@@ -34,162 +34,86 @@
  * <GraphCanvasApp data={wikipediaDataViz} config={wikipediaDataVizSettings} />
  */
 
-import type { GraphData } from '@invana/graph';
+import type { CanvasConfig } from '@invana/canvas';
+import type { GraphEdge, GraphNode } from '@invana/graph';
 
 import raw from './wikipedia-dataviz.json';
 
-/**
- * Vertex label — the entity kind, taken verbatim from sigma's per-node `tag`.
- * Drives shape + palette downstream; each has an icon asset in {@link WdvMeta.tags}.
- */
-export type WdvNodeLabel =
-  | 'Chart type'
-  | 'Company'
-  | 'Concept'
-  | 'Field'
-  | 'List'
-  | 'Method'
-  | 'Organization'
-  | 'Person'
-  | 'Technology'
-  | 'Tool'
-  | 'unknown';
-
-/** Edge label — the sole relation kind: a directed Wikipedia hyperlink. */
-export type WdvEdgeLabel = 'links_to';
-
-/**
- * A Wikipedia page. Every vertex shares this shape regardless of its
- * {@link WdvNodeLabel} — the label is the only thing that varies.
- */
-export interface WdvPageProperties {
-  /** Display title of the page (`Cytoscape`, `Radar chart`, …). */
-  readonly name: string;
-  /** Canonical Wikipedia article URL. */
-  readonly url: string;
-  /** Community-detected topic cluster key — see {@link WdvClusterMeta}. */
-  readonly cluster: string;
-  /** Denormalised {@link WdvClusterMeta.clusterLabel}, or `null` if unmapped. */
-  readonly clusterLabel: string | null;
-  /** Precomputed ForceAtlas2 x-coordinate (the source cartography). */
-  readonly x: number;
-  /** Precomputed ForceAtlas2 y-coordinate. */
-  readonly y: number;
-  /** PageRank-like importance in `[0, 1]` — good for node sizing. */
-  readonly score: number;
-}
-
-/** Node property bag. Single-mode graph → one shape for every vertex kind. */
-export type WdvNodeProperties = WdvPageProperties;
-
-/** Edge property bag — hyperlinks carry no attributes. */
-export type WdvEdgeProperties = Record<string, never>;
-
-/** A Wikipedia page `{ id, type, data }`. */
-export interface WdvNode {
-  readonly id: string;
-  readonly type: WdvNodeLabel;
-  readonly data: WdvNodeProperties;
-}
-
-/** A hyperlink `{ id, type, source, target, data }`. */
-export interface WdvEdge {
-  readonly id: string;
-  readonly type: WdvEdgeLabel;
-  readonly source: string;
-  readonly target: string;
-  readonly data: WdvEdgeProperties;
-}
-
-/** One community-detected topic cluster — its colour and human label. */
-export interface WdvClusterMeta {
-  /** Cluster key, matching {@link WdvPageProperties.cluster}. */
-  readonly key: string;
-  /** Hex swatch used by the source viz for members of this cluster. */
-  readonly color: string;
-  /** Topic label (`Graph theory`, `Business intelligence`, …). */
-  readonly clusterLabel: string;
-}
-
-/** One tag kind — its key ({@link WdvNodeLabel}) and sigma's icon-asset filename. */
-export interface WdvTagMeta {
-  /** Tag key — equals a {@link WdvNodeLabel}. */
-  readonly key: WdvNodeLabel;
-  /** SVG icon asset name from the source demo (`tool.svg`, `person.svg`, …). */
-  readonly image: string;
-}
-
-/** One vertex kind in the {@link WdvSchema} — its label, tally, and property types. */
-export interface WdvNodeTypeSchema {
-  readonly type: WdvNodeLabel;
-  /** Number of vertices carrying this label. */
-  readonly count: number;
-  /**
-   * Property key → primitive type string, unioned across every vertex of this
-   * kind (`'string'`, `'number'`, `'string | null'`, …).
-   */
-  readonly properties: Readonly<Record<string, string>>;
-}
-
-/** A permitted `{ source → target }` vertex pairing for a relation kind. */
-export interface WdvEndpointSchema {
-  readonly source: WdvNodeLabel;
-  readonly target: WdvNodeLabel;
-}
-
-/** One relation kind in the {@link WdvSchema} — its endpoints, tally, and property types. */
-export interface WdvEdgeTypeSchema {
-  readonly type: WdvEdgeLabel;
-  /** Number of edges carrying this label. */
-  readonly count: number;
-  /** `true` — hyperlinks are directional. */
-  readonly directed: boolean;
-  /** Every `{ source, target }` label-pair observed for this relation. */
-  readonly endpoints: readonly WdvEndpointSchema[];
-  /** Property key → primitive type string; `{}` for `links_to`. */
-  readonly properties: Readonly<Record<string, string>>;
-}
-
-/**
- * The graph schema (meta-graph / ontology) — the vertex and relation kinds the
- * dataset contains, each with counts, property types, and (for edges) endpoint
- * constraints. Derived by the generator from the emitted data, so it always
- * matches {@link WikipediaDataVizData.nodes} / `.edges`.
- */
-export interface WdvSchema {
-  readonly nodeTypes: readonly WdvNodeTypeSchema[];
-  readonly edgeTypes: readonly WdvEdgeTypeSchema[];
-}
-
-/** Self-describing provenance, counts, and sidecar registries baked into the JSON. */
-export interface WdvMeta {
-  readonly name: string;
-  readonly description: string;
-  /** The site that publishes the underlying demo (sigma.js). */
-  readonly source: string;
-  /** The GitHub repo the raw dataset is fetched from. */
-  readonly sourceRepo: string;
-  readonly nodeCount: number;
-  readonly edgeCount: number;
-  /** The 24 community-detected topic clusters — colour + label per key. */
-  readonly clusters: readonly WdvClusterMeta[];
-  /** The 11 tag kinds — each {@link WdvNodeLabel} with its source icon asset. */
-  readonly tags: readonly WdvTagMeta[];
-  /** The graph's meta-graph — vertex/relation kinds, their property types + endpoints. */
-  readonly schema: WdvSchema;
-}
-
-/** The full dataset: provenance + registries + the property graph. */
-export interface WikipediaDataVizData {
-  readonly meta: WdvMeta;
-  nodes: WdvNode[];
-  edges: WdvEdge[];
-}
-
-// The JSON is already valid `WikipediaDataVizData`; the cast only narrows the
+// The JSON is already valid `GraphData`; the cast only narrows the
 // string-literal unions (`label`) that JSON import widens to `string`.
 // No per-record reshaping.
-export const wikipediaDataViz = raw as unknown as WikipediaDataVizData;
+export const wikipediaDataViz = raw as unknown as {
+  readonly meta: {
+    readonly name: string;
+    readonly description: string;
+    readonly source: string;
+    readonly sourceRepo: string;
+    readonly nodeCount: number;
+    readonly edgeCount: number;
+    readonly clusters: readonly {
+      readonly key: string;
+      readonly color: string;
+      readonly label: string;
+    }[];
+    readonly tags: readonly { readonly key: string; readonly label: string }[];
+  };
+  /** Positions are the data — `data.x` / `data.y` come from the source layout. */
+  nodes: (GraphNode & {
+    data: {
+      readonly name: string;
+      readonly url: string;
+      readonly cluster: string;
+      readonly clusterLabel: string | null;
+      readonly x: number;
+      readonly y: number;
+      readonly score: number;
+    };
+  })[];
+  edges: GraphEdge[];
+};
 
 /** {@link wikipediaDataViz} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: GraphData = wikipediaDataViz as unknown as GraphData;
+export const data = wikipediaDataViz;
+
+/**
+ * Recommended look for the **Wikipedia data-visualisation** link graph.
+ *
+ * The upstream graph ships its own community layout on `data.x` / `data.y`, so
+ * the honest default is **no layout** (`activeLayout: ''`) — a force sim would throw
+ * away the clustering the dataset was built to show. Consumers that want to
+ * re-solve it point `activeLayout` at their own. Colour-by-type maps the 11 page
+ * tags; the 24 finer topic clusters live on `data.cluster` for a custom resolver.
+ */
+export const settings: CanvasConfig = {
+  activeLayout: '',
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: 'circle', radius: 3 },
+          bgStrokeWidth: 0,
+          showLabel: false,
+        },
+      },
+      edge: {
+        style: {
+          strokeColor: 0x94a3b8,
+          strokeWidth: 0.4,
+          strokeAlpha: 0.2,
+          arrowTargetShape: 'none',
+        },
+      },
+    },
+  },
+  behaviours: {
+    color: { enabled: true, colorEdges: false },
+    hover: {
+      enabled: true,
+      state: 'highlighted',
+      inactiveState: 'dimmed',
+      degree: 1,
+      direction: 'both',
+    },
+  },
+};

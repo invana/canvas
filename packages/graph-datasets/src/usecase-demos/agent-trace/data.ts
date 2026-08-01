@@ -13,54 +13,34 @@
  * carries no positions.
  */
 
-import type { GraphData } from '@invana/graph';
+import type { CanvasConfig } from '@invana/canvas';
+import type { GraphEdge, GraphNode } from '@invana/graph';
 
-/** What the node represents in the agent's execution graph. */
-export type AgentTraceNodeKind = 'llm' | 'tool' | 'decision' | 'output';
-
-/** Per-node execution status — drives state-config styling in the story. */
-export type AgentTraceStatus = 'success' | 'error' | 'pending';
-
-/** What the edge represents. */
-export type AgentTraceEdgeKind = 'calls' | 'returns' | 'branch';
-
-/** Free-form per-node data. The store keeps this opaque. */
-export interface AgentTraceNodeData {
-  readonly kind: AgentTraceNodeKind;
-  readonly label: string;
-  readonly status: AgentTraceStatus;
-  readonly durationMs: number;
-  readonly tokens?: number;
-}
-
-/** Free-form per-edge data. */
-export interface AgentTraceEdgeData {
-  readonly kind: AgentTraceEdgeKind;
-}
-
-export interface AgentTraceNode {
-  readonly id: string;
-  /** The step kind — also on `data.kind`, so colour-by-type works unwired. */
-  readonly type: AgentTraceNodeKind;
-  readonly data: AgentTraceNodeData;
-}
-
-export interface AgentTraceEdge {
-  readonly id: string;
-  readonly source: string;
-  readonly target: string;
-  readonly data: AgentTraceEdgeData;
-}
-
-export interface AgentTraceData {
+/**
+ * A named preset — a trace graph plus the id/name the story's picker lists it
+ * under. Local by design: the exported value carries the shape by inference, so
+ * no consumer needs a type import.
+ */
+interface AgentTracePreset {
   readonly id: string;
   readonly name: string;
-  nodes: AgentTraceNode[];
-  edges: AgentTraceEdge[];
+  nodes: (GraphNode & {
+    type: 'llm' | 'tool' | 'decision' | 'output';
+    data: {
+      readonly kind: 'llm' | 'tool' | 'decision' | 'output';
+      readonly label: string;
+      readonly status: 'success' | 'error' | 'pending';
+      readonly durationMs: number;
+      readonly tokens?: number;
+    };
+  })[];
+  edges: (GraphEdge & {
+    data: { readonly kind: 'calls' | 'returns' | 'branch' };
+  })[];
 }
 
 // ── Preset 1: Refund query (all-success happy path) ─────────────────────
-const refundQuery: AgentTraceData = {
+const refundQuery: AgentTracePreset = {
   id: 'refund-query',
   name: 'Refund query (happy path)',
   nodes: [
@@ -88,7 +68,7 @@ const refundQuery: AgentTraceData = {
 };
 
 // ── Preset 2: Knowledge lookup (error + retry + fallback) ───────────────
-const knowledgeLookup: AgentTraceData = {
+const knowledgeLookup: AgentTracePreset = {
   id: 'knowledge-lookup',
   name: 'Knowledge lookup (error + retry)',
   nodes: [
@@ -117,7 +97,7 @@ const knowledgeLookup: AgentTraceData = {
 };
 
 // ── Preset 3: Multi-tool decision (branching path) ──────────────────────
-const multiToolDecision: AgentTraceData = {
+const multiToolDecision: AgentTracePreset = {
   id: 'multi-tool-decision',
   name: 'Multi-tool decision (branching)',
   nodes: [
@@ -154,7 +134,7 @@ const multiToolDecision: AgentTraceData = {
 };
 
 /** All three presets, in display order. */
-export const agentTrace: readonly AgentTraceData[] = [
+export const agentTrace: readonly AgentTracePreset[] = [
   refundQuery,
   knowledgeLookup,
   multiToolDecision,
@@ -164,4 +144,59 @@ export const agentTrace: readonly AgentTraceData[] = [
  * The first trace (`refundQuery`) as the engine-ready value
  * `<GraphCanvasApp data>` takes — the default of the three in {@link agentTrace}.
  */
-export const data: GraphData = agentTrace[0] as unknown as GraphData;
+export const data = agentTrace[0];
+
+/**
+ * Recommended look for an **LLM agent trace**.
+ *
+ * A trace is a run, and a run reads top-to-bottom — so this expects a layered
+ * `ElkLayout` mounted under the id `elk` rather than the bundle's force sim. Steps
+ * are labelled boxes; colour-by-type separates the step kinds (llm · tool · output
+ * · …). Each step's `status` and `durationMs` stay on `data` for a consumer's
+ * badge / colour resolver.
+ */
+export const settings: CanvasConfig = {
+  activeLayout: 'elk',
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: 'rect', width: 168, height: 40, cornerRadius: 8 },
+          bgStrokeColor: 0xffffff,
+          bgStrokeWidth: 1.5,
+          labelColor: 0xffffff,
+          labelFontSize: 11,
+          labelFontWeight: 600,
+          labelPlacement: 'center',
+        },
+      },
+      edge: {
+        style: {
+          shape: { pathType: 'rounded', pathStyleOpts: { radius: 8 } },
+          strokeColor: 0x94a3b8,
+          strokeWidth: 1.3,
+          arrowTargetShape: 'triangle',
+          arrowTargetSize: 8,
+        },
+      },
+    },
+  },
+  layouts: {
+    elk: {
+      algorithm: 'layered',
+      direction: 'DOWN',
+      nodeSpacing: 28,
+      layerSpacing: 70,
+    },
+  },
+  behaviours: {
+    color: { enabled: true, colorEdges: false },
+    hover: {
+      enabled: true,
+      state: 'highlighted',
+      degree: 1,
+      direction: 'both',
+    },
+  },
+};

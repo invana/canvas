@@ -19,66 +19,9 @@
  * <GraphCanvasApp data={starSchema} config={starSchemaSettings} />
  */
 
-import type { GraphData } from '@invana/graph';
+import type { CanvasConfig } from '@invana/canvas';
 
-/** Node type — a table's role in the star. */
-export type StarSchemaNodeType = 'Dimension' | 'Fact';
-
-/** Edge type — the only relation here is a foreign key into a dimension. */
-export type StarSchemaEdgeType = 'REFERENCES';
-
-/** Column data type. Deliberately storage-agnostic (not SQL types). */
-export type StarSchemaFieldType = 'integer' | 'number' | 'string' | 'date' | 'boolean';
-
-/** One column of a table. */
-export interface StarSchemaField {
-  /** Column name, as it appears in the model (`'CustomerId'`). */
-  readonly name: string;
-  /** Column data type — drives the row's type chip downstream. */
-  readonly type: StarSchemaFieldType;
-}
-
-/** Node payload — the table's identity, its look, and its columns. */
-export interface StarSchemaNodeData {
-  /** Table name (`'Dim_Customer'`). `id` stays the lowercase stable key. */
-  readonly name: string;
-  /** Iconify id for the header glyph (`'lucide/users'`). Presentation hint. */
-  readonly icon: string;
-  /** Header band colour, `0xRRGGBB`. Presentation hint. */
-  readonly headerColor: number;
-  /** The table's columns, in model order. */
-  readonly fields: readonly StarSchemaField[];
-}
-
-/** Edge payload — which column of the fact table makes the reference. */
-export interface StarSchemaEdgeData {
-  /** The fact table's foreign-key column (`'CustomerId'`). */
-  readonly foreignKey: string;
-}
-
-/** A table. */
-export interface StarSchemaNode {
-  readonly id: string;
-  readonly type: StarSchemaNodeType;
-  readonly data: StarSchemaNodeData;
-}
-
-/** A foreign key, fact → dimension. */
-export interface StarSchemaEdge {
-  readonly id: string;
-  readonly type: StarSchemaEdgeType;
-  readonly source: string;
-  readonly target: string;
-  readonly data: StarSchemaEdgeData;
-}
-
-/** The full dataset. */
-export interface StarSchemaData {
-  nodes: StarSchemaNode[];
-  edges: StarSchemaEdge[];
-}
-
-export const starSchema: StarSchemaData = {
+export const starSchema = {
   nodes: [
     {
       id: 'dim_customer',
@@ -152,4 +95,57 @@ export const starSchema: StarSchemaData = {
 };
 
 /** {@link starSchema} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: GraphData = starSchema as unknown as GraphData;
+export const data = starSchema;
+
+/**
+ * Recommended look for the **retail star schema**.
+ *
+ * A data model is a layered DAG, so this expects an `ElkLayout` under the id
+ * `layout`. The tables themselves are **composite cards** built from each node's
+ * `fields` list, which no serialisable setting can express — a consumer supplies
+ * the `shape` resolver, and `bgStrokeWidth: 0` here stops the base node border from
+ * double-framing whatever card it builds.
+ *
+ * Foreign-key edges are dashed and arrowless, the ER convention for a reference
+ * rather than a flow.
+ */
+export const settings: CanvasConfig = {
+  activeLayout: 'layout',
+  fitOnLoad: true,
+  layers: {
+    background: {
+      type: 'pattern',
+      patternType: 'dots',
+      size: 1.5,
+      spacing: 24,
+      alpha: 0.85,
+    },
+    graph: {
+      node: { style: { bgStrokeWidth: 0 } },
+      edge: {
+        style: {
+          strokeColor: 0x64748b,
+          strokeWidth: 1.4,
+          strokeDashArray: [5, 4],
+          arrowTargetShape: 'none',
+          shape: { pathType: 'orth' },
+        },
+      },
+    },
+  },
+  layouts: {
+    layout: {
+      algorithm: 'layered',
+      direction: 'RIGHT',
+      nodeSpacing: 60,
+      layerSpacing: 140,
+      padding: 40,
+    },
+  },
+  behaviours: {
+    // The card carries its own colours — nothing else may repaint it.
+    color: { enabled: false },
+    hover: { enabled: true },
+    'drag-node': { enabled: true },
+  },
+};

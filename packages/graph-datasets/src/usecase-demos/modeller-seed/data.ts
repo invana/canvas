@@ -13,34 +13,9 @@
  * <GraphCanvasApp data={modellerSeed} config={modellerSeedSettings} />
  */
 
-import type { GraphData } from '@invana/graph';
+import type { CanvasConfig } from '@invana/canvas';
 
-/**
- * A seed node. Deliberately **untyped** — the modeller's user is the one who
- * classifies it — so it carries only a caption and where it starts.
- */
-export interface ModellerSeedNode {
-  readonly id: string;
-  /** Starting position, centred around the origin so the board opens framed. */
-  readonly position: { readonly x: number; readonly y: number };
-  /** The caption drawn on the node (`'A'`). */
-  readonly style: { readonly labelText: string };
-}
-
-/** A seed edge — untyped for the same reason. */
-export interface ModellerSeedEdge {
-  readonly id: string;
-  readonly source: string;
-  readonly target: string;
-}
-
-/** The full dataset. */
-export interface ModellerSeedData {
-  nodes: ModellerSeedNode[];
-  edges: ModellerSeedEdge[];
-}
-
-export const modellerSeed: ModellerSeedData = {
+export const modellerSeed = {
   nodes: [
     { id: 'a', position: { x: -120, y: -60 }, style: { labelText: 'A' } },
     { id: 'b', position: { x: 120, y: -60 }, style: { labelText: 'B' } },
@@ -50,4 +25,35 @@ export const modellerSeed: ModellerSeedData = {
 };
 
 /** {@link modellerSeed} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: GraphData = modellerSeed as unknown as GraphData;
+export const data = modellerSeed;
+
+/**
+ * Recommended look for the **modeller seed** board.
+ *
+ * An authoring surface, not a picture: the three seed nodes sit where they were
+ * placed, so there is **no layout** (`activeLayout: ''`) — a solver would fight the
+ * user on their first drag. A grid background gives the drawing something to align
+ * against, and colour-by-type is off because seed nodes are deliberately untyped
+ * until the user classifies them.
+ */
+export const settings: CanvasConfig = {
+  activeLayout: '',
+  fitOnLoad: false,
+  layers: {
+    background: { type: 'pattern', patternType: 'grid' },
+    graph: {
+      node: {
+        style: {
+          shape: { kind: 'circle', radius: 22 },
+          bgFill: 0x3b82f6,
+          bgStrokeWidth: 2,
+          labelColor: 0xf8fafc,
+          labelFontSize: 13,
+          labelPlacement: 'center',
+        },
+      },
+      edge: { style: { strokeWidth: 2 } },
+    },
+  },
+  behaviours: { color: { enabled: false }, 'drag-node': { enabled: true } },
+};

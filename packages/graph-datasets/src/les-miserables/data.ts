@@ -18,37 +18,11 @@
  * graph.setData(lesMiserables);
  */
 
-import type { GraphData } from '@invana/graph';
-
-export interface LesMiserablesNodeData {
-  /** Co-occurrence cluster (0–10). Used for colour-by-group in stories. */
-  group: number;
-}
-
-export interface LesMiserablesEdgeData {
-  /** Number of scenes the two characters share (edge weight, 1–31). */
-  value: number;
-}
-
-export interface LesMiserablesNode {
-  id: string;
-  data: LesMiserablesNodeData;
-}
-
-export interface LesMiserablesEdge {
-  id: string;
-  source: string;
-  target: string;
-  data: LesMiserablesEdgeData;
-}
-
-export interface LesMiserablesData {
-  nodes: LesMiserablesNode[];
-  edges: LesMiserablesEdge[];
-}
+import type { CanvasConfig } from '@invana/canvas';
+import type { GraphEdge, GraphNode } from '@invana/graph';
 
 /** 77 character nodes. */
-const nodes: LesMiserablesNode[] = [
+const nodes: (GraphNode & { data: { group: number } })[] = [
   { id: 'Myriel', data: { group: 1 } },
   { id: 'Napoleon', data: { group: 1 } },
   { id: 'Mlle.Baptistine', data: { group: 1 } },
@@ -388,7 +362,7 @@ const rawEdges: RawEdge[] = [
   { source: 'Mme.Hucheloup', target: 'Enjolras', value: 1 },
 ];
 
-const edges: LesMiserablesEdge[] = rawEdges.map((e) => ({
+const edges: (GraphEdge & { data: { value: number } })[] = rawEdges.map((e) => ({
   id: `${e.source}__${e.target}`,
   source: e.source,
   target: e.target,
@@ -396,7 +370,52 @@ const edges: LesMiserablesEdge[] = rawEdges.map((e) => ({
 }));
 
 /** Les Misérables co-occurrence network — pass straight to `graph.setData()`. */
-export const lesMiserables: LesMiserablesData = { nodes, edges };
+export const lesMiserables: {
+  /** `data.group` is the co-occurrence cluster (0–10) — colour-by-group in stories. */
+  nodes: (GraphNode & { data: { group: number } })[];
+  /** `data.value` is the number of scenes the two characters share (1–31). */
+  edges: (GraphEdge & { data: { value: number } })[];
+} = { nodes, edges };
 
 /** {@link lesMiserables} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: GraphData = lesMiserables as unknown as GraphData;
+export const data = lesMiserables;
+
+/**
+ * Recommended look for the **Les Misérables** co-occurrence network.
+ *
+ * A dense 77-character social graph: small filled dots, thin translucent links,
+ * and a force layout with enough charge to open the hairball. Characters have no
+ * `type` (their community is `data.group`), so the colour-by-type behaviour is off
+ * — nothing to partition by — and a single node fill reads better than one colour
+ * for everything anyway.
+ */
+export const settings: CanvasConfig = {
+  activeLayout: 'graph-force',
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: 'circle', radius: 5 },
+          bgFill: 0x60a5fa,
+          bgStrokeWidth: 0,
+          labelFontSize: 9,
+          labelPlacement: 'bottom',
+          labelOffsetY: 3,
+        },
+      },
+      edge: {
+        style: { strokeColor: 0x94a3b8, strokeWidth: 0.6, strokeAlpha: 0.45 },
+      },
+    },
+  },
+  layouts: {
+    'graph-force': {
+      charge: { strength: -220 },
+      link: { distance: 40 },
+      collide: {},
+      animate: false,
+    },
+  },
+  behaviours: { color: { enabled: false } },
+};

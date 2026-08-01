@@ -23,35 +23,8 @@
  * graph.setData(oldFaithful);
  */
 
-import type { GraphData } from '@invana/graph';
-
-export interface OldFaithfulPoint {
-  /** Eruption duration in minutes. */
-  eruptions: number;
-  /** Minutes elapsed before the next eruption. */
-  waiting: number;
-}
-
-export interface OldFaithfulNodeData extends OldFaithfulPoint {
-  /**
-   * Bimodal cluster the point most likely belongs to — `'short'` for the
-   * brief eruption / short-wait cluster, `'long'` for the long-duration /
-   * long-wait cluster. Determined by a 3-minute split on `eruptions`.
-   * Useful for colour-by-cluster stories.
-   */
-  cluster: 'short' | 'long';
-}
-
-export interface OldFaithfulNode {
-  id: string;
-  data: OldFaithfulNodeData;
-  position: { x: number; y: number };
-}
-
-export interface OldFaithfulGraphData {
-  nodes: OldFaithfulNode[];
-  edges: never[];
-}
+import type { CanvasConfig } from '@invana/canvas';
+import type { GraphNode } from '@invana/graph';
 
 /** Vertical scale applied to `eruptions` so the two axes share comparable ranges. */
 const ERUPTION_Y_SCALE = 20;
@@ -105,18 +78,46 @@ const RAW: ReadonlyArray<readonly [number, number]> = [
   [1.817, 46], [4.467, 74],
 ];
 
-export const oldFaithful: OldFaithfulGraphData = {
-  nodes: RAW.map(([eruptions, waiting], i): OldFaithfulNode => ({
-    id: `f-${i}`,
-    data: {
-      eruptions,
-      waiting,
-      cluster: eruptions < 3 ? 'short' : 'long',
-    },
-    position: { x: waiting, y: eruptions * ERUPTION_Y_SCALE },
-  })),
+export const oldFaithful = {
+  nodes: RAW.map(
+    ([eruptions, waiting], i): GraphNode => ({
+      id: `f-${i}`,
+      data: {
+        eruptions,
+        waiting,
+        cluster: eruptions < 3 ? 'short' : 'long',
+      },
+      position: { x: waiting, y: eruptions * ERUPTION_Y_SCALE },
+    }),
+  ),
   edges: [],
 };
 
 /** {@link oldFaithful} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: GraphData = oldFaithful as unknown as GraphData;
+export const data = oldFaithful;
+
+/**
+ * Recommended look for the **Old Faithful** eruption scatter.
+ *
+ * Not a network at all — 272 eruptions plotted as a scatter, with `position`
+ * already baked into the data and no edges. So there is **no layout** (`activeLayout: ''`);
+ * anything that moved the points would destroy the chart. Nodes carry a `cluster`
+ * of `short` / `long` on `data`, not as a `type`, so colour-by-type is off.
+ */
+export const settings: CanvasConfig = {
+  activeLayout: '',
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: 'circle', radius: 3 },
+          bgFill: 0x38bdf8,
+          bgStrokeWidth: 0,
+          showLabel: false,
+        },
+      },
+    },
+  },
+  behaviours: { color: { enabled: false }, 'drag-node': { enabled: false } },
+};

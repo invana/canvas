@@ -19,12 +19,13 @@
  * <GraphCanvasApp data={cora} config={coraSettings} />
  */
 
-import type { GraphData } from '@invana/graph';
+import type { CanvasConfig } from '@invana/canvas';
+import type { GraphEdge, GraphNode } from '@invana/graph';
 
 import raw from './cora.json';
 
-/** Subject category — the 7 ML topics the original Cora dataset partitions papers into. */
-export type CoraSubject =
+/** The seven subject areas a paper can belong to. */
+type CoraSubject =
   | 'Neural_Networks'
   | 'Rule_Learning'
   | 'Reinforcement_Learning'
@@ -33,32 +34,64 @@ export type CoraSubject =
   | 'Genetic_Algorithms'
   | 'Case_Based';
 
-export interface CoraNodeData {
-  readonly subject: CoraSubject;
-}
-
-/** A paper. `type` is its subject area; `data.subject` repeats it for readers. */
-export interface CoraNode {
-  readonly id: string;
-  readonly type: CoraSubject;
-  readonly data: CoraNodeData;
-}
-
-/** A citation. Direction is citing → cited. */
-export interface CoraEdge {
-  readonly id: string;
-  readonly source: string;
-  readonly target: string;
-}
-
-export interface CoraData {
-  nodes: CoraNode[];
-  edges: CoraEdge[];
-}
-
-// The JSON is already valid `CoraData`; the cast only narrows `type` /
+// The JSON is already valid `GraphData`; the cast only narrows `type` /
 // `data.subject` from the `string` a JSON import widens them to.
-export const cora = raw as unknown as CoraData;
+export const cora = raw as unknown as {
+  /** `type` and `data.subject` are the paper's subject area — the same value. */
+  nodes: (GraphNode & { type: CoraSubject; data: { subject: CoraSubject } })[];
+  edges: GraphEdge[];
+};
 
 /** {@link cora} as the engine-ready value `setData` / `<GraphCanvasApp>` take. */
-export const data: GraphData = cora as unknown as GraphData;
+export const data = cora;
+
+/**
+ * Recommended look for the **Cora** citation network.
+ *
+ * 2,708 papers and 10,556 citations — the largest dataset here, and the settings
+ * are shaped almost entirely by that. Papers are 3px dots so the seven subject
+ * communities read as regions rather than as individual marks; citations are barely
+ * visible on their own and exist to shape the layout. Colour-by-type partitions the
+ * subjects for free, since each paper's `type` **is** its subject.
+ */
+export const settings: CanvasConfig = {
+  activeLayout: 'graph-force',
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: 'circle', radius: 3 },
+          bgStrokeWidth: 0,
+          showLabel: false,
+        },
+      },
+      edge: {
+        style: {
+          strokeColor: 0x94a3b8,
+          strokeWidth: 0.4,
+          strokeAlpha: 0.12,
+          arrowTargetShape: 'none',
+        },
+      },
+    },
+  },
+  layouts: {
+    'graph-force': {
+      charge: { strength: -60 },
+      link: { distance: 28 },
+      collide: {},
+      animate: false,
+    },
+  },
+  behaviours: {
+    color: { enabled: true, colorEdges: false },
+    hover: {
+      enabled: true,
+      state: 'highlighted',
+      inactiveState: 'dimmed',
+      degree: 1,
+      direction: 'both',
+    },
+  },
+};

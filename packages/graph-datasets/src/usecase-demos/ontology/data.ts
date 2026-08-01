@@ -11,53 +11,15 @@
  * unfold the products, locations, and industries by clicking.
  */
 
-import type { GraphData } from '@invana/graph';
+import type { CanvasConfig } from '@invana/canvas';
+import type { GraphEdge, GraphNode } from '@invana/graph';
 
-/** Entity kind — drives shape and palette in the story. */
-export type OntologyEntityKind = 'company' | 'person' | 'product' | 'location' | 'industry';
-
-/** Predicate / FK label on each edge. */
-export type OntologyEdgeKind =
-  | 'founded'
-  | 'ceo_of'
-  | 'works_at'
-  | 'builds'
-  | 'headquartered_in'
-  | 'operates_in'
-  | 'competes_with';
-
-export interface OntologyNodeData {
-  readonly kind: OntologyEntityKind;
-  /** Human-readable display name (id stays kebab-case for stability). */
-  readonly name: string;
-}
-
-export interface OntologyEdgeData {
-  readonly kind: OntologyEdgeKind;
-}
-
-export interface OntologyNode {
-  readonly id: string;
-  /** The entity kind — also on `data.kind`, so colour-by-type works unwired. */
-  readonly type: OntologyEntityKind;
-  readonly data: OntologyNodeData;
-}
-
-export interface OntologyEdge {
-  readonly id: string;
-  readonly source: string;
-  readonly target: string;
-  readonly data: OntologyEdgeData;
-}
-
-export interface OntologyData {
-  nodes: OntologyNode[];
-  edges: OntologyEdge[];
-  /** Ids that the story shows in its initial collapsed view. */
-  readonly coreIds: readonly string[];
-}
-
-const nodes: OntologyNode[] = [
+const nodes: (GraphNode & {
+  data: {
+    kind: 'company' | 'person' | 'product' | 'location' | 'industry';
+    name: string;
+  };
+})[] = [
   // ── Companies ──
   { id: 'stripe',    type: 'company', data: { kind: 'company', name: 'Stripe' } },
   { id: 'anthropic', type: 'company', data: { kind: 'company', name: 'Anthropic' } },
@@ -98,7 +60,18 @@ const nodes: OntologyNode[] = [
   { id: 'productivity',     type: 'industry', data: { kind: 'industry', name: 'Productivity' } },
 ];
 
-const edges: OntologyEdge[] = [
+const edges: (GraphEdge & {
+  data: {
+    kind:
+      | 'founded'
+      | 'ceo_of'
+      | 'works_at'
+      | 'builds'
+      | 'headquartered_in'
+      | 'operates_in'
+      | 'competes_with';
+  };
+})[] = [
   // founded
   { id: 'f1', source: 'patrick-collison', target: 'stripe',    data: { kind: 'founded' } },
   { id: 'f2', source: 'john-collison',    target: 'stripe',    data: { kind: 'founded' } },
@@ -156,7 +129,58 @@ const coreIds: readonly string[] = [
   'patrick-collison', 'dario-amodei', 'sam-altman', 'dylan-field', 'karri-saarinen',
 ];
 
-export const ontology: OntologyData = { nodes, edges, coreIds };
+export const ontology = {
+  nodes,
+  edges,
+  coreIds,
+};
 
 /** {@link ontology} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: GraphData = ontology as unknown as GraphData;
+export const data = ontology;
+
+/**
+ * Recommended look for the **ontology** knowledge graph.
+ *
+ * A small, readable knowledge graph — few enough entities that every node can
+ * carry its label, which is the point of an ontology view. Colour-by-type separates
+ * the entity kinds, and edges keep arrowheads because a triple's direction is its
+ * meaning.
+ */
+export const settings: CanvasConfig = {
+  activeLayout: 'graph-force',
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: 'circle', radius: 10 },
+          bgStrokeWidth: 1.5,
+          labelFontSize: 11,
+          labelPlacement: 'bottom',
+          labelOffsetY: 4,
+        },
+      },
+      edge: {
+        style: {
+          strokeWidth: 1.2,
+          strokeAlpha: 0.7,
+          arrowTargetShape: 'triangle',
+          arrowTargetSize: 7,
+        },
+      },
+    },
+  },
+  layouts: {
+    'graph-force': {
+      charge: { strength: -420 },
+      link: { distance: 110 },
+      collide: {},
+      animate: false,
+    },
+  },
+  behaviours: {
+    color: { enabled: true, colorEdges: false },
+    hover: { enabled: true, state: 'highlighted', degree: 1 },
+    'click-select': { enabled: true, multiple: true },
+  },
+};

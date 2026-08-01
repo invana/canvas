@@ -24,58 +24,28 @@
  * graphLayer.setData(ukEnergyFlowAsGraph());
  */
 
-import type { GraphData } from '@invana/graph';
+import type { CanvasConfig } from '@invana/canvas';
+import type { GraphEdge, GraphNode } from '@invana/graph';
 
 import ukEnergyFlowJson from './uk-energy-flow.json';
 
 /** Original (numeric-index) node shape. */
-export interface UkEnergyFlowNode {
+interface UkEnergyFlowNode {
   name: string;
 }
 
 /** Original (numeric-index) link shape — `source` / `target` are indices
  *  into the `nodes` array. */
-export interface UkEnergyFlowLink {
+interface UkEnergyFlowLink {
   source: number;
   target: number;
   value: number;
 }
 
 /** Original `{nodes, links}` shape (matches d3-sankey's expected input). */
-export interface UkEnergyFlow {
+interface UkEnergyFlow {
   nodes: UkEnergyFlowNode[];
   links: UkEnergyFlowLink[];
-}
-
-/** Node in the flat `{nodes, edges}` projection. */
-export interface UkEnergyFlowGraphNode {
-  id: string;
-  data: {
-    /** Original `name` field — used by Sankey labels. */
-    name: string;
-    /**
-     * Categorical bucket derived from the node name's first whitespace-
-     * separated word (`'Solar PV'` becomes `'Solar'`, `'Coal reserves'`
-     * becomes `'Coal'`). Mirrors the d3 example's first-word replace key
-     * so a 10-colour ordinal scale produces the same grouping as the
-     * canonical Observable port.
-     */
-    category: string;
-  };
-}
-
-/** Edge in the flat projection. `value` is the flow magnitude (TWh). */
-export interface UkEnergyFlowGraphEdge {
-  id: string;
-  source: string;
-  target: string;
-  data: { value: number };
-}
-
-/** Output of {@link ukEnergyFlowAsGraph}. */
-export interface UkEnergyFlowGraphData {
-  nodes: UkEnergyFlowGraphNode[];
-  edges: UkEnergyFlowGraphEdge[];
 }
 
 /** Original dataset, untouched. Pass straight to `d3.sankey()` if you want
@@ -91,16 +61,18 @@ export const ukEnergyFlow: UkEnergyFlow = ukEnergyFlowJson as UkEnergyFlow;
  *  - Edge ids are `<source>--<target>`; the source dataset has no duplicate
  *    pairs, so no extra disambiguation is needed.
  */
-export function ukEnergyFlowAsGraph(): UkEnergyFlowGraphData {
+export function ukEnergyFlowAsGraph() {
   const { nodes, links } = ukEnergyFlow;
-  const graphNodes: UkEnergyFlowGraphNode[] = nodes.map((n) => ({
+  const graphNodes: (GraphNode & {
+    data: { name: string; category: string };
+  })[] = nodes.map((n) => ({
     id: n.name,
     data: {
       name: n.name,
       category: n.name.replace(/ .*/, ''),
     },
   }));
-  const graphEdges: UkEnergyFlowGraphEdge[] = links.map((l) => {
+  const graphEdges: (GraphEdge & { data: { value: number } })[] = links.map((l) => {
     const source = nodes[l.source]!.name;
     const target = nodes[l.target]!.name;
     return {
@@ -114,4 +86,46 @@ export function ukEnergyFlowAsGraph(): UkEnergyFlowGraphData {
 }
 
 /** The UK energy flow as a graph, engine-ready. Same value as {@link ukEnergyFlowAsGraph}(). */
-export const data: GraphData = ukEnergyFlowAsGraph() as unknown as GraphData;
+export const data = ukEnergyFlowAsGraph();
+
+/**
+ * Recommended look for the **UK energy flow** Sankey.
+ *
+ * A flow diagram, so it expects a `D3SankeyLayout` mounted under the id `layout`.
+ * The ribbons are the data — edge width comes from the layout, and the endpoints
+ * attach to node faces (`edge-port`) rather than being trimmed at an outline, which
+ * is what keeps a ribbon flush against its bar.
+ */
+export const settings: CanvasConfig = {
+  activeLayout: 'layout',
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: 'rect', width: 14, height: 40 },
+          bgFill: 0x64748b,
+          bgStrokeWidth: 0,
+          labelFontSize: 10,
+          labelPlacement: 'right',
+        },
+      },
+      edge: {
+        style: {
+          strokeAlpha: 0.4,
+          arrowTargetShape: 'none',
+          // `bump-horizontal` is the ribbon curve (there is no `'sankey'`
+          // pathType — see `EdgePathType`); `edge-port` anchors are what keep a
+          // ribbon flush against its bar's face.
+          shape: {
+            pathType: 'bump-horizontal',
+            sourceAnchor: 'edge-port',
+            targetAnchor: 'edge-port',
+          },
+        },
+      },
+    },
+  },
+  layouts: { layout: { nodeWidth: 14, nodePadding: 12 } },
+  behaviours: { color: { enabled: false }, 'drag-node': { enabled: false } },
+};

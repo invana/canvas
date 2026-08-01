@@ -25,133 +25,125 @@
  * invanaCodeKg.clusters, invanaCodeKg.tour, invanaCodeKg.project
  */
 
-import type { GraphData } from '@invana/graph';
+import type { CanvasConfig } from '@invana/canvas';
+import type { GraphEdge, GraphNode } from '@invana/graph';
 
 import raw from './knowledge-graph.json';
 
-/** Node type — the source-entity kind. Drives shape + palette downstream. */
-export type InvanaCodeNodeLabel = 'file' | 'function' | 'class' | 'config' | 'document';
-
-/** Analyser's coarse complexity bucket for a node. */
-export type InvanaCodeComplexity = 'simple' | 'moderate' | 'complex';
-
-/** Edge type — the relation kind. */
-export type InvanaCodeEdgeLabel =
-  | 'imports'
-  | 'contains'
-  | 'exports'
-  | 'calls'
-  | 'inherits'
-  | 'configures'
-  | 'depends_on'
-  | 'documents'
-  | 'related';
-
-/** Node payload — everything that isn't `id` or `type`. */
-export interface InvanaCodeNodeProperties {
-  /** Short display name (`main.tsx`, `ErrorPage`, …). `id` stays the stable path-qualified key. */
-  readonly name: string;
-  /** Repo-relative source path the entity lives in. */
-  readonly filePath: string;
-  /** One-line natural-language description from the analyser. */
-  readonly summary: string;
-  /** Free-form classification tags (`entry-point`, `react`, `error-handling`, …). */
-  readonly tags: readonly string[];
-  /** Analyser complexity bucket. */
-  readonly complexity: InvanaCodeComplexity;
-  /** `[startLine, endLine]` for function/class nodes; absent for whole-file nodes. */
-  readonly lineRange?: readonly [number, number];
-  /** Language-specific caveat the analyser flagged, when present. */
-  readonly languageNotes?: string;
-  /** Owning cluster id (from {@link InvanaCodeCluster}), or `null` when ungrouped. */
-  readonly cluster: string | null;
-  /**
-   * Test-coverage percentage (0–100).
-   *
-   * **Synthetic.** The analyser emits no coverage, so this is derived offline by
-   * `scripts/add-code-health.mjs` from {@link InvanaCodeNodeProperties.complexity}
-   * plus a hash of the node id — deterministic, but *not* measured. Present only
-   * on `file` / `function` / `class` nodes; a `config` or `document` has none.
-   */
-  readonly coverage?: number;
-  /**
-   * Count of open errors attributed to the entity.
-   *
-   * **Synthetic**, from the same generator as {@link InvanaCodeNodeProperties.coverage}
-   * and correlated with it (thin coverage attracts errors), so the pair reads as
-   * a health signal rather than two unrelated numbers. Same node-label caveat.
-   */
-  readonly errors?: number;
-}
-
-/** Edge payload — relation strength + directionality metadata. */
-export interface InvanaCodeEdgeProperties {
-  /** Analyser-assigned edge weight in `[0.5, 1]`. */
-  readonly weight: number;
-  /** Relation directionality. The source graph only emits `'forward'`. */
-  readonly direction: 'forward';
-}
-
-/** A code entity: `{ id, type, data }`. */
-export interface InvanaCodeNode {
-  readonly id: string;
-  readonly type: InvanaCodeNodeLabel;
-  readonly data: InvanaCodeNodeProperties;
-}
-
-/** A typed relation: `{ id, type, source, target, data }`. */
-export interface InvanaCodeEdge {
-  readonly id: string;
-  readonly type: InvanaCodeEdgeLabel;
-  readonly source: string;
-  readonly target: string;
-  readonly data: InvanaCodeEdgeProperties;
-}
-
-/** An architectural cluster — a named group of node ids. */
-export interface InvanaCodeCluster {
-  readonly id: string;
-  readonly name: string;
-  readonly description: string;
-  readonly nodeIds: readonly string[];
-}
-
-/** A guided-tour step spotlighting a set of nodes with a teaching note. */
-export interface InvanaCodeTourStep {
-  readonly order: number;
-  readonly title: string;
-  readonly description: string;
-  readonly nodeIds: readonly string[];
-  readonly languageLesson?: string;
-}
-
-/** Project-level provenance for the analysed repository. */
-export interface InvanaCodeProject {
-  readonly name: string;
-  readonly languages: readonly string[];
-  readonly frameworks: readonly string[];
-  readonly description: string;
-  readonly analyzedAt?: string;
-  readonly gitCommitHash?: string;
-}
-
-/** The full dataset: graph + cluster metadata + tour + provenance. */
-export interface InvanaCodeKgData {
-  nodes: InvanaCodeNode[];
-  edges: InvanaCodeEdge[];
-  readonly clusters: readonly InvanaCodeCluster[];
-  readonly tour: readonly InvanaCodeTourStep[];
-  readonly project: InvanaCodeProject;
-}
-
-// The JSON is already valid `InvanaCodeKgData`; the cast only narrows the
+// The JSON is already valid `GraphData`; the cast only narrows the
 // string-literal unions (`type`, `complexity`, `direction`) that JSON import
 // widens to `string`. No per-record reshaping.
-export const invanaCodeKg = raw as unknown as InvanaCodeKgData;
+export const invanaCodeKg = raw as unknown as {
+  nodes: (GraphNode & {
+    type: 'file' | 'function' | 'class' | 'config' | 'document';
+    data: {
+      readonly name: string;
+      readonly filePath: string;
+      readonly summary: string;
+      readonly tags: readonly string[];
+      readonly complexity: 'simple' | 'moderate' | 'complex';
+      readonly lineRange?: readonly [number, number];
+      readonly languageNotes?: string;
+      readonly cluster: string | null;
+      readonly coverage?: number;
+      readonly errors?: number;
+    };
+  })[];
+  edges: (GraphEdge & {
+    type:
+      | 'imports'
+      | 'contains'
+      | 'exports'
+      | 'calls'
+      | 'inherits'
+      | 'configures'
+      | 'depends_on'
+      | 'documents'
+      | 'related';
+    data: { readonly weight: number; readonly direction: 'forward' };
+  })[];
+  readonly clusters: readonly {
+    readonly id: string;
+    readonly name: string;
+    readonly description: string;
+    readonly nodeIds: readonly string[];
+  }[];
+  readonly tour: readonly {
+    readonly order: number;
+    readonly title: string;
+    readonly description: string;
+    readonly nodeIds: readonly string[];
+    readonly languageLesson?: string;
+  }[];
+  readonly project: {
+    readonly name: string;
+    readonly languages: readonly string[];
+    readonly frameworks: readonly string[];
+    readonly description: string;
+    readonly analyzedAt?: string;
+    readonly gitCommitHash?: string;
+  };
+};
 
 /**
  * The graph half of {@link invanaCodeKg} as the engine-ready value `setData` /
  * `<GraphCanvasApp>` take. Same arrays — the clusters / tour / project metadata
  * is simply not part of `GraphData`.
  */
-export const data: GraphData = invanaCodeKg as unknown as GraphData;
+export const data = invanaCodeKg;
+
+/**
+ * Recommended look for the **Invana code knowledge graph**.
+ *
+ * 602 code entities across 8 architectural clusters. Colour-by-type partitions
+ * by entity kind (`file` · `function` · `class` · `config` · `document`) with no
+ * wiring; a consumer that would rather colour by *cluster* supplies its own
+ * `bgFill` resolver, since `data.cluster` can't be reached from serialisable
+ * settings.
+ *
+ * Edges are hairline and heavily faded — at 1,329 relations their aggregate is the
+ * picture — and hover dims everything off the 1-hop neighbourhood, which is the
+ * only practical way to read one file's dependencies out of the mass.
+ */
+export const settings: CanvasConfig = {
+  activeLayout: 'graph-force',
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: 'circle', radius: 4 },
+          bgStrokeWidth: 0,
+          showLabel: false,
+        },
+      },
+      edge: {
+        style: {
+          strokeColor: 0x94a3b8,
+          strokeWidth: 0.5,
+          strokeAlpha: 0.22,
+          arrowTargetShape: 'none',
+        },
+      },
+    },
+  },
+  layouts: {
+    'graph-force': {
+      charge: { strength: -140 },
+      link: { distance: 44 },
+      collide: {},
+      animate: false,
+    },
+  },
+  behaviours: {
+    color: { enabled: true, colorEdges: false },
+    hover: {
+      enabled: true,
+      state: 'highlighted',
+      inactiveState: 'dimmed',
+      degree: 1,
+      direction: 'both',
+    },
+    'click-select': { enabled: true, multiple: true, trigger: ['shift'] },
+  },
+};

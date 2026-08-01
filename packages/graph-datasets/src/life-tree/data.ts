@@ -18,55 +18,22 @@
  * graphLayer.setData(lifeTreeAsGraph());
  */
 
-import type { GraphData } from '@invana/graph';
+import type { CanvasConfig } from '@invana/canvas';
+import type { GraphEdge, GraphNode } from '@invana/graph';
 
 import { LIFE_TREE_NEWICK } from './newick';
 
 /** The three domains of life. Set on every node beneath a top-level clade. */
-export type LifeTreeKingdom = 'Bacteria' | 'Eukaryota' | 'Archaea';
+type LifeTreeKingdom = 'Bacteria' | 'Eukaryota' | 'Archaea';
 
 /** Node shape in the parsed Newick hierarchy. */
-export interface LifeTreeNode {
+interface LifeTreeNode {
   /** Clade or species name. May be empty for anonymous internal nodes. */
   name: string;
   /** Branch length to parent (substitution rate). `undefined` on the root. */
   length?: number;
   /** Child clades. Leaves omit this field. */
   children?: LifeTreeNode[];
-}
-
-/** A single node in the flat projection. */
-export interface LifeTreeGraphNode {
-  id: string;
-  data: {
-    /** Original Newick name. Empty for anonymous internal clades. */
-    name: string;
-    /** Depth from root. Root is 0. */
-    depth: number;
-    /** True iff this node has no children. */
-    isLeaf: boolean;
-    /** Branch length to parent (substitution rate). `undefined` on the root. */
-    length?: number;
-    /**
-     * Top-level domain of life. Inherited from the nearest ancestor whose name
-     * is `'Bacteria'`, `'Eukaryota'`, or `'Archaea'`. The root and its two
-     * pre-domain wrapper nodes have no kingdom.
-     */
-    kingdom?: LifeTreeKingdom;
-  };
-}
-
-/** A single parent→child edge in the flat projection. */
-export interface LifeTreeGraphEdge {
-  id: string;
-  source: string;
-  target: string;
-}
-
-/** Output of {@link lifeTreeAsGraph}. */
-export interface LifeTreeGraphData {
-  nodes: LifeTreeGraphNode[];
-  edges: LifeTreeGraphEdge[];
 }
 
 const KINGDOMS = new Set<string>(['Bacteria', 'Eukaryota', 'Archaea']);
@@ -147,9 +114,17 @@ export const lifeTreeHierarchy: LifeTreeNode = parseNewick(LIFE_TREE_NEWICK);
  * emitted id is unique while the readable path is preserved in the common
  * case.
  */
-export function lifeTreeAsGraph(): LifeTreeGraphData {
-  const nodes: LifeTreeGraphNode[] = [];
-  const edges: LifeTreeGraphEdge[] = [];
+export function lifeTreeAsGraph() {
+  const nodes: (GraphNode & {
+    data: {
+      name: string;
+      depth: number;
+      isLeaf: boolean;
+      length?: number;
+      kingdom?: 'Bacteria' | 'Eukaryota' | 'Archaea';
+    };
+  })[] = [];
+  const edges: GraphEdge[] = [];
   let edgeCounter = 0;
   let anonCounter = 0;
   const seen = new Set<string>();
@@ -223,4 +198,45 @@ export function lifeTreeAsGraph(): LifeTreeGraphData {
 }
 
 /** The flattened tree of life, engine-ready. Same value as {@link lifeTreeAsGraph}(). */
-export const data: GraphData = lifeTreeAsGraph() as unknown as GraphData;
+export const data = lifeTreeAsGraph();
+
+/**
+ * Recommended look for the **tree of life** phylogeny.
+ *
+ * A phylogeny is read radially — every clade fans from a common root — so this
+ * expects a hierarchical layout under the id `layout` in `radial-tree` mode. Branch
+ * lengths live on `data.length`; the layout, not these settings, decides whether to
+ * honour them.
+ */
+export const settings: CanvasConfig = {
+  activeLayout: 'layout',
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: 'circle', radius: 2 },
+          bgFill: 0x4ade80,
+          bgStrokeWidth: 0,
+          labelFontSize: 8,
+        },
+      },
+      edge: {
+        style: {
+          strokeColor: 0x94a3b8,
+          strokeWidth: 0.7,
+          strokeAlpha: 0.6,
+          arrowTargetShape: 'none',
+          // Polar path styles need the true centre angle, not a trimmed cut point.
+          shape: {
+            pathType: 'bump-radial',
+            sourceAnchor: 'center',
+            targetAnchor: 'center',
+          },
+        },
+      },
+    },
+  },
+  layouts: { layout: { mode: 'radial-tree', radius: 460 } },
+  behaviours: { color: { enabled: false } },
+};

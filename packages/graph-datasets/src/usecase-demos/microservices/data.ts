@@ -10,48 +10,16 @@
  * to see the styled states.
  */
 
-import type { GraphData } from '@invana/graph';
+import type { CanvasConfig } from '@invana/canvas';
+import type { GraphEdge, GraphNode } from '@invana/graph';
 
-/** Coarse architectural tier — drives icon choice in the story. */
-export type MicroservicesTier = 'gateway' | 'api' | 'logic' | 'data' | 'external';
-
-/** Health roll-up rendered as the node state-config name. */
-export type MicroservicesHealth = 'healthy' | 'degraded' | 'down';
-
-export interface MicroservicesNodeData {
-  readonly tier: MicroservicesTier;
-  readonly health: MicroservicesHealth;
-  /** Sustained requests-per-second at this service. */
-  readonly rps: number;
-}
-
-export interface MicroservicesEdgeData {
-  /** Sustained requests-per-second on this dependency edge. */
-  readonly rps: number;
-  /** Fraction in `[0, 1]`. Above ~0.05 the story flags the edge. */
-  readonly errorRate: number;
-}
-
-export interface MicroservicesNode {
-  readonly id: string;
-  /** The service tier — also on `data.tier`, so colour-by-type works unwired. */
-  readonly type: MicroservicesTier;
-  readonly data: MicroservicesNodeData;
-}
-
-export interface MicroservicesEdge {
-  readonly id: string;
-  readonly source: string;
-  readonly target: string;
-  readonly data: MicroservicesEdgeData;
-}
-
-export interface MicroservicesData {
-  nodes: MicroservicesNode[];
-  edges: MicroservicesEdge[];
-}
-
-const nodes: MicroservicesNode[] = [
+const nodes: (GraphNode & {
+  data: {
+    tier: 'gateway' | 'api' | 'logic' | 'data' | 'external';
+    health: 'healthy' | 'degraded' | 'down';
+    rps: number;
+  };
+})[] = [
   // ── Edge / gateway ──
   { id: 'api-gateway',           type: 'gateway', data: { tier: 'gateway',  health: 'healthy',  rps: 5800 } },
 
@@ -83,7 +51,7 @@ const nodes: MicroservicesNode[] = [
   { id: 'ses-mailer',            type: 'external', data: { tier: 'external', health: 'healthy',  rps:  340 } },
 ];
 
-const edges: MicroservicesEdge[] = [
+const edges: (GraphEdge & { data: { rps: number; errorRate: number } })[] = [
   // gateway fan-out
   { id: 'g1', source: 'api-gateway', target: 'auth-api',     data: { rps:  920, errorRate: 0.002 } },
   { id: 'g2', source: 'api-gateway', target: 'user-api',     data: { rps: 1200, errorRate: 0.004 } },
@@ -143,7 +111,63 @@ const edges: MicroservicesEdge[] = [
   { id: 'i2', source: 'inventory-service', target: 'queue',      data: { rps: 220, errorRate: 0.001 } },
 ];
 
-export const microservices: MicroservicesData = { nodes, edges };
+export const microservices = { nodes, edges };
 
 /** {@link microservices} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: GraphData = microservices as unknown as GraphData;
+export const data = microservices;
+
+/**
+ * Recommended look for the **microservices** topology.
+ *
+ * A service map, so services are rounded boxes with their name inside rather than
+ * dots — an operator reads names, not positions. Colour-by-type separates the tiers
+ * (gateway · api · worker · datastore …). Health and RPS live on `data` and drive
+ * per-node colour / edge width through a consumer-supplied resolver; these settings
+ * deliberately stop at what serialises.
+ */
+export const settings: CanvasConfig = {
+  activeLayout: 'graph-force',
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: 'rect', width: 132, height: 34, cornerRadius: 6 },
+          bgStrokeColor: 0xffffff,
+          bgStrokeWidth: 1.5,
+          labelColor: 0xffffff,
+          labelFontSize: 11,
+          labelFontWeight: 600,
+          labelPlacement: 'center',
+        },
+      },
+      edge: {
+        style: {
+          strokeColor: 0x94a3b8,
+          strokeWidth: 1.2,
+          strokeAlpha: 0.7,
+          arrowTargetShape: 'triangle',
+          arrowTargetSize: 7,
+        },
+      },
+    },
+  },
+  layouts: {
+    'graph-force': {
+      charge: { strength: -900 },
+      link: { distance: 160 },
+      collide: {},
+      animate: false,
+    },
+  },
+  behaviours: {
+    color: { enabled: true, colorEdges: false },
+    hover: {
+      enabled: true,
+      state: 'highlighted',
+      degree: 1,
+      direction: 'both',
+    },
+    'click-select': { enabled: true, multiple: true },
+  },
+};

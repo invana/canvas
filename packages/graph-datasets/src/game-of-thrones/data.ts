@@ -28,203 +28,100 @@
  * <GraphCanvasApp data={gameOfThrones} config={gameOfThronesSettings} />
  */
 
-import type { GraphData } from '@invana/graph';
+import type { CanvasConfig } from '@invana/canvas';
+import type { GraphEdge, GraphNode } from '@invana/graph';
 
 import raw from './game-of-thrones.json';
 
-/** Vertex label — the entity kind. Drives shape + palette downstream. */
-export type GotNodeLabel =
-  | 'character'
-  | 'house'
-  | 'location'
-  | 'subLocation'
-  | 'season'
-  | 'episode'
-  | 'scene';
-
-/** Edge label — the relation kind. */
-export type GotEdgeLabel =
-  | 'member_of'
-  | 'part_of'
-  | 'located_at'
-  | 'within'
-  | 'appears_in'
-  | 'co_appears_with';
-
-/** A named character appearing in at least one scene. */
-export interface GotCharacterProperties {
-  /** Display name (`Jon Snow`, `Tyrion Lannister`, …). */
-  readonly name: string;
-  /** Owning house name, or `null` when the character isn't in a group. */
-  readonly house: string | null;
-  /** Total screen time across all scenes, in whole seconds. */
-  readonly screenTimeSeconds: number;
-  /** Number of distinct scenes the character appears in. */
-  readonly sceneCount: number;
-  /** Number of distinct episodes the character appears in. */
-  readonly episodeCount: number;
-}
-
-/** A great house / faction / group (Stark, Targaryen, Night's Watch, …). */
-export interface GotHouseProperties {
-  readonly name: string;
-  /** Count of characters the source assigns to this house. */
-  readonly memberCount: number;
-}
-
-/** A top-level location (King's Landing, Winterfell, The Wall, …). */
-export interface GotLocationProperties {
-  readonly name: string;
-  /** Number of scenes set at this location. */
-  readonly sceneCount: number;
-}
-
-/** A sub-location within one or more locations (Castle Black, Red Keep, …). */
-export interface GotSubLocationProperties {
-  readonly name: string;
-}
-
-/** A season of the show. */
-export interface GotSeasonProperties {
-  readonly seasonNum: number;
-  /** Number of episodes in the season. */
-  readonly episodeCount: number;
-}
-
-/** An episode, with IMDb link + air date carried through from the source. */
-export interface GotEpisodeProperties {
-  readonly seasonNum: number;
-  readonly episodeNum: number;
-  readonly title: string;
-  readonly airDate: string | null;
-  /** IMDb title path (`/title/tt1480055/`), or `null`. */
-  readonly link: string | null;
-  readonly description: string | null;
-  readonly sceneCount: number;
-}
-
-/** A single scene — the atomic unit of the source transcripts. */
-export interface GotSceneProperties {
-  readonly seasonNum: number;
-  readonly episodeNum: number;
-  /** 0-based position of the scene within its episode. */
-  readonly sceneIndex: number;
-  /** `h:mm:ss` start timecode within the episode. */
-  readonly start: string;
-  /** `h:mm:ss` end timecode within the episode. */
-  readonly end: string;
-  /** Scene length in whole seconds (`|end − start|`). */
-  readonly durationSeconds: number;
-  readonly location: string | null;
-  readonly subLocation: string | null;
-  /** Number of distinct characters in the scene. */
-  readonly characterCount: number;
-}
-
-/** Node property bag — discriminated by the vertex {@link GotNodeLabel}. */
-export type GotNodeProperties =
-  | GotCharacterProperties
-  | GotHouseProperties
-  | GotLocationProperties
-  | GotSubLocationProperties
-  | GotSeasonProperties
-  | GotEpisodeProperties
-  | GotSceneProperties;
-
-/** Weight carried by a `co_appears_with` edge; `{}` for the structural kinds. */
-export interface GotCoAppearanceProperties {
-  /** Number of scenes the two characters share. */
-  readonly sharedScenes: number;
-  /** Combined screen time of their shared scenes, in whole seconds. */
-  readonly sharedSeconds: number;
-}
-
-/** Edge property bag — `co_appears_with` carries weight; others are empty. */
-export type GotEdgeProperties = GotCoAppearanceProperties | Record<string, never>;
-
-/** A GoT entity `{ id, type, data }`. */
-export interface GotNode {
-  readonly id: string;
-  readonly type: GotNodeLabel;
-  readonly data: GotNodeProperties;
-}
-
-/** A typed relation `{ id, type, source, target, data }`. */
-export interface GotEdge {
-  readonly id: string;
-  readonly type: GotEdgeLabel;
-  readonly source: string;
-  readonly target: string;
-  readonly data: GotEdgeProperties;
-}
-
-/** One vertex kind in the {@link GotSchema} — its label, tally, and property types. */
-export interface GotNodeTypeSchema {
-  readonly type: GotNodeLabel;
-  /** Number of vertices carrying this label. */
-  readonly count: number;
-  /**
-   * Property key → primitive type string, unioned across every vertex of this
-   * kind (`'string'`, `'number'`, `'string | null'`, …).
-   */
-  readonly properties: Readonly<Record<string, string>>;
-}
-
-/** A permitted `{ source → target }` vertex pairing for a relation kind. */
-export interface GotEndpointSchema {
-  readonly source: GotNodeLabel;
-  readonly target: GotNodeLabel;
-}
-
-/** One relation kind in the {@link GotSchema} — its endpoints, tally, and property types. */
-export interface GotEdgeTypeSchema {
-  readonly type: GotEdgeLabel;
-  /** Number of edges carrying this label. */
-  readonly count: number;
-  /** `false` for symmetric networks (`co_appears_with`); `true` otherwise. */
-  readonly directed: boolean;
-  /** Every `{ source, target }` label-pair observed for this relation. */
-  readonly endpoints: readonly GotEndpointSchema[];
-  /** Property key → primitive type string; `{}` for the structural relations. */
-  readonly properties: Readonly<Record<string, string>>;
-}
-
-/**
- * The graph schema (meta-graph / ontology) — the vertex and relation kinds the
- * dataset contains, each with counts, property types, and (for edges) endpoint
- * constraints. Derived by the generator from the emitted data, so it always
- * matches {@link GameOfThronesData.nodes} / `.edges`.
- */
-export interface GotSchema {
-  readonly nodeTypes: readonly GotNodeTypeSchema[];
-  readonly edgeTypes: readonly GotEdgeTypeSchema[];
-}
-
-/** Self-describing provenance + counts baked into the JSON by the generator. */
-export interface GotMeta {
-  readonly name: string;
-  readonly description: string;
-  /** The site that publishes the underlying data. */
-  readonly source: string;
-  /** The GitHub repo the raw data is fetched from. */
-  readonly sourceRepo: string;
-  readonly nodeCount: number;
-  readonly edgeCount: number;
-  /** The graph's meta-graph — vertex/relation kinds, their property types + endpoints. */
-  readonly schema: GotSchema;
-}
-
-/** The full dataset: provenance + the property graph. */
-export interface GameOfThronesData {
-  readonly meta: GotMeta;
-  nodes: GotNode[];
-  edges: GotEdge[];
-}
-
-// The JSON is already valid `GameOfThronesData`; the cast only narrows the
+// The JSON is already valid `GraphData`; the cast only narrows the
 // string-literal unions (`label`) that JSON import widens to `string`.
 // No per-record reshaping.
-export const gameOfThrones = raw as unknown as GameOfThronesData;
+export const gameOfThrones = raw as unknown as {
+  /** Dataset provenance + the derived schema the LayersViewPanel story reads. */
+  readonly meta: {
+    readonly name: string;
+    readonly description: string;
+    readonly source: string;
+    readonly sourceRepo: string;
+    readonly nodeCount: number;
+    readonly edgeCount: number;
+    readonly schema: {
+      readonly nodeTypes: readonly {
+        readonly type: string;
+        readonly count: number;
+        readonly properties: Readonly<Record<string, string>>;
+      }[];
+      readonly edgeTypes: readonly {
+        readonly type: string;
+        readonly count: number;
+        readonly endpoints: readonly {
+          readonly source: string;
+          readonly target: string;
+        }[];
+        readonly properties: Readonly<Record<string, string>>;
+      }[];
+    };
+  };
+  /** `data` varies by `type` — every kind carries a `name`, the rest is per-kind. */
+  nodes: (GraphNode & {
+    type: 'character' | 'house' | 'location' | 'subLocation' | 'season' | 'episode' | 'scene';
+    data: { readonly name?: string } & Readonly<Record<string, unknown>>;
+  })[];
+  edges: (GraphEdge & {
+    type: 'member_of' | 'part_of' | 'located_at' | 'within' | 'appears_in' | 'co_appears_with';
+    data: { readonly sharedScenes?: number; readonly sharedSeconds?: number };
+  })[];
+};
 
 /** {@link gameOfThrones} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: GraphData = gameOfThrones as unknown as GraphData;
+export const data = gameOfThrones;
+
+/**
+ * Recommended look for the **Game of Thrones** multi-entity graph.
+ *
+ * Six entity types across ~5k nodes and ~29k edges. Colour-by-type stays on —
+ * it's the only thing that makes a graph this size legible at a glance — but edges
+ * drop to a hairline and hover dims everything off the 1-hop neighbourhood, which
+ * is how you read an individual character out of the mass.
+ */
+export const settings: CanvasConfig = {
+  activeLayout: 'graph-force',
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: 'circle', radius: 3.5 },
+          bgStrokeWidth: 0,
+          showLabel: false,
+        },
+      },
+      edge: {
+        style: {
+          strokeColor: 0x94a3b8,
+          strokeWidth: 0.4,
+          strokeAlpha: 0.18,
+          arrowTargetShape: 'none',
+        },
+      },
+    },
+  },
+  layouts: {
+    'graph-force': {
+      charge: { strength: -90 },
+      link: {},
+      collide: {},
+      animate: false,
+    },
+  },
+  behaviours: {
+    color: { enabled: true, colorEdges: false },
+    hover: {
+      enabled: true,
+      state: 'highlighted',
+      inactiveState: 'dimmed',
+      degree: 1,
+      direction: 'both',
+    },
+  },
+};

@@ -14,54 +14,17 @@
  * graphLayer.setData(flareAsGraph());
  */
 
-import type { GraphData } from '@invana/graph';
+import type { CanvasConfig } from '@invana/canvas';
+import type { GraphEdge, GraphNode } from '@invana/graph';
 
 import flareJson from './flare.json';
 
 /** Node shape in the original Flare hierarchy. Leaves carry `value`; inner
  *  nodes carry `children`. The root has neither field guaranteed. */
-export interface FlareNode {
+interface FlareNode {
   name: string;
   value?: number;
   children?: FlareNode[];
-}
-
-/** A single node in the flat projection. The id is the slash-joined path
- *  from the root (e.g. `flare/analytics/cluster/AgglomerativeCluster`) so
- *  it survives duplicate `name` values across branches. */
-export interface FlareGraphNode {
-  id: string;
-  data: {
-    /** Original `name` field. Convenient for labels once those land. */
-    name: string;
-    /** Depth from root. Root is 0. */
-    depth: number;
-    /** True iff this node has no children. */
-    isLeaf: boolean;
-    /** Original `value` field, if present (only on leaves). */
-    value?: number;
-    /**
-     * Top-level category — the depth-1 ancestor's name (e.g. `analytics`,
-     * `animate`, `data`, ...). Depth-1 nodes carry their own name here;
-     * the root (depth 0) carries `undefined`. Drives categorical colour
-     * in the bubble-chart layout, since every leaf inherits the same
-     * `group` as every other leaf under the same top-level branch.
-     */
-    group?: string;
-  };
-}
-
-/** A single parent→child edge in the flat projection. */
-export interface FlareGraphEdge {
-  id: string;
-  source: string;
-  target: string;
-}
-
-/** Output of {@link flareAsGraph}. */
-export interface FlareGraphData {
-  nodes: FlareGraphNode[];
-  edges: FlareGraphEdge[];
 }
 
 /** The original Flare hierarchy in its nested form. */
@@ -72,9 +35,17 @@ export const flareHierarchy: FlareNode = flareJson as FlareNode;
  * `GraphLayer.setData`. BFS-traverses the tree, assigning slash-joined path
  * ids so duplicate names across branches stay distinct.
  */
-export function flareAsGraph(): FlareGraphData {
-  const nodes: FlareGraphNode[] = [];
-  const edges: FlareGraphEdge[] = [];
+export function flareAsGraph() {
+  const nodes: (GraphNode & {
+    data: {
+      name: string;
+      depth: number;
+      isLeaf: boolean;
+      value?: number;
+      group?: string;
+    };
+  })[] = [];
+  const edges: GraphEdge[] = [];
   let edgeCounter = 0;
 
   interface Pending {
@@ -133,4 +104,39 @@ export function flareAsGraph(): FlareGraphData {
 }
 
 /** The flattened Flare hierarchy, engine-ready. Same value as {@link flareAsGraph}(). */
-export const data: GraphData = flareAsGraph() as unknown as GraphData;
+export const data = flareAsGraph();
+
+/**
+ * Recommended look for the **Flare** package hierarchy.
+ *
+ * The flattened Flare tree is the canonical d3-hierarchy fixture, so these
+ * settings assume a hierarchical layout the consumer mounts under the id `layout`
+ * (`D3HierarchyLayout` in `tree` mode is the obvious pick) rather than the bundle's
+ * force sim. Leaves and branches are the same mark — depth is carried by position.
+ */
+export const settings: CanvasConfig = {
+  activeLayout: 'layout',
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: 'circle', radius: 3.5 },
+          bgFill: 0x818cf8,
+          bgStrokeWidth: 0,
+          labelFontSize: 9,
+        },
+      },
+      edge: {
+        style: {
+          strokeColor: 0x94a3b8,
+          strokeWidth: 0.8,
+          strokeAlpha: 0.5,
+          arrowTargetShape: 'none',
+        },
+      },
+    },
+  },
+  layouts: { layout: { mode: 'tree', nodeSize: [12, 160] } },
+  behaviours: { color: { enabled: false } },
+};

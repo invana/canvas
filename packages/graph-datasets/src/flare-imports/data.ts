@@ -29,28 +29,36 @@
  * // ... then swap to importEdges and render with `pathType: 'bundle'`.
  */
 
-import type { GraphData } from '@invana/graph';
+import type { CanvasConfig } from '@invana/canvas';
+import type { GraphData, GraphEdge, GraphNode } from '@invana/graph';
 
-import { flareAsGraph, type FlareGraphNode, type FlareGraphEdge } from '../flare/data';
+import { flareAsGraph } from '../flare/data';
 
-/** A synthetic leaf→leaf import edge. */
-export interface FlareImportEdge {
-  id: string;
-  source: string;
-  target: string;
+/**
+ * The payload flare's node records carry (see `../flare/data`). Read through
+ * {@link payload} — node `data` is the engine's opaque bag, so the shape is
+ * asserted here, at the point of use, rather than exported as a dataset type.
+ */
+interface FlareNodePayload {
+  readonly name: string;
+  readonly depth: number;
+  readonly isLeaf: boolean;
+  readonly group?: string;
 }
 
+const payload = (n: GraphNode): FlareNodePayload => n.data as FlareNodePayload;
+
 /** Output of {@link flareImportsAsGraph}. */
-export interface FlareImportsGraphData {
-  nodes: FlareGraphNode[];
+interface FlareImportsGraphData {
+  nodes: (GraphNode & { data: FlareNodePayload })[];
   /** Parent→child edges from the flare hierarchy. Feed these to the layout. */
-  treeEdges: FlareGraphEdge[];
+  treeEdges: GraphEdge[];
   /** Synthetic leaf→leaf import edges. Render these as bundled curves. */
-  importEdges: FlareImportEdge[];
+  importEdges: GraphEdge[];
 }
 
 /** Options for {@link flareImportsAsGraph}. */
-export interface FlareImportsOptions {
+interface FlareImportsOptions {
   /** Minimum import out-degree per leaf. Default `1`. */
   readonly minImportsPerLeaf?: number;
   /** Maximum import out-degree per leaf. Default `5`. */
@@ -81,9 +89,9 @@ export function flareImportsAsGraph(opts: FlareImportsOptions = {}): FlareImport
   const leavesByGroup = new Map<string, string[]>();
   const allLeaves: string[] = [];
   for (const n of nodes) {
-    if (!n.data.isLeaf) continue;
+    if (!payload(n).isLeaf) continue;
     allLeaves.push(n.id);
-    const g = n.data.group ?? '';
+    const g = payload(n).group ?? '';
     let bucket = leavesByGroup.get(g);
     if (!bucket) {
       bucket = [];
@@ -92,7 +100,7 @@ export function flareImportsAsGraph(opts: FlareImportsOptions = {}): FlareImport
     bucket.push(n.id);
   }
 
-  const importEdges: FlareImportEdge[] = [];
+  const importEdges: GraphEdge[] = [];
   let edgeCounter = 0;
 
   for (const sourceId of allLeaves) {
@@ -100,7 +108,9 @@ export function flareImportsAsGraph(opts: FlareImportsOptions = {}): FlareImport
     // across reloads even though we never persist it.
     const rng = mulberry32(hashString(sourceId));
     const sourceGroup =
-      nodes.find((n) => n.id === sourceId)?.data.group ?? '';
+      nodes.find((n) => n.id === sourceId)?.data === undefined
+        ? ''
+        : (payload(nodes.find((n) => n.id === sourceId)!).group ?? '');
     const intraBucket = leavesByGroup.get(sourceGroup) ?? [];
 
     const targetCount = minOut + Math.floor(rng() * (maxOut - minOut + 1));
@@ -160,5 +170,63 @@ function mulberry32(seed: number): () => number {
   };
 }
 
-/** The Flare import network, engine-ready. Same value as {@link flareImportsAsGraph}(). */
-export const data: GraphData = flareImportsAsGraph() as unknown as GraphData;
+/**
+ * The Flare **import network**, engine-ready — the picture {@link settings} is
+ * written for. The generator returns the tree edges and the import edges
+ * separately (a bundled-curve story needs the tree only for the layout), so this
+ * is the import half; call {@link flareImportsAsGraph} for both.
+ */
+export const data: GraphData = (() => {
+  const { nodes, importEdges } = flareImportsAsGraph();
+  return { nodes, edges: importEdges };
+})();
+
+/**
+ * Recommended look for the **Flare import network**.
+ *
+ * Class-to-class imports are a dense directed network, so the edges are hairline
+ * and heavily faded — the shape comes from their aggregate, not any single link.
+ * Hover lights the 1-hop neighbourhood, which is the only practical way to read an
+ * individual class's dependencies at this density.
+ */
+export const settings: CanvasConfig = {
+  activeLayout: 'graph-force',
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: 'circle', radius: 3.5 },
+          bgFill: 0xf472b6,
+          bgStrokeWidth: 0,
+        },
+      },
+      edge: {
+        style: {
+          strokeColor: 0x94a3b8,
+          strokeWidth: 0.5,
+          strokeAlpha: 0.25,
+          arrowTargetShape: 'none',
+        },
+      },
+    },
+  },
+  layouts: {
+    'graph-force': {
+      charge: { strength: -120 },
+      link: { distance: 36 },
+      collide: {},
+      animate: false,
+    },
+  },
+  behaviours: {
+    color: { enabled: false },
+    hover: {
+      enabled: true,
+      state: 'highlighted',
+      inactiveState: 'dimmed',
+      degree: 1,
+      direction: 'both',
+    },
+  },
+};

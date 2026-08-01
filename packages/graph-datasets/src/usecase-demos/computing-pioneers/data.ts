@@ -17,59 +17,9 @@
  * <GraphCanvasApp data={computingPioneers} config={computingPioneersSettings} />
  */
 
-import type { GraphData } from '@invana/graph';
+import type { CanvasConfig } from '@invana/canvas';
 
-/** Node type — the entity kind. Drives which node structure renders it. */
-export type ComputingPioneersNodeType = 'Person' | 'Organization' | 'Concept';
-
-/** Edge type — how a person relates to an idea or an institution. */
-export type ComputingPioneersEdgeType =
-  | 'DESIGNED'
-  | 'DESCRIBED'
-  | 'CREATED'
-  | 'INVENTED'
-  | 'STUDIED_AT'
-  | 'WORKED_AT'
-  | 'INFLUENCED';
-
-/**
- * Node payload. Only `name` is common to all three types — `role` / `avatar`
- * are `Person`-only and `founded` is `Organization`-only, so a template binds
- * whichever subset its type uses.
- */
-export interface ComputingPioneersNodeData {
-  /** Display name — the one field every label carries. */
-  readonly name: string;
-  /** `Person` only — what they're known as professionally. */
-  readonly role?: string;
-  /** `Person` only — an avatar **id** (`'ada'`), not a URL. */
-  readonly avatar?: string;
-  /** `Organization` only — founding note, pre-formatted (`'est. 1209'`). */
-  readonly founded?: string;
-}
-
-/** A pioneer, institution or idea. */
-export interface ComputingPioneersNode {
-  readonly id: string;
-  readonly type: ComputingPioneersNodeType;
-  readonly data: ComputingPioneersNodeData;
-}
-
-/** A relation. The type carries the whole meaning, so there's no payload. */
-export interface ComputingPioneersEdge {
-  readonly id: string;
-  readonly type: ComputingPioneersEdgeType;
-  readonly source: string;
-  readonly target: string;
-}
-
-/** The full dataset. */
-export interface ComputingPioneersData {
-  nodes: ComputingPioneersNode[];
-  edges: ComputingPioneersEdge[];
-}
-
-export const computingPioneers: ComputingPioneersData = {
+export const computingPioneers = {
   nodes: [
     { id: 'ada', type: 'Person', data: { name: 'Ada Lovelace', role: 'Mathematician', avatar: 'ada' } },
     { id: 'alan', type: 'Person', data: { name: 'Alan Turing', role: 'Computer Scientist', avatar: 'alan' } },
@@ -94,4 +44,34 @@ export const computingPioneers: ComputingPioneersData = {
 };
 
 /** {@link computingPioneers} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: GraphData = computingPioneers as unknown as GraphData;
+export const data = computingPioneers;
+
+/**
+ * Recommended look for the **computing pioneers** graph.
+ *
+ * Ten nodes, so everything can be labelled and generously spaced. The three types
+ * are meant to render as *different node structures* (an id card, an elliptical
+ * badge, a plain circle), which is a template registry a consumer supplies —
+ * colour-by-type is therefore **off**, since those templates own their own colour
+ * and a palette would repaint them.
+ *
+ * The force numbers are the load-bearing part: cards are wide, so charge, link
+ * distance and collision are all scaled up to keep them from overlapping.
+ */
+export const settings: CanvasConfig = {
+  activeLayout: 'graph-force',
+  fitOnLoad: true,
+  layouts: {
+    'graph-force': {
+      charge: { strength: -1400 },
+      link: { distance: 220 },
+      collide: { radius: 130 },
+      animate: false,
+    },
+  },
+  behaviours: {
+    color: { enabled: false },
+    hover: { enabled: true, state: 'highlighted', degree: 1 },
+    'click-select': { enabled: true, multiple: true },
+  },
+};

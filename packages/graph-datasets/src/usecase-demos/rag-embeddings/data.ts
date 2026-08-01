@@ -11,10 +11,11 @@
  * `DensityContourFillLayer` to bring the cluster topology forward.
  */
 
-import type { GraphData } from '@invana/graph';
+import type { CanvasConfig } from '@invana/canvas';
+import type { GraphNode } from '@invana/graph';
 
 const CLUSTER_NAMES = ['auth', 'billing', 'search', 'infra', 'ml'] as const;
-export type RagEmbeddingsCluster = (typeof CLUSTER_NAMES)[number];
+type RagEmbeddingsCluster = (typeof CLUSTER_NAMES)[number];
 
 const SNIPPETS: Record<RagEmbeddingsCluster, readonly string[]> = {
   auth: [
@@ -115,24 +116,6 @@ const CENTERS: readonly ClusterCenter[] = [
 
 const OUTLIER_COUNT = 22;
 
-export interface RagEmbeddingsNodeData {
-  readonly cluster: RagEmbeddingsCluster;
-  readonly text: string;
-  readonly source: string;
-}
-
-export interface RagEmbeddingsNode {
-  readonly id: string;
-  /** The chunk's cluster — also on `data.cluster`. */
-  readonly type: RagEmbeddingsCluster;
-  readonly position: { readonly x: number; readonly y: number };
-  readonly data: RagEmbeddingsNodeData;
-}
-
-export interface RagEmbeddingsData {
-  nodes: RagEmbeddingsNode[];
-}
-
 /** Mulberry32 — same PRNG used in flare-imports. */
 function mulberry32(seed: number): () => number {
   let a = seed >>> 0;
@@ -152,9 +135,11 @@ function gauss(rng: () => number): number {
   return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
 }
 
-function buildDataset(): RagEmbeddingsData {
+function buildDataset() {
   const rng = mulberry32(0x52414708); // 'RAG\x08'
-  const nodes: RagEmbeddingsNode[] = [];
+  const nodes: (GraphNode & {
+    data: { cluster: RagEmbeddingsCluster; text: string; source: string };
+  })[] = [];
   let i = 0;
 
   for (const c of CENTERS) {
@@ -190,10 +175,42 @@ function buildDataset(): RagEmbeddingsData {
     });
   }
 
-  return { nodes };
+  // A projection scatter: the positions are the data, there are no links.
+  return { nodes, edges: [] };
 }
 
-export const ragEmbeddings: RagEmbeddingsData = buildDataset();
+export const ragEmbeddings = buildDataset();
 
 /** {@link ragEmbeddings} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: GraphData = ragEmbeddings as unknown as GraphData;
+export const data = ragEmbeddings;
+
+/**
+ * Recommended look for the **RAG embedding** projection.
+ *
+ * An embedding projection: every chunk's `position` **is** the data, so there is
+ * **no layout** (`activeLayout: ''`) and dragging is off — moving a point would be
+ * lying about the embedding. Marks are small translucent dots so overlapping
+ * regions read as density, which is what a contour overlay then picks up.
+ * Colour-by-type separates the semantic clusters.
+ */
+export const settings: CanvasConfig = {
+  activeLayout: '',
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: 'circle', radius: 3.5 },
+          bgStrokeWidth: 0,
+          bgAlpha: 0.85,
+          showLabel: false,
+        },
+      },
+    },
+  },
+  behaviours: {
+    color: { enabled: true, colorEdges: false },
+    'drag-node': { enabled: false },
+    hover: { enabled: true, state: 'highlighted', degree: 0 },
+  },
+};

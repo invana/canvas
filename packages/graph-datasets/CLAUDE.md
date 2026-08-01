@@ -2,17 +2,21 @@
 
 Example graph datasets used by storybook stories and tests.
 
-## A dataset is a folder: `data.ts` + `settings.ts`
+## A dataset is one `data.ts` exporting two halves
 
 Every dataset lives in its own folder under `src/` (kebab-case, e.g. `les-miserables/`,
-`usecase-demos/star-schema/`) and ships **two halves**:
+`usecase-demos/star-schema/`) and ships **one module** with **two exports**:
 
 ```
 src/<dataset>/
-├── data.ts       → export const data: GraphData      — what to draw
-├── settings.ts   → export const settings: CanvasConfig — how it should look
+├── data.ts       → export const data: GraphData       — what to draw
+│                   export const settings: CanvasConfig — how it should look
 └── <dataset>.json (optional — the on-disk serialisation for JSON-backed sets)
 ```
+
+**There is no `settings.ts`.** The look was never separable from the data it was
+written for — a settings module that can't see the graph it styles is two files to
+open for one dataset — so both live in `data.ts`, data first, settings last.
 
 Both halves are typed with the **engine's own types, imported directly** — data is
 `@invana/graph`'s `GraphData`, settings are `@invana/canvas`'s `CanvasConfig`.
@@ -27,10 +31,41 @@ import { lesMiserables, lesMiserablesSettings } from '@invana/graph-datasets';
 ```
 
 The barrels (`src/index.ts`, `src/usecase-demos/index.ts`) re-export both halves
-per dataset under matching names — the data under the dataset's own name, the
-settings as `<name>Settings`. Two large graphs (`game-of-thrones`,
-`wikipedia-dataviz`) keep their own subpath entries, with an `index.ts` in the
-folder re-exporting `./data` + `./settings`, so they stay out of the main bundle.
+per dataset from `./<dataset>/data` under matching names — the data under the
+dataset's own name, the settings as `<name>Settings`. Two large graphs
+(`game-of-thrones`, `wikipedia-dataviz`) keep their own subpath entries, with an
+`index.ts` in the folder re-exporting `./data`, so they stay out of the main bundle.
+
+## No per-dataset record types
+
+**A dataset exports values, never types.** There is no `GameOfThronesData`, no
+`GotMeta`, no `CoraNodeData` — that zoo existed only to describe payloads, cost a
+type per dataset per record kind to maintain, and forced consumers into a type
+import before they could read a field.
+
+Where a payload *is* read by consumers, say so **inline on the exported value** —
+one structural annotation, nothing importable:
+
+```ts
+export const lesMiserables: {
+  /** `data.group` is the co-occurrence cluster (0–10). */
+  nodes: (GraphNode & { data: { group: number } })[];
+  edges: (GraphEdge & { data: { value: number } })[];
+} = { nodes, edges };
+```
+
+`GraphNode & { data: P }` (rather than `GraphNode<P>`) is deliberate: it keeps every
+engine field *and* makes `data` **required**, so a consumer writes `n.data.group`
+with no guard. Consumers get the shape by inference; nothing to import, nothing to
+keep in sync. Rules:
+
+- **Object literals, not named types.** A local `type`/`interface` is fine when a
+  union would otherwise repeat (see `cora`'s `CoraSubject`) or when a builder needs
+  to read a payload back (`citations`' `PaperPayload`) — but it stays **unexported**.
+- **Annotate only what's read.** A payload no story touches needs no annotation;
+  leave it as the engine's `data?: unknown`.
+- **`satisfies GraphData`** on a hand-authored dataset value keeps the narrow
+  inferred type while still checking it against the engine's shape.
 
 ## `data.ts` — engine-ready, authored in the final shape
 
@@ -68,9 +103,10 @@ interface GraphEdge<D = unknown> { id: string; type?: string; source: string; ta
 ### JSON-backed datasets
 
 Store the data in the JSON **already in the final shape**. The `.ts` module is
-then a thin typed view — `import raw …; export const x = raw as unknown as XData;`
-— with **no `.map()` reshaping**. The exported interfaces ARE the on-disk
-contract; the JSON is its serialisation. If the upstream source is shaped
+then a thin typed view — `import raw …; export const x = raw as unknown as {…};`,
+the cast narrowing the string-literal unions a JSON import widens to `string` —
+with **no `.map()` reshaping**. That inline annotation IS the on-disk contract;
+the JSON is its serialisation. If the upstream source is shaped
 differently, transform it **once, offline** in `scripts/` (`prepare-cora.mjs`,
 `prepare-got.mjs`, `to-canvas-data.mjs`), never on import. `invanaCodeKg` is the
 reference example.
@@ -79,9 +115,9 @@ Any synthetic field stamped onto a real dataset must say so in its TSDoc —
 `invanaCodeKg`'s `coverage` / `errors` (from `scripts/add-code-health.mjs`) are
 derived, not measured, and are marked as such.
 
-## `settings.ts` — the recommended look, as pure JSON
+## `settings` — the recommended look, as pure JSON
 
-Two rules keep the settings portable:
+Exported from the bottom of the dataset's `data.ts`. Two rules keep it portable:
 
 1. **Keyed by the `<GraphCanvasApp>` bundle's ids** — layers `background` /
    `graph`, layouts `graph-force`, behaviours `pan` · `wheel` · `drag-node` ·
@@ -101,11 +137,12 @@ running a solver over it would destroy the picture.
 
 ## Adding a dataset
 
-1. `src/<name>/data.ts` — typed interfaces + the value, engine-ready.
-2. `src/<name>/settings.ts` — the recommended look.
-3. Re-export both from the owning barrel (`src/index.ts` or
-   `src/usecase-demos/index.ts`): the data under its own name, the settings as
-   `<name>Settings`.
-4. A new subpath entry (only for a graph big enough to warrant one) also needs an
+1. `src/<name>/data.ts` — the engine-ready value (`data`, plus a legacy-named
+   alias if consumers already use one) and then `settings`, in that order. No
+   exported types; annotate a payload inline only where a consumer reads it.
+2. Re-export both from the owning barrel (`src/index.ts` or
+   `src/usecase-demos/index.ts`), both from `./<name>/data`: the data under its
+   own name, the settings as `<name>Settings`.
+3. A new subpath entry (only for a graph big enough to warrant one) also needs an
    `index.ts` in the folder, a `tsup.config.ts` entry, and a `package.json`
    `exports` entry.

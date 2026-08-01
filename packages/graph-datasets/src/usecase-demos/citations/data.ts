@@ -17,7 +17,8 @@
  *     preferential attachment.
  */
 
-import type { GraphData } from '@invana/graph';
+import type { CanvasConfig } from '@invana/canvas';
+import type { GraphEdge, GraphNode } from '@invana/graph';
 
 const TOPICS = [
   'transformers',
@@ -26,78 +27,92 @@ const TOPICS = [
   'graph-neural-networks',
   'vision-language',
 ] as const;
-export type CitationsTopic = (typeof TOPICS)[number];
+type CitationsTopic = (typeof TOPICS)[number];
 
 const TOPIC_SLUGS: Record<CitationsTopic, string> = {
-  'transformers':           'tfm',
-  'diffusion-models':       'diff',
+  transformers: 'tfm',
+  'diffusion-models': 'diff',
   'reinforcement-learning': 'rl',
-  'graph-neural-networks':  'gnn',
-  'vision-language':        'vlm',
+  'graph-neural-networks': 'gnn',
+  'vision-language': 'vlm',
 };
 
 const TOPIC_TITLE_FRAGS: Record<CitationsTopic, readonly string[]> = {
-  'transformers': [
-    'Scaling Laws', 'Mixture-of-Experts', 'Long-Context Attention', 'Rotary Embeddings',
-    'Distilled Encoders', 'Sparse Attention', 'KV-Cache Compression', 'Speculative Decoding',
-    'Pre-training Recipes', 'Tokenizer Studies', 'Position Bias', 'Layer-Norm Variants',
+  transformers: [
+    'Scaling Laws',
+    'Mixture-of-Experts',
+    'Long-Context Attention',
+    'Rotary Embeddings',
+    'Distilled Encoders',
+    'Sparse Attention',
+    'KV-Cache Compression',
+    'Speculative Decoding',
+    'Pre-training Recipes',
+    'Tokenizer Studies',
+    'Position Bias',
+    'Layer-Norm Variants',
   ],
   'diffusion-models': [
-    'Latent Diffusion', 'Score Matching', 'Consistency Models', 'Flow Matching',
-    'Classifier-Free Guidance', 'DDIM Sampling', 'Cascaded Resolutions', 'Conditional Priors',
-    'Video Diffusion', 'Audio Diffusion', 'Inverse Problems', 'Training Stability',
+    'Latent Diffusion',
+    'Score Matching',
+    'Consistency Models',
+    'Flow Matching',
+    'Classifier-Free Guidance',
+    'DDIM Sampling',
+    'Cascaded Resolutions',
+    'Conditional Priors',
+    'Video Diffusion',
+    'Audio Diffusion',
+    'Inverse Problems',
+    'Training Stability',
   ],
   'reinforcement-learning': [
-    'Offline RL', 'Direct Preference Optimization', 'Reward Modelling', 'World Models',
-    'Decision Transformer', 'Exploration Bonuses', 'Hierarchical Policies', 'PPO Variants',
-    'Constitutional AI', 'Multi-Agent Coordination', 'Sample Efficiency', 'Self-Play',
+    'Offline RL',
+    'Direct Preference Optimization',
+    'Reward Modelling',
+    'World Models',
+    'Decision Transformer',
+    'Exploration Bonuses',
+    'Hierarchical Policies',
+    'PPO Variants',
+    'Constitutional AI',
+    'Multi-Agent Coordination',
+    'Sample Efficiency',
+    'Self-Play',
   ],
   'graph-neural-networks': [
-    'Message Passing', 'Spectral Filters', 'Graph Transformers', 'Heterogeneous Graphs',
-    'Subgraph Sampling', 'Equivariant GNNs', 'Knowledge-Graph Reasoning', 'Link Prediction',
-    'GraphSAGE', 'Attention Pooling', 'Over-smoothing', 'Scalability',
+    'Message Passing',
+    'Spectral Filters',
+    'Graph Transformers',
+    'Heterogeneous Graphs',
+    'Subgraph Sampling',
+    'Equivariant GNNs',
+    'Knowledge-Graph Reasoning',
+    'Link Prediction',
+    'GraphSAGE',
+    'Attention Pooling',
+    'Over-smoothing',
+    'Scalability',
   ],
   'vision-language': [
-    'CLIP Variants', 'Visual Question Answering', 'Image Captioning', 'Multimodal Pre-training',
-    'Region Grounding', 'Document Understanding', 'Video-Language', 'Open-Vocabulary Detection',
-    'Vision Transformers', 'Cross-Modal Alignment', 'Compositional Reasoning', 'Few-Shot Vision',
+    'CLIP Variants',
+    'Visual Question Answering',
+    'Image Captioning',
+    'Multimodal Pre-training',
+    'Region Grounding',
+    'Document Understanding',
+    'Video-Language',
+    'Open-Vocabulary Detection',
+    'Vision Transformers',
+    'Cross-Modal Alignment',
+    'Compositional Reasoning',
+    'Few-Shot Vision',
   ],
 };
 
 const PAPERS_PER_TOPIC = 30;
 const YEAR_MIN = 2018;
 const YEAR_MAX = 2025;
-
-export interface CitationsNodeData {
-  readonly topic: CitationsTopic;
-  readonly title: string;
-  readonly year: number;
-  readonly citationsCount: number;
-}
-
-export interface CitationsEdgeData {
-  /** Reserved for future predicates (`cites`, `extends`, `refutes`, ...). */
-  readonly kind: 'cites';
-}
-
-export interface CitationsNode {
-  readonly id: string;
-  /** The paper's topic — also on `data.topic`, so colour-by-type works unwired. */
-  readonly type: CitationsTopic;
-  readonly data: CitationsNodeData;
-}
-
-export interface CitationsEdge {
-  readonly id: string;
-  readonly source: string;
-  readonly target: string;
-  readonly data: CitationsEdgeData;
-}
-
-export interface CitationsData {
-  nodes: CitationsNode[];
-  edges: CitationsEdge[];
-}
 
 /** Mulberry32 PRNG seeded for snapshot stability. */
 function mulberry32(seed: number): () => number {
@@ -117,9 +132,23 @@ function gauss(rng: () => number): number {
   return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
 }
 
-function buildDataset(): CitationsData {
+/**
+ * The payload each paper node carries. Read through {@link paper} — `data` is
+ * the engine's opaque bag, so the shape is asserted at the point of use rather
+ * than exported as a dataset type.
+ */
+interface PaperPayload {
+  readonly topic: CitationsTopic;
+  readonly title: string;
+  readonly year: number;
+  readonly citationsCount: number;
+}
+
+const paper = (n: GraphNode): PaperPayload => n.data as PaperPayload;
+
+function buildDataset() {
   const rng = mulberry32(0xc17a710);
-  const nodes: CitationsNode[] = [];
+  const nodes: (GraphNode & { data: PaperPayload })[] = [];
 
   for (const topic of TOPICS) {
     const frags = TOPIC_TITLE_FRAGS[topic];
@@ -145,11 +174,11 @@ function buildDataset(): CitationsData {
   // papers (year ≤ this paper's year). 70% intra-topic, 30% inter-topic.
   // Within the chosen pool we sample with weights ∝ citationsCount so
   // hubs accumulate more incoming edges → preferential attachment.
-  const byTopic = new Map<CitationsTopic, CitationsNode[]>();
+  const byTopic = new Map<CitationsTopic, (GraphNode & { data: PaperPayload })[]>();
   for (const t of TOPICS) byTopic.set(t, []);
-  for (const n of nodes) byTopic.get(n.data.topic)!.push(n);
+  for (const n of nodes) byTopic.get(paper(n).topic)!.push(n);
 
-  const edges: CitationsEdge[] = [];
+  const edges: (GraphEdge & { data: { kind: 'cites' } })[] = [];
   let edgeCounter = 0;
 
   for (const src of nodes) {
@@ -157,20 +186,21 @@ function buildDataset(): CitationsData {
     const used = new Set<string>([src.id]);
     for (let k = 0; k < fanout; k++) {
       const intra = rng() < 0.7;
-      const pool = intra
-        ? byTopic.get(src.data.topic)!
-        : nodes;
+      const pool = intra ? byTopic.get(paper(src).topic)! : nodes;
       // Restrict to strictly-older papers for citation realism.
-      const candidates = pool.filter((n) => n.data.year < src.data.year && !used.has(n.id));
+      const candidates = pool.filter((n) => paper(n).year < paper(src).year && !used.has(n.id));
       if (candidates.length === 0) continue;
 
       // Weighted sample by citationsCount + 1.
-      const totalW = candidates.reduce((acc, n) => acc + n.data.citationsCount + 1, 0);
+      const totalW = candidates.reduce((acc, n) => acc + paper(n).citationsCount + 1, 0);
       let r = rng() * totalW;
-      let target: CitationsNode | undefined;
+      let target: GraphNode | undefined;
       for (const c of candidates) {
-        r -= c.data.citationsCount + 1;
-        if (r <= 0) { target = c; break; }
+        r -= paper(c).citationsCount + 1;
+        if (r <= 0) {
+          target = c;
+          break;
+        }
       }
       if (!target) target = candidates[candidates.length - 1]!;
       used.add(target.id);
@@ -186,7 +216,58 @@ function buildDataset(): CitationsData {
   return { nodes, edges };
 }
 
-export const citations: CitationsData = buildDataset();
+export const citations = buildDataset();
 
 /** {@link citations} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: GraphData = citations as unknown as GraphData;
+export const data = citations;
+
+/**
+ * Recommended look for the **citations** paper network.
+ *
+ * Preferential attachment means a handful of hubs and a long tail, so the marks
+ * stay uniform and let the layout express the degree distribution. Colour-by-type
+ * maps the research topics (each paper's `type` is its topic). Edges point from the
+ * citing paper to the older one it cites, so arrowheads stay on.
+ */
+export const settings: CanvasConfig = {
+  activeLayout: 'graph-force',
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: 'circle', radius: 5 },
+          bgStrokeWidth: 0,
+          showLabel: false,
+        },
+      },
+      edge: {
+        style: {
+          strokeColor: 0x94a3b8,
+          strokeWidth: 0.6,
+          strokeAlpha: 0.3,
+          arrowTargetShape: 'triangle',
+          arrowTargetSize: 5,
+        },
+      },
+    },
+  },
+  layouts: {
+    'graph-force': {
+      charge: { strength: -160 },
+      link: { distance: 50 },
+      collide: {},
+      animate: false,
+    },
+  },
+  behaviours: {
+    color: { enabled: true, colorEdges: false },
+    hover: {
+      enabled: true,
+      state: 'highlighted',
+      inactiveState: 'dimmed',
+      degree: 1,
+      direction: 'both',
+    },
+  },
+};

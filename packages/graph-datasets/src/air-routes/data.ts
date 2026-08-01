@@ -22,12 +22,12 @@
  */
 
 import airportsData from './airports.json';
-import type { GraphData } from '@invana/graph';
+import type { CanvasConfig } from '@invana/canvas';
 
 import landData from './land-50m.json';
 
 /** A single airport point. */
-export interface Airport {
+interface Airport {
   /** Airport name from the source CSV (e.g. `"London Heathrow Airport"`). */
   name: string;
   /** Longitude in degrees, WGS-84. */
@@ -42,7 +42,7 @@ export interface Airport {
  * consumers either pass this straight to `topojson-client.feature(...)`
  * or pluck `.objects.land` directly.
  */
-export interface LandTopology {
+interface LandTopology {
   type: 'Topology';
   bbox?: [number, number, number, number];
   transform?: { scale: [number, number]; translate: [number, number] };
@@ -82,7 +82,35 @@ export const landTopology: LandTopology = landData as unknown as LandTopology;
  * `data`, and it's the consumer's map projection that turns them into world
  * coordinates.
  */
-export const data: GraphData = {
+export const data = {
   nodes: airports.map((airport, i) => ({ id: `ap-${i}`, type: 'airport', data: airport })),
   edges: [],
+};
+
+/**
+ * Recommended look for the **air routes** airport set.
+ *
+ * Airports are geography, not topology: every node's real position comes from
+ * projecting `data.lng` / `data.lat` through whichever map the consumer mounts, so
+ * there is **no layout** (`activeLayout: ''`) and dragging is off — a moved airport
+ * is a wrong airport. Marks are small and uniform because 2,980 of them overlap
+ * heavily at world zoom.
+ */
+export const settings: CanvasConfig = {
+  activeLayout: '',
+  fitOnLoad: false,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: 'circle', radius: 2.5 },
+          bgFill: 0xf97316,
+          bgStrokeColor: 0xffffff,
+          bgStrokeWidth: 0.5,
+          showLabel: false,
+        },
+      },
+    },
+  },
+  behaviours: { color: { enabled: false }, 'drag-node': { enabled: false } },
 };

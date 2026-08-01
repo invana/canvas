@@ -22,27 +22,10 @@
  * const data = generateTwitterActivity({ users: 24, tweets: 50 });
  */
 
-import type { GraphData } from '@invana/graph';
+import type { CanvasConfig } from '@invana/canvas';
+import type { GraphEdge, GraphNode } from '@invana/graph';
 
-export type TwitterNodeLabel = 'User' | 'Tweet' | 'Comment' | 'Hashtag' | 'Retweet';
-
-export interface TwitterNode {
-  id: string;
-  type: TwitterNodeLabel;
-  data: Record<string, string | number | boolean>;
-}
-export interface TwitterEdge {
-  id: string;
-  type: string;
-  source: string;
-  target: string;
-}
-export interface TwitterGraphData {
-  nodes: TwitterNode[];
-  edges: TwitterEdge[];
-}
-
-export interface TwitterDatasetOptions {
+interface TwitterDatasetOptions {
   users?: number;
   tweets?: number;
   comments?: number;
@@ -117,14 +100,16 @@ function shortTime(ts: number): string {
 }
 
 /** Build the mocked Twitter activity graph (~100 nodes by default). */
-export function generateTwitterActivity(opts: TwitterDatasetOptions = {}): TwitterGraphData {
+export function generateTwitterActivity(opts: TwitterDatasetOptions = {}) {
   const { users = 18, tweets = 34, comments = 26, hashtags = 12, retweets = 10, seed = 42 } = opts;
   const rnd = mulberry32(seed);
   const int = (n: number) => Math.floor(rnd() * n);
   const pick = <T>(arr: readonly T[]): T => arr[int(arr.length)]!;
 
-  const nodes: TwitterNode[] = [];
-  const edges: TwitterEdge[] = [];
+  const nodes: (GraphNode & {
+    data: Record<string, string | number | boolean>;
+  })[] = [];
+  const edges: GraphEdge[] = [];
   let eid = 0;
   const link = (source: string, target: string, type: string): void => {
     edges.push({ id: `e${eid++}`, type, source, target });
@@ -159,14 +144,22 @@ export function generateTwitterActivity(opts: TwitterDatasetOptions = {}): Twitt
   }
 
   const propsOf = (id: string) =>
-    nodes.find((n) => n.id === id)!.data as { name: string; handle: string; avatar: string };
+    nodes.find((n) => n.id === id)!.data as {
+      name: string;
+      handle: string;
+      avatar: string;
+    };
 
   // Hashtags
   const tagIds: string[] = [];
   for (let i = 0; i < hashtags; i++) {
     const tag = TAGS[i % TAGS.length]!;
     const id = `h${i}`;
-    nodes.push({ id, type: 'Hashtag', data: { tag, label: `#${tag}`, uses: 1 + int(60) } });
+    nodes.push({
+      id,
+      type: 'Hashtag',
+      data: { tag, label: `#${tag}`, uses: 1 + int(60) },
+    });
     tagIds.push(id);
   }
 
@@ -213,7 +206,13 @@ export function generateTwitterActivity(opts: TwitterDatasetOptions = {}): Twitt
     nodes.push({
       id,
       type: 'Comment',
-      data: { text: pick(COMMENTS), author: a.name, handle: a.handle, time: shortTime(ts), ts },
+      data: {
+        text: pick(COMMENTS),
+        author: a.name,
+        handle: a.handle,
+        time: shortTime(ts),
+        ts,
+      },
     });
     link(authorId, id, 'WROTE');
     link(id, tweet, 'REPLY_TO');
@@ -246,7 +245,52 @@ export function generateTwitterActivity(opts: TwitterDatasetOptions = {}): Twitt
 }
 
 /** Default ~100-node Twitter activity graph (seed 42). */
-export const twitterActivity: TwitterGraphData = generateTwitterActivity();
+export const twitterActivity = generateTwitterActivity();
 
 /** {@link twitterActivity} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: GraphData = twitterActivity as unknown as GraphData;
+export const data = twitterActivity;
+
+/**
+ * Recommended look for the **Twitter activity** graph.
+ *
+ * Five node types (`User` · `Tweet` · `Comment` · `Hashtag` · `Retweet`) and eight
+ * edge types, so this is one of the few datasets where colour-by-type earns its
+ * keep — it's left **on**, and the palette does the categorising with no per-node
+ * wiring. Edges get arrowheads because direction is meaningful here (who posted
+ * what, who replied to whom).
+ */
+export const settings: CanvasConfig = {
+  activeLayout: 'graph-force',
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: 'circle', radius: 7 },
+          bgStrokeWidth: 1.5,
+          labelFontSize: 10,
+        },
+      },
+      edge: {
+        style: {
+          strokeWidth: 1,
+          strokeAlpha: 0.6,
+          arrowTargetShape: 'triangle',
+          arrowTargetSize: 6,
+        },
+      },
+    },
+  },
+  layouts: {
+    'graph-force': {
+      charge: { strength: -260 },
+      link: { distance: 70 },
+      collide: {},
+      animate: false,
+    },
+  },
+  behaviours: {
+    color: { enabled: true, colorEdges: false },
+    hover: { enabled: true, state: 'highlighted', degree: 1 },
+  },
+};

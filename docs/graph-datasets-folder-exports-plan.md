@@ -4,6 +4,10 @@
 **Package:** `packages/graph-datasets` (`@invana/graph-datasets`).
 **Predecessor:** commit `b3c0cb3` *"a dataset is a folder — data.ts + settings.ts"*, which
 created the folder layout this plan finishes.
+**Superseded in part (2026-08-01):** `settings.ts` has since been **folded into `data.ts`**
+(one module per dataset, exporting `data` + `settings`) and *all* per-dataset record types
+are deleted — see §4 and §10 Q3. Sections below that still show a separate `settings.ts` or
+a `*Data` / `*Node` type describe the pre-merge state.
 
 ---
 
@@ -14,9 +18,9 @@ Make every dataset folder a **self-contained module with a fixed export contract
 ```
 src/<dataset>/
 ├── data.ts       export const data: GraphData           ← the only value name
+│                 export const settings: CanvasConfig      ← merged in, 2026-08-01
 │                 export function <name>(opts): GraphData ← optional generator
-├── settings.ts   export const settings: CanvasConfig      ← the only value name
-├── index.ts      export * from './data'; export * from './settings';
+├── index.ts      export * from './data';
 └── <extras>.ts   hierarchy / topology / meta / traces — the non-graph payloads
 ```
 
@@ -40,7 +44,8 @@ and turns each folder into its own package entry point.
 | Dataset folders | **24** — 13 at `src/`, 11 under `src/usecase-demos/` |
 | `data.ts` exporting `data: GraphData` | 24 / 24 ✅ |
 | …of which are a laundered re-cast | **23 / 24** — `export const data: GraphData = <legacy> as unknown as GraphData` (only `air-routes` authors `data` directly) |
-| `settings.ts` exporting `settings` | 24 / 24 ✅, typed `CanvasConfig` (a local alias of `@invana/canvas`'s `CanvasConfig`) |
+| `settings` | 24 / 24 ✅, typed `CanvasConfig` — **now exported from `data.ts`; `settings.ts` is gone (2026-08-01)** |
+| Per-dataset record types | **none** — deleted 2026-08-01; payloads that consumers read are annotated inline on the exported value (`GraphNode & { data: { … } }`), nothing importable |
 | Public surface | flat aliased barrels — `src/index.ts` (`lesMiserables`, `lesMiserablesSettings`, …) + `src/usecase-demos/index.ts`, plus 2 subpath entries (`game-of-thrones`, `wikipedia-dataviz`) |
 | `index.ts` inside a folder | 2 / 24 (only the two subpath datasets) |
 | Consumers | **63 storybook files**, ~120 import sites; plus generated TypeDoc pages under `apps/docs/api/graph-datasets/` |
@@ -60,7 +65,7 @@ them is benign:
 |---|---|---|
 | D1 | **Per-dataset subpath imports** — `@invana/graph-datasets/<dataset>` resolves to `{ data, settings }` | uniform names, no aliasing, tree-shakes by construction; all 63 consumer files change |
 | D2 | **Delete the legacy value exports** (`lesMiserables`, `cora`, `flareAsGraph`, …) | `data` is the only value; the laundering casts go with them. Breaking; storybook migrates in the same change |
-| D3 | **Non-graph payloads get their own file in the folder** (`hierarchy.ts`, `topology.ts`, `meta.ts`, `traces.ts`) | `data.ts` stays strictly about the graph; d3-hierarchy / sankey / maplibre stories keep their inputs |
+| D3 | **Non-graph payloads get their own file in the folder** (`hierarchy.ts`, `topology.ts`, `meta.ts`, `traces.ts`) | `data.ts` stays strictly about the graph; d3-hierarchy / sankey / maplibre stories keep their inputs. ⚠️ Re-weigh this against the 2026-08-01 merge, which moved *settings* the other way — one file per dataset may beat four |
 | D4 | **`data.ts` may also export a generator** — but it must be typed to return `GraphData` | the parameterised builders (`generateLattice`, `generateRandomTree`, `generateTwitterActivity`, `flareImportsAsGraph`) stay put; their bespoke `*GraphData` return types are replaced by `GraphData` |
 | D5 | **Both halves use the engine's own types, imported directly** — `GraphData` from `@invana/graph`, `CanvasConfig` from `@invana/canvas` | no in-package aliases for either half |
 
@@ -86,9 +91,9 @@ Both surface the moment the double cast is removed, and both are shipping today:
 
 | File | Problem |
 |---|---|
-| `src/flare-imports/data.ts:164` | `FlareImportsGraphData` is `{ nodes, treeEdges, importEdges }` — it has **no `edges` field**. `data` is cast to `GraphData` anyway, so `data.edges` is `undefined` at runtime. Any consumer passing it to `setData` gets an edgeless graph. |
-| `src/usecase-demos/rag-embeddings/data.ts:199` | `RagEmbeddingsData` is `{ nodes }` only — same story, `data.edges` is `undefined`. |
-| `src/random-tree/data.ts:33` | All 119 generated edges are `{ source, target }` with **no `id`** — the package's own authoring rule ("`id` is required on edges too… don't synthesise them at runtime") is violated by the generator. Stamp `e0`, `e1`, … in the generator. |
+| ~~`src/flare-imports/data.ts`~~ | ✅ **fixed 2026-08-01** — the generator still returns `{ nodes, treeEdges, importEdges }`, but `data` is now a real `GraphData` (`{ nodes, edges: importEdges }` — the import network its settings are written for). |
+| ~~`src/usecase-demos/rag-embeddings/data.ts`~~ | ✅ **fixed 2026-08-01** — the builder returns `{ nodes, edges: [] }`; it's a projection scatter with no edges by design. |
+| ~~`src/random-tree/data.ts`~~ | ✅ **fixed 2026-08-01** — the generator emits engine-ready records (`{ id: '0' }`, `{ id: 'e0', source, target }`), so no consumer maps it any more. |
 
 Fix as part of the migration:
 

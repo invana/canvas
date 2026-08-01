@@ -31,7 +31,8 @@
  * graphLayer.setData(h1b2019AsGraph());
  */
 
-import type { GraphData } from '@invana/graph';
+import type { CanvasConfig } from '@invana/canvas';
+import type { GraphEdge, GraphNode } from '@invana/graph';
 
 import h1bJson from './h1b2019.json';
 
@@ -40,49 +41,10 @@ import h1bJson from './h1b2019.json';
  * {@link FlareNode}: leaves carry `value`, inner nodes (root, states, cities)
  * carry `children`.
  */
-export interface H1B2019Node {
+interface H1B2019Node {
   name: string;
   value?: number;
   children?: H1B2019Node[];
-}
-
-/**
- * A single node in the flat projection. The id is the slash-joined path
- * from the root (e.g. `H-1B 2019/CA/SAN JOSE/GOOGLE LLC`) so duplicate
- * employer / city names across states stay distinct.
- */
-export interface H1B2019GraphNode {
-  id: string;
-  data: {
-    /** Original `name` field — state abbreviation, city name, or employer. */
-    name: string;
-    /** Depth from root. Root = 0, state = 1, city = 2, employer = 3. */
-    depth: number;
-    /** True iff this node has no children (i.e. an employer leaf). */
-    isLeaf: boolean;
-    /** Sum of petition counts for this leaf. Inner nodes omit it. */
-    value?: number;
-    /**
-     * Top-level category — the depth-1 ancestor's name (the U.S. state
-     * abbreviation, e.g. `CA`, `NY`, `TX`). Depth-1 nodes carry their own
-     * name here; the root (depth 0) carries `undefined`. Drives categorical
-     * colouring by state for bubble-chart-style renders.
-     */
-    group?: string;
-  };
-}
-
-/** A single parent→child edge in the flat projection. */
-export interface H1B2019GraphEdge {
-  id: string;
-  source: string;
-  target: string;
-}
-
-/** Output of {@link h1b2019AsGraph}. */
-export interface H1B2019GraphData {
-  nodes: H1B2019GraphNode[];
-  edges: H1B2019GraphEdge[];
 }
 
 /** The H-1B 2019 hierarchy in its nested form. */
@@ -97,9 +59,17 @@ export const h1b2019Hierarchy: H1B2019Node = h1bJson as H1B2019Node;
  * each call is cheap (one pass over a 1 MB JSON), so consumers can re-call
  * after filtering settings change without caching.
  */
-export function h1b2019AsGraph(): H1B2019GraphData {
-  const nodes: H1B2019GraphNode[] = [];
-  const edges: H1B2019GraphEdge[] = [];
+export function h1b2019AsGraph() {
+  const nodes: (GraphNode & {
+    data: {
+      name: string;
+      depth: number;
+      isLeaf: boolean;
+      value?: number;
+      group?: string;
+    };
+  })[] = [];
+  const edges: GraphEdge[] = [];
   let edgeCounter = 0;
 
   interface Pending {
@@ -156,4 +126,39 @@ export function h1b2019AsGraph(): H1B2019GraphData {
 }
 
 /** The flattened H-1B hierarchy, engine-ready. Same value as {@link h1b2019AsGraph}(). */
-export const data: GraphData = h1b2019AsGraph() as unknown as GraphData;
+export const data = h1b2019AsGraph();
+
+/**
+ * Recommended look for the **H-1B 2019** state → city → employer hierarchy.
+ *
+ * Four levels and thousands of leaves, so this expects a hierarchical layout
+ * mounted under the id `layout` — radial or pack, where the leaf count is the point.
+ * Marks stay tiny and labels off by default; a consumer that wants employer names
+ * turns them on for the depth it cares about.
+ */
+export const settings: CanvasConfig = {
+  activeLayout: 'layout',
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: 'circle', radius: 2.5 },
+          bgFill: 0xfbbf24,
+          bgStrokeWidth: 0,
+          showLabel: false,
+        },
+      },
+      edge: {
+        style: {
+          strokeColor: 0x94a3b8,
+          strokeWidth: 0.6,
+          strokeAlpha: 0.35,
+          arrowTargetShape: 'none',
+        },
+      },
+    },
+  },
+  layouts: { layout: { mode: 'radial-tree', radius: 520 } },
+  behaviours: { color: { enabled: false } },
+};

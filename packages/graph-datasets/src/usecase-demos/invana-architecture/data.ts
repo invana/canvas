@@ -29,64 +29,9 @@
  * <GraphCanvasApp data={invanaArchitecture} config={invanaArchitectureSettings} />
  */
 
-import type { GraphData } from '@invana/graph';
+import type { CanvasConfig } from '@invana/canvas';
 
-/** Node type — a group frame, or an item inside one. */
-export type InvanaArchitectureNodeType = 'stage' | 'box';
-
-/** Edge type — every edge is a step or a feedback link in the same loop. */
-export type InvanaArchitectureEdgeType = 'flow';
-
-/** Node payload — the box footprint the consumer's `shape` resolver reads. */
-export interface InvanaArchitectureNodeData {
-  /** `box` only — authored width, sized to the caption. */
-  readonly width?: number;
-  /** `box` only — authored height, sized to the caption's line count. */
-  readonly height?: number;
-}
-
-/** Edge payload — the flow annotation and whether the link is a side path. */
-export interface InvanaArchitectureEdgeData {
-  /** Flow annotation drawn on the edge (`'3 · grounded context'`), when it has one. */
-  readonly caption?: string;
-  /**
-   * `true` for the feedback / side links (recall, logging, approval, undo) that
-   * the source diagram draws dashed; `false` for the solid numbered path.
-   */
-  readonly dashed: boolean;
-}
-
-/** A stage frame or a component box. */
-export interface InvanaArchitectureNode {
-  readonly id: string;
-  readonly type: InvanaArchitectureNodeType;
-  /** Authored **top-left** corner — the arrangement is the diagram. */
-  readonly position: { readonly x: number; readonly y: number };
-  /** The caption drawn on the node. May contain `\n` for a multi-line box. */
-  readonly style: { readonly labelText: string };
-  /** `box` only — id of the `stage` node that frames it. */
-  readonly parentId?: string;
-  /** `stage` only — names the tint overlay the consumer's settings define. */
-  readonly states?: readonly string[];
-  readonly data?: InvanaArchitectureNodeData;
-}
-
-/** One arrow of the learning loop. */
-export interface InvanaArchitectureEdge {
-  readonly id: string;
-  readonly type: InvanaArchitectureEdgeType;
-  readonly source: string;
-  readonly target: string;
-  readonly data: InvanaArchitectureEdgeData;
-}
-
-/** The full dataset. */
-export interface InvanaArchitectureData {
-  nodes: InvanaArchitectureNode[];
-  edges: InvanaArchitectureEdge[];
-}
-
-export const invanaArchitecture: InvanaArchitectureData = {
+export const invanaArchitecture = {
   nodes: [
     // ── Stage frames ──────────────────────────────────────────────────────
     { id: 'simulation', type: 'stage', states: ['stage'], position: { x: 1202, y: 84 }, style: { labelText: '5 · Simulation Layer — weigh it first' } },
@@ -202,4 +147,62 @@ export const invanaArchitecture: InvanaArchitectureData = {
 };
 
 /** {@link invanaArchitecture} as the engine-ready value `<GraphCanvasApp data>` takes. */
-export const data: GraphData = invanaArchitecture as unknown as GraphData;
+export const data = invanaArchitecture;
+
+/**
+ * Recommended look for the **Invana end-to-end architecture** diagram.
+ *
+ * The arrangement *is* the diagram — every node ships its authored position — so
+ * there is **no layout** (`activeLayout: ''`). Colour-by-type is off for the same
+ * reason: the stage tints are the diagram's own palette, carried by the `stage`
+ * state overlay a consumer defines (each stage node names it in `states`).
+ *
+ * Boxes are plain rects sized from `data.width` / `data.height` via a consumer
+ * `shape` resolver; what's here is everything about the look that serialises —
+ * hairline grey arrows, small centred captions, and the label pill behind a flow
+ * annotation.
+ */
+export const settings: CanvasConfig = {
+  activeLayout: '',
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          bgFill: 0xffffff,
+          bgStrokeColor: 0x9ca3af,
+          bgStrokeWidth: 1,
+          labelAlign: 'center',
+          labelColor: 0x111827,
+          labelFontSize: 11,
+          labelLineHeight: 14,
+        },
+      },
+      edge: {
+        style: {
+          strokeColor: 0x9ca3af,
+          strokeWidth: 1,
+          arrowTargetShape: 'triangle',
+          arrowTargetSize: 7,
+          shape: {
+            pathType: 'smooth',
+            sourceAnchor: 'boundary',
+            targetAnchor: 'boundary',
+          },
+          labelColor: 0x3f3f46,
+          labelFontSize: 10,
+          labelAutoRotate: false,
+          labelBackgroundFill: 0xffffff,
+          labelBackgroundPadding: 2,
+        },
+      },
+    },
+  },
+  behaviours: {
+    color: { enabled: false },
+    hover: { enabled: true, state: 'highlighted', degree: 1 },
+    // `collapse` and `click-select` both claim `pointer+click`; selection stands
+    // down so the stage +/- toggles win.
+    'click-select': { enabled: false },
+  },
+};
