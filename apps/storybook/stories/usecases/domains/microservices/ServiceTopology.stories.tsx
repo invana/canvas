@@ -35,12 +35,17 @@ import type { CanvasConfig } from '@invana/canvas';
 import type { EdgeDecorationSpec, EdgeStyle, GraphCanvas, GraphData, GraphLayer } from '@invana/graph';
 import {
   microservices,
-  type MicroservicesEdgeData,
-  type MicroservicesHealth,
-  type MicroservicesTier,
 } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider } from '@invana/themes';
 import { Activity, Map, Moon, Settings, Sun } from 'lucide-react';
+
+/** The service-topology vocabulary this story colours + sizes by. */
+type MicroservicesTier = 'gateway' | 'api' | 'logic' | 'data' | 'external';
+type MicroservicesHealth = 'healthy' | 'degraded' | 'down';
+interface MicroservicesEdgeData {
+  readonly rps: number;
+  readonly errorRate: number;
+}
 
 const meta: Meta = { title: 'usecases/domains/microservices/ServiceTopology' };
 export default meta;

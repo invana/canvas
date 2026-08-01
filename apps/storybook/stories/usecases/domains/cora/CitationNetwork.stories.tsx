@@ -33,9 +33,22 @@ import {
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData, GraphNode } from '@invana/graph';
-import { cora, type CoraNodeData, type CoraSubject } from '@invana/graph-datasets/usecase-demos';
+import { cora } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider } from '@invana/themes';
 import { Layers, Moon, Settings, Sun } from 'lucide-react';
+
+/** Cora's subject areas + the payload each paper node carries. */
+type CoraSubject =
+  | 'Neural_Networks'
+  | 'Rule_Learning'
+  | 'Reinforcement_Learning'
+  | 'Probabilistic_Methods'
+  | 'Theory'
+  | 'Genetic_Algorithms'
+  | 'Case_Based';
+interface CoraNodeData {
+  readonly subject: CoraSubject;
+}
 
 const meta: Meta = { title: 'usecases/domains/cora/CitationNetwork' };
 export default meta;

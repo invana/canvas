@@ -34,11 +34,13 @@ import type { CanvasConfig } from '@invana/canvas';
 import type { EdgeDecorationSpec, EdgeStyle, GraphCanvas, GraphData, NodeShapeOptions } from '@invana/graph';
 import {
   agentTrace,
-  type AgentTraceNodeKind,
-  type AgentTraceStatus,
 } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider } from '@invana/themes';
 import { Moon, Settings, Sun } from 'lucide-react';
+
+/** The trace vocabulary this story colours + shapes by. */
+type AgentTraceNodeKind = 'llm' | 'tool' | 'decision' | 'output';
+type AgentTraceStatus = 'success' | 'error' | 'pending';
 
 const meta: Meta = { title: 'usecases/domains/llm-agent-trace/AgentTrace' };
 export default meta;

@@ -35,9 +35,14 @@ import {
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData, GraphNode } from '@invana/graph';
-import { cora, type CoraNodeData } from '@invana/graph-datasets/usecase-demos';
+import { cora } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider } from '@invana/themes';
 import { Moon, Settings, Sun } from 'lucide-react';
+
+/** The payload each Cora paper node carries. */
+interface CoraNodeData {
+  readonly subject: string;
+}
 
 const meta: Meta = { title: 'usecases/domains/cora/SubjectBundle' };
 export default meta;

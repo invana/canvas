@@ -54,23 +54,19 @@ export const RandomTreeStory: Story = {
     const buildGraphData = (): { nodes: GraphNode<TreeNodeData>[]; edges: GraphEdge[] } => {
       const tree = generateRandomTree(settings.nodeCount);
 
-      // Depth via BFS from root (index 0). The dataset doesn't carry depth,
-      // but the topology is a tree so a single pass over edges is enough.
-      const depths = new Array<number>(tree.nodes.length).fill(0);
-      for (const e of tree.edges) depths[e.target] = depths[e.source]! + 1;
+      // Depth via BFS from the root (id '0'). The dataset doesn't carry depth,
+      // but the topology is a tree so a single pass over edges is enough — the
+      // generator emits ids in parent-before-child order.
+      const depths = new Map<string, number>(tree.nodes.map((n) => [n.id, 0]));
+      for (const e of tree.edges) depths.set(e.target, (depths.get(e.source) ?? 0) + 1);
       maxDepth = 0;
-      for (const d of depths) if (d > maxDepth) maxDepth = d;
+      for (const d of depths.values()) if (d > maxDepth) maxDepth = d;
 
       const nodes: GraphNode<TreeNodeData>[] = tree.nodes.map((n) => ({
-        id: String(n.index),
-        data: { depth: depths[n.index]! },
+        id: n.id,
+        data: { depth: depths.get(n.id)! },
       }));
-      const edges: GraphEdge[] = tree.edges.map((e, i) => ({
-        id: `e${i}`,
-        source: String(e.source),
-        target: String(e.target),
-      }));
-      return { nodes, edges };
+      return { nodes, edges: tree.edges };
     };
 
     // ── Canvas setup ─────────────────────────────────────────────────────

@@ -69,10 +69,13 @@ import {
   type NodeStylingTemplate,
   type NodeTypeBinding,
 } from '@invana/graph';
-import { invanaCodeKg, type InvanaCodeNodeLabel } from '@invana/graph-datasets/usecase-demos';
+import { invanaCodeKg } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider } from '@invana/themes';
 import { TabbedPanel } from '@invana/ui';
 import { Moon, Sun } from 'lucide-react';
+
+/** The code-KG node kinds this story styles. */
+type InvanaCodeNodeLabel = 'file' | 'function' | 'class' | 'config' | 'document';
 
 const meta: Meta = { title: 'usecases/apps/StyleDesigner' };
 export default meta;

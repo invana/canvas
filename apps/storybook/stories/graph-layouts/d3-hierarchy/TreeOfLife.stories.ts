@@ -12,7 +12,10 @@ import {
   type D3HierarchyLayoutOptions,
 } from '@invana/graph-layout-d3-hierarchy';
 import type { LayoutOptions } from '@invana/canvas';
-import { lifeTreeAsGraph, type LifeTreeKingdom } from '@invana/graph-datasets';
+import { lifeTreeAsGraph } from '@invana/graph-datasets';
+
+/** The three kingdoms the dataset tags clades with (`data.kingdom`). */
+type LifeTreeKingdom = 'Bacteria' | 'Eukaryota' | 'Archaea';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../div-util';
 

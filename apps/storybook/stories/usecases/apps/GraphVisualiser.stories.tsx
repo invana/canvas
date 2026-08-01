@@ -152,17 +152,7 @@ export const GraphVisualiserStory: Story = {
         {
           id: 'random-tree',
           title: 'Random tree',
-          // The one dataset still in the minimal `{index}` / `{source, target}`
-          // shape — mapped onto GraphNode / GraphEdge at the call site, as its
-          // module TSDoc asks.
-          data: {
-            nodes: randomTree.nodes.map((n) => ({ id: String(n.index) })),
-            edges: randomTree.edges.map((e, i) => ({
-              id: `e${i}`,
-              source: String(e.source),
-              target: String(e.target),
-            })),
-          } as GraphData,
+          data: randomTree,
           settings: randomTreeSettings,
           layout: null,
         },

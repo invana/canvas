@@ -33,11 +33,17 @@ import type { CanvasConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData, GraphNode } from '@invana/graph';
 import {
   ragEmbeddings,
-  type RagEmbeddingsCluster,
-  type RagEmbeddingsNodeData,
 } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider } from '@invana/themes';
 import { Map, Moon, Settings, Sun } from 'lucide-react';
+
+/** The embedding payload this story reads. */
+type RagEmbeddingsCluster = string;
+interface RagEmbeddingsNodeData {
+  readonly cluster: RagEmbeddingsCluster;
+  readonly text: string;
+  readonly source: string;
+}
 
 const meta: Meta = { title: 'usecases/domains/rag-embeddings/EmbeddingExplorer' };
 export default meta;

@@ -38,11 +38,23 @@ import type { GraphCanvas, GraphData, GraphNode, NodeShapeOptions } from '@invan
 import type { ElkDirection } from '@invana/graph-layout-elkjs';
 import {
   invanaCodeKg,
-  type InvanaCodeNodeLabel,
-  type InvanaCodeNodeProperties,
 } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider } from '@invana/themes';
 import { Map, Moon, Settings, Sun } from 'lucide-react';
+
+/** The code-KG payload this story reads, declared where it's used. */
+type InvanaCodeNodeLabel = 'file' | 'function' | 'class' | 'config' | 'document';
+interface InvanaCodeNodeProperties {
+  readonly name: string;
+  readonly filePath: string;
+  readonly summary: string;
+  readonly tags: readonly string[];
+  readonly complexity: 'simple' | 'moderate' | 'complex';
+  readonly lineRange?: readonly [number, number];
+  readonly cluster: string | null;
+  readonly coverage?: number;
+  readonly errors?: number;
+}
 
 const meta: Meta = { title: 'usecases/domains/code-kg/CompositeCards' };
 export default meta;

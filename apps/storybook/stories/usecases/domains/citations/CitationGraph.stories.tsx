@@ -37,11 +37,18 @@ import type { CanvasConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData, GraphNode } from '@invana/graph';
 import {
   citations,
-  type CitationsNodeData,
-  type CitationsTopic,
 } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider } from '@invana/themes';
 import { Moon, Settings, Sun } from 'lucide-react';
+
+/** The payload each paper node carries. */
+type CitationsTopic = string;
+interface CitationsNodeData {
+  readonly topic: CitationsTopic;
+  readonly title: string;
+  readonly year: number;
+  readonly citationsCount: number;
+}
 
 const meta: Meta = { title: 'usecases/domains/citations/CitationGraph' };
 export default meta;

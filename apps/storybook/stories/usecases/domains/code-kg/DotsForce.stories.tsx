@@ -36,12 +36,23 @@ import type { CanvasConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData, GraphNode, NodeShapeOptions } from '@invana/graph';
 import {
   invanaCodeKg,
-  type InvanaCodeComplexity,
-  type InvanaCodeNodeLabel,
-  type InvanaCodeNodeProperties,
 } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider } from '@invana/themes';
 import { Map, Moon, Settings, Sun } from 'lucide-react';
+
+/** The code-KG payload this story reads, declared where it's used. */
+type InvanaCodeNodeLabel = 'file' | 'function' | 'class' | 'config' | 'document';
+type InvanaCodeComplexity = 'simple' | 'moderate' | 'complex';
+interface InvanaCodeNodeProperties {
+  readonly name: string;
+  readonly filePath: string;
+  readonly summary: string;
+  readonly tags: readonly string[];
+  readonly complexity: InvanaCodeComplexity;
+  readonly cluster: string | null;
+  readonly coverage?: number;
+  readonly errors?: number;
+}
 
 const meta: Meta = { title: 'usecases/domains/code-kg/DotsForce' };
 export default meta;
