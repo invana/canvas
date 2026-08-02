@@ -481,18 +481,20 @@ export type {
   ContextMenuOptions,
 } from './editors/behaviours/context-menu';
 
-// ColorByLabelBehaviour
-export { ColorByLabelEditorPanel, colorByLabelFields } from './editors/behaviours/color-by-label';
+// ColorByBehaviour
+export { ColorByEditorPanel, colorByFields } from './editors/behaviours/color-by';
 export {
-  optionsToForm as colorByLabelOptionsToForm,
-  formToOptions as colorByLabelFormToOptions,
-} from './editors/behaviours/color-by-label';
+  optionsToForm as colorByOptionsToForm,
+  formToOptions as colorByFormToOptions,
+} from './editors/behaviours/color-by';
 export type {
-  ColorByLabelEditorPanelProps,
-  ColorByLabelFields,
-  ColorByLabelFormState,
-  ColorByLabelOptions,
-} from './editors/behaviours/color-by-label';
+  ColorByEditorPanelProps,
+  ColorByFields,
+  ColorByFormState,
+  ColorByModeValue,
+  ColorByOptions,
+  ColorByScaleValue,
+} from './editors/behaviours/color-by';
 
 // ThemeBehaviour
 export { ThemeEditorPanel, themeFields } from './editors/behaviours/theme';

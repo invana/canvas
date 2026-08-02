@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { BackgroundLayer, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
-  ColorByLabelBehaviour,
+  ColorByBehaviour,
   DragNodeBehaviour,
   GraphCanvas,
   GraphLayer,
@@ -29,7 +29,7 @@ export const GraphLegendLayerStory: Story = {
     // Four node types and four edge types — the legend keys on `type`, so the
     // per-item data only carries the type, the label, and (for KNOWS) the dash
     // that the legend's edge swatch mirrors. Colours are NOT set here: the
-    // `ColorByLabelBehaviour` below assigns one per type, and the legend reads
+    // `ColorByBehaviour` below assigns one per type, and the legend reads
     // whatever ends up on screen.
     const nodes: GraphNode[] = [
       { id: 'p1', type: 'Person', style: { labelText: 'Ada' } },
@@ -84,7 +84,7 @@ export const GraphLegendLayerStory: Story = {
     // Colour-by-type. The legend resolves each type's swatch from a representative
     // element's *effective* style, so these palette colours show up in the legend
     // with no extra wiring — this is the pairing the legend is designed for.
-    canvas.behaviours.register(new ColorByLabelBehaviour({ id: 'color', targetLayerId: 'graph' }));
+    canvas.behaviours.register(new ColorByBehaviour({ id: 'color', targetLayerId: 'graph' }));
     const forceLayout = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
     canvas.layouts.add(forceLayout);
 

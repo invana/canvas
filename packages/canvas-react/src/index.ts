@@ -119,8 +119,8 @@ export type { ClickViewBehaviourProps } from './behaviours/ClickViewBehaviour';
 export { HoverElementPreviewBehaviour } from './behaviours/HoverElementPreviewBehaviour';
 export type { HoverElementPreviewBehaviourProps } from './behaviours/HoverElementPreviewBehaviour';
 export { useBehaviourRegistration } from './behaviours/useBehaviourRegistration';
-export { ColorByLabelBehaviour } from './behaviours/ColorByLabelBehaviour';
-export type { ColorByLabelBehaviourProps } from './behaviours/ColorByLabelBehaviour';
+export { ColorByBehaviour } from './behaviours/ColorByBehaviour';
+export type { ColorByBehaviourProps } from './behaviours/ColorByBehaviour';
 
 export { ThemeBehaviour } from './behaviours/ThemeBehaviour';
 export type { ThemeBehaviourProps } from './behaviours/ThemeBehaviour';

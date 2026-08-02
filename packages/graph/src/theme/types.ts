@@ -29,7 +29,7 @@ export type ColorRole =
 
 /** Concrete colour values for one light/dark variant of a {@link Theme}. */
 export interface ThemePalette extends Record<ColorRole, number> {
-  /** Fill-by-category ramp consumed by `ColorByLabelBehaviour` / minimap. */
+  /** Fill-by-category ramp consumed by `ColorByBehaviour` / minimap. */
   categorical: number[];
 }
 

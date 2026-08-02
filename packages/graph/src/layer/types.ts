@@ -1572,7 +1572,7 @@ export interface GraphLayerEvents {
    * The layer-level style template changed (node / edge defaults or the state
    * catalogue) — emitted by `setNodeDefaults` / `setEdgeDefaults` /
    * `setStateConfigs` (and therefore by any `applyOptions` patch or behaviour
-   * that writes the template, e.g. `ColorByLabelBehaviour`). Distinct from
+   * that writes the template, e.g. `ColorByBehaviour`). Distinct from
    * `data:changed` (topology / positions). Dependents that mirror resolved
    * styling — e.g. `MiniMapLayer` — subscribe to repaint. See
    * `unified-canvas-options-plan.md` §7.2.

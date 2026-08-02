@@ -1,8 +1,9 @@
 # RFC — `ColorByBehaviour`
 
-**Status:** 📋 proposed — no code written.
+**Status:** ✅ **implemented 2026-08-02.** `ColorByBehaviour` ships in
+`@invana/graph`; `ColorByLabelBehaviour` is **deleted**, not aliased (see §8).
 **Package:** `@invana/graph` (behaviour + legend contract) · `@invana/canvas-ui` (editor).
-**Supersedes:** `ColorByLabelBehaviour` (rename + extend, back-compat alias).
+**Supersedes:** `ColorByLabelBehaviour` (rename + extend; **no** back-compat alias — §8).
 **Parent:** [`new-behaviours-rfc.md`](./new-behaviours-rfc.md) §4.1 / U5 — decisions
 **D2, D6, D7, D9, D10, D11** are locked there and are not re-opened here.
 **Reference implementation for the options pattern:** `NodeCentralityBehaviour`.
@@ -619,16 +620,32 @@ Registry: `kind: 'color-by'`, with a `'color-by-label'` alias key for one releas
 | Palette const | `DEFAULT_LABEL_PALETTE` | `DEFAULT_CATEGORY_PALETTE` |
 | Node accessor | `nodeLabel?: (n) => string` | `nodeValueKey?: string` + `nodeValueBy?` |
 
-- `export { ColorByBehaviour as ColorByLabelBehaviour }` — deprecated alias. Every
-  new option is optional and `mode` defaults to `'category'`, so existing call
-  sites compile and behave identically.
-- `nodeLabel` / `edgeLabel` remain as **deprecated aliases** of `nodeValueBy` /
-  `edgeValueBy`, resolved in `resolveOptions` (`nodeValueBy ?? nodeLabel`) so
-  there is one code path past the constructor.
-- `DEFAULT_LABEL_PALETTE` stays exported as a deprecated alias.
-- Instances built through the alias still report `kind: 'color-by'`, hence the
-  editor-registry alias key.
+> ### ⚠️ As built: **no aliases were shipped**
+>
+> The RFC planned a deprecation window — `ColorByBehaviour as ColorByLabelBehaviour`,
+> `nodeLabel`/`edgeLabel` folded into `nodeValueBy`/`edgeValueBy`,
+> `DEFAULT_LABEL_PALETTE`, and a `'color-by-label'` registry key. **None of that
+> was implemented**: the old class, its options and its editor folder are deleted
+> outright and every consumer was migrated in the same pass.
+>
+> That was the right call because the package is pre-1.0 and the consumer set was
+> fully enumerable — six files across four packages, all in this repo. A
+> deprecation window costs a second code path to maintain and buys nothing when
+> there are no external callers to protect. Migration for anyone outside:
+
+| Before | After |
+|---|---|
+| `ColorByLabelBehaviour` | `ColorByBehaviour` |
+| `ColorByLabelBehaviourOptions` | `ColorByBehaviourOptions` |
+| `DEFAULT_LABEL_PALETTE` | `DEFAULT_CATEGORY_PALETTE` |
+| `ColorLabelAccessor<T>` | `ColorValueAccessor<T>` |
+| `nodeLabel: (n) => n.data.tier` | `nodeValueKey: 'data.tier'` (or `nodeValueBy` if computed) |
+| `kind: 'color-by-label'` | `kind: 'color-by'` |
+| `ColorByLabelEditorPanel` · `colorByLabelFields` | `ColorByEditorPanel` · `colorByFields` |
+| `<ColorByLabelBehaviour>` (canvas-react) | `<ColorByBehaviour>` |
+
 - `getColorMap()` is unchanged and still the right call for category legends.
+- `getLegend()` is new and is the mode-agnostic replacement.
 
 `kind` is the stable key `CanvasSettingsEditorPanel` resolves editors by — which
 is exactly why it gets fixed **now**, with one consumer, rather than after

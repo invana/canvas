@@ -55,11 +55,14 @@ export type {
   ResolvedPreviewCard,
 } from './HoverElementPreviewBehaviour';
 
-export { ColorByLabelBehaviour, DEFAULT_LABEL_PALETTE } from './ColorByLabelBehaviour';
+export { ColorByBehaviour, DEFAULT_CATEGORY_PALETTE, DEFAULT_RANGE_STOPS } from './ColorByBehaviour';
 export type {
-  ColorByLabelBehaviourOptions,
-  ColorLabelAccessor,
-} from './ColorByLabelBehaviour';
+  ColorByBehaviourOptions,
+  ColorByLegendSection,
+  ColorByMode,
+  ColorByScale,
+  ColorValueAccessor,
+} from './ColorByBehaviour';
 
 export { BrushSelectBehaviour } from './BrushSelectBehaviour';
 export type {

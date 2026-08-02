@@ -8,7 +8,7 @@
  * Colour-by-category is composed explicitly here: the bundle's default `color`
  * behaviour keys on `node.type`, but the raw Les Misérables nodes carry no
  * `type`, so it's disabled via `config` and replaced with an explicit
- * `<ColorByLabelBehaviour>` keyed on each node's community `group` (1–11) — the
+ * `<ColorByBehaviour>` keyed on each node's community `group` (1–11) — the
  * dataset's real categories — giving distinct per-community colours.
  *
  * The minimal end of the spectrum; contrast with `FullFeatured` (everything on)
@@ -17,7 +17,7 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import { ColorByLabelBehaviour } from '@invana/canvas-react';
+import { ColorByBehaviour } from '@invana/canvas-react';
 import { GraphCanvasApp } from '@invana/canvas-ui';
 import { lesMiserables } from '@invana/graph-datasets';
 import { ThemeProvider } from '@invana/themes';
@@ -39,10 +39,10 @@ export const NoChromeStory: Story = {
         config={{ behaviours: { color: { enabled: false } } }}
       >
         {/* Colour each node by its Les Mis community group instead of its type. */}
-        <ColorByLabelBehaviour
+        <ColorByBehaviour
           targetLayerId="graph"
           colorEdges={false}
-          nodeLabel={(n) => String((n.data as { group?: number } | undefined)?.group ?? '')}
+          nodeValueKey="data.group"
         />
       </GraphCanvasApp>
     </ThemeProvider>

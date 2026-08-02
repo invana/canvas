@@ -17,7 +17,7 @@
  * else the first seen) and asks the source `GraphLayer` for its *effective*
  * style via `resolveNodeStyle` / `resolveEdgeStyle`. So the legend automatically
  * agrees with whatever is actually on screen — the layer template, per-node
- * overrides, `ColorByLabelBehaviour`, and `ThemeBehaviour` recolours — with no
+ * overrides, `ColorByBehaviour`, and `ThemeBehaviour` recolours — with no
  * separate palette to keep in sync. A node swatch is always a filled circle in
  * the node's `bgFill` colour (the shape kind is deliberately *not* mirrored — the
  * legend keys on type, not geometry); an edge swatch is a short line in the

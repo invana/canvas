@@ -148,11 +148,11 @@ import {
   optionsToForm as collapseExpandToForm,
   formToOptions as collapseExpandToOptions,
 } from '../../editors/behaviours/collapse-expand/mapping';
-import { colorByLabelFields } from '../../editors/behaviours/color-by-label/fields';
+import { colorByFields } from '../../editors/behaviours/color-by/fields';
 import {
-  optionsToForm as colorByLabelToForm,
-  formToOptions as colorByLabelToOptions,
-} from '../../editors/behaviours/color-by-label/mapping';
+  optionsToForm as colorByToForm,
+  formToOptions as colorByToOptions,
+} from '../../editors/behaviours/color-by/mapping';
 import { themeFields } from '../../editors/behaviours/theme/fields';
 import {
   optionsToForm as themeToForm,
@@ -283,7 +283,7 @@ export const DEFAULT_CANVAS_SETTINGS_SCHEMAS: Record<string, SettingsSchemaEntry
   'erase': { section: 'behaviours', typeLabel: 'Erase', fields: eraseFields, toForm: eraseToForm, toOptions: eraseToOptions },
   'node-resize': { section: 'behaviours', typeLabel: 'Node Resize', fields: nodeResizeFields, toForm: nodeResizeToForm, toOptions: nodeResizeToOptions },
   'collapse-expand': { section: 'behaviours', typeLabel: 'Collapse / Expand', fields: collapseExpandFields, toForm: collapseExpandToForm, toOptions: collapseExpandToOptions },
-  'color-by-label': { section: 'behaviours', typeLabel: 'Color by Label', fields: colorByLabelFields, toForm: colorByLabelToForm, toOptions: colorByLabelToOptions },
+  'color-by': { section: 'behaviours', typeLabel: 'Color by', fields: colorByFields, toForm: colorByToForm, toOptions: colorByToOptions },
   'theme': { section: 'behaviours', typeLabel: 'Theme', fields: themeFields, toForm: themeToForm, toOptions: themeToOptions },
   'degree-size': { section: 'behaviours', typeLabel: 'Degree Size', fields: nodeCentralityFields, toForm: nodeCentralityToForm, toOptions: nodeCentralityToOptions },
   'context-menu': { section: 'behaviours', typeLabel: 'Context Menu', fields: contextMenuFields, toForm: contextMenuToForm, toOptions: contextMenuToOptions },

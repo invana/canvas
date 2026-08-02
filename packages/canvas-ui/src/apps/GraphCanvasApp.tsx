@@ -67,7 +67,7 @@ import { HoverActivateBehaviour } from '@invana/canvas-react';
 import { ClickSelectBehaviour } from '@invana/canvas-react';
 import { BrushSelectBehaviour } from '@invana/canvas-react';
 import { LassoSelectBehaviour } from '@invana/canvas-react';
-import { ColorByLabelBehaviour } from '@invana/canvas-react';
+import { ColorByBehaviour } from '@invana/canvas-react';
 import { ThemeBehaviour } from '@invana/canvas-react';
 import { buildHeaderNav, type GraphCanvasAppHeaderOptions } from './GraphCanvasAppHeader';
 import { buildFooterNav, type GraphCanvasAppFooterOptions } from './GraphCanvasAppFooter';
@@ -325,7 +325,7 @@ function GraphCanvasAppMain({
               which behaviours are enabled. To turn one off: its `enabled` flag. */}
           <BackgroundLayer id="background" />
           <GraphLayer id="graph" data={data} />
-          <ColorByLabelBehaviour id="color" targetLayerId="graph" />
+          <ColorByBehaviour id="color" targetLayerId="graph" />
           {/* fitPadding={null} disables the wrapper's own end-fit — the engine's
               `config.fitOnLoad` one-shot is the single fitter (and centres even
               when no layout runs). */}
