@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type NodeData } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type GraphNode } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'graph/Etc/PerNodeOverride' };
@@ -8,7 +8,7 @@ export default meta;
 type Story = StoryObj;
 
 /**
- * Validates per-node `state` overlay catalogue (singular) on `NodeData`.
+ * Validates per-node `state` overlay catalogue (singular) on `GraphNode`.
  *
  * Three tiles, all with `states: ['hovered']` so the built-in hovered config
  * tries to apply. Each tile overrides `hovered` differently via its own
@@ -31,8 +31,8 @@ export const PerNodeOverrideStory: Story = {
       '#graph-states-per-node-override',
     )!;
 
-    const nodes: NodeData[] = [
-      {
+    const nodes: GraphNode[] = [
+      { type: 'node',
         id: 'default',
         position: { x: -180, y: 0 },
         style: {
@@ -48,7 +48,7 @@ export const PerNodeOverrideStory: Story = {
         },
         states: ['hovered'],
       },
-      {
+      { type: 'node',
         id: 'orange',
         position: { x: 0, y: 0 },
         style: {
@@ -67,7 +67,7 @@ export const PerNodeOverrideStory: Story = {
         },
         states: ['hovered'],
       },
-      {
+      { type: 'node',
         id: 'red',
         position: { x: 180, y: 0 },
         style: {

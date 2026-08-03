@@ -95,6 +95,9 @@ export function h1b2019AsGraph() {
     const { node, parentId, path, depth, group } = queue.shift()!;
     const isLeaf = !node.children || node.children.length === 0;
     nodes.push({
+      // Depth *is* the entity kind in this rollup: 0 = the country root,
+      // 1 = state, 2 = city, 3 = employer.
+      type: (['root', 'state', 'city', 'employer'][depth] ?? 'employer'),
       id: path,
       data: {
         name: node.name,
@@ -105,7 +108,7 @@ export function h1b2019AsGraph() {
       },
     });
     if (parentId !== null) {
-      edges.push({ id: `e${edgeCounter++}`, source: parentId, target: path });
+      edges.push({ id: `e${edgeCounter++}`, type: 'contains', source: parentId, target: path });
     }
     if (node.children) {
       for (const child of node.children) {

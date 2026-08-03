@@ -1,6 +1,6 @@
 /**
  * Data shapes consumed by the built-in composite **card** builders. Each is the
- * per-node payload you'd store on `NodeData.data` and hand to the matching
+ * per-node payload you'd store on `GraphNode.data` and hand to the matching
  * builder (`schemaTableCard(data)` etc.).
  */
 

@@ -5,8 +5,8 @@ import {
   GraphCanvas,
   GraphLayer,
   ParallelEdgeBehaviour,
-  type EdgeData,
-  type NodeData,
+  type GraphEdge,
+  type GraphNode,
   type ParallelEdgeDistribute,
 } from '@invana/graph';
 import GUI from 'lil-gui';
@@ -38,12 +38,12 @@ export const ParallelEdgeCustomPolicyStory: Story = {
   play: async ({ canvasElement }) => {
     const settings = { flip: false, spacing: 14 };
 
-    const nodes: NodeData[] = [
-      { id: 'a', position: { x: -220, y: 0 }, style: { bgFill: 0x64748b, bgStrokeColor: 0x334155, shape: { kind: 'circle', radius: 30 } } },
-      { id: 'b', position: { x:  220, y: 0 }, style: { bgFill: 0x64748b, bgStrokeColor: 0x334155, shape: { kind: 'circle', radius: 30 } } },
+    const nodes: GraphNode[] = [
+      { type: 'node', id: 'a', position: { x: -220, y: 0 }, style: { bgFill: 0x64748b, bgStrokeColor: 0x334155, shape: { kind: 'circle', radius: 30 } } },
+      { type: 'node', id: 'b', position: { x:  220, y: 0 }, style: { bgFill: 0x64748b, bgStrokeColor: 0x334155, shape: { kind: 'circle', radius: 30 } } },
     ];
 
-    const edges: EdgeData[] = Array.from({ length: 6 }, (_, i) => ({
+    const edges: GraphEdge[] = Array.from({ length: 6 }, (_, i) => ({ type: 'edge',
       id: `e${i}`,
       source: 'a',
       target: 'b',

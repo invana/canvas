@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   DragNodeBehaviour, GraphCanvas, GraphLayer,
-  type EdgeData, type NodeData,
+  type GraphEdge, type GraphNode,
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -58,19 +58,19 @@ export const Overview: Story = {
     const CIRC_CORNER_BASE =
       (CORNER_GAP + Math.sqrt(2 * CIRC_R * CIRC_R - CORNER_GAP * CORNER_GAP)) / 2;
 
-    const nodes: NodeData[] = [
-      { id: 'rect-host', position: { x: -260, y: 0 },
+    const nodes: GraphNode[] = [
+      { type: 'node', id: 'rect-host', position: { x: -260, y: 0 },
         style: { shape: { kind: 'rect', width: RECT_W, height: RECT_H } } },
-      { id: 'circ-host', position: { x:  200, y: 0 },
+      { type: 'node', id: 'circ-host', position: { x:  200, y: 0 },
         style: { shape: { kind: 'circle', radius: CIRC_R } } },
     ];
 
-    const edges: EdgeData[] = [];
+    const edges: GraphEdge[] = [];
     // Rect cardinals — baseOffset along the side axis = the rect's
     // half-extent in that direction so the feet sit on the silhouette.
     for (const side of CARDINALS) {
       const isVertical = side === 'top' || side === 'bottom';
-      edges.push({
+      edges.push({ type: 'edge',
         id: `rect-${side}`, source: 'rect-host', target: 'rect-host',
         style: {
           shape: {
@@ -89,7 +89,7 @@ export const Overview: Story = {
     // Rect corners — baseOffsetX / baseOffsetY pin the wrap's inner
     // corner to the rect's actual corner.
     for (const side of CORNERS) {
-      edges.push({
+      edges.push({ type: 'edge',
         id: `rect-${side}`, source: 'rect-host', target: 'rect-host',
         style: {
           shape: {
@@ -106,7 +106,7 @@ export const Overview: Story = {
     }
     // Circle cardinals.
     for (const side of CARDINALS) {
-      edges.push({
+      edges.push({ type: 'edge',
         id: `circ-${side}`, source: 'circ-host', target: 'circ-host',
         style: {
           shape: {
@@ -123,7 +123,7 @@ export const Overview: Story = {
     }
     // Circle corners.
     for (const side of CORNERS) {
-      edges.push({
+      edges.push({ type: 'edge',
         id: `circ-${side}`, source: 'circ-host', target: 'circ-host',
         style: {
           shape: {

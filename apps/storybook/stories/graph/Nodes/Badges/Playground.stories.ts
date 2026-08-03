@@ -5,7 +5,7 @@ import {
   GraphLayer,
   type BadgeOrigin,
   type NodeBadge,
-  type NodeData,
+  type GraphNode,
   type NodeDecorationSpec,
 } from '@invana/graph';
 import GUI from 'lil-gui';
@@ -137,9 +137,9 @@ export const Playground: Story = {
       labelPlacement: 'center' as const,
     });
 
-    const nodes: NodeData[] = [
-      { id: 'host-a', position: { x: -120, y: 0 }, style: { ...baseStyle('host-a'), badges: [buildBadge()] } },
-      { id: 'host-b', position: { x:  120, y: 0 }, style: { ...baseStyle('host-b'), badges: [buildBadge()] } },
+    const nodes: GraphNode[] = [
+      { type: 'node', id: 'host-a', position: { x: -120, y: 0 }, style: { ...baseStyle('host-a'), badges: [buildBadge()] } },
+      { type: 'node', id: 'host-b', position: { x:  120, y: 0 }, style: { ...baseStyle('host-b'), badges: [buildBadge()] } },
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>(

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type NodeData, type NodeShapeOptions } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type GraphNode, type NodeShapeOptions } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'graph/Nodes/Badges/Shapes' };
@@ -41,10 +41,10 @@ export const Shapes: Story = {
 
     const colGap = 180;
     const rowGap = 160;
-    const nodes: NodeData[] = variants.map((v, i) => {
+    const nodes: GraphNode[] = variants.map((v, i) => {
       const col = i % 3;
       const row = Math.floor(i / 3);
-      return {
+      return { type: 'node',
         id: v.id,
         position: { x: (col - 1) * colGap, y: (row - 0.5) * rowGap },
         style: {

@@ -6,7 +6,7 @@ import {
 import type { LoopCurvePresetName } from '@invana/canvas';
 import {
   GraphCanvas, DragNodeBehaviour, GraphLayer,
-  type EdgeData, type NodeData,
+  type GraphEdge, type GraphNode,
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -102,17 +102,17 @@ export const Overview: Story = {
       { id: 'node-hairpin',  cx:  COL_X, cy:  ROW_Y, preset: 'hairpin'  },
     ];
 
-    const nodes: NodeData[] = NODE_SPECS.map(spec => ({
+    const nodes: GraphNode[] = NODE_SPECS.map(spec => ({ type: 'node',
       id: spec.id,
       position: { x: spec.cx, y: spec.cy },
       style: { labelText: spec.preset, labelPlacement: 'bottom' },
     }));
 
-    const edges: EdgeData[] = [];
+    const edges: GraphEdge[] = [];
     for (const spec of NODE_SPECS) {
       const preset = LOOP_CURVE_PRESETS[spec.preset];
       for (const p of PLACEMENTS) {
-        edges.push({
+        edges.push({ type: 'edge',
           id: `${spec.id}-${p.id}`,
           source: spec.id,
           target: spec.id,

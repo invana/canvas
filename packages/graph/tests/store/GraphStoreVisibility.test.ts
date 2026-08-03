@@ -5,11 +5,11 @@ import { GraphStore } from '../../src/store';
 /** A small triangle a-b-c with edges ab, bc, ca. */
 function triangle(): GraphStore {
   const store = new GraphStore();
-  store.addNodesBulk([{ id: 'a' }, { id: 'b' }, { id: 'c' }]);
+  store.addNodesBulk([{ type: 'node', id: 'a' }, { type: 'node', id: 'b' }, { type: 'node', id: 'c' }]);
   store.addEdgesBulk([
-    { id: 'ab', source: 'a', target: 'b' },
-    { id: 'bc', source: 'b', target: 'c' },
-    { id: 'ca', source: 'c', target: 'a' },
+    { type: 'edge', id: 'ab', source: 'a', target: 'b' },
+    { type: 'edge', id: 'bc', source: 'b', target: 'c' },
+    { type: 'edge', id: 'ca', source: 'c', target: 'a' },
   ]);
   return store;
 }
@@ -47,7 +47,7 @@ describe('GraphStore — visibility: single hide/show', () => {
 
   it('accepts hidden on addNode and reconstructs it', () => {
     const store = new GraphStore();
-    store.addNode({ id: 'x', hidden: true });
+    store.addNode({ type: 'node', id: 'x', hidden: true });
     expect(store.isNodeHidden('x')).toBe(true);
     expect(store.getNode('x')?.hidden).toBe(true);
   });
@@ -170,8 +170,8 @@ describe('GraphStore — visibility: bulk + convenience', () => {
   it('hideNodesByPredicate hides matching nodes only', () => {
     const store = new GraphStore();
     store.addNodesBulk([
-      { id: 'a', data: { drop: true } },
-      { id: 'b', data: { drop: false } },
+      { type: 'node', id: 'a', data: { drop: true } },
+      { type: 'node', id: 'b', data: { drop: false } },
     ]);
     store.hideNodesByPredicate((n) => (n.data as { drop?: boolean })?.drop === true);
     expect(store.isNodeHidden('a')).toBe(true);
@@ -256,7 +256,7 @@ describe('GraphStore — visibility: serialization round-trip', () => {
 
   it('hidden flag survives compact()', () => {
     const store = triangle();
-    store.addNode({ id: 'd' }); // isolated node
+    store.addNode({ type: 'node', id: 'd' }); // isolated node
     store.hideNode('a');
     store.hideEdge('bc');
     store.removeNode('d'); // create a tombstone without cascading a/b/c edges

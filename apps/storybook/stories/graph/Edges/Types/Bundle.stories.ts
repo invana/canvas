@@ -4,9 +4,8 @@ import {
   DragNodeBehaviour,
   GraphCanvas,
   GraphLayer,
-  type EdgeData,
+  type GraphEdge,
   type GraphNode,
-  type NodeData,
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
@@ -43,35 +42,35 @@ export const Bundle: Story = {
 
   play: async ({ canvasElement }) => {
     // Two clusters of four nodes — left at x = -260, right at x = +260.
-    const nodes: NodeData[] = [
-      { id: 'L0', position: { x: -260, y: -90 } },
-      { id: 'L1', position: { x: -260, y: -30 } },
-      { id: 'L2', position: { x: -260, y:  30 } },
-      { id: 'L3', position: { x: -260, y:  90 } },
-      { id: 'R0', position: { x:  260, y: -90 } },
-      { id: 'R1', position: { x:  260, y: -30 } },
-      { id: 'R2', position: { x:  260, y:  30 } },
-      { id: 'R3', position: { x:  260, y:  90 } },
+    const nodes: GraphNode[] = [
+      { type: 'node', id: 'L0', position: { x: -260, y: -90 } },
+      { type: 'node', id: 'L1', position: { x: -260, y: -30 } },
+      { type: 'node', id: 'L2', position: { x: -260, y:  30 } },
+      { type: 'node', id: 'L3', position: { x: -260, y:  90 } },
+      { type: 'node', id: 'R0', position: { x:  260, y: -90 } },
+      { type: 'node', id: 'R1', position: { x:  260, y: -30 } },
+      { type: 'node', id: 'R2', position: { x:  260, y:  30 } },
+      { type: 'node', id: 'R3', position: { x:  260, y:  90 } },
     ];
 
     // 16 inter-cluster edges — every left node to every right node.
-    const edges: EdgeData[] = [
-      { id: 'L0-R0', source: 'L0', target: 'R0' },
-      { id: 'L0-R1', source: 'L0', target: 'R1' },
-      { id: 'L0-R2', source: 'L0', target: 'R2' },
-      { id: 'L0-R3', source: 'L0', target: 'R3' },
-      { id: 'L1-R0', source: 'L1', target: 'R0' },
-      { id: 'L1-R1', source: 'L1', target: 'R1' },
-      { id: 'L1-R2', source: 'L1', target: 'R2' },
-      { id: 'L1-R3', source: 'L1', target: 'R3' },
-      { id: 'L2-R0', source: 'L2', target: 'R0' },
-      { id: 'L2-R1', source: 'L2', target: 'R1' },
-      { id: 'L2-R2', source: 'L2', target: 'R2' },
-      { id: 'L2-R3', source: 'L2', target: 'R3' },
-      { id: 'L3-R0', source: 'L3', target: 'R0' },
-      { id: 'L3-R1', source: 'L3', target: 'R1' },
-      { id: 'L3-R2', source: 'L3', target: 'R2' },
-      { id: 'L3-R3', source: 'L3', target: 'R3' },
+    const edges: GraphEdge[] = [
+      { type: 'edge', id: 'L0-R0', source: 'L0', target: 'R0' },
+      { type: 'edge', id: 'L0-R1', source: 'L0', target: 'R1' },
+      { type: 'edge', id: 'L0-R2', source: 'L0', target: 'R2' },
+      { type: 'edge', id: 'L0-R3', source: 'L0', target: 'R3' },
+      { type: 'edge', id: 'L1-R0', source: 'L1', target: 'R0' },
+      { type: 'edge', id: 'L1-R1', source: 'L1', target: 'R1' },
+      { type: 'edge', id: 'L1-R2', source: 'L1', target: 'R2' },
+      { type: 'edge', id: 'L1-R3', source: 'L1', target: 'R3' },
+      { type: 'edge', id: 'L2-R0', source: 'L2', target: 'R0' },
+      { type: 'edge', id: 'L2-R1', source: 'L2', target: 'R1' },
+      { type: 'edge', id: 'L2-R2', source: 'L2', target: 'R2' },
+      { type: 'edge', id: 'L2-R3', source: 'L2', target: 'R3' },
+      { type: 'edge', id: 'L3-R0', source: 'L3', target: 'R0' },
+      { type: 'edge', id: 'L3-R1', source: 'L3', target: 'R1' },
+      { type: 'edge', id: 'L3-R2', source: 'L3', target: 'R2' },
+      { type: 'edge', id: 'L3-R3', source: 'L3', target: 'R3' },
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-edge-types-bundle')!;

@@ -4,8 +4,8 @@ import {
   DragNodeBehaviour,
   GraphCanvas,
   GraphLayer,
-  type EdgeData,
-  type NodeData,
+  type GraphEdge,
+  type GraphNode,
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -41,9 +41,10 @@ export const AutoRotateStory: Story = {
       { id: 'raw',     label: 'autoRotate: true, keepUpright: false', autoRotate: true,  keepUpright: false },
     ] as const;
 
-    const nodes: NodeData[] = variants.flatMap((v, i) => [
+    const nodes: GraphNode[] = variants.flatMap((v, i) => [
       {
         id: `${v.id}-src`,
+        type: 'node',
         position: { x: -260, y: (i - 1) * 160 - 60 },
         style: {
           shape: { kind: 'circle', radius: 14 },
@@ -57,6 +58,7 @@ export const AutoRotateStory: Story = {
       },
       {
         id: `${v.id}-tgt`,
+        type: 'node',
         // Stagger the target by +120 px so the bezier bends visibly.
         position: { x: 260, y: (i - 1) * 160 + 60 },
         style: {
@@ -66,7 +68,7 @@ export const AutoRotateStory: Story = {
       },
     ]);
 
-    const edges: EdgeData[] = variants.map((v) => ({
+    const edges: GraphEdge[] = variants.map((v) => ({ type: 'edge',
       id: v.id,
       source: `${v.id}-src`,
       target: `${v.id}-tgt`,
@@ -75,6 +77,7 @@ export const AutoRotateStory: Story = {
         badges: [
           {
             id: 'flow',
+            type: 'node',
             placement: 'middle',
             shape: { kind: 'rect', width: 70, height: 20, cornerRadius: 4 },
             fill: 0x7c3aed,

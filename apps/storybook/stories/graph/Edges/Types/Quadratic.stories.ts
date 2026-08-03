@@ -4,8 +4,8 @@ import {
   DragNodeBehaviour,
   GraphCanvas,
   GraphLayer,
-  type EdgeData,
-  type NodeData,
+  type GraphEdge,
+  type GraphNode,
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -30,32 +30,32 @@ export const Quadratic: Story = {
   render: () => createContainer({ id: 'graph-edge-types-quadratic' }),
 
   play: async ({ canvasElement }) => {
-    const nodes: NodeData[] = [
-      { id: 'hub',         position: { x:    0, y:    0 } },
-      { id: 'default',     position: { x:    0, y: -180 } },
-      { id: 'selected',    position: { x:  171, y:  -56 } },
-      { id: 'highlighted', position: { x:  106, y:  146 } },
-      { id: 'dimmed',      position: { x: -106, y:  146 } },
-      { id: 'disabled',    position: { x: -171, y:  -56 } },
+    const nodes: GraphNode[] = [
+      { type: 'node', id: 'hub',         position: { x:    0, y:    0 } },
+      { type: 'node', id: 'default',     position: { x:    0, y: -180 } },
+      { type: 'node', id: 'selected',    position: { x:  171, y:  -56 } },
+      { type: 'node', id: 'highlighted', position: { x:  106, y:  146 } },
+      { type: 'node', id: 'dimmed',      position: { x: -106, y:  146 } },
+      { type: 'node', id: 'disabled',    position: { x: -171, y:  -56 } },
     ];
 
-    const edges: EdgeData[] = [
-      { id: 'quadratic-default',     source: 'hub', target: 'default',
+    const edges: GraphEdge[] = [
+      { type: 'edge', id: 'quadratic-default',     source: 'hub', target: 'default',
         style: { shape: { pathType: 'quadratic', pathStyleOpts: { curveOffset: -30 } },
                  labelText: 'quadratic-default' } },
-      { id: 'quadratic-selected',    source: 'hub', target: 'selected',
+      { type: 'edge', id: 'quadratic-selected',    source: 'hub', target: 'selected',
         style: { shape: { pathType: 'quadratic', pathStyleOpts: { curveOffset: -30 } },
                  labelText: 'quadratic-selected' },
         states: ['selected'] },
-      { id: 'quadratic-highlighted', source: 'hub', target: 'highlighted',
+      { type: 'edge', id: 'quadratic-highlighted', source: 'hub', target: 'highlighted',
         style: { shape: { pathType: 'quadratic', pathStyleOpts: { curveOffset: -30 } },
                  labelText: 'quadratic-highlighted' },
         states: ['highlighted'] },
-      { id: 'quadratic-dimmed',      source: 'hub', target: 'dimmed',
+      { type: 'edge', id: 'quadratic-dimmed',      source: 'hub', target: 'dimmed',
         style: { shape: { pathType: 'quadratic', pathStyleOpts: { curveOffset: -30 } },
                  labelText: 'quadratic-dimmed' },
         states: ['dimmed'] },
-      { id: 'quadratic-disabled',    source: 'hub', target: 'disabled',
+      { type: 'edge', id: 'quadratic-disabled',    source: 'hub', target: 'disabled',
         style: { shape: { pathType: 'quadratic', pathStyleOpts: { curveOffset: -30 } },
                  labelText: 'quadratic-disabled' },
         states: ['disabled'] },

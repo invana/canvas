@@ -26,6 +26,7 @@ import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   DragNodeBehaviour,
   GraphCanvas,
+  ColorByBehaviour,
   GraphLayer,
   type DragNodeBehaviourOptions,
   type GraphNode,
@@ -44,17 +45,12 @@ export const DragNodeStory: Story = {
   render: () => createContainer({ id: 'graph-drag-node' }),
 
   play: async ({ canvasElement }) => {
-    const GROUP_COLORS = [
-      0x9ca3af, 0xef4444, 0xf59e0b, 0xeab308, 0x10b981, 0x06b6d4,
-      0x3b82f6, 0x8b5cf6, 0xec4899, 0x14b8a6, 0xa3e635,
-    ];
 
-    const nodes: GraphNode[] = lesMiserables.nodes.map((n, index) => ({
+    const nodes: GraphNode[] = lesMiserables.nodes.map((n, index) => ({ type: `group-${n.data.group}`,
       id: n.id,
       data: { group: n.data.group, index },
       style: {
         shape: { kind: 'circle', radius: 8 },
-        bgFill: GROUP_COLORS[n.data.group % GROUP_COLORS.length],
         bgStrokeColor: 0xffffff,
         bgStrokeWidth: 1,
       },
@@ -162,6 +158,11 @@ export const DragNodeStory: Story = {
     const remount = (): void => {
       if (canvas.behaviours.has('drag-node')) canvas.behaviours.unregister('drag-node');
       canvas.behaviours.register(new DragNodeBehaviour(buildOptions()));
+      // Colour by the community on `data.group` — the dataset carries it, so
+      // the story needs no palette of its own.
+      canvas.behaviours.register(
+        new ColorByBehaviour({ id: 'color', targetLayerId: 'graph', enabled: true, nodeValueKey: 'data.group', colorEdges: false }),
+      );
     };
     remount();
 

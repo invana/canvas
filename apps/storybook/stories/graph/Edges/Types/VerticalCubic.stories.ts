@@ -4,8 +4,8 @@ import {
   DragNodeBehaviour,
   GraphCanvas,
   GraphLayer,
-  type EdgeData,
-  type NodeData,
+  type GraphEdge,
+  type GraphNode,
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -31,32 +31,32 @@ export const VerticalCubicStory: Story = {
   play: async ({ canvasElement }) => {
     // Root at the top centre; five children spread along y = +180, evenly
     // spaced from x = -240 to x = +240.
-    const nodes: NodeData[] = [
-      { id: 'root',        position: { x:    0, y: -180 } },
-      { id: 'default',     position: { x: -240, y:  180 } },
-      { id: 'selected',    position: { x: -120, y:  180 } },
-      { id: 'highlighted', position: { x:    0, y:  180 } },
-      { id: 'dimmed',      position: { x:  120, y:  180 } },
-      { id: 'disabled',    position: { x:  240, y:  180 } },
+    const nodes: GraphNode[] = [
+      { type: 'node', id: 'root',        position: { x:    0, y: -180 } },
+      { type: 'node', id: 'default',     position: { x: -240, y:  180 } },
+      { type: 'node', id: 'selected',    position: { x: -120, y:  180 } },
+      { type: 'node', id: 'highlighted', position: { x:    0, y:  180 } },
+      { type: 'node', id: 'dimmed',      position: { x:  120, y:  180 } },
+      { type: 'node', id: 'disabled',    position: { x:  240, y:  180 } },
     ];
 
-    const edges: EdgeData[] = [
-      { id: 'vcubic-default',     source: 'root', target: 'default',
+    const edges: GraphEdge[] = [
+      { type: 'edge', id: 'vcubic-default',     source: 'root', target: 'default',
         style: { shape: { pathType: 'bezier', pathStyleOpts: { axis: 'v', tension: 0.6 } },
                  labelText: 'default' } },
-      { id: 'vcubic-selected',    source: 'root', target: 'selected',
+      { type: 'edge', id: 'vcubic-selected',    source: 'root', target: 'selected',
         style: { shape: { pathType: 'bezier', pathStyleOpts: { axis: 'v', tension: 0.6 } },
                  labelText: 'selected' },
         states: ['selected'] },
-      { id: 'vcubic-highlighted', source: 'root', target: 'highlighted',
+      { type: 'edge', id: 'vcubic-highlighted', source: 'root', target: 'highlighted',
         style: { shape: { pathType: 'bezier', pathStyleOpts: { axis: 'v', tension: 0.6 } },
                  labelText: 'highlighted' },
         states: ['highlighted'] },
-      { id: 'vcubic-dimmed',      source: 'root', target: 'dimmed',
+      { type: 'edge', id: 'vcubic-dimmed',      source: 'root', target: 'dimmed',
         style: { shape: { pathType: 'bezier', pathStyleOpts: { axis: 'v', tension: 0.6 } },
                  labelText: 'dimmed' },
         states: ['dimmed'] },
-      { id: 'vcubic-disabled',    source: 'root', target: 'disabled',
+      { type: 'edge', id: 'vcubic-disabled',    source: 'root', target: 'disabled',
         style: { shape: { pathType: 'bezier', pathStyleOpts: { axis: 'v', tension: 0.6 } },
                  labelText: 'disabled' },
         states: ['disabled'] },

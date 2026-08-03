@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type NodeData } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type GraphNode } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'graph/Etc/BuiltinHover' };
@@ -8,7 +8,7 @@ export default meta;
 type Story = StoryObj;
 
 /**
- * Validates the v3 G6-aligned `NodeData` shape against the built-in `hovered`
+ * Validates the v3 G6-aligned `GraphNode` shape against the built-in `hovered`
  * state config that `GraphLayer` auto-registers
  * (`DEFAULT_NODE_STATE_CONFIGS.hovered` — strokeWidth: 3, stroke: 0xffffff).
  *
@@ -32,8 +32,8 @@ export const BuiltinHoverStory: Story = {
     const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
 
-    const nodes: NodeData[] = [
-      {
+    const nodes: GraphNode[] = [
+      { type: 'node',
         id: 'rest',
         position: { x: -90, y: 0 },
         style: {
@@ -49,7 +49,7 @@ export const BuiltinHoverStory: Story = {
           labelOffsetY: 8,
         },
       },
-      {
+      { type: 'node',
         id: 'hovered',
         position: { x: 90, y: 0 },
         style: {

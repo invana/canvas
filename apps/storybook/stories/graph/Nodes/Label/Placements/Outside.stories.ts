@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import type { ShapeLabelPlacement } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type EdgeData, type NodeData, type NodeStyle } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type GraphEdge, type GraphNode, type NodeStyle } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -31,27 +31,27 @@ export const Outside: Story = {
     // Each ring node picks a different shape kind so outside-placement
     // anchoring is exercised across all six built-in silhouettes. Polygon
     // vertices and arc params are literals — no helper functions.
-    const nodes: NodeData[] = [
-      { id: 'hub',      position: { x: 0,    y: 0    }, style: { shape: { kind: 'circle', radius: 22 }, bgFill: 0x0f172a, bgStrokeColor: 0x0f172a, labelText: 'hub', labelColor: 0xffffff, labelPlacement: 'center' } },
-      { id: 'n-top',    position: { x: 0,    y: -220 }, style: { shape: { kind: 'circle', radius: 16 },                                       labelText: 'top',          labelPlacement: 'top',          labelOffsetY: -4 } },
-      { id: 'n-tr',     position: { x: 156,  y: -156 }, style: { shape: { kind: 'rect', width: 40, height: 32, cornerRadius: 6 },             labelText: 'top-right',    labelPlacement: 'top-right',    labelOffsetY: -4 } },
-      { id: 'n-right',  position: { x: 220,  y: 0    }, style: { shape: { kind: 'regular-polygon', sides: 5, radius: 20 },                    labelText: 'right',        labelPlacement: 'right' } },
-      { id: 'n-br',     position: { x: 156,  y: 156  }, style: { shape: { kind: 'star', points: 5, outerRadius: 22, innerRadius: 10 },        labelText: 'bottom-right', labelPlacement: 'bottom-right', labelOffsetY: 4 } },
-      { id: 'n-bottom', position: { x: 0,    y: 220  }, style: { shape: { kind: 'polygon', vertices: [ { x: 0, y: -20 }, { x: 20, y: 0 }, { x: 0, y: 20 }, { x: -20, y: 0 } ] }, labelText: 'bottom', labelPlacement: 'bottom', labelOffsetY: 4 } },
-      { id: 'n-bl',     position: { x: -156, y: 156  }, style: { shape: { kind: 'arc', innerR: 8, outerR: 22, startAngle: -Math.PI / 2, endAngle: Math.PI / 2 }, labelText: 'bottom-left', labelPlacement: 'bottom-left', labelOffsetY: 4 } },
-      { id: 'n-left',   position: { x: -220, y: 0    }, style: { shape: { kind: 'regular-polygon', sides: 6, radius: 20, rotation: Math.PI / 6 }, labelText: 'left',     labelPlacement: 'left' } },
-      { id: 'n-tl',     position: { x: -156, y: -156 }, style: { shape: { kind: 'rect', width: 40, height: 40, cornerRadius: 20 },            labelText: 'top-left',     labelPlacement: 'top-left',     labelOffsetY: -4 } },
+    const nodes: GraphNode[] = [
+      { type: 'node', id: 'hub',      position: { x: 0,    y: 0    }, style: { shape: { kind: 'circle', radius: 22 }, bgFill: 0x0f172a, bgStrokeColor: 0x0f172a, labelText: 'hub', labelColor: 0xffffff, labelPlacement: 'center' } },
+      { type: 'node', id: 'n-top',    position: { x: 0,    y: -220 }, style: { shape: { kind: 'circle', radius: 16 },                                       labelText: 'top',          labelPlacement: 'top',          labelOffsetY: -4 } },
+      { type: 'node', id: 'n-tr',     position: { x: 156,  y: -156 }, style: { shape: { kind: 'rect', width: 40, height: 32, cornerRadius: 6 },             labelText: 'top-right',    labelPlacement: 'top-right',    labelOffsetY: -4 } },
+      { type: 'node', id: 'n-right',  position: { x: 220,  y: 0    }, style: { shape: { kind: 'regular-polygon', sides: 5, radius: 20 },                    labelText: 'right',        labelPlacement: 'right' } },
+      { type: 'node', id: 'n-br',     position: { x: 156,  y: 156  }, style: { shape: { kind: 'star', points: 5, outerRadius: 22, innerRadius: 10 },        labelText: 'bottom-right', labelPlacement: 'bottom-right', labelOffsetY: 4 } },
+      { type: 'node', id: 'n-bottom', position: { x: 0,    y: 220  }, style: { shape: { kind: 'polygon', vertices: [ { x: 0, y: -20 }, { x: 20, y: 0 }, { x: 0, y: 20 }, { x: -20, y: 0 } ] }, labelText: 'bottom', labelPlacement: 'bottom', labelOffsetY: 4 } },
+      { type: 'node', id: 'n-bl',     position: { x: -156, y: 156  }, style: { shape: { kind: 'arc', innerR: 8, outerR: 22, startAngle: -Math.PI / 2, endAngle: Math.PI / 2 }, labelText: 'bottom-left', labelPlacement: 'bottom-left', labelOffsetY: 4 } },
+      { type: 'node', id: 'n-left',   position: { x: -220, y: 0    }, style: { shape: { kind: 'regular-polygon', sides: 6, radius: 20, rotation: Math.PI / 6 }, labelText: 'left',     labelPlacement: 'left' } },
+      { type: 'node', id: 'n-tl',     position: { x: -156, y: -156 }, style: { shape: { kind: 'rect', width: 40, height: 40, cornerRadius: 20 },            labelText: 'top-left',     labelPlacement: 'top-left',     labelOffsetY: -4 } },
     ];
 
-    const edges: EdgeData[] = [
-      { id: 'e-top',    source: 'hub', target: 'n-top' },
-      { id: 'e-tr',     source: 'hub', target: 'n-tr' },
-      { id: 'e-right',  source: 'hub', target: 'n-right' },
-      { id: 'e-br',     source: 'hub', target: 'n-br' },
-      { id: 'e-bottom', source: 'hub', target: 'n-bottom' },
-      { id: 'e-bl',     source: 'hub', target: 'n-bl' },
-      { id: 'e-left',   source: 'hub', target: 'n-left' },
-      { id: 'e-tl',     source: 'hub', target: 'n-tl' },
+    const edges: GraphEdge[] = [
+      { type: 'edge', id: 'e-top',    source: 'hub', target: 'n-top' },
+      { type: 'edge', id: 'e-tr',     source: 'hub', target: 'n-tr' },
+      { type: 'edge', id: 'e-right',  source: 'hub', target: 'n-right' },
+      { type: 'edge', id: 'e-br',     source: 'hub', target: 'n-br' },
+      { type: 'edge', id: 'e-bottom', source: 'hub', target: 'n-bottom' },
+      { type: 'edge', id: 'e-bl',     source: 'hub', target: 'n-bl' },
+      { type: 'edge', id: 'e-left',   source: 'hub', target: 'n-left' },
+      { type: 'edge', id: 'e-tl',     source: 'hub', target: 'n-tl' },
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-label-placements-outside')!;

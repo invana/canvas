@@ -80,7 +80,7 @@ export const RectGroupStory: Story = {
     };
 
     const nodes: GraphNode[] = [
-      {
+      { type: 'node',
         id: 'group-a',
         position: { x: 0, y: 0 },
         style: {
@@ -105,7 +105,7 @@ export const RectGroupStory: Story = {
           labelPlacement: 'inside-top-left',
         },
       },
-      {
+      { type: 'node',
         id: 'node1',
         parentId: 'group-a',
         position: { x: -50, y: -30 },
@@ -119,7 +119,7 @@ export const RectGroupStory: Story = {
           labelOffsetY: 6,
         },
       },
-      {
+      { type: 'node',
         id: 'node2',
         parentId: 'group-a',
         position: { x: 50, y: -30 },
@@ -133,7 +133,7 @@ export const RectGroupStory: Story = {
           labelOffsetY: 6,
         },
       },
-      {
+      { type: 'node',
         id: 'node3',
         parentId: 'group-a',
         position: { x: 0, y: 80 },

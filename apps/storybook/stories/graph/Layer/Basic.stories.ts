@@ -27,7 +27,7 @@ export const Basic: Story = {
     const R = 260;
     const nodes: GraphNode[] = lesMiserables.nodes.map((n, i) => {
       const theta = (i / N) * Math.PI * 2;
-      return {
+      return { type: 'node',
         id: n.id,
         position: { x: Math.cos(theta) * R, y: Math.sin(theta) * R },
         data: {

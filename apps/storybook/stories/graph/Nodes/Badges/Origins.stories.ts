@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type BadgeOrigin, type NodeData } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type BadgeOrigin, type GraphNode } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'graph/Nodes/Badges/Origins' };
@@ -40,7 +40,7 @@ export const Origins: Story = {
       { id: 'top-left',      label: "origin: 'top-left'",       origin: 'top-left' },
     ];
 
-    const nodes: NodeData[] = variants.map((v, i) => ({
+    const nodes: GraphNode[] = variants.map((v, i) => ({ type: 'node',
       id: v.id,
       position: { x: (i - 1.5) * 220, y: 0 },
       style: {

@@ -38,7 +38,7 @@ export const HackerStyleStory: Story = {
     const BG = 0x0a0e1a;
 
     const nodes: GraphNode[] = [
-      {
+      { type: 'node',
         id: 'group-front',
         position: { x: 0, y: 0 },
         style: {
@@ -58,15 +58,15 @@ export const HackerStyleStory: Story = {
           labelPlacement: 'inside-top-left',
         },
       },
-      {
+      { type: 'node',
         id: 'web', parentId: 'group-front', position: { x: -40, y: -30 },
         style: { shape: { kind: 'circle', radius: 14 }, bgFill: NEON_GREEN, bgAlpha: 0.95, labelText: 'web', labelColor: NEON_GREEN, labelFontFamily: 'ui-monospace, monospace', labelFontSize: 11, labelPlacement: 'bottom', labelOffsetY: 6 },
       },
-      {
+      { type: 'node',
         id: 'cdn', parentId: 'group-front', position: { x: 60, y: -30 },
         style: { shape: { kind: 'circle', radius: 14 }, bgFill: NEON_GREEN, bgAlpha: 0.95, labelText: 'cdn', labelColor: NEON_GREEN, labelFontFamily: 'ui-monospace, monospace', labelFontSize: 11, labelPlacement: 'bottom', labelOffsetY: 6 },
       },
-      {
+      { type: 'node',
         id: 'group-svc',
         position: { x: 360, y: 0 },
         style: {
@@ -86,15 +86,15 @@ export const HackerStyleStory: Story = {
           labelPlacement: 'inside-top-left',
         },
       },
-      {
+      { type: 'node',
         id: 'api', parentId: 'group-svc', position: { x: 310, y: -30 },
         style: { shape: { kind: 'circle', radius: 14 }, bgFill: NEON_CYAN, bgAlpha: 0.95, labelText: 'api', labelColor: NEON_CYAN, labelFontFamily: 'ui-monospace, monospace', labelFontSize: 11, labelPlacement: 'bottom', labelOffsetY: 6 },
       },
-      {
+      { type: 'node',
         id: 'auth', parentId: 'group-svc', position: { x: 410, y: -30 },
         style: { shape: { kind: 'circle', radius: 14 }, bgFill: NEON_CYAN, bgAlpha: 0.95, labelText: 'auth', labelColor: NEON_CYAN, labelFontFamily: 'ui-monospace, monospace', labelFontSize: 11, labelPlacement: 'bottom', labelOffsetY: 6 },
       },
-      {
+      { type: 'node',
         id: 'group-data',
         position: { x: 720, y: 0 },
         style: {
@@ -114,21 +114,21 @@ export const HackerStyleStory: Story = {
           labelPlacement: 'inside-top-left',
         },
       },
-      {
+      { type: 'node',
         id: 'pg', parentId: 'group-data', position: { x: 680, y: -30 },
         style: { shape: { kind: 'circle', radius: 14 }, bgFill: NEON_MAGENTA, bgAlpha: 0.95, labelText: 'pg', labelColor: NEON_MAGENTA, labelFontFamily: 'ui-monospace, monospace', labelFontSize: 11, labelPlacement: 'bottom', labelOffsetY: 6 },
       },
-      {
+      { type: 'node',
         id: 'redis', parentId: 'group-data', position: { x: 770, y: -30 },
         style: { shape: { kind: 'circle', radius: 14 }, bgFill: NEON_MAGENTA, bgAlpha: 0.95, labelText: 'redis', labelColor: NEON_MAGENTA, labelFontFamily: 'ui-monospace, monospace', labelFontSize: 11, labelPlacement: 'bottom', labelOffsetY: 6 },
       },
     ];
 
     const edges: GraphEdge[] = [
-      { id: 'web-api', source: 'web', target: 'api', style: { strokeColor: NEON_GREEN, strokeAlpha: 0.7, strokeWidth: 1.5, strokeDashArray: [3, 3], arrowTargetShape: 'none' } },
-      { id: 'cdn-api', source: 'cdn', target: 'api', style: { strokeColor: NEON_GREEN, strokeAlpha: 0.5, strokeWidth: 1, strokeDashArray: [3, 3], arrowTargetShape: 'none' } },
-      { id: 'api-pg', source: 'api', target: 'pg', style: { strokeColor: NEON_CYAN, strokeAlpha: 0.7, strokeWidth: 1.5, strokeDashArray: [3, 3], arrowTargetShape: 'none' } },
-      { id: 'auth-redis', source: 'auth', target: 'redis', style: { strokeColor: NEON_CYAN, strokeAlpha: 0.7, strokeWidth: 1.5, strokeDashArray: [3, 3], arrowTargetShape: 'none' } },
+      { type: 'edge', id: 'web-api', source: 'web', target: 'api', style: { strokeColor: NEON_GREEN, strokeAlpha: 0.7, strokeWidth: 1.5, strokeDashArray: [3, 3], arrowTargetShape: 'none' } },
+      { type: 'edge', id: 'cdn-api', source: 'cdn', target: 'api', style: { strokeColor: NEON_GREEN, strokeAlpha: 0.5, strokeWidth: 1, strokeDashArray: [3, 3], arrowTargetShape: 'none' } },
+      { type: 'edge', id: 'api-pg', source: 'api', target: 'pg', style: { strokeColor: NEON_CYAN, strokeAlpha: 0.7, strokeWidth: 1.5, strokeDashArray: [3, 3], arrowTargetShape: 'none' } },
+      { type: 'edge', id: 'auth-redis', source: 'auth', target: 'redis', style: { strokeColor: NEON_CYAN, strokeAlpha: 0.7, strokeWidth: 1.5, strokeDashArray: [3, 3], arrowTargetShape: 'none' } },
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-hacker-style')!;

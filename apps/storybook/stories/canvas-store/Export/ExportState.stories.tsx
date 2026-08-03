@@ -54,11 +54,11 @@ const data: GraphData = {
       style: { shape: { kind: 'arc', innerR: 14, outerR: 26, startAngle: -1.9, endAngle: 1.2 }, bgFill: 0xef4444 } },
   ],
   edges: [
-    { id: 'auth-core', source: 'auth', target: 'core' },
-    { id: 'core-db', source: 'core', target: 'db' },
-    { id: 'core-cache', source: 'core', target: 'cache' },
-    { id: 'worker-core', source: 'worker', target: 'core' },
-    { id: 'core-gauge', source: 'core', target: 'gauge' },
+    { type: 'edge', id: 'auth-core', source: 'auth', target: 'core' },
+    { type: 'edge', id: 'core-db', source: 'core', target: 'db' },
+    { type: 'edge', id: 'core-cache', source: 'core', target: 'cache' },
+    { type: 'edge', id: 'worker-core', source: 'worker', target: 'core' },
+    { type: 'edge', id: 'core-gauge', source: 'core', target: 'gauge' },
   ],
 };
 

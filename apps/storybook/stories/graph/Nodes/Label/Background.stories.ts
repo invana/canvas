@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type NodeData, type NodeStyle } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type GraphNode, type NodeStyle } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -22,14 +22,14 @@ export const Background: Story = {
   render: () => createContainer({ id: 'graph-label-background' }),
 
   play: async ({ canvasElement }) => {
-    const nodes: NodeData[] = [
+    const nodes: GraphNode[] = [
       // 3-col × 2-row grid so pill labels don't overlap horizontally.
-      { id: 'circle',          position: { x: -280, y: -150 }, style: { shape: { kind: 'circle', radius: 24 },                                                                  labelText: 'circle',          labelPlacement: 'bottom', labelOffsetY: 10 } },
-      { id: 'rect',            position: { x: 0,    y: -150 }, style: { shape: { kind: 'rect', width: 56, height: 40, cornerRadius: 8 },                                        labelText: 'rect',            labelPlacement: 'bottom', labelOffsetY: 10 } },
-      { id: 'arc',             position: { x: 280,  y: -150 }, style: { shape: { kind: 'arc', innerR: 10, outerR: 26, startAngle: -Math.PI / 2, endAngle: Math.PI / 2 },        labelText: 'arc',             labelPlacement: 'bottom', labelOffsetY: 10 } },
-      { id: 'regular-polygon', position: { x: -280, y: 150  }, style: { shape: { kind: 'regular-polygon', sides: 5, radius: 26 },                                               labelText: 'pentagon',        labelPlacement: 'bottom', labelOffsetY: 10 } },
-      { id: 'star',            position: { x: 0,    y: 150  }, style: { shape: { kind: 'star', points: 5, outerRadius: 28, innerRadius: 12 },                                   labelText: 'star',            labelPlacement: 'bottom', labelOffsetY: 10 } },
-      { id: 'polygon',         position: { x: 280,  y: 150  }, style: { shape: { kind: 'polygon', vertices: [ { x: 24, y: 0 }, { x: 12, y: -21 }, { x: -12, y: -21 }, { x: -24, y: 0 }, { x: -12, y: 21 }, { x: 12, y: 21 } ] }, labelText: 'polygon', labelPlacement: 'bottom', labelOffsetY: 10 } },
+      { type: 'node', id: 'circle',          position: { x: -280, y: -150 }, style: { shape: { kind: 'circle', radius: 24 },                                                                  labelText: 'circle',          labelPlacement: 'bottom', labelOffsetY: 10 } },
+      { type: 'node', id: 'rect',            position: { x: 0,    y: -150 }, style: { shape: { kind: 'rect', width: 56, height: 40, cornerRadius: 8 },                                        labelText: 'rect',            labelPlacement: 'bottom', labelOffsetY: 10 } },
+      { type: 'node', id: 'arc',             position: { x: 280,  y: -150 }, style: { shape: { kind: 'arc', innerR: 10, outerR: 26, startAngle: -Math.PI / 2, endAngle: Math.PI / 2 },        labelText: 'arc',             labelPlacement: 'bottom', labelOffsetY: 10 } },
+      { type: 'node', id: 'regular-polygon', position: { x: -280, y: 150  }, style: { shape: { kind: 'regular-polygon', sides: 5, radius: 26 },                                               labelText: 'pentagon',        labelPlacement: 'bottom', labelOffsetY: 10 } },
+      { type: 'node', id: 'star',            position: { x: 0,    y: 150  }, style: { shape: { kind: 'star', points: 5, outerRadius: 28, innerRadius: 12 },                                   labelText: 'star',            labelPlacement: 'bottom', labelOffsetY: 10 } },
+      { type: 'node', id: 'polygon',         position: { x: 280,  y: 150  }, style: { shape: { kind: 'polygon', vertices: [ { x: 24, y: 0 }, { x: 12, y: -21 }, { x: -12, y: -21 }, { x: -24, y: 0 }, { x: -12, y: 21 }, { x: 12, y: 21 } ] }, labelText: 'polygon', labelPlacement: 'bottom', labelOffsetY: 10 } },
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-label-background')!;

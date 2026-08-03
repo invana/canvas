@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   DragNodeBehaviour, GraphCanvas, GraphLayer,
-  type EdgeData, type NodeData,
+  type GraphEdge, type GraphNode,
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
@@ -53,16 +53,16 @@ export const Playground: Story = {
       showArrow: true,
     };
 
-    const nodes: NodeData[] = [
-      { id: NODE_ID, position: { x: 0, y: 0 },
+    const nodes: GraphNode[] = [
+      { type: 'node', id: NODE_ID, position: { x: 0, y: 0 },
         style: {
           shape: { kind: 'rect', width: 80, height: 50 },
           bgFill: 0x4f9cf9, bgStrokeColor: 0x1e40af, bgStrokeWidth: 2,
         } },
     ];
 
-    const edges: EdgeData[] = [
-      { id: EDGE_ID, source: NODE_ID, target: NODE_ID },
+    const edges: GraphEdge[] = [
+      { type: 'edge', id: EDGE_ID, source: NODE_ID, target: NODE_ID },
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-edge-loop-polyline-playground')!;

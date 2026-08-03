@@ -74,8 +74,6 @@ export const GraphVisualiserStory: Story = {
      * id `layout`; `null` means it rides the bundle's own `graph-force`.
      */
     const datasets = useMemo(() => {
-      const groupOf = (n: GraphNode): number =>
-        (n.data as { group?: number } | undefined)?.group ?? 0;
 
       const flareImports = flareImportsAsGraph();
       const randomTree = generateRandomTree(120);
@@ -87,11 +85,10 @@ export const GraphVisualiserStory: Story = {
           // a label (its "type"). Stamp graph-DB-style labels so the inspector's
           // Type row has something to show: each node's community `group` becomes
           // its type, so the inspector groups characters by community; edges are
-          // `APPEARS_WITH`.
-          data: {
-            nodes: lesMiserables.nodes.map((n) => ({ ...n, type: `Group ${groupOf(n)}` })),
-            edges: lesMiserables.edges.map((e) => ({ ...e, type: 'APPEARS_WITH' })),
-          } as GraphData,
+          // The dataset is already engine-ready — characters carry
+          // `type: 'character'` and their community on `data.group`, which the
+          // ColorByBehaviour partitions by. No re-mapping needed.
+          data: lesMiserables,
           // The dataset ships `color: { enabled: false }` — correctly, since Les
           // Mis has no `type` of its own. This story just gave every node one, so
           // colour-by-type earns its keep here: the bundle's `color` behaviour

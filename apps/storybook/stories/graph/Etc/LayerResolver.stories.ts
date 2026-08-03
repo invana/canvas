@@ -1,6 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type GraphNode, type NodeData } from '@invana/graph';
+import {
+  GraphCanvas,
+  GraphLayer,
+  type GraphNode,
+} from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'graph/Etc/LayerResolver' };
@@ -44,34 +48,34 @@ export const LayerResolverStory: Story = {
     // Per-node `style.shape` is concrete (no resolvers per-instance at the
     // store layer). The layer-level `node.style.bgFill` resolver runs
     // every render against the stored GraphNode.
-    const nodes: NodeData<TileData>[] = [
-      {
+    const nodes: GraphNode<TileData>[] = [
+      { type: 'node',
         id: 'a',
         position: { x: -240, y: 0 },
         data: { weight: 1.0, group: 0 },
         style: { shape: { kind: 'circle', radius: 20 }, labelText: 'a' },
       },
-      {
+      { type: 'node',
         id: 'b',
         position: { x: -120, y: 0 },
         data: { weight: 1.5, group: 1 },
         style: { shape: { kind: 'circle', radius: 26 }, labelText: 'b' },
         states: ['hovered'],
       },
-      {
+      { type: 'node',
         id: 'c',
         position: { x: 0, y: 0 },
         data: { weight: 2.0, group: 2 },
         style: { shape: { kind: 'circle', radius: 32 }, labelText: 'c' },
       },
-      {
+      { type: 'node',
         id: 'd',
         position: { x: 120, y: 0 },
         data: { weight: 2.5, group: 0 },
         style: { shape: { kind: 'circle', radius: 38 }, labelText: 'd' },
         states: ['hovered'],
       },
-      {
+      { type: 'node',
         id: 'e',
         position: { x: 240, y: 0 },
         data: { weight: 3.0, group: 1 },

@@ -18,6 +18,7 @@ import type { GraphSchema } from '../schema/types';
 import { AdjacencyIndex } from './AdjacencyIndex';
 import { FrameFlushScheduler } from './FrameFlushScheduler';
 import { PendingEdges } from './PendingEdges';
+import { UNKNOWN_TYPE } from './types';
 import type {
   EdgeDirection,
   GraphEdge,
@@ -770,7 +771,9 @@ export class GraphStore implements DataSource {
 
     if ('states' in patch) cold.states = patch.states ?? undefined;
     if ('state' in patch) cold.state = patch.state;
-    if ('type' in patch) cold.type = patch.type;
+    // Same rule as insert: a patch that clears `type` normalises to the
+    // sentinel rather than leaving the stored record without one.
+    if ('type' in patch) cold.type = patch.type || UNKNOWN_TYPE;
     if ('style' in patch) cold.style = patch.style;
 
     if ('position' in patch && patch.position !== undefined) {
@@ -926,7 +929,8 @@ export class GraphStore implements DataSource {
       cold.target = nextTarget;
     }
 
-    if ('type' in patch) cold.type = patch.type;
+    // Same rule as insert — see `updateNode`.
+    if ('type' in patch) cold.type = patch.type || UNKNOWN_TYPE;
     if ('data' in patch) cold.data = patch.data;
     if ('states' in patch) cold.states = patch.states ?? undefined;
     if ('state' in patch) cold.state = patch.state;
@@ -1408,12 +1412,16 @@ export class GraphStore implements DataSource {
     if (node.hidden) this.hiddenNodeIds.add(node.id);
 
     // Cold payload stored without `position` / `pinned` — those live in columns.
-    const cold: GraphNode = { id: node.id };
+    const cold: GraphNode = { id: node.id, type: UNKNOWN_TYPE };
     if (node.data !== undefined) cold.data = node.data;
     if (node.parentId !== undefined) cold.parentId = node.parentId;
     if (node.states !== undefined) cold.states = node.states;
     if (node.state !== undefined) cold.state = node.state;
-    if (node.type !== undefined) cold.type = node.type;
+    // `||`, not `??`: `type: ''` satisfies the required-string type but would
+    // produce an empty legend row and an empty colour category — a record that
+    // is technically typed and practically not. Collapse it with the nullish
+    // cases. This is the single place a stored record's `type` is decided.
+    cold.type = node.type || UNKNOWN_TYPE;
     if (node.style !== undefined) cold.style = node.style;
     this.nodeMap.set(node.id, cold);
 
@@ -1446,8 +1454,13 @@ export class GraphStore implements DataSource {
     this.inAdj.add(dstSlot, slot);
     if (edge.hidden) this.hiddenEdgeIds.add(edge.id);
 
-    const cold: GraphEdge = { id: edge.id, source: edge.source, target: edge.target };
-    if (edge.type !== undefined) cold.type = edge.type;
+    const cold: GraphEdge = {
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      // See the note in `installNode` — `||` catches `''` as well as nullish.
+      type: edge.type || UNKNOWN_TYPE,
+    };
     if (edge.data !== undefined) cold.data = edge.data;
     if (edge.states !== undefined) cold.states = edge.states;
     if (edge.state !== undefined) cold.state = edge.state;

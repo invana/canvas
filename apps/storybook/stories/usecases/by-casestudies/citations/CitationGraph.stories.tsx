@@ -90,7 +90,7 @@ export const CitationGraphStory: Story = {
     const data: GraphData = useMemo(
       () => ({
         nodes: citations.nodes.map((n) => ({ id: n.id, type: n.data.topic, data: n.data })),
-        edges: citations.edges.map((e) => ({
+        edges: citations.edges.map((e) => ({ type: 'edge',
           id: e.id,
           source: e.source,
           target: e.target,

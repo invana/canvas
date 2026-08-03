@@ -263,12 +263,12 @@ function DrawingTools() {
       const newId = `cm-n-${n}-${stamp}`;
       const shape = shapeKey ? SHAPES[shapeKey] : undefined;
       history?.transaction('add node', (rec) => {
-        rec.addNode({
+        rec.addNode({ type: 'node',
           id: newId,
           position: pos,
           style: { labelText: `N${n}`, ...(shape ? { shape } : {}) },
         });
-        if (fromId) rec.addEdge({ id: `cm-e-${n}-${stamp}`, source: fromId, target: newId });
+        if (fromId) rec.addEdge({ type: 'edge', id: `cm-e-${n}-${stamp}`, source: fromId, target: newId });
       });
     },
     [history],
@@ -354,6 +354,7 @@ function DrawingTools() {
         // as flat top-level items rather than under a hover submenu.)
         ...Object.keys(SHAPES).map((key) => ({
           id: `add-${key}`,
+          type: 'node',
           label: `Add ${SHAPE_LABELS[key]?.toLowerCase() ?? key}`,
           icon: SHAPE_ICONS[key as keyof typeof SHAPE_ICONS],
           onClick: () => addNodeAt({ x: world.x, y: world.y }, { shapeKey: key }),
@@ -379,7 +380,7 @@ function DrawingTools() {
         enabled={tool === 'add'}
         createNode={(world) => {
           const n = (seqRef.current += 1);
-          return {
+          return { type: 'node',
             id: `n-${n}-${Date.now().toString(36)}`,
             position: world,
             style: { shape: SHAPES[nodeKindRef.current] ?? SHAPES.circle, labelText: String(n) },

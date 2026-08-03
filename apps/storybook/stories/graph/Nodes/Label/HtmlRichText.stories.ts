@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import type { ShapeLabelStyle } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type NodeData, type NodeStyle } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type GraphNode, type NodeStyle } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -45,14 +45,14 @@ export const HtmlRichTextStory: Story = {
       offset: { y: 10 },
     };
 
-    const nodes: NodeData[] = [
+    const nodes: GraphNode[] = [
       // 3-col × 2-row grid so rich-text pill labels (width 220) don't overlap.
-      { id: 'circle',          position: { x: -320, y: -150 }, style: { shape: { kind: 'circle', radius: 24 },                                                                  labelStyle: baseLabelStyle } },
-      { id: 'rect',            position: { x: 0,    y: -150 }, style: { shape: { kind: 'rect', width: 80, height: 50, cornerRadius: 10 },                                       labelStyle: baseLabelStyle } },
-      { id: 'arc',             position: { x: 320,  y: -150 }, style: { shape: { kind: 'arc', innerR: 10, outerR: 26, startAngle: -Math.PI / 2, endAngle: Math.PI / 2 },        labelStyle: baseLabelStyle } },
-      { id: 'regular-polygon', position: { x: -320, y: 150  }, style: { shape: { kind: 'regular-polygon', sides: 5, radius: 26 },                                               labelStyle: baseLabelStyle } },
-      { id: 'star',            position: { x: 0,    y: 150  }, style: { shape: { kind: 'star', points: 5, outerRadius: 28, innerRadius: 12 },                                   labelStyle: baseLabelStyle } },
-      { id: 'polygon',         position: { x: 320,  y: 150  }, style: { shape: { kind: 'polygon', vertices: [ { x: 24, y: 0 }, { x: 12, y: -21 }, { x: -12, y: -21 }, { x: -24, y: 0 }, { x: -12, y: 21 }, { x: 12, y: 21 } ] }, labelStyle: baseLabelStyle } },
+      { type: 'node', id: 'circle',          position: { x: -320, y: -150 }, style: { shape: { kind: 'circle', radius: 24 },                                                                  labelStyle: baseLabelStyle } },
+      { type: 'node', id: 'rect',            position: { x: 0,    y: -150 }, style: { shape: { kind: 'rect', width: 80, height: 50, cornerRadius: 10 },                                       labelStyle: baseLabelStyle } },
+      { type: 'node', id: 'arc',             position: { x: 320,  y: -150 }, style: { shape: { kind: 'arc', innerR: 10, outerR: 26, startAngle: -Math.PI / 2, endAngle: Math.PI / 2 },        labelStyle: baseLabelStyle } },
+      { type: 'node', id: 'regular-polygon', position: { x: -320, y: 150  }, style: { shape: { kind: 'regular-polygon', sides: 5, radius: 26 },                                               labelStyle: baseLabelStyle } },
+      { type: 'node', id: 'star',            position: { x: 0,    y: 150  }, style: { shape: { kind: 'star', points: 5, outerRadius: 28, innerRadius: 12 },                                   labelStyle: baseLabelStyle } },
+      { type: 'node', id: 'polygon',         position: { x: 320,  y: 150  }, style: { shape: { kind: 'polygon', vertices: [ { x: 24, y: 0 }, { x: 12, y: -21 }, { x: -12, y: -21 }, { x: -24, y: 0 }, { x: -12, y: 21 }, { x: 12, y: 21 } ] }, labelStyle: baseLabelStyle } },
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-label-html-rich-text')!;

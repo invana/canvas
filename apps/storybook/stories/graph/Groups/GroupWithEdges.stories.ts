@@ -50,7 +50,7 @@ export const GroupWithEdgesStory: Story = {
         : { bgFill: undefined, bgAlpha: undefined };
 
     const nodes: GraphNode[] = [
-      {
+      { type: 'node',
         id: 'group-a',
         position: { x: 0, y: 0 },
         style: {
@@ -70,19 +70,19 @@ export const GroupWithEdgesStory: Story = {
           labelPlacement: 'inside-top-left',
         },
       },
-      {
+      { type: 'node',
         id: 'a1', parentId: 'group-a', position: { x: -50, y: -40 },
         style: { shape: { kind: 'circle', radius: 16 }, bgFill: 0x3b82f6, labelText: 'a1', labelPlacement: 'bottom', labelOffsetY: 6 },
       },
-      {
+      { type: 'node',
         id: 'a2', parentId: 'group-a', position: { x: 50, y: -40 },
         style: { shape: { kind: 'circle', radius: 16 }, bgFill: 0x3b82f6, labelText: 'a2', labelPlacement: 'bottom', labelOffsetY: 6 },
       },
-      {
+      { type: 'node',
         id: 'a3', parentId: 'group-a', position: { x: 0, y: 50 },
         style: { shape: { kind: 'circle', radius: 16 }, bgFill: 0x3b82f6, labelText: 'a3', labelPlacement: 'bottom', labelOffsetY: 6 },
       },
-      {
+      { type: 'node',
         id: 'group-b',
         position: { x: 360, y: 0 },
         style: {
@@ -99,27 +99,27 @@ export const GroupWithEdgesStory: Story = {
           labelPlacement: 'inside-top-left',
         },
       },
-      {
+      { type: 'node',
         id: 'b1', parentId: 'group-b', position: { x: 310, y: -40 },
         style: { shape: { kind: 'circle', radius: 16 }, bgFill: 0xc026d3, labelText: 'b1', labelPlacement: 'bottom', labelOffsetY: 6 },
       },
-      {
+      { type: 'node',
         id: 'b2', parentId: 'group-b', position: { x: 410, y: -40 },
         style: { shape: { kind: 'circle', radius: 16 }, bgFill: 0xc026d3, labelText: 'b2', labelPlacement: 'bottom', labelOffsetY: 6 },
       },
-      {
+      { type: 'node',
         id: 'b3', parentId: 'group-b', position: { x: 360, y: 50 },
         style: { shape: { kind: 'circle', radius: 16 }, bgFill: 0xc026d3, labelText: 'b3', labelPlacement: 'bottom', labelOffsetY: 6 },
       },
     ];
 
     const edges: GraphEdge[] = [
-      { id: 'a1-a2', source: 'a1', target: 'a2', style: { strokeColor: 0x94a3b8, strokeWidth: 1, arrowTargetShape: 'none' } },
-      { id: 'a2-a3', source: 'a2', target: 'a3', style: { strokeColor: 0x94a3b8, strokeWidth: 1, arrowTargetShape: 'none' } },
-      { id: 'b1-b2', source: 'b1', target: 'b2', style: { strokeColor: 0x94a3b8, strokeWidth: 1, arrowTargetShape: 'none' } },
-      { id: 'b1-b3', source: 'b1', target: 'b3', style: { strokeColor: 0x94a3b8, strokeWidth: 1, arrowTargetShape: 'none' } },
+      { type: 'edge', id: 'a1-a2', source: 'a1', target: 'a2', style: { strokeColor: 0x94a3b8, strokeWidth: 1, arrowTargetShape: 'none' } },
+      { type: 'edge', id: 'a2-a3', source: 'a2', target: 'a3', style: { strokeColor: 0x94a3b8, strokeWidth: 1, arrowTargetShape: 'none' } },
+      { type: 'edge', id: 'b1-b2', source: 'b1', target: 'b2', style: { strokeColor: 0x94a3b8, strokeWidth: 1, arrowTargetShape: 'none' } },
+      { type: 'edge', id: 'b1-b3', source: 'b1', target: 'b3', style: { strokeColor: 0x94a3b8, strokeWidth: 1, arrowTargetShape: 'none' } },
       // Cross-group — re-routes to the collapsed super-node when either side collapses.
-      { id: 'cross', source: 'a3', target: 'b1', style: { strokeColor: 0x6b7fff, strokeWidth: 1.5, strokeDashArray: [4, 3], arrowTargetShape: 'none' } },
+      { type: 'edge', id: 'cross', source: 'a3', target: 'b1', style: { strokeColor: 0x6b7fff, strokeWidth: 1.5, strokeDashArray: [4, 3], arrowTargetShape: 'none' } },
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-group-with-edges')!;

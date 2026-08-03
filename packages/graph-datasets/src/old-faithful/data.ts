@@ -86,7 +86,7 @@ const RAW: ReadonlyArray<readonly [number, number]> = [
 
 export const oldFaithful = {
   nodes: RAW.map(
-    ([eruptions, waiting], i): GraphNode => ({
+    ([eruptions, waiting], i): GraphNode => ({ type: 'eruption',
       id: `f-${i}`,
       data: {
         eruptions,

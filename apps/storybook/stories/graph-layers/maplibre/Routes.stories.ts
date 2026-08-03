@@ -84,7 +84,7 @@ export const Routes_Story: Story = {
     // world coords don't.
     const nodes: GraphNode[] = airports.map((a, i) => {
       const { x, y } = map.project([a.lng, a.lat]);
-      return {
+      return { type: 'node',
         id: `ap-${i}`,
         position: { x, y },
         data: { name: a.name, lng: a.lng, lat: a.lat },
@@ -114,7 +114,7 @@ export const Routes_Story: Story = {
       const key = `${lo}-${hi}`;
       if (seen.has(key)) return;
       seen.add(key);
-      edges.push({
+      edges.push({ type: 'edge',
         id: `e-${edges.length}`,
         source: `ap-${lo}`,
         target: `ap-${hi}`,

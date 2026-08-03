@@ -87,7 +87,7 @@ export const CollisionDetectionStory: Story = {
       const nodes: GraphNode<NodeData>[] = [];
       for (let i = 0; i < count; i++) {
         const r = minR + Math.random() * (maxR - minR);
-        nodes.push({
+        nodes.push({ type: 'node',
           id: String(i),
           // No explicit `position` — the layout leaves x/y undefined so
           // d3-force phyllotaxis-scatters all nodes from the origin at
@@ -100,7 +100,7 @@ export const CollisionDetectionStory: Story = {
 
       // Pointer node — pinned (sim won't move it), large radius so collide
       // sweeps neighbours aside. Off-screen until the first pointermove.
-      nodes.push({
+      nodes.push({ type: 'node',
         id: POINTER_ID,
         position: { x: 1e6, y: 1e6 },
         pinned: true,

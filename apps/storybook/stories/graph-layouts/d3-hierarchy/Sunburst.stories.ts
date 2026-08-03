@@ -132,6 +132,7 @@ export const Sunburst: Story = {
       return {
         nodes: data.nodes.map((n) => ({
           id: n.id,
+          type: 'node',
           data: {
             // The layout reads `data.value` via its default value accessor —
             // only leaves carry one, inner nodes get summed by d3.hierarchy.
@@ -155,6 +156,7 @@ export const Sunburst: Story = {
         })),
         edges: data.edges.map((e) => ({
           id: e.id,
+          type: 'edge',
           source: e.source,
           target: e.target,
         })),

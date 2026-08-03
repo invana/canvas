@@ -6,8 +6,8 @@ import {
   GraphLayer,
   ParallelEdgeBehaviour,
   type EdgeAnchor,
-  type EdgeData,
-  type NodeData,
+  type GraphEdge,
+  type GraphNode,
   type NodeShapeOptions,
 } from '@invana/graph';
 import GUI from 'lil-gui';
@@ -57,12 +57,12 @@ export const Orth: Story = {
     };
 
     const nodeStyle = () => ({ bgFill: 0x64748b, bgStrokeColor: 0x334155, shape: SHAPES[settings.nodeKind]! });
-    const nodes: NodeData[] = [
-      { id: 'a', position: { x: -240, y: -160 }, style: nodeStyle() },
-      { id: 'b', position: { x:  240, y:  160 }, style: nodeStyle() },
+    const nodes: GraphNode[] = [
+      { type: 'node', id: 'a', position: { x: -240, y: -160 }, style: nodeStyle() },
+      { type: 'node', id: 'b', position: { x:  240, y:  160 }, style: nodeStyle() },
     ];
 
-    const edgeStyle = (): EdgeData['style'] => ({
+    const edgeStyle = (): GraphEdge['style'] => ({
       shape: {
         pathType: 'orth',
         sourceAnchor: settings.anchor,
@@ -70,7 +70,7 @@ export const Orth: Story = {
       },
     });
 
-    const edges: EdgeData[] = Array.from({ length: settings.count }, (_, i) => ({
+    const edges: GraphEdge[] = Array.from({ length: settings.count }, (_, i) => ({ type: 'edge',
       id: `e${i}`, source: 'a', target: 'b', style: edgeStyle(),
     }));
 
@@ -114,7 +114,7 @@ export const Orth: Story = {
       const style = edgeStyle();
       for (let i = 0; i < settings.count; i++) {
         if (!graph.store.getEdge(`e${i}`)) {
-          graph.store.addEdge({ id: `e${i}`, source: 'a', target: 'b', style });
+          graph.store.addEdge({ type: 'edge', id: `e${i}`, source: 'a', target: 'b', style });
         }
       }
       for (let i = settings.count; i <= COUNT_MAX; i++) {

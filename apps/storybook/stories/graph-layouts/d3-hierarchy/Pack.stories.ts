@@ -126,6 +126,7 @@ export const Pack: Story = {
             const isLeaf = n.data.isLeaf;
             return {
               id: n.id,
+              type: 'node',
               data: {
                 // Pack writes the real diameter onto `data.size` once it
                 // runs; this placeholder keeps a fresh setData from flashing
@@ -147,7 +148,7 @@ export const Pack: Story = {
           }),
         edges: data.edges
           .filter((e) => keep.has(e.source) && keep.has(e.target))
-          .map((e) => ({ id: e.id, source: e.source, target: e.target })),
+          .map((e) => ({ id: e.id, type: 'edge', source: e.source, target: e.target })),
       };
     };
 
@@ -168,7 +169,7 @@ export const Pack: Story = {
           style: {
             shape: (n) => {
               const size = (n.data as { size?: number } | undefined)?.size ?? 0.1;
-              return { kind: 'circle', radius: size / 2 };
+              return { type: 'edge', kind: 'circle', radius: size / 2 };
             },
           },
         },

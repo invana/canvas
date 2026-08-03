@@ -104,7 +104,7 @@ export const Streaming: Story = {
     const seed = (count: number): void => {
       const nodes: GraphNode[] = [];
       for (let i = 0; i < count; i++) {
-        nodes.push({
+        nodes.push({ type: 'node',
           id: nextNodeId(),
           position: randomPos(),
           data: { group: randInt(palette.length) },
@@ -114,7 +114,7 @@ export const Streaming: Story = {
       // Spanning-ish edges — every node except the first gets one edge
       // back to a random earlier node, giving the seed graph some structure.
       for (let i = 1; i < nodes.length; i++) {
-        edges.push({
+        edges.push({ type: 'edge',
           id: nextEdgeId(),
           source: nodes[i]!.id,
           target: nodes[randInt(i)]!.id,
@@ -152,7 +152,7 @@ export const Streaming: Story = {
       // automatically without any setNodeState call.
       const addedNodes: GraphNode[] = [];
       for (let i = 0; i < settings.addNodes; i++) {
-        addedNodes.push({
+        addedNodes.push({ type: 'node',
           id: nextNodeId(),
           position: randomPos(),
           data: { group: randInt(palette.length) },
@@ -168,7 +168,7 @@ export const Streaming: Story = {
           const s = pick(pool);
           const t = pick(pool);
           if (t === s) continue;
-          addedEdges.push({ id: nextEdgeId(), source: s, target: t });
+          addedEdges.push({ type: 'edge', id: nextEdgeId(), source: s, target: t });
         }
       }
 

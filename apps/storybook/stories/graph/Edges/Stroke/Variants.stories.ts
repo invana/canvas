@@ -3,9 +3,9 @@ import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   GraphCanvas,
   GraphLayer,
-  type EdgeData,
+  type GraphEdge,
   type EdgeShapeOptions,
-  type NodeData,
+  type GraphNode,
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -93,15 +93,15 @@ export const Variants: Story = {
         shapeFor: () => ({ pathType: 'manhattan' }) },
     ];
 
-    const nodes: NodeData[] = [];
-    const edges: EdgeData[] = [];
+    const nodes: GraphNode[] = [];
+    const edges: GraphEdge[] = [];
 
     // Column header nodes: invisible-ish anchors that carry the variant
     // label above. Tiny radius + bg matched to background so only the
     // label reads.
     for (let c = 0; c < VARIANTS.length; c++) {
       const v = VARIANTS[c]!;
-      nodes.push({
+      nodes.push({ type: 'node',
         id: `header-${c}`,
         position: { x: c * COL_PITCH + EDGE_DX / 2, y: HEADER_Y },
         style: {
@@ -132,17 +132,17 @@ export const Variants: Story = {
         const tgtY = rowY + EDGE_DY;
         const cell = `${row.name}-${variant.name}`;
 
-        nodes.push({
+        nodes.push({ type: 'node',
           id: `src-${cell}`,
           position: { x: srcX, y: srcY },
           style: c === 0 ? { labelText: row.name } : {},
         });
-        nodes.push({
+        nodes.push({ type: 'node',
           id: `tgt-${cell}`,
           position: { x: tgtX, y: tgtY },
         });
 
-        edges.push({
+        edges.push({ type: 'edge',
           id: `edge-${cell}`,
           source: `src-${cell}`,
           target: `tgt-${cell}`,

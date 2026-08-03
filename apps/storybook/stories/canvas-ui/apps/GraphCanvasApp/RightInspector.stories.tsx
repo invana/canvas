@@ -19,7 +19,6 @@ import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ClickViewBehaviour, type ViewContext } from '@invana/canvas-react';
 import { EdgeDetailView, GraphCanvasApp, GraphControlsToolbar, NodeDetailView, PanelContent, ThemeToggle } from '@invana/canvas-ui';
-import type { GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { ThemeProvider } from '@invana/themes';
 
@@ -29,11 +28,7 @@ type Story = StoryObj;
 
 // Community `group` → node `type`; edges are `APPEARS_WITH`. This gives the
 // inspector's Type row a real value and colours nodes by community.
-const groupOf = (n: GraphNode): number => (n.data as { group?: number } | undefined)?.group ?? 0;
-const DATA = {
-  nodes: lesMiserables.nodes.map((n) => ({ ...n, type: `Group ${groupOf(n)}` })),
-  edges: lesMiserables.edges.map((e) => ({ ...e, type: 'APPEARS_WITH' })),
-};
+const DATA = lesMiserables;
 
 /** The app + the state bridge between the click behaviour and the right region. */
 function RightInspectorApp() {

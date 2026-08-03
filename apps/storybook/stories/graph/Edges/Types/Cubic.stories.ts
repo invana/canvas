@@ -4,8 +4,8 @@ import {
   DragNodeBehaviour,
   GraphCanvas,
   GraphLayer,
-  type EdgeData,
-  type NodeData,
+  type GraphEdge,
+  type GraphNode,
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -27,36 +27,36 @@ export const Cubic: Story = {
   render: () => createContainer({ id: 'graph-edge-types-cubic' }),
 
   play: async ({ canvasElement }) => {
-    const nodes: NodeData[] = [
-      { id: 'hub',         position: { x:    0, y:    0 } },
-      { id: 'default',     position: { x:    0, y: -180 } },
-      { id: 'selected',    position: { x:  171, y:  -56 } },
-      { id: 'highlighted', position: { x:  106, y:  146 } },
-      { id: 'dimmed',      position: { x: -106, y:  146 } },
-      { id: 'disabled',    position: { x: -171, y:  -56 } },
+    const nodes: GraphNode[] = [
+      { type: 'node', id: 'hub',         position: { x:    0, y:    0 } },
+      { type: 'node', id: 'default',     position: { x:    0, y: -180 } },
+      { type: 'node', id: 'selected',    position: { x:  171, y:  -56 } },
+      { type: 'node', id: 'highlighted', position: { x:  106, y:  146 } },
+      { type: 'node', id: 'dimmed',      position: { x: -106, y:  146 } },
+      { type: 'node', id: 'disabled',    position: { x: -171, y:  -56 } },
     ];
 
-    const edges: EdgeData[] = [
-      { id: 'cubic-default',     source: 'hub', target: 'default',
+    const edges: GraphEdge[] = [
+      { type: 'edge', id: 'cubic-default',     source: 'hub', target: 'default',
         style: { shape: { pathType: 'bezier', sourceAnchor: 'boundary', targetAnchor: 'boundary',
                           pathStyleOpts: { axis: 'auto', tension: 0.6 } },
                  labelText: 'cubic-default' } },
-      { id: 'cubic-selected',    source: 'hub', target: 'selected',
+      { type: 'edge', id: 'cubic-selected',    source: 'hub', target: 'selected',
         style: { shape: { pathType: 'bezier', sourceAnchor: 'boundary', targetAnchor: 'boundary',
                           pathStyleOpts: { axis: 'auto', tension: 0.6 } },
                  labelText: 'cubic-selected' },
         states: ['selected'] },
-      { id: 'cubic-highlighted', source: 'hub', target: 'highlighted',
+      { type: 'edge', id: 'cubic-highlighted', source: 'hub', target: 'highlighted',
         style: { shape: { pathType: 'bezier', sourceAnchor: 'boundary', targetAnchor: 'boundary',
                           pathStyleOpts: { axis: 'auto', tension: 0.6 } },
                  labelText: 'cubic-highlighted' },
         states: ['highlighted'] },
-      { id: 'cubic-dimmed',      source: 'hub', target: 'dimmed',
+      { type: 'edge', id: 'cubic-dimmed',      source: 'hub', target: 'dimmed',
         style: { shape: { pathType: 'bezier', sourceAnchor: 'boundary', targetAnchor: 'boundary',
                           pathStyleOpts: { axis: 'auto', tension: 0.6 } },
                  labelText: 'cubic-dimmed' },
         states: ['dimmed'] },
-      { id: 'cubic-disabled',    source: 'hub', target: 'disabled',
+      { type: 'edge', id: 'cubic-disabled',    source: 'hub', target: 'disabled',
         style: { shape: { pathType: 'bezier', sourceAnchor: 'boundary', targetAnchor: 'boundary',
                           pathStyleOpts: { axis: 'auto', tension: 0.6 } },
                  labelText: 'cubic-disabled' },

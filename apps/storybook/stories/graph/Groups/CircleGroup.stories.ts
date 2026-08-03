@@ -29,7 +29,7 @@ export const CircleGroupStory: Story = {
     const settings = { autoFit: true, padding: 28 };
 
     const nodes: GraphNode[] = [
-      {
+      { type: 'node',
         id: 'group-c',
         position: { x: 0, y: 0 },
         style: {
@@ -43,7 +43,7 @@ export const CircleGroupStory: Story = {
           group: { autoFit: settings.autoFit, padding: settings.padding },
         },
       },
-      {
+      { type: 'node',
         id: 'node1',
         parentId: 'group-c',
         position: { x: -50, y: -30 },
@@ -57,7 +57,7 @@ export const CircleGroupStory: Story = {
           labelOffsetY: 6,
         },
       },
-      {
+      { type: 'node',
         id: 'node2',
         parentId: 'group-c',
         position: { x: 50, y: -30 },
@@ -71,7 +71,7 @@ export const CircleGroupStory: Story = {
           labelOffsetY: 6,
         },
       },
-      {
+      { type: 'node',
         id: 'node3',
         parentId: 'group-c',
         position: { x: 0, y: 80 },

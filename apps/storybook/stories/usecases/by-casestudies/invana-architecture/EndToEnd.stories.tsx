@@ -168,7 +168,7 @@ export const EndToEndStory: Story = {
     // handler swaps it for `stageDark`. Box footprints (`data.width` /
     // `data.height`) ride on the data payload the shape resolver reads.
     const data: GraphData = useMemo(
-      () => ({
+      () => ({ type: 'node',
         // Nodes arrive engine-ready: position, parentId, caption and the
         // `stage` tint state are all on the dataset.
         nodes: invanaArchitecture.nodes as GraphNode[],
@@ -177,7 +177,7 @@ export const EndToEndStory: Story = {
         // the only thing the story translates, since `strokeDashArray` is a
         // *look*, not data. Everything else about an edge — colour, weight,
         // arrowhead, smooth path, label font + pill — is on the layer template.
-        edges: invanaArchitecture.edges.map((e) => ({
+        edges: invanaArchitecture.edges.map((e) => ({ type: 'edge',
           id: e.id,
           source: e.source,
           target: e.target,

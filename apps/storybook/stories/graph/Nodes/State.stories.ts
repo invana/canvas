@@ -5,7 +5,6 @@ import {
   GraphLayer,
   type CanonicalStateName,
   type GraphNode,
-  type NodeData,
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
@@ -20,7 +19,7 @@ type Story = StoryObj;
  * this story does not register any state configs. Label content is hoisted
  * into `node.style.labelText` (resolver — reads per-tile `data` for the
  * text), and each tile's state is supplied directly via the data-driven
- * `states` field on `NodeData` — no imperative `setNodeState` calls.
+ * `states` field on `GraphNode` — no imperative `setNodeState` calls.
  *
  * The nodes are a flat literal array (no map / loop) so the data shape is
  * visible at a glance in Storybook's "Show code" tab.
@@ -44,37 +43,37 @@ export const State: Story = {
     }
 
     // 3×2 grid. Cell pitch: 220 × 200. Origin at (0, 0).
-    const nodes: NodeData<TileData>[] = [
-      {
+    const nodes: GraphNode<TileData>[] = [
+      { type: 'node',
         id: 'n-default',
         position: { x: -220, y: -100 },
         data: { state: 'default', note: 'resting appearance — no state active' },
       },
-      {
+      { type: 'node',
         id: 'n-hover',
         position: { x: 0, y: -100 },
         data: { state: 'hovered', note: 'pointer is over the node' },
         states: ['hovered'],
       },
-      {
+      { type: 'node',
         id: 'n-selected',
         position: { x: 220, y: -100 },
         data: { state: 'selected', note: 'click-selected (sticky)' },
         states: ['selected'],
       },
-      {
+      { type: 'node',
         id: 'n-highlighted',
         position: { x: -220, y: 100 },
         data: { state: 'highlighted', note: '1-hop neighbour of the focal' },
         states: ['highlighted'],
       },
-      {
+      { type: 'node',
         id: 'n-dimmed',
         position: { x: 0, y: 100 },
         data: { state: 'dimmed', note: 'de-emphasised by another active set' },
         states: ['dimmed'],
       },
-      {
+      { type: 'node',
         id: 'n-disabled',
         position: { x: 220, y: 100 },
         data: { state: 'disabled', note: 'not interactive' },

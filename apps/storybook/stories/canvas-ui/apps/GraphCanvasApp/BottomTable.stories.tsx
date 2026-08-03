@@ -16,7 +16,6 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { CanvasMessageBar, GraphCanvasApp, GraphControlsToolbar, GraphStatusBar, ThemeToggle } from '@invana/canvas-ui';
-import type { GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { ThemeProvider } from '@invana/themes';
 
@@ -26,16 +25,12 @@ type Story = StoryObj;
 
 // Community `group` → node `type`, plus a per-node degree (appearance count) so the
 // table has a couple of meaningful columns.
-const groupOf = (n: GraphNode): number => (n.data as { group?: number } | undefined)?.group ?? 0;
 const DEGREE = new Map<string, number>();
 for (const e of lesMiserables.edges) {
   DEGREE.set(e.source, (DEGREE.get(e.source) ?? 0) + 1);
   DEGREE.set(e.target, (DEGREE.get(e.target) ?? 0) + 1);
 }
-const DATA = {
-  nodes: lesMiserables.nodes.map((n) => ({ ...n, type: `Group ${groupOf(n)}` })),
-  edges: lesMiserables.edges.map((e) => ({ ...e, type: 'APPEARS_WITH' })),
-};
+const DATA = lesMiserables;
 
 // The bottom region — a data table projecting the graph's nodes. A plain
 // scrollable table stands in for the real `DataStore`-backed grid.

@@ -23,39 +23,39 @@ export const NodeCentralityStory: Story = {
     // Hub-and-spoke graph hardcoded so the degree pattern is readable from
     // the story source. h1 has degree 9 (8 leaves + 1 inter-hub edge), h2
     // has degree 7, h3 has degree 5; leaves are degree 1.
-    const nodes = [
-      { id: 'h1' },
-      { id: 'h2' },
-      { id: 'h3' },
-      { id: 'l1' }, { id: 'l2' }, { id: 'l3' }, { id: 'l4' },
-      { id: 'l5' }, { id: 'l6' }, { id: 'l7' }, { id: 'l8' },
-      { id: 'l9' }, { id: 'l10' }, { id: 'l11' }, { id: 'l12' }, { id: 'l13' },
-      { id: 'l14' }, { id: 'l15' }, { id: 'l16' }, { id: 'l17' },
+    const nodes: GraphNode[] = [
+      { id: 'h1' , type: 'node' },
+      { id: 'h2' , type: 'node' },
+      { id: 'h3' , type: 'node' },
+      { id: 'l1', type: 'node' }, { id: 'l2', type: 'node' }, { id: 'l3', type: 'node' }, { id: 'l4', type: 'node' },
+      { id: 'l5', type: 'node' }, { id: 'l6', type: 'node' }, { id: 'l7', type: 'node' }, { id: 'l8', type: 'node' },
+      { id: 'l9', type: 'node' }, { id: 'l10', type: 'node' }, { id: 'l11', type: 'node' }, { id: 'l12', type: 'node' }, { id: 'l13', type: 'node' },
+      { id: 'l14', type: 'node' }, { id: 'l15', type: 'node' }, { id: 'l16', type: 'node' }, { id: 'l17', type: 'node' },
     ];
     const edges = [
       // h1 spokes (out from h1 → degree 8 out, 0 in)
-      { id: 'e1',  source: 'h1', target: 'l1' },
-      { id: 'e2',  source: 'h1', target: 'l2' },
-      { id: 'e3',  source: 'h1', target: 'l3' },
-      { id: 'e4',  source: 'h1', target: 'l4' },
-      { id: 'e5',  source: 'h1', target: 'l5' },
-      { id: 'e6',  source: 'h1', target: 'l6' },
-      { id: 'e7',  source: 'h1', target: 'l7' },
-      { id: 'e8',  source: 'h1', target: 'l8' },
+      { id: 'e1', type: 'edge',  source: 'h1', target: 'l1' },
+      { id: 'e2', type: 'edge',  source: 'h1', target: 'l2' },
+      { id: 'e3', type: 'edge',  source: 'h1', target: 'l3' },
+      { id: 'e4', type: 'edge',  source: 'h1', target: 'l4' },
+      { id: 'e5', type: 'edge',  source: 'h1', target: 'l5' },
+      { id: 'e6', type: 'edge',  source: 'h1', target: 'l6' },
+      { id: 'e7', type: 'edge',  source: 'h1', target: 'l7' },
+      { id: 'e8', type: 'edge',  source: 'h1', target: 'l8' },
       // h2 spokes (in to h2 → degree 5 in)
-      { id: 'e9',  source: 'l9',  target: 'h2' },
-      { id: 'e10', source: 'l10', target: 'h2' },
-      { id: 'e11', source: 'l11', target: 'h2' },
-      { id: 'e12', source: 'l12', target: 'h2' },
-      { id: 'e13', source: 'l13', target: 'h2' },
+      { id: 'e9', type: 'edge',  source: 'l9',  target: 'h2' },
+      { id: 'e10', type: 'edge', source: 'l10', target: 'h2' },
+      { id: 'e11', type: 'edge', source: 'l11', target: 'h2' },
+      { id: 'e12', type: 'edge', source: 'l12', target: 'h2' },
+      { id: 'e13', type: 'edge', source: 'l13', target: 'h2' },
       // h3 spokes (mixed — l14/l15 in, l16/l17 out → degree 4)
-      { id: 'e14', source: 'l14', target: 'h3' },
-      { id: 'e15', source: 'l15', target: 'h3' },
-      { id: 'e16', source: 'h3',  target: 'l16' },
-      { id: 'e17', source: 'h3',  target: 'l17' },
+      { id: 'e14', type: 'edge', source: 'l14', target: 'h3' },
+      { id: 'e15', type: 'edge', source: 'l15', target: 'h3' },
+      { id: 'e16', type: 'edge', source: 'h3',  target: 'l16' },
+      { id: 'e17', type: 'edge', source: 'h3',  target: 'l17' },
       // Inter-hub bridges
-      { id: 'e18', source: 'h1', target: 'h2' },
-      { id: 'e19', source: 'h2', target: 'h3' },
+      { id: 'e18', type: 'edge', source: 'h1', target: 'h2' },
+      { id: 'e19', type: 'edge', source: 'h2', target: 'h3' },
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-node-centrality')!;

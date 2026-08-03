@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type NodeData } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type GraphNode } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
 /** Narrower than the public `BadgePlacement` union — these stories only use the
@@ -39,13 +39,13 @@ export const Placements: Story = {
     const colGap = 240;
     const rowGap = 200;
 
-    const nodes: NodeData[] = named.map((placement, i) => {
+    const nodes: GraphNode[] = named.map((placement, i) => {
       // 3-col × 3-row grid with the centre cell skipped — `placement` cycles
       // through 8 named anchors, `i` 0..7 maps to grid indices 0..3, 5..8.
       const gridIndex = i >= 4 ? i + 1 : i;
       const col = gridIndex % 3;
       const row = Math.floor(gridIndex / 3);
-      return {
+      return { type: 'node',
         id: placement,
         position: {
           x: (col - 1) * colGap,

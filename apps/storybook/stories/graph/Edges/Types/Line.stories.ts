@@ -4,8 +4,8 @@ import {
   DragNodeBehaviour,
   GraphCanvas,
   GraphLayer,
-  type EdgeData,
-  type NodeData,
+  type GraphEdge,
+  type GraphNode,
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -31,28 +31,28 @@ export const Line: Story = {
     // Hub at origin, five spokes at angles -90°, -18°, 54°, 126°, 198°
     // (72° apart, starting straight up), radius 180. Positions hardcoded
     // per the storybook data convention — no helper math at module scope.
-    const nodes: NodeData[] = [
-      { id: 'hub',         position: { x:    0, y:    0 } },
-      { id: 'default',     position: { x:    0, y: -180 } },
-      { id: 'selected',    position: { x:  171, y:  -56 } },
-      { id: 'highlighted', position: { x:  106, y:  146 } },
-      { id: 'dimmed',      position: { x: -106, y:  146 } },
-      { id: 'disabled',    position: { x: -171, y:  -56 } },
+    const nodes: GraphNode[] = [
+      { type: 'node', id: 'hub',         position: { x:    0, y:    0 } },
+      { type: 'node', id: 'default',     position: { x:    0, y: -180 } },
+      { type: 'node', id: 'selected',    position: { x:  171, y:  -56 } },
+      { type: 'node', id: 'highlighted', position: { x:  106, y:  146 } },
+      { type: 'node', id: 'dimmed',      position: { x: -106, y:  146 } },
+      { type: 'node', id: 'disabled',    position: { x: -171, y:  -56 } },
     ];
 
-    const edges: EdgeData[] = [
-      { id: 'line-default',     source: 'hub', target: 'default',
+    const edges: GraphEdge[] = [
+      { type: 'edge', id: 'line-default',     source: 'hub', target: 'default',
         style: { shape: { pathType: 'straight' }, labelText: 'line-default' } },
-      { id: 'line-selected',    source: 'hub', target: 'selected',
+      { type: 'edge', id: 'line-selected',    source: 'hub', target: 'selected',
         style: { shape: { pathType: 'straight' }, labelText: 'line-selected' },
         states: ['selected'] },
-      { id: 'line-highlighted', source: 'hub', target: 'highlighted',
+      { type: 'edge', id: 'line-highlighted', source: 'hub', target: 'highlighted',
         style: { shape: { pathType: 'straight' }, labelText: 'line-highlighted' },
         states: ['highlighted'] },
-      { id: 'line-dimmed',      source: 'hub', target: 'dimmed',
+      { type: 'edge', id: 'line-dimmed',      source: 'hub', target: 'dimmed',
         style: { shape: { pathType: 'straight' }, labelText: 'line-dimmed' },
         states: ['dimmed'] },
-      { id: 'line-disabled',    source: 'hub', target: 'disabled',
+      { type: 'edge', id: 'line-disabled',    source: 'hub', target: 'disabled',
         style: { shape: { pathType: 'straight' }, labelText: 'line-disabled' },
         states: ['disabled'] },
     ];

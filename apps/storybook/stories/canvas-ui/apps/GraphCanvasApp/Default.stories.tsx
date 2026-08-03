@@ -12,7 +12,6 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { GraphCanvasApp } from '@invana/canvas-ui';
-import type { GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { ThemeProvider } from '@invana/themes';
 
@@ -23,11 +22,7 @@ type Story = StoryObj;
 // Les Misérables ships no `type` — in a graph DB every node/edge carries a label
 // (its "type"). Map each node's community `group` to its type so the bundle's
 // default colour-by-type gives one colour per community; edges are `APPEARS_WITH`.
-const groupOf = (n: GraphNode): number => (n.data as { group?: number } | undefined)?.group ?? 0;
-const DATA = {
-  nodes: lesMiserables.nodes.map((n) => ({ ...n, type: `Group ${groupOf(n)}` })),
-  edges: lesMiserables.edges.map((e) => ({ ...e, type: 'APPEARS_WITH' })),
-};
+const DATA = lesMiserables;
 
 export const Default: Story = {
   render: () => (

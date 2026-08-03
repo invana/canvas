@@ -5,9 +5,10 @@ import {
   GraphCanvas,
   GraphLayer,
   type EdgeBadgePlacement,
-  type EdgeData,
-  type NodeData,
-} from '@invana/graph';
+  type GraphEdge,
+  type GraphNode,
+
+  type EdgeStyle,} from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -40,26 +41,26 @@ export const Overview: Story = {
   render: () => createContainer({ id: 'graph-edges-badges' }),
 
   play: async ({ canvasElement }) => {
-    const nodes: NodeData[] = [
+    const nodes: GraphNode[] = [
       // Row 0 — plain chip
-      { id: 'r0-src', position: { x: -240, y: -240 }, style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x60a5fa, labelText: 'plain', labelPlacement: 'left', labelOffsetX: -10 } },
-      { id: 'r0-tgt', position: { x:  240, y: -240 }, style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x34d399 } },
+      { type: 'node', id: 'r0-src', position: { x: -240, y: -240 }, style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x60a5fa, labelText: 'plain', labelPlacement: 'left', labelOffsetX: -10 } },
+      { type: 'node', id: 'r0-tgt', position: { x:  240, y: -240 }, style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x34d399 } },
       // Row 1 — count chip
-      { id: 'r1-src', position: { x: -240, y: -120 }, style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x60a5fa, labelText: 'count', labelPlacement: 'left', labelOffsetX: -10 } },
-      { id: 'r1-tgt', position: { x:  240, y: -120 }, style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x34d399 } },
+      { type: 'node', id: 'r1-src', position: { x: -240, y: -120 }, style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x60a5fa, labelText: 'count', labelPlacement: 'left', labelOffsetX: -10 } },
+      { type: 'node', id: 'r1-tgt', position: { x:  240, y: -120 }, style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x34d399 } },
       // Row 2 — icon at end
-      { id: 'r2-src', position: { x: -240, y:    0 }, style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x60a5fa, labelText: 'icon @ end', labelPlacement: 'left', labelOffsetX: -10 } },
-      { id: 'r2-tgt', position: { x:  240, y:    0 }, style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x34d399 } },
+      { type: 'node', id: 'r2-src', position: { x: -240, y:    0 }, style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x60a5fa, labelText: 'icon @ end', labelPlacement: 'left', labelOffsetX: -10 } },
+      { type: 'node', id: 'r2-tgt', position: { x:  240, y:    0 }, style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x34d399 } },
       // Row 3 — glow
-      { id: 'r3-src', position: { x: -240, y:  120 }, style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x60a5fa, labelText: 'glow', labelPlacement: 'left', labelOffsetX: -10 } },
-      { id: 'r3-tgt', position: { x:  240, y:  120 }, style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x34d399 } },
+      { type: 'node', id: 'r3-src', position: { x: -240, y:  120 }, style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x60a5fa, labelText: 'glow', labelPlacement: 'left', labelOffsetX: -10 } },
+      { type: 'node', id: 'r3-tgt', position: { x:  240, y:  120 }, style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x34d399 } },
       // Row 4 — auto-rotating arrow tag (use a curve so rotation is visible)
-      { id: 'r4-src', position: { x: -240, y:  240 }, style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x60a5fa, labelText: 'autoRotate', labelPlacement: 'left', labelOffsetX: -10 } },
-      { id: 'r4-tgt', position: { x:  240, y:  240 }, style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x34d399 } },
+      { type: 'node', id: 'r4-src', position: { x: -240, y:  240 }, style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x60a5fa, labelText: 'autoRotate', labelPlacement: 'left', labelOffsetX: -10 } },
+      { type: 'node', id: 'r4-tgt', position: { x:  240, y:  240 }, style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x34d399 } },
     ];
 
-    const edges: EdgeData[] = [
-      {
+    const edges: GraphEdge[] = [
+      { type: 'edge',
         id: 'r0',
         source: 'r0-src',
         target: 'r0-tgt',
@@ -67,6 +68,7 @@ export const Overview: Story = {
           badges: [
             {
               id: 'plain',
+              type: 'node',
               placement: 'middle',
               shape: { kind: 'circle', radius: 9 },
               fill: 0xf59e0b,
@@ -76,7 +78,7 @@ export const Overview: Story = {
           ],
         },
       },
-      {
+      { type: 'edge',
         id: 'r1',
         source: 'r1-src',
         target: 'r1-tgt',
@@ -84,6 +86,7 @@ export const Overview: Story = {
           badges: [
             {
               id: 'count',
+              type: 'node',
               placement: 'middle',
               shape: { kind: 'rect', width: 28, height: 20, cornerRadius: 10 },
               fill: 0xdc2626,
@@ -96,7 +99,7 @@ export const Overview: Story = {
           ],
         },
       },
-      {
+      { type: 'edge',
         id: 'r2',
         source: 'r2-src',
         target: 'r2-tgt',
@@ -104,6 +107,7 @@ export const Overview: Story = {
           badges: [
             {
               id: 'verified',
+              type: 'node',
               placement: 'end',
               shape: { kind: 'circle', radius: 11 },
               fill: 0x1d4ed8,
@@ -121,7 +125,7 @@ export const Overview: Story = {
           ],
         },
       },
-      {
+      { type: 'edge',
         id: 'r3',
         source: 'r3-src',
         target: 'r3-tgt',
@@ -129,6 +133,7 @@ export const Overview: Story = {
           badges: [
             {
               id: 'hot',
+              type: 'node',
               placement: 'middle',
               shape: { kind: 'circle', radius: 8 },
               fill: 0xf97316,
@@ -147,7 +152,7 @@ export const Overview: Story = {
           ],
         },
       },
-      {
+      { type: 'edge',
         id: 'r4',
         source: 'r4-src',
         target: 'r4-tgt',
@@ -156,6 +161,7 @@ export const Overview: Story = {
           badges: [
             {
               id: 'tag',
+              type: 'node',
               placement: 'middle',
               shape: { kind: 'rect', width: 60, height: 18, cornerRadius: 4 },
               fill: 0x7c3aed,
@@ -227,7 +233,7 @@ export const Overview: Story = {
       // story that wants a non-midpoint anchor as part of the demo.
       for (const edge of edges) {
         if (edge.id === 'r2') continue;
-        const badge = edge.style!.badges![0]!;
+        const badge = (edge.style as EdgeStyle).badges![0]!;
         graph.store.updateEdge(edge.id, {
           style: {
             ...edge.style!,

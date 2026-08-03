@@ -18,9 +18,10 @@ import type { GraphData } from '@invana/graph';
  * string, so it drops straight into `setData` with no mapping at the call site.
  */
 export const generateRandomTree = (numNodes: number): GraphData => ({
-  nodes: Array.from({ length: numNodes }, (_, i) => ({ id: String(i) })),
+  nodes: Array.from({ length: numNodes }, (_, i) => ({ id: String(i), type: 'node' })),
   edges: Array.from({ length: numNodes - 1 }, (_, i) => ({
     id: `e${i}`,
+    type: 'link',
     source: String(Math.floor(Math.sqrt(i))),
     target: String(i + 1),
   })),

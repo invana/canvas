@@ -30,9 +30,9 @@ export const StatCard: Story = {
 
   play: async ({ canvasElement }) => {
     const nodes: GraphNode[] = [
-      { id: 's1', position: { x: -240, y: 0 }, data: { label: 'Revenue', value: '$48.2k', delta: '+12.5%', trend: 'up', icon: 'lucide/dollar-sign', accent: 0x22c55e } satisfies StatCardData },
-      { id: 's2', position: { x: 0, y: 0 }, data: { label: 'Active Users', value: '3,914', delta: '+4.1%', trend: 'up', icon: 'lucide/users', accent: 0x3b82f6 } satisfies StatCardData },
-      { id: 's3', position: { x: 240, y: 0 }, data: { label: 'Churn', value: '2.3%', delta: '-0.8%', trend: 'down', icon: 'lucide/trending-down', accent: 0xf43f5e } satisfies StatCardData },
+      { type: 'node', id: 's1', position: { x: -240, y: 0 }, data: { label: 'Revenue', value: '$48.2k', delta: '+12.5%', trend: 'up', icon: 'lucide/dollar-sign', accent: 0x22c55e } satisfies StatCardData },
+      { type: 'node', id: 's2', position: { x: 0, y: 0 }, data: { label: 'Active Users', value: '3,914', delta: '+4.1%', trend: 'up', icon: 'lucide/users', accent: 0x3b82f6 } satisfies StatCardData },
+      { type: 'node', id: 's3', position: { x: 240, y: 0 }, data: { label: 'Churn', value: '2.3%', delta: '-0.8%', trend: 'down', icon: 'lucide/trending-down', accent: 0xf43f5e } satisfies StatCardData },
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#composite-stat-card')!;

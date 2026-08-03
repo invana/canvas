@@ -31,7 +31,7 @@ export const CARD_SHAPE: CompositeShapeOption = {
   ],
 };
 
-const card = (id: string, title: string, accent: number, x: number, y: number): GraphData['nodes'][number] => ({
+const card = (id: string, title: string, accent: number, x: number, y: number): GraphData['nodes'][number] => ({ type: 'node',
   id,
   position: { x, y },
   style: {
@@ -49,16 +49,16 @@ const card = (id: string, title: string, accent: number, x: number, y: number): 
 /** Four simple nodes — one per shape kind, distinct fills. */
 export const SIMPLE_DATA: GraphData = {
   nodes: [
-    { id: 'alpha', position: { x: -150, y: -60 }, style: { shape: { kind: 'circle', radius: 28 }, bgFill: 0x3b82f6, labelText: 'Alpha', labelColor: 0xffffff, labelPlacement: 'center' } },
-    { id: 'beta', position: { x: 150, y: -60 }, style: { shape: { kind: 'rect', width: 64, height: 46, cornerRadius: 8 }, bgFill: 0x10b981, labelText: 'Beta', labelColor: 0x052e16, labelPlacement: 'center' } },
-    { id: 'gamma', position: { x: -150, y: 90 }, style: { shape: { kind: 'star', points: 5, innerRadius: 14, outerRadius: 30 }, bgFill: 0xf59e0b, labelText: 'Gamma', labelColor: 0x451a03, labelPlacement: 'center' } },
-    { id: 'delta', position: { x: 150, y: 90 }, style: { shape: { kind: 'regular-polygon', sides: 6, radius: 28 }, bgFill: 0x8b5cf6, labelText: 'Delta', labelColor: 0xffffff, labelPlacement: 'center' } },
+    { type: 'node', id: 'alpha', position: { x: -150, y: -60 }, style: { shape: { kind: 'circle', radius: 28 }, bgFill: 0x3b82f6, labelText: 'Alpha', labelColor: 0xffffff, labelPlacement: 'center' } },
+    { type: 'node', id: 'beta', position: { x: 150, y: -60 }, style: { shape: { kind: 'rect', width: 64, height: 46, cornerRadius: 8 }, bgFill: 0x10b981, labelText: 'Beta', labelColor: 0x052e16, labelPlacement: 'center' } },
+    { type: 'node', id: 'gamma', position: { x: -150, y: 90 }, style: { shape: { kind: 'star', points: 5, innerRadius: 14, outerRadius: 30 }, bgFill: 0xf59e0b, labelText: 'Gamma', labelColor: 0x451a03, labelPlacement: 'center' } },
+    { type: 'node', id: 'delta', position: { x: 150, y: 90 }, style: { shape: { kind: 'regular-polygon', sides: 6, radius: 28 }, bgFill: 0x8b5cf6, labelText: 'Delta', labelColor: 0xffffff, labelPlacement: 'center' } },
   ],
   edges: [
-    { id: 'e1', source: 'alpha', target: 'beta' },
-    { id: 'e2', source: 'beta', target: 'delta' },
-    { id: 'e3', source: 'delta', target: 'gamma' },
-    { id: 'e4', source: 'gamma', target: 'alpha' },
+    { type: 'edge', id: 'e1', source: 'alpha', target: 'beta' },
+    { type: 'edge', id: 'e2', source: 'beta', target: 'delta' },
+    { type: 'edge', id: 'e3', source: 'delta', target: 'gamma' },
+    { type: 'edge', id: 'e4', source: 'gamma', target: 'alpha' },
   ],
 };
 
@@ -70,8 +70,8 @@ export const COMPOSITE_DATA: GraphData = {
     card('worker', 'Worker', 0xf472b6, 170, 90),
   ],
   edges: [
-    { id: 'e1', source: 'service', target: 'gateway' },
-    { id: 'e2', source: 'service', target: 'worker' },
+    { type: 'edge', id: 'e1', source: 'service', target: 'gateway' },
+    { type: 'edge', id: 'e2', source: 'service', target: 'worker' },
   ],
 };
 
@@ -79,10 +79,10 @@ export const COMPOSITE_DATA: GraphData = {
 export const MIXED_DATA: GraphData = {
   nodes: [...SIMPLE_DATA.nodes, card('service', 'Service', 0x38bdf8, 0, 15)],
   edges: [
-    { id: 'm1', source: 'alpha', target: 'service' },
-    { id: 'm2', source: 'beta', target: 'service' },
-    { id: 'm3', source: 'gamma', target: 'service' },
-    { id: 'm4', source: 'delta', target: 'service' },
+    { type: 'edge', id: 'm1', source: 'alpha', target: 'service' },
+    { type: 'edge', id: 'm2', source: 'beta', target: 'service' },
+    { type: 'edge', id: 'm3', source: 'gamma', target: 'service' },
+    { type: 'edge', id: 'm4', source: 'delta', target: 'service' },
   ],
 };
 

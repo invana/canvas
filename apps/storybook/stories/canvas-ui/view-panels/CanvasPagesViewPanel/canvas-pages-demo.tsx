@@ -38,19 +38,19 @@ function hslToRgbNumber(h: number, s: number, l: number): number {
 function boardGraph(title: string): GraphData {
   return {
     nodes: [
-      { id: 'hub', data: { name: title } },
-      { id: 'a' },
-      { id: 'b' },
-      { id: 'c' },
-      { id: 'd' },
-      { id: 'e' },
+      { type: 'node', id: 'hub', data: { name: title } },
+      { type: 'node', id: 'a' },
+      { type: 'node', id: 'b' },
+      { type: 'node', id: 'c' },
+      { type: 'node', id: 'd' },
+      { type: 'node', id: 'e' },
     ],
     edges: [
-      { id: 'ha', source: 'hub', target: 'a' },
-      { id: 'hb', source: 'hub', target: 'b' },
-      { id: 'hc', source: 'hub', target: 'c' },
-      { id: 'hd', source: 'hub', target: 'd' },
-      { id: 'he', source: 'hub', target: 'e' },
+      { type: 'edge', id: 'ha', source: 'hub', target: 'a' },
+      { type: 'edge', id: 'hb', source: 'hub', target: 'b' },
+      { type: 'edge', id: 'hc', source: 'hub', target: 'c' },
+      { type: 'edge', id: 'hd', source: 'hub', target: 'd' },
+      { type: 'edge', id: 'he', source: 'hub', target: 'e' },
     ],
   };
 }

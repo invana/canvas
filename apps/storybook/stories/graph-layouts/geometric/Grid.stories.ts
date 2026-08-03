@@ -12,7 +12,8 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { BackgroundLayer, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphCanvas, DragNodeBehaviour, GraphLayer, type GraphNode, ThemeBehaviour } from '@invana/graph';
+import { GraphCanvas, DragNodeBehaviour, ColorByBehaviour,
+  GraphLayer, type GraphNode, ThemeBehaviour } from '@invana/graph';
 import { GeometricLayout, type GeometricLayoutMode } from '@invana/graph-layout-geometric';
 import type { EasingName } from '@invana/canvas';
 import { lesMiserables } from '@invana/graph-datasets';
@@ -27,21 +28,9 @@ export const Grid: Story = {
   render: () => createContainer({ id: 'graph-geometric-grid' }),
 
   play: async ({ canvasElement }) => {
-    const PALETTE = [
-      0x9ca3af, 0xef4444, 0xf59e0b, 0xeab308, 0x10b981, 0x06b6d4, 0x3b82f6, 0x8b5cf6, 0xec4899,
-      0x14b8a6, 0xa3e635,
-    ] as const;
-    const groupOf = (n: GraphNode): number => (n.data as { group?: number } | undefined)?.group ?? 0;
     const EASINGS: EasingName[] = ['linear', 'easeOutCubic', 'easeInOutCubic', 'easeInOutSine', 'easeOutQuad'];
 
-    const graphData = {
-      nodes: lesMiserables.nodes.map((n) => ({
-        id: n.id,
-        data: n.data,
-        style: { bgFill: PALETTE[groupOf(n as GraphNode) % PALETTE.length]! },
-      })),
-      edges: lesMiserables.edges.map((e) => ({ id: e.id, source: e.source, target: e.target })),
-    };
+    const graphData = lesMiserables;
 
     // ── Add everything, then init() last ─────────────────────────────────
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-geometric-grid')!;
@@ -55,6 +44,11 @@ export const Grid: Story = {
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
     canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }));
+    // Colour by the community on `data.group` — the dataset carries it, so
+    // the story needs no palette of its own.
+    canvas.behaviours.register(
+      new ColorByBehaviour({ id: 'color', targetLayerId: 'graph', enabled: true, nodeValueKey: 'data.group', colorEdges: false }),
+    );
     const layout = new GeometricLayout({ id: 'geo', targetLayerId: 'graph' });
     canvas.layouts.add(layout);
 

@@ -4,8 +4,8 @@ import {
   DragNodeBehaviour,
   GraphCanvas,
   GraphLayer,
-  type EdgeData,
-  type NodeData,
+  type GraphEdge,
+  type GraphNode,
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -28,15 +28,15 @@ export const OrthogonalLineStory: Story = {
   render: () => createContainer({ id: 'graph-edge-types-orth' }),
 
   play: async ({ canvasElement }) => {
-    const nodes: NodeData[] = [
-      { id: 'a', position: { x: -220, y: -80 },
+    const nodes: GraphNode[] = [
+      { type: 'node', id: 'a', position: { x: -220, y: -80 },
         style: { bgFill: 0x4f9cf9, bgStrokeColor: 0x1d4ed8, labelText: 'a', labelPlacement: 'top' } },
-      { id: 'b', position: { x:  220, y:  80 },
+      { type: 'node', id: 'b', position: { x:  220, y:  80 },
         style: { bgFill: 0x10b981, bgStrokeColor: 0x047857, labelText: 'b', labelPlacement: 'bottom' } },
     ];
 
-    const edges: EdgeData[] = [
-      {
+    const edges: GraphEdge[] = [
+      { type: 'edge',
         id: 'orth',
         source: 'a',
         target: 'b',

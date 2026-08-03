@@ -4,8 +4,8 @@ import {
   GraphCanvas,
   GraphLayer,
   type CanonicalStateName,
-  type EdgeData,
-  type NodeData,
+  type GraphEdge,
+  type GraphNode,
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
@@ -44,60 +44,60 @@ export const State: Story = {
 
     // 3×2 grid. Cell pitch: 280 × 200. Endpoints sit ±90 from each cell
     // centre. Anchor ids: a-* (left), b-* (right) per tile.
-    const nodes: NodeData[] = [
+    const nodes: GraphNode[] = [
       // row 0 — y = -100
-      { id: 'a-default',     position: { x: -370, y: -100 } },
-      { id: 'b-default',     position: { x: -190, y: -100 } },
-      { id: 'a-hover',       position: { x:  -90, y: -100 } },
-      { id: 'b-hover',       position: { x:   90, y: -100 } },
-      { id: 'a-selected',    position: { x:  190, y: -100 } },
-      { id: 'b-selected',    position: { x:  370, y: -100 } },
+      { type: 'node', id: 'a-default',     position: { x: -370, y: -100 } },
+      { type: 'node', id: 'b-default',     position: { x: -190, y: -100 } },
+      { type: 'node', id: 'a-hover',       position: { x:  -90, y: -100 } },
+      { type: 'node', id: 'b-hover',       position: { x:   90, y: -100 } },
+      { type: 'node', id: 'a-selected',    position: { x:  190, y: -100 } },
+      { type: 'node', id: 'b-selected',    position: { x:  370, y: -100 } },
 
       // row 1 — y = 100
-      { id: 'a-highlighted', position: { x: -370, y:  100 } },
-      { id: 'b-highlighted', position: { x: -190, y:  100 } },
-      { id: 'a-dimmed',      position: { x:  -90, y:  100 } },
-      { id: 'b-dimmed',      position: { x:   90, y:  100 } },
-      { id: 'a-disabled',    position: { x:  190, y:  100 } },
-      { id: 'b-disabled',    position: { x:  370, y:  100 } },
+      { type: 'node', id: 'a-highlighted', position: { x: -370, y:  100 } },
+      { type: 'node', id: 'b-highlighted', position: { x: -190, y:  100 } },
+      { type: 'node', id: 'a-dimmed',      position: { x:  -90, y:  100 } },
+      { type: 'node', id: 'b-dimmed',      position: { x:   90, y:  100 } },
+      { type: 'node', id: 'a-disabled',    position: { x:  190, y:  100 } },
+      { type: 'node', id: 'b-disabled',    position: { x:  370, y:  100 } },
     ];
 
-    const edges: EdgeData<TileData>[] = [
-      {
+    const edges: GraphEdge<TileData>[] = [
+      { type: 'edge',
         id: 'e-default',
         source: 'a-default', target: 'b-default',
         data: { state: 'default', note: 'resting appearance — no state active' },
         style: { labelText: 'default\nresting appearance — no state active' },
       },
-      {
+      { type: 'edge',
         id: 'e-hover',
         source: 'a-hover', target: 'b-hover',
         data: { state: 'hovered', note: 'pointer is over the edge' },
         style: { labelText: 'hovered\npointer is over the edge' },
         states: ['hovered'],
       },
-      {
+      { type: 'edge',
         id: 'e-selected',
         source: 'a-selected', target: 'b-selected',
         data: { state: 'selected', note: 'click-selected (sticky)' },
         style: { labelText: 'selected\nclick-selected (sticky)' },
         states: ['selected'],
       },
-      {
+      { type: 'edge',
         id: 'e-highlighted',
         source: 'a-highlighted', target: 'b-highlighted',
         data: { state: 'highlighted', note: 'incident to a focal node' },
         style: { labelText: 'highlighted\nincident to a focal node' },
         states: ['highlighted'],
       },
-      {
+      { type: 'edge',
         id: 'e-dimmed',
         source: 'a-dimmed', target: 'b-dimmed',
         data: { state: 'dimmed', note: 'de-emphasised by another active set' },
         style: { labelText: 'dimmed\nde-emphasised by another active set' },
         states: ['dimmed'],
       },
-      {
+      { type: 'edge',
         id: 'e-disabled',
         source: 'a-disabled', target: 'b-disabled',
         data: { state: 'disabled', note: 'not interactive' },

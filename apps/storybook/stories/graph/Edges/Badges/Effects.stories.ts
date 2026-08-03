@@ -5,8 +5,8 @@ import {
   GraphCanvas,
   GraphLayer,
   type BadgeEffects,
-  type EdgeData,
-  type NodeData,
+  type GraphEdge,
+  type GraphNode,
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -49,9 +49,10 @@ export const Effects: Story = {
       { id: 'combo',    label: 'shake + breathing',  effects: { shake: { amplitude: 1.5, frequencyHz: 9 }, breathing: { amplitude: 0.25, frequencyHz: 1.2 } } },
     ];
 
-    const nodes: NodeData[] = variants.flatMap((v, i) => [
+    const nodes: GraphNode[] = variants.flatMap((v, i) => [
       {
         id: `${v.id}-src`,
+        type: 'node',
         position: { x: -260, y: (i - 2) * 90 },
         style: {
           shape: { kind: 'circle', radius: 14 },
@@ -67,6 +68,7 @@ export const Effects: Story = {
       },
       {
         id: `${v.id}-tgt`,
+        type: 'node',
         position: { x: 260, y: (i - 2) * 90 },
         style: {
           shape: { kind: 'circle', radius: 14 },
@@ -77,7 +79,7 @@ export const Effects: Story = {
       },
     ]);
 
-    const edges: EdgeData[] = variants.map((v) => ({
+    const edges: GraphEdge[] = variants.map((v) => ({ type: 'edge',
       id: v.id,
       source: `${v.id}-src`,
       target: `${v.id}-tgt`,
@@ -85,6 +87,7 @@ export const Effects: Story = {
         badges: [
           {
             id: 'demo',
+            type: 'node',
             placement: 'middle',
             shape: { kind: 'circle', radius: 11 },
             fill: 0xdc2626,

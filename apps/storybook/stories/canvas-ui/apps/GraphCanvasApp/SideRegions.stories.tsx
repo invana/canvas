@@ -16,7 +16,6 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { CanvasMessageBar, GraphCanvasApp, GraphControlsToolbar, GraphStatusBar, ThemeToggle } from '@invana/canvas-ui';
-import type { GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { ThemeProvider } from '@invana/themes';
 
@@ -30,11 +29,7 @@ export const SideRegionsStory: Story = {
     // Les Misérables ships no `type` — in a graph DB every node/edge carries a
     // label (its "type"). Each node's community `group` becomes its type; edges
     // are `APPEARS_WITH`.
-    const groupOf = (n: GraphNode): number => (n.data as { group?: number } | undefined)?.group ?? 0;
-    const data = {
-      nodes: lesMiserables.nodes.map((n) => ({ ...n, type: `Group ${groupOf(n)}` })),
-      edges: lesMiserables.edges.map((e) => ({ ...e, type: 'APPEARS_WITH' })),
-    };
+    const data = lesMiserables;
 
     // Right region — a simple details / settings-style surface. Plain content (no
     // engine needed); a real app drops the settings panel / node-edge editors here.

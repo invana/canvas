@@ -13,7 +13,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { BackgroundLayer, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import { GraphCanvas, GraphLayer, MiniMapLayer } from '@invana/graph';
-import type { GraphNode } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { lesMiserables } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
@@ -29,12 +28,7 @@ export const LayerVisibilityStory: Story = {
   render: () => createContainer({ id: 'graph-layer-visibility' }),
 
   play: async ({ canvasElement }) => {
-    const groupOf = (n: GraphNode): number =>
-      (n.data as { group?: number } | undefined)?.group ?? 0;
-    const data = {
-      nodes: lesMiserables.nodes.map((n) => ({ ...n, type: `Group ${groupOf(n)}` })),
-      edges: lesMiserables.edges.map((e) => ({ ...e, type: 'APPEARS_WITH' })),
-    };
+    const data = lesMiserables;
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-layer-visibility')!;
     const canvas = new GraphCanvas();

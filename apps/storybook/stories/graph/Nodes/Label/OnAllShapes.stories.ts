@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import type { ShapeLabelPlacement } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type NodeData, type NodeStyle } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type GraphNode, type NodeStyle } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -28,33 +28,33 @@ export const OnAllShapesStory: Story = {
     // Hexagon vertices pre-computed as literals (radius 30, pointy-right
     // orientation, centre-relative). Per the storybook data-pattern
     // convention: polygon coords are hardcoded, no helper functions.
-    const nodes: NodeData[] = [
-      {
+    const nodes: GraphNode[] = [
+      { type: 'node',
         id: 'circle',
         position: { x: -260, y: -160 },
         style: { shape: { kind: 'circle', radius: 28 }, labelText: 'circle', labelPlacement: 'bottom', labelOffsetY: 8 },
       },
-      {
+      { type: 'node',
         id: 'rect',
         position: { x: 0, y: -160 },
         style: { shape: { kind: 'rect', width: 70, height: 50, cornerRadius: 8 }, labelText: 'rect', labelPlacement: 'bottom', labelOffsetY: 8 },
       },
-      {
+      { type: 'node',
         id: 'arc',
         position: { x: 260, y: -160 },
         style: { shape: { kind: 'arc', innerR: 14, outerR: 32, startAngle: -Math.PI / 2, endAngle: Math.PI / 2 }, labelText: 'arc', labelPlacement: 'bottom', labelOffsetY: 8 },
       },
-      {
+      { type: 'node',
         id: 'regular-polygon',
         position: { x: -260, y: 160 },
         style: { shape: { kind: 'regular-polygon', sides: 5, radius: 32 }, labelText: 'regular-polygon', labelPlacement: 'bottom', labelOffsetY: 8 },
       },
-      {
+      { type: 'node',
         id: 'star',
         position: { x: 0, y: 160 },
         style: { shape: { kind: 'star', points: 5, outerRadius: 34, innerRadius: 14 }, labelText: 'star', labelPlacement: 'bottom', labelOffsetY: 8 },
       },
-      {
+      { type: 'node',
         id: 'polygon',
         position: { x: 260, y: 160 },
         style: {

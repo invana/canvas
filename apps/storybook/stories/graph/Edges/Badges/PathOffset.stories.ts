@@ -4,8 +4,8 @@ import {
   DragNodeBehaviour,
   GraphCanvas,
   GraphLayer,
-  type EdgeData,
-  type NodeData,
+  type GraphEdge,
+  type GraphNode,
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
@@ -34,9 +34,10 @@ export const PathOffsetStory: Story = {
 
   play: async ({ canvasElement }) => {
     const offsets = [-60, 0, 60];
-    const nodes: NodeData[] = offsets.flatMap((offset, i) => [
+    const nodes: GraphNode[] = offsets.flatMap((offset, i) => [
       {
         id: `src-${i}`,
+        type: 'node',
         position: { x: -260, y: (i - 1) * 110 },
         style: {
           shape: { kind: 'circle', radius: 14 },
@@ -50,12 +51,13 @@ export const PathOffsetStory: Story = {
       },
       {
         id: `tgt-${i}`,
+        type: 'node',
         position: { x: 260, y: (i - 1) * 110 },
         style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x34d399 },
       },
     ]);
 
-    const edges: EdgeData[] = offsets.map((offset, i) => ({
+    const edges: GraphEdge[] = offsets.map((offset, i) => ({ type: 'edge',
       id: `e-${i}`,
       source: `src-${i}`,
       target: `tgt-${i}`,
@@ -63,6 +65,7 @@ export const PathOffsetStory: Story = {
         badges: [
           {
             id: 'demo',
+            type: 'node',
             placement: 'middle',
             pathOffset: offset,
             shape: { kind: 'rect', width: 60, height: 20, cornerRadius: 4 },
@@ -79,11 +82,11 @@ export const PathOffsetStory: Story = {
 
     // Fourth edge driven live by the GUI for a sweep demo.
     nodes.push(
-      { id: 'live-src', position: { x: -260, y: 200 }, style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x60a5fa, labelText: 'live sweep', labelColor: 0x0f172a, labelFontSize: 11, labelPlacement: 'left', labelOffsetX: -10 } },
-      { id: 'live-tgt', position: { x:  260, y: 200 }, style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x34d399 } },
+      { type: 'node', id: 'live-src', position: { x: -260, y: 200 }, style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x60a5fa, labelText: 'live sweep', labelColor: 0x0f172a, labelFontSize: 11, labelPlacement: 'left', labelOffsetX: -10 } },
+      { type: 'node', id: 'live-tgt', position: { x:  260, y: 200 }, style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x34d399 } },
     );
     const liveOffset = { value: 0 };
-    edges.push({
+    edges.push({ type: 'edge',
       id: 'live',
       source: 'live-src',
       target: 'live-tgt',
@@ -91,6 +94,7 @@ export const PathOffsetStory: Story = {
         badges: [
           {
             id: 'sweep',
+            type: 'node',
             placement: 'middle',
             pathOffset: liveOffset.value,
             shape: { kind: 'circle', radius: 10 },
@@ -137,6 +141,7 @@ export const PathOffsetStory: Story = {
           badges: [
             {
               id: 'sweep',
+              type: 'node',
               placement: 'middle',
               pathOffset: liveOffset.value,
               shape: { kind: 'circle', radius: 10 },

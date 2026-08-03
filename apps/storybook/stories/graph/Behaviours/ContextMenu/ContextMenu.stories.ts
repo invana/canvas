@@ -23,18 +23,18 @@ export const ContextMenuStory: Story = {
   play: async ({ canvasElement }) => {
     // ─── Data — literal per-item; shared styling lives in canvasOptions ──────
     const nodes: GraphNode[] = [
-      { id: 'a', position: { x: -160, y: -80 }, data: { label: 'Alpha' }, style: { labelText: 'Alpha' } },
-      { id: 'b', position: { x: 0, y: -120 }, data: { label: 'Beta' }, style: { labelText: 'Beta' } },
-      { id: 'c', position: { x: 160, y: -60 }, data: { label: 'Gamma' }, style: { labelText: 'Gamma' } },
-      { id: 'd', position: { x: -120, y: 90 }, data: { label: 'Delta' }, style: { labelText: 'Delta' } },
-      { id: 'e', position: { x: 60, y: 120 }, data: { label: 'Epsilon' }, style: { labelText: 'Epsilon' } },
+      { type: 'node', id: 'a', position: { x: -160, y: -80 }, data: { label: 'Alpha' }, style: { labelText: 'Alpha' } },
+      { type: 'node', id: 'b', position: { x: 0, y: -120 }, data: { label: 'Beta' }, style: { labelText: 'Beta' } },
+      { type: 'node', id: 'c', position: { x: 160, y: -60 }, data: { label: 'Gamma' }, style: { labelText: 'Gamma' } },
+      { type: 'node', id: 'd', position: { x: -120, y: 90 }, data: { label: 'Delta' }, style: { labelText: 'Delta' } },
+      { type: 'node', id: 'e', position: { x: 60, y: 120 }, data: { label: 'Epsilon' }, style: { labelText: 'Epsilon' } },
     ];
     const edges: GraphEdge[] = [
-      { id: 'a-b', source: 'a', target: 'b', data: { rel: 'links' } },
-      { id: 'b-c', source: 'b', target: 'c', data: { rel: 'links' } },
-      { id: 'a-d', source: 'a', target: 'd', data: { rel: 'links' } },
-      { id: 'd-e', source: 'd', target: 'e', data: { rel: 'links' } },
-      { id: 'b-e', source: 'b', target: 'e', data: { rel: 'links' } },
+      { type: 'edge', id: 'a-b', source: 'a', target: 'b', data: { rel: 'links' } },
+      { type: 'edge', id: 'b-c', source: 'b', target: 'c', data: { rel: 'links' } },
+      { type: 'edge', id: 'a-d', source: 'a', target: 'd', data: { rel: 'links' } },
+      { type: 'edge', id: 'd-e', source: 'd', target: 'e', data: { rel: 'links' } },
+      { type: 'edge', id: 'b-e', source: 'b', target: 'e', data: { rel: 'links' } },
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-context-menu')!;

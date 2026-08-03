@@ -52,7 +52,7 @@ export const GroupResizeStory: Story = {
     };
 
     const nodes: GraphNode[] = [
-      {
+      { type: 'node',
         id: 'group-a',
         position: { x: 0, y: 0 },
         style: {
@@ -68,19 +68,19 @@ export const GroupResizeStory: Story = {
           labelPlacement: 'inside-top-left',
         },
       },
-      {
+      { type: 'node',
         id: 'node1',
         parentId: 'group-a',
         position: { x: 60, y: 60 },
         style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6 },
       },
-      {
+      { type: 'node',
         id: 'node2',
         parentId: 'group-a',
         position: { x: 200, y: 60 },
         style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6 },
       },
-      {
+      { type: 'node',
         id: 'plain-rect',
         position: { x: 380, y: 30 },
         style: {

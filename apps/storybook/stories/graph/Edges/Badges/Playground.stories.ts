@@ -6,9 +6,9 @@ import {
   GraphLayer,
   type BadgeOrigin,
   type EdgeBadge,
-  type EdgeData,
+  type GraphEdge,
   type NodeBadge,
-  type NodeData,
+  type GraphNode,
   type NodeDecorationSpec,
 } from '@invana/graph';
 import GUI from 'lil-gui';
@@ -135,7 +135,7 @@ export const Playground: Story = {
       ...(buildEffects(s.effect) ? { effects: buildEffects(s.effect)! } : {}),
     });
 
-    const buildEdge = (): EdgeData => ({
+    const buildEdge = (): GraphEdge => ({ type: 'edge',
       id: 'e',
       source: 'src',
       target: 'tgt',
@@ -145,8 +145,8 @@ export const Playground: Story = {
       },
     });
 
-    const nodes: NodeData[] = [
-      {
+    const nodes: GraphNode[] = [
+      { type: 'node',
         id: 'src',
         position: { x: -240, y: 0 },
         style: {
@@ -161,7 +161,7 @@ export const Playground: Story = {
           labelOffsetX: -10,
         },
       },
-      {
+      { type: 'node',
         id: 'tgt',
         position: { x: 240, y: 80 },
         style: {

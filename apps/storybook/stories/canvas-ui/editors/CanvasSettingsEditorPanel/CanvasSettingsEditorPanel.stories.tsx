@@ -30,7 +30,7 @@ import {
   ToolbarItems,
   useSidePanels,
 } from '@invana/canvas-ui';
-import type { GraphCanvas, GraphNode } from '@invana/graph';
+import type { GraphCanvas } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
@@ -52,8 +52,6 @@ const LAYOUTS: Record<string, LayoutFactory> = {
   'elk-layered': () => new ElkLayout({ algorithm: 'layered', direction: 'RIGHT' }),
 };
 const LAYOUT_LABEL: Record<string, string> = { 'd3-force': 'Force', 'elk-layered': 'Layered' };
-
-const groupOf = (n: GraphNode): number => (n.data as { group?: number } | undefined)?.group ?? 0;
 
 const nodeMenu = (ctx: GraphNodeMenuContext): MenuItem[] => [
   { id: 'inspect', label: `Inspect ${ctx.id}`, onClick: () => window.alert(`Node ${ctx.id}`) },
@@ -104,10 +102,7 @@ export const CanvasSettingsEditorPanelStory: Story = {
     // edge the `APPEARS_WITH` label. Memoised so toggling the panel (a re-render)
     // keeps a stable identity and never reloads the engine.
     const data = useMemo(
-      () => ({
-        nodes: lesMiserables.nodes.map((n) => ({ ...n, type: `Group ${groupOf(n)}` })),
-        edges: lesMiserables.edges.map((e) => ({ ...e, type: 'APPEARS_WITH' })),
-      }),
+      () => lesMiserables,
       [],
     );
 

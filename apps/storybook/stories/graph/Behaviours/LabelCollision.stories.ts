@@ -38,7 +38,7 @@ export const LabelCollisionStory: Story = {
     // Compose every node with a label hint. The label sits below the node
     // (placement: 'bottom') with a white pill background so it stays
     // readable on any underlying edge / shape colour.
-    const nodes: GraphNode[] = lesMiserables.nodes.map((n) => ({
+    const nodes: GraphNode[] = lesMiserables.nodes.map((n) => ({ type: `group-${n.data.group}`,
       id: n.id,
       data: { group: n.data.group },
       style: {

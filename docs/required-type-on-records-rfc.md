@@ -1,9 +1,15 @@
 # RFC — `type` becomes required on the stored record
 
-**Status:** 📋 proposed — no code written.
-**Decision taken (2026-08-03):** approach **(B)** — required on the *stored*
-record, defaulted at the store boundary. Approach (A), requiring every author to
-write it, is recorded in §3 with its measured cost and why it lost.
+**Status:** 🚧 in progress — the core has landed; the migration (§9) has not.
+**Decision taken (2026-08-03), then reversed the same day:** approach **(A)** —
+**one `GraphNode`, `type` required, every author writes it.**
+
+> (B) — a separate `GraphNodeInput` with `type` optional — was built and reverted.
+> It works and costs almost nothing to migrate, but it means two types to keep
+> straight for one field, and that ergonomic weight outweighed the saving.
+> **The measured cost of (A) is also far lower than §3 first claimed** — see
+> §3.1, where the headline "24,683 records" turned out to be two edits. §9 is the
+> migration plan.
 **Package:** `@invana/graph` (types + `GraphStore` + a handful of readers).
 `@invana/graph-datasets` and `apps/storybook` are **untouched** — that's the point.
 **Driver:** `node.type` should be a `string` everywhere downstream, so readers
@@ -13,19 +19,19 @@ stop writing `?? '(untyped)'` and behaviours can key off it unconditionally.
 
 ## 1. What changes
 
+**One type. `type` is required, everywhere.**
+
 ```ts
-// stored — what GraphStore holds and every reader sees
 interface GraphNode<D = unknown> {
   id: string;
   type: string;          // ← was `type?: string`
   …
 }
-
-// input — what a consumer hands to setData
-interface GraphNodeInput<D = unknown> extends Omit<GraphNode<D>, 'type'> {
-  type?: string;         // ← stays optional; omitted means 'unknown'
-}
 ```
+
+There is no `GraphNodeInput`. An author writes `type` on every record; a reader
+gets a `string` without a guard. The field that used to be optional simply
+isn't.
 
 ### 🔒 The sentinel — `UNKNOWN_TYPE`
 
@@ -40,7 +46,18 @@ interface GraphNodeInput<D = unknown> extends Omit<GraphNode<D>, 'type'> {
 export const UNKNOWN_TYPE = 'unknown';
 ```
 
-### 🔒 Normalisation — **both** insert paths, using `||` not `??`
+### 🔒 Normalisation stays — as a runtime net, not the mechanism
+
+With `type` required, TypeScript catches an omission at authoring time, so the
+store's default is no longer how records *get* a type. It is kept anyway,
+because three paths bypass the compiler entirely:
+
+- **`importData`** of a snapshot written before this change (§7.2).
+- **JSON parsed at runtime** — a feed, a fixture, a `fetch`.
+- **`updateNode(id, patch)`** — `Partial<GraphNode>` makes `type` optional
+  again, so `{ type: '' }` type-checks.
+
+So it is defence, and cheap. **Both** insert paths, using `||` not `??`:
 
 ```ts
 // GraphStore.installNode
@@ -67,9 +84,10 @@ confined to the one boundary where a human is authoring data.
 
 ---
 
-## 2. Why the boundary already exists
+## 2. Where the normalisation lands
 
-Three facts found while assessing, and together they make (B) nearly free:
+Three facts found while assessing. The first two still matter; the third is why
+(B) was tried at all, and is now resolved by W6 instead.
 
 1. **There is exactly one insert chokepoint per kind.** Every path —
    `addNode`, `addNodesBulk`, `setData`, the update-or-insert branch at
@@ -85,36 +103,68 @@ Three facts found while assessing, and together they make (B) nearly free:
    currently takes the *stored* type directly, and one interface is doing both
    jobs.
 
-Point 3 is the honest cost of this RFC: it isn't "add a `??`", it's **finishing a
-split the codebase already documents**. That's still small, and it pays down an
-existing inconsistency rather than adding one.
+Under (A) the split isn't needed at all: `GraphData` keeps taking `GraphNode`,
+and the dead `NodeData` / `NodeInput` cluster is simply deleted (W6, §6) rather
+than wired. One stored type, no input type, nothing else.
 
 ---
 
-## 3. The alternative, measured
+## 3. The two approaches, measured
 
-Approach **(A)** — make `type` required and let every author write it — was
-measured by flipping the declaration, compiling, and reverting.
+Both were built. (B) landed first, then was reverted in favour of (A).
 
-| Surface | Cost under (A) | Cost under (B) |
+| Surface | (A) — one type, required | (B) — separate input type |
 |---|---|---|
-| `@invana/graph` | **141 compile errors** | ~6 files (§5) |
-| `@invana/graph-datasets` | **11 of ~24 exports** need edits — 400 typeless nodes + 727 typeless edges in plain exports, plus `h1b2019AsGraph` at **24,683 / 24,682** | **0** |
-| `apps/storybook` | **232 of 301 files** that build records inline never set a type | **0** |
+| `@invana/graph` | 141 compile errors | ~6 files |
+| `@invana/graph-datasets` | 12 files, **few edits each** (§3.1) | 12 files (annotation swap only) |
+| `apps/storybook` | **2,546 literal sites** across 232 files | 0 |
 | `@invana/canvas-ui` | 5 files | 0 |
-| Every future story | must write `type: 'unknown'` forever | nothing |
+| Types to keep straight | **1** | 2 |
+| Every future story | writes `type` | nothing |
 
-> Downstream error counts under (A) could not be measured cleanly: while `graph`
-> has 141 errors its DTS build fails, so `@invana/graph/dist/index.d.ts`
-> disappears and storybook reports 387 errors of which **235 are
-> "could not find a declaration file"** cascade rather than real type errors.
-> Real downstream numbers only become measurable after `graph` itself compiles.
-> The per-file counts above are source-level and are the reliable figures.
+(B) is objectively cheaper to migrate and was recommended on that basis. (A) was
+chosen anyway, because one type for one field is worth more than the migration
+saving — and because the migration is both smaller and more *valuable* than the
+raw count suggests.
 
-(A) buys nothing (B) doesn't: the downstream guarantee is identical. It just
-charges ~250 file-edits for it, permanently taxes every new story, and — because
-`'unknown'` would be hand-written 25,000 times in generated data — invites typos
-that `'unknown'`-as-a-default cannot have.
+### 3.1 Correcting the scary number
+
+The first draft's headline was that `h1b2019AsGraph` alone needs
+**24,683 nodes / 24,682 edges** typed. That is the record count, not the edit
+count, and it was misleading.
+
+Measured: `h1b2019`, `flare`, `life-tree` and `lattice` contain **zero literal
+node lines** — every record is produced inside a `.map()` or a loop. Adding a
+type is **one edit per generator**, not one per record.
+
+| Where | Records | Literal sites needing an edit |
+|---|--:|--:|
+| `h1b2019` | 49,365 | **~2** |
+| `flare` / `flare-imports` | ~750 | ~4 |
+| `life-tree` | 581 | ~2 |
+| `lattice`, `random-tree` | generated | ~2 each |
+| `les-miserables` | 331 | **77** (hand-authored literals) |
+| `apps/storybook` | — | **2,546** (median 7 per file, max 91) |
+
+So the real shape of the work is: **a dozen dataset generators, one line each**,
+plus a long tail of small storybook fixtures. Which is what makes §9 tractable.
+
+### 3.2 What survived the revert
+
+The (B) implementation is not wasted. Everything except the input types carries
+over unchanged and is **already landed**:
+
+- ✅ `UNKNOWN_TYPE` exported from `@invana/graph`
+- ✅ `type: string` required on `GraphNode` / `GraphEdge`
+- ✅ `installNode` / `installEdge` normalise with `||`
+- ✅ `updateNode` / `updateEdge` normalise on patch
+- ✅ W6 — the dead `NodeData` / `NodeInput` / `EdgeData` / `EdgeInput` /
+  `GraphDataOptions` cluster deleted
+- ✅ 6 normalisation tests (`tests/store/typeNormalisation.test.ts`), 102/102 green
+
+**To revert:** delete `GraphNodeInput` / `GraphEdgeInput`, put the ~10 store
+signatures back to `GraphNode` / `GraphEdge`, and revert the 12 dataset
+annotation swaps — which then become §9's real work.
 
 ---
 
@@ -180,7 +230,7 @@ The tradeoff was between two invariants, and this preserves the stronger one:
 | ID | Task | Package | Notes |
 |---|---|---|---|
 | **W1** | `GraphNode.type` / `GraphEdge.type` → required | `graph/src/store/types.ts:24,91` | the two-line core |
-| **W2** | Add `GraphNodeInput` / `GraphEdgeInput` (`Omit<…,'type'> & { type?: string }`) and retype `GraphData` | `graph/src/layer/types.ts:130` | finishes the split §2.3 describes |
+| ~~W2~~ | ~~Add `GraphNodeInput` / `GraphEdgeInput`~~ | — | ❌ **dropped** — (A) keeps one type; see §3.2 and §9.1 |
 | **W3** | Default in `installNode` / `installEdge` | `graph/src/store/GraphStore.ts` | 4 call sites already funnel here |
 | **W4** | `updateNode(id, patch: Partial<GraphNode>)` — confirm `Partial` still allows omitting `type` | `GraphStore.ts:738` | it does; listed so it's checked, not assumed |
 | **W5** | Retire the 4 dead fallbacks (§4 table) | `graph`, `canvas-ui` | mechanical |
@@ -190,6 +240,7 @@ The tradeoff was between two invariants, and this preserves the stronger one:
 | **W10** | `ColorByBehaviour` — treat `UNKNOWN_TYPE` as `fallbackColor`, not a palette category (§4.2). Document the reserved string in its TSDoc and on the `UNKNOWN_TYPE` export | `graph` | keeps every untyped dataset looking exactly as it does today |
 | **W11** | `exportData` — omit `type` when it equals `UNKNOWN_TYPE` (§7.2), + the TSDoc note on export≠stored | `graph/src/layer/GraphLayer.ts:653` | ~1 MB saved on the largest snapshot |
 | **W12** | `GraphLegendLayer` — drop the dead `type === undefined` guard; **do not** add an `UNKNOWN_TYPE` skip (§8 Q8) | `graph/src/layer/GraphLegendLayer.ts:651` | the legend reports every type present, `unknown` included |
+| **W13** | The §9 migration — datasets, codemod, readers | `graph-datasets`, `apps/storybook` | the bulk of the work; see §9 |
 | **W9** | Update the data-model docs | `docs/data-types-instances.md`, `data-types-implementation-plan.md`, `node-edge-options-plan.md`, `canvas-store-state-inventory.md`, `apps/docs/graph/data-model.md`, `apps/docs/graph/store-plan.md`, `packages/graph/CLAUDE.md` | 7 files declare `type?: string` as the contract |
 
 **Sequencing:** W1–W3 land together (the type is briefly inconsistent between
@@ -326,3 +377,101 @@ reader diffing a snapshot against `store.nodes()` would otherwise be puzzled.
    nothing). A ninth ColorBy story would demonstrate it. *(Leaning: no. Once
    `MissingField` exists, a second all-grey story teaches little, and the rule is
    better documented in TSDoc than shown twice.)*
+
+---
+
+## 9. Migration plan
+
+The guiding rule, and the reason this is worth doing rather than merely
+survivable:
+
+> **`UNKNOWN_TYPE` is the fallback, not the migration strategy.** A record gets
+> a *meaningful* type wherever the data has one. `'unknown'` is for records that
+> genuinely have no kind — and after §9.2 there are very few.
+
+That is what turns a 2,500-edit chore into a payoff: today **15 datasets ship
+with colour-by-type disabled** because there is nothing to partition by
+(§4). After this, most of them can turn it on.
+
+### 9.1 Phase 0 — revert (B) *(~30 min)*
+
+Delete `GraphNodeInput` / `GraphEdgeInput`; restore `GraphNode` / `GraphEdge` on
+`addNode`, `addEdge`, `addNodesBulk`, `addEdgesBulk`, `upsertNode`, `upsertEdge`,
+`installNode`, `installEdge`, `tryAdmitPending`, `handleUnknownEndpoint`,
+`PendingEdges`, `GraphData`, and the two behaviour factories. Everything in
+§3.2's ✅ list stays. Expect ~141 errors to reappear — that is Phase 1's worklist.
+
+### 9.2 Phase 1 — datasets get *real* types *(~12 files, high value)*
+
+One edit per generator. Proposed types, chosen from what each dataset already
+knows about itself:
+
+| Dataset | Node type(s) | Edge type(s) | Source of the distinction |
+|---|---|---|---|
+| `les-miserables` | `'character'` | `'co-appears-with'` | uniform — 77 literals, one sed |
+| `old-faithful` | `'eruption'` | — | uniform |
+| `flare` / `flare-imports` | `'package'` / `'class'` | `'contains'` / `'imports'` | **`isLeaf` already exists** |
+| `h1b2019` | `'state'` / `'city'` / `'employer'` | `'contains'` | **`depth` already exists** |
+| `life-tree` | `'clade'` / `'species'` | `'descends-from'` | **`isLeaf` already exists** |
+| `uk-energy-flow` | `'stage'` | `'flows-to'` | could refine via `data.category` |
+| `lattice`, `random-tree` | `'cell'` / `'node'` | `'link'` | uniform |
+| `citations` | *(typed)* | `'cites'` | edges only |
+| `microservices` | *(typed)* | `'calls'` | edges only |
+| `ontology` | *(typed)* | per-predicate | edges only |
+| `agent-trace`, `modeller-seed` | per record | per record | small |
+
+The three marked **bold** are the interesting ones: `flare`, `h1b2019` and
+`life-tree` already carry `isLeaf` / `depth`, so a one-line ternary gives them a
+genuine two- or three-way partition where they currently have none — and
+colour-by-type starts working on datasets where it was previously pointless.
+
+Then **W7**: rewrite the 15 dataset TSDoc blocks whose stated reason
+(*"characters have no `type` … nothing to partition by"*) is now false, and flip
+`color: { enabled: false }` → `true` wherever the new types make it meaningful.
+
+### 9.3 Phase 2 — storybook fixtures *(2,546 sites, codemod-assisted)*
+
+Too many to hand-edit, uniform enough to automate. **ts-morph**, type-directed
+rather than regex, so it only touches literals that actually land in a
+`GraphNode` / `GraphEdge` position:
+
+1. Type-check the project; collect every `TS2741: Property 'type' is missing`
+   diagnostic — that is the exact worklist, no guessing about which literals matter.
+2. For each, insert `type: <T>` immediately after `id:`.
+3. Pick `<T>` per **file**, not per record — a story's fixture is almost always
+   one homogeneous graph. Default `'node'` / `'edge'`; use `UNKNOWN_TYPE` only
+   where the story's subject *is* the absence of a type.
+4. Re-run until the diagnostic set is empty.
+
+Review the diff by sampling rather than reading 232 files: the codemod's output
+is mechanical, and `check-types` plus the story screenshots are the real gate.
+
+> ⚠️ **`MissingField` must be excluded from the codemod.** Its subject is a
+> record with no meaningful type; giving it `'node'` silently destroys the story.
+> It gets `UNKNOWN_TYPE` and the §4.1 repoint by hand.
+
+### 9.4 Phase 3 — reader cleanup *(W5, W10–W12)*
+
+Only now that every producer is fixed:
+
+- Delete the four `?? '(untyped)'` / `?? 'shape'` fallbacks (§4) — **this is the
+  payoff, and it is not available under (B).**
+- W10 `ColorByBehaviour` sentinel · W11 export omission · W12 legend guard.
+- W9 docs.
+
+### 9.5 Sequencing and risk
+
+```
+Phase 0 (revert)  →  Phase 1 (datasets)  →  Phase 2 (codemod)  →  Phase 3 (readers)
+   ~30 min             ~12 files             2,546 sites           ~10 files
+                       ↑ the valuable bit    ↑ the bulk            ↑ the payoff
+```
+
+**The repo does not compile between Phase 0 and the end of Phase 2.** That is
+unavoidable with a required field and is the main cost of (A) over (B) — so
+Phases 0–2 should land as **one commit**, not three. Phase 3 can follow
+separately.
+
+**Rollback:** if Phase 2 goes badly, reverting to (B) is mechanical — re-add the
+two input types and the signatures. The `UNKNOWN_TYPE` constant, the
+normalisation, the tests and W6 hold under either.

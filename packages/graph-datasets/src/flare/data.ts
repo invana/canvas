@@ -72,6 +72,9 @@ export function flareAsGraph() {
     const { node, parentId, path, depth, group } = queue.shift()!;
     const isLeaf = !node.children || node.children.length === 0;
     nodes.push({
+      // The hierarchy already knows which is which — a leaf is a class, an
+      // inner node is a package. Two real types instead of one `unknown`.
+      type: isLeaf ? 'class' : 'package',
       id: path,
       data: {
         name: node.name,
@@ -82,7 +85,7 @@ export function flareAsGraph() {
       },
     });
     if (parentId !== null) {
-      edges.push({ id: `e${edgeCounter++}`, source: parentId, target: path });
+      edges.push({ id: `e${edgeCounter++}`, type: 'contains', source: parentId, target: path });
     }
     if (node.children) {
       for (const child of node.children) {

@@ -5,7 +5,7 @@ import {
 } from '@invana/canvas';
 import {
   GraphCanvas, DragNodeBehaviour, GraphLayer,
-  type EdgeData, type NodeData,
+  type GraphEdge, type GraphNode,
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
@@ -92,7 +92,7 @@ export const Ring: Story = {
       readonly id: string;
       readonly cx: number;
       readonly silhouette: (theta: number) => { dx: number; dy: number };
-      readonly nodeStyle: NodeData['style'];
+      readonly nodeStyle: GraphNode['style'];
     }
     const HOSTS: ReadonlyArray<HostSpec> = [
       { id: 'host-rect',    cx: -300, silhouette: rectSilhouette(RECT_W, RECT_H),
@@ -105,7 +105,7 @@ export const Ring: Story = {
         nodeStyle: { shape: { kind: 'regular-polygon', sides: 6, radius: HEX_R } } },
     ];
 
-    const nodes: NodeData[] = HOSTS.map(h => ({
+    const nodes: GraphNode[] = HOSTS.map(h => ({ type: 'node',
       id: h.id, position: { x: h.cx, y: 0 }, style: h.nodeStyle,
     }));
 
@@ -113,11 +113,11 @@ export const Ring: Story = {
     // it on the edge so the resolver doesn't recompute silhouettes
     // every render.
     interface EdgeMeta { angle: number; pivotDx: number; pivotDy: number; }
-    const edges: EdgeData<EdgeMeta>[] = [];
+    const edges: GraphEdge<EdgeMeta>[] = [];
     for (const h of HOSTS) {
       for (const a of ANGLES) {
         const pivot = h.silhouette(a.angle);
-        edges.push({
+        edges.push({ type: 'edge',
           id: `${h.id}-${a.id}`,
           source: h.id, target: h.id,
           data: { angle: a.angle, pivotDx: pivot.dx, pivotDy: pivot.dy },

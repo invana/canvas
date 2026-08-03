@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type BadgeEffects, type NodeData } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type BadgeEffects, type GraphNode } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'graph/Nodes/Badges/Effects' };
@@ -42,7 +42,7 @@ export const Effects: Story = {
     ];
 
     // Per-node style is content — it rides on `initData` below.
-    const nodes: NodeData[] = variants.map((v, i) => ({
+    const nodes: GraphNode[] = variants.map((v, i) => ({ type: 'node',
       id: v.id,
       position: { x: (i - 2) * 180, y: 0 },
       style: {

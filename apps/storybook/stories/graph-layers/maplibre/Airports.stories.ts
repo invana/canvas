@@ -74,7 +74,7 @@ export const Airports_Story: Story = {
     // no id column.
     const nodes: GraphNode[] = airports.map((a, i) => {
       const { x, y } = map.project([a.lng, a.lat]);
-      return {
+      return { type: 'node',
         id: `ap-${i}`,
         position: { x, y },
         data: { name: a.name, lng: a.lng, lat: a.lat },

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type EdgeData, type NodeData } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type GraphEdge, type GraphNode } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -35,32 +35,32 @@ export const Interactive: Story = {
     // viewers can read off which row is which; targets unlabelled. Row
     // pitch 110, target.y = source.y + 60 so the orth-family routers have
     // a vertical delta to bridge (otherwise they collapse to a flat line).
-    const nodes: NodeData[] = [
-      { id: 'straight-src',    position: { x: -240, y: -330 }, style: { labelText: 'straight' } },
-      { id: 'bezier-src',      position: { x: -240, y: -220 }, style: { labelText: 'bezier' } },
-      { id: 'bump-radial-src', position: { x: -240, y: -110 }, style: { labelText: 'bump-radial' } },
-      { id: 'smooth-src',      position: { x: -240, y:    0 }, style: { labelText: 'smooth' } },
-      { id: 'rounded-src',     position: { x: -240, y:  110 }, style: { labelText: 'rounded' } },
-      { id: 'orth-src',        position: { x: -240, y:  220 }, style: { labelText: 'orth' } },
-      { id: 'manhattan-src',   position: { x: -240, y:  330 }, style: { labelText: 'manhattan' } },
-      { id: 'straight-tgt',    position: { x:  240, y: -270 } },
-      { id: 'bezier-tgt',      position: { x:  240, y: -160 } },
-      { id: 'bump-radial-tgt', position: { x:  240, y:  -50 } },
-      { id: 'smooth-tgt',      position: { x:  240, y:   60 } },
-      { id: 'rounded-tgt',     position: { x:  240, y:  170 } },
-      { id: 'orth-tgt',        position: { x:  240, y:  280 } },
-      { id: 'manhattan-tgt',   position: { x:  240, y:  390 } },
+    const nodes: GraphNode[] = [
+      { type: 'node', id: 'straight-src',    position: { x: -240, y: -330 }, style: { labelText: 'straight' } },
+      { type: 'node', id: 'bezier-src',      position: { x: -240, y: -220 }, style: { labelText: 'bezier' } },
+      { type: 'node', id: 'bump-radial-src', position: { x: -240, y: -110 }, style: { labelText: 'bump-radial' } },
+      { type: 'node', id: 'smooth-src',      position: { x: -240, y:    0 }, style: { labelText: 'smooth' } },
+      { type: 'node', id: 'rounded-src',     position: { x: -240, y:  110 }, style: { labelText: 'rounded' } },
+      { type: 'node', id: 'orth-src',        position: { x: -240, y:  220 }, style: { labelText: 'orth' } },
+      { type: 'node', id: 'manhattan-src',   position: { x: -240, y:  330 }, style: { labelText: 'manhattan' } },
+      { type: 'node', id: 'straight-tgt',    position: { x:  240, y: -270 } },
+      { type: 'node', id: 'bezier-tgt',      position: { x:  240, y: -160 } },
+      { type: 'node', id: 'bump-radial-tgt', position: { x:  240, y:  -50 } },
+      { type: 'node', id: 'smooth-tgt',      position: { x:  240, y:   60 } },
+      { type: 'node', id: 'rounded-tgt',     position: { x:  240, y:  170 } },
+      { type: 'node', id: 'orth-tgt',        position: { x:  240, y:  280 } },
+      { type: 'node', id: 'manhattan-tgt',   position: { x:  240, y:  390 } },
     ];
 
     // Per-edge style carries only the structural `shape.pathType` (and
     // pathStyleOpts where the path style needs them). Everything else —
     // stroke channels — flows from the layer-template resolvers below.
-    const edges: EdgeData[] = [
-      { id: 'straight',    source: 'straight-src',    target: 'straight-tgt',
+    const edges: GraphEdge[] = [
+      { type: 'edge', id: 'straight',    source: 'straight-src',    target: 'straight-tgt',
         style: { shape: { pathType: 'straight' } } },
-      { id: 'bezier',      source: 'bezier-src',      target: 'bezier-tgt',
+      { type: 'edge', id: 'bezier',      source: 'bezier-src',      target: 'bezier-tgt',
         style: { shape: { pathType: 'bezier', pathStyleOpts: { axis: 'h', tension: 0.6 } } } },
-      { id: 'bump-radial', source: 'bump-radial-src', target: 'bump-radial-tgt',
+      { type: 'edge', id: 'bump-radial', source: 'bump-radial-src', target: 'bump-radial-tgt',
         // Polar origin sits well off to the left so the two endpoints land
         // on the same general angular ray but at clearly different radii —
         // r0 ≈ 376, r1 ≈ 842. With `origin: (0, 0)` (the bump-radial
@@ -68,13 +68,13 @@ export const Interactive: Story = {
         // visually to a near-straight line — bump-radial really wants a
         // genuine radial layout to read correctly.
         style: { shape: { pathType: 'bump-radial', pathStyleOpts: { origin: { x: -600, y: 0 } } } } },
-      { id: 'smooth',      source: 'smooth-src',      target: 'smooth-tgt',
+      { type: 'edge', id: 'smooth',      source: 'smooth-src',      target: 'smooth-tgt',
         style: { shape: { pathType: 'smooth' } } },
-      { id: 'rounded',     source: 'rounded-src',     target: 'rounded-tgt',
+      { type: 'edge', id: 'rounded',     source: 'rounded-src',     target: 'rounded-tgt',
         style: { shape: { pathType: 'rounded' } } },
-      { id: 'orth',        source: 'orth-src',        target: 'orth-tgt',
+      { type: 'edge', id: 'orth',        source: 'orth-src',        target: 'orth-tgt',
         style: { shape: { pathType: 'orth' } } },
-      { id: 'manhattan',   source: 'manhattan-src',   target: 'manhattan-tgt',
+      { type: 'edge', id: 'manhattan',   source: 'manhattan-src',   target: 'manhattan-tgt',
         style: { shape: { pathType: 'manhattan' } } },
     ];
 

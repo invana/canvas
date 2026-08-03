@@ -4,8 +4,8 @@ import {
   DragNodeBehaviour,
   GraphCanvas,
   GraphLayer,
-  type EdgeData,
-  type NodeData,
+  type GraphEdge,
+  type GraphNode,
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -35,13 +35,13 @@ export const Multiple: Story = {
   render: () => createContainer({ id: 'graph-edges-badges-multiple' }),
 
   play: async ({ canvasElement }) => {
-    const nodes: NodeData[] = [
-      { id: 'src', position: { x: -280, y: 0 }, style: { shape: { kind: 'circle', radius: 16 }, bgFill: 0x60a5fa, labelText: 'source', labelColor: 0x0f172a, labelFontSize: 11, labelPlacement: 'left', labelOffsetX: -10 } },
-      { id: 'tgt', position: { x:  280, y: 0 }, style: { shape: { kind: 'circle', radius: 16 }, bgFill: 0x34d399, labelText: 'target', labelColor: 0x0f172a, labelFontSize: 11, labelPlacement: 'right', labelOffsetX: 10 } },
+    const nodes: GraphNode[] = [
+      { type: 'node', id: 'src', position: { x: -280, y: 0 }, style: { shape: { kind: 'circle', radius: 16 }, bgFill: 0x60a5fa, labelText: 'source', labelColor: 0x0f172a, labelFontSize: 11, labelPlacement: 'left', labelOffsetX: -10 } },
+      { type: 'node', id: 'tgt', position: { x:  280, y: 0 }, style: { shape: { kind: 'circle', radius: 16 }, bgFill: 0x34d399, labelText: 'target', labelColor: 0x0f172a, labelFontSize: 11, labelPlacement: 'right', labelOffsetX: 10 } },
     ];
 
-    const edges: EdgeData[] = [
-      {
+    const edges: GraphEdge[] = [
+      { type: 'edge',
         id: 'e',
         source: 'src',
         target: 'tgt',

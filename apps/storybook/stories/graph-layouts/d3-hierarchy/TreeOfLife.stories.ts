@@ -88,6 +88,7 @@ export const TreeOfLifeStory: Story = {
       return {
         nodes: data.nodes.map((n) => ({
           id: n.id,
+          type: 'node',
           style: {
             // Only leaves get a visible dot; internal clades shrink to a
             // near-invisible pip so the radial "lines" dominate the read.
@@ -100,6 +101,7 @@ export const TreeOfLifeStory: Story = {
         })),
         edges: data.edges.map((e) => ({
           id: e.id,
+          type: 'edge',
           source: e.source,
           target: e.target,
           // Per-edge stroke override — wins over the layer template's
@@ -196,6 +198,7 @@ export const TreeOfLifeStory: Story = {
 
     const layout = new D3HierarchyLayout({
       id: 'radial',
+      type: 'node',
       targetLayerId: 'graph',
     } as D3HierarchyLayoutOptions & LayoutOptions);
     canvas.layouts.add(layout);

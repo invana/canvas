@@ -15,10 +15,10 @@ export const DrawEdgeStory: Story = {
 
   play: async ({ canvasElement }) => {
     const seed: GraphNode[] = [
-      { id: 'a', position: { x: -140, y: -60 }, style: { labelText: 'A' } },
-      { id: 'b', position: { x: 140, y: -60 }, style: { labelText: 'B' } },
-      { id: 'c', position: { x: -140, y: 80 }, style: { labelText: 'C' } },
-      { id: 'd', position: { x: 140, y: 80 }, style: { labelText: 'D' } },
+      { type: 'node', id: 'a', position: { x: -140, y: -60 }, style: { labelText: 'A' } },
+      { type: 'node', id: 'b', position: { x: 140, y: -60 }, style: { labelText: 'B' } },
+      { type: 'node', id: 'c', position: { x: -140, y: 80 }, style: { labelText: 'C' } },
+      { type: 'node', id: 'd', position: { x: 140, y: 80 }, style: { labelText: 'D' } },
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-draw-edge')!;
@@ -41,7 +41,7 @@ export const DrawEdgeStory: Story = {
     const draw = new DrawEdgeBehaviour({
       id: 'draw-edge',
       targetLayerId: 'graph',
-      createEdge: (source, target) => ({ id: `e${++e}`, source, target }),
+      createEdge: (source, target) => ({ type: 'edge', id: `e${++e}`, source, target }),
       onEdgeCreate: () => {
         settings.edges += 1;
         gui.controllersRecursive().forEach((c) => c.updateDisplay());

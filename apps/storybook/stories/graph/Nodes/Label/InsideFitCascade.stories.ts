@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import type { ShapeLabelStyle } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type NodeData, type NodeShapeOptions, type NodeStyle } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type GraphNode, type NodeShapeOptions, type NodeStyle } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -33,8 +33,8 @@ export const InsideFitCascadeStory: Story = {
 
     // Per-shape base size used by `scaledShape` below. Hardcoded literal
     // dimensions per the storybook data-pattern convention — no helpers.
-    const nodes: NodeData[] = [
-      {
+    const nodes: GraphNode[] = [
+      { type: 'node',
         id: 'circle',
         position: { x: -320, y: -180 },
         style: {
@@ -46,7 +46,7 @@ export const InsideFitCascadeStory: Story = {
           },
         },
       },
-      {
+      { type: 'node',
         id: 'rect',
         position: { x: 0, y: -180 },
         style: {
@@ -58,7 +58,7 @@ export const InsideFitCascadeStory: Story = {
           },
         },
       },
-      {
+      { type: 'node',
         id: 'arc',
         position: { x: 320, y: -180 },
         style: {
@@ -70,7 +70,7 @@ export const InsideFitCascadeStory: Story = {
           },
         },
       },
-      {
+      { type: 'node',
         id: 'regular-polygon',
         position: { x: -320, y: 180 },
         style: {
@@ -82,7 +82,7 @@ export const InsideFitCascadeStory: Story = {
           },
         },
       },
-      {
+      { type: 'node',
         id: 'star',
         position: { x: 0, y: 180 },
         style: {
@@ -94,7 +94,7 @@ export const InsideFitCascadeStory: Story = {
           },
         },
       },
-      {
+      { type: 'node',
         id: 'polygon',
         position: { x: 320, y: 180 },
         style: {

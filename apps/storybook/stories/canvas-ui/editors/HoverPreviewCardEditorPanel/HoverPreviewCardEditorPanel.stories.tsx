@@ -54,11 +54,11 @@ const DATA: GraphData = {
     { id: 'katherine', type: 'Person', data: { name: 'Katherine Johnson', role: 'Mathematician', bio: 'Orbital-mechanics calculations critical to early US crewed spaceflight.', email: 'katherine@orbit.nasa', avatar: 'https://i.pravatar.cc/96?img=20' } },
   ],
   edges: [
-    { id: 'ada-alan', source: 'ada', target: 'alan' },
-    { id: 'alan-grace', source: 'alan', target: 'grace' },
-    { id: 'ada-edsger', source: 'ada', target: 'edsger' },
-    { id: 'edsger-katherine', source: 'edsger', target: 'katherine' },
-    { id: 'grace-katherine', source: 'grace', target: 'katherine' },
+    { type: 'edge', id: 'ada-alan', source: 'ada', target: 'alan' },
+    { type: 'edge', id: 'alan-grace', source: 'alan', target: 'grace' },
+    { type: 'edge', id: 'ada-edsger', source: 'ada', target: 'edsger' },
+    { type: 'edge', id: 'edsger-katherine', source: 'edsger', target: 'katherine' },
+    { type: 'edge', id: 'grace-katherine', source: 'grace', target: 'katherine' },
   ],
 };
 

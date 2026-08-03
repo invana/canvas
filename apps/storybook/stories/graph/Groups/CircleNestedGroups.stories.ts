@@ -27,7 +27,7 @@ export const CircleNestedGroupsStory: Story = {
 
   play: async ({ canvasElement }) => {
     const nodes: GraphNode[] = [
-      {
+      { type: 'node',
         id: 'outer',
         position: { x: 0, y: 0 },
         style: {
@@ -41,7 +41,7 @@ export const CircleNestedGroupsStory: Story = {
           group: { autoFit: true, padding: 36 },
         },
       },
-      {
+      { type: 'node',
         id: 'inner',
         parentId: 'outer',
         position: { x: 0, y: -50 },
@@ -53,7 +53,7 @@ export const CircleNestedGroupsStory: Story = {
           group: { autoFit: true, padding: 22 },
         },
       },
-      {
+      { type: 'node',
         id: 'node1',
         parentId: 'inner',
         position: { x: -40, y: -50 },
@@ -67,7 +67,7 @@ export const CircleNestedGroupsStory: Story = {
           labelOffsetY: 6,
         },
       },
-      {
+      { type: 'node',
         id: 'node2',
         parentId: 'inner',
         position: { x: 40, y: -50 },
@@ -81,7 +81,7 @@ export const CircleNestedGroupsStory: Story = {
           labelOffsetY: 6,
         },
       },
-      {
+      { type: 'node',
         id: 'node3',
         parentId: 'outer',
         position: { x: -50, y: 120 },

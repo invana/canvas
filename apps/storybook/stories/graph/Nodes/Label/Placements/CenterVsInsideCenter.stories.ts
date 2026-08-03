@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type NodeData, type NodeStyle } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type GraphNode, type NodeStyle } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -32,23 +32,23 @@ export const CenterVsInsideCenterStory: Story = {
   play: async ({ canvasElement }) => {
     const INITIAL_TEXT = 'a moderately long label';
 
-    const nodes: NodeData[] = [
+    const nodes: GraphNode[] = [
       // 3-col × 4-row grid. Top block (center) overflows; bottom block
       // (inside-center) contains. Sub-rows separated by 160, blocks by 240.
       // ─── center block (may overflow) ─────────────────────────────────
-      { id: 'center-circle',          position: { x: -280, y: -380 }, style: { shape: { kind: 'circle', radius: 25 },                                                                  labelText: INITIAL_TEXT, labelPlacement: 'center' } },
-      { id: 'center-rect',            position: { x: 0,    y: -380 }, style: { shape: { kind: 'rect', width: 90, height: 50, cornerRadius: 8 },                                        labelText: INITIAL_TEXT, labelPlacement: 'center' } },
-      { id: 'center-arc',             position: { x: 280,  y: -380 }, style: { shape: { kind: 'arc', innerR: 8, outerR: 30, startAngle: -Math.PI / 2, endAngle: Math.PI / 2 },         labelText: INITIAL_TEXT, labelPlacement: 'center' } },
-      { id: 'center-regular-polygon', position: { x: -280, y: -220 }, style: { shape: { kind: 'regular-polygon', sides: 5, radius: 28 },                                               labelText: INITIAL_TEXT, labelPlacement: 'center' } },
-      { id: 'center-star',            position: { x: 0,    y: -220 }, style: { shape: { kind: 'star', points: 5, outerRadius: 32, innerRadius: 14 },                                   labelText: INITIAL_TEXT, labelPlacement: 'center' } },
-      { id: 'center-polygon',         position: { x: 280,  y: -220 }, style: { shape: { kind: 'polygon', vertices: [ { x: 28, y: 0 }, { x: 14, y: -24 }, { x: -14, y: -24 }, { x: -28, y: 0 }, { x: -14, y: 24 }, { x: 14, y: 24 } ] }, labelText: INITIAL_TEXT, labelPlacement: 'center' } },
+      { type: 'node', id: 'center-circle',          position: { x: -280, y: -380 }, style: { shape: { kind: 'circle', radius: 25 },                                                                  labelText: INITIAL_TEXT, labelPlacement: 'center' } },
+      { type: 'node', id: 'center-rect',            position: { x: 0,    y: -380 }, style: { shape: { kind: 'rect', width: 90, height: 50, cornerRadius: 8 },                                        labelText: INITIAL_TEXT, labelPlacement: 'center' } },
+      { type: 'node', id: 'center-arc',             position: { x: 280,  y: -380 }, style: { shape: { kind: 'arc', innerR: 8, outerR: 30, startAngle: -Math.PI / 2, endAngle: Math.PI / 2 },         labelText: INITIAL_TEXT, labelPlacement: 'center' } },
+      { type: 'node', id: 'center-regular-polygon', position: { x: -280, y: -220 }, style: { shape: { kind: 'regular-polygon', sides: 5, radius: 28 },                                               labelText: INITIAL_TEXT, labelPlacement: 'center' } },
+      { type: 'node', id: 'center-star',            position: { x: 0,    y: -220 }, style: { shape: { kind: 'star', points: 5, outerRadius: 32, innerRadius: 14 },                                   labelText: INITIAL_TEXT, labelPlacement: 'center' } },
+      { type: 'node', id: 'center-polygon',         position: { x: 280,  y: -220 }, style: { shape: { kind: 'polygon', vertices: [ { x: 28, y: 0 }, { x: 14, y: -24 }, { x: -14, y: -24 }, { x: -28, y: 0 }, { x: -14, y: 24 }, { x: 14, y: 24 } ] }, labelText: INITIAL_TEXT, labelPlacement: 'center' } },
       // ─── inside-center block (must fit) ──────────────────────────────
-      { id: 'inside-circle',          position: { x: -280, y: 20  }, style: { shape: { kind: 'circle', radius: 25 },                                                                  labelText: INITIAL_TEXT, labelPlacement: 'inside-center' } },
-      { id: 'inside-rect',            position: { x: 0,    y: 20  }, style: { shape: { kind: 'rect', width: 90, height: 50, cornerRadius: 8 },                                        labelText: INITIAL_TEXT, labelPlacement: 'inside-center' } },
-      { id: 'inside-arc',             position: { x: 280,  y: 20  }, style: { shape: { kind: 'arc', innerR: 8, outerR: 30, startAngle: -Math.PI / 2, endAngle: Math.PI / 2 },         labelText: INITIAL_TEXT, labelPlacement: 'inside-center' } },
-      { id: 'inside-regular-polygon', position: { x: -280, y: 180 }, style: { shape: { kind: 'regular-polygon', sides: 5, radius: 28 },                                               labelText: INITIAL_TEXT, labelPlacement: 'inside-center' } },
-      { id: 'inside-star',            position: { x: 0,    y: 180 }, style: { shape: { kind: 'star', points: 5, outerRadius: 32, innerRadius: 14 },                                   labelText: INITIAL_TEXT, labelPlacement: 'inside-center' } },
-      { id: 'inside-polygon',         position: { x: 280,  y: 180 }, style: { shape: { kind: 'polygon', vertices: [ { x: 28, y: 0 }, { x: 14, y: -24 }, { x: -14, y: -24 }, { x: -28, y: 0 }, { x: -14, y: 24 }, { x: 14, y: 24 } ] }, labelText: INITIAL_TEXT, labelPlacement: 'inside-center' } },
+      { type: 'node', id: 'inside-circle',          position: { x: -280, y: 20  }, style: { shape: { kind: 'circle', radius: 25 },                                                                  labelText: INITIAL_TEXT, labelPlacement: 'inside-center' } },
+      { type: 'node', id: 'inside-rect',            position: { x: 0,    y: 20  }, style: { shape: { kind: 'rect', width: 90, height: 50, cornerRadius: 8 },                                        labelText: INITIAL_TEXT, labelPlacement: 'inside-center' } },
+      { type: 'node', id: 'inside-arc',             position: { x: 280,  y: 20  }, style: { shape: { kind: 'arc', innerR: 8, outerR: 30, startAngle: -Math.PI / 2, endAngle: Math.PI / 2 },         labelText: INITIAL_TEXT, labelPlacement: 'inside-center' } },
+      { type: 'node', id: 'inside-regular-polygon', position: { x: -280, y: 180 }, style: { shape: { kind: 'regular-polygon', sides: 5, radius: 28 },                                               labelText: INITIAL_TEXT, labelPlacement: 'inside-center' } },
+      { type: 'node', id: 'inside-star',            position: { x: 0,    y: 180 }, style: { shape: { kind: 'star', points: 5, outerRadius: 32, innerRadius: 14 },                                   labelText: INITIAL_TEXT, labelPlacement: 'inside-center' } },
+      { type: 'node', id: 'inside-polygon',         position: { x: 280,  y: 180 }, style: { shape: { kind: 'polygon', vertices: [ { x: 28, y: 0 }, { x: 14, y: -24 }, { x: -14, y: -24 }, { x: -28, y: 0 }, { x: -14, y: 24 }, { x: 14, y: 24 } ] }, labelText: INITIAL_TEXT, labelPlacement: 'inside-center' } },
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-label-center-vs-inside-center')!;

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type NodeData } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type GraphNode } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'graph/Etc/Decorations' };
@@ -9,7 +9,7 @@ type Story = StoryObj;
 
 /**
  * Validates `style.decorations` (discriminated-union array) — per-instance
- * declarative decoration attachment via the v3 NodeData shape. State
+ * declarative decoration attachment via the v3 GraphNode shape. State
  * overlays append decorations to the resolved set; the layer projects them
  * to `renderer.setDecoration` calls per slot id.
  *
@@ -26,8 +26,8 @@ export const Decorations: Story = {
       '#graph-states-decorations',
     )!;
 
-    const nodes: NodeData[] = [
-      {
+    const nodes: GraphNode[] = [
+      { type: 'node',
         id: 'sel',
         position: { x: -180, y: 0 },
         style: {
@@ -50,7 +50,7 @@ export const Decorations: Story = {
         },
         states: ['selected'],
       },
-      {
+      { type: 'node',
         id: 'err',
         position: { x: 0, y: 0 },
         style: {
@@ -73,7 +73,7 @@ export const Decorations: Story = {
         },
         states: ['error'],
       },
-      {
+      { type: 'node',
         id: 'glow',
         position: { x: 180, y: 0 },
         style: {

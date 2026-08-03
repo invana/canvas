@@ -5,8 +5,8 @@ import {
   GraphCanvas,
   GraphLayer,
   type EdgeBadgePlacement,
-  type EdgeData,
-  type NodeData,
+  type GraphEdge,
+  type GraphNode,
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -44,9 +44,10 @@ export const Placements: Story = {
       { placement: 1,        label: 't=1 (raw, no clearance)' },
     ];
 
-    const nodes: NodeData[] = variants.flatMap((v, i) => [
+    const nodes: GraphNode[] = variants.flatMap((v, i) => [
       {
         id: `src-${i}`,
+        type: 'node',
         position: { x: -260, y: (i - (variants.length - 1) / 2) * 90 },
         style: {
           shape: { kind: 'circle', radius: 14 },
@@ -63,6 +64,7 @@ export const Placements: Story = {
       },
       {
         id: `tgt-${i}`,
+        type: 'node',
         position: { x: 260, y: (i - (variants.length - 1) / 2) * 90 },
         style: {
           shape: { kind: 'circle', radius: 14 },
@@ -73,7 +75,7 @@ export const Placements: Story = {
       },
     ]);
 
-    const edges: EdgeData[] = variants.map((v, i) => ({
+    const edges: GraphEdge[] = variants.map((v, i) => ({ type: 'edge',
       id: `e-${i}`,
       source: `src-${i}`,
       target: `tgt-${i}`,
@@ -81,6 +83,7 @@ export const Placements: Story = {
         badges: [
           {
             id: 'demo',
+            type: 'node',
             placement: v.placement,
             shape: { kind: 'circle', radius: 9 },
             fill: 0xdc2626,

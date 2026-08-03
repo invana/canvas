@@ -4,7 +4,7 @@ import {
   GraphCanvas,
   GraphLayer,
   LabelCollisionBehaviour,
-  type NodeData,
+  type GraphNode,
   type NodeStyle,
 } from '@invana/graph';
 import GUI from 'lil-gui';
@@ -38,13 +38,13 @@ export const CollisionPriorityStory: Story = {
   render: () => createContainer({ id: 'graph-label-collision-priority' }),
 
   play: async ({ canvasElement }) => {
-    const nodes: NodeData[] = [
-      { id: 'force-circle',     position: { x: -200, y: 0 }, style: { shape: { kind: 'circle', radius: 10 },                                                                  labelText: 'forceShow: circle — always',           labelForceShow: true } },
-      { id: 'pri-low-rect',     position: { x: -100, y: 0 }, style: { shape: { kind: 'rect', width: 26, height: 18, cornerRadius: 4 },                                        labelText: 'priority 1: rect — should hide',       labelPriority: 1 } },
-      { id: 'pri-high-arc',     position: { x: -50,  y: 0 }, style: { shape: { kind: 'arc', innerR: 5, outerR: 12, startAngle: -Math.PI / 2, endAngle: Math.PI / 2 },         labelText: 'priority 10: arc — should win',        labelPriority: 10 } },
-      { id: 'plain-pentagon',   position: { x: 30,   y: 0 }, style: { shape: { kind: 'regular-polygon', sides: 5, radius: 11 },                                               labelText: 'plain: pentagon — degree tie',         labelPriority: 5 } },
-      { id: 'pinned-star',      position: { x: 120,  y: 0 }, style: { shape: { kind: 'star', points: 5, outerRadius: 12, innerRadius: 5 },                                    labelText: 'pinned A: star — own group',           labelCollisionGroup: 'pinned', labelPriority: 1 } },
-      { id: 'pinned-polygon',   position: { x: 200,  y: 0 }, style: { shape: { kind: 'polygon', vertices: [ { x: 11, y: 0 }, { x: 5, y: -10 }, { x: -5, y: -10 }, { x: -11, y: 0 }, { x: -5, y: 10 }, { x: 5, y: 10 } ] }, labelText: 'pinned B: polygon — own group', labelCollisionGroup: 'pinned', labelPriority: 1 } },
+    const nodes: GraphNode[] = [
+      { type: 'node', id: 'force-circle',     position: { x: -200, y: 0 }, style: { shape: { kind: 'circle', radius: 10 },                                                                  labelText: 'forceShow: circle — always',           labelForceShow: true } },
+      { type: 'node', id: 'pri-low-rect',     position: { x: -100, y: 0 }, style: { shape: { kind: 'rect', width: 26, height: 18, cornerRadius: 4 },                                        labelText: 'priority 1: rect — should hide',       labelPriority: 1 } },
+      { type: 'node', id: 'pri-high-arc',     position: { x: -50,  y: 0 }, style: { shape: { kind: 'arc', innerR: 5, outerR: 12, startAngle: -Math.PI / 2, endAngle: Math.PI / 2 },         labelText: 'priority 10: arc — should win',        labelPriority: 10 } },
+      { type: 'node', id: 'plain-pentagon',   position: { x: 30,   y: 0 }, style: { shape: { kind: 'regular-polygon', sides: 5, radius: 11 },                                               labelText: 'plain: pentagon — degree tie',         labelPriority: 5 } },
+      { type: 'node', id: 'pinned-star',      position: { x: 120,  y: 0 }, style: { shape: { kind: 'star', points: 5, outerRadius: 12, innerRadius: 5 },                                    labelText: 'pinned A: star — own group',           labelCollisionGroup: 'pinned', labelPriority: 1 } },
+      { type: 'node', id: 'pinned-polygon',   position: { x: 200,  y: 0 }, style: { shape: { kind: 'polygon', vertices: [ { x: 11, y: 0 }, { x: 5, y: -10 }, { x: -5, y: -10 }, { x: -11, y: 0 }, { x: -5, y: 10 }, { x: 5, y: 10 } ] }, labelText: 'pinned B: polygon — own group', labelCollisionGroup: 'pinned', labelPriority: 1 } },
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-label-collision-priority')!;

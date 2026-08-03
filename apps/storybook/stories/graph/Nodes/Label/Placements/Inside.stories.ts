@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import type { ShapeLabelPlacement } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type NodeData, type NodeShapeOptions, type NodeStyle } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type GraphNode, type NodeShapeOptions, type NodeStyle } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -61,16 +61,16 @@ export const Inside: Story = {
       }
     };
 
-    const nodes: NodeData[] = [
-      { id: 'inside-top-left',     position: { x: -160, y: -100 }, style: { shape: shapeForKind('rect'), labelText: 'inside-top-left',     labelPlacement: 'inside-top-left' } },
-      { id: 'inside-top',          position: { x: 0,    y: -100 }, style: { shape: shapeForKind('rect'), labelText: 'inside-top',          labelPlacement: 'inside-top' } },
-      { id: 'inside-top-right',    position: { x: 160,  y: -100 }, style: { shape: shapeForKind('rect'), labelText: 'inside-top-right',    labelPlacement: 'inside-top-right' } },
-      { id: 'inside-left',         position: { x: -160, y: 0    }, style: { shape: shapeForKind('rect'), labelText: 'inside-left',         labelPlacement: 'inside-left' } },
-      { id: 'inside-center',       position: { x: 0,    y: 0    }, style: { shape: shapeForKind('rect'), labelText: 'inside-center',       labelPlacement: 'inside-center' } },
-      { id: 'inside-right',        position: { x: 160,  y: 0    }, style: { shape: shapeForKind('rect'), labelText: 'inside-right',        labelPlacement: 'inside-right' } },
-      { id: 'inside-bottom-left',  position: { x: -160, y: 100  }, style: { shape: shapeForKind('rect'), labelText: 'inside-bottom-left',  labelPlacement: 'inside-bottom-left' } },
-      { id: 'inside-bottom',       position: { x: 0,    y: 100  }, style: { shape: shapeForKind('rect'), labelText: 'inside-bottom',       labelPlacement: 'inside-bottom' } },
-      { id: 'inside-bottom-right', position: { x: 160,  y: 100  }, style: { shape: shapeForKind('rect'), labelText: 'inside-bottom-right', labelPlacement: 'inside-bottom-right' } },
+    const nodes: GraphNode[] = [
+      { type: 'node', id: 'inside-top-left',     position: { x: -160, y: -100 }, style: { shape: shapeForKind('rect'), labelText: 'inside-top-left',     labelPlacement: 'inside-top-left' } },
+      { type: 'node', id: 'inside-top',          position: { x: 0,    y: -100 }, style: { shape: shapeForKind('rect'), labelText: 'inside-top',          labelPlacement: 'inside-top' } },
+      { type: 'node', id: 'inside-top-right',    position: { x: 160,  y: -100 }, style: { shape: shapeForKind('rect'), labelText: 'inside-top-right',    labelPlacement: 'inside-top-right' } },
+      { type: 'node', id: 'inside-left',         position: { x: -160, y: 0    }, style: { shape: shapeForKind('rect'), labelText: 'inside-left',         labelPlacement: 'inside-left' } },
+      { type: 'node', id: 'inside-center',       position: { x: 0,    y: 0    }, style: { shape: shapeForKind('rect'), labelText: 'inside-center',       labelPlacement: 'inside-center' } },
+      { type: 'node', id: 'inside-right',        position: { x: 160,  y: 0    }, style: { shape: shapeForKind('rect'), labelText: 'inside-right',        labelPlacement: 'inside-right' } },
+      { type: 'node', id: 'inside-bottom-left',  position: { x: -160, y: 100  }, style: { shape: shapeForKind('rect'), labelText: 'inside-bottom-left',  labelPlacement: 'inside-bottom-left' } },
+      { type: 'node', id: 'inside-bottom',       position: { x: 0,    y: 100  }, style: { shape: shapeForKind('rect'), labelText: 'inside-bottom',       labelPlacement: 'inside-bottom' } },
+      { type: 'node', id: 'inside-bottom-right', position: { x: 160,  y: 100  }, style: { shape: shapeForKind('rect'), labelText: 'inside-bottom-right', labelPlacement: 'inside-bottom-right' } },
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-label-placements-inside')!;

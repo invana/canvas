@@ -22,7 +22,10 @@ import { Behaviour, type BehaviourOptions, type CanvasContext } from '@invana/ca
 import type { BaseConnectorSpec } from '@invana/canvas';
 
 import { GraphLayer } from '../layer/GraphLayer';
-import type { GraphEdge } from '../store/types';
+import { UNKNOWN_TYPE } from '../store';
+import type {
+  GraphEdge,
+} from '../store/types';
 
 /** Constructor options for `DrawEdgeBehaviour`. */
 export interface DrawEdgeBehaviourOptions extends BehaviourOptions {
@@ -76,11 +79,14 @@ export class DrawEdgeBehaviour extends Behaviour<DrawEdgeBehaviourOptions> {
       this._options.createEdge ??
       ((source, target) => {
         const id = `e-${Date.now().toString(36)}-${(drawEdgeSeq++).toString(36)}`;
+        // No domain knowledge here — supply `createEdge` for a real predicate.
+        const type = UNKNOWN_TYPE;
         if (source === target) {
           // A loop needs center anchors — boundary anchors collapse it onto a
           // single silhouette point.
           return {
             id,
+            type,
             source,
             target,
             style: {
@@ -88,7 +94,7 @@ export class DrawEdgeBehaviour extends Behaviour<DrawEdgeBehaviourOptions> {
             },
           };
         }
-        return { id, source, target };
+        return { id, type, source, target };
       })
     );
   }
@@ -224,7 +230,13 @@ export class DrawEdgeBehaviour extends Behaviour<DrawEdgeBehaviourOptions> {
       const edge = this.makeEdge(source, target);
       if (edge) {
         this.layer.store.addEdge(edge);
-        this.onEdgeCreate?.(edge);
+        // The *stored* record — see the note in `CreateNodeBehaviour`. The
+        // fallback covers an edge parked awaiting a missing endpoint, which
+        // can't happen here (both ends are picked from existing nodes) but
+        // shouldn't silently drop the callback if that ever changes.
+        this.onEdgeCreate?.(
+          this.layer.store.getEdge(edge.id) ?? { ...edge, type: edge.type || UNKNOWN_TYPE },
+        );
       }
     }
   }

@@ -25,18 +25,18 @@ export const Defaults: Story = {
 
   play: async ({ canvasElement }) => {
     const nodes: GraphNode[] = [
-      { id: 'a', position: { x: -160, y: -70 } },
-      { id: 'b', position: { x: 10, y: -120 } },
-      { id: 'c', position: { x: 170, y: -50 } },
-      { id: 'd', position: { x: -110, y: 100 } },
-      { id: 'e', position: { x: 90, y: 110 } },
+      { type: 'node', id: 'a', position: { x: -160, y: -70 } },
+      { type: 'node', id: 'b', position: { x: 10, y: -120 } },
+      { type: 'node', id: 'c', position: { x: 170, y: -50 } },
+      { type: 'node', id: 'd', position: { x: -110, y: 100 } },
+      { type: 'node', id: 'e', position: { x: 90, y: 110 } },
     ];
     const edges: GraphEdge[] = [
-      { id: 'a-b', source: 'a', target: 'b' },
-      { id: 'b-c', source: 'b', target: 'c' },
-      { id: 'a-d', source: 'a', target: 'd' },
-      { id: 'd-e', source: 'd', target: 'e' },
-      { id: 'b-e', source: 'b', target: 'e' },
+      { type: 'edge', id: 'a-b', source: 'a', target: 'b' },
+      { type: 'edge', id: 'b-c', source: 'b', target: 'c' },
+      { type: 'edge', id: 'a-d', source: 'a', target: 'd' },
+      { type: 'edge', id: 'd-e', source: 'd', target: 'e' },
+      { type: 'edge', id: 'b-e', source: 'b', target: 'e' },
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-layer-defaults')!;

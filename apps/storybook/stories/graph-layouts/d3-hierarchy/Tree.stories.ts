@@ -93,6 +93,7 @@ export const Tree: Story = {
       return {
         nodes: data.nodes.map((n) => ({
           id: n.id,
+          type: 'node',
           data: { name: n.data.name, depth: n.data.depth, isLeaf: n.data.isLeaf },
           style: {
             bgFill: settings.colorByDepth ? colorAt(n.data.depth) : 0x1f2937,
@@ -116,6 +117,7 @@ export const Tree: Story = {
         })),
         edges: data.edges.map((e) => ({
           id: e.id,
+          type: 'edge',
           source: e.source,
           target: e.target,
         })),
@@ -154,6 +156,7 @@ export const Tree: Story = {
 
     const layout = new D3HierarchyLayout({
       id: 'tree',
+      type: 'node',
       targetLayerId: 'graph',
     } as D3HierarchyLayoutOptions & LayoutOptions);
     canvas.layouts.add(layout);

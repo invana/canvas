@@ -15,8 +15,8 @@ export const CreateNodeStory: Story = {
 
   play: async ({ canvasElement }) => {
     const seed: GraphNode[] = [
-      { id: 'a', position: { x: -80, y: 0 }, style: { labelText: 'A' } },
-      { id: 'b', position: { x: 80, y: 0 }, style: { labelText: 'B' } },
+      { type: 'node', id: 'a', position: { x: -80, y: 0 }, style: { labelText: 'A' } },
+      { type: 'node', id: 'b', position: { x: 80, y: 0 }, style: { labelText: 'B' } },
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-create-node')!;
@@ -36,7 +36,7 @@ export const CreateNodeStory: Story = {
     const create = new CreateNodeBehaviour({
       id: 'create-node',
       targetLayerId: 'graph',
-      createNode: (world) => ({
+      createNode: (world) => ({ type: 'node',
         id: `n${++n}`,
         position: world,
         style: { labelText: `n${n}` },

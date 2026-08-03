@@ -38,7 +38,10 @@ import type {
   ResizeHandleDecorationStyle,
   SelectionFrameDecorationStyle,
 } from '@invana/canvas/primitives';
-import type { GraphEdge, GraphNode } from '../store/types';
+import type {
+  GraphEdge,
+  GraphNode,
+} from '../store/types';
 
 /**
  * A field value that's either a static value or a function that derives the
@@ -47,7 +50,7 @@ import type { GraphEdge, GraphNode } from '../store/types';
  * Used on every field of `NodeStyle` / `EdgeStyle` (via `ResolvableNodeStyle`
  * / `ResolvableEdgeStyle`) so callers can supply per-item-derived styling
  * on the layer template (`options.node.style`) or per-instance input
- * (`NodeInput.style`) without spreading hints into every node's `data`.
+ * (`GraphNode.style`) without spreading hints into every node's `data`.
  *
  * Resolved per render (layer-level) or once at insert (per-input). Keep
  * resolvers cheap and pure — they may run per frame. Recursive returns
@@ -126,7 +129,13 @@ export type EdgePathType =
  */
 export type EdgeAnchor = 'boundary' | 'center' | 'perpendicular' | 'edge-port' | (string & {});
 
-/** Initial-load shape passed to `graphLayer.setData(data)`. */
+/**
+ * Initial-load shape passed to `graphLayer.setData(data)`.
+ *
+ * Carries **input** records — `type` is optional here and the store defaults it
+ * to `UNKNOWN_TYPE` on insert. Read the data back with `store.nodes()` /
+ * `exportData()` to get the stored form, where `type` is always a `string`.
+ */
 export interface GraphData {
   nodes: GraphNode[];
   edges: GraphEdge[];
@@ -136,7 +145,7 @@ export interface GraphData {
 /**
  * Canonical interaction-state names with sensible defaults baked into the
  * GraphLayer's resolver. State styling lives on the layer-level
- * {@link NodeOption.state} / per-node {@link NodeData.state} catalogue —
+ * {@link NodeOption.state} / per-node `GraphNode.state` catalogue —
  * `default` is intentionally absent (it's the absence of any active state,
  * not a state itself).
  *
@@ -234,7 +243,7 @@ export type CanonicalStateName =
 export const COLLAPSED_STATE = 'collapsed';
 
 // ───────────────────────────────────────────────────────────────────────────
-// v3 — G6-aligned types (NodeData / NodeInput / NodeOption + edge mirror)
+// v3 — G6-aligned types (NodeOption / EdgeOption templates)
 // See `data-types-instances.md` + `data-types-implementation-plan.md`.
 // ───────────────────────────────────────────────────────────────────────────
 
@@ -986,7 +995,7 @@ export interface GroupOptions {
  * kept structured (`shape`, `icon`, `image`, `decorations`, `effects`,
  * `badges`).
  *
- * Per-instance state overlays for a node live at {@link NodeData.state}
+ * Per-instance state overlays for a node live at `GraphNode.state`
  * (a sibling of `style`), NOT inside `NodeStyle`.
  */
 export interface NodeStyle {
@@ -1132,72 +1141,11 @@ export interface NodeStyle {
  * Resolver-aware mirror of {@link NodeStyle}. Each field is either a static
  * value or `(D) => T`. Two scopes use this generic at different `D`:
  *
- *   - `NodeInput<D>.style` — resolvers fire at insert (`D` = raw node data).
  *   - `NodeOption.style` — resolvers fire at render (`D` = stored `GraphNode`).
  */
 export type ResolvableNodeStyle<D = unknown> = {
   readonly [K in keyof NodeStyle]?: Resolvable<NonNullable<NodeStyle[K]>, D>;
 };
-
-// ─── NodeData / NodeInput / NodeOption ─────────────────────────────────────
-
-/**
- * Per-instance node descriptor as stored by `GraphStore`. All values
- * concrete (no functions). Flat field layout matching G6's `NodeData`
- * convention.
- *
- * - `state` (singular) = per-instance overlay catalogue.
- * - `states` (plural) = currently-active state names.
- */
-export interface NodeData<D = unknown> {
-  readonly id: string;
-  /** Type tag (free-form). Matches a `NodeOption` template if any. */
-  readonly type?: string;
-  readonly data?: D;
-  readonly style?: NodeStyle;
-  /** Per-instance overlay catalogue (singular `state`). */
-  readonly state?: Readonly<Record<string, NodeStyle>>;
-  /** Currently-active state names (plural `states`). */
-  readonly states?: readonly string[] | null;
-  // store-side concerns:
-  readonly position?: { readonly x: number; readonly y: number };
-  readonly pinned?: boolean;
-  /**
-   * True iff this node is explicitly hidden — culled from render, hit-test,
-   * bounds, layout, labels and minimap (not merely alpha-0). Sibling of
-   * {@link pinned}. Prefer `graph.hideNode(id)` / `store.setNodeHidden(...)` at
-   * runtime; this field is for authored / serialized data.
-   */
-  readonly hidden?: boolean;
-  /**
-   * Logical parent id — the only hierarchy field. Use this for both tree
-   * structures AND group/combo membership (the parent is just a regular
-   * node that visually represents the group). The store auto-maintains an
-   * inverse index, queryable via `store.childrenOf(id)` /
-   * `store.descendantsOf(id)`.
-   */
-  readonly parentId?: string;
-}
-
-/**
- * What the consumer passes to `GraphLayer.setData`. Same shape as
- * {@link NodeData} but with Resolvable fields — `id` and per-field styles
- * may be functions over `data`. Resolvers fire once at insert; the store
- * holds `NodeData`.
- */
-export interface NodeInput<D = unknown> {
-  readonly id?: ResolvableId<D>;
-  readonly type?: string;
-  readonly data?: D;
-  readonly style?: ResolvableNodeStyle<D>;
-  readonly state?: Readonly<Record<string, ResolvableNodeStyle<D>>>;
-  readonly states?: readonly string[];
-  readonly position?: { readonly x: number; readonly y: number };
-  readonly pinned?: boolean;
-  /** Explicitly hidden — see {@link NodeData.hidden}. */
-  readonly hidden?: boolean;
-  readonly parentId?: string;
-}
 
 /**
  * Layer-level node template — G6's `node` field on GraphOptions. Resolvers
@@ -1342,40 +1290,6 @@ export type ResolvableEdgeStyle<D = unknown> = {
   readonly [K in keyof EdgeStyle]?: Resolvable<NonNullable<EdgeStyle[K]>, D>;
 };
 
-/** Per-instance edge descriptor — stored by GraphStore, concrete values. */
-export interface EdgeData<D = unknown> {
-  readonly id: string;
-  readonly source: string;
-  readonly target: string;
-  /** Predicate / FK label. Free-form. G6 calls this `type`. */
-  readonly type?: string;
-  readonly data?: D;
-  readonly style?: EdgeStyle;
-  readonly state?: Readonly<Record<string, EdgeStyle>>;
-  readonly states?: readonly string[] | null;
-  /**
-   * True iff this edge is explicitly hidden. Note an edge is also *effectively*
-   * hidden when either endpoint is hidden (derived — see `store.isEdgeVisible`).
-   * Prefer `graph.hideEdge(id)` at runtime; this field is for authored /
-   * serialized data.
-   */
-  readonly hidden?: boolean;
-}
-
-/** Resolver-aware input shape for an edge. */
-export interface EdgeInput<D = unknown> {
-  readonly id?: ResolvableId<D>;
-  readonly source: string;
-  readonly target: string;
-  readonly type?: string;
-  readonly data?: D;
-  readonly style?: ResolvableEdgeStyle<D>;
-  readonly state?: Readonly<Record<string, ResolvableEdgeStyle<D>>>;
-  readonly states?: readonly string[];
-  /** Explicitly hidden — see {@link EdgeData.hidden}. */
-  readonly hidden?: boolean;
-}
-
 /** Layer-level edge template — G6's `edge` field. */
 export interface EdgeOption {
   readonly type?: string;
@@ -1449,20 +1363,6 @@ export const DEFAULT_EDGE_STATES: Readonly<Record<CanonicalStateName, EdgeStyle>
   // Edges are never containers; the state exists on the shared canonical union.
   collapsed:   {},
 };
-
-// ─── GraphDataOptions ──────────────────────────────────────────────────────
-
-/**
- * Top-level data input shape for `GraphLayer.setData(opts)`. Carries node /
- * edge inputs plus optional layer-wide id resolvers.
- */
-export interface GraphDataOptions<DN = unknown, DE = unknown> {
-  readonly nodes: readonly NodeInput<DN>[];
-  readonly edges: readonly EdgeInput<DE>[];
-  /** Optional layer-wide id resolver applied to nodes that lack an explicit `id`. */
-  readonly nodeIdResolver?: (data: DN) => string;
-  readonly edgeIdResolver?: (data: DE) => string;
-}
 
 /** Constructor options for `GraphLayer`. */
 export interface GraphLayerOptions {

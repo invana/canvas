@@ -4,8 +4,8 @@ import {
   DragNodeBehaviour,
   GraphCanvas,
   GraphLayer,
-  type EdgeData,
-  type NodeData,
+  type GraphEdge,
+  type GraphNode,
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -31,32 +31,32 @@ export const HorizontalCubicStory: Story = {
   play: async ({ canvasElement }) => {
     // Root on the left, five children stacked along x = +220, evenly
     // spaced from y = -200 to y = +200.
-    const nodes: NodeData[] = [
-      { id: 'root',        position: { x: -220, y:    0 } },
-      { id: 'default',     position: { x:  220, y: -200 } },
-      { id: 'selected',    position: { x:  220, y: -100 } },
-      { id: 'highlighted', position: { x:  220, y:    0 } },
-      { id: 'dimmed',      position: { x:  220, y:  100 } },
-      { id: 'disabled',    position: { x:  220, y:  200 } },
+    const nodes: GraphNode[] = [
+      { type: 'node', id: 'root',        position: { x: -220, y:    0 } },
+      { type: 'node', id: 'default',     position: { x:  220, y: -200 } },
+      { type: 'node', id: 'selected',    position: { x:  220, y: -100 } },
+      { type: 'node', id: 'highlighted', position: { x:  220, y:    0 } },
+      { type: 'node', id: 'dimmed',      position: { x:  220, y:  100 } },
+      { type: 'node', id: 'disabled',    position: { x:  220, y:  200 } },
     ];
 
-    const edges: EdgeData[] = [
-      { id: 'hcubic-default',     source: 'root', target: 'default',
+    const edges: GraphEdge[] = [
+      { type: 'edge', id: 'hcubic-default',     source: 'root', target: 'default',
         style: { shape: { pathType: 'bezier', pathStyleOpts: { axis: 'h', tension: 0.6 } },
                  labelText: 'default' } },
-      { id: 'hcubic-selected',    source: 'root', target: 'selected',
+      { type: 'edge', id: 'hcubic-selected',    source: 'root', target: 'selected',
         style: { shape: { pathType: 'bezier', pathStyleOpts: { axis: 'h', tension: 0.6 } },
                  labelText: 'selected' },
         states: ['selected'] },
-      { id: 'hcubic-highlighted', source: 'root', target: 'highlighted',
+      { type: 'edge', id: 'hcubic-highlighted', source: 'root', target: 'highlighted',
         style: { shape: { pathType: 'bezier', pathStyleOpts: { axis: 'h', tension: 0.6 } },
                  labelText: 'highlighted' },
         states: ['highlighted'] },
-      { id: 'hcubic-dimmed',      source: 'root', target: 'dimmed',
+      { type: 'edge', id: 'hcubic-dimmed',      source: 'root', target: 'dimmed',
         style: { shape: { pathType: 'bezier', pathStyleOpts: { axis: 'h', tension: 0.6 } },
                  labelText: 'dimmed' },
         states: ['dimmed'] },
-      { id: 'hcubic-disabled',    source: 'root', target: 'disabled',
+      { type: 'edge', id: 'hcubic-disabled',    source: 'root', target: 'disabled',
         style: { shape: { pathType: 'bezier', pathStyleOpts: { axis: 'h', tension: 0.6 } },
                  labelText: 'disabled' },
         states: ['disabled'] },

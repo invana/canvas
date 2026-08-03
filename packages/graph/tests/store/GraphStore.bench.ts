@@ -19,7 +19,7 @@ describe('GraphStore.addNode', () => {
   // Target: p50 < 1 µs.
   bench('addNode single', () => {
     const store = new GraphStore({ initialCapacity: 4096 });
-    for (let i = 0; i < 1_000; i++) store.addNode({ id: `n-${i}` });
+    for (let i = 0; i < 1_000; i++) store.addNode({ type: 'node', id: `n-${i}` });
   });
 });
 
@@ -27,9 +27,9 @@ describe('GraphStore.addEdge', () => {
   // Target: p50 < 1 µs.
   bench('addEdge single', () => {
     const store = new GraphStore({ initialCapacity: 4096 });
-    for (let i = 0; i < 1_000; i++) store.addNode({ id: `n-${i}` });
+    for (let i = 0; i < 1_000; i++) store.addNode({ type: 'node', id: `n-${i}` });
     for (let i = 0; i < 1_000; i++) {
-      store.addEdge({ id: `e-${i}`, source: `n-${i % 1_000}`, target: `n-${(i + 1) % 1_000}` });
+      store.addEdge({ type: 'edge', id: `e-${i}`, source: `n-${i % 1_000}`, target: `n-${(i + 1) % 1_000}` });
     }
   });
 });
@@ -38,7 +38,7 @@ describe('GraphStore bulk insert', () => {
   // Target: addNodesBulk(100k) < 50 ms.
   bench('addNodesBulk(100k)', () => {
     const store = new GraphStore({ initialCapacity: N });
-    const nodes = Array.from({ length: N }, (_, i) => ({ id: `n-${i}` }));
+    const nodes = Array.from({ length: N }, (_, i) => ({ id: `n-${i}`, type: 'node' }));
     store.addNodesBulk(nodes);
   });
 
@@ -47,9 +47,10 @@ describe('GraphStore bulk insert', () => {
     'addEdgesBulk(500k) on 100k nodes',
     () => {
       const store = new GraphStore({ initialCapacity: N });
-      store.addNodesBulk(Array.from({ length: N }, (_, i) => ({ id: `n-${i}` })));
+      store.addNodesBulk(Array.from({ length: N }, (_, i) => ({ id: `n-${i}`, type: 'node' })));
       const edges = Array.from({ length: E }, (_, i) => ({
         id: `e-${i}`,
+        type: 'edge',
         source: `n-${i % N}`,
         target: `n-${(i * 7) % N}`,
       }));
@@ -62,10 +63,11 @@ describe('GraphStore bulk insert', () => {
 describe('GraphStore.neighborsOf', () => {
   // Target: first-neighbor < 50 ns amortized.
   const store = new GraphStore({ initialCapacity: N });
-  store.addNodesBulk(Array.from({ length: N }, (_, i) => ({ id: `n-${i}` })));
+  store.addNodesBulk(Array.from({ length: N }, (_, i) => ({ id: `n-${i}`, type: 'node' })));
   store.addEdgesBulk(
     Array.from({ length: E }, (_, i) => ({
       id: `e-${i}`,
+      type: 'edge',
       source: `n-${i % N}`,
       target: `n-${(i * 7919) % N}`,
     })),
@@ -82,7 +84,7 @@ describe('GraphStore.neighborsOf', () => {
 describe('GraphStore.setPositionsBulk (sim tick)', () => {
   // Target: per call < 5 ms for 100k nodes.
   const store = new GraphStore({ initialCapacity: N });
-  store.addNodesBulk(Array.from({ length: N }, (_, i) => ({ id: `n-${i}` })));
+  store.addNodesBulk(Array.from({ length: N }, (_, i) => ({ id: `n-${i}`, type: 'node' })));
   const ids = Array.from({ length: N }, (_, i) => `n-${i}`);
   const xy = new Float32Array(N * 2);
   for (let i = 0; i < N; i++) {
@@ -99,10 +101,11 @@ describe('GraphStore.removeNode (cascade)', () => {
   // Target: < 100 µs at avg deg ≈ 10.
   bench('cascade-remove 1k nodes from 10k-node graph', () => {
     const store = new GraphStore({ initialCapacity: 10_000 });
-    store.addNodesBulk(Array.from({ length: 10_000 }, (_, i) => ({ id: `n-${i}` })));
+    store.addNodesBulk(Array.from({ length: 10_000 }, (_, i) => ({ id: `n-${i}`, type: 'node' })));
     store.addEdgesBulk(
       Array.from({ length: 50_000 }, (_, i) => ({
         id: `e-${i}`,
+        type: 'edge',
         source: `n-${i % 10_000}`,
         target: `n-${(i * 7) % 10_000}`,
       })),
@@ -115,13 +118,13 @@ describe('GraphStore.batch', () => {
   bench('1k inserts via batch (1 flush)', () => {
     const store = new GraphStore();
     store.batch(() => {
-      for (let i = 0; i < 1_000; i++) store.addNode({ id: `n-${i}` });
+      for (let i = 0; i < 1_000; i++) store.addNode({ type: 'node', id: `n-${i}` });
     });
   });
 
   bench('1k inserts sync (1k flushes)', () => {
     const store = new GraphStore();
-    for (let i = 0; i < 1_000; i++) store.addNode({ id: `n-${i}` });
+    for (let i = 0; i < 1_000; i++) store.addNode({ type: 'node', id: `n-${i}` });
   });
 });
 
@@ -135,9 +138,9 @@ describe('GraphStore streaming (flushMode:frame)', () => {
       for (let f = 0; f < 60; f++) {
         for (let i = 0; i < 166; i++) {
           const nodeId = `n-${id++}`;
-          store.upsertNode({ id: nodeId, position: { x: i, y: f } });
+          store.upsertNode({ type: 'node', id: nodeId, position: { x: i, y: f } });
           if (id > 1) {
-            store.upsertEdge({ id: `e-${id}`, source: `n-${id - 2}`, target: nodeId });
+            store.upsertEdge({ type: 'edge', id: `e-${id}`, source: `n-${id - 2}`, target: nodeId });
           }
         }
         store.flush();
@@ -154,11 +157,11 @@ describe('GraphStore out-of-order edges (unknownEndpoint:buffer)', () => {
     () => {
       const store = new GraphStore({ unknownEndpoint: 'buffer', initialCapacity: 20_000 });
       for (let i = 0; i < 10_000; i++) {
-        store.addEdge({ id: `e-${i}`, source: `s-${i}`, target: `t-${i}` });
+        store.addEdge({ type: 'edge', id: `e-${i}`, source: `s-${i}`, target: `t-${i}` });
       }
       for (let i = 0; i < 10_000; i++) {
-        store.addNode({ id: `s-${i}` });
-        store.addNode({ id: `t-${i}` });
+        store.addNode({ type: 'node', id: `s-${i}` });
+        store.addNode({ type: 'node', id: `t-${i}` });
       }
     },
     { iterations: 5 },

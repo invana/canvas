@@ -43,7 +43,7 @@ export const GroupVisibilityStory: Story = {
       { id: 'b2', type: 'member', parentId: 'group-b', position: { x: 188, y: 0 }, style: memberStyle(0xf43f5e) },
       { id: 'hub', type: 'hub', position: { x: 0, y: 140 }, style: memberStyle(0x10b981) },
     ];
-    const edge = (id: string, source: string, target: string): GraphEdge => ({
+    const edge = (id: string, source: string, target: string): GraphEdge => ({ type: 'edge',
       id,
       source,
       target,

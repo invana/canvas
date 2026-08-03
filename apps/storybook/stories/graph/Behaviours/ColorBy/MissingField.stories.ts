@@ -3,9 +3,8 @@
  *
  * **This story renders every node grey, on purpose.**
  *
- * `nodeValueKey` defaults to `'type'`, and Les Misérables characters *have no
- * `type`* — their community lives on `data.group`. So the path resolves to
- * `undefined` on every node and every node takes `fallbackColor`.
+ * `nodeValueKey` points at `data.nosuchfield`, which no record has. The path
+ * resolves to `undefined` on every node, so every node takes `fallbackColor`.
  *
  * That's the designed behaviour for a mis-typed or absent path, and the reasoning
  * is worth stating: a uniform grey graph is a **loud symptom**. The alternative —
@@ -13,8 +12,8 @@
  * plausible-looking picture built on nothing. `getLegend()` tells the same story,
  * returning a `categories` section with no entries.
  *
- * Fix it live from the panel: set `nodeValueKey` to `data.group` and the graph
- * becomes `ByCommunity`.
+ * Fix it live from the panel: set `nodeValueKey` to `data.group` (or `type` —
+ * these characters are typed `'character'`) and the graph comes back.
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
@@ -48,11 +47,14 @@ export const MissingFieldStory: Story = {
     );
     canvas.layouts.add(new D3ForceLayout({ id: 'force', targetLayerId: 'graph' }));
 
-    // No `nodeValueKey` — so it defaults to `'type'`, which this dataset lacks.
+    // An obviously-absent path. Les Mis characters *do* carry a `type` now
+    // (`'character'`), so the old demonstration — leaving `nodeValueKey` at its
+    // `'type'` default — would colour every node one colour instead of grey.
     const colorBy = new ColorByBehaviour({
       id: 'color',
       targetLayerId: 'graph',
       enabled: true,
+      nodeValueKey: 'data.nosuchfield',
       colorEdges: false,
     });
     canvas.behaviours.register(colorBy);

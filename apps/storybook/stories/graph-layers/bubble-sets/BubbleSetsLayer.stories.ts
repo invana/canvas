@@ -17,7 +17,7 @@ import {
   LayersPanelLayer,
   WheelZoomBehaviour,
 } from '@invana/canvas';
-import { DragNodeBehaviour, GraphCanvas, GraphLayer, type EdgeData, type NodeData, ThemeBehaviour } from '@invana/graph';
+import { DragNodeBehaviour, GraphCanvas, GraphLayer, type GraphEdge, type GraphNode, ThemeBehaviour } from '@invana/graph';
 import { BubbleSetsLayer, type BubbleSet } from '@invana/graph-layer-bubble-sets';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../div-util';
@@ -39,25 +39,25 @@ export const BubbleSetsLayer_Story: Story = {
     // Eight hand-placed nodes, hardcoded positions — the layout is not the
     // subject of this story, so no force simulation runs. Per the storybook
     // data convention, nodes are a literal array of plain objects.
-    const nodes: NodeData[] = [
-      { id: 'n0', position: { x:  140, y: -120 }, style: { bgFill: 0x7e57c2, labelText: 'node-0' } },
-      { id: 'n1', position: { x:  160, y:   80 }, style: { bgFill: 0x7e57c2, labelText: 'node-1' } },
-      { id: 'n2', position: { x:   20, y:  -40 }, style: { bgFill: 0x7e57c2, labelText: 'node-2' } },
-      { id: 'n3', position: { x: -120, y:  -20 }, style: { bgFill: 0x7e57c2, labelText: 'node-3' } },
-      { id: 'n4', position: { x: -240, y:  -60 }, style: { bgFill: 0xffb74d, labelText: 'node-4' } },
-      { id: 'n5', position: { x: -160, y:  140 }, style: { bgFill: 0xffb74d, labelText: 'node-5' } },
-      { id: 'n6', position: { x:  -60, y: -180 }, style: { bgFill: 0xffb74d, labelText: 'node-6' } },
-      { id: 'n7', position: { x:  -40, y:  220 }, style: { bgFill: 0xec407a, labelText: 'node-7' } },
+    const nodes: GraphNode[] = [
+      { type: 'node', id: 'n0', position: { x:  140, y: -120 }, style: { bgFill: 0x7e57c2, labelText: 'node-0' } },
+      { type: 'node', id: 'n1', position: { x:  160, y:   80 }, style: { bgFill: 0x7e57c2, labelText: 'node-1' } },
+      { type: 'node', id: 'n2', position: { x:   20, y:  -40 }, style: { bgFill: 0x7e57c2, labelText: 'node-2' } },
+      { type: 'node', id: 'n3', position: { x: -120, y:  -20 }, style: { bgFill: 0x7e57c2, labelText: 'node-3' } },
+      { type: 'node', id: 'n4', position: { x: -240, y:  -60 }, style: { bgFill: 0xffb74d, labelText: 'node-4' } },
+      { type: 'node', id: 'n5', position: { x: -160, y:  140 }, style: { bgFill: 0xffb74d, labelText: 'node-5' } },
+      { type: 'node', id: 'n6', position: { x:  -60, y: -180 }, style: { bgFill: 0xffb74d, labelText: 'node-6' } },
+      { type: 'node', id: 'n7', position: { x:  -40, y:  220 }, style: { bgFill: 0xec407a, labelText: 'node-7' } },
     ];
 
-    const edges: EdgeData[] = [
-      { id: 'e0-2', source: 'n0', target: 'n2' },
-      { id: 'e1-2', source: 'n1', target: 'n2' },
-      { id: 'e2-3', source: 'n2', target: 'n3' },
-      { id: 'e3-4', source: 'n3', target: 'n4' },
-      { id: 'e3-5', source: 'n3', target: 'n5' },
-      { id: 'e3-6', source: 'n3', target: 'n6' },
-      { id: 'e1-7', source: 'n1', target: 'n7' },
+    const edges: GraphEdge[] = [
+      { type: 'edge', id: 'e0-2', source: 'n0', target: 'n2' },
+      { type: 'edge', id: 'e1-2', source: 'n1', target: 'n2' },
+      { type: 'edge', id: 'e2-3', source: 'n2', target: 'n3' },
+      { type: 'edge', id: 'e3-4', source: 'n3', target: 'n4' },
+      { type: 'edge', id: 'e3-5', source: 'n3', target: 'n5' },
+      { type: 'edge', id: 'e3-6', source: 'n3', target: 'n6' },
+      { type: 'edge', id: 'e1-7', source: 'n1', target: 'n7' },
     ];
 
     const initialSets: BubbleSet[] = [

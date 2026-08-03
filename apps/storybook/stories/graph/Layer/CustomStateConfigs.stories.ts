@@ -38,30 +38,35 @@ export const CustomStateConfigsStory: Story = {
     // share the same canvas and camera.
     const canonicalTile: GraphNode<TileData> = {
       id: 'canonical-hover',
+      type: 'node',
       position: { x: -300, y: -90 },
       data: { title: 'hover (canonical)', note: 'shipped default' },
       states: ['hovered'],
     };
     const overriddenTile: GraphNode<TileData> = {
       id: 'overridden-hover',
+      type: 'node',
       position: { x: 0, y: -90 },
       data: { title: 'hover (overridden)', note: 'options.node.state' },
       states: ['hovered'],
     };
     const mentionTile: GraphNode<TileData> = {
       id: 'mention',
+      type: 'node',
       position: { x: 300, y: -90 },
       data: { title: 'mention (new)', note: 'declared in this layer' },
       states: ['mention'],
     };
     const escalatedTile: GraphNode<TileData> = {
       id: 'escalated',
+      type: 'node',
       position: { x: -150, y: 110 },
       data: { title: 'escalated (new)', note: 'declared in this layer' },
       states: ['escalated'],
     };
     const stackedTile: GraphNode<TileData> = {
       id: 'mention+escalated',
+      type: 'node',
       position: { x: 150, y: 110 },
       data: { title: 'mention + escalated', note: 'stacked — last-set wins per field' },
       states: ['mention', 'escalated'],
@@ -75,7 +80,7 @@ export const CustomStateConfigsStory: Story = {
 
     const labelResolver = (n: GraphNode) => {
       const tile = n.data as TileData;
-      return {
+      return { type: 'node',
         content: {
           kind: 'text' as const,
           text: `${tile.title}\n${tile.note}`,

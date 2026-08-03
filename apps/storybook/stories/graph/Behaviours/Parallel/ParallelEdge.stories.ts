@@ -6,11 +6,12 @@ import {
   GraphLayer,
   ParallelEdgeBehaviour,
   type EdgeAnchor,
-  type EdgeData,
+  type GraphEdge,
   type EdgePathType,
-  type NodeData,
+  type GraphNode,
   type NodeShapeOptions,
-} from '@invana/graph';
+
+  type NodeStyle,} from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -86,16 +87,16 @@ export const ParallelEdgeStory: Story = {
       beta: 0.85,
     };
 
-    const nodes: NodeData[] = [
-      { id: 'a', position: { x: -240, y: -160 }, style: { bgFill: 0x64748b, bgStrokeColor: 0x334155 } },
-      { id: 'b', position: { x:  240, y:  160 }, style: { bgFill: 0x64748b, bgStrokeColor: 0x334155 } },
+    const nodes: GraphNode[] = [
+      { type: 'node', id: 'a', position: { x: -240, y: -160 }, style: { bgFill: 0x64748b, bgStrokeColor: 0x334155 } },
+      { type: 'node', id: 'b', position: { x:  240, y:  160 }, style: { bgFill: 0x64748b, bgStrokeColor: 0x334155 } },
     ];
 
     // Per-edge style: only the structural shape fields the behaviour cares
     // about reading (pathType, sourceAnchor, targetAnchor, pathStyleOpts).
     // The behaviour adds `waypoints` + anchor offsets on top — those stay
     // out of the seed so the data shape reads cleanly.
-    const edgeStyleForCurrentSettings = (): EdgeData['style'] => ({
+    const edgeStyleForCurrentSettings = (): GraphEdge['style'] => ({
       shape: {
         pathType: settings.pathType,
         sourceAnchor: settings.anchor,
@@ -112,12 +113,14 @@ export const ParallelEdgeStory: Story = {
     // Build the initial content (data is content, not config): seed the
     // chosen node shape and `count` parallel edges into `initData`.
     const initShape = SHAPES[settings.nodeKind]!;
-    const initNodes: NodeData[] = nodes.map((n) => ({
+    const initNodes: GraphNode[] = nodes.map((n) => ({
       ...n,
-      style: { ...n.style, shape: initShape },
+      // `GraphNode.style` is `unknown` (the store avoids a layer
+      // dependency), so narrow it to read the shape back.
+      style: { ...(n.style as NodeStyle), shape: initShape },
     }));
     const initEdgeStyle = edgeStyleForCurrentSettings();
-    const initEdges: EdgeData[] = Array.from({ length: settings.count }, (_, i) => ({
+    const initEdges: GraphEdge[] = Array.from({ length: settings.count }, (_, i) => ({ type: 'edge',
       id: `e${i}`,
       source: 'a',
       target: 'b',
@@ -190,7 +193,7 @@ export const ParallelEdgeStory: Story = {
       const style = edgeStyleForCurrentSettings();
       for (let i = 0; i < settings.count; i++) {
         if (!graph.store.getEdge(`e${i}`)) {
-          graph.store.addEdge({ id: `e${i}`, source: 'a', target: 'b', style });
+          graph.store.addEdge({ type: 'edge', id: `e${i}`, source: 'a', target: 'b', style });
         }
       }
       for (let i = settings.count; i <= COUNT_MAX; i++) {

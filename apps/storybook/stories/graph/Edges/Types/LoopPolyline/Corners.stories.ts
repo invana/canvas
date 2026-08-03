@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   GraphCanvas, DragNodeBehaviour, GraphLayer,
-  type EdgeData, type NodeData,
+  type GraphEdge, type GraphNode,
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
@@ -71,19 +71,19 @@ export const Corners: Story = {
       return { x: Math.cos(t) * ELL_RX, y: Math.sin(t) * ELL_RY };
     });
 
-    const nodes: NodeData[] = [
-      { id: 'host-rect',    position: { x: -300, y: 0 },
+    const nodes: GraphNode[] = [
+      { type: 'node', id: 'host-rect',    position: { x: -300, y: 0 },
         style: { shape: { kind: 'rect', width: RECT_W, height: RECT_H } } },
-      { id: 'host-circle',  position: { x: -100, y: 0 },
+      { type: 'node', id: 'host-circle',  position: { x: -100, y: 0 },
         style: { shape: { kind: 'circle', radius: CIRC_R } } },
-      { id: 'host-ellipse', position: { x:  100, y: 0 },
+      { type: 'node', id: 'host-ellipse', position: { x:  100, y: 0 },
         style: { shape: { kind: 'polygon', vertices: ELL_VERTS } } },
-      { id: 'host-hex',     position: { x:  300, y: 0 },
+      { type: 'node', id: 'host-hex',     position: { x:  300, y: 0 },
         style: { shape: { kind: 'regular-polygon', sides: 6, radius: HEX_R } } },
     ];
 
     interface EdgeMeta { host: HostKind; side: Corner; }
-    const edges: EdgeData<EdgeMeta>[] = [];
+    const edges: GraphEdge<EdgeMeta>[] = [];
     const hostByNodeId: ReadonlyArray<{ id: string; host: HostKind }> = [
       { id: 'host-rect',    host: 'rect' },
       { id: 'host-circle',  host: 'circle' },
@@ -92,7 +92,7 @@ export const Corners: Story = {
     ];
     for (const h of hostByNodeId) {
       for (const side of CORNERS) {
-        edges.push({
+        edges.push({ type: 'edge',
           id: `${h.id}-${side}`,
           source: h.id, target: h.id,
           data: { host: h.host, side },

@@ -135,6 +135,7 @@ export function flareImportsAsGraph(opts: FlareImportsOptions = {}): FlareImport
       used.add(target);
       importEdges.push({
         id: `imp${edgeCounter++}`,
+        type: 'imports',
         source: sourceId,
         target,
       });

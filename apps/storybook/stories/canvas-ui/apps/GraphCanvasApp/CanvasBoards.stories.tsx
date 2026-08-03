@@ -56,8 +56,8 @@ type Story = StoryObj;
 /** A 10-person team and who collaborates with whom — general force layout. */
 const TEAM_GRAPH: GraphData = {
   nodes: [
-    { id: 'Alice' }, { id: 'Bob' }, { id: 'Carol' }, { id: 'Dave' }, { id: 'Eve' },
-    { id: 'Frank' }, { id: 'Grace' }, { id: 'Heidi' }, { id: 'Ivan' }, { id: 'Judy' },
+    { type: 'node', id: 'Alice' }, { type: 'node', id: 'Bob' }, { type: 'node', id: 'Carol' }, { type: 'node', id: 'Dave' }, { type: 'node', id: 'Eve' },
+    { type: 'node', id: 'Frank' }, { type: 'node', id: 'Grace' }, { type: 'node', id: 'Heidi' }, { type: 'node', id: 'Ivan' }, { type: 'node', id: 'Judy' },
   ],
   edges: [
     { id: 'c1', source: 'Alice', target: 'Bob', type: 'collaborates' },
@@ -79,8 +79,8 @@ const TEAM_GRAPH: GraphData = {
 /** A CI/CD build pipeline — a directed DAG that reads as clean layers in ELK. */
 const PIPELINE_GRAPH: GraphData = {
   nodes: [
-    { id: 'Source' }, { id: 'Install' }, { id: 'Lint' }, { id: 'Typecheck' },
-    { id: 'Test' }, { id: 'Build' }, { id: 'Bundle' }, { id: 'Deploy' }, { id: 'Notify' },
+    { type: 'node', id: 'Source' }, { type: 'node', id: 'Install' }, { type: 'node', id: 'Lint' }, { type: 'node', id: 'Typecheck' },
+    { type: 'node', id: 'Test' }, { type: 'node', id: 'Build' }, { type: 'node', id: 'Bundle' }, { type: 'node', id: 'Deploy' }, { type: 'node', id: 'Notify' },
   ],
   edges: [
     { id: 'p1', source: 'Source', target: 'Install', type: 'then' },
@@ -99,9 +99,9 @@ const PIPELINE_GRAPH: GraphData = {
 /** A company org chart — a single-root tree (parent → child = "manages"). */
 const ORG_GRAPH: GraphData = {
   nodes: [
-    { id: 'CEO' }, { id: 'CTO' }, { id: 'CFO' }, { id: 'CMO' },
-    { id: 'Backend' }, { id: 'Frontend' }, { id: 'DevOps' }, { id: 'QA' },
-    { id: 'Accounting' }, { id: 'Payroll' }, { id: 'Content' }, { id: 'Ads' },
+    { type: 'node', id: 'CEO' }, { type: 'node', id: 'CTO' }, { type: 'node', id: 'CFO' }, { type: 'node', id: 'CMO' },
+    { type: 'node', id: 'Backend' }, { type: 'node', id: 'Frontend' }, { type: 'node', id: 'DevOps' }, { type: 'node', id: 'QA' },
+    { type: 'node', id: 'Accounting' }, { type: 'node', id: 'Payroll' }, { type: 'node', id: 'Content' }, { type: 'node', id: 'Ads' },
   ],
   edges: [
     { id: 'o1', source: 'CEO', target: 'CTO', type: 'manages' },

@@ -36,7 +36,7 @@ export const LesMiserablesStory: Story = {
     ];
 
     type LesMisNodeData = { group: number };
-    const nodes: GraphNode<LesMisNodeData>[] = lesMiserables.nodes.map((n) => ({
+    const nodes: GraphNode<LesMisNodeData>[] = lesMiserables.nodes.map((n) => ({ type: `group-${n.data.group}`,
       id: n.id,
       data: { group: n.data.group },
     }));

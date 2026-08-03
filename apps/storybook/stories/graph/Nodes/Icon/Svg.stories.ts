@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import type { InsetAnchor } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type NodeData, type NodeShapeOptions } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type GraphNode, type NodeShapeOptions } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -24,7 +24,7 @@ export const Svg: Story = {
   render: () => createContainer({ id: 'graph-nodes-icon-svg' }),
 
   play: async ({ canvasElement }) => {
-    const nodes: NodeData[] = [
+    const nodes: GraphNode[] = [
       { id: 'circle',          type: 'circle',          position: { x: -280, y: -150 } },
       { id: 'rect',            type: 'rect',            position: { x: 0,    y: -150 } },
       { id: 'arc',             type: 'arc',             position: { x: 280,  y: -150 } },

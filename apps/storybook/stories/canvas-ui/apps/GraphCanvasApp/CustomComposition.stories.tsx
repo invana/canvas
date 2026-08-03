@@ -26,13 +26,7 @@ import { ThemeProvider } from '@invana/themes';
 const meta: Meta = { title: 'canvas-ui/apps/GraphCanvasApp/CustomComposition' };
 export default meta;
 type Story = StoryObj;
-
-const groupOf = (n: GraphNode): number => (n.data as { group?: number } | undefined)?.group ?? 0;
-const PALETTE = [0x60a5fa, 0x34d399, 0xf472b6, 0xfbbf24, 0xa78bfa, 0x22d3ee, 0xfb7185];
-const DATA = {
-  nodes: lesMiserables.nodes.map((n) => ({ ...n, type: `Group ${groupOf(n)}` })),
-  edges: lesMiserables.edges.map((e) => ({ ...e, type: 'APPEARS_WITH' })),
-};
+const DATA = lesMiserables;
 
 export const CustomCompositionStory: Story = {
   name: 'CustomComposition',
@@ -67,7 +61,6 @@ export const CustomCompositionStory: Story = {
           node={{
             style: {
               shape: { kind: 'star', points: 5, innerRadius: 5, outerRadius: 11 },
-              bgFill: (n: GraphNode) => PALETTE[groupOf(n) % PALETTE.length]!,
               bgStrokeColor: 0x0f172a,
               bgStrokeWidth: 1.5,
               labelText: (n: GraphNode) => n.id,

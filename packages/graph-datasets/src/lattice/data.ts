@@ -23,15 +23,15 @@ export const generateLattice = (n: number): GraphData => {
 
   for (let i = 0; i < size; i++) {
     for (let j = 0; j < size; j++) {
-      nodes.push({ id: `${i},${j}` });
+      nodes.push({ type: 'cell', id: `${i},${j}` });
       if (j < size - 1)
-        edges.push({
+        edges.push({ type: 'link',
           id: `h-${i}-${j}`,
           source: `${i},${j}`,
           target: `${i},${j + 1}`,
         });
       if (i < size - 1)
-        edges.push({
+        edges.push({ type: 'link',
           id: `v-${i}-${j}`,
           source: `${i},${j}`,
           target: `${i + 1},${j}`,

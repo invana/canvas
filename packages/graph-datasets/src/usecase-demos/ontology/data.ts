@@ -73,54 +73,54 @@ const edges: (GraphEdge & {
   };
 })[] = [
   // founded
-  { id: 'f1', source: 'patrick-collison', target: 'stripe',    data: { kind: 'founded' } },
-  { id: 'f2', source: 'john-collison',    target: 'stripe',    data: { kind: 'founded' } },
-  { id: 'f3', source: 'dario-amodei',     target: 'anthropic', data: { kind: 'founded' } },
-  { id: 'f4', source: 'daniela-amodei',   target: 'anthropic', data: { kind: 'founded' } },
-  { id: 'f5', source: 'sam-altman',       target: 'openai',    data: { kind: 'founded' } },
-  { id: 'f6', source: 'greg-brockman',    target: 'openai',    data: { kind: 'founded' } },
-  { id: 'f7', source: 'dylan-field',      target: 'figma',     data: { kind: 'founded' } },
-  { id: 'f8', source: 'karri-saarinen',   target: 'linear',    data: { kind: 'founded' } },
+  { type: 'relates-to', id: 'f1', source: 'patrick-collison', target: 'stripe',    data: { kind: 'founded' } },
+  { type: 'relates-to', id: 'f2', source: 'john-collison',    target: 'stripe',    data: { kind: 'founded' } },
+  { type: 'relates-to', id: 'f3', source: 'dario-amodei',     target: 'anthropic', data: { kind: 'founded' } },
+  { type: 'relates-to', id: 'f4', source: 'daniela-amodei',   target: 'anthropic', data: { kind: 'founded' } },
+  { type: 'relates-to', id: 'f5', source: 'sam-altman',       target: 'openai',    data: { kind: 'founded' } },
+  { type: 'relates-to', id: 'f6', source: 'greg-brockman',    target: 'openai',    data: { kind: 'founded' } },
+  { type: 'relates-to', id: 'f7', source: 'dylan-field',      target: 'figma',     data: { kind: 'founded' } },
+  { type: 'relates-to', id: 'f8', source: 'karri-saarinen',   target: 'linear',    data: { kind: 'founded' } },
 
   // ceo_of
-  { id: 'c1', source: 'patrick-collison', target: 'stripe',    data: { kind: 'ceo_of' } },
-  { id: 'c2', source: 'dario-amodei',     target: 'anthropic', data: { kind: 'ceo_of' } },
-  { id: 'c3', source: 'sam-altman',       target: 'openai',    data: { kind: 'ceo_of' } },
-  { id: 'c4', source: 'dylan-field',      target: 'figma',     data: { kind: 'ceo_of' } },
-  { id: 'c5', source: 'karri-saarinen',   target: 'linear',    data: { kind: 'ceo_of' } },
+  { type: 'relates-to', id: 'c1', source: 'patrick-collison', target: 'stripe',    data: { kind: 'ceo_of' } },
+  { type: 'relates-to', id: 'c2', source: 'dario-amodei',     target: 'anthropic', data: { kind: 'ceo_of' } },
+  { type: 'relates-to', id: 'c3', source: 'sam-altman',       target: 'openai',    data: { kind: 'ceo_of' } },
+  { type: 'relates-to', id: 'c4', source: 'dylan-field',      target: 'figma',     data: { kind: 'ceo_of' } },
+  { type: 'relates-to', id: 'c5', source: 'karri-saarinen',   target: 'linear',    data: { kind: 'ceo_of' } },
 
   // works_at (non-founders / past)
-  { id: 'w1', source: 'daniela-amodei',   target: 'anthropic', data: { kind: 'works_at' } },
-  { id: 'w2', source: 'greg-brockman',    target: 'openai',    data: { kind: 'works_at' } },
-  { id: 'w3', source: 'john-collison',    target: 'stripe',    data: { kind: 'works_at' } },
+  { type: 'relates-to', id: 'w1', source: 'daniela-amodei',   target: 'anthropic', data: { kind: 'works_at' } },
+  { type: 'relates-to', id: 'w2', source: 'greg-brockman',    target: 'openai',    data: { kind: 'works_at' } },
+  { type: 'relates-to', id: 'w3', source: 'john-collison',    target: 'stripe',    data: { kind: 'works_at' } },
 
   // builds
-  { id: 'b1', source: 'stripe',    target: 'stripe-payments', data: { kind: 'builds' } },
-  { id: 'b2', source: 'stripe',    target: 'stripe-atlas',    data: { kind: 'builds' } },
-  { id: 'b3', source: 'anthropic', target: 'claude',          data: { kind: 'builds' } },
-  { id: 'b4', source: 'openai',    target: 'chatgpt',         data: { kind: 'builds' } },
-  { id: 'b5', source: 'openai',    target: 'gpt-4',           data: { kind: 'builds' } },
-  { id: 'b6', source: 'figma',     target: 'figma-design',    data: { kind: 'builds' } },
-  { id: 'b7', source: 'figma',     target: 'figma-dev-mode',  data: { kind: 'builds' } },
-  { id: 'b8', source: 'linear',    target: 'linear-app',      data: { kind: 'builds' } },
+  { type: 'relates-to', id: 'b1', source: 'stripe',    target: 'stripe-payments', data: { kind: 'builds' } },
+  { type: 'relates-to', id: 'b2', source: 'stripe',    target: 'stripe-atlas',    data: { kind: 'builds' } },
+  { type: 'relates-to', id: 'b3', source: 'anthropic', target: 'claude',          data: { kind: 'builds' } },
+  { type: 'relates-to', id: 'b4', source: 'openai',    target: 'chatgpt',         data: { kind: 'builds' } },
+  { type: 'relates-to', id: 'b5', source: 'openai',    target: 'gpt-4',           data: { kind: 'builds' } },
+  { type: 'relates-to', id: 'b6', source: 'figma',     target: 'figma-design',    data: { kind: 'builds' } },
+  { type: 'relates-to', id: 'b7', source: 'figma',     target: 'figma-dev-mode',  data: { kind: 'builds' } },
+  { type: 'relates-to', id: 'b8', source: 'linear',    target: 'linear-app',      data: { kind: 'builds' } },
 
   // headquartered_in
-  { id: 'h1', source: 'stripe',    target: 'san-francisco', data: { kind: 'headquartered_in' } },
-  { id: 'h2', source: 'anthropic', target: 'san-francisco', data: { kind: 'headquartered_in' } },
-  { id: 'h3', source: 'openai',    target: 'san-francisco', data: { kind: 'headquartered_in' } },
-  { id: 'h4', source: 'figma',     target: 'san-francisco', data: { kind: 'headquartered_in' } },
-  { id: 'h5', source: 'linear',    target: 'san-francisco', data: { kind: 'headquartered_in' } },
+  { type: 'relates-to', id: 'h1', source: 'stripe',    target: 'san-francisco', data: { kind: 'headquartered_in' } },
+  { type: 'relates-to', id: 'h2', source: 'anthropic', target: 'san-francisco', data: { kind: 'headquartered_in' } },
+  { type: 'relates-to', id: 'h3', source: 'openai',    target: 'san-francisco', data: { kind: 'headquartered_in' } },
+  { type: 'relates-to', id: 'h4', source: 'figma',     target: 'san-francisco', data: { kind: 'headquartered_in' } },
+  { type: 'relates-to', id: 'h5', source: 'linear',    target: 'san-francisco', data: { kind: 'headquartered_in' } },
 
   // operates_in
-  { id: 'o1', source: 'stripe',    target: 'payments',     data: { kind: 'operates_in' } },
-  { id: 'o2', source: 'anthropic', target: 'ai-research',  data: { kind: 'operates_in' } },
-  { id: 'o3', source: 'openai',    target: 'ai-research',  data: { kind: 'operates_in' } },
-  { id: 'o4', source: 'figma',     target: 'design-tools', data: { kind: 'operates_in' } },
-  { id: 'o5', source: 'linear',    target: 'productivity', data: { kind: 'operates_in' } },
+  { type: 'relates-to', id: 'o1', source: 'stripe',    target: 'payments',     data: { kind: 'operates_in' } },
+  { type: 'relates-to', id: 'o2', source: 'anthropic', target: 'ai-research',  data: { kind: 'operates_in' } },
+  { type: 'relates-to', id: 'o3', source: 'openai',    target: 'ai-research',  data: { kind: 'operates_in' } },
+  { type: 'relates-to', id: 'o4', source: 'figma',     target: 'design-tools', data: { kind: 'operates_in' } },
+  { type: 'relates-to', id: 'o5', source: 'linear',    target: 'productivity', data: { kind: 'operates_in' } },
 
   // competes_with — directed but read as bi-directional rivalry
-  { id: 'x1', source: 'anthropic', target: 'openai', data: { kind: 'competes_with' } },
-  { id: 'x2', source: 'openai',    target: 'anthropic', data: { kind: 'competes_with' } },
+  { type: 'relates-to', id: 'x1', source: 'anthropic', target: 'openai', data: { kind: 'competes_with' } },
+  { type: 'relates-to', id: 'x2', source: 'openai',    target: 'anthropic', data: { kind: 'competes_with' } },
 ];
 
 /** Five companies + their CEOs — the story's collapsed starting view. */

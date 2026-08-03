@@ -62,7 +62,7 @@ export const CollapseExpandStory: Story = {
     };
 
     const nodes: GraphNode[] = [
-      {
+      { type: 'node',
         id: 'group-a',
         position: { x: 0, y: 0 },
         style: {
@@ -73,19 +73,19 @@ export const CollapseExpandStory: Story = {
           group: { autoFit: true, padding: 24 },
         },
       },
-      {
+      { type: 'node',
         id: 'node1',
         parentId: 'group-a',
         position: { x: -28, y: 0 },
         style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6 },
       },
-      {
+      { type: 'node',
         id: 'node2',
         parentId: 'group-a',
         position: { x: 28, y: 0 },
         style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6 },
       },
-      {
+      { type: 'node',
         id: 'outside',
         position: { x: 240, y: 0 },
         style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6 },
@@ -93,7 +93,7 @@ export const CollapseExpandStory: Story = {
     ];
 
     const edges: GraphEdge[] = [
-      {
+      { type: 'edge',
         id: 'cross',
         source: 'node2',
         target: 'outside',

@@ -37,7 +37,7 @@ export const SchemaTable: Story = {
   play: async ({ canvasElement }) => {
     // Two schema cards + one edge — enough to show the built-in card node type.
     const nodes: GraphNode[] = [
-      {
+      { type: 'node',
         id: 'customer',
         position: { x: -220, y: 0 },
         data: {
@@ -52,7 +52,7 @@ export const SchemaTable: Story = {
           ],
         } satisfies SchemaTableData,
       },
-      {
+      { type: 'node',
         id: 'order',
         position: { x: 220, y: 0 },
         data: {
@@ -68,7 +68,7 @@ export const SchemaTable: Story = {
         } satisfies SchemaTableData,
       },
     ];
-    const edges: GraphEdge[] = [{ id: 'e', source: 'order', target: 'customer' }];
+    const edges: GraphEdge[] = [{ type: 'edge', id: 'e', source: 'order', target: 'customer' }];
 
     // Per-node hovered row, read by the builder to light up a row band.
     const hoverRow = new Map<string, number>();

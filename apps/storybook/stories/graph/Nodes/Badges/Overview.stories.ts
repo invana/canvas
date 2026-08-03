@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type NodeData } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type GraphNode, type NodeStyle } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -30,8 +30,8 @@ export const Overview: Story = {
   render: () => createContainer({ id: 'graph-nodes-badges' }),
 
   play: async ({ canvasElement }) => {
-    const nodes: NodeData[] = [
-      {
+    const nodes: GraphNode[] = [
+      { type: 'node',
         id: 'plain',
         position: { x: -300, y: 0 },
         style: {
@@ -43,6 +43,7 @@ export const Overview: Story = {
           badges: [
             {
               id: 'dot',
+              type: 'node',
               placement: 'top-right',
               origin: 'center',
               shape: { kind: 'circle', radius: 7 },
@@ -53,7 +54,7 @@ export const Overview: Story = {
           ],
         },
       },
-      {
+      { type: 'node',
         id: 'count',
         position: { x: -150, y: 0 },
         style: {
@@ -65,6 +66,7 @@ export const Overview: Story = {
           badges: [
             {
               id: 'count',
+              type: 'node',
               placement: 'top-right',
               origin: 'center',
               shape: { kind: 'rect', width: 22, height: 18, cornerRadius: 9 },
@@ -78,7 +80,7 @@ export const Overview: Story = {
           ],
         },
       },
-      {
+      { type: 'node',
         id: 'icon',
         position: { x: 0, y: 0 },
         style: {
@@ -90,6 +92,7 @@ export const Overview: Story = {
           badges: [
             {
               id: 'verified',
+              type: 'node',
               placement: 'top-right',
               origin: 'center',
               shape: { kind: 'circle', radius: 11 },
@@ -108,7 +111,7 @@ export const Overview: Story = {
           ],
         },
       },
-      {
+      { type: 'node',
         id: 'decorated',
         position: { x: 150, y: 0 },
         style: {
@@ -120,6 +123,7 @@ export const Overview: Story = {
           badges: [
             {
               id: 'hot',
+              type: 'node',
               placement: 'top-right',
               origin: 'center',
               shape: { kind: 'circle', radius: 9 },
@@ -139,7 +143,7 @@ export const Overview: Story = {
           ],
         },
       },
-      {
+      { type: 'node',
         id: 'animated',
         position: { x: 300, y: 0 },
         style: {
@@ -151,6 +155,7 @@ export const Overview: Story = {
           badges: [
             {
               id: 'pulse',
+              type: 'node',
               placement: 'top-right',
               origin: 'center',
               shape: { kind: 'circle', radius: 9 },
@@ -210,7 +215,7 @@ export const Overview: Story = {
       // `GraphStore.updateNode` replaces `style` wholesale, so the prior
       // style is spread to preserve every unpatched field.
       for (const node of nodes) {
-        const badge = node.style!.badges![0]!;
+        const badge = (node.style as NodeStyle).badges![0]!;
         graph.store.updateNode(node.id, {
           style: {
             ...node.style!,

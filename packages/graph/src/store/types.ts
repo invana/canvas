@@ -16,12 +16,35 @@
  */
 export type GraphElementKind = 'node' | 'edge';
 
+/**
+ * The `type` assigned to a record inserted without one.
+ *
+ * `GraphNode.type` and `GraphEdge.type` are **required**, so every reader sees a
+ * `string` without a guard. This is the value to use for a record that genuinely
+ * has no kind. `GraphStore` also defaults to it on insert and update, as a
+ * runtime net for the paths that bypass the compiler — `importData` of an older
+ * snapshot, JSON parsed at runtime, and `Partial` patches.
+ *
+ * A named export rather than a bare literal so consumers can branch on it
+ * (`node.type === UNKNOWN_TYPE`) without a magic string.
+ *
+ * ⚠️ **Reserved.** `ColorByBehaviour` treats it as `fallbackColor` rather than a
+ * palette category, so a record deliberately typed `'unknown'` renders grey. If
+ * you need a real category, pick a different name.
+ */
+export const UNKNOWN_TYPE = 'unknown';
+
 /** A node in the graph. `id` is unique within a `GraphStore`. */
 export interface GraphNode<D = unknown> {
   /** Stable identity. Must be unique within the store. */
   id: string;
-  /** Type tag — matches a `NodeOption.type` template if any. Free-form. */
-  type?: string;
+  /**
+   * Type tag — matches a `NodeOption.type` template if any. Free-form.
+   *
+   * **Required.** Every record carries one; where a graph has no meaningful
+   * kinds, use {@link UNKNOWN_TYPE}.
+   */
+  type: string;
   /** Arbitrary user payload — opaque to the store. */
   data?: D;
   /** Logical parent. Cycles are rejected at write time. */
@@ -87,8 +110,13 @@ export interface GraphEdge<D = unknown> {
   source: string;
   /** Target node id. */
   target: string;
-  /** Predicate / FK label / "calls" / "depends-on" — free-form. */
-  type?: string;
+  /**
+   * Predicate / FK label / "calls" / "depends-on" — free-form.
+   *
+   * **Required.** Every record carries one; where a graph has no meaningful
+   * predicates, use {@link UNKNOWN_TYPE}.
+   */
+  type: string;
   /** Arbitrary user payload — opaque to the store. */
   data?: D;
   /** Sibling of {@link GraphNode.states} — currently-active state names. */
@@ -105,6 +133,7 @@ export interface GraphEdge<D = unknown> {
   /** Per-instance overlay catalogue. Typed by consumer as `Record<string, EdgeStyle>`. */
   state?: unknown;
 }
+
 
 /**
  * Constructor options for `GraphStore`.

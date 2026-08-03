@@ -26,7 +26,7 @@ export const ClickSelectStory: Story = {
       0x9ca3af, 0xef4444, 0xf59e0b, 0xeab308, 0x10b981, 0x06b6d4,
       0x3b82f6, 0x8b5cf6, 0xec4899, 0x14b8a6, 0xa3e635,
     ];
-    const nodes: GraphNode[] = lesMiserables.nodes.map((n) => ({
+    const nodes: GraphNode[] = lesMiserables.nodes.map((n) => ({ type: `group-${n.data.group}`,
       id: n.id,
       data: { group: n.data.group },
       style: {

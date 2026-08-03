@@ -30,9 +30,9 @@ export const TaskCard: Story = {
 
   play: async ({ canvasElement }) => {
     const nodes: GraphNode[] = [
-      { id: 't1', position: { x: -260, y: 0 }, data: { title: 'Fix WebGPU fallback crash on Safari', priority: 'high', tags: [{ label: 'Bug', color: 0xf43f5e }, { label: 'Renderer', color: 0x8b5cf6 }], assignee: { initials: 'RM', color: 0x0ea5e9 }, due: 'Jul 12' } satisfies TaskCardData },
-      { id: 't2', position: { x: 0, y: 0 }, data: { title: 'Composite icon part documentation', priority: 'med', tags: [{ label: 'Docs', color: 0x3b82f6 }], assignee: { initials: 'AL', color: 0x6366f1 }, due: 'Jul 18' } satisfies TaskCardData },
-      { id: 't3', position: { x: 260, y: 0 }, data: { title: 'Schema editor: reorder fields', priority: 'low', tags: [{ label: 'Feature', color: 0x22c55e }, { label: 'UI', color: 0xf59e0b }], assignee: { initials: 'GH', color: 0xec4899 }, due: 'Jul 22' } satisfies TaskCardData },
+      { type: 'node', id: 't1', position: { x: -260, y: 0 }, data: { title: 'Fix WebGPU fallback crash on Safari', priority: 'high', tags: [{ label: 'Bug', color: 0xf43f5e }, { label: 'Renderer', color: 0x8b5cf6 }], assignee: { initials: 'RM', color: 0x0ea5e9 }, due: 'Jul 12' } satisfies TaskCardData },
+      { type: 'node', id: 't2', position: { x: 0, y: 0 }, data: { title: 'Composite icon part documentation', priority: 'med', tags: [{ label: 'Docs', color: 0x3b82f6 }], assignee: { initials: 'AL', color: 0x6366f1 }, due: 'Jul 18' } satisfies TaskCardData },
+      { type: 'node', id: 't3', position: { x: 260, y: 0 }, data: { title: 'Schema editor: reorder fields', priority: 'low', tags: [{ label: 'Feature', color: 0x22c55e }, { label: 'UI', color: 0xf59e0b }], assignee: { initials: 'GH', color: 0xec4899 }, due: 'Jul 22' } satisfies TaskCardData },
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#composite-task-card')!;

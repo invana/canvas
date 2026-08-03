@@ -31,9 +31,9 @@ export const UserCard: Story = {
 
   play: async ({ canvasElement }) => {
     const nodes: GraphNode[] = [
-      { id: 'u1', position: { x: -300, y: 0 }, data: { name: 'Ada Lovelace', role: 'Mathematician', initials: 'AL', avatar: 0x6366f1, status: 'online', email: 'ada@analytical.co', phone: '+44 20 7946 0958' } satisfies UserCardData },
-      { id: 'u2', position: { x: 0, y: 0 }, data: { name: 'Alan Turing', role: 'Computer Scientist', initials: 'AT', avatar: 0x0ea5e9, status: 'away', email: 'alan@enigma.io', phone: '+44 16 3555 0142' } satisfies UserCardData },
-      { id: 'u3', position: { x: 300, y: 0 }, data: { name: 'Grace Hopper', role: 'Rear Admiral', initials: 'GH', avatar: 0xec4899, status: 'offline', email: 'grace@cobol.mil', phone: '+1 202 555 0173' } satisfies UserCardData },
+      { type: 'node', id: 'u1', position: { x: -300, y: 0 }, data: { name: 'Ada Lovelace', role: 'Mathematician', initials: 'AL', avatar: 0x6366f1, status: 'online', email: 'ada@analytical.co', phone: '+44 20 7946 0958' } satisfies UserCardData },
+      { type: 'node', id: 'u2', position: { x: 0, y: 0 }, data: { name: 'Alan Turing', role: 'Computer Scientist', initials: 'AT', avatar: 0x0ea5e9, status: 'away', email: 'alan@enigma.io', phone: '+44 16 3555 0142' } satisfies UserCardData },
+      { type: 'node', id: 'u3', position: { x: 300, y: 0 }, data: { name: 'Grace Hopper', role: 'Rear Admiral', initials: 'GH', avatar: 0xec4899, status: 'offline', email: 'grace@cobol.mil', phone: '+1 202 555 0173' } satisfies UserCardData },
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#composite-user-card')!;

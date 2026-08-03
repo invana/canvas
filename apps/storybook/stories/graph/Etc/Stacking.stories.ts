@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type NodeData } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type GraphNode } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'graph/Etc/Stacking' };
@@ -30,8 +30,8 @@ export const Stacking: Story = {
       '#graph-states-stacking',
     )!;
 
-    const nodes: NodeData[] = [
-      {
+    const nodes: GraphNode[] = [
+      { type: 'node',
         id: 'sel',
         position: { x: -200, y: 0 },
         style: {
@@ -47,7 +47,7 @@ export const Stacking: Story = {
         },
         states: ['selected'],
       },
-      {
+      { type: 'node',
         id: 'sel-dim',
         position: { x: 0, y: 0 },
         style: {
@@ -63,7 +63,7 @@ export const Stacking: Story = {
         },
         states: ['selected', 'dimmed'],
       },
-      {
+      { type: 'node',
         id: 'sel-dim-pulse',
         position: { x: 200, y: 0 },
         style: {

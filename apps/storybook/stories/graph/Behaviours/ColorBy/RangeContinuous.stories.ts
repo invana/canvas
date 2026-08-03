@@ -47,6 +47,7 @@ export const RangeContinuousStory: Story = {
     }
     const nodes = lesMiserables.nodes.map((n) => ({
       id: n.id,
+      type: `group-${n.data.group}`,
       data: { group: n.data.group, scenes: scenes.get(n.id) ?? 0 },
     }));
 

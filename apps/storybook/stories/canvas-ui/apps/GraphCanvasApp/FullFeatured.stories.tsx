@@ -23,7 +23,6 @@ import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ClickViewBehaviour, GraphClipboardProvider, TextResolutionLODBehaviour, type LayoutFactory, type ViewContext } from '@invana/canvas-react';
 import { CanvasMessageBar, DevInfoToggleButton, EdgeDetailView, NodeDetailView, GraphBackgroundContextMenu, type GraphBackgroundMenuContext, GraphCanvasApp, GraphControlsToolbar, GraphNodeContextMenu, type GraphNodeMenuContext, GraphStatusBar, MiniMapToggleButton, ThemeToggle } from '@invana/canvas-ui';
-import type { GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { ThemeProvider } from '@invana/themes';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
@@ -43,8 +42,6 @@ const LAYOUTS: Record<string, LayoutFactory> = {
   'elk-layered': () => new ElkLayout({ algorithm: 'layered', direction: 'RIGHT' }),
 };
 const LAYOUT_LABEL: Record<string, string> = { 'd3-force': 'Force', 'elk-layered': 'Layered' };
-const PALETTE = [0x60a5fa, 0x34d399, 0xf472b6, 0xfbbf24, 0xa78bfa, 0x22d3ee];
-const groupOf = (n: GraphNode): number => (n.data as { group?: number } | undefined)?.group ?? 0;
 
 const nodeMenu = (ctx: GraphNodeMenuContext): MenuItem[] => [
   // eslint-disable-next-line no-alert
@@ -64,10 +61,7 @@ export const FullFeaturedStory: Story = {
     // Les Misérables ships no `type` — in a graph DB every node/edge carries a
     // label (its "type"). Each node's community `group` becomes its type so the
     // inspector's Type row reflects its real category; edges are `APPEARS_WITH`.
-    const data = {
-      nodes: lesMiserables.nodes.map((n) => ({ ...n, type: `Group ${groupOf(n)}` })),
-      edges: lesMiserables.edges.map((e) => ({ ...e, type: 'APPEARS_WITH' })),
-    };
+    const data = lesMiserables;
     return (
     // A real consumer mounts the app under its own <ThemeProvider> — the app
     // reads light/dark from it via useTheme() (and throws without one).
@@ -87,14 +81,9 @@ export const FullFeaturedStory: Story = {
               animate: false,
             },
           },
-          // Community colours via a resolver (non-serialisable → still just config);
-          // bundle's type-colour behaviour off so the resolver wins.
-          behaviours: { color: { enabled: false } },
-          layers: {
-            graph: {
-              node: { style: { bgFill: (n: GraphNode) => PALETTE[groupOf(n) % PALETTE.length]! } },
-            },
-          },
+          // Community colours come from the bundle's own ColorByBehaviour —
+          // one option instead of a local palette plus a bgFill resolver.
+          behaviours: { color: { enabled: true, nodeValueKey: 'data.group' } },
         }}
         header={{
           title: 'Graph Canvas App',

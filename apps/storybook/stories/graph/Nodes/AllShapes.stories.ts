@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type NodeData, type NodeShapeOptions } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type GraphNode, type NodeShapeOptions } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
@@ -31,7 +31,7 @@ export const AllShapesStory: Story = {
     // Per-cell data: just position, type tag, and (optional) active state.
     // No style here — geometry, label, fill, stroke all come from the
     // layer-template resolvers below.
-    const nodes: NodeData[] = [
+    const nodes: GraphNode[] = [
       // ─── row: default (no state) — y = -360 ────────────────────────
       { id: 'default-circle',          type: 'circle',          position: { x: -500, y: -360 } },
       { id: 'default-rect',            type: 'rect',            position: { x: -300, y: -360 } },

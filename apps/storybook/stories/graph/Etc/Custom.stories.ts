@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type NodeData } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type GraphNode } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'graph/Etc/Custom' };
@@ -25,8 +25,8 @@ export const Custom: Story = {
       '#graph-states-custom',
     )!;
 
-    const nodes: NodeData[] = [
-      {
+    const nodes: GraphNode[] = [
+      { type: 'node',
         id: 'alert-1',
         position: { x: -180, y: 0 },
         style: {
@@ -50,7 +50,7 @@ export const Custom: Story = {
         },
         states: ['criticalAlert'],
       },
-      {
+      { type: 'node',
         id: 'alert-2',
         position: { x: 0, y: 0 },
         style: {
@@ -74,7 +74,7 @@ export const Custom: Story = {
         },
         states: ['criticalAlert'],
       },
-      {
+      { type: 'node',
         id: 'pinned',
         position: { x: 180, y: 0 },
         style: {

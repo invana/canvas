@@ -29,7 +29,7 @@ export const FixedSizeGroupStory: Story = {
 
   play: async ({ canvasElement }) => {
     const nodes: GraphNode[] = [
-      {
+      { type: 'node',
         id: 'group-a',
         position: { x: -120, y: -100 },
         style: {
@@ -46,19 +46,19 @@ export const FixedSizeGroupStory: Story = {
           labelPlacement: 'inside-top-left',
         },
       },
-      {
+      { type: 'node',
         id: 'node1',
         parentId: 'group-a',
         position: { x: -60, y: -50 },
         style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0xeab308 },
       },
-      {
+      { type: 'node',
         id: 'node2',
         parentId: 'group-a',
         position: { x: 0, y: -20 },
         style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0xeab308 },
       },
-      {
+      { type: 'node',
         id: 'node3',
         parentId: 'group-a',
         position: { x: 60, y: 10 },

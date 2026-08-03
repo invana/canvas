@@ -5,8 +5,8 @@ import {
   GraphCanvas,
   GraphLayer,
   type BadgeOrigin,
-  type EdgeData,
-  type NodeData,
+  type GraphEdge,
+  type GraphNode,
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -44,9 +44,10 @@ export const Origins: Story = {
       { origin: 'top-right', label: "origin: 'top-right'" },
     ];
 
-    const nodes: NodeData[] = variants.flatMap((v, i) => [
+    const nodes: GraphNode[] = variants.flatMap((v, i) => [
       {
         id: `src-${i}`,
+        type: 'node',
         position: { x: -260, y: (i - 1.5) * 110 },
         style: {
           shape: { kind: 'circle', radius: 14 },
@@ -60,6 +61,7 @@ export const Origins: Story = {
       },
       {
         id: `tgt-${i}`,
+        type: 'node',
         position: { x: 260, y: (i - 1.5) * 110 },
         style: {
           shape: { kind: 'circle', radius: 14 },
@@ -68,7 +70,7 @@ export const Origins: Story = {
       },
     ]);
 
-    const edges: EdgeData[] = variants.map((v, i) => ({
+    const edges: GraphEdge[] = variants.map((v, i) => ({ type: 'edge',
       id: `e-${i}`,
       source: `src-${i}`,
       target: `tgt-${i}`,
@@ -76,6 +78,7 @@ export const Origins: Story = {
         badges: [
           {
             id: 'demo',
+            type: 'node',
             placement: 'middle',
             ...(v.origin !== undefined ? { origin: v.origin } : {}),
             shape: { kind: 'rect', width: 24, height: 18, cornerRadius: 4 },

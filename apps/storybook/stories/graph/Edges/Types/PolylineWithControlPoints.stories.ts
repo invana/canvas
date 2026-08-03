@@ -4,8 +4,8 @@ import {
   DragNodeBehaviour,
   GraphCanvas,
   GraphLayer,
-  type EdgeData,
-  type NodeData,
+  type GraphEdge,
+  type GraphNode,
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -30,15 +30,15 @@ export const PolylineWithControlPointsStory: Story = {
   render: () => createContainer({ id: 'graph-edge-types-polyline-cp' }),
 
   play: async ({ canvasElement }) => {
-    const nodes: NodeData[] = [
-      { id: 'a', position: { x: -240, y:  80 },
+    const nodes: GraphNode[] = [
+      { type: 'node', id: 'a', position: { x: -240, y:  80 },
         style: { bgFill: 0x4f9cf9, bgStrokeColor: 0x1d4ed8, labelText: 'a', labelPlacement: 'bottom' } },
-      { id: 'b', position: { x:  240, y: -80 },
+      { type: 'node', id: 'b', position: { x:  240, y: -80 },
         style: { bgFill: 0x10b981, bgStrokeColor: 0x047857, labelText: 'b', labelPlacement: 'top' } },
     ];
 
-    const edges: EdgeData[] = [
-      {
+    const edges: GraphEdge[] = [
+      { type: 'edge',
         id: 'polyline',
         source: 'a',
         target: 'b',

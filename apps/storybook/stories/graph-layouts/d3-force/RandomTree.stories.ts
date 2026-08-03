@@ -62,7 +62,7 @@ export const RandomTreeStory: Story = {
       maxDepth = 0;
       for (const d of depths.values()) if (d > maxDepth) maxDepth = d;
 
-      const nodes: GraphNode<TreeNodeData>[] = tree.nodes.map((n) => ({
+      const nodes: GraphNode<TreeNodeData>[] = tree.nodes.map((n) => ({ type: 'node',
         id: n.id,
         data: { depth: depths.get(n.id)! },
       }));

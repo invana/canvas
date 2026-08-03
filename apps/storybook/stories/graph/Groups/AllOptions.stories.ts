@@ -112,7 +112,7 @@ export const AllOptionsStory: Story = {
     };
 
     const nodes: GraphNode[] = [
-      {
+      { type: 'node',
         id: 'group-a',
         position: { x: 0, y: 0 },
         style: {
@@ -131,19 +131,19 @@ export const AllOptionsStory: Story = {
           labelPlacement: settings.labelPlacement,
         },
       },
-      {
+      { type: 'node',
         id: 'node1',
         parentId: 'group-a',
         position: { x: -50, y: -30 },
         style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6, labelText: 'node1', labelPlacement: 'bottom', labelOffsetY: 6, labelColor: 0x334155, labelFontSize: 12 },
       },
-      {
+      { type: 'node',
         id: 'node2',
         parentId: 'group-a',
         position: { x: 50, y: -30 },
         style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6, labelText: 'node2', labelPlacement: 'bottom', labelOffsetY: 6, labelColor: 0x334155, labelFontSize: 12 },
       },
-      {
+      { type: 'node',
         id: 'node3',
         parentId: 'group-a',
         position: { x: 0, y: 70 },

@@ -11,15 +11,15 @@ import { GraphStore } from '../../src/store';
 function groupLayer(): { layer: GraphLayer; store: GraphStore } {
   const store = new GraphStore();
   store.addNodesBulk([
-    { id: 'g', style: { group: {} } }, // container node → isGroupNode true
-    { id: 'c1', parentId: 'g' },
-    { id: 'c2', parentId: 'g' },
-    { id: 'gc', parentId: 'c1' },
-    { id: 'x' },
+    { type: 'node', id: 'g', style: { group: {} } }, // container node → isGroupNode true
+    { type: 'node', id: 'c1', parentId: 'g' },
+    { type: 'node', id: 'c2', parentId: 'g' },
+    { type: 'node', id: 'gc', parentId: 'c1' },
+    { type: 'node', id: 'x' },
   ]);
   store.addEdgesBulk([
-    { id: 'c1-c2', source: 'c1', target: 'c2' },
-    { id: 'c1-x', source: 'c1', target: 'x' },
+    { type: 'edge', id: 'c1-c2', source: 'c1', target: 'c2' },
+    { type: 'edge', id: 'c1-x', source: 'c1', target: 'x' },
   ]);
   const layer = new GraphLayer({ id: 'graph', options: { store } });
   return { layer, store };

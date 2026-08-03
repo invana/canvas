@@ -14,14 +14,15 @@
  */
 
 import type { CanvasConfig } from '@invana/canvas';
+import { UNKNOWN_TYPE } from '@invana/graph';
 
 export const modellerSeed = {
   nodes: [
-    { id: 'a', position: { x: -120, y: -60 }, style: { labelText: 'A' } },
-    { id: 'b', position: { x: 120, y: -60 }, style: { labelText: 'B' } },
-    { id: 'c', position: { x: 0, y: 90 }, style: { labelText: 'C' } },
+    { id: 'a', type: UNKNOWN_TYPE, position: { x: -120, y: -60 }, style: { labelText: 'A' } },
+    { id: 'b', type: UNKNOWN_TYPE, position: { x: 120, y: -60 }, style: { labelText: 'B' } },
+    { id: 'c', type: UNKNOWN_TYPE, position: { x: 0, y: 90 }, style: { labelText: 'C' } },
   ],
-  edges: [{ id: 'a-b', source: 'a', target: 'b' }],
+  edges: [{ id: 'a-b', type: UNKNOWN_TYPE, source: 'a', target: 'b' }],
 };
 
 /** {@link modellerSeed} as the engine-ready value `<GraphCanvasApp data>` takes. */

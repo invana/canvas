@@ -28,7 +28,7 @@ export const NestedGroupsStory: Story = {
 
   play: async ({ canvasElement }) => {
     const nodes: GraphNode[] = [
-      {
+      { type: 'node',
         id: 'outer',
         position: { x: 0, y: 0 },
         style: {
@@ -42,7 +42,7 @@ export const NestedGroupsStory: Story = {
           group: { autoFit: true, padding: 28 },
         },
       },
-      {
+      { type: 'node',
         id: 'inner',
         parentId: 'outer',
         position: { x: 0, y: -60 },
@@ -54,7 +54,7 @@ export const NestedGroupsStory: Story = {
           group: { autoFit: true, padding: 18 },
         },
       },
-      {
+      { type: 'node',
         id: 'node1',
         parentId: 'inner',
         position: { x: -55, y: -60 },
@@ -68,7 +68,7 @@ export const NestedGroupsStory: Story = {
           labelOffsetY: 6,
         },
       },
-      {
+      { type: 'node',
         id: 'node2',
         parentId: 'inner',
         position: { x: 55, y: -60 },
@@ -82,7 +82,7 @@ export const NestedGroupsStory: Story = {
           labelOffsetY: 6,
         },
       },
-      {
+      { type: 'node',
         id: 'node3',
         parentId: 'outer',
         position: { x: -60, y: 90 },

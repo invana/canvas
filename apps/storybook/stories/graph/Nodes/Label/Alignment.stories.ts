@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type NodeData, type NodeStyle } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type GraphNode, type NodeStyle } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -23,8 +23,8 @@ export const Alignment: Story = {
   play: async ({ canvasElement }) => {
     const LONG = 'A multi-line label that wraps to demonstrate horizontal alignment';
 
-    const nodes: NodeData[] = [
-      {
+    const nodes: GraphNode[] = [
+      { type: 'node',
         id: 'circle',
         position: { x: -280, y: -150 },
         style: {
@@ -38,7 +38,7 @@ export const Alignment: Story = {
           },
         },
       },
-      {
+      { type: 'node',
         id: 'rect',
         position: { x: 0, y: -150 },
         style: {
@@ -52,7 +52,7 @@ export const Alignment: Story = {
           },
         },
       },
-      {
+      { type: 'node',
         id: 'arc',
         position: { x: 280, y: -150 },
         style: {
@@ -66,7 +66,7 @@ export const Alignment: Story = {
           },
         },
       },
-      {
+      { type: 'node',
         id: 'regular-polygon',
         position: { x: -280, y: 150 },
         style: {
@@ -80,7 +80,7 @@ export const Alignment: Story = {
           },
         },
       },
-      {
+      { type: 'node',
         id: 'star',
         position: { x: 0, y: 150 },
         style: {
@@ -94,7 +94,7 @@ export const Alignment: Story = {
           },
         },
       },
-      {
+      { type: 'node',
         id: 'polygon',
         position: { x: 280, y: 150 },
         style: {

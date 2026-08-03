@@ -159,6 +159,8 @@ export function lifeTreeAsGraph() {
     const { node, parentId, path, depth, kingdom } = queue.shift()!;
     const isLeaf = !node.children || node.children.length === 0;
     nodes.push({
+      // A leaf is a species; everything above it is a clade.
+      type: isLeaf ? 'species' : 'clade',
       id: path,
       data: {
         name: node.name,
@@ -169,7 +171,7 @@ export function lifeTreeAsGraph() {
       },
     });
     if (parentId !== null) {
-      edges.push({ id: `e${edgeCounter++}`, source: parentId, target: path });
+      edges.push({ id: `e${edgeCounter++}`, type: 'descends-from', source: parentId, target: path });
     }
     if (node.children) {
       for (const child of node.children) {

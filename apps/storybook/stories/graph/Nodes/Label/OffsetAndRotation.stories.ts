@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type NodeData, type NodeStyle } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type GraphNode, type NodeStyle } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -26,24 +26,24 @@ export const OffsetAndRotationStory: Story = {
   render: () => createContainer({ id: 'graph-label-offset-rotation' }),
 
   play: async ({ canvasElement }) => {
-    const nodes: NodeData[] = [
+    const nodes: GraphNode[] = [
       // 3-col × 4-row grid: ref block on top (sub-rows at y=-380/-220), tweak
       // block below (sub-rows at y=20/180). Sub-rows arrange the 6 shapes as
       // 3 + 3 instead of one wide row so adjacent labels don't collide.
       // ─── ref block ───────────────────────────────────────────────────
-      { id: 'ref-circle',          position: { x: -260, y: -380 }, style: { shape: { kind: 'circle', radius: 24 },                                                                  labelText: 'ref',     labelPlacement: 'bottom' } },
-      { id: 'ref-rect',            position: { x: 0,    y: -380 }, style: { shape: { kind: 'rect', width: 56, height: 40, cornerRadius: 8 },                                        labelText: 'ref',     labelPlacement: 'bottom' } },
-      { id: 'ref-arc',             position: { x: 260,  y: -380 }, style: { shape: { kind: 'arc', innerR: 10, outerR: 26, startAngle: -Math.PI / 2, endAngle: Math.PI / 2 },        labelText: 'ref',     labelPlacement: 'bottom' } },
-      { id: 'ref-regular-polygon', position: { x: -260, y: -220 }, style: { shape: { kind: 'regular-polygon', sides: 5, radius: 26 },                                               labelText: 'ref',     labelPlacement: 'bottom' } },
-      { id: 'ref-star',            position: { x: 0,    y: -220 }, style: { shape: { kind: 'star', points: 5, outerRadius: 28, innerRadius: 12 },                                   labelText: 'ref',     labelPlacement: 'bottom' } },
-      { id: 'ref-polygon',         position: { x: 260,  y: -220 }, style: { shape: { kind: 'polygon', vertices: [ { x: 24, y: 0 }, { x: 12, y: -21 }, { x: -12, y: -21 }, { x: -24, y: 0 }, { x: -12, y: 21 }, { x: 12, y: 21 } ] }, labelText: 'ref', labelPlacement: 'bottom' } },
+      { type: 'node', id: 'ref-circle',          position: { x: -260, y: -380 }, style: { shape: { kind: 'circle', radius: 24 },                                                                  labelText: 'ref',     labelPlacement: 'bottom' } },
+      { type: 'node', id: 'ref-rect',            position: { x: 0,    y: -380 }, style: { shape: { kind: 'rect', width: 56, height: 40, cornerRadius: 8 },                                        labelText: 'ref',     labelPlacement: 'bottom' } },
+      { type: 'node', id: 'ref-arc',             position: { x: 260,  y: -380 }, style: { shape: { kind: 'arc', innerR: 10, outerR: 26, startAngle: -Math.PI / 2, endAngle: Math.PI / 2 },        labelText: 'ref',     labelPlacement: 'bottom' } },
+      { type: 'node', id: 'ref-regular-polygon', position: { x: -260, y: -220 }, style: { shape: { kind: 'regular-polygon', sides: 5, radius: 26 },                                               labelText: 'ref',     labelPlacement: 'bottom' } },
+      { type: 'node', id: 'ref-star',            position: { x: 0,    y: -220 }, style: { shape: { kind: 'star', points: 5, outerRadius: 28, innerRadius: 12 },                                   labelText: 'ref',     labelPlacement: 'bottom' } },
+      { type: 'node', id: 'ref-polygon',         position: { x: 260,  y: -220 }, style: { shape: { kind: 'polygon', vertices: [ { x: 24, y: 0 }, { x: 12, y: -21 }, { x: -12, y: -21 }, { x: -24, y: 0 }, { x: -12, y: 21 }, { x: 12, y: 21 } ] }, labelText: 'ref', labelPlacement: 'bottom' } },
       // ─── tweak block ─────────────────────────────────────────────────
-      { id: 'tweak-circle',          position: { x: -260, y: 20  }, style: { shape: { kind: 'circle', radius: 24 },                                                                  labelText: 'tweak me', labelPlacement: 'bottom', labelOffsetX: 0, labelOffsetY: 0, labelRotation: 0 } },
-      { id: 'tweak-rect',            position: { x: 0,    y: 20  }, style: { shape: { kind: 'rect', width: 56, height: 40, cornerRadius: 8 },                                        labelText: 'tweak me', labelPlacement: 'bottom', labelOffsetX: 0, labelOffsetY: 0, labelRotation: 0 } },
-      { id: 'tweak-arc',             position: { x: 260,  y: 20  }, style: { shape: { kind: 'arc', innerR: 10, outerR: 26, startAngle: -Math.PI / 2, endAngle: Math.PI / 2 },        labelText: 'tweak me', labelPlacement: 'bottom', labelOffsetX: 0, labelOffsetY: 0, labelRotation: 0 } },
-      { id: 'tweak-regular-polygon', position: { x: -260, y: 180 }, style: { shape: { kind: 'regular-polygon', sides: 5, radius: 26 },                                               labelText: 'tweak me', labelPlacement: 'bottom', labelOffsetX: 0, labelOffsetY: 0, labelRotation: 0 } },
-      { id: 'tweak-star',            position: { x: 0,    y: 180 }, style: { shape: { kind: 'star', points: 5, outerRadius: 28, innerRadius: 12 },                                   labelText: 'tweak me', labelPlacement: 'bottom', labelOffsetX: 0, labelOffsetY: 0, labelRotation: 0 } },
-      { id: 'tweak-polygon',         position: { x: 260,  y: 180 }, style: { shape: { kind: 'polygon', vertices: [ { x: 24, y: 0 }, { x: 12, y: -21 }, { x: -12, y: -21 }, { x: -24, y: 0 }, { x: -12, y: 21 }, { x: 12, y: 21 } ] }, labelText: 'tweak me', labelPlacement: 'bottom', labelOffsetX: 0, labelOffsetY: 0, labelRotation: 0 } },
+      { type: 'node', id: 'tweak-circle',          position: { x: -260, y: 20  }, style: { shape: { kind: 'circle', radius: 24 },                                                                  labelText: 'tweak me', labelPlacement: 'bottom', labelOffsetX: 0, labelOffsetY: 0, labelRotation: 0 } },
+      { type: 'node', id: 'tweak-rect',            position: { x: 0,    y: 20  }, style: { shape: { kind: 'rect', width: 56, height: 40, cornerRadius: 8 },                                        labelText: 'tweak me', labelPlacement: 'bottom', labelOffsetX: 0, labelOffsetY: 0, labelRotation: 0 } },
+      { type: 'node', id: 'tweak-arc',             position: { x: 260,  y: 20  }, style: { shape: { kind: 'arc', innerR: 10, outerR: 26, startAngle: -Math.PI / 2, endAngle: Math.PI / 2 },        labelText: 'tweak me', labelPlacement: 'bottom', labelOffsetX: 0, labelOffsetY: 0, labelRotation: 0 } },
+      { type: 'node', id: 'tweak-regular-polygon', position: { x: -260, y: 180 }, style: { shape: { kind: 'regular-polygon', sides: 5, radius: 26 },                                               labelText: 'tweak me', labelPlacement: 'bottom', labelOffsetX: 0, labelOffsetY: 0, labelRotation: 0 } },
+      { type: 'node', id: 'tweak-star',            position: { x: 0,    y: 180 }, style: { shape: { kind: 'star', points: 5, outerRadius: 28, innerRadius: 12 },                                   labelText: 'tweak me', labelPlacement: 'bottom', labelOffsetX: 0, labelOffsetY: 0, labelRotation: 0 } },
+      { type: 'node', id: 'tweak-polygon',         position: { x: 260,  y: 180 }, style: { shape: { kind: 'polygon', vertices: [ { x: 24, y: 0 }, { x: 12, y: -21 }, { x: -12, y: -21 }, { x: -24, y: 0 }, { x: -12, y: 21 }, { x: 12, y: 21 } ] }, labelText: 'tweak me', labelPlacement: 'bottom', labelOffsetX: 0, labelOffsetY: 0, labelRotation: 0 } },
     ];
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-label-offset-rotation')!;

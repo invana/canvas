@@ -4,8 +4,8 @@ import {
   DragNodeBehaviour,
   GraphCanvas,
   GraphLayer,
-  type EdgeData,
-  type NodeData,
+  type GraphEdge,
+  type GraphNode,
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
@@ -14,7 +14,7 @@ export default meta;
 type Story = StoryObj;
 
 /**
- * `GraphLayer` rendering edges with text labels via the v3 `EdgeData` shape.
+ * `GraphLayer` rendering edges with text labels via the v3 `GraphEdge` shape.
  *
  * One row per built-in `pathType` — `straight`, `bezier`, `bump-radial`,
  * `smooth`, `rounded`, `orth`, `manhattan`. The shared label payload lives
@@ -40,23 +40,23 @@ export const EdgeLabelsStory: Story = {
     // Layer-level `node.style` carries the shared circle shape AND the
     // shared label font / placement / colour (only sources have a
     // labelText so targets effectively skip the label).
-    const nodes: NodeData[] = [
+    const nodes: GraphNode[] = [
       // sources
-      { id: 'straight-src',    position: { x: -240, y: -360 }, style: { bgFill: 0x4f9cf9, bgStrokeColor: 0x1d4ed8, labelText: 'straight' } },
-      { id: 'bezier-src',      position: { x: -240, y: -240 }, style: { bgFill: 0x4f9cf9, bgStrokeColor: 0x1d4ed8, labelText: 'bezier' } },
-      { id: 'bump-radial-src', position: { x: -240, y: -120 }, style: { bgFill: 0x4f9cf9, bgStrokeColor: 0x1d4ed8, labelText: 'bump-radial' } },
-      { id: 'smooth-src',      position: { x: -240, y:    0 }, style: { bgFill: 0x4f9cf9, bgStrokeColor: 0x1d4ed8, labelText: 'smooth' } },
-      { id: 'rounded-src',     position: { x: -240, y:  120 }, style: { bgFill: 0x4f9cf9, bgStrokeColor: 0x1d4ed8, labelText: 'rounded' } },
-      { id: 'orth-src',        position: { x: -240, y:  240 }, style: { bgFill: 0x4f9cf9, bgStrokeColor: 0x1d4ed8, labelText: 'orth' } },
-      { id: 'manhattan-src',   position: { x: -240, y:  360 }, style: { bgFill: 0x4f9cf9, bgStrokeColor: 0x1d4ed8, labelText: 'manhattan' } },
+      { type: 'node', id: 'straight-src',    position: { x: -240, y: -360 }, style: { bgFill: 0x4f9cf9, bgStrokeColor: 0x1d4ed8, labelText: 'straight' } },
+      { type: 'node', id: 'bezier-src',      position: { x: -240, y: -240 }, style: { bgFill: 0x4f9cf9, bgStrokeColor: 0x1d4ed8, labelText: 'bezier' } },
+      { type: 'node', id: 'bump-radial-src', position: { x: -240, y: -120 }, style: { bgFill: 0x4f9cf9, bgStrokeColor: 0x1d4ed8, labelText: 'bump-radial' } },
+      { type: 'node', id: 'smooth-src',      position: { x: -240, y:    0 }, style: { bgFill: 0x4f9cf9, bgStrokeColor: 0x1d4ed8, labelText: 'smooth' } },
+      { type: 'node', id: 'rounded-src',     position: { x: -240, y:  120 }, style: { bgFill: 0x4f9cf9, bgStrokeColor: 0x1d4ed8, labelText: 'rounded' } },
+      { type: 'node', id: 'orth-src',        position: { x: -240, y:  240 }, style: { bgFill: 0x4f9cf9, bgStrokeColor: 0x1d4ed8, labelText: 'orth' } },
+      { type: 'node', id: 'manhattan-src',   position: { x: -240, y:  360 }, style: { bgFill: 0x4f9cf9, bgStrokeColor: 0x1d4ed8, labelText: 'manhattan' } },
       // targets — each at source.y + 60 so routers have a vertical delta to bridge
-      { id: 'straight-tgt',    position: { x: 240, y: -300 }, style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } },
-      { id: 'bezier-tgt',      position: { x: 240, y: -180 }, style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } },
-      { id: 'bump-radial-tgt', position: { x: 240, y:  -60 }, style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } },
-      { id: 'smooth-tgt',      position: { x: 240, y:   60 }, style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } },
-      { id: 'rounded-tgt',     position: { x: 240, y:  180 }, style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } },
-      { id: 'orth-tgt',        position: { x: 240, y:  300 }, style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } },
-      { id: 'manhattan-tgt',   position: { x: 240, y:  420 }, style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } },
+      { type: 'node', id: 'straight-tgt',    position: { x: 240, y: -300 }, style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } },
+      { type: 'node', id: 'bezier-tgt',      position: { x: 240, y: -180 }, style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } },
+      { type: 'node', id: 'bump-radial-tgt', position: { x: 240, y:  -60 }, style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } },
+      { type: 'node', id: 'smooth-tgt',      position: { x: 240, y:   60 }, style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } },
+      { type: 'node', id: 'rounded-tgt',     position: { x: 240, y:  180 }, style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } },
+      { type: 'node', id: 'orth-tgt',        position: { x: 240, y:  300 }, style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } },
+      { type: 'node', id: 'manhattan-tgt',   position: { x: 240, y:  420 }, style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } },
     ];
 
     // Bezier needs an explicit axis to bend horizontally; bump-radial needs
@@ -64,19 +64,19 @@ export const EdgeLabelsStory: Story = {
     // layout. Other path types take no pathStyleOpts. Each edge's
     // `labelText` shows its pathType + (when present) the pathStyleOpts
     // payload so the demo also documents the data.
-    const edges: EdgeData[] = [
-      {
+    const edges: GraphEdge[] = [
+      { type: 'edge',
         id: 'straight',    source: 'straight-src',    target: 'straight-tgt',
         style: { shape: { pathType: 'straight' }, labelText: 'straight' },
       },
-      {
+      { type: 'edge',
         id: 'bezier',      source: 'bezier-src',      target: 'bezier-tgt',
         style: {
           shape: { pathType: 'bezier', pathStyleOpts: { axis: 'h', tension: 0.6 } },
           labelText: "bezier · { axis: 'h', tension: 0.6 }",
         },
       },
-      {
+      { type: 'edge',
         id: 'bump-radial', source: 'bump-radial-src', target: 'bump-radial-tgt',
         // Polar origin off to the left of the grid — places the endpoints
         // on a single near-horizontal radial sector but at clearly different
@@ -89,19 +89,19 @@ export const EdgeLabelsStory: Story = {
           labelText: 'bump-radial · { origin: { x: -600, y: 0 } }',
         },
       },
-      {
+      { type: 'edge',
         id: 'smooth',      source: 'smooth-src',      target: 'smooth-tgt',
         style: { shape: { pathType: 'smooth' }, labelText: 'smooth' },
       },
-      {
+      { type: 'edge',
         id: 'rounded',     source: 'rounded-src',     target: 'rounded-tgt',
         style: { shape: { pathType: 'rounded' }, labelText: 'rounded' },
       },
-      {
+      { type: 'edge',
         id: 'orth',        source: 'orth-src',        target: 'orth-tgt',
         style: { shape: { pathType: 'orth' }, labelText: 'orth' },
       },
-      {
+      { type: 'edge',
         id: 'manhattan',   source: 'manhattan-src',   target: 'manhattan-tgt',
         style: { shape: { pathType: 'manhattan' }, labelText: 'manhattan' },
       },

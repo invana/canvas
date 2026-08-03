@@ -8,6 +8,7 @@
  */
 
 export { GraphStore } from './GraphStore';
+export { UNKNOWN_TYPE } from './types';
 export type {
   EdgeDirection,
   GraphEdge,

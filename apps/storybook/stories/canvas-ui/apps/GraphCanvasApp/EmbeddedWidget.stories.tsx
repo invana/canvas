@@ -13,7 +13,6 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { CanvasControlsToolbar, CanvasMessageBar, GraphCanvasApp, GraphStatusBar } from '@invana/canvas-ui';
-import type { GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { ThemeProvider } from '@invana/themes';
 
@@ -22,11 +21,7 @@ export default meta;
 type Story = StoryObj;
 
 // Community `group` → node `type` so the default colour-by-type reads by community.
-const groupOf = (n: GraphNode): number => (n.data as { group?: number } | undefined)?.group ?? 0;
-const DATA = {
-  nodes: lesMiserables.nodes.map((n) => ({ ...n, type: `Group ${groupOf(n)}` })),
-  edges: lesMiserables.edges.map((e) => ({ ...e, type: 'APPEARS_WITH' })),
-};
+const DATA = lesMiserables;
 
 export const EmbeddedWidgetStory: Story = {
   name: 'EmbeddedWidget',

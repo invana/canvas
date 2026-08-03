@@ -59,6 +59,7 @@ export const EdgeBundlingStory: Story = {
     // invisible — the d3 demo only shows class names on the rim.
     const nodes = rawNodes.map((n) => ({
       id: n.id,
+      type: 'node',
       style: n.data.isLeaf
         ? {
             shape: { kind: 'circle' as const, radius: settings.leafSize / 2 },
@@ -295,7 +296,7 @@ export const EdgeBundlingStory: Story = {
         for (const e of importEdges) {
           if (!leafIds.has(e.source) || !leafIds.has(e.target)) continue;
           const waypoints = bundleWaypoints(e.source, e.target);
-          graph.store.addEdge({
+          graph.store.addEdge({ type: 'edge',
             id: e.id,
             source: e.source,
             target: e.target,

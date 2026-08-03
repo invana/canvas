@@ -53,62 +53,62 @@ const nodes: (GraphNode & {
 
 const edges: (GraphEdge & { data: { rps: number; errorRate: number } })[] = [
   // gateway fan-out
-  { id: 'g1', source: 'api-gateway', target: 'auth-api',     data: { rps:  920, errorRate: 0.002 } },
-  { id: 'g2', source: 'api-gateway', target: 'user-api',     data: { rps: 1200, errorRate: 0.004 } },
-  { id: 'g3', source: 'api-gateway', target: 'product-api',  data: { rps: 1450, errorRate: 0.003 } },
-  { id: 'g4', source: 'api-gateway', target: 'order-api',    data: { rps:  680, errorRate: 0.082 } },
-  { id: 'g5', source: 'api-gateway', target: 'billing-api',  data: { rps:  240, errorRate: 0.011 } },
-  { id: 'g6', source: 'api-gateway', target: 'search-api',   data: { rps:  980, errorRate: 0.005 } },
+  { type: 'calls', id: 'g1', source: 'api-gateway', target: 'auth-api',     data: { rps:  920, errorRate: 0.002 } },
+  { type: 'calls', id: 'g2', source: 'api-gateway', target: 'user-api',     data: { rps: 1200, errorRate: 0.004 } },
+  { type: 'calls', id: 'g3', source: 'api-gateway', target: 'product-api',  data: { rps: 1450, errorRate: 0.003 } },
+  { type: 'calls', id: 'g4', source: 'api-gateway', target: 'order-api',    data: { rps:  680, errorRate: 0.082 } },
+  { type: 'calls', id: 'g5', source: 'api-gateway', target: 'billing-api',  data: { rps:  240, errorRate: 0.011 } },
+  { type: 'calls', id: 'g6', source: 'api-gateway', target: 'search-api',   data: { rps:  980, errorRate: 0.005 } },
 
   // auth-api
-  { id: 'a1', source: 'auth-api', target: 'user-db', data: { rps: 720, errorRate: 0.001 } },
-  { id: 'a2', source: 'auth-api', target: 'cache',   data: { rps: 920, errorRate: 0.0008 } },
+  { type: 'calls', id: 'a1', source: 'auth-api', target: 'user-db', data: { rps: 720, errorRate: 0.001 } },
+  { type: 'calls', id: 'a2', source: 'auth-api', target: 'cache',   data: { rps: 920, errorRate: 0.0008 } },
 
   // user-api
-  { id: 'u1', source: 'user-api', target: 'user-db', data: { rps: 1100, errorRate: 0.002 } },
-  { id: 'u2', source: 'user-api', target: 'cache',   data: { rps: 1200, errorRate: 0.0005 } },
+  { type: 'calls', id: 'u1', source: 'user-api', target: 'user-db', data: { rps: 1100, errorRate: 0.002 } },
+  { type: 'calls', id: 'u2', source: 'user-api', target: 'cache',   data: { rps: 1200, errorRate: 0.0005 } },
 
   // product-api
-  { id: 'p1', source: 'product-api', target: 'product-db', data: { rps: 1450, errorRate: 0.001 } },
-  { id: 'p2', source: 'product-api', target: 'cache',      data: { rps: 1400, errorRate: 0.0004 } },
+  { type: 'calls', id: 'p1', source: 'product-api', target: 'product-db', data: { rps: 1450, errorRate: 0.001 } },
+  { type: 'calls', id: 'p2', source: 'product-api', target: 'cache',      data: { rps: 1400, errorRate: 0.0004 } },
 
   // order-api (degraded — high err on fraud + payment)
-  { id: 'o1', source: 'order-api', target: 'order-db',             data: { rps: 660, errorRate: 0.012 } },
-  { id: 'o2', source: 'order-api', target: 'payment-service',      data: { rps: 480, errorRate: 0.094 } },
-  { id: 'o3', source: 'order-api', target: 'notification-service', data: { rps: 220, errorRate: 0.006 } },
-  { id: 'o4', source: 'order-api', target: 'fraud-detector',       data: { rps: 410, errorRate: 0.984 } },
-  { id: 'o5', source: 'order-api', target: 'inventory-service',    data: { rps: 280, errorRate: 0.008 } },
-  { id: 'o6', source: 'order-api', target: 'queue',                data: { rps: 320, errorRate: 0.001 } },
+  { type: 'calls', id: 'o1', source: 'order-api', target: 'order-db',             data: { rps: 660, errorRate: 0.012 } },
+  { type: 'calls', id: 'o2', source: 'order-api', target: 'payment-service',      data: { rps: 480, errorRate: 0.094 } },
+  { type: 'calls', id: 'o3', source: 'order-api', target: 'notification-service', data: { rps: 220, errorRate: 0.006 } },
+  { type: 'calls', id: 'o4', source: 'order-api', target: 'fraud-detector',       data: { rps: 410, errorRate: 0.984 } },
+  { type: 'calls', id: 'o5', source: 'order-api', target: 'inventory-service',    data: { rps: 280, errorRate: 0.008 } },
+  { type: 'calls', id: 'o6', source: 'order-api', target: 'queue',                data: { rps: 320, errorRate: 0.001 } },
 
   // billing-api
-  { id: 'b1', source: 'billing-api', target: 'payment-service', data: { rps: 200, errorRate: 0.088 } },
-  { id: 'b2', source: 'billing-api', target: 'queue',           data: { rps: 220, errorRate: 0.002 } },
+  { type: 'calls', id: 'b1', source: 'billing-api', target: 'payment-service', data: { rps: 200, errorRate: 0.088 } },
+  { type: 'calls', id: 'b2', source: 'billing-api', target: 'queue',           data: { rps: 220, errorRate: 0.002 } },
 
   // search-api
-  { id: 's1', source: 'search-api', target: 'search-index',           data: { rps: 870, errorRate: 0.003 } },
-  { id: 's2', source: 'search-api', target: 'recommendation-service', data: { rps: 540, errorRate: 0.007 } },
+  { type: 'calls', id: 's1', source: 'search-api', target: 'search-index',           data: { rps: 870, errorRate: 0.003 } },
+  { type: 'calls', id: 's2', source: 'search-api', target: 'recommendation-service', data: { rps: 540, errorRate: 0.007 } },
 
   // payment-service
-  { id: 'pm1', source: 'payment-service', target: 'stripe-adapter', data: { rps: 320, errorRate: 0.071 } },
-  { id: 'pm2', source: 'payment-service', target: 'queue',          data: { rps: 280, errorRate: 0.004 } },
+  { type: 'calls', id: 'pm1', source: 'payment-service', target: 'stripe-adapter', data: { rps: 320, errorRate: 0.071 } },
+  { type: 'calls', id: 'pm2', source: 'payment-service', target: 'queue',          data: { rps: 280, errorRate: 0.004 } },
 
   // notification-service
-  { id: 'n1', source: 'notification-service', target: 'ses-mailer', data: { rps: 340, errorRate: 0.006 } },
-  { id: 'n2', source: 'notification-service', target: 'queue',      data: { rps: 510, errorRate: 0.002 } },
+  { type: 'calls', id: 'n1', source: 'notification-service', target: 'ses-mailer', data: { rps: 340, errorRate: 0.006 } },
+  { type: 'calls', id: 'n2', source: 'notification-service', target: 'queue',      data: { rps: 510, errorRate: 0.002 } },
 
   // recommendation-service
-  { id: 'r1', source: 'recommendation-service', target: 'user-db',    data: { rps: 360, errorRate: 0.001 } },
-  { id: 'r2', source: 'recommendation-service', target: 'product-db', data: { rps: 380, errorRate: 0.001 } },
-  { id: 'r3', source: 'recommendation-service', target: 'cache',      data: { rps: 720, errorRate: 0.0004 } },
+  { type: 'calls', id: 'r1', source: 'recommendation-service', target: 'user-db',    data: { rps: 360, errorRate: 0.001 } },
+  { type: 'calls', id: 'r2', source: 'recommendation-service', target: 'product-db', data: { rps: 380, errorRate: 0.001 } },
+  { type: 'calls', id: 'r3', source: 'recommendation-service', target: 'cache',      data: { rps: 720, errorRate: 0.0004 } },
 
   // fraud-detector (down — its outbound calls all error)
-  { id: 'f1', source: 'fraud-detector', target: 'user-db',  data: { rps: 0, errorRate: 1 } },
-  { id: 'f2', source: 'fraud-detector', target: 'order-db', data: { rps: 0, errorRate: 1 } },
-  { id: 'f3', source: 'fraud-detector', target: 'cache',    data: { rps: 0, errorRate: 1 } },
+  { type: 'calls', id: 'f1', source: 'fraud-detector', target: 'user-db',  data: { rps: 0, errorRate: 1 } },
+  { type: 'calls', id: 'f2', source: 'fraud-detector', target: 'order-db', data: { rps: 0, errorRate: 1 } },
+  { type: 'calls', id: 'f3', source: 'fraud-detector', target: 'cache',    data: { rps: 0, errorRate: 1 } },
 
   // inventory-service
-  { id: 'i1', source: 'inventory-service', target: 'product-db', data: { rps: 280, errorRate: 0.002 } },
-  { id: 'i2', source: 'inventory-service', target: 'queue',      data: { rps: 220, errorRate: 0.001 } },
+  { type: 'calls', id: 'i1', source: 'inventory-service', target: 'product-db', data: { rps: 280, errorRate: 0.002 } },
+  { type: 'calls', id: 'i2', source: 'inventory-service', target: 'queue',      data: { rps: 220, errorRate: 0.001 } },
 ];
 
 export const microservices = { nodes, edges };

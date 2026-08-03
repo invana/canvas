@@ -6,7 +6,7 @@ import type { GraphStoreEventMap } from '../../src/store';
 describe('GraphStore — CRUD', () => {
   it('adds and reads a node with all fields', () => {
     const store = new GraphStore();
-    store.addNode({
+    store.addNode({ type: 'node',
       id: 'a',
       data: { kind: 'vessel' },
       position: { x: 10, y: 20 },
@@ -22,30 +22,30 @@ describe('GraphStore — CRUD', () => {
 
   it('throws on duplicate addNode', () => {
     const store = new GraphStore();
-    store.addNode({ id: 'a' });
-    expect(() => store.addNode({ id: 'a' })).toThrow(/duplicate/);
+    store.addNode({ type: 'node', id: 'a' });
+    expect(() => store.addNode({ type: 'node', id: 'a' })).toThrow(/duplicate/);
   });
 
   it('upsertNode adds if absent, merges if present', () => {
     const store = new GraphStore();
-    store.upsertNode({ id: 'a', data: { count: 1 } });
-    store.upsertNode({ id: 'a', data: { count: 2 } });
+    store.upsertNode({ type: 'node', id: 'a', data: { count: 1 } });
+    store.upsertNode({ type: 'node', id: 'a', data: { count: 2 } });
     expect(store.getNode<{ count: number }>('a')?.data?.count).toBe(2);
   });
 
   it('updateNode applies a partial patch', () => {
     const store = new GraphStore();
-    store.addNode({ id: 'a', position: { x: 1, y: 1 } });
+    store.addNode({ type: 'node', id: 'a', position: { x: 1, y: 1 } });
     store.updateNode('a', { position: { x: 5, y: 5 } });
     expect(store.getPosition('a')).toEqual({ x: 5, y: 5 });
   });
 
   it('removeNode cascades incident edges by default', () => {
     const store = new GraphStore();
-    store.addNodesBulk([{ id: 'a' }, { id: 'b' }, { id: 'c' }]);
+    store.addNodesBulk([{ type: 'node', id: 'a' }, { type: 'node', id: 'b' }, { type: 'node', id: 'c' }]);
     store.addEdgesBulk([
-      { id: 'ab', source: 'a', target: 'b' },
-      { id: 'bc', source: 'b', target: 'c' },
+      { type: 'edge', id: 'ab', source: 'a', target: 'b' },
+      { type: 'edge', id: 'bc', source: 'b', target: 'c' },
     ]);
     store.removeNode('b');
     expect(store.hasNode('b')).toBe(false);
@@ -55,8 +55,8 @@ describe('GraphStore — CRUD', () => {
 
   it('removeNode with cascade:false throws when edges still exist', () => {
     const store = new GraphStore();
-    store.addNodesBulk([{ id: 'a' }, { id: 'b' }]);
-    store.addEdge({ id: 'ab', source: 'a', target: 'b' });
+    store.addNodesBulk([{ type: 'node', id: 'a' }, { type: 'node', id: 'b' }]);
+    store.addEdge({ type: 'edge', id: 'ab', source: 'a', target: 'b' });
     expect(() => store.removeNode('a', { cascade: false })).toThrow(/incident edges/);
     expect(store.hasNode('a')).toBe(true);
   });
@@ -65,36 +65,36 @@ describe('GraphStore — CRUD', () => {
 describe('GraphStore — referential integrity', () => {
   it('throws on edge with unknown endpoint by default', () => {
     const store = new GraphStore();
-    store.addNode({ id: 'a' });
-    expect(() => store.addEdge({ id: 'x', source: 'a', target: 'missing' })).toThrow(
+    store.addNode({ type: 'node', id: 'a' });
+    expect(() => store.addEdge({ type: 'edge', id: 'x', source: 'a', target: 'missing' })).toThrow(
       /unknown endpoint/,
     );
   });
 
   it('drops the edge under unknownEndpoint:"drop"', () => {
     const store = new GraphStore({ unknownEndpoint: 'drop' });
-    store.addNode({ id: 'a' });
-    store.addEdge({ id: 'x', source: 'a', target: 'missing' });
+    store.addNode({ type: 'node', id: 'a' });
+    store.addEdge({ type: 'edge', id: 'x', source: 'a', target: 'missing' });
     expect(store.hasEdge('x')).toBe(false);
     expect(store.edgeCount()).toBe(0);
   });
 
   it('buffers and admits the edge under unknownEndpoint:"buffer"', () => {
     const store = new GraphStore({ unknownEndpoint: 'buffer' });
-    store.addNode({ id: 'a' });
-    store.addEdge({ id: 'x', source: 'a', target: 'b' });
+    store.addNode({ type: 'node', id: 'a' });
+    store.addEdge({ type: 'edge', id: 'x', source: 'a', target: 'b' });
     expect(store.hasEdge('x')).toBe(false);
-    store.addNode({ id: 'b' });
+    store.addNode({ type: 'node', id: 'b' });
     expect(store.hasEdge('x')).toBe(true);
     expect(store.edgeCount()).toBe(1);
   });
 
   it('buffers and admits the edge when both endpoints arrive after the edge', () => {
     const store = new GraphStore({ unknownEndpoint: 'buffer' });
-    store.addEdge({ id: 'x', source: 'a', target: 'b' });
-    store.addNode({ id: 'a' });
+    store.addEdge({ type: 'edge', id: 'x', source: 'a', target: 'b' });
+    store.addNode({ type: 'node', id: 'a' });
     expect(store.hasEdge('x')).toBe(false); // still missing b
-    store.addNode({ id: 'b' });
+    store.addNode({ type: 'node', id: 'b' });
     expect(store.hasEdge('x')).toBe(true);
   });
 });
@@ -102,11 +102,11 @@ describe('GraphStore — referential integrity', () => {
 describe('GraphStore — adjacency', () => {
   it('reports in/out degrees correctly', () => {
     const store = new GraphStore();
-    store.addNodesBulk([{ id: 'a' }, { id: 'b' }, { id: 'c' }]);
+    store.addNodesBulk([{ type: 'node', id: 'a' }, { type: 'node', id: 'b' }, { type: 'node', id: 'c' }]);
     store.addEdgesBulk([
-      { id: 'ab', source: 'a', target: 'b' },
-      { id: 'ac', source: 'a', target: 'c' },
-      { id: 'cb', source: 'c', target: 'b' },
+      { type: 'edge', id: 'ab', source: 'a', target: 'b' },
+      { type: 'edge', id: 'ac', source: 'a', target: 'c' },
+      { type: 'edge', id: 'cb', source: 'c', target: 'b' },
     ]);
     expect(store.outDegree('a')).toBe(2);
     expect(store.inDegree('a')).toBe(0);
@@ -118,10 +118,10 @@ describe('GraphStore — adjacency', () => {
 
   it('iterates edgesOf in the requested direction', () => {
     const store = new GraphStore();
-    store.addNodesBulk([{ id: 'a' }, { id: 'b' }, { id: 'c' }]);
+    store.addNodesBulk([{ type: 'node', id: 'a' }, { type: 'node', id: 'b' }, { type: 'node', id: 'c' }]);
     store.addEdgesBulk([
-      { id: 'ab', source: 'a', target: 'b' },
-      { id: 'ca', source: 'c', target: 'a' },
+      { type: 'edge', id: 'ab', source: 'a', target: 'b' },
+      { type: 'edge', id: 'ca', source: 'c', target: 'a' },
     ]);
     const out = [...store.edgesOf('a', 'out')].map((e) => e.id);
     const inE = [...store.edgesOf('a', 'in')].map((e) => e.id);
@@ -133,10 +133,10 @@ describe('GraphStore — adjacency', () => {
 
   it('iterates neighborsOf correctly', () => {
     const store = new GraphStore();
-    store.addNodesBulk([{ id: 'a' }, { id: 'b' }, { id: 'c' }]);
+    store.addNodesBulk([{ type: 'node', id: 'a' }, { type: 'node', id: 'b' }, { type: 'node', id: 'c' }]);
     store.addEdgesBulk([
-      { id: 'ab', source: 'a', target: 'b' },
-      { id: 'ca', source: 'c', target: 'a' },
+      { type: 'edge', id: 'ab', source: 'a', target: 'b' },
+      { type: 'edge', id: 'ca', source: 'c', target: 'a' },
     ]);
     expect([...store.neighborsOf('a', 'out')]).toEqual(['b']);
     expect([...store.neighborsOf('a', 'in')]).toEqual(['c']);
@@ -145,7 +145,7 @@ describe('GraphStore — adjacency', () => {
 
   it('supports multi-edges between the same pair', () => {
     const store = new GraphStore();
-    store.addNodesBulk([{ id: 'a' }, { id: 'b' }]);
+    store.addNodesBulk([{ type: 'node', id: 'a' }, { type: 'node', id: 'b' }]);
     store.addEdge({ id: 'ab-1', source: 'a', target: 'b', type: 'calls' });
     store.addEdge({ id: 'ab-2', source: 'a', target: 'b', type: 'imports' });
     expect(store.outDegree('a')).toBe(2);
@@ -155,8 +155,8 @@ describe('GraphStore — adjacency', () => {
 
   it('rewires adjacency on updateEdge endpoint change', () => {
     const store = new GraphStore();
-    store.addNodesBulk([{ id: 'a' }, { id: 'b' }, { id: 'c' }]);
-    store.addEdge({ id: 'e', source: 'a', target: 'b' });
+    store.addNodesBulk([{ type: 'node', id: 'a' }, { type: 'node', id: 'b' }, { type: 'node', id: 'c' }]);
+    store.addEdge({ type: 'edge', id: 'e', source: 'a', target: 'b' });
     store.updateEdge('e', { target: 'c' });
     expect(store.outDegree('a')).toBe(1);
     expect(store.inDegree('b')).toBe(0);
@@ -168,11 +168,11 @@ describe('GraphStore — adjacency', () => {
 describe('GraphStore — parent/child', () => {
   it('indexes parent → children and supports descendants/ancestors', () => {
     const store = new GraphStore();
-    store.addNode({ id: 'root' });
-    store.addNode({ id: 'a', parentId: 'root' });
-    store.addNode({ id: 'b', parentId: 'root' });
-    store.addNode({ id: 'a1', parentId: 'a' });
-    store.addNode({ id: 'a2', parentId: 'a' });
+    store.addNode({ type: 'node', id: 'root' });
+    store.addNode({ type: 'node', id: 'a', parentId: 'root' });
+    store.addNode({ type: 'node', id: 'b', parentId: 'root' });
+    store.addNode({ type: 'node', id: 'a1', parentId: 'a' });
+    store.addNode({ type: 'node', id: 'a2', parentId: 'a' });
 
     expect([...store.childrenOf('root')].sort()).toEqual(['a', 'b']);
     expect([...store.descendantsOf('root')].sort()).toEqual(['a', 'a1', 'a2', 'b']);
@@ -182,23 +182,23 @@ describe('GraphStore — parent/child', () => {
 
   it('rejects parentId cycles on updateNode', () => {
     const store = new GraphStore();
-    store.addNode({ id: 'a' });
-    store.addNode({ id: 'b', parentId: 'a' });
-    store.addNode({ id: 'c', parentId: 'b' });
+    store.addNode({ type: 'node', id: 'a' });
+    store.addNode({ type: 'node', id: 'b', parentId: 'a' });
+    store.addNode({ type: 'node', id: 'c', parentId: 'b' });
     expect(() => store.updateNode('a', { parentId: 'c' })).toThrow(/cycle/);
   });
 
   it('rejects self-parent', () => {
     const store = new GraphStore();
-    store.addNode({ id: 'a' });
+    store.addNode({ type: 'node', id: 'a' });
     expect(() => store.updateNode('a', { parentId: 'a' })).toThrow(/cycle/);
   });
 
   it('orphans direct children when a parent is removed', () => {
     const store = new GraphStore();
-    store.addNode({ id: 'root' });
-    store.addNode({ id: 'a', parentId: 'root' });
-    store.addNode({ id: 'a1', parentId: 'a' });
+    store.addNode({ type: 'node', id: 'root' });
+    store.addNode({ type: 'node', id: 'a', parentId: 'root' });
+    store.addNode({ type: 'node', id: 'a1', parentId: 'a' });
     store.removeNode('a');
     expect(store.hasNode('a1')).toBe(true);
     expect(store.parentOf('a1')).toBeUndefined();
@@ -208,7 +208,7 @@ describe('GraphStore — parent/child', () => {
 describe('GraphStore — positions', () => {
   it('setPosition default fires node:update', () => {
     const store = new GraphStore();
-    store.addNode({ id: 'a', position: { x: 0, y: 0 } });
+    store.addNode({ type: 'node', id: 'a', position: { x: 0, y: 0 } });
     const cb = vi.fn();
     store.events.on('node:update', cb);
     store.setPosition('a', { x: 1, y: 2 });
@@ -218,7 +218,7 @@ describe('GraphStore — positions', () => {
 
   it('setPosition silent does not fire node:update but bumps version', () => {
     const store = new GraphStore();
-    store.addNode({ id: 'a', position: { x: 0, y: 0 } });
+    store.addNode({ type: 'node', id: 'a', position: { x: 0, y: 0 } });
     const cb = vi.fn();
     store.events.on('node:update', cb);
     const v1 = store.version;
@@ -231,9 +231,9 @@ describe('GraphStore — positions', () => {
   it('setPositionsBulk writes many positions in one call', () => {
     const store = new GraphStore();
     store.addNodesBulk([
-      { id: 'a', position: { x: 0, y: 0 } },
-      { id: 'b', position: { x: 0, y: 0 } },
-      { id: 'c', position: { x: 0, y: 0 } },
+      { type: 'node', id: 'a', position: { x: 0, y: 0 } },
+      { type: 'node', id: 'b', position: { x: 0, y: 0 } },
+      { type: 'node', id: 'c', position: { x: 0, y: 0 } },
     ]);
     const xy = new Float32Array([10, 20, 30, 40, 50, 60]);
     store.setPositionsBulk(['a', 'b', 'c'], xy, { silent: true });
@@ -244,7 +244,7 @@ describe('GraphStore — positions', () => {
 
   it('setPositionsBulk validates xy length', () => {
     const store = new GraphStore();
-    store.addNode({ id: 'a' });
+    store.addNode({ type: 'node', id: 'a' });
     expect(() =>
       store.setPositionsBulk(['a'], new Float32Array([1, 2, 3]), { silent: true }),
     ).toThrow(/xy.length/);
@@ -252,7 +252,7 @@ describe('GraphStore — positions', () => {
 
   it('setPinned + isPinned + pinnedIds round-trip', () => {
     const store = new GraphStore();
-    store.addNodesBulk([{ id: 'a' }, { id: 'b' }, { id: 'c', pinned: true }]);
+    store.addNodesBulk([{ type: 'node', id: 'a' }, { type: 'node', id: 'b' }, { type: 'node', id: 'c', pinned: true }]);
     store.setPinned('a', true);
     expect(store.isPinned('a')).toBe(true);
     expect(store.isPinned('b')).toBe(false);
@@ -267,9 +267,9 @@ describe('GraphStore — batch / events / flush', () => {
     const flushCb = vi.fn();
     store.events.on('flush', flushCb);
     store.batch(() => {
-      store.addNode({ id: 'a' });
-      store.addNode({ id: 'b' });
-      store.addNode({ id: 'c' });
+      store.addNode({ type: 'node', id: 'a' });
+      store.addNode({ type: 'node', id: 'b' });
+      store.addNode({ type: 'node', id: 'c' });
     });
     expect(flushCb).toHaveBeenCalledTimes(1);
     expect(flushCb.mock.calls[0]![0]).toMatchObject({ addedNodes: 3 });
@@ -277,7 +277,7 @@ describe('GraphStore — batch / events / flush', () => {
 
   it('batch dedupes node:update for the same id', () => {
     const store = new GraphStore();
-    store.addNode({ id: 'a' });
+    store.addNode({ type: 'node', id: 'a' });
     const cb = vi.fn();
     store.events.on('node:update', cb);
     store.batch(() => {
@@ -295,7 +295,7 @@ describe('GraphStore — batch / events / flush', () => {
     store.events.on('node:add', addCb);
     store.events.on('node:remove', removeCb);
     store.batch(() => {
-      store.addNode({ id: 'a' });
+      store.addNode({ type: 'node', id: 'a' });
       store.removeNode('a');
     });
     expect(addCb).not.toHaveBeenCalled();
@@ -307,12 +307,12 @@ describe('GraphStore — batch / events / flush', () => {
     const flushCb = vi.fn();
     store.events.on('flush', flushCb);
     store.batch(() => {
-      store.addNode({ id: 'a' });
+      store.addNode({ type: 'node', id: 'a' });
       store.batch(() => {
-        store.addNode({ id: 'b' });
+        store.addNode({ type: 'node', id: 'b' });
       });
       expect(flushCb).not.toHaveBeenCalled();
-      store.addNode({ id: 'c' });
+      store.addNode({ type: 'node', id: 'c' });
     });
     expect(flushCb).toHaveBeenCalledTimes(1);
     expect(flushCb.mock.calls[0]![0]).toMatchObject({ addedNodes: 3 });
@@ -322,7 +322,7 @@ describe('GraphStore — batch / events / flush', () => {
     const store = new GraphStore({ flushMode: 'sync' });
     const cb = vi.fn();
     store.events.on('node:add', cb);
-    store.addNode({ id: 'a' });
+    store.addNode({ type: 'node', id: 'a' });
     expect(cb).toHaveBeenCalledTimes(1);
   });
 
@@ -330,7 +330,7 @@ describe('GraphStore — batch / events / flush', () => {
     const store = new GraphStore({ flushMode: 'frame' });
     const flushCb = vi.fn<(p: GraphStoreEventMap['flush']) => void>();
     store.events.on('flush', flushCb);
-    for (let i = 0; i < 100; i++) store.addNode({ id: `n${i}` });
+    for (let i = 0; i < 100; i++) store.addNode({ type: 'node', id: `n${i}` });
     // Nothing has flushed yet (RAF deferred).
     expect(flushCb).not.toHaveBeenCalled();
     store.flush();
@@ -342,7 +342,7 @@ describe('GraphStore — batch / events / flush', () => {
 describe('GraphStore — upsert in streaming mode', () => {
   it('upsertEdge adds when absent and updates when present', () => {
     const store = new GraphStore();
-    store.addNodesBulk([{ id: 'a' }, { id: 'b' }]);
+    store.addNodesBulk([{ type: 'node', id: 'a' }, { type: 'node', id: 'b' }]);
     store.upsertEdge({ id: 'e', source: 'a', target: 'b', type: 'first' });
     store.upsertEdge({ id: 'e', source: 'a', target: 'b', type: 'second' });
     expect(store.edgeCount()).toBe(1);
@@ -353,8 +353,8 @@ describe('GraphStore — upsert in streaming mode', () => {
 describe('GraphStore — clear and compact', () => {
   it('clear wipes everything', () => {
     const store = new GraphStore();
-    store.addNodesBulk([{ id: 'a' }, { id: 'b' }]);
-    store.addEdge({ id: 'ab', source: 'a', target: 'b' });
+    store.addNodesBulk([{ type: 'node', id: 'a' }, { type: 'node', id: 'b' }]);
+    store.addEdge({ type: 'edge', id: 'ab', source: 'a', target: 'b' });
     store.clear();
     expect(store.nodeCount()).toBe(0);
     expect(store.edgeCount()).toBe(0);
@@ -364,11 +364,11 @@ describe('GraphStore — clear and compact', () => {
   it('compact preserves data through a rebuild', () => {
     const store = new GraphStore();
     store.addNodesBulk([
-      { id: 'a', position: { x: 1, y: 2 }, pinned: true },
-      { id: 'b' },
-      { id: 'c' },
+      { type: 'node', id: 'a', position: { x: 1, y: 2 }, pinned: true },
+      { type: 'node', id: 'b' },
+      { type: 'node', id: 'c' },
     ]);
-    store.addEdge({ id: 'ab', source: 'a', target: 'b' });
+    store.addEdge({ type: 'edge', id: 'ab', source: 'a', target: 'b' });
     store.removeNode('c');
     store.compact();
     expect(store.nodeCount()).toBe(2);
@@ -388,7 +388,7 @@ describe('GraphStore — pending edge TTL', () => {
     });
     const orphanCb = vi.fn();
     store.events.on('edge:orphaned', orphanCb);
-    store.addEdge({ id: 'x', source: 'a', target: 'b' });
+    store.addEdge({ type: 'edge', id: 'x', source: 'a', target: 'b' });
     expect(store.hasEdge('x')).toBe(false);
     // Manually drive a flush — pending TTL is 0 so it should expire immediately.
     store.flush();
@@ -399,7 +399,7 @@ describe('GraphStore — pending edge TTL', () => {
 describe('GraphStore — interaction state (presence compartment)', () => {
   it('addNodeState toggles presence; nodeStatesOf reflects it', () => {
     const store = new GraphStore();
-    store.addNode({ id: 'a' });
+    store.addNode({ type: 'node', id: 'a' });
     expect(store.nodeStatesOf('a')).toEqual([]);
     store.addNodeState('a', 'selected');
     expect(store.hasNodeState('a', 'selected')).toBe(true);
@@ -413,7 +413,7 @@ describe('GraphStore — interaction state (presence compartment)', () => {
     const cb = vi.fn();
     store.events.on('node:state', cb);
     store.addNodeState('missing', 'selected'); // unknown → no-op
-    store.addNode({ id: 'a' });
+    store.addNode({ type: 'node', id: 'a' });
     store.addNodeState('a', 'selected');
     store.addNodeState('a', 'selected'); // already set → no event
     store.flush();
@@ -423,27 +423,27 @@ describe('GraphStore — interaction state (presence compartment)', () => {
 
   it('nodeStatesOf unions document states[] with the presence set', () => {
     const store = new GraphStore();
-    store.addNode({ id: 'a', states: ['error'] }); // document compartment
+    store.addNode({ type: 'node', id: 'a', states: ['error'] }); // document compartment
     store.addNodeState('a', 'hover'); // presence compartment
     expect([...store.nodeStatesOf('a')].sort()).toEqual(['error', 'hover']);
   });
 
   it('clearNodeState clears presence only, leaving document states[] intact', () => {
     const store = new GraphStore();
-    store.addNode({ id: 'a', states: ['error'] });
+    store.addNode({ type: 'node', id: 'a', states: ['error'] });
     store.addNodeState('a', 'hover');
     store.clearNodeState('hover');
     expect(store.nodeStatesOf('a')).toEqual(['error']);
     // A document state of the same name survives clearNodeState.
     store.addNodeState('b', 'error'); // no node b → no-op, sanity
-    store.addNode({ id: 'c', states: ['error'] });
+    store.addNode({ type: 'node', id: 'c', states: ['error'] });
     store.clearNodeState('error');
     expect(store.nodeStatesOf('c')).toEqual(['error']);
   });
 
   it('a data-feed updateNode({states}) does not wipe a live presence state', () => {
     const store = new GraphStore();
-    store.addNode({ id: 'a', states: ['error'] });
+    store.addNode({ type: 'node', id: 'a', states: ['error'] });
     store.addNodeState('a', 'selected'); // user selection (presence)
     store.updateNode('a', { states: ['warning'] }); // feed replaces document states
     expect([...store.nodeStatesOf('a')].sort()).toEqual(['selected', 'warning']);
@@ -453,7 +453,7 @@ describe('GraphStore — interaction state (presence compartment)', () => {
     const store = new GraphStore({ flushMode: 'frame' });
     const cb = vi.fn<(p: GraphStoreEventMap['node:state']) => void>();
     store.events.on('node:state', cb);
-    store.addNode({ id: 'a' });
+    store.addNode({ type: 'node', id: 'a' });
     store.flush();
     cb.mockClear();
     store.addNodeState('a', 'hover'); // on
@@ -465,7 +465,7 @@ describe('GraphStore — interaction state (presence compartment)', () => {
 
   it('setNodeState toggles via the boolean convenience', () => {
     const store = new GraphStore();
-    store.addNode({ id: 'a' });
+    store.addNode({ type: 'node', id: 'a' });
     store.setNodeState('a', 'selected', true);
     expect(store.hasNodeState('a', 'selected')).toBe(true);
     store.setNodeState('a', 'selected', false);
@@ -474,7 +474,7 @@ describe('GraphStore — interaction state (presence compartment)', () => {
 
   it('removeNode drops its presence states and nodesWithState reflects union', () => {
     const store = new GraphStore();
-    store.addNodesBulk([{ id: 'a' }, { id: 'b', states: ['error'] }]);
+    store.addNodesBulk([{ type: 'node', id: 'a' }, { type: 'node', id: 'b', states: ['error'] }]);
     store.addNodeState('a', 'error');
     expect([...store.nodesWithState('error')].sort()).toEqual(['a', 'b']);
     store.removeNode('a');
@@ -483,8 +483,8 @@ describe('GraphStore — interaction state (presence compartment)', () => {
 
   it('edge state mirrors node state', () => {
     const store = new GraphStore();
-    store.addNodesBulk([{ id: 'a' }, { id: 'b' }]);
-    store.addEdge({ id: 'ab', source: 'a', target: 'b' });
+    store.addNodesBulk([{ type: 'node', id: 'a' }, { type: 'node', id: 'b' }]);
+    store.addEdge({ type: 'edge', id: 'ab', source: 'a', target: 'b' });
     store.addEdgeState('ab', 'highlighted');
     expect(store.hasEdgeState('ab', 'highlighted')).toBe(true);
     expect([...store.edgesWithState('highlighted')]).toEqual(['ab']);

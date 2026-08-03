@@ -91,6 +91,7 @@ export const Bubble: Story = {
           const isLeaf = n.data.isLeaf;
           return {
             id: n.id,
+            type: 'node',
             data: {
               // Pack writes the real diameter onto `data.size` once it
               // runs — this is just a placeholder so nodes don't flash at
@@ -115,6 +116,7 @@ export const Bubble: Story = {
         }),
         edges: data.edges.map((e) => ({
           id: e.id,
+          type: 'edge',
           source: e.source,
           target: e.target,
         })),
@@ -137,7 +139,7 @@ export const Bubble: Story = {
           style: {
             shape: (n) => {
               const size = (n.data as { size?: number } | undefined)?.size ?? 0.1;
-              return { kind: 'circle', radius: size / 2 };
+              return { type: 'edge', kind: 'circle', radius: size / 2 };
             },
           },
         },
@@ -152,6 +154,7 @@ export const Bubble: Story = {
 
     const layout = new D3HierarchyLayout({
       id: 'hierarchy',
+      type: 'node',
       targetLayerId: 'graph',
     } as D3HierarchyLayoutOptions);
     canvas.layouts.add(layout);

@@ -6,7 +6,7 @@ import {
 import type { LoopCurvePresetName } from '@invana/canvas';
 import {
   GraphCanvas, DragNodeBehaviour, GraphLayer,
-  type EdgeData, type NodeData,
+  type GraphEdge, type GraphNode,
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
@@ -81,7 +81,7 @@ export const Stacked: Story = {
     const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
 
-    const nodes: NodeData[] = [{ id: NODE_ID, position: { x: 0, y: 0 } }];
+    const nodes: GraphNode[] = [{ type: 'node', id: NODE_ID, position: { x: 0, y: 0 } }];
 
     // The `shape` + `strokeColor` resolvers read mutable `settings` from
     // the closure, so they stay in the constructor; the literal style
@@ -159,7 +159,7 @@ export const Stacked: Story = {
           if (i < settings.count && !exists) {
             graph.store.addEdge<EdgeMeta>({
               id, source: NODE_ID, target: NODE_ID, data: { index: i },
-            } as EdgeData<EdgeMeta>);
+            } as GraphEdge<EdgeMeta>);
           } else if (i >= settings.count && exists) {
             graph.store.removeEdge(id);
           }

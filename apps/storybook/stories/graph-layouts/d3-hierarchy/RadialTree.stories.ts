@@ -81,12 +81,14 @@ export const RadialTreeStory: Story = {
       return {
         nodes: data.nodes.map((n) => ({
           id: n.id,
+          type: 'node',
           style: {
             bgFill: settings.colorByDepth ? colorAt(n.data.depth) : 0x1f2937,
           },
         })),
         edges: data.edges.map((e) => ({
           id: e.id,
+          type: 'edge',
           source: e.source,
           target: e.target,
         })),

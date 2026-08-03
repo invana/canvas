@@ -18,7 +18,10 @@
 import { Behaviour, type BehaviourOptions, type CanvasContext } from '@invana/canvas';
 
 import { GraphLayer } from '../layer/GraphLayer';
-import type { GraphNode } from '../store/types';
+import { UNKNOWN_TYPE } from '../store';
+import type {
+  GraphNode,
+} from '../store/types';
 
 /** Constructor options for `CreateNodeBehaviour`. */
 export interface CreateNodeBehaviourOptions extends BehaviourOptions {
@@ -50,6 +53,9 @@ export class CreateNodeBehaviour extends Behaviour<CreateNodeBehaviourOptions> {
       this._options.createNode ??
       ((world) => ({
         id: `n-${Date.now().toString(36)}-${(createNodeSeq++).toString(36)}`,
+        // The built-in factory knows nothing about the domain, so the record it
+        // makes has no meaningful kind. Supply `createNode` to give one.
+        type: UNKNOWN_TYPE,
         position: { x: world.x, y: world.y },
       }))
     );
@@ -107,7 +113,10 @@ export class CreateNodeBehaviour extends Behaviour<CreateNodeBehaviourOptions> {
       const node = this.makeNode({ x: world.x, y: world.y });
       if (!node) return;
       this.layer.store.addNode(node);
-      this.onNodeCreate?.(node);
+      // Hand back the *stored* record: the store normalises `type`, and a
+      // consumer reading `n.type` should see what is actually in the graph, not
+      // what the factory happened to leave out.
+      this.onNodeCreate?.(this.layer.store.getNode(node.id) ?? { ...node, type: node.type || UNKNOWN_TYPE });
     };
 
     renderer.events.on('shape:click', consume);

@@ -204,7 +204,7 @@ function buildDataset() {
       }
       if (!target) target = candidates[candidates.length - 1]!;
       used.add(target.id);
-      edges.push({
+      edges.push({ type: 'cites',
         id: `c${edgeCounter++}`,
         source: src.id,
         target: target.id,

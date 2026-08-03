@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type EdgeData, type NodeData } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type GraphEdge, type GraphNode } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'graph/Etc/EdgeTransitions' };
@@ -9,7 +9,7 @@ type Story = StoryObj;
 
 /**
  * Mirror of the node state stories on edges. Validates the v3 G6-aligned
- * `EdgeData` shape drives the connector renderer correctly, and that
+ * `GraphEdge` shape drives the connector renderer correctly, and that
  * per-edge `state` overlay catalogue applies on top of the layer's
  * canonical edge state configs.
  *
@@ -27,17 +27,17 @@ export const EdgeTransitionsStory: Story = {
       '#graph-states-edge-transitions',
     )!;
 
-    const nodes: NodeData[] = [
-      { id: 'a1', position: { x: -160, y: -120 }, style: { shape: { kind: 'circle', radius: 14 } } },
-      { id: 'b1', position: { x:  160, y: -120 }, style: { shape: { kind: 'circle', radius: 14 } } },
-      { id: 'a2', position: { x: -160, y:    0 }, style: { shape: { kind: 'circle', radius: 14 } } },
-      { id: 'b2', position: { x:  160, y:    0 }, style: { shape: { kind: 'circle', radius: 14 } } },
-      { id: 'a3', position: { x: -160, y:  120 }, style: { shape: { kind: 'circle', radius: 14 } } },
-      { id: 'b3', position: { x:  160, y:  120 }, style: { shape: { kind: 'circle', radius: 14 } } },
+    const nodes: GraphNode[] = [
+      { type: 'node', id: 'a1', position: { x: -160, y: -120 }, style: { shape: { kind: 'circle', radius: 14 } } },
+      { type: 'node', id: 'b1', position: { x:  160, y: -120 }, style: { shape: { kind: 'circle', radius: 14 } } },
+      { type: 'node', id: 'a2', position: { x: -160, y:    0 }, style: { shape: { kind: 'circle', radius: 14 } } },
+      { type: 'node', id: 'b2', position: { x:  160, y:    0 }, style: { shape: { kind: 'circle', radius: 14 } } },
+      { type: 'node', id: 'a3', position: { x: -160, y:  120 }, style: { shape: { kind: 'circle', radius: 14 } } },
+      { type: 'node', id: 'b3', position: { x:  160, y:  120 }, style: { shape: { kind: 'circle', radius: 14 } } },
     ];
 
-    const edges: EdgeData[] = [
-      {
+    const edges: GraphEdge[] = [
+      { type: 'edge',
         id: 'e1',
         source: 'a1', target: 'b1',
         style: {
@@ -52,7 +52,7 @@ export const EdgeTransitionsStory: Story = {
         },
         states: ['hovered'],
       },
-      {
+      { type: 'edge',
         id: 'e2',
         source: 'a2', target: 'b2',
         style: {
@@ -70,7 +70,7 @@ export const EdgeTransitionsStory: Story = {
         },
         states: ['hovered'],
       },
-      {
+      { type: 'edge',
         id: 'e3',
         source: 'a3', target: 'b3',
         style: {

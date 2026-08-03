@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   GraphCanvas, DragNodeBehaviour, GraphLayer,
-  type EdgeData, type NodeData,
+  type GraphEdge, type GraphNode,
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
@@ -84,7 +84,7 @@ export const Stacked: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       options: {
-        initData: { nodes: [{ id: NODE_ID, position: { x: 0, y: 0 } }] as NodeData[], edges: [] },
+        initData: { nodes: [{ id: NODE_ID, position: { x: 0, y: 0 } }] as GraphNode[], edges: [] },
         edge: {
           style: {
             // Per-edge ring index drives the geometric growth; `settings`
@@ -153,8 +153,8 @@ export const Stacked: Story = {
           const id = `loop-${i}`;
           const exists = !!graph.store.getEdge(id);
           if (i < settings.count && !exists) {
-            const e: EdgeData<EdgeMeta> = {
-              id, source: NODE_ID, target: NODE_ID, data: { index: i },
+            const e: GraphEdge<EdgeMeta> = {
+              id, type: 'loop', source: NODE_ID, target: NODE_ID, data: { index: i },
             };
             graph.store.addEdge(e);
           } else if (i >= settings.count && exists) {

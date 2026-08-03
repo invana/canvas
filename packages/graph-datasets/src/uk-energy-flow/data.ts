@@ -74,6 +74,7 @@ export function ukEnergyFlowAsGraph() {
     data: { name: string; category: string };
   })[] = nodes.map((n) => ({
     id: n.name,
+    type: 'stage',
     data: {
       name: n.name,
       category: n.name.replace(/ .*/, ''),
@@ -84,6 +85,7 @@ export function ukEnergyFlowAsGraph() {
     const target = nodes[l.target]!.name;
     return {
       id: `${source}--${target}`,
+      type: 'flows-to',
       source,
       target,
       data: { value: l.value },

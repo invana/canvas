@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphCanvas, GraphLayer, type NodeData } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type GraphNode } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'graph/Nodes/Badges/Multiple' };
@@ -25,8 +25,8 @@ export const Multiple: Story = {
 
   play: async ({ canvasElement }) => {
     // Per-node style is content — it rides on `initData` below.
-    const nodes: NodeData[] = [
-      {
+    const nodes: GraphNode[] = [
+      { type: 'node',
         id: 'host',
         position: { x: 0, y: 0 },
         style: {
