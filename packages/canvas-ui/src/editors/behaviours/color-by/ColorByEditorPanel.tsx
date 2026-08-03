@@ -43,7 +43,7 @@ export interface ColorByEditorPanelProps {
  * form-fields` mapping (`optionsToForm` / `formToOptions`) is the consumer's
  * plug-in.
  *
- * The default schema is **mode-driven**: switching Mode between Category and
+ * The default schema is **mode-driven**: switching Mode between Categorical and
  * Range, or changing Scale, swaps the field set live off a `useWatch`. Values
  * for the mode you aren't on are kept in form state rather than cleared, which
  * mirrors the behaviour's own "options outside their mode are ignored, not

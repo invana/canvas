@@ -15,7 +15,7 @@ import type { ColorByFields } from './types';
  *
  * ```
  * always            → mode, nodeValueKey, edgeValueKey, colorNodes, colorEdges, fallbackColor
- * mode 'category'   → + maxCategories
+ * mode 'categorical'   → + maxCategories
  * mode 'range'      → + scale
  *   continuous        → + nodeDomain[min,max], edgeDomain[min,max]   (blank = auto)
  *   'quantile'        → + bins, nodeDomain[min,max], edgeDomain[min,max]
@@ -27,7 +27,7 @@ import type { ColorByFields } from './types';
  * `FieldType` has no array or map kind.
  */
 export function colorByFields(values: ColorByFields = {}): FieldConfig[] {
-  const mode = values.mode ?? 'category';
+  const mode = values.mode ?? 'categorical';
   const scale = values.scale ?? 'linear';
   const continuous = scale === 'linear' || scale === 'sqrt' || scale === 'log';
 
@@ -37,7 +37,7 @@ export function colorByFields(values: ColorByFields = {}): FieldConfig[] {
       type: 'select',
       label: 'Mode',
       options: [
-        { value: 'category', label: 'Category (which kind is this?)' },
+        { value: 'categorical', label: 'Categorical (which kind is this?)' },
         { value: 'range', label: 'Range (how much of this is there?)' },
       ],
       description:
@@ -77,7 +77,7 @@ export function colorByFields(values: ColorByFields = {}): FieldConfig[] {
     },
   ];
 
-  if (mode === 'category') {
+  if (mode === 'categorical') {
     return [
       ...shared,
       {

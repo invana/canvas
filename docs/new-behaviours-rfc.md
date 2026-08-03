@@ -144,7 +144,7 @@ option remains *additive* if the constraint is ever revisited.
 | **U2** | `ContextMenuBehaviour` | Bind the P1 verbs as items — `Isolate`, `Expand 1 hop`, `Path to…`, `Export evidence`. | A verb nobody can find isn't shipped. Also one of B2's three entry points (§4.2). | ✅ built | S — **blocked on P1** |
 | **U3** | `LassoSelectBehaviour` / `BrushSelectBehaviour` | Route the resulting selection into a composite op rather than leaving it as raw selection. | Every focus beat: "lasso the cluster → isolate → pull 2 hops". | ✅ built; the op end is missing | S — **blocked on P1** |
 | **U4** | `CollapseExpandBehaviour` | **Decide:** extend to fetch-and-grow, or keep collapse-only and ship B3 alongside. | It collapses what's loaded; it does not grow. | ✅ built, collapse-only | decision, then B3 |
-| **U5** | `ColorByLabelBehaviour` → **`ColorByBehaviour`** | **Rename + modes.** Absorbs the first draft's B6. Gains `mode: 'category' \| 'range'`, serialisable field paths, numeric scales, auto domains, and pinned value colours. **Full design in §4.1.** | Colouring by category is one of two jobs the same mechanism does. Risk band, confidence, latency, amount are all the *same* template-field-resolver write with a different value→colour function. | ✅ built, categorical-only, non-serialisable field selection | **L** — the largest item in this table; see §4.1.8 |
+| **U5** | `ColorByLabelBehaviour` → **`ColorByBehaviour`** | **Rename + modes.** Absorbs the first draft's B6. Gains `mode: 'categorical' \| 'range'`, serialisable field paths, numeric scales, auto domains, and pinned value colours. **Full design in §4.1.** | Colouring by category is one of two jobs the same mechanism does. Risk band, confidence, latency, amount are all the *same* template-field-resolver write with a different value→colour function. | ✅ built, categorical-only, non-serialisable field selection | **L** — the largest item in this table; see §4.1.8 |
 | **U6** | Edge styling | **Verify** confidence-weighted edge width/alpha works via template field resolvers today. `strokeWidth` exists on edge style + state types. | CS3's `WeakestLink` — the weakest edge *is* the confidence interval. | ✅ likely already possible | S — **investigation first; may be zero code** |
 | **U7** | `HoverElementPreviewBehaviour` | Provenance-shaped card content — source, licence, confidence, timestamp. | CS3 paper cards, CS1 transaction cards, CS5 chunk cards. | ✅ built | S — **story-level content, not engine work** |
 
@@ -184,12 +184,12 @@ consumer, rather than after `mode: 'range'` has shipped under a name that says
 > defaults, `ResolvedOptions` / `resolveOptions`, and the mode × scale validity
 > matrix. Deliberately not duplicated here; duplicates rot.
 
-The shape in one paragraph: `mode: 'category' | 'range'`; per-kind value
+The shape in one paragraph: `mode: 'categorical' | 'range'`; per-kind value
 selection (`nodeValueKey` / `edgeValueKey` dot paths, with `nodeValueBy` /
 `edgeValueBy` accessors as the escape hatch); the existing channel flags
 (`colorNodes` / `colorEdges` / `fallbackColor`); `palette` + `valueColors` for
 category; `scale` / `colorStops` / `bins` / `*Domain` / `*Thresholds` for range.
-Everything new is optional and `mode` defaults to `'category'`, so the existing
+Everything new is optional and `mode` defaults to `'categorical'`, so the existing
 constructor call is byte-for-byte valid and behaves identically.
 
 **Two things the dedicated RFC settled that the first sketch had wrong** — both
@@ -285,7 +285,7 @@ class ColorByBehaviour {
   /** What a legend should render, **per coloured channel** — the two can carry
    *  different fields and domains (§4.1.2). Supersedes `getColorMap()` for range mode. */
   getLegend(): { nodes?: ColorByLegendSection; edges?: ColorByLegendSection };
-  /** Retained for category mode — value → assigned colour. */
+  /** Retained for categorical mode — value → assigned colour. */
   getColorMap(): ReadonlyMap<string, number>;
 }
 ```
@@ -306,7 +306,7 @@ continuous renders a gradient bar with domain end labels.
 
 - `ColorByBehaviour` is the class. `export { ColorByBehaviour as ColorByLabelBehaviour }`
   is a **deprecated alias** — every new option is optional and `mode` defaults to
-  `'category'`, so existing call sites compile and behave identically.
+  `'categorical'`, so existing call sites compile and behave identically.
 - `DEFAULT_LABEL_PALETTE` stays exported as a deprecated alias of
   `DEFAULT_CATEGORY_PALETTE`.
 - Instances constructed through the alias still report `kind = 'color-by'`, so
@@ -458,7 +458,7 @@ one editor.
 | | Question | Decision | Why |
 |---|---|---|---|
 | **D1** | Is reachability a mode of path-highlight, or its own behaviour? *(draft: separate)* | **One `TraversalHighlightBehaviour`,** `mode: 'path' \| 'reachable'` | They share the P2 query and the B1 emphasis hand-off; only the interaction and a couple of options differ. The draft's objection was the editor-panel one above, which doesn't hold. One emphasis-writer instead of two. |
-| **D2** | Continuous colour as a sibling behaviour, or a mode on the existing one? *(draft: sibling)* | **One `ColorByBehaviour`** — rename + `mode: 'category' \| 'range'` (§4.1) | Same objection, same collapse. Decisive addition: two behaviours would write the *same* template fields on the *same* layer, so they'd need B1-style single-writer discipline between them — solving a problem created by the split. `dab4ad0` is what that failure looks like. |
+| **D2** | Continuous colour as a sibling behaviour, or a mode on the existing one? *(draft: sibling)* | **One `ColorByBehaviour`** — rename + `mode: 'categorical' \| 'range'` (§4.1) | Same objection, same collapse. Decisive addition: two behaviours would write the *same* template fields on the *same* layer, so they'd need B1-style single-writer discipline between them — solving a problem created by the split. `dab4ad0` is what that failure looks like. |
 | **D3** | What drives path endpoint selection? | **Programmatic core + both entry points** (§4.2) | `highlightPath(a, b)` is the API; the U2 context-menu verb is the discoverable driver; `pickMode` is opt-in and off by default because it competes with `ClickSelectBehaviour` for clicks. |
 | **D4** | Does diff need a second `GraphStore`? | **In-memory snapshot** | Covers all three case-study beats. A second store doubles memory and needs id-correspondence rules nothing asks for. Serialisable snapshots are the documented next step if cross-session run-vs-run appears. |
 | **D5** | Does the timeline own its scrub control? | **Behaviour in `@invana/graph`, control in `@invana/canvas-ui`** | The split the repo uses everywhere — headless vs pixels. The behaviour filters and exposes `setTime`/`play`/`range`; a self-wiring `TimelineToolbar` drives it through canvas-react hooks. Rule 12's editor covers config; the scrubber is live control, not config. |

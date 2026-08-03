@@ -59,6 +59,7 @@ export { ColorByBehaviour, DEFAULT_CATEGORY_PALETTE, DEFAULT_RANGE_STOPS } from 
 export type {
   ColorByBehaviourOptions,
   ColorByLegendSection,
+  ResolvedColorByOptions,
   ColorByMode,
   ColorByScale,
   ColorValueAccessor,

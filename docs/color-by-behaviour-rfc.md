@@ -16,7 +16,7 @@ One behaviour that colours nodes and edges from a data field, in two modes:
 
 | Mode | Question | Example |
 |---|---|---|
-| `'category'` | *"which kind is this?"* | node type, community id, status, tier |
+| `'categorical'` | *"which kind is this?"* | node type, community id, status, tier |
 | `'range'` | *"how much of this is there?"* | risk score, confidence, latency, amount |
 
 Both write the **same template fields** through the **same field-resolver
@@ -56,7 +56,7 @@ Four hard constraints, each of which kills a design that would otherwise look fi
    mapping code.
 4. **Back-compatible.** Every existing `new ColorByLabelBehaviour({…})` call site
    must compile and behave identically — which means every new option is optional
-   and `mode` defaults to `'category'`.
+   and `mode` defaults to `'categorical'`.
 
 ### 2.2 Naming — borrowed, not invented
 
@@ -124,7 +124,7 @@ enforced by the editor's `fields` function** (§7), not by the type. Same choice
 
 ```ts
 /** Which colouring job. */
-export type ColorByMode = 'category' | 'range';
+export type ColorByMode = 'categorical' | 'range';
 
 /**
  * Curve / binning mapping a numeric value to a colour. Continuous curves
@@ -142,7 +142,7 @@ export interface ColorByBehaviourOptions extends BehaviourOptions {
   targetLayerId: string;
 
   /**
-   * Which colouring job. Default `'category'` — one distinct colour per distinct
+   * Which colouring job. Default `'categorical'` — one distinct colour per distinct
    * value. `'range'` maps a numeric value through {@link scale} onto
    * {@link colorStops}. Determines which options below are read; see the
    * validity matrix in the class TSDoc.
@@ -169,7 +169,7 @@ export interface ColorByBehaviourOptions extends BehaviourOptions {
    * **Code escape hatch.** Per-node value accessor; supersedes
    * {@link nodeValueKey} when set. Use for computed keys the store doesn't hold
    * (`` `community-${n.data.group}` ``) or derived magnitudes. Return a `string`
-   * in `'category'` mode, a `number` in `'range'` mode.
+   * in `'categorical'` mode, a `number` in `'range'` mode.
    * **Not editor-exposed** (function) and not persisted to `view.definition`.
    */
   nodeValueBy?: ColorValueAccessor<GraphNode>;
@@ -188,7 +188,7 @@ export interface ColorByBehaviourOptions extends BehaviourOptions {
    */
   fallbackColor?: number;
 
-  // ─── mode: 'category' ─────────────────────────────────────────────────
+  // ─── mode: 'categorical' ─────────────────────────────────────────────────
 
   /**
    * Colours (`0xRRGGBB`) handed out in order of first appearance and remembered,
@@ -278,7 +278,7 @@ Every default lives in `resolveOptions` (§2.7), stated once.
 
 | Option | Default | Note |
 |---|---|---|
-| `mode` | `'category'` | back-compat: today's behaviour |
+| `mode` | `'categorical'` | back-compat: today's behaviour |
 | `nodeValueKey` / `edgeValueKey` | `'type'` | matches today's `n.type` / `e.type` accessors |
 | `nodeValueBy` / `edgeValueBy` | — | unset |
 | `colorNodes` / `colorEdges` | `true` | unchanged |
@@ -350,7 +350,7 @@ it" — required for anything whose *absence is meaningful*
 Which options each mode actually reads. This table is the specification the
 editor's `fields` function implements (§7), and belongs in the class TSDoc.
 
-| Option | `'category'` | `'range'` continuous | `'range'` `quantile` | `'range'` `threshold` |
+| Option | `'categorical'` | `'range'` continuous | `'range'` `quantile` | `'range'` `threshold` |
 |---|:--:|:--:|:--:|:--:|
 | `*ValueKey` / `*ValueBy` | ✅ as string | ✅ as number | ✅ | ✅ |
 | `colorNodes` / `colorEdges` / `fallbackColor` | ✅ | ✅ | ✅ | ✅ |
@@ -406,7 +406,7 @@ otherwise             → readPath(node, nodeValueKey)
 `readPath` walks a dot path from the item root, returning `undefined` on any
 missing segment. A small local helper, not a dependency.
 
-**`'category'` — `String(value)`, uniformly.** `null` / `undefined` / `''` →
+**`'categorical'` — `String(value)`, uniformly.** `null` / `undefined` / `''` →
 `fallbackColor`; everything else stringifies. So booleans give `'true'` / `'false'`,
 numbers give `'42'`, and arrays join (`states` → `'hover,selected'`).
 
@@ -553,7 +553,7 @@ class ColorByBehaviour {
    *  resolved options and domain the canvas is painted from. */
   getLegend(): { nodes?: ColorByLegendSection; edges?: ColorByLegendSection };
 
-  /** Retained for `'category'` mode — value → assigned colour. */
+  /** Retained for `'categorical'` mode — value → assigned colour. */
   getColorMap(): ReadonlyMap<string, number>;
 }
 ```
@@ -589,7 +589,7 @@ The function implements §2.8 directly:
 
 ```
 always            → mode, nodeValueKey, edgeValueKey, colorNodes, colorEdges, fallbackColor
-mode 'category'   → + valueColors (map editor), palette (swatch array), maxCategories
+mode 'categorical'   → + valueColors (map editor), palette (swatch array), maxCategories
 mode 'range'      → + scale, colorStops
   scale continuous  → + nodeDomain[min,max], edgeDomain[min,max]   (blank = auto)
   scale 'quantile'  → + bins, nodeDomain, edgeDomain
@@ -678,7 +678,7 @@ packages/graph/src/behaviours/ColorByBehaviour.ts
 Sequenced so each step is independently reviewable:
 
 1. **Options + resolve, no behaviour change.** Land `ColorByBehaviourOptions`,
-   `resolveOptions`, the rename and aliases. `mode: 'category'` reproduces
+   `resolveOptions`, the rename and aliases. `mode: 'categorical'` reproduces
    today's behaviour exactly; the only new capability is `nodeValueKey`.
 2. **Category upgrades.** `valueColors`, `maxCategories` + the `other` tally,
    palette rename.

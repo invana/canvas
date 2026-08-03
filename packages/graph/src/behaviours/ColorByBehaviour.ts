@@ -2,7 +2,7 @@
  * `ColorByBehaviour` — colours nodes and edges from **one addressable field**,
  * in one of two modes:
  *
- * - **`'category'`** *(default)* — *"which kind is this?"* One distinct colour
+ * - **`'categorical'`** *(default)* — *"which kind is this?"* One distinct colour
  *   per distinct value, handed out from a palette in order of first appearance
  *   and remembered. The classic "colour by node/edge type" view.
  * - **`'range'`** — *"how much of this is there?"* A numeric value mapped
@@ -28,7 +28,7 @@
  *
  * ### Validity matrix — which options each mode reads
  *
- * | Option | `'category'` | `'range'` continuous | `quantile` | `threshold` |
+ * | Option | `'categorical'` | `'range'` continuous | `quantile` | `threshold` |
  * |---|:--:|:--:|:--:|:--:|
  * | `*ValueKey` / `*ValueBy` | ✅ as string | ✅ as number | ✅ | ✅ |
  * | `colorNodes` / `colorEdges` / `fallbackColor` | ✅ | ✅ | ✅ | ✅ |
@@ -93,7 +93,7 @@ import type { GraphEdge, GraphNode } from '../store/types';
 // ─── Public types ────────────────────────────────────────────────────────────
 
 /** Which colouring job — see the class TSDoc's validity matrix. */
-export type ColorByMode = 'category' | 'range';
+export type ColorByMode = 'categorical' | 'range';
 
 /**
  * Curve / binning mapping a numeric value to a colour. Continuous curves
@@ -150,7 +150,7 @@ export interface ColorByBehaviourOptions extends BehaviourOptions {
   targetLayerId: string;
 
   /**
-   * Which colouring job. Default `'category'` — one distinct colour per distinct
+   * Which colouring job. Default `'categorical'` — one distinct colour per distinct
    * value. `'range'` maps a numeric value through {@link scale} onto
    * {@link colorStops}. Determines which options below are read.
    */
@@ -176,7 +176,7 @@ export interface ColorByBehaviourOptions extends BehaviourOptions {
    * **Code escape hatch.** Per-node value accessor; supersedes
    * {@link nodeValueKey} when set. Use for computed keys the store doesn't hold
    * (`` `community-${n.data.group}` ``) or derived magnitudes. Return a `string`
-   * in `'category'` mode, a `number` in `'range'` mode.
+   * in `'categorical'` mode, a `number` in `'range'` mode.
    * **Not editor-exposed** (it's a function) and not persisted.
    */
   nodeValueBy?: ColorValueAccessor<GraphNode>;
@@ -195,7 +195,7 @@ export interface ColorByBehaviourOptions extends BehaviourOptions {
    */
   fallbackColor?: number;
 
-  // ─── mode: 'category' ───────────────────────────────────────────────────
+  // ─── mode: 'categorical' ───────────────────────────────────────────────────
 
   /**
    * Colours (`0xRRGGBB`) handed out in order of first appearance and remembered,
@@ -275,8 +275,15 @@ export interface ColorByBehaviourOptions extends BehaviourOptions {
 
 // ─── Option resolution ───────────────────────────────────────────────────────
 
-/** Every option resolved to a concrete value — nothing past the constructor writes `?? default`. */
-interface ResolvedOptions {
+/**
+ * Every option resolved to a concrete value — nothing past the constructor
+ * writes `?? default`.
+ *
+ * Exported because {@link ColorByBehaviour.getResolvedOptions} hands it out:
+ * the base `getOptions()` returns only what the caller *passed*, which omits
+ * every default and so can't answer "what is this behaviour actually doing".
+ */
+export interface ResolvedColorByOptions {
   mode: ColorByMode;
   nodeValueKey: string;
   edgeValueKey: string;
@@ -306,11 +313,11 @@ interface ResolvedOptions {
  * caller drops back to auto-domain or removes an accessor.
  */
 function resolveOptions(
-  prev: ResolvedOptions | null,
+  prev: ResolvedColorByOptions | null,
   patch: Partial<ColorByBehaviourOptions>,
-): ResolvedOptions {
-  const base: ResolvedOptions = prev ?? {
-    mode: 'category',
+): ResolvedColorByOptions {
+  const base: ResolvedColorByOptions = prev ?? {
+    mode: 'categorical',
     nodeValueKey: 'type',
     edgeValueKey: 'type',
     nodeValueBy: undefined,
@@ -378,7 +385,7 @@ function readPath(root: unknown, path: string): unknown {
 }
 
 /**
- * Coerce an extracted value for `'category'` mode: `String(value)` uniformly.
+ * Coerce an extracted value for `'categorical'` mode: `String(value)` uniformly.
  *
  * So booleans give `'true'`/`'false'`, numbers `'42'`, and arrays join
  * (`states` → `'hover,selected'`). Objects all collapse to `'[object Object]'`
@@ -486,7 +493,7 @@ export class ColorByBehaviour extends Behaviour<ColorByBehaviourOptions> {
   override readonly kind = 'color-by';
 
   private layer: GraphLayer | null = null;
-  private opts: ResolvedOptions;
+  private opts: ResolvedColorByOptions;
 
   /** Subscription disposers, called in `onDestroy`. */
   private readonly subs: (() => void)[] = [];
@@ -495,7 +502,7 @@ export class ColorByBehaviour extends Behaviour<ColorByBehaviourOptions> {
   /** Re-entrancy guard — our own repaint must not feed back into a rescan. */
   private patching = false;
 
-  /** value → assigned colour, in first-appearance order. Category mode. */
+  /** value → assigned colour, in first-appearance order. Categorical mode. */
   private readonly colors = new Map<string, number>();
   /** Distinct values assigned *from the palette* — what `maxCategories` counts. */
   private paletteAssigned = 0;
@@ -590,7 +597,38 @@ export class ColorByBehaviour extends Behaviour<ColorByBehaviourOptions> {
   // ─── Public API ───────────────────────────────────────────────────────────
 
   /**
-   * Live value → colour mapping. Category mode only — `'range'` has no discrete
+   * The fully-resolved option set actually in use — **every default filled in**.
+   *
+   * Distinct from the base `getOptions()`, which returns only the options the
+   * caller passed. A settings panel or a story that wants to show what the
+   * behaviour is doing needs the resolved set, otherwise it silently omits every
+   * default and reports `mode: undefined` for a behaviour that is very
+   * definitely in categorical mode.
+   *
+   * Remember the validity matrix (class TSDoc): options outside the active mode
+   * are present here but **ignored** by the write path.
+   */
+  getResolvedOptions(): Readonly<ResolvedColorByOptions> {
+    return this.opts;
+  }
+
+  /**
+   * The derived per-channel domain and bin edges the colour resolvers read.
+   *
+   * Only meaningful in `'range'` mode. Worth exposing separately from
+   * {@link getResolvedOptions} because when `nodeDomain` / `edgeDomain` are unset
+   * the *resolved option* is `undefined` while the *domain in use* is whatever
+   * the last auto-scan found — and that gap is exactly what surprises people.
+   */
+  getDomains(): { nodes: { domain: [number, number]; edges: number[] }; edges: { domain: [number, number]; edges: number[] } } {
+    return {
+      nodes: { domain: [...this.nodeState.domain], edges: [...this.nodeState.edges] },
+      edges: { domain: [...this.edgeState.domain], edges: [...this.edgeState.edges] },
+    };
+  }
+
+  /**
+   * Live value → colour mapping. Categorical mode only — `'range'` has no discrete
    * assignment, so prefer {@link getLegend} for anything mode-agnostic.
    */
   getColorMap(): ReadonlyMap<string, number> {
@@ -644,7 +682,7 @@ export class ColorByBehaviour extends Behaviour<ColorByBehaviourOptions> {
 
   /** Map a raw value to a colour under the current mode. */
   private colorFor(raw: unknown, state: ChannelState): number {
-    if (this.opts.mode === 'category') return this.colorForValue(toCategory(raw));
+    if (this.opts.mode === 'categorical') return this.colorForValue(toCategory(raw));
 
     const value = toMagnitude(raw);
     if (value === null) return this.opts.fallbackColor;
@@ -749,7 +787,7 @@ export class ColorByBehaviour extends Behaviour<ColorByBehaviourOptions> {
         ? this.opts.nodeValueKey
         : this.opts.edgeValueKey;
 
-    if (this.opts.mode === 'category') {
+    if (this.opts.mode === 'categorical') {
       const entries = [...this.colors].map(([value, color]) => ({ value, color }));
       for (const [value, color] of Object.entries(this.opts.valueColors)) {
         if (!this.colors.has(value)) entries.push({ value, color });

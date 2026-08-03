@@ -9,7 +9,7 @@
  */
 
 /** Which colouring job — mirrors the engine's `ColorByMode`. */
-export type ColorByModeValue = 'category' | 'range';
+export type ColorByModeValue = 'categorical' | 'range';
 
 /** Curve / binning — mirrors the engine's `ColorByScale`. */
 export type ColorByScaleValue = 'linear' | 'sqrt' | 'log' | 'quantile' | 'threshold';
@@ -36,7 +36,7 @@ export interface ColorByOptions {
   colorEdges?: boolean;
   /** Colour for missing / non-numeric values, as an engine `0xRRGGBB` number. */
   fallbackColor?: number;
-  /** Cardinality cap for `'category'`. */
+  /** Cardinality cap for `'categorical'`. */
   maxCategories?: number;
   scale?: ColorByScaleValue;
   /** Explicit `[min, max]` for node values; omit for auto-scan. */

@@ -179,6 +179,7 @@ export {
   DEFAULT_RANGE_STOPS,
   type ColorByBehaviourOptions,
   type ColorByLegendSection,
+  type ResolvedColorByOptions,
   type ColorByMode,
   type ColorByScale,
   type ColorValueAccessor,
