@@ -69,6 +69,15 @@ const PATTERN_FIELDS: FieldConfig[] = [
     label: 'Follow camera',
     description: 'Pattern shifts + scales with the camera when on.',
   },
+  {
+    name: 'hidePatternBelowZoom',
+    type: 'number',
+    label: 'Hide below zoom',
+    min: 0,
+    max: 2,
+    step: 0.05,
+    description: 'Hide the pattern under this camera scale (0.5 = 50%). Set 0 to always show it.',
+  },
 ];
 
 const THEME_FIELDS: FieldConfig[] = [

@@ -32,6 +32,8 @@ export interface BackgroundLayerOptions {
   spacing?: number;
   alpha?: number;
   followCamera?: boolean;
+  /** Camera scale below which the pattern is hidden. `0` disables the cutoff. */
+  hidePatternBelowZoom?: number;
   mode?: BackgroundMode;
   surfaceRole?: string;
   patternRole?: string;

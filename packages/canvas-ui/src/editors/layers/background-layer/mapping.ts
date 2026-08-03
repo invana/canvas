@@ -28,6 +28,7 @@ export function optionsToForm(o: BackgroundLayerOptions = {}): BackgroundLayerFi
     spacing: o.spacing,
     alpha: o.alpha,
     followCamera: o.followCamera,
+    hidePatternBelowZoom: o.hidePatternBelowZoom,
     mode: o.mode,
     surfaceRole: o.surfaceRole,
     patternRole: o.patternRole,
@@ -51,6 +52,7 @@ export function formToOptions(f: BackgroundLayerFields): BackgroundLayerOptions 
   if (f.spacing !== undefined) out.spacing = f.spacing;
   if (f.alpha !== undefined) out.alpha = f.alpha;
   if (f.followCamera !== undefined) out.followCamera = f.followCamera;
+  if (f.hidePatternBelowZoom !== undefined) out.hidePatternBelowZoom = f.hidePatternBelowZoom;
   if (f.mode !== undefined) out.mode = f.mode;
   if (f.surfaceRole) out.surfaceRole = f.surfaceRole;
   if (f.patternRole) out.patternRole = f.patternRole;

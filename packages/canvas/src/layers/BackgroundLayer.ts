@@ -82,6 +82,18 @@ export interface BackgroundLayerOptions {
    */
   followCamera?: boolean;
   /**
+   * Hide the tiled pattern once the camera scale drops below this value — zoomed
+   * far out the tiles collapse into visual noise, so the backdrop reads better
+   * on its own. Set `0` to disable the cutoff and always show the pattern.
+   *
+   * Only affects `type: 'pattern'`; the solid backdrop always paints. Applies to
+   * *any* camera change (wheel / pinch / keyboard / programmatic), since it's
+   * evaluated from the cached camera scale rather than in a zoom behaviour.
+   *
+   * Default `0.5` (hidden below 50% zoom).
+   */
+  hidePatternBelowZoom?: number;
+  /**
    * How `{ light, dark }` colour variants are resolved. `'auto'` (default)
    * follows the active theme on `ctx.theme`; `'light'` / `'dark'` pin
    * explicitly. Has no effect when both colours are plain scalars.
@@ -110,6 +122,7 @@ const DEFAULTS: Required<BackgroundLayerOptions> = {
   spacing: 12,
   alpha: 0.6,
   followCamera: true,
+  hidePatternBelowZoom: 0.5,
   mode: 'auto',
   surfaceRole: 'surface',
   patternRole: 'divider',
@@ -311,6 +324,12 @@ export class BackgroundLayer extends ScreenLayer<
 
   private syncTileTransform(): void {
     if (!this.tiling) return;
+    // Low-zoom cutoff: below the threshold the tiles are too dense to read, so
+    // we hide the pattern and leave the solid backdrop. Evaluated here (rather
+    // than in a zoom behaviour) so every camera source — wheel, pinch, keyboard,
+    // programmatic — goes through the same check.
+    this.tiling.visible =
+      this.opts.hidePatternBelowZoom <= 0 || this.camScale >= this.opts.hidePatternBelowZoom;
     // Texture is rasterised at `textureDpr` device pixels per CSS pixel; we
     // divide `tileScale` by it so on-screen pattern size stays in CSS-pixel
     // units regardless of display density.
