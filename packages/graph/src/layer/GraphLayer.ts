@@ -2323,13 +2323,32 @@ export class GraphLayer extends WorldLayer<
    * caller falls back to whatever floor size the group's declared
    * width/height/radius provides.
    *
-   * Recurses into child groups via {@link boundsOfNode} so a child whose
+   * Recurses into child groups via the child's own spec, so a child whose
    * own frame has already been auto-fit contributes its current size, not
    * its stored declared size.
+   *
+   * **Anchored on the child's render origin, not its `position`.** Those are
+   * the same point for most shapes, but *not* for `composite`: a card's
+   * `position` is its **centre**, and {@link shapeRenderXY} shifts it by
+   * `-size/2` because the composite shape draws from its top-left corner. So
+   * the spec's `x`/`y` — already mapped through that function, and the exact
+   * point the renderer draws at — is the only correct anchor here. Adding the
+   * raw `position` instead assumed every shape was top-left-origin and shifted
+   * a card-holding frame by half a card down-and-right: the members spilled out
+   * of the top-left edges while the frame overhung on the bottom-right. The
+   * frame's *size* was right the whole time, which is why it read as a
+   * mispositioned box rather than a mis-measured one.
+   *
+   * Reading `spec.x` also keeps this in lockstep with the renderer for free —
+   * any future shape that grows its own origin mapping is handled without
+   * touching this method. The spec is built once and reused for the bounds
+   * measurement, so this costs no more than the previous `boundsOfNode` call.
    */
   private directChildrenWorldBounds(
     groupId: string,
   ): { minX: number; minY: number; maxX: number; maxY: number } | undefined {
+    const renderer = this._renderer;
+    if (!renderer) return undefined;
     let minX = Infinity;
     let minY = Infinity;
     let maxX = -Infinity;
@@ -2338,11 +2357,12 @@ export class GraphLayer extends WorldLayer<
     for (const childId of this.store.childrenOf(groupId)) {
       const child = this.store.getNode(childId);
       if (!child) continue;
-      const local = this.boundsOfNode(child);
+      const spec = this.nodeSpec(child);
+      const local = renderer.boundsOfSpec(spec);
       if (!local) continue;
-      const pos = child.position ?? { x: 0, y: 0 };
-      const wx = pos.x + local.x;
-      const wy = pos.y + local.y;
+      const origin = spec as unknown as { x?: number; y?: number };
+      const wx = (origin.x ?? 0) + local.x;
+      const wy = (origin.y ?? 0) + local.y;
       if (wx < minX) minX = wx;
       if (wy < minY) minY = wy;
       if (wx + local.width > maxX) maxX = wx + local.width;

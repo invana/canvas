@@ -242,6 +242,16 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
       ? groupInsets(layer, node)
       : { top: 16, right: 16, bottom: 16, left: 16 };
     elkNode.layoutOptions = {
+      // Spacing/algorithm keys are repeated on every container because **ELK
+      // resolves layout options per node and a node that declares its own
+      // `layoutOptions` does not inherit its parent's.** Without this the root
+      // graph honoured `nodeSpacing` / `layerSpacing` between the containers
+      // while every container laid its own members out with ELK's built-in
+      // defaults (`elk.spacing.nodeNode` = 20) — so raising the spacing pushed
+      // the frames apart and left the nodes inside them jammed together, at a
+      // fixed 20px no matter what the caller configured.
+      ...nestedLayoutOptions(this.opts),
+      // Container-specific, so they must win over the inherited set above.
       'elk.padding': `[top=${insets.top},left=${insets.left},bottom=${insets.bottom},right=${insets.right}]`,
       'elk.nodeSize.constraints': 'MINIMUM_SIZE',
     };
@@ -346,6 +356,28 @@ function buildLayoutOptions(opts: ElkLayoutOptions, nests = false): LayoutOption
   if (opts.edgeRouting !== undefined) out['elk.edgeRouting'] = opts.edgeRouting;
   if (opts.padding !== undefined) out['elk.padding'] = formatPadding(opts.padding);
   if (opts.layoutOptions) Object.assign(out, opts.layoutOptions);
+  return out;
+}
+
+/**
+ * The subset of {@link buildLayoutOptions} a **nested container** re-declares.
+ *
+ * ELK resolves layout options per node: a node carrying its own `layoutOptions`
+ * does **not** inherit the ones set on its parent. A container has to declare
+ * `elk.padding` (its `GroupOptions` insets), so it silently opted out of every
+ * spacing key the caller configured on the root and fell back to ELK's defaults
+ * — `elk.spacing.nodeNode` = 20 regardless of {@link ElkLayoutOptions.nodeSpacing}.
+ * The visible symptom was a graph whose *frames* respected the spacing while the
+ * *nodes inside them* stayed jammed at 20px.
+ *
+ * Two keys are deliberately dropped:
+ * - **`elk.padding`** — each container computes its own from its `GroupOptions`,
+ *   and the caller's graph-level padding must not overwrite it.
+ * - **`elk.hierarchyHandling`** — root-only; passing `nests = false` omits it.
+ */
+function nestedLayoutOptions(opts: ElkLayoutOptions): LayoutOptions {
+  const out = buildLayoutOptions(opts);
+  delete out['elk.padding'];
   return out;
 }
 
