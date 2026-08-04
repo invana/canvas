@@ -38,6 +38,7 @@ export { settings as airportsSettings } from './air-routes/data';
 // ── data ─────────────────────────────────────────────────────────────────────
 
 export { lesMiserables } from './les-miserables/data';
+export { canvasDataflow } from './canvas-dataflow/data';
 export { generateRandomTree } from './random-tree/data';
 export { generateLattice } from './lattice/data';
 export { twitterActivity, generateTwitterActivity } from './twitter/data';
