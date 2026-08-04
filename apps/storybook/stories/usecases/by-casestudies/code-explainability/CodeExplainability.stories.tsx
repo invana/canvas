@@ -35,6 +35,10 @@
  *    the ticket: a record change stops there.
  * 5. **Switch to dots** when the question turns from *"what is this"* to
  *    *"what is the shape"* — the same graph, the compact reading.
+ * 6. **Open Settings** to re-cut the picture without editing the story: the ELK
+ *    direction and spacing, the hover degree, every mounted behaviour. The panel
+ *    lists exactly what this canvas registers — which is why the app bundle is
+ *    off (`bundle={false}`) and the children below are the whole composition.
  *
  * ### What it makes obvious
  *
@@ -53,13 +57,30 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { CollapseExpandBehaviour, ElkLayout } from '@invana/canvas-react';
+import {
+  BackgroundLayer,
+  BrushSelectBehaviour,
+  ClickSelectBehaviour,
+  CollapseExpandBehaviour,
+  ColorByBehaviour,
+  DragNodeBehaviour,
+  DragPanBehaviour,
+  ElkLayout,
+  GraphLayer,
+  HoverActivateBehaviour,
+  LassoSelectBehaviour,
+  ThemeBehaviour,
+  WheelZoomBehaviour,
+} from '@invana/canvas-react';
 import {
   CanvasMessageBar,
+  CanvasSettingsEditorPanel,
+  CanvasThemeSync,
   GraphCanvasApp,
   GraphControlsToolbar,
   GraphStatusBar,
   ToolbarItems,
+  useSidePanels,
 } from '@invana/canvas-ui';
 import { canvasDataflow } from '@invana/graph-datasets';
 import type { CanvasConfig } from '@invana/canvas';
@@ -70,8 +91,8 @@ import type {
   NodeStylingRegistry,
   NodeTypeRegistry,
 } from '@invana/graph';
-import type { ElkDirection } from '@invana/graph-layout-elkjs';
 import { ThemeProvider } from '@invana/themes';
+import { Moon, Settings, Sun } from 'lucide-react';
 
 
 // ─── Presentation ────────────────────────────────────────────────────────────
@@ -184,6 +205,11 @@ const CARD_CONFIG: CanvasConfig = {
   activeLayout: 'elk',
   fitOnLoad: false,
   layers: {
+    // The app bundle is off (`bundle={false}` below — it would register a
+    // d3-force layout this story has no use for), so every setting the bundle
+    // used to supply is spelled out here, keyed by the id each JSX child
+    // registers under.
+    background: { type: 'pattern', patternType: 'grid', alpha: 0.5 },
     graph: {
       nodeStructureTemplates: structures,
       nodeStylingTemplates: stylings,
@@ -223,21 +249,24 @@ const CARD_CONFIG: CanvasConfig = {
           // has no fill at all and the frame, its cards and the backdrop read as
           // one flat slab.
           //
-          // Three surfaces want three values. The frame sits *between* the
-          // backdrop and the card, so the card still reads as the raised thing:
-          //   backdrop 0x0f172a  <  frame 0x16203a  <  card `cardBg` 0x1e293b
-          // Literals, not roles: a raw `NodeStyle` colour is a number, so unlike
-          // the card's `strokeRole` these do not follow the palette — flip the
-          // theme to light and the frames need new values.
-          // Lighter than the first pass, because `bgAlpha: 0.6` composites the
-          // frame against the backdrop: 0x1f2a44 at 60% over 0x0f172a lands near
-          // 0x18213a — still clearly a step above the backdrop and a step below
-          // the card, which is the ordering that makes the card read as raised.
-          // Picking the *final* colour and then adding alpha would have washed
-          // the frame back into the background.
-          bgFill: (node: GraphNode) => (node.type === 'package' ? 0x1f2a44 : undefined),
-          bgAlpha: (node: GraphNode) => (node.type === 'package' ? 0.6 : undefined),
-          bgStrokeColor: (node: GraphNode) => (node.type === 'package' ? 0x3f4f6b : undefined),
+          // Three surfaces, and the frame has to sit *between* the backdrop and
+          // the card so the card still reads as the raised thing. The card's own
+          // colours go through roles (`bgRole: 'cardBg'`, `strokeRole`), so they
+          // follow the theme — but a raw `NodeStyle` colour is a plain number
+          // with no role channel, so a literal picked for dark mode would be
+          // wrong the moment the header's theme toggle flips to light.
+          //
+          // The way out is a **neutral tinted with alpha rather than a chosen
+          // colour**: mid-slate at 14% composites *against whatever backdrop is
+          // behind it*. Over the dark backdrop it lands near 0x1b2436 — a step
+          // up from the background, a step below `cardBg`. Over the light one it
+          // lands near 0xe9ecf0 — a step *down* from the background, with the
+          // near-white card still the raised surface. The ordering that makes a
+          // card read as raised survives either way, from one pair of values.
+          bgFill: (node: GraphNode) => (node.type === 'package' ? 0x64748b : undefined),
+          bgAlpha: (node: GraphNode) => (node.type === 'package' ? 0.14 : undefined),
+          bgStrokeColor: (node: GraphNode) => (node.type === 'package' ? 0x94a3b8 : undefined),
+          bgStrokeAlpha: (node: GraphNode) => (node.type === 'package' ? 0.5 : undefined),
           bgStrokeWidth: (node: GraphNode) => (node.type === 'package' ? 1 : undefined),
           labelText: (node: GraphNode) => (node.type === 'package' ? node.id : undefined),
         },
@@ -277,8 +306,22 @@ const CARD_CONFIG: CanvasConfig = {
     },
   },
   behaviours: {
+    // Colour-by-type is off: the card styling owns the fill, and a `bgFill`
+    // resolver would fight it.
     color: { enabled: false },
     hover: { enabled: true, state: 'highlighted', inactiveState: 'dimmed', degree: 1, direction: 'both' },
+    pan: { enabled: true },
+    wheel: { enabled: true },
+    'drag-node': { enabled: true },
+    'click-select': { enabled: true, multiple: true },
+    // Registered disarmed — the toolbar's select-mode picker arms one at a time.
+    'brush-select': { enabled: false },
+    'lasso-select': { enabled: false },
+    // A package frame's +/- toggle and double-click-to-collapse.
+    'collapse-expand': { enabled: true },
+    // The sole theme publisher; `<CanvasThemeSync>` pins its mode + family to
+    // the host `<ThemeProvider>`, so the header toggle repaints the canvas.
+    theme: { enabled: true, mode: 'system', active: 'default', accent: 'css-var' },
   },
 };
 
@@ -291,6 +334,7 @@ const DOT_CONFIG: CanvasConfig = {
   activeLayout: 'elk',
   fitOnLoad: false,
   layers: {
+    background: { type: 'pattern', patternType: 'grid', alpha: 0.5 },
     graph: {
       node: {
         style: {
@@ -303,12 +347,16 @@ const DOT_CONFIG: CanvasConfig = {
             node.type === 'package'
               ? { kind: 'rect' as const, width: 168, height: 40, cornerRadius: 12 }
               : { kind: 'circle' as const, radius: 8 },
-          // Same three-surface split as CARD_CONFIG. The dot keeps its white
-          // rim; the frame takes the muted border, or a 168×40 white-ringed
-          // pill would read as the loudest thing on screen.
-          bgFill: (node: GraphNode) => (node.type === 'package' ? 0x1f2a44 : undefined),
-          bgAlpha: (node: GraphNode) => (node.type === 'package' ? 0.6 : undefined),
-          bgStrokeColor: (node: GraphNode) => (node.type === 'package' ? 0x3f4f6b : 0xffffff),
+          // The same theme-agnostic tinted neutral as CARD_CONFIG — see the
+          // reasoning there. The frame takes the muted border and the dot keeps
+          // a brighter rim, or a 168×40 ringed pill would read as the loudest
+          // thing on screen. The dot's rim is a role-free literal too, so it
+          // gets the same treatment: slate reads against both backdrops where
+          // white disappears into the light one.
+          bgFill: (node: GraphNode) => (node.type === 'package' ? 0x64748b : undefined),
+          bgAlpha: (node: GraphNode) => (node.type === 'package' ? 0.14 : undefined),
+          bgStrokeColor: 0x94a3b8,
+          bgStrokeAlpha: (node: GraphNode) => (node.type === 'package' ? 0.5 : 0.9),
           bgStrokeWidth: (node: GraphNode) => (node.type === 'package' ? 1 : 1.5),
           labelFontSize: 10,
           labelPlacement: 'bottom',
@@ -323,9 +371,19 @@ const DOT_CONFIG: CanvasConfig = {
   layouts: {
     elk: { algorithm: 'layered', direction: 'RIGHT', nodeSpacing: 18, layerSpacing: 90, padding: 30 },
   },
+  // Same hand-rolled bundle as CARD_CONFIG (see the note there) — except
+  // colour-by-type, which is on here because nothing competes for the fill.
   behaviours: {
     color: { enabled: true },
     hover: { enabled: true, state: 'highlighted', inactiveState: 'dimmed', degree: 1, direction: 'both' },
+    pan: { enabled: true },
+    wheel: { enabled: true },
+    'drag-node': { enabled: true },
+    'click-select': { enabled: true, multiple: true },
+    'brush-select': { enabled: false },
+    'lasso-select': { enabled: false },
+    'collapse-expand': { enabled: true },
+    theme: { enabled: true, mode: 'system', active: 'default', accent: 'css-var' },
   },
 };
 
@@ -338,8 +396,23 @@ export const CodeExplainabilityStory: Story = {
   render: function CodeExplainabilityRender() {
     /** Cards carry the prose; dots carry the topology. Same graph either way. */
     const [look, setLook] = useState<'cards' | 'dots'>('cards');
-    /** RIGHT reads as a sentence; DOWN is better when the fan-out is wide. */
-    const [direction, setDirection] = useState<ElkDirection>('RIGHT');
+
+    // Settings docks `<CanvasSettingsEditorPanel>` into the right region — the
+    // ELK direction / spacing and every mounted behaviour, editable live. That
+    // panel is why the header carries no layout controls of its own.
+    const dock = useSidePanels(
+      [
+        {
+          id: 'settings',
+          icon: Settings,
+          label: 'Settings',
+          render: (c) => (
+            <CanvasSettingsEditorPanel canvas={c} className="border-0 bg-transparent shadow-none" />
+          ),
+        },
+      ],
+      { section: { defaultSize: '380px', maxSize: '520px' } },
+    );
 
     // Memoised so a toolbar change never hands GraphCanvasApp a new `data`
     // identity and reloads the engine.
@@ -352,12 +425,13 @@ export const CodeExplainabilityStory: Story = {
     const onReady = useCallback((c: GraphCanvas | null) => {
       if (!c) return;
       c.showMessage('Hover a symbol to isolate its 1-hop neighbourhood');
-      // Framing is done by hand, because neither built-in mechanism works here:
-      // `config.fitOnLoad` measures before ELK resolves (and lands at ~170%), and
-      // `<ElkLayout fitPadding>` does not fire on the initial run. Both are
-      // instances of `docs/autofit-bounds-rfc.md`. So: fit once, after the
-      // layout has landed and painted.
-      window.setTimeout(() => c.fitView(60), 400);
+      // No fit here. `config.fitOnLoad` is off (it measures before a one-shot
+      // layout resolves — `docs/autofit-bounds-rfc.md`), and a hand-rolled
+      // `setTimeout(fitView, 400)` is the same bug on a timer: ELK's solve time
+      // moves with the look, so the timer fires mid-solve and frames a near-empty
+      // bbox — ~770% on the dot look. `<ElkLayout fitPadding={60}>` fits off the
+      // layout's own `end` event instead, which is the only signal that can't be
+      // early.
     }, []);
 
     return (
@@ -366,10 +440,29 @@ export const CodeExplainabilityStory: Story = {
           data={data}
           config={config}
           onReady={onReady}
+          // `bundle={false}` — the batteries-included bundle registers a
+          // d3-force layout, and this graph is laid out by ELK alone. Turning it
+          // off makes the children below the *whole* canvas, which is also what
+          // keeps the settings panel honest: it lists exactly what's mounted, so
+          // a layout nothing points at never shows up as an editable surface.
+          bundle={false}
+          // The switch below is not a config *tweak*: cards and dots differ in
+          // which node templates exist at all. `config` is applied with
+          // `canvas.update()`, which deep-merges (`Canvas.ts:761`) — and
+          // `GraphLayer.setOptions` merges `nodeTypes` key-by-key
+          // (`GraphLayer.ts:874`), so a merge can never *remove* the card
+          // bindings. Without a remount the graph stays cards forever (the type
+          // binding is applied above the layer template, `GraphLayer.ts:967`).
+          // `instanceKey` exists for exactly this: re-init and apply the new
+          // config from scratch.
+          instanceKey={look}
           header={{
             title: 'Code explainability — where does a node become a pixel?',
-            center: <GraphControlsToolbar />,
-            right: () => (
+            // No layout picker: its default factory constructs a `D3ForceLayout`
+            // (`GraphControlsToolbar.tsx:56`), which would put d3-force back in
+            // through the front door. ELK's own options live in Settings.
+            center: <GraphControlsToolbar sections={{ layout: false }} />,
+            right: (ctx) => (
               <ToolbarItems
                 orientation="horizontal"
                 items={[
@@ -381,30 +474,54 @@ export const CodeExplainabilityStory: Story = {
                     options: { cards: 'Cards — what is this symbol', dots: 'Dots — what is the shape' },
                     onChange: (v) => setLook(v as 'cards' | 'dots'),
                   },
+                  ...dock.items,
                   {
-                    type: 'select',
-                    key: 'direction',
-                    label: 'Flow',
-                    value: direction,
-                    options: { RIGHT: 'Left → right', DOWN: 'Top → down' },
-                    onChange: (v) => setDirection(v as ElkDirection),
+                    type: 'toggle',
+                    key: 'theme',
+                    icon: Sun,
+                    activeIcon: Moon,
+                    label: 'Switch to dark theme',
+                    activeLabel: 'Switch to light theme',
+                    active: ctx.themeKind === 'dark',
+                    onToggle: ctx.toggleTheme,
                   },
                 ]}
               />
             ),
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+          right={dock.region}
         >
-          {/* The bundle registers only the force layout, so the ELK id named by
-              `config.activeLayout` is mounted here. `nodeSize` is a function, so
-              it rides the `options` prop rather than the serialisable config —
-              without it ELK lays out around points and the cards overlap. */}
+          {/* With the bundle off, these children *are* the canvas — the same set
+              `GraphCanvasApp` would have mounted, minus the force layout, plus
+              ELK and collapse/expand. Every option comes from `config`, keyed by
+              the id each one registers under. */}
+          <BackgroundLayer id="background" />
+          <GraphLayer id="graph" data={data} />
+          <ColorByBehaviour id="color" targetLayerId="graph" />
+          {/* The sole theme publisher + the sync that drives its mode/family off
+              the host `<ThemeProvider>` — that pair is what makes the header's
+              sun/moon toggle repaint the canvas and not just the chrome. */}
+          <ThemeBehaviour id="theme" />
+          <CanvasThemeSync />
+          <DragPanBehaviour id="pan" />
+          <WheelZoomBehaviour id="wheel" />
+          <DragNodeBehaviour id="drag-node" targetLayerId="graph" />
+          <HoverActivateBehaviour id="hover" targetLayerId="graph" />
+          <ClickSelectBehaviour id="click-select" targetLayerId="graph" />
+          <BrushSelectBehaviour id="brush-select" targetLayerId="graph" />
+          <LassoSelectBehaviour id="lasso-select" targetLayerId="graph" />
+          {/* The one layout, named by `config.activeLayout`. `nodeSize` is a
+              function, so it rides the `options` prop rather than the
+              serialisable config — without it ELK lays out around points and the
+              cards overlap. `direction` is deliberately *not* here: it lives in
+              `config.layouts.elk`, so the Settings panel can drive it (wrapper
+              options are init-only; config wins by id). */}
           <ElkLayout
             id="elk"
             targetLayerId="graph"
             fitPadding={60}
             options={{
-              direction,
               // Containers are sized by their children, so only leaves get a
               // fixed box — handing ELK a card-sized package would reserve room
               // twice.
@@ -416,12 +533,9 @@ export const CodeExplainabilityStory: Story = {
                     : { width: 20, height: 20 },
             }}
           />
-          {/* Not in the GraphCanvasApp bundle (which registers background ·
-              graph · color · theme · pan · wheel · drag-node · hover ·
-              click-select · brush-select · lasso-select), so a package frame's
-              +/- toggle has no listener until this is mounted — and neither
-              does double-click, which `doubleClickToToggle` already enables by
-              default. Behaviours never auto-enable (root rule 7). */}
+          {/* A package frame's +/- toggle has no listener until this is mounted —
+              and neither does double-click, which `doubleClickToToggle` already
+              enables by default. Behaviours never auto-enable (root rule 7). */}
           <CollapseExpandBehaviour id="collapse-expand" targetLayerId="graph" enabled />
         </GraphCanvasApp>
       </ThemeProvider>
