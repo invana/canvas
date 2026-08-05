@@ -263,11 +263,18 @@ const CARD_CONFIG: CanvasConfig = {
           // lands near 0xe9ecf0 — a step *down* from the background, with the
           // near-white card still the raised surface. The ordering that makes a
           // card read as raised survives either way, from one pair of values.
-          bgFill: (node: GraphNode) => (node.type === 'package' ? 0x64748b : undefined),
-          bgAlpha: (node: GraphNode) => (node.type === 'package' ? 0.14 : undefined),
+          //
+          // The alpha goes on the **fill layer**, not on `bgAlpha`: `bgAlpha` is
+          // the whole shape's opacity (`GraphLayer.ts:1518` — it becomes
+          // `spec.alpha`), so it multiplies the border too. A 0.5 border under
+          // `bgAlpha: 0.14` paints at 0.07 — which is why these frames looked
+          // borderless. `{ kind: 'solid', … alpha }` tints only the fill and
+          // leaves the outline at full strength.
+          bgFill: (node: GraphNode) =>
+            node.type === 'package' ? { kind: 'solid' as const, color: 0x64748b, alpha: 0.14 } : undefined,
           bgStrokeColor: (node: GraphNode) => (node.type === 'package' ? 0x94a3b8 : undefined),
-          bgStrokeAlpha: (node: GraphNode) => (node.type === 'package' ? 0.5 : undefined),
-          bgStrokeWidth: (node: GraphNode) => (node.type === 'package' ? 1 : undefined),
+          bgStrokeAlpha: (node: GraphNode) => (node.type === 'package' ? 0.75 : undefined),
+          bgStrokeWidth: (node: GraphNode) => (node.type === 'package' ? 1.5 : undefined),
           labelText: (node: GraphNode) => (node.type === 'package' ? node.id : undefined),
         },
       },
@@ -347,17 +354,19 @@ const DOT_CONFIG: CanvasConfig = {
             node.type === 'package'
               ? { kind: 'rect' as const, width: 168, height: 40, cornerRadius: 12 }
               : { kind: 'circle' as const, radius: 8 },
-          // The same theme-agnostic tinted neutral as CARD_CONFIG — see the
-          // reasoning there. The frame takes the muted border and the dot keeps
-          // a brighter rim, or a 168×40 ringed pill would read as the loudest
-          // thing on screen. The dot's rim is a role-free literal too, so it
-          // gets the same treatment: slate reads against both backdrops where
-          // white disappears into the light one.
-          bgFill: (node: GraphNode) => (node.type === 'package' ? 0x64748b : undefined),
-          bgAlpha: (node: GraphNode) => (node.type === 'package' ? 0.14 : undefined),
+          // The same theme-agnostic tinted neutral as CARD_CONFIG, and the same
+          // reason the tint lives on the fill layer rather than `bgAlpha` (which
+          // would fade the border with it) — see the notes there. The frame
+          // takes the muted border and the dot keeps a brighter rim, or a 168×40
+          // ringed pill would read as the loudest thing on screen. The dot's rim
+          // is a role-free literal too, so it gets the same treatment: slate
+          // reads against both backdrops where white disappears into the light
+          // one.
+          bgFill: (node: GraphNode) =>
+            node.type === 'package' ? { kind: 'solid' as const, color: 0x64748b, alpha: 0.14 } : undefined,
           bgStrokeColor: 0x94a3b8,
-          bgStrokeAlpha: (node: GraphNode) => (node.type === 'package' ? 0.5 : 0.9),
-          bgStrokeWidth: (node: GraphNode) => (node.type === 'package' ? 1 : 1.5),
+          bgStrokeAlpha: (node: GraphNode) => (node.type === 'package' ? 0.75 : 0.9),
+          bgStrokeWidth: 1.5,
           labelFontSize: 10,
           labelPlacement: 'bottom',
           labelOffsetY: 4,

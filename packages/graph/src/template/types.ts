@@ -193,6 +193,13 @@ export interface NodeStylingTemplate {
   // simple:
   fillRole?: ColorRole;
   fill?: number;
+  /**
+   * Border colour — applies to **both** structure kinds: it becomes the shape's
+   * `bgStrokeColor` on a `simple` structure, and the composite silhouette's own
+   * stroke on a `card` (so it traces a custom `frame` too). Defaults to no
+   * border when unset; {@link strokeWidth} defaults to `1` on a card and `1.5`
+   * on a simple shape.
+   */
   strokeRole?: ColorRole;
   stroke?: number;
   strokeWidth?: number;

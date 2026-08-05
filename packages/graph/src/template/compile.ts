@@ -177,6 +177,11 @@ export function compileCard(
   const parts: CompositePart[] = [];
 
   const bg = color(styling?.bgRole, styling?.bg, palette) ?? palette.cardBg ?? 0xffffff;
+  // Card border. Read from the same `strokeRole` / `stroke` / `strokeWidth`
+  // pair `compileSimple` and `compileFreeform` use, so one styling template
+  // borders a card exactly as it borders a simple shape — a card used to be the
+  // one structure kind that silently dropped them.
+  const strokeColor = color(styling?.strokeRole, styling?.stroke, palette);
   const accent = color(styling?.accentRole, styling?.accent, palette);
   const dividerColor =
     color(styling?.slots?.divider?.colorRole, styling?.slots?.divider?.color, palette) ??
@@ -210,20 +215,29 @@ export function compileCard(
     y += ROW_GAP;
   }
 
+  // The border rides the **composite's own** `stroke`, not the node-level
+  // `bgStrokeColor`: it then traces whatever silhouette the card actually has
+  // (a `frame` ellipse / polygon as readily as the default rounded rect), and
+  // it survives the `bgStrokeWidth: 0` below, which exists to suppress a
+  // *second*, rect-shaped border from the layer template.
+  const rootStroke: RootStroke | undefined =
+    strokeColor !== undefined ? { color: strokeColor, width: styling?.strokeWidth ?? 1 } : undefined;
   const shape: CompositeShapeOption = {
     kind: 'composite',
     width,
     height,
     cornerRadius: 10,
-    ...(struct.frame ? { root: frameToRoot(struct.frame, width, height, 10, bg, undefined) } : {}),
+    ...(struct.frame ? { root: frameToRoot(struct.frame, width, height, 10, bg, rootStroke) } : {}),
     fill: bg,
+    ...(rootStroke ? { stroke: rootStroke } : {}),
     parts,
   };
   // Express the card background as the node's `bgFill` too (not only the
   // composite's internal fill). Styling owns the card colour, so this asserts it
   // at the node level — overriding any layer-wide colour-by-category default,
   // exactly as `compileSimple` does for simple shapes. `bgStrokeWidth: 0` stops
-  // the layer's base node border from framing the card.
+  // the layer's base node border from framing the card *on top of* the
+  // silhouette-following stroke above.
   return { shape, bgFill: bg, bgStrokeWidth: 0 };
 }
 
@@ -248,19 +262,34 @@ function layoutRow(
   let x = cursor.x;
   let rowHeight = 0;
 
-  for (const cell of slots) {
+  // Right edge of the content box — every cell is clipped to it, and the last
+  // cell of a multi-cell row is anchored *at* it.
+  const rightEdge = cursor.width - cursor.pad;
+
+  for (let i = 0; i < slots.length; i++) {
+    const cell = slots[i]!;
+    // Cells share the row instead of each claiming everything left of the right
+    // edge. A cell used to take `rightEdge - x` and then advance `x` by the same
+    // amount, so in a two-cell row (`symbol` + `package`) the first cell ate the
+    // whole row and the second started **on** the right edge — drawing its text
+    // outside the card. Split what's left evenly across the cells still to come.
+    const available = rightEdge - x;
+    const cellWidth = available / (slots.length - i);
+    // The last cell of a multi-cell row right-aligns against the card's right
+    // padding edge: that pairs a left tag with a right-hand qualifier (`CLASS` …
+    // `@invana/graph`) the way the row reads, instead of leaving a ragged gap.
+    const isTrailing = slots.length > 1 && i === slots.length - 1;
     if ('stack' in cell) {
-      const remaining = cursor.width - cursor.pad - x;
       let sy = cursor.y;
       for (const sub of cell.stack) {
         if ('stack' in sub || sub.kind === 'image') continue; // stacks hold text/tag only
         const ss = resolveSlotStyle(styling?.slots?.[sub.slot], palette, 'foreground');
         const text = formatText(resolveText(node, bindings[sub.slot]), ss.uppercase);
-        parts.push(label(text, x, sy + ss.fontSize, ss, remaining, 'left'));
+        parts.push(label(text, x, sy + ss.fontSize, ss, cellWidth, 'left'));
         sy += ss.fontSize + STACK_GAP + 2;
       }
       rowHeight = Math.max(rowHeight, sy - cursor.y);
-      x += remaining;
+      x += cellWidth;
       continue;
     }
     if (cell.kind === 'image') {
@@ -302,10 +331,13 @@ function layoutRow(
       palette,
       cell.kind === 'tag' ? 'muted' : 'heading',
     );
-    const remaining = cursor.width - cursor.pad - x;
     const text = formatText(resolveText(node, bindings[cell.slot]), ss.uppercase);
-    parts.push(label(text, x, cursor.y + ss.fontSize, ss, remaining, 'left'));
-    x += remaining;
+    parts.push(
+      isTrailing
+        ? label(text, rightEdge, cursor.y + ss.fontSize, ss, cellWidth, 'right')
+        : label(text, x, cursor.y + ss.fontSize, ss, cellWidth, 'left'),
+    );
+    x += cellWidth;
     rowHeight = Math.max(rowHeight, ss.fontSize + 2);
   }
 
