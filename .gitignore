@@ -52,3 +52,4 @@ debug-storybook.log
 
 # git-cliff release-notes scratch file (generated in CI for the GitHub Release body)
 RELEASE_NOTES.md
+.ua/
