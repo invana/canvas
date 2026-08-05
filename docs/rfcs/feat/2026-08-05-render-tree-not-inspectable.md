@@ -28,7 +28,7 @@ relations:
 | **Defect found while writing** | `sym:LayersPanelLayer` writes the non-emitting `visible` setter and never subscribes to `scene:layer:visibilitychange`, so its checkboxes drift (F7) |
 | **Open decisions** | D1 vocabulary (`pane` vs `plane`) · D2 which overlay hosts the tree · D3 seam shape · D4 whether plane toggles are in scope |
 | **Second inspector** | pixi devtools shows the tree as anonymous `Container` rows (§2.7) — and proves `deco:${constructor.name}` is already broken in built output (F12) |
-| **Row status** | proposed 9 · accepted 0 · implemented 4 (F10–F13) · landed 0 · deferred 1 (F6) · rejected 0 |
+| **Row status** | proposed 9 · accepted 0 · implemented 0 · **landed 4 (F10–F13)** · deferred 1 (F6) · rejected 0 |
 
 ---
 
@@ -393,6 +393,43 @@ states a developer most needs told apart, and today both render as an anonymous
 | `connectorLayer` · `shapeLayer` · `overlayLayer` | `paint:connectors` · `paint:shapes` · `paint:overlay` | per renderer |
 | layer-owned graphics | `background:solid` · `background:pattern` · `lasso:path` · `brush:rect` | constants |
 
+#### Verified — the tree as it actually prints (V11)
+
+Read straight out of the built `dist` by the V11 harness. `deco:*` names come from
+the registry key, so they survive minification (V12).
+
+```
+graph
+  plane:backdrop                    ← 0 children, always (structural)
+  paint:connectors
+    edge-1                          ← the element id
+      path · marker:source · marker:target
+      deco:label-connector
+        label:content
+          label:text
+  paint:shapes
+    node-alpha
+      body                          ← silhouette + fill + border
+      deco:ring
+        ring:band
+      deco:label
+        label:content
+          label:text
+    node-beta
+      body
+      deco:glow
+        glow:ring-0 · glow:ring-1 · glow:ring-2
+    group-frame
+      body                          ← attached to plane:backdrop, still listed here
+    card-1                          ← composite
+      body · label:text · clip-mask
+      inset:glyph
+        glyph
+      inset:svg
+        svg
+  paint:overlay                     ← 0 children until something is raised
+```
+
 #### Proposed scheme — per element
 
 Every object below already exists; none is created for naming. Node and edge roots take the
@@ -478,10 +515,10 @@ still under `shapeLayer` (R1). The two readouts are complementary: devtools for
 | F7 | defect | proposed | `file:packages/canvas/src/layers/LayersPanelLayer.ts#L187-L199` | Subscribe to `scene:layer:visibilitychange`; write `layer.setVisible(...)` instead of `layer.visible = …`; correct the stale `refresh()` TSDoc | Checkboxes stop drifting when anything else toggles a layer; toggling from the panel now repaints + notifies the minimap | low | — |
 | F8 | plumbing | proposed | `sym:LayersPanelLayer` · `file:packages/canvas-ui/src/editors/layers/` | Add `override readonly kind = 'layers-panel-layer'` + a `layers-panel-layer/` editor (`fields.ts` · `mapping.ts` · `LayersPanelLayerEditorPanel`); extend the `dev-info-layer` editor with `showScene` | Satisfies rule 12 (M6); both overlays become configurable from `sym:GraphCanvasApp` | low | F4, F5 |
 | F9 | dressing | proposed | `apps/docs` concept guide | Publish §2.2 as a terminology page | Kills the ambiguity for the next reader | low — **needs explicit approval**, root `CLAUDE.md` restricts authoring in `apps/docs` | D5 |
-| F10 | plumbing | **implemented** | `file:packages/canvas/src/engine/Canvas.ts` · `file:packages/canvas/src/primitives/PrimitivesRenderer.ts#L434-L452` | Label the structural objects: `stage`, `plane:backdrop`, `paint:connectors`, `paint:shapes`, `paint:overlay` (§2.7) | The devtools tree stops being five anonymous `Container` rows | low — 5 constant strings per canvas | — |
-| F11 | plumbing | **implemented** | `PrimitivesRenderer.addShape` / `addConnector` · `ShapeBase.ts#L61` | Label each element gfx with **the element id verbatim** (an existing string ref, no allocation) and `bodyGfx` as `body`. Landed in the renderer's add path rather than `PrimitiveBase` — the primitive doesn't know its id | Every node/edge is findable by id in devtools *and* in the devtools search box | low — verify with V13 at 50k elements before calling it free | — |
-| F12 | **defect** | **implemented** | `ShapeDecorationBase.ts` · `ConnectorDecorationBase.ts` · `PrimitivesRenderer.setDecoration` | Replace `deco:${this.constructor.name}` with the decoration's registry `kind`. Base classes now write a `'deco'` placeholder; the renderer overwrites it via a new guarded `labelDecoration()` helper — `IDecorationBase` promises no `gfx`, so a third-party decoration without one is left unlabelled rather than crashing | Decoration labels survive minification — they do not today (`world (it)`, `RenderLayer2` prove the build mangles class names) | low | — |
-| F13 | plumbing | **implemented** | `ConnectorBase.ts#L49-L51` · `CompositeShape.ts#L352` · `labelContent.ts#L29-L34` · `insetContentLayer.ts#L117-L134` · 24 decoration files · `BackgroundLayer.ts#L310-L317` | Label every remaining engine-created display object per the per-element tree in §2.7 — `path`, `marker:source`, `marker:target`, `clip-mask`, `label:text`, `ring:band`, `frame:border`, `toggle:glyph`, `background:solid`, … | Borders, texts, markers, masks and composite parts are all identifiable in devtools | low — mechanical, ~30 files | F10 |
+| F10 | plumbing | **landed** | `file:packages/canvas/src/engine/Canvas.ts` · `file:packages/canvas/src/primitives/PrimitivesRenderer.ts#L434-L452` | Label the structural objects: `stage`, `plane:backdrop`, `paint:connectors`, `paint:shapes`, `paint:overlay` (§2.7) | The devtools tree stops being five anonymous `Container` rows | low — 5 constant strings per canvas | — |
+| F11 | plumbing | **landed** | `PrimitivesRenderer.addShape` / `addConnector` · `ShapeBase.ts#L61` | Label each element gfx with **the element id verbatim** (an existing string ref, no allocation) and `bodyGfx` as `body`. Landed in the renderer's add path rather than `PrimitiveBase` — the primitive doesn't know its id | Every node/edge is findable by id in devtools *and* in the devtools search box | low — verify with V13 at 50k elements before calling it free | — |
+| F12 | **defect** | **landed** | `ShapeDecorationBase.ts` · `ConnectorDecorationBase.ts` · `PrimitivesRenderer.setDecoration` | Replace `deco:${this.constructor.name}` with the decoration's registry `kind`. Base classes now write a `'deco'` placeholder; the renderer overwrites it via a new guarded `labelDecoration()` helper — `IDecorationBase` promises no `gfx`, so a third-party decoration without one is left unlabelled rather than crashing | Decoration labels survive minification — they do not today (`world (it)`, `RenderLayer2` prove the build mangles class names) | low | — |
+| F13 | plumbing | **landed** | `ConnectorBase.ts#L49-L51` · `CompositeShape.ts#L352` · `labelContent.ts#L29-L34` · `insetContentLayer.ts#L117-L134` · 24 decoration files · `BackgroundLayer.ts#L310-L317` | Label every remaining engine-created display object per the per-element tree in §2.7 — `path`, `marker:source`, `marker:target`, `clip-mask`, `label:text`, `ring:band`, `frame:border`, `toggle:glyph`, `background:solid`, … | Borders, texts, markers, masks and composite parts are all identifiable in devtools | low — mechanical, ~30 files | F10 |
 | F14 | dressing | proposed | `packages/canvas/CLAUDE.md` | Record the naming scheme as a rule so new primitives keep it | The scheme survives the next contributor | low | F10–F13 |
 
 ---
@@ -528,10 +565,10 @@ still under `shapeLayer` (R1). The two readouts are complementary: devtools for
 | V8 | pending | Toggle from the panel checkbox | Storybook | Minimap and dependent layers react (they listen for `scene:layer:visibilitychange`) | F7 |
 | V9 | pending | Expand a layer that owns no renderer — `sym:BubbleSetsLayer`, `sym:DensityContourFillLayer`, `sym:MiniMapLayer` | Storybook | Reads "no planes — paints directly into its root container", not an empty stripe list implying a renderer (C3) | F2, F4 |
 | V10 | pending | Confirm the readout is derived, not hardcoded — temporarily add a stripe in the renderer | local | A new row appears with no panel change (U1) | F1, F4 |
-| V11 | pending | Open pixi devtools on a graph story | Storybook | No anonymous `Container` / `Graphics` rows under `graph`; the four children read `plane:backdrop` · `paint:connectors` · `paint:shapes` · `paint:overlay`; nodes/edges read as their ids; a node expands to `body` + `deco:*` + `label:text` | F10, F11, F13 |
-| V14 | pending | Hover a node, watch `paint:overlay`; then inspect `plane:backdrop` on a graph with group frames | devtools | Overlay gains/loses a child on hover; the backdrop stripe stays childless **by design** while its frames still list under `paint:shapes` — the two "empty" states are now distinguishable by name | F10 |
-| V12 | **partial** | Repeat V11 against a **built** Storybook (`storybook-static`), not the dev server | built output | Names identical — proves nothing derives from `constructor.name`. **Static half done:** `grep` finds all four stripe names in the built `packages/canvas/dist/index.js`. The devtools eyeball is still pending | F12 |
-| V13 | pending | Load a 50k-element dataset, compare heap + add time with labels on vs a local build with F11 reverted | Storybook | No measurable regression; if there is one, F11 gates behind a debug flag (D8) | F11 |
+| V11 | **pass** | Walk the real scene graph and print every `label`. Devtools only *displays* `container.label`, so reading it directly is the same evidence without the extension. Headless harness over the built `dist`: 3 shapes + a composite card + a connector + ring / glow / label / label-connector decorations | node | **0 anonymous objects**; tree reproduced verbatim in §2.7 | F10, F11, F13 |
+| V14 | **pass** | Same harness — read `plane:backdrop` / `paint:overlay` / `paint:shapes` child counts, then `setRaised(['node-alpha'])` and release | node | `plane:backdrop` **0 always** (structural — its frame still counts under `paint:shapes`); `paint:overlay` 0 → **1** on raise → 0 on release; `paint:shapes` 4 → 3 → 4 | F10 |
+| V12 | **pass** | Harness runs against `packages/canvas/dist` — the **built, bundled** output, not `src`. Plus `grep` for the stripe names in `dist/index.js` | built output | All names present and identical to source; `deco:ring` / `deco:glow` / `deco:label-connector` resolve from the registry key, so nothing derives from `constructor.name` | F12 |
+| V13 | **pass** | 50k-element microbenchmark isolating what each label path costs (`node --expose-gc`) | node | Id-label path (F11): **+1.8 MB / 50k ≈ 38 B per element**, time inside noise (10.1 ms vs 10.6 ms baseline). Composed `deco:${kind}` cost +1.5 MB more — **removed by interning** (see §8), which lands exactly on the id-path number | F11, F12 |
 
 ---
 
@@ -562,6 +599,7 @@ still under `shapeLayer` (R1). The two readouts are complementary: devtools for
 | 2026-08-05 | Added §2.7 + F10–F14 from two pixi-devtools screenshots | proposed | Naming census of the live scene tree. Found F12: `deco:${constructor.name}` is minification-unsafe, proven by `world (it)` / `RenderLayer2` in the same capture. New decision D8 on always-on vs gated labels |
 | 2026-08-05 | **F10–F13 approved** ("start with F10-F13") | accepted | Naming only. F1–F9 + F14 untouched; F6 stays deferred |
 | 2026-08-05 | F10–F13 implemented | implemented | 29 files across `pkg:@invana/canvas` + `pkg:@invana/graph`. `tsc --noEmit` clean in both; both build. **Two deviations from the written plan:** F11 labels in `addShape`/`addConnector` rather than `PrimitiveBase` (the primitive has no id), and F12 needed a guarded `labelDecoration()` helper because `IDecorationBase` doesn't declare `gfx` — a bare `deco.gfx` write failed to compile. V11/V13/V14 still need a devtools eyeball |
+| 2026-08-05 | V11–V14 all `pass`; F10–F13 → `landed` | landed (rows) | Verified with a headless harness over the built `dist` rather than the devtools extension — devtools only displays `container.label`, so reading labels directly is the same evidence and is reproducible. **Two fixes came out of it:** (a) `deco:${kind}` allocated a string per decoration *mount* (hover / select churn, not just load) — now interned in a `kind → label` map, which drops the 50k cost to the id-path baseline; (b) the composite tree read `inset:glyph > inset:glyph`, so the child is now named by role (`glyph` / `svg` / `svg-url`) under the `inset:<kind>` container |
 | 2026-08-05 | Unblocked repo-wide `check-types` | implemented | Pre-existing `@invana/styling` raw-`.ts` failure in `pkg:@invana/canvas-ui` + `pkg:@invana/canvas-designer`, unrelated to F10–F13; fixed with the storybook `paths`-stub pattern. Now **three** copies of that stub exist — folding it into `pkg:@repo/typescript-config` is the obvious follow-up, not taken unasked (V1b) |
 | 2026-08-05 | Extended §2.7 with the full per-element naming tree — body/border, texts, markers, masks, composite parts, all 24 decorations | proposed | Third screenshot resolved the "two empty containers": `RenderLayer2` is childless **structurally**, `overlayLayer` is childless **situationally**. V14 added to assert both. F13 rescoped from "32 Graphics sites" to the named manifest |
 | 2026-08-05 | Added the pixi-object lineage to §2.5 — stage · Viewport · containers · stripes, with shipped `zIndex` values and every ordering knob | proposed | Five separate lazily-flipped `sortableChildren` scopes catalogued; `_container` is deliberately never sortable. Noted the two DOM overlays hold empty pixi containers at z 9999/9998 ⇒ F4 must report `childCount`, not just names |

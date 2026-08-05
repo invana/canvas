@@ -115,14 +115,16 @@ function renderChild(
     if (layer.fontWeight !== undefined) style.fontWeight = layer.fontWeight as never;
     if (layer.fontStyle !== undefined) style.fontStyle = layer.fontStyle;
     const t = new Text({ text: layer.char, style });
-    t.label = 'inset:glyph';
+    // Child of the `inset:<kind>` container — name it by role, not by kind, so
+    // the tree doesn't read `inset:glyph > inset:glyph`.
+    t.label = 'glyph';
     t.alpha = alpha;
     return t;
   }
 
   if (layer.kind === 'svg') {
     const g = new Graphics();
-    g.label = 'inset:svg';
+    g.label = 'svg';
     g.path(new GraphicsPath(layer.pathD));
     g.stroke({
       color,
@@ -134,7 +136,7 @@ function renderChild(
 
   // layer.kind === 'svg-url'
   const g = new Graphics();
-  g.label = 'inset:svg-url';
+  g.label = 'svg-url';
   void fetchSvgPathD(layer.url)
     .then((pathD) => {
       if (g.destroyed) return;

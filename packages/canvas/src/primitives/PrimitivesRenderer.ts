@@ -3089,8 +3089,18 @@ function decoHasSetResolution(deco: IDecorationBase<unknown>): boolean {
  */
 function labelDecoration(deco: IDecorationBase<unknown>, kind: string): void {
   const gfx = (deco as { gfx?: Container }).gfx;
-  if (gfx) gfx.label = `deco:${kind}`;
+  if (!gfx) return;
+  // Interned: decorations mount and unmount on hover / select churn, not just at
+  // load, so a template literal here would allocate a fresh string per mount.
+  // The id-based labels on shapes / connectors need no such cache — they reuse
+  // the caller's existing string.
+  let label = DECO_LABELS.get(kind);
+  if (label === undefined) DECO_LABELS.set(kind, (label = `deco:${kind}`));
+  gfx.label = label;
 }
+
+/** `kind` → `deco:<kind>`, interned for {@link labelDecoration}. */
+const DECO_LABELS = new Map<string, string>();
 
 /** AABB intersection in screen / world coords. Half-open on the far edges. */
 function rectsIntersect(
