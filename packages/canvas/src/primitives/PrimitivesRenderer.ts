@@ -31,7 +31,7 @@
  * before the Layer's container is destroyed.
  */
 
-import { Container, type FederatedPointerEvent } from 'pixi.js';
+import { Container, RenderLayer, type FederatedPointerEvent } from 'pixi.js';
 import type { Camera } from '../camera/Camera';
 import { EventEmitter } from '@invana/canvas-store';
 import { TextureRegistry } from '../textures/TextureRegistry';
@@ -355,6 +355,23 @@ export class PrimitivesRenderer {
    */
   private readonly overlayLayer: Container;
   /**
+   * The `'backdrop'` paint stripe — the one plane that renders **below**
+   * `connectorLayer`.
+   *
+   * A `RenderLayer` changes *render order only*: an attached shape keeps its
+   * logical parent (`shapeLayer`), so its transform, culling, decorations and
+   * destruction paths are untouched — nothing is reparented. That is the whole
+   * reason this is a `RenderLayer` and not a fourth `Container`, which would
+   * have needed home-band restore, decoration-lifetime and destroy-ordering
+   * care (`docs/group-frame-paint-band-plan.md`, rejected).
+   *
+   * `sortableChildren` so nested frames still order among themselves by
+   * `zIndex` — a child frame paints above its parent inside the stripe.
+   *
+   * @see `docs/render-planes-and-emphasis-plan.md` §4.1
+   */
+  private readonly backdropPlane: RenderLayer;
+  /**
    * The set {@link setRaised} currently has lifted — the renderer's mirror of
    * its own overlay, so the next call knows what to drop back.
    */
@@ -427,6 +444,12 @@ export class PrimitivesRenderer {
     this.shapeLayer.sortableChildren = true;
     this.overlayLayer = new Container();
     this.overlayLayer.sortableChildren = true;
+    // Added FIRST → the one stripe that paints below the connectors. Shapes
+    // attached to it (group frames, swimlane bands) stay children of
+    // `shapeLayer`; only their render order moves, so nothing else about them
+    // changes. Sorted, so nested frames still stack by `zIndex` inside it.
+    this.backdropPlane = new RenderLayer({ sortableChildren: true });
+    this._container.addChild(this.backdropPlane);
     this._container.addChild(this.connectorLayer);
     this._container.addChild(this.shapeLayer);
     // Added last → renders on top of both sub-layers. Holds the raised
@@ -596,9 +619,34 @@ export class PrimitivesRenderer {
     // left in place so `hitTest` can still consult it via
     // `inst.shape.getHitArea().contains(...)`.
     shape.gfx.eventMode = 'none';
+    // Enforce the plane invariant at add time: a shape declaring `'backdrop'`
+    // is attached to that stripe before its first paint, so a group frame never
+    // flashes in front of its edges on the frame it appears.
+    this.applyShapePlane(id, inst as unknown as ShapeInstance);
     // Inherit the current label-resolution LOD so a shape with internal text
     // (composite) mounts crisp instead of at base fidelity until the next tier.
     if (this.trackedLabelResolution !== null) shape.setLabelResolution?.(this.trackedLabelResolution);
+  }
+
+  /**
+   * Attach / detach one shape's gfx to the paint stripe its spec declares.
+   *
+   * Two rules, both load-bearing:
+   *
+   * 1. **A raised shape is never in the backdrop.** `setRaised` exists to float
+   *    an element above everything; leaving it attached to the stripe *below the
+   *    connectors* would silently defeat that, since the stripe wins over the
+   *    overlay parent. So a lifted shape detaches, and re-attaches when dropped
+   *    ({@link setLifted} calls back here).
+   * 2. **`detach` is unconditional.** Pixi's `RenderLayer` ignores a detach for
+   *    an object it doesn't hold, so this is safe to call on every update — no
+   *    "was it attached?" bookkeeping to drift out of sync.
+   */
+  private applyShapePlane(id: string, inst: ShapeInstance): void {
+    const gfx = inst.shape.gfx;
+    const wantsBackdrop = inst.spec.plane === 'backdrop' && !this.raisedIds.has(id);
+    if (wantsBackdrop) this.backdropPlane.attach(gfx);
+    else this.backdropPlane.detach(gfx);
   }
 
   updateShape<TSpec extends BaseShapeSpec>(id: string, partial: Partial<TSpec>): void {
@@ -606,6 +654,10 @@ export class PrimitivesRenderer {
     if (!inst) return;
     inst.spec = { ...inst.spec, ...partial };
     inst.shape.draw(inst.spec);
+    // `plane` can flip on any update — a group frame collapsing becomes an
+    // ordinary interactive node and must leave the backdrop, or it renders
+    // under the very edges it now terminates.
+    if (partial.plane !== undefined) this.applyShapePlane(id, inst as unknown as ShapeInstance);
     // Keep the hit index in step with visibility: a now-hidden shape is removed
     // (so it stops being hittable), a now-visible one is (re-)inserted. `insert`
     // handles both the "already indexed" and "was hidden" cases idempotently.
@@ -805,6 +857,15 @@ export class PrimitivesRenderer {
     const parent = lifted ? this.overlayLayer : home;
     gfx.zIndex = lifted ? (shape ? 1 : 0) : 0;
     if (gfx.parent !== parent) parent.addChild(gfx);
+    // A plane beats the parent, so reparenting alone can't lift a backdrop
+    // shape: it has to leave the stripe on the way up and rejoin it on the way
+    // down. `raisedIds` is updated by `setRaised` *around* these calls, so pass
+    // the intent explicitly rather than re-reading it here.
+    if (shape) {
+      const wantsBackdrop = !lifted && shape.spec.plane === 'backdrop';
+      if (wantsBackdrop) this.backdropPlane.attach(gfx);
+      else this.backdropPlane.detach(gfx);
+    }
   }
 
 
@@ -915,6 +976,10 @@ export class PrimitivesRenderer {
     for (const fx of inst.effects.values()) this.disposeEffect(fx);
     inst.effects.clear();
     this.hostsWithEffects.delete(inst);
+    // Leave the stripe before the gfx is destroyed — a `RenderLayer` holds its
+    // own list of attached children, and a destroyed object left in it renders
+    // as a stale entry.
+    this.backdropPlane.detach(inst.shape.gfx);
     inst.shape.destroy();
     this.hit.remove(id);
     this.movedShapeHits.delete(id);

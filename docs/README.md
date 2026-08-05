@@ -7,6 +7,24 @@ working design-of-record documents. Day-to-day API/concept docs live in
 
 > New plans/design notes go **here** (`docs/`), not at the repo root.
 
+## RFCs — one per feature or fix, written before the code
+
+- [rfcs/](./rfcs/) — **every feature request and bug fix gets a document first**, then
+  the code (root `CLAUDE.md` rule 15). `rfcs/feat/` for a new capability, `rfcs/fix/`
+  for something already shipped that behaves wrong; file name `YYYY-MM-DD-<slug>.md`,
+  slug naming the *problem* so it stays findable when the solution changes.
+  [rfcs/README.md](./rfcs/README.md) has the section list and the two standing rules
+  for the fix table (name the downstream consumers; separate the defect from the
+  dressing). The long-form `*-plan.md` docs below predate the folder and stay put —
+  they're the design of record an RFC links to rather than re-litigates.
+  - [fix/2026-08-05-group-frame-occludes-edges.md](./rfcs/fix/2026-08-05-group-frame-occludes-edges.md)
+    — 🚧 implemented 2026-08-05 (F1·F2·F3·F5 `landed`; F4·F6 `implemented`, pending V4).
+    A group frame is a shape, so it paints in `shapeLayer`, which sits
+    above every connector; `behindChildren`'s `zIndex - 1` only orders it among sibling
+    *shapes*, so the edges **between a frame's own members** are painted over. Scopes
+    the landing of the `plane` axis from `render-planes-and-emphasis-plan.md` (design
+    locked there, not here) + the blast radius across every `style.group` graph.
+
 ## Architecture
 
 - [architecture-proposal.md](./architecture-proposal.md) — target Layer / Behaviour /

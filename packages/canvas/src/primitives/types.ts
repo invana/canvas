@@ -382,12 +382,42 @@ export interface ConnectorPaintStyle {
 
 // ─── Spec types ────────────────────────────────────────────────────────────
 
+/**
+ * Ordered paint stripe. Earlier entries paint **below** later ones, and a stripe
+ * always wins over `zIndex`: `plane` picks the stripe, `zIndex` orders *within*
+ * it. Independent of the scene graph — a shape keeps its logical parent (and so
+ * its transform); only its render order moves.
+ *
+ * `'backdrop'` is the only stripe below the connectors, which is what makes a
+ * group frame able to sit under the edges between its own members — see
+ * `docs/rfcs/fix/2026-08-05-group-frame-occludes-edges.md`.
+ *
+ * @remarks
+ * The design of record (`docs/render-planes-and-emphasis-plan.md` §4.1) defines
+ * five stripes — `backdrop` · `background` · `content` · `foreground` ·
+ * `overlay`. Two are implemented: `'backdrop'` and the default `'content'`. The
+ * remaining three are served today by the renderer's built-in connector / shape
+ * / overlay ordering; widening this union later is additive.
+ */
+export type PlaneName = 'backdrop' | 'content';
+
 export interface BaseShapeSpec {
   readonly kind: string;
   readonly x: number;
   readonly y: number;
   readonly fill?: ShapeFill;
   readonly stroke?: ShapeStroke;
+  /**
+   * Which paint stripe this shape renders into. Default `'content'` — with
+   * every shape above every connector, the renderer's long-standing
+   * "nodes above edges" convention.
+   *
+   * `'backdrop'` moves the shape **below the connectors**, for scenery rather
+   * than content: a group frame, a swimlane band, a region wash. Purely visual —
+   * hit resolution still reads {@link zIndex} recorded at insert, so a backdrop
+   * shape is picked exactly as it was before.
+   */
+  readonly plane?: PlaneName;
   /** Default `0`. Higher = on top. Used for hit-test resolution. */
   readonly zIndex?: number;
   readonly alpha?: number;

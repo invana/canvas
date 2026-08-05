@@ -281,8 +281,12 @@ const CARD_CONFIG: CanvasConfig = {
       edge: {
         style: {
           strokeColor: 0x94a3b8,
-          strokeWidth: 1.2,
-          strokeAlpha: 0.4,
+          // Legible at the zoom this graph actually gets read at. 42 cards fit
+          // at ~26%, where a 1.2px line at 40% alpha is a sub-pixel smudge —
+          // the edges were marginal even over open backdrop, before the group
+          // frames were painting over them at all.
+          strokeWidth: 1.6,
+          strokeAlpha: 0.7,
           arrowTargetShape: 'triangle',
           arrowTargetSize: 5,
         },
@@ -373,7 +377,7 @@ const DOT_CONFIG: CanvasConfig = {
         },
       },
       edge: {
-        style: { strokeColor: 0x94a3b8, strokeWidth: 1.2, strokeAlpha: 0.5, arrowTargetShape: 'none' },
+        style: { strokeColor: 0x94a3b8, strokeWidth: 1.6, strokeAlpha: 0.7, arrowTargetShape: 'none' },
       },
     },
   },

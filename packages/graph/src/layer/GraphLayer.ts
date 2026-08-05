@@ -1494,8 +1494,16 @@ export class GraphLayer extends WorldLayer<
     // interactive node.
     const baseZ = (style as { zIndex?: number }).zIndex;
     let zIndex: number | undefined = baseZ;
+    // The same condition also picks the **paint plane**. `zIndex` alone can
+    // only order a frame among sibling *shapes* — the renderer paints every
+    // shape above every connector — so on its own `behindChildren` left a frame
+    // covering the edges between its own members. `'backdrop'` is the one
+    // stripe below the connectors, which is what makes the promise true.
+    // See `docs/rfcs/fix/2026-08-05-group-frame-occludes-edges.md`.
+    let plane: 'backdrop' | 'content' = 'content';
     if (group && !collapsedFrame && group.behindChildren !== false) {
       zIndex = (baseZ ?? 0) - 1;
+      plane = 'backdrop';
     }
 
     // Map the canonical `node.position` to the shape's render origin. The
@@ -1525,6 +1533,11 @@ export class GraphLayer extends WorldLayer<
       fill,
       ...(stroke ? { stroke } : {}),
       ...(zIndex !== undefined ? { zIndex } : {}),
+      // Always emit `plane` — same partial-merge reasoning as `alpha` / `fill` /
+      // `visible`. A frame that collapses stops being a backdrop, and omitting
+      // the field on that pass would leave a stale `'backdrop'` on the cached
+      // spec: a collapsed group node rendering under the edges it terminates.
+      plane,
       // Always emit `visible` — the renderer partial-merges patches onto
       // the cached spec, so omitting the field on the "now visible" pass
       // after a collapse → expand (or show) transition would leave the previous
