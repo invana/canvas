@@ -157,6 +157,8 @@ export class SelectionFrameDecoration extends ShapeDecorationBase<SelectionFrame
 
   constructor(style: SelectionFrameDecorationStyle) {
     super(style);
+    this.border.label = 'frame:border';
+    this.handlesGfx.label = 'frame:handles';
     this.gfx.addChild(this.border);
     this.gfx.addChild(this.handlesGfx);
   }

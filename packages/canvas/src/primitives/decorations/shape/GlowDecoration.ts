@@ -106,6 +106,7 @@ export class GlowDecoration extends ShapeDecorationBase<GlowDecorationStyle> {
   private syncLayerCount(n: number): void {
     while (this.layerGfx.length < n) {
       const g = new Graphics();
+      g.label = `glow:ring-${this.layerGfx.length}`;
       this.gfx.addChild(g);
       this.layerGfx.push(g);
     }

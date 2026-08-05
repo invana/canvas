@@ -77,6 +77,7 @@ export class ResizeHandleDecoration extends ShapeDecorationBase<ResizeHandleDeco
 
   constructor(style: ResizeHandleDecorationStyle) {
     super(style);
+    this.handle.label = 'resize:handle';
     this.gfx.addChild(this.handle);
   }
 

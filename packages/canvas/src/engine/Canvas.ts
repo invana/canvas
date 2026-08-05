@@ -1124,6 +1124,9 @@ export class Canvas {
     });
     viewport.label = 'world';
     this.world = viewport;
+    // Name the root so the pixi devtools scene tree reads `stage` instead of an
+    // anonymous `Container`. `initWithStage` callers may have named it already.
+    if (!stage.label) stage.label = 'stage';
     this.stage = stage;
 
     // World goes in first → bottom. ScreenLayers attach themselves to `stage`

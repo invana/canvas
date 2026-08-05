@@ -49,6 +49,10 @@ export abstract class ConnectorBase<TSpec extends BaseConnectorSpec>
     this.bodyGfx = new Graphics();
     this.sourceMarkerGfx = new Graphics();
     this.targetMarkerGfx = new Graphics();
+    // devtools scene-tree names — see `docs/rfcs/feat/2026-08-05-render-tree-not-inspectable.md` §2.7.
+    this.bodyGfx.label = 'path';
+    this.sourceMarkerGfx.label = 'marker:source';
+    this.targetMarkerGfx.label = 'marker:target';
     this.gfx.addChild(this.bodyGfx);
     this.gfx.addChild(this.sourceMarkerGfx);
     this.gfx.addChild(this.targetMarkerGfx);

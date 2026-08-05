@@ -30,6 +30,7 @@ export class RingConnectorDecoration extends ConnectorDecorationBase<RingConnect
 
   constructor(style: RingConnectorDecorationStyle) {
     super(style);
+    this.band.label = 'ring:band';
     this.gfx.addChild(this.band);
   }
 

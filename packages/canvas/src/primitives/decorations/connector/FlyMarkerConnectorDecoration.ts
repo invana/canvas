@@ -46,6 +46,11 @@ export class FlyMarkerConnectorDecoration extends ConnectorDecorationBase<FlyMar
   private markerGfx = new Graphics();
   private elapsedMs = 0;
 
+  constructor(style: FlyMarkerConnectorDecorationStyle) {
+    super(style);
+    this.markerGfx.label = 'fly:marker';
+  }
+
   /** Densified polyline of the current host path. */
   private samples: Point[] = [];
   /** Cumulative arc-length at each sample. `cumLen[i]` = distance from samples[0] to samples[i]. */

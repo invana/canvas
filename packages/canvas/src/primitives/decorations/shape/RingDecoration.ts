@@ -34,6 +34,7 @@ export class RingDecoration extends ShapeDecorationBase<RingDecorationStyle> {
 
   constructor(style: RingDecorationStyle) {
     super(style);
+    this.band.label = 'ring:band';
     this.gfx.addChild(this.band);
   }
 

@@ -308,6 +308,7 @@ export class BackgroundLayer extends ScreenLayer<
     const { width, height } = this.viewportSize();
 
     const bg = new Graphics();
+    bg.label = 'background:solid';
     bg.rect(0, 0, width, height).fill(this.resolveColor(this.opts.backgroundColor));
     this.container.addChild(bg);
 
@@ -315,6 +316,7 @@ export class BackgroundLayer extends ScreenLayer<
 
     const texture = this.createPatternTexture();
     const tiling = new TilingSprite({ texture, width, height });
+    tiling.label = 'background:pattern';
     tiling.alpha = this.opts.alpha;
     this.container.addChild(tiling);
     this.patternTexture = texture;

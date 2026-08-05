@@ -69,18 +69,22 @@ export class LiquidFillDecoration extends ShapeDecorationBase<LiquidFillDecorati
 
     if (!this.maskGfx) {
       this.maskGfx = new Graphics();
+      this.maskGfx.label = 'liquid:mask';
       this.gfx.addChild(this.maskGfx);
     }
     if (!this.fluidContainer) {
       this.fluidContainer = new Container();
+      this.fluidContainer.label = 'liquid:fluid';
       this.gfx.addChild(this.fluidContainer);
     }
     if (!this.fluidGfx) {
       this.fluidGfx = new Graphics();
+      this.fluidGfx.label = 'liquid:wave';
       this.fluidContainer.addChild(this.fluidGfx);
     }
     if (!this.highlightGfx) {
       this.highlightGfx = new Graphics();
+      this.highlightGfx.label = 'liquid:highlight';
       this.fluidContainer.addChild(this.highlightGfx);
     }
     this.fluidContainer.mask = this.maskGfx;

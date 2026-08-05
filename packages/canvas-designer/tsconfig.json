@@ -3,8 +3,15 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": ".",
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    // See `types/styling-themes-config.d.ts` — `@invana/styling` ships that
+    // subpath as raw `.ts`, so tsc type-checks the dependency's own source and
+    // fails on its latent errors. Same redirect as `packages/canvas-ui` and
+    // `apps/storybook`. Remove once the dependency ships compiled types.
+    "paths": {
+      "@invana/styling/themes.config": ["./types/styling-themes-config.d.ts"]
+    }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "types/**/*"],
   "exclude": ["node_modules", "dist"]
 }

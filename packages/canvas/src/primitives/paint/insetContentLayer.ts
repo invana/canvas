@@ -115,12 +115,14 @@ function renderChild(
     if (layer.fontWeight !== undefined) style.fontWeight = layer.fontWeight as never;
     if (layer.fontStyle !== undefined) style.fontStyle = layer.fontStyle;
     const t = new Text({ text: layer.char, style });
+    t.label = 'inset:glyph';
     t.alpha = alpha;
     return t;
   }
 
   if (layer.kind === 'svg') {
     const g = new Graphics();
+    g.label = 'inset:svg';
     g.path(new GraphicsPath(layer.pathD));
     g.stroke({
       color,
@@ -132,6 +134,7 @@ function renderChild(
 
   // layer.kind === 'svg-url'
   const g = new Graphics();
+  g.label = 'inset:svg-url';
   void fetchSvgPathD(layer.url)
     .then((pathD) => {
       if (g.destroyed) return;

@@ -102,6 +102,7 @@ export class RevealConnectorDecoration extends ConnectorDecorationBase<RevealCon
 
   constructor(style: RevealConnectorDecorationStyle) {
     super(style);
+    this.revealGfx.label = 'reveal:mask';
     this.remainingDelayMs = Math.max(0, style.delayMs ?? 0);
   }
 

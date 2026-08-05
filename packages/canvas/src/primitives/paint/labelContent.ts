@@ -27,11 +27,13 @@ export function mountLabelContent(
   if (content.kind === 'text') {
     const effectiveWrap = withDerivedMaxLines(wrap);
     const display = new Text({ text: content.text, style: textStyleFor(content, effectiveWrap) });
+    display.label = 'label:text';
     display.alpha = content.alpha ?? 1;
     applyMaxLines(display, content, effectiveWrap);
     return { display, kind: 'text' };
   }
   const display = new HTMLText({ text: htmlBodyFor(content), style: htmlStyleFor(content, wrap) });
+  display.label = 'label:text';
   display.alpha = content.alpha ?? 1;
   return { display, kind: 'html-text' };
 }

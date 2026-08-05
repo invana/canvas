@@ -21,7 +21,9 @@ export abstract class ConnectorDecorationBase<TStyle>
   constructor(style: TStyle) {
     super();
     this.style = style;
-    this.gfx.label = `deco:${this.constructor.name}`;
+    // Placeholder — overwritten with `deco:<registry kind>` on mount. See the
+    // note in `ShapeDecorationBase` on why `constructor.name` can't be used.
+    this.gfx.label = 'deco';
   }
 
   mount(host: ConnectorDecorationHostInfo): void {

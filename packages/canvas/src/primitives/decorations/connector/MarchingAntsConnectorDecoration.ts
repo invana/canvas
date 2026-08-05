@@ -36,6 +36,11 @@ export class MarchingAntsConnectorDecoration extends ConnectorDecorationBase<Mar
   private antsGfx = new Graphics();
   private elapsedMs = 0;
 
+  constructor(style: MarchingAntsConnectorDecorationStyle) {
+    super(style);
+    this.antsGfx.label = 'ants:path';
+  }
+
   protected repaint(): void {
     if (this.antsGfx.parent !== this.gfx) {
       this.gfx.addChild(this.antsGfx);

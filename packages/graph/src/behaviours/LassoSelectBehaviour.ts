@@ -163,6 +163,7 @@ export class LassoSelectBehaviour extends Behaviour {
     ctx.world.sortableChildren = true;
     ctx.world.addChild(this.overlay);
     this.gfx = new Graphics();
+    this.gfx.label = 'lasso:path';
     this.overlay.addChild(this.gfx);
 
     const el = ctx.canvasElement;

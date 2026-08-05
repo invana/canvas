@@ -199,6 +199,7 @@ export class BrushSelectBehaviour extends Behaviour {
     ctx.stage.sortableChildren = true;
     ctx.stage.addChild(this.overlay);
     this.gfx = new Graphics();
+    this.gfx.label = 'brush:rect';
     this.overlay.addChild(this.gfx);
 
     const el = ctx.canvasElement;

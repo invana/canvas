@@ -433,6 +433,11 @@ export class PrimitivesRenderer {
     // wave) is clipped visually by the overlapping shape.
     this.connectorLayer = new Container();
     this.shapeLayer = new Container();
+    // Names carried purely for the pixi devtools scene tree — four anonymous
+    // `Container` rows are indistinguishable, and the two that read as empty are
+    // empty for different reasons (see `backdropPlane` / `overlayLayer` below).
+    this.connectorLayer.label = 'paint:connectors';
+    this.shapeLayer.label = 'paint:shapes';
     // Sort each sub-layer's children by `gfx.zIndex` so a primitive can be
     // lifted above its peers within its own layer (see `setRaised`). Default
     // `zIndex` is 0, and JS `Array.sort` is stable,
@@ -443,12 +448,21 @@ export class PrimitivesRenderer {
     this.connectorLayer.sortableChildren = true;
     this.shapeLayer.sortableChildren = true;
     this.overlayLayer = new Container();
+    // Reads as childless in devtools whenever nothing is hovered / selected —
+    // that is *situational* emptiness, unlike `plane:backdrop`, which can never
+    // hold children at all.
+    this.overlayLayer.label = 'paint:overlay';
     this.overlayLayer.sortableChildren = true;
     // Added FIRST → the one stripe that paints below the connectors. Shapes
     // attached to it (group frames, swimlane bands) stay children of
     // `shapeLayer`; only their render order moves, so nothing else about them
     // changes. Sorted, so nested frames still stack by `zIndex` inside it.
     this.backdropPlane = new RenderLayer({ sortableChildren: true });
+    // Always renders childless in the devtools scene tree — a `RenderLayer` holds
+    // no children by construction (`attach` doesn't reparent), so its members
+    // stay listed under `paint:shapes`. The name is what tells a reader that the
+    // emptiness is structural, not a bug.
+    this.backdropPlane.label = 'plane:backdrop';
     this._container.addChild(this.backdropPlane);
     this._container.addChild(this.connectorLayer);
     this._container.addChild(this.shapeLayer);
@@ -601,6 +615,10 @@ export class PrimitivesRenderer {
       },
     };
     const shape = new Ctor(spec, host) as IShape<TSpec>;
+    // The element id *is* the devtools label — assigning the existing string
+    // costs one pointer, so this stays free at graph scale (a template literal
+    // would allocate one string per node).
+    shape.gfx.label = id;
     this.shapeLayer.addChild(shape.gfx);
     const inst = new ShapeInstance<TSpec>(id, spec, shape);
     this.shapeInstances.set(id, inst as unknown as ShapeInstance);
@@ -999,6 +1017,8 @@ export class PrimitivesRenderer {
       shapeRegistry: this.shapeRegistry,
     };
     const connector = new Connector(host) as unknown as IConnector<TSpec>;
+    // Same zero-allocation labelling as `addShape`.
+    connector.gfx.label = id;
     this.connectorLayer.addChild(connector.gfx);
     const inst = new ConnectorInstance<TSpec>(id, spec, connector);
     this.connectorInstances.set(id, inst as unknown as ConnectorInstance);
@@ -1246,6 +1266,7 @@ export class PrimitivesRenderer {
     if (shape) {
       const ctor = entry.ctor as ShapeDecorationCtor;
       const deco = new ctor(decoration.style);
+      labelDecoration(deco, decoration.kind);
       shape.shape.gfx.sortableChildren = true;
       // Aggregate must include the new decoration's contribution — set it
       // into the map first so `aggregateShapeOuterExtent` picks it up, then
@@ -1274,6 +1295,7 @@ export class PrimitivesRenderer {
     } else {
       const ctor = entry.ctor as ConnectorDecorationCtor;
       const deco = new ctor(decoration.style);
+      labelDecoration(deco, decoration.kind);
       connector!.connector.gfx.sortableChildren = true;
       const host: ConnectorDecorationHostInfo = {
         hostId: targetId,
@@ -3054,6 +3076,20 @@ function normalizeAnchorSpec(
  */
 function decoHasSetResolution(deco: IDecorationBase<unknown>): boolean {
   return typeof (deco as { setResolution?: unknown }).setResolution === 'function';
+}
+
+/**
+ * Name a decoration's root container for the pixi devtools scene tree, using the
+ * **registry kind** rather than `constructor.name` — class names mangle under
+ * minification, which is precisely where the devtools tree gets read.
+ *
+ * `IDecorationBase` doesn't promise a `gfx` (only the built-in `*DecorationBase`
+ * classes carry one, via `PrimitiveBase`), so this is a guarded write: a
+ * third-party decoration without one is simply left unlabelled.
+ */
+function labelDecoration(deco: IDecorationBase<unknown>, kind: string): void {
+  const gfx = (deco as { gfx?: Container }).gfx;
+  if (gfx) gfx.label = `deco:${kind}`;
 }
 
 /** AABB intersection in screen / world coords. Half-open on the far edges. */

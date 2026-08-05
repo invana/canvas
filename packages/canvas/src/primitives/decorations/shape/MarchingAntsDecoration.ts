@@ -38,6 +38,11 @@ export class MarchingAntsDecoration extends ShapeDecorationBase<MarchingAntsDeco
   private antsGfx = new Graphics();
   private elapsedMs = 0;
 
+  constructor(style: MarchingAntsDecorationStyle) {
+    super(style);
+    this.antsGfx.label = 'ants:path';
+  }
+
   protected repaint(): void {
     // One-time attach; the tick loop redraws every frame so we don't need
     // to re-emit geometry here. Just ensure the Graphics child is mounted.

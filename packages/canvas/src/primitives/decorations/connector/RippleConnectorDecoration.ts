@@ -92,6 +92,7 @@ export class RippleConnectorDecoration extends ConnectorDecorationBase<RippleCon
   private syncRingCount(n: number): void {
     while (this.ringGfx.length < n) {
       const g = new Graphics();
+      g.label = `ripple:ring-${this.ringGfx.length}`;
       this.gfx.addChild(g);
       this.ringGfx.push(g);
     }

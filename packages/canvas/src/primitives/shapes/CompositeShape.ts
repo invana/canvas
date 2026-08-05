@@ -350,6 +350,7 @@ export class CompositeShape extends ShapeBase<CompositeSpec> {
     }
     if (!this.clipMask) {
       this.clipMask = new Graphics();
+      this.clipMask.label = 'clip-mask';
       this.gfx.addChild(this.clipMask);
       this.gfx.mask = this.clipMask;
     }

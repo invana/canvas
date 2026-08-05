@@ -20,7 +20,12 @@ export abstract class ShapeDecorationBase<TStyle>
   constructor(style: TStyle) {
     super();
     this.style = style;
-    this.gfx.label = `deco:${this.constructor.name}`;
+    // Placeholder only. `PrimitivesRenderer.setDecoration` overwrites this with
+    // `deco:<registry kind>` the moment it mounts us. Deliberately NOT
+    // `constructor.name` — that mangles to a single letter under minification,
+    // so the devtools tree went unreadable in exactly the built bundles where
+    // it matters.
+    this.gfx.label = 'deco';
   }
 
   mount(host: ShapeDecorationHostInfo): void {

@@ -59,6 +59,9 @@ export abstract class ShapeBase<TSpec extends BaseShapeSpec>
     super();
     this.gfx.sortableChildren = true;
     this.bodyGfx = new Graphics();
+    // Silhouette + fill + stroke all paint here — in the devtools tree this row
+    // *is* the shape's border.
+    this.bodyGfx.label = 'body';
     this.bodyGfx.zIndex = 0;
     this.gfx.addChild(this.bodyGfx);
 

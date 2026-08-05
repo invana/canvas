@@ -105,6 +105,7 @@ export class FlowParticlesConnectorDecoration extends ConnectorDecorationBase<Fl
     const target = Math.max(1, Math.floor(this.style.count ?? 5));
     while (this.particles.length < target) {
       const g = new Graphics();
+      g.label = `flow:particle-${this.particles.length}`;
       this.gfx.addChild(g);
       this.particles.push(g);
     }

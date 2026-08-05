@@ -134,6 +134,8 @@ export class ToggleDecoration extends ShapeDecorationBase<ToggleDecorationStyle>
 
   constructor(style: ToggleDecorationStyle) {
     super(style);
+    this.button.label = 'toggle:button';
+    this.glyph.label = 'toggle:glyph';
     this.gfx.addChild(this.button);
     this.gfx.addChild(this.glyph);
   }
