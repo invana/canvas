@@ -30,7 +30,7 @@ export class PathShape extends ShapeBase<PathSpec> {
     const pts = spec.points;
     if (pts.length < 2) return;
 
-    const closed = spec.closed === true;
+    const closed = spec.closed === true || spec.smooth === true;
     const dashArray = style?.dashArray ?? spec.stroke?.dashArray;
     if (dashArray && dashArray[0] > 0 && dashArray[1] > 0) {
       emitDashedStroke(g, pts, {
@@ -45,6 +45,10 @@ export class PathShape extends ShapeBase<PathSpec> {
     }
 
     const trace = (): void => {
+      if (spec.smooth === true) {
+        traceSmoothClosed(g, pts);
+        return;
+      }
       const [first, ...rest] = pts;
       if (!first) return;
       g.moveTo(first.x, first.y);
@@ -78,4 +82,28 @@ export class PathShape extends ShapeBase<PathSpec> {
   contains(localX: number, localY: number): boolean {
     return this.spec.points.length >= 3 && pointInPolygon(localX, localY, this.spec.points);
   }
+}
+
+/**
+ * Closed quadratic spline through segment midpoints, using each input point as
+ * an off-curve control point. C¹ continuous, so a stair-stepped polyline draws
+ * as a smooth contour — the smoothing lives here, in the geometry, rather than
+ * in whoever produced the points.
+ */
+function traceSmoothClosed(g: Graphics, pts: readonly Point[]): void {
+  const n = pts.length;
+  if (n < 3) return;
+  const last = pts[n - 1]!;
+  const first = pts[0]!;
+  let mx = (last.x + first.x) * 0.5;
+  let my = (last.y + first.y) * 0.5;
+  g.moveTo(mx, my);
+  for (let i = 0; i < n; i++) {
+    const a = pts[i]!;
+    const b = pts[(i + 1) % n]!;
+    mx = (a.x + b.x) * 0.5;
+    my = (a.y + b.y) * 0.5;
+    g.quadraticCurveTo(a.x, a.y, mx, my);
+  }
+  g.closePath();
 }

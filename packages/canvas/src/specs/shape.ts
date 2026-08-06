@@ -274,4 +274,13 @@ export interface PathSpec extends BaseShapeSpec {
   readonly points: readonly Point[];
   /** Join the last point back to the first. Default `false`. */
   readonly closed?: boolean;
+  /**
+   * Treat `points` as **off-curve control points** of a closed quadratic spline
+   * through segment midpoints, rather than as straight segments. The result is
+   * C¹ continuous, so marching-squares stair-stepping renders as a smooth
+   * contour without pre-smoothing the data.
+   *
+   * Implies `closed`. Default `false`.
+   */
+  readonly smooth?: boolean;
 }
