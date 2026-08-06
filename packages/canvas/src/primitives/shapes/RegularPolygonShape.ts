@@ -3,12 +3,14 @@ import { ShapeBase } from '../base/ShapeBase';
 import { applyFill, applyMarkerFill, applyStroke } from '../paint/applyFillStroke';
 import { emitDashedStroke } from '../paint/dashedStroke';
 import {
+  boundsOfRegularPolygon,
+  containsRegularPolygon,
   offsetPolygon,
   pointInPolygon,
-  polygonBounds,
   rayPolygonIntersection,
   regularPolygonVertices,
-} from './_polyUtils';
+  scaleRegularPolygon,
+} from '../../specs/shapeGeometry';
 import type {
   Point,
   Rect,
@@ -67,14 +69,14 @@ export class RegularPolygonShape extends ShapeBase<RegularPolygonSpec> {
   }
 
   static boundsOf(spec: Omit<RegularPolygonSpec, 'x' | 'y'>): Rect {
-    return polygonBounds(regularPolygonVertices(spec.sides, spec.radius, spec.rotation ?? 0));
+    return boundsOfRegularPolygon(spec);
   }
 
   static scaleSpec(
     spec: Omit<RegularPolygonSpec, 'x' | 'y'>,
     factor: number,
   ): Partial<RegularPolygonSpec> {
-    return { radius: spec.radius * factor };
+    return scaleRegularPolygon(spec, factor);
   }
 
   /**
@@ -89,7 +91,7 @@ export class RegularPolygonShape extends ShapeBase<RegularPolygonSpec> {
   }
 
   contains(localX: number, localY: number): boolean {
-    return pointInPolygon(localX, localY, computeVertices(this.spec, 0));
+    return containsRegularPolygon(this.spec, localX, localY);
   }
 
   override boundaryIntersect(localFromCenter: Point): Point | null {

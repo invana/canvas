@@ -1,4 +1,5 @@
 import type { Graphics } from 'pixi.js';
+import { boundsOfArc, containsArc, scaleArc } from '../../specs/shapeGeometry';
 import { ShapeBase } from '../base/ShapeBase';
 import { applyFill, applyStroke } from '../paint/applyFillStroke';
 import { emitDashedStroke } from '../paint/dashedStroke';
@@ -81,11 +82,11 @@ export class ArcShape extends ShapeBase<ArcSpec> {
   }
 
   static boundsOf(spec: Omit<ArcSpec, 'x' | 'y'>): Rect {
-    return arcBounds(spec.innerR, spec.outerR, spec.startAngle, spec.endAngle);
+    return boundsOfArc(spec);
   }
 
   static scaleSpec(spec: Omit<ArcSpec, 'x' | 'y'>, factor: number): Partial<ArcSpec> {
-    return { innerR: spec.innerR * factor, outerR: spec.outerR * factor };
+    return scaleArc(spec, factor);
   }
 
   /**
@@ -104,14 +105,7 @@ export class ArcShape extends ShapeBase<ArcSpec> {
   }
 
   contains(localX: number, localY: number): boolean {
-    return pointInArc(
-      localX,
-      localY,
-      this.spec.innerR,
-      this.spec.outerR,
-      this.spec.startAngle,
-      this.spec.endAngle,
-    );
+    return containsArc(this.spec, localX, localY);
   }
 }
 
@@ -204,76 +198,3 @@ function sampleArcOutline(
   return out;
 }
 
-/**
- * Axis-aligned bounding box for an annular sector. The extreme points are
- * either on the four sector corners (a0/inner, a0/outer, a1/inner, a1/outer)
- * or at the cardinal angles (0, π/2, π, 3π/2) on the outer radius if those
- * angles fall inside the sweep — those produce the (±outerR, 0) / (0, ±outerR)
- * extents.
- */
-function arcBounds(innerR: number, outerR: number, a0: number, a1: number): Rect {
-  if (a1 <= a0 || outerR <= 0) return { x: 0, y: 0, width: 0, height: 0 };
-
-  // Corners always contribute.
-  const corners: Point[] = [
-    { x: Math.cos(a0) * innerR, y: Math.sin(a0) * innerR },
-    { x: Math.cos(a0) * outerR, y: Math.sin(a0) * outerR },
-    { x: Math.cos(a1) * innerR, y: Math.sin(a1) * innerR },
-    { x: Math.cos(a1) * outerR, y: Math.sin(a1) * outerR },
-  ];
-
-  // Add the cardinal-angle extents on the outer radius if the sweep crosses
-  // them. Normalise everything into a single circle's worth of revolutions so
-  // sweeps that wrap past 2π still pick up all four cardinals.
-  const sweep = a1 - a0;
-  for (const k of [0, 1, 2, 3]) {
-    const cardinal = (k * Math.PI) / 2;
-    // First multiple of 2π that lands `cardinal` at or after a0.
-    let n = Math.ceil((a0 - cardinal) / TAU);
-    if (cardinal + n * TAU < a0) n++;
-    const angle = cardinal + n * TAU;
-    if (angle <= a1 || sweep >= TAU) {
-      corners.push({ x: Math.cos(angle) * outerR, y: Math.sin(angle) * outerR });
-    }
-  }
-
-  let minX = corners[0]!.x;
-  let maxX = minX;
-  let minY = corners[0]!.y;
-  let maxY = minY;
-  for (let i = 1; i < corners.length; i++) {
-    const p = corners[i]!;
-    if (p.x < minX) minX = p.x;
-    else if (p.x > maxX) maxX = p.x;
-    if (p.y < minY) minY = p.y;
-    else if (p.y > maxY) maxY = p.y;
-  }
-  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
-}
-
-/**
- * Exact analytical point-in-annular-sector test. Splits the test into a
- * radial check (innerR ≤ r ≤ outerR) and an angular check (θ falls within
- * the sweep, modulo 2π). Cheap and pixel-tight — preferred over a polygon
- * approximation when the sweep is large.
- */
-function pointInArc(
-  localX: number,
-  localY: number,
-  innerR: number,
-  outerR: number,
-  a0: number,
-  a1: number,
-): boolean {
-  const r2 = localX * localX + localY * localY;
-  if (r2 < innerR * innerR || r2 > outerR * outerR) return false;
-  if (a1 - a0 >= TAU) return true;
-
-  // Bring θ into the same revolution as a0 so the comparison is unambiguous
-  // across the 2π wrap (e.g. sweep from 3π/2 to 5π/2 hitting θ ≈ 0.1).
-  const theta = Math.atan2(localY, localX);
-  let n = Math.ceil((a0 - theta) / TAU);
-  if (theta + n * TAU < a0) n++;
-  const t = theta + n * TAU;
-  return t >= a0 && t <= a1;
-}

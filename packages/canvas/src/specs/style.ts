@@ -134,6 +134,36 @@ export type ShapeFill =
   | ShapeFillLayer
   | ReadonlyArray<ShapeFillLayer>;
 
+/**
+ * The **inset-content** half of {@link ShapeFillLayer} — the layer kinds a
+ * backend mounts *inside* the silhouette as a child rather than painting
+ * *into* it. Named here (not only where it is mounted) because it is part of
+ * the vocabulary: a `CompositePart` of kind `'icon'` carries one, so the spec
+ * types must be able to reference it without reaching into a renderer.
+ */
+export type InsetFillLayer = Extract<
+  ShapeFillLayer,
+  { kind: 'glyph' | 'svg' | 'svg-url' }
+>;
+
+/**
+ * Does this fill paint the **silhouette** — i.e. would a backend emit a fill
+ * for it? True for the `number` shorthand and for any `solid` / `image` layer;
+ * false for `undefined` and for a fill made only of inset content
+ * ({@link InsetFillLayer}), which mounts a child instead of filling.
+ *
+ * Load-bearing for hit-testing: a shape with no silhouette fill is **hollow**
+ * — only its stroke band answers a containment test, exactly as pixi's
+ * `Graphics.containsPoint` behaves (it consults a `fill` instruction that was
+ * never emitted). See `containsSpec` in `specs/shapeGeometry/`.
+ */
+export function hasSilhouetteFill(fill: ShapeFill | undefined): boolean {
+  if (fill === undefined) return false;
+  if (typeof fill === 'number') return true;
+  const layers = Array.isArray(fill) ? fill : [fill as ShapeFillLayer];
+  return layers.some((l) => l.kind === 'solid' || l.kind === 'image');
+}
+
 // ─── Stroke (border) ───────────────────────────────────────────────────────
 
 export interface ShapeStroke {

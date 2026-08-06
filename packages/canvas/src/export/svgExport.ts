@@ -49,8 +49,8 @@ import type {
   ConnectorLabelStyle,
   LabelContent,
 } from '../primitives/types';
-import type { CompositeSpec, CompositePart } from '../primitives/shapes/CompositeShape';
-import { tabbedRectOutline, tabbedRectFoldLine } from '../primitives/shapes/TabbedRectShape';
+import type { CompositeSpec, CompositePart } from '../specs';
+import { tabbedRectOutline, tabbedRectFoldLine } from '../specs/shapeGeometry';
 import { hexToCss, resolveExportBackground, captureRect, type ExportArea } from './shared';
 
 /** Options for {@link Canvas.exportSVG} (a subset of the raster options). */

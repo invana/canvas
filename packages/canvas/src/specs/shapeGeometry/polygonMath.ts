@@ -1,14 +1,21 @@
 /**
- * Polygon math helpers shared by `PolygonShape`, `RegularPolygonShape`, and
- * `StarShape`. Pure functions, no `pixi.js` imports — everything operates on
- * plain `{x, y}` vertex arrays in shape-local space.
+ * Polygon maths shared by every spec kind whose silhouette is (or densifies
+ * to) a closed vertex ring — `polygon`, `regular-polygon`, `star`,
+ * `tabbed-rect`, `path`, and the sampled `arc` fallback.
+ *
+ * Pure functions over plain `{x, y}` arrays in shape-local space. No drawing
+ * library, and nothing from `primitives/` — this file is what lets picking and
+ * bounds be answered with no GPU (see `docs/renderer-split-design.md` §4.5,
+ * "what stays engine-side").
  *
  * Convention: all vertex arrays here are **centre-relative** — the silhouette
  * is traced around the origin so that `boundaryIntersect` (which receives
- * centre-relative input) works without an extra translation step.
+ * centre-relative input) works without an extra translation step. The one
+ * exception is `tabbed-rect`, whose outline is AABB-origin-relative; it says so
+ * at its own call sites.
  */
 
-import type { Point, Rect } from '../types';
+import type { Point, Rect } from '../geometry';
 
 /** Tight axis-aligned bounding box around the vertex list. */
 export function polygonBounds(vertices: ReadonlyArray<Point>): Rect {
@@ -51,6 +58,82 @@ export function pointInPolygon(
   return inside;
 }
 
+/** Squared distance from `(px, py)` to the segment `(x1, y1) → (x2, y2)`. */
+export function distanceToSegmentSq(
+  px: number,
+  py: number,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+): number {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const lenSq = dx * dx + dy * dy;
+  // Degenerate segment (both endpoints coincide) — fall back to point distance.
+  let t = lenSq === 0 ? 0 : ((px - x1) * dx + (py - y1) * dy) / lenSq;
+  t = t < 0 ? 0 : t > 1 ? 1 : t;
+  const ex = x1 + t * dx - px;
+  const ey = y1 + t * dy - py;
+  return ex * ex + ey * ey;
+}
+
+/**
+ * Squared distance from `(x, y)` to the nearest **edge** of a vertex ring.
+ * `closed` includes the wrap-around edge (last → first); an open run omits it,
+ * which is what a `path` spec with `closed: false` draws.
+ */
+export function distanceToOutlineSq(
+  x: number,
+  y: number,
+  vertices: ReadonlyArray<Point>,
+  closed = true,
+): number {
+  const n = vertices.length;
+  if (n === 0) return Infinity;
+  if (n === 1) {
+    const v = vertices[0]!;
+    return (x - v.x) * (x - v.x) + (y - v.y) * (y - v.y);
+  }
+  const edges = closed ? n : n - 1;
+  let best = Infinity;
+  for (let i = 0; i < edges; i++) {
+    const a = vertices[i]!;
+    const b = vertices[(i + 1) % n]!;
+    const d = distanceToSegmentSq(x, y, a.x, a.y, b.x, b.y);
+    if (d < best) best = d;
+  }
+  return best;
+}
+
+/**
+ * Containment against a vertex ring **grown (or shrunk) by `pad`**.
+ *
+ * - `pad > 0` — inside the ring *or* within `pad` of its outline. This is the
+ *   region a centred stroke of half-width `pad` covers, and it is exactly the
+ *   union pixi's `Graphics.containsPoint` reports for a filled + stroked
+ *   polygon (`Polygon.contains` ∪ `Polygon.strokeContains`).
+ * - `pad < 0` — inside the ring *and* further than `|pad|` from its outline:
+ *   the silhouette eroded inward, used to punch the hole out of a
+ *   fill-less shape so only its stroke band answers `true`.
+ *
+ * The offset is a true distance offset (round joins at convex corners), not a
+ * miter offset, so a spike's tip grows by `pad` rather than by `pad / sin(θ/2)`
+ * — the same approximation pixi makes.
+ */
+export function polygonContainsInflated(
+  x: number,
+  y: number,
+  vertices: ReadonlyArray<Point>,
+  pad = 0,
+  closed = true,
+): boolean {
+  const inside = closed && pointInPolygon(x, y, vertices);
+  if (pad === 0) return inside;
+  const nearOutline = distanceToOutlineSq(x, y, vertices, closed) <= pad * pad;
+  return pad > 0 ? inside || nearOutline : inside && !nearOutline;
+}
+
 /**
  * Parallel-offset a closed polygon by `distance` along each edge's inward
  * normal. Positive `distance` shrinks (inset); negative grows (outset).
@@ -59,8 +142,8 @@ export function pointInPolygon(
  * normals, scaled so the perpendicular offset along the edges equals
  * `distance`. Sufficient for convex and mildly concave silhouettes — the
  * regular-polygon and star convenience kinds always produce well-behaved
- * shapes, free-form `PolygonShape` insets are best-effort and may
- * self-intersect at extreme concavities.
+ * shapes, free-form polygon insets are best-effort and may self-intersect at
+ * extreme concavities.
  */
 export function offsetPolygon(
   vertices: ReadonlyArray<Point>,
@@ -215,7 +298,7 @@ export interface RoundedCorner extends Point {
  * half of either adjacent edge, so authored radii larger than the geometry
  * degrade gracefully instead of self-intersecting. Arcs are sampled at
  * roughly one vertex per 2 px of arc length (min 2 segments), matching the
- * density `sampleRectOutline` uses for rounded rects.
+ * density the rounded-rect outline sampler uses.
  *
  * Output winds in the same direction as the input ring, starting at the
  * first corner (or the start of its fillet when it has one).

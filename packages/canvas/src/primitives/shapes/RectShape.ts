@@ -1,4 +1,5 @@
 import type { Graphics } from 'pixi.js';
+import { boundsOfRect, containsRect, scaleRect } from '../../specs/shapeGeometry';
 import { ShapeBase } from '../base/ShapeBase';
 import { applyFill, applyMarkerFill, applyStroke } from '../paint/applyFillStroke';
 import { emitDashedStroke } from '../paint/dashedStroke';
@@ -61,22 +62,16 @@ export class RectShape extends ShapeBase<RectSpec> {
   }
 
   static boundsOf(spec: Omit<RectSpec, 'x' | 'y'>): Rect {
-    return { x: 0, y: 0, width: spec.width, height: spec.height };
+    return boundsOfRect(spec);
   }
 
   static scaleSpec(spec: Omit<RectSpec, 'x' | 'y'>, factor: number): Partial<RectSpec> {
-    return {
-      width: spec.width * factor,
-      height: spec.height * factor,
-      ...(spec.cornerRadius !== undefined ? { cornerRadius: spec.cornerRadius * factor } : {}),
-    };
+    return scaleRect(spec, factor);
   }
 
+  /** Rounded corners are honoured — the fillet is cut out of the box, not ignored. */
   contains(localX: number, localY: number): boolean {
-    return (
-      localX >= 0 && localY >= 0 &&
-      localX <= this.spec.width && localY <= this.spec.height
-    );
+    return containsRect(this.spec, localX, localY);
   }
 
   /**

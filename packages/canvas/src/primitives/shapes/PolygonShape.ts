@@ -3,11 +3,13 @@ import { ShapeBase } from '../base/ShapeBase';
 import { applyFill, applyMarkerFill, applyStroke } from '../paint/applyFillStroke';
 import { emitDashedStroke } from '../paint/dashedStroke';
 import {
+  boundsOfPolygon,
+  containsPolygon,
   offsetPolygon,
   pointInPolygon,
-  polygonBounds,
   rayPolygonIntersection,
-} from './_polyUtils';
+  scalePolygon,
+} from '../../specs/shapeGeometry';
 import type {
   Point,
   PolygonSpec,
@@ -62,11 +64,11 @@ export class PolygonShape extends ShapeBase<PolygonSpec> {
   }
 
   static boundsOf(spec: Omit<PolygonSpec, 'x' | 'y'>): Rect {
-    return polygonBounds(spec.vertices);
+    return boundsOfPolygon(spec);
   }
 
   static scaleSpec(spec: Omit<PolygonSpec, 'x' | 'y'>, factor: number): Partial<PolygonSpec> {
-    return { vertices: spec.vertices.map((v) => ({ x: v.x * factor, y: v.y * factor })) };
+    return scalePolygon(spec, factor);
   }
 
   /**
@@ -81,7 +83,7 @@ export class PolygonShape extends ShapeBase<PolygonSpec> {
   }
 
   contains(localX: number, localY: number): boolean {
-    return pointInPolygon(localX, localY, this.spec.vertices);
+    return containsPolygon(this.spec, localX, localY);
   }
 
   /**

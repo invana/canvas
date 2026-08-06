@@ -44,6 +44,7 @@ import { EllipseShape } from './shapes/EllipseShape';
 import { RectShape } from './shapes/RectShape';
 import { TabbedRectShape } from './shapes/TabbedRectShape';
 import { connectorGeometryKey } from '../specs/geometry';
+import { containsSpec } from '../specs/shapeGeometry';
 import { PathShape } from './shapes/PathShape';
 import { PolygonShape } from './shapes/PolygonShape';
 import { RegularPolygonShape } from './shapes/RegularPolygonShape';
@@ -650,9 +651,10 @@ export class PrimitivesRenderer {
     // pointer router (see `installPointerRouter`) handles hit-routing
     // via `hitTest`. Disabling `eventMode` on the gfx skips Pixi's
     // per-shape hit-test walk on every pointer event (the perf win on
-    // dense graphs); the geometric `hitArea` set by `ShapeBase` is
-    // left in place so `hitTest` can still consult it via
-    // `inst.shape.getHitArea().contains(...)`.
+    // dense graphs). `hitTest`'s narrow phase answers from the spec
+    // ({@link shapeContainsLocal}); the geometric `hitArea` set by
+    // `ShapeBase` is left in place as the fallback for custom shape kinds
+    // the spec geometry doesn't know.
     shape.gfx.eventMode = 'none';
     // Enforce the plane invariant at add time: a shape declaring `'backdrop'`
     // is attached to that stripe before its first paint, so a group frame never
@@ -1972,7 +1974,7 @@ export class PrimitivesRenderer {
       // `contains` — otherwise a 5×-scaled shape whose visible
       // silhouette covers the cursor reports `false`.
       const s = inst.gfxScale || 1;
-      const exact = inst.shape.getHitArea().contains(dx / s, dy / s);
+      const exact = this.shapeContainsLocal(inst, dx / s, dy / s);
       return { exact, distSq };
     }
     const inst = this.connectorInstances.get(id);
@@ -1981,6 +1983,26 @@ export class PrimitivesRenderer {
     const distSq = distanceToPolylineSq(poly, worldX, worldY);
     const exact = distSq <= this.connectorHitToleranceSq(inst);
     return { exact, distSq };
+  }
+
+  /**
+   * Narrow-phase containment for one shape, in its **local** frame.
+   *
+   * Answered from the **spec** ({@link containsSpec}) — pure geometry, no
+   * display object consulted — so picking is identical across backends and
+   * works with no GPU (`docs/renderer-split-design.md` §4.5). A spec kind the
+   * engine has no geometry for is necessarily a `registerShape` custom kind;
+   * those still fall back to asking the instance for its `hitArea`, which is
+   * the only thing that knows their silhouette.
+   */
+  private shapeContainsLocal(
+    inst: ShapeInstance,
+    localX: number,
+    localY: number,
+  ): boolean {
+    const exact = containsSpec(inst.spec, localX, localY);
+    if (exact !== undefined) return exact;
+    return inst.shape.getHitArea().contains(localX, localY);
   }
 
   /** {@link hoverHysteresisPx} in world units at the current camera scale. */
@@ -2047,7 +2069,7 @@ export class PrimitivesRenderer {
         const distSq = dx * dx + dy * dy;
         if (distSq <= incidenceSq) nearbyCentres.push({ x: inst.spec.x, y: inst.spec.y });
         const s = inst.gfxScale || 1;
-        if (inst.shape.getHitArea().contains(dx / s, dy / s)) {
+        if (this.shapeContainsLocal(inst, dx / s, dy / s)) {
           const bestKindRank = bestExact && bestExact.kind === 'shape' ? 1 : 0;
           if (
             bestExact === null ||

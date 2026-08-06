@@ -1,4 +1,5 @@
 import type { Graphics } from 'pixi.js';
+import { boundsOfCircle, containsCircle, scaleCircle } from '../../specs/shapeGeometry';
 import { ShapeBase } from '../base/ShapeBase';
 import { applyFill, applyMarkerFill, applyStroke } from '../paint/applyFillStroke';
 import { emitDashedStroke } from '../paint/dashedStroke';
@@ -63,17 +64,15 @@ export class CircleShape extends ShapeBase<CircleSpec> {
   }
 
   static boundsOf(spec: Omit<CircleSpec, 'x' | 'y'>): Rect {
-    const r = spec.radius;
-    return { x: -r, y: -r, width: r * 2, height: r * 2 };
+    return boundsOfCircle(spec);
   }
 
   static scaleSpec(spec: Omit<CircleSpec, 'x' | 'y'>, factor: number): Partial<CircleSpec> {
-    return { radius: spec.radius * factor };
+    return scaleCircle(spec, factor);
   }
 
   contains(localX: number, localY: number): boolean {
-    const r = this.spec.radius;
-    return localX * localX + localY * localY <= r * r;
+    return containsCircle(this.spec, localX, localY);
   }
 
   /**

@@ -2,7 +2,7 @@ import type { Graphics } from 'pixi.js';
 import { ShapeBase } from '../base/ShapeBase';
 import { applyFill, applyStroke } from '../paint/applyFillStroke';
 import { emitDashedStroke } from '../paint/dashedStroke';
-import { pointInPolygon, polygonBounds } from './_polyUtils';
+import { boundsOfPath, containsPath, scalePath } from '../../specs/shapeGeometry';
 import type { PathSpec, Point, Rect, ShapeHostInfo, ShapePaintStyle } from '../types';
 
 /**
@@ -15,8 +15,9 @@ import type { PathSpec, Point, Rect, ShapeHostInfo, ShapePaintStyle } from '../t
  * geometry needs — density-contour bands, bubble-set hulls, region outlines —
  * where the producer emits a point list rather than a parameterised silhouette.
  *
- * Hit-testing treats an open path as its closed polygon, which is the useful
- * answer for a filled hull and a harmless approximation for a thin outline.
+ * Hit-testing follows what is painted: a closed run has an interior to hit, an
+ * open one answers only along its stroke — a fill is emitted only when closed,
+ * so the two agree by construction.
  */
 export class PathShape extends ShapeBase<PathSpec> {
   static readonly kind = 'path';
@@ -67,11 +68,11 @@ export class PathShape extends ShapeBase<PathSpec> {
   }
 
   static boundsOf(spec: Omit<PathSpec, 'x' | 'y'>): Rect {
-    return polygonBounds(spec.points);
+    return boundsOfPath(spec);
   }
 
   static scaleSpec(spec: Omit<PathSpec, 'x' | 'y'>, factor: number): Partial<PathSpec> {
-    return { points: spec.points.map((p) => ({ x: p.x * factor, y: p.y * factor })) };
+    return scalePath(spec, factor);
   }
 
   /** Points are authored centre-relative, so the local origin is the centre. */
@@ -80,7 +81,7 @@ export class PathShape extends ShapeBase<PathSpec> {
   }
 
   contains(localX: number, localY: number): boolean {
-    return this.spec.points.length >= 3 && pointInPolygon(localX, localY, this.spec.points);
+    return containsPath(this.spec, localX, localY);
   }
 }
 

@@ -1,4 +1,5 @@
 import type { Graphics } from 'pixi.js';
+import { boundsOfEllipse, containsEllipse, scaleEllipse } from '../../specs/shapeGeometry';
 import { ShapeBase } from '../base/ShapeBase';
 import { applyFill, applyMarkerFill, applyStroke } from '../paint/applyFillStroke';
 import { emitDashedStroke } from '../paint/dashedStroke';
@@ -58,19 +59,15 @@ export class EllipseShape extends ShapeBase<EllipseSpec> {
   }
 
   static boundsOf(spec: Omit<EllipseSpec, 'x' | 'y'>): Rect {
-    return { x: -spec.radiusX, y: -spec.radiusY, width: spec.radiusX * 2, height: spec.radiusY * 2 };
+    return boundsOfEllipse(spec);
   }
 
   static scaleSpec(spec: Omit<EllipseSpec, 'x' | 'y'>, factor: number): Partial<EllipseSpec> {
-    return { radiusX: spec.radiusX * factor, radiusY: spec.radiusY * factor };
+    return scaleEllipse(spec, factor);
   }
 
   contains(localX: number, localY: number): boolean {
-    const { radiusX: rx, radiusY: ry } = this.spec;
-    if (rx <= 0 || ry <= 0) return false;
-    const nx = localX / rx;
-    const ny = localY / ry;
-    return nx * nx + ny * ny <= 1;
+    return containsEllipse(this.spec, localX, localY);
   }
 
   /**

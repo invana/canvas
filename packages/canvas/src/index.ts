@@ -40,6 +40,36 @@ export {
   type CanvasView,
 } from '@invana/canvas-store';
 
+// ─── Spec geometry (P4) ──────────────────────────────────────────────────────
+// Picking and bounds computed from a spec, with no backend involved — which is
+// what makes hit-testing headlessly testable and identical across renderers.
+export {
+  containsSpec,
+  boundsOfSpec,
+  scaleSpec,
+  collapsedSpec,
+  fitSpecToContent,
+  strokeBandOf,
+  tabbedRectOutline,
+  tabbedRectFoldLine,
+} from './specs/shapeGeometry';
+// Lives with the fill vocabulary rather than the geometry — a spec with no
+// silhouette fill is hollow, and picking honours that.
+export { hasSilhouetteFill } from './specs/style';
+export type { ShapeSpec } from './specs';
+
+// ─── Gesture arbitration (P5) ────────────────────────────────────────────────
+// One gesture owns the pointer at a time; camera behaviours yield to it. This
+// replaces behaviours reaching into pixi-viewport's plugin registry to pause it.
+export { DefaultGestureArbiter } from './input/GestureArbiter';
+export type { GestureArbiter, GestureClaimOptions } from './input/GestureArbiter';
+export type {
+  CameraInputConfig,
+  CameraInputModifier,
+  WheelInputOptions,
+  PinchInputOptions,
+} from './camera/Camera';
+
 // ─── Transient overlays (P3) ─────────────────────────────────────────────────
 // Immediate-mode drawing for gesture visuals that must never become state.
 export type { IOverlayDevice, OverlayFill, OverlayFillLike, OverlayStroke, OverlaySpace } from './renderer/IOverlayDevice';

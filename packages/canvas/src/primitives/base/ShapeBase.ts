@@ -81,6 +81,12 @@ export abstract class ShapeBase<TSpec extends BaseShapeSpec>
   /**
    * Hit-test region for this shape, derived from {@link drawGeometry}.
    *
+   * **No longer the picking path for built-in kinds** — `hitTest`'s narrow
+   * phase answers from the spec (`containsSpec` in `specs/shapeGeometry/`), so
+   * picking needs no display object and both backends agree. This stays as the
+   * pixi `gfx.hitArea` wiring, and as the fallback for `registerShape` kinds
+   * the spec geometry has never heard of.
+   *
    * Default behaviour: the returned `IHitArea`'s `contains(x, y)` delegates
    * to `bodyGfx.containsPoint({ x, y })`. Because `drawGeometry` is the
    * single function that paints the silhouette into `bodyGfx` (see

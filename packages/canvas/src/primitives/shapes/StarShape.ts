@@ -3,12 +3,14 @@ import { ShapeBase } from '../base/ShapeBase';
 import { applyFill, applyMarkerFill, applyStroke } from '../paint/applyFillStroke';
 import { emitDashedStroke } from '../paint/dashedStroke';
 import {
+  boundsOfStar,
+  containsStar,
   offsetPolygon,
   pointInPolygon,
-  polygonBounds,
   rayPolygonIntersection,
+  scaleStar,
   starVertices,
-} from './_polyUtils';
+} from '../../specs/shapeGeometry';
 import type {
   Point,
   Rect,
@@ -65,16 +67,11 @@ export class StarShape extends ShapeBase<StarSpec> {
   }
 
   static boundsOf(spec: Omit<StarSpec, 'x' | 'y'>): Rect {
-    return polygonBounds(
-      starVertices(spec.points, spec.innerRadius, spec.outerRadius, spec.rotation ?? 0),
-    );
+    return boundsOfStar(spec);
   }
 
   static scaleSpec(spec: Omit<StarSpec, 'x' | 'y'>, factor: number): Partial<StarSpec> {
-    return {
-      innerRadius: spec.innerRadius * factor,
-      outerRadius: spec.outerRadius * factor,
-    };
+    return scaleStar(spec, factor);
   }
 
   /**
@@ -89,7 +86,7 @@ export class StarShape extends ShapeBase<StarSpec> {
   }
 
   contains(localX: number, localY: number): boolean {
-    return pointInPolygon(localX, localY, computeVertices(this.spec, 0));
+    return containsStar(this.spec, localX, localY);
   }
 
   override boundaryIntersect(localFromCenter: Point): Point | null {

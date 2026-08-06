@@ -17,13 +17,13 @@ import {
   mountInsetContent,
   updateInsetContent,
   destroyInsetContent,
-  type InsetLayer,
   type InsetContentView,
 } from '../paint/insetContentLayer';
 import type {
   ArcSpec,
-  BaseShapeSpec,
   CircleSpec,
+  CompositeRootSpec,
+  CompositeSpec,
   EllipseSpec,
   PolygonSpec,
   Rect,
@@ -33,121 +33,17 @@ import type {
   ShapePaintStyle,
   StarSpec,
 } from '../types';
+import { boundsOfComposite, resolveCompositeRoot } from '../../specs/shapeGeometry';
 
-/** Solid stroke for a {@link CompositePart}. */
-interface PartStroke {
-  readonly color: number;
-  readonly width?: number;
-  readonly alpha?: number;
-}
-
-/** Solid fill + optional stroke shared by the geometric part kinds. */
-interface PartFill {
-  readonly fill?: number;
-  readonly fillAlpha?: number;
-  readonly stroke?: PartStroke;
-}
-
-/**
- * A child element of a {@link CompositeShape}, positioned at a coordinate
- * relative to the composite's top-left origin.
- *
- * - `'rect'` / `'circle'` / `'line'` — geometry traced into the shared body
- *   `Graphics`. Fill/stroke are solid colours (the simple sugar fields here);
- *   for gradient / image / dashed paint, compose dedicated shapes instead.
- * - `'label'` — a text block mounted as a Pixi text child. `anchor` picks
- *   which horizontal edge of the measured block lands at `x` (default left);
- *   `maxWidth` enables word-wrap, `maxLines` + `overflow` drive ellipsis.
- * - `'icon'` — a small vector inset (icon-font `glyph` / `svg` / `svg-url`)
- *   mounted into a `size × size` box at `(x, y)`, reusing the engine's
- *   {@link InsetLayer} vocabulary. An optional `background` traces a chip
- *   (e.g. a coloured rounded square) behind the glyph — the type-tag look.
- *
- * `rect` / `circle` / `icon` parts may carry a `hitId` to become an addressable
- * **sub-part**: {@link CompositeShape.hitTestPart} reports the topmost `hitId`
- * under a point, which the renderer turns into `shape:partover` / `shape:partout`
- * events (e.g. per-row hover on a table card). A transparent full-row `rect`
- * with a `hitId` is the idiomatic way to make a whole row hoverable.
- */
-export type CompositePart =
-  | ({
-      readonly part: 'rect';
-      readonly x: number;
-      readonly y: number;
-      readonly width: number;
-      readonly height: number;
-      readonly cornerRadius?: number;
-      /** Marks this rect as an addressable sub-part for {@link CompositeShape.hitTestPart}. */
-      readonly hitId?: string;
-    } & PartFill)
-  | ({
-      readonly part: 'circle';
-      readonly x: number;
-      readonly y: number;
-      readonly radius: number;
-      /** Marks this circle as an addressable sub-part for {@link CompositeShape.hitTestPart}. */
-      readonly hitId?: string;
-    } & PartFill)
-  | {
-      readonly part: 'line';
-      readonly x: number;
-      readonly y: number;
-      readonly x2: number;
-      readonly y2: number;
-      readonly stroke: PartStroke;
-    }
-  | {
-      readonly part: 'label';
-      readonly x: number;
-      readonly y: number;
-      readonly text: string;
-      /** Horizontal anchor of the text block at `(x, y)`. Default `'left'`. */
-      readonly anchor?: 'left' | 'center' | 'right';
-      readonly fontSize?: number;
-      readonly fontWeight?: number | string;
-      readonly fontStyle?: 'normal' | 'italic';
-      readonly fontVariant?: 'normal' | 'small-caps';
-      readonly fill?: number;
-      readonly lineHeight?: number;
-      readonly align?: 'left' | 'center' | 'right';
-      readonly maxWidth?: number;
-      readonly maxLines?: number;
-      readonly overflow?: 'clip' | 'ellipsis';
-    }
-  | {
-      readonly part: 'icon';
-      readonly x: number;
-      readonly y: number;
-      /** Side of the square box the icon is mounted into; the glyph scales to fit. */
-      readonly size: number;
-      /** Icon content — the engine's inset vocabulary (glyph / svg / svg-url). */
-      readonly icon: InsetLayer;
-      /** Optional chip traced behind the glyph (the coloured type-tag square). */
-      readonly background?: {
-        readonly fill: number;
-        readonly fillAlpha?: number;
-        readonly cornerRadius?: number;
-      };
-      /** Marks this icon's box as an addressable sub-part for {@link CompositeShape.hitTestPart}. */
-      readonly hitId?: string;
-    };
-
-/**
- * The composite's **root** (background) shape — an ordinary shape spec the
- * composite borrows for its silhouette. The composite doesn't re-implement any
- * geometry: it builds a real {@link RectShape} / {@link CircleShape} / … and
- * delegates fill, stroke, hit-testing and every decoration to it. So a card can
- * be a rect, circle, polygon, etc. just by changing this. `x`/`y` are ignored —
- * the composite centres the root in its `width × height` box.
- */
-export type CompositeRootSpec =
-  | RectSpec
-  | CircleSpec
-  | EllipseSpec
-  | PolygonSpec
-  | RegularPolygonSpec
-  | StarSpec
-  | ArcSpec;
+// The composite's spec vocabulary lives in `specs/` — it is a description, not
+// drawing. Re-exported here so the long-standing import path keeps working.
+export type {
+  CompositePart,
+  CompositePartFill,
+  CompositePartStroke,
+  CompositeRootSpec,
+  CompositeSpec,
+} from '../../specs';
 
 /** Factory per root kind — composite borrows the real shape, no geometry copied. */
 const ROOT_CTORS: Record<
@@ -163,37 +59,6 @@ const ROOT_CTORS: Record<
   star: (s, h) => new StarShape(s as StarSpec, h) as unknown as ShapeBase<CompositeRootSpec>,
   arc: (s, h) => new ArcShape(s as ArcSpec, h) as unknown as ShapeBase<CompositeRootSpec>,
 };
-
-/**
- * Spec for a {@link CompositeShape}. The body is a {@link root} shape sized to
- * the `width × height` box (default: a rounded rect from `cornerRadius` / the
- * inherited `fill` / `stroke`). `parts` declares ordered child geometry + labels
- * at coordinates relative to the composite's top-left origin.
- */
-export interface CompositeSpec extends BaseShapeSpec {
-  readonly kind: 'composite';
-  readonly width: number;
-  readonly height: number;
-  /** Corner radius for the *default* rounded-rect root. Ignored when {@link root} is set. */
-  readonly cornerRadius?: number;
-  /**
-   * Background silhouette of the card — any ordinary shape spec (rect / circle /
-   * polygon / regular-polygon / star / arc). Omit for a rounded rectangle built
-   * from `cornerRadius` + the inherited `fill` / `stroke`. The composite centres
-   * it in the box and delegates fill, stroke, hit-testing and decorations to it.
-   */
-  readonly root?: CompositeRootSpec;
-  /** Ordered child parts; geometry traced into the body, labels mounted as text. */
-  readonly parts: readonly CompositePart[];
-  /**
-   * Clip the child `parts` (and labels / icons) to the root silhouette. When
-   * `true`, a part that runs to the card edge — a left accent bar, a full-width
-   * header — **follows the rounded corners** instead of poking past them (a
-   * `rect` is square geometry and can't round a corner on its own). Off by
-   * default; decorations (hover ring / halo) are never clipped.
-   */
-  readonly clip?: boolean;
-}
 
 /**
  * A container shape: a **root** background shape plus an ordered list of child
@@ -246,19 +111,13 @@ export class CompositeShape extends ShapeBase<CompositeSpec> {
     this.draw(spec);
   }
 
-  /** The effective root spec: explicit {@link CompositeSpec.root} or a default rect. */
+  /**
+   * The effective root spec: explicit {@link CompositeSpec.root} or a default
+   * rect. Resolved by the pure spec maths so the hit test (which has no
+   * instance to ask) resolves the same silhouette this draws.
+   */
   private rootSpecOf(spec: CompositeSpec): CompositeRootSpec {
-    if (spec.root) return spec.root;
-    return {
-      kind: 'rect',
-      x: 0,
-      y: 0,
-      width: spec.width,
-      height: spec.height,
-      ...(spec.cornerRadius !== undefined ? { cornerRadius: spec.cornerRadius } : {}),
-      ...(spec.fill !== undefined ? { fill: spec.fill } : {}),
-      ...(spec.stroke !== undefined ? { stroke: spec.stroke } : {}),
-    };
+    return resolveCompositeRoot(spec);
   }
 
   /**
@@ -473,7 +332,7 @@ export class CompositeShape extends ShapeBase<CompositeSpec> {
    * default size and overlap.
    */
   static boundsOf(spec: Pick<CompositeSpec, 'width' | 'height'>): Rect {
-    return { x: 0, y: 0, width: spec.width, height: spec.height };
+    return boundsOfComposite(spec);
   }
 
   /**

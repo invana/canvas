@@ -137,16 +137,25 @@ export interface IShape<TSpec extends BaseShapeSpec = BaseShapeSpec> {
   paintInto?(g: Graphics, style?: ShapePaintStyle): void;
   /**
    * Hit-test region for this shape in shape-local coordinates. Used by
-   * `ShapeBase` to wire `gfx.hitArea` at construct time and by
-   * `PrimitivesRenderer.hitTest` for the rbush-backed manual hit-test path.
+   * `ShapeBase` to wire `gfx.hitArea` at construct time, and by
+   * `PrimitivesRenderer.hitTest` as the **fallback** narrow phase for shape
+   * kinds the pure spec geometry doesn't cover — i.e. kinds a consumer added
+   * via `registerShape`. Built-in kinds are picked from the spec instead
+   * (`containsSpec`), so picking works with no display object at all.
    *
    * The default `ShapeBase` implementation derives the region from
    * `drawGeometry` via `bodyGfx.containsPoint`, so the hit area always
-   * matches the rendered silhouette + stroke. Subclasses may override with
-   * a cheaper analytical test (e.g. `CircleShape`: `x² + y² ≤ r²`).
+   * matches the rendered silhouette + stroke. Custom shapes that want
+   * spec-driven picking should register their geometry rather than override
+   * this.
    */
   getHitArea(): IHitArea;
-  /** Optional precise containment in shape-local coordinates. */
+  /**
+   * Optional precise containment in shape-local coordinates. Built-ins
+   * delegate to the pure per-kind function in `specs/shapeGeometry/`, so a
+   * caller holding an instance and a caller holding only a spec get the same
+   * answer.
+   */
   contains?(localX: number, localY: number): boolean;
   /**
    * Optional **sub-part** hit test in shape-local coordinates: returns the
