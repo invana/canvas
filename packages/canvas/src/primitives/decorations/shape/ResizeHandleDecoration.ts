@@ -2,49 +2,14 @@ import { Graphics } from 'pixi.js';
 import { ShapeDecorationBase } from '../../base/ShapeDecorationBase';
 import type { Rect } from '../../types';
 
-/**
- * Where on the host AABB a `ResizeHandleDecoration` sits. The eight cardinal
- * + corner positions cover every rectangular drag axis (horizontal / vertical
- * sides, diagonal corners). For radially-symmetric hosts (circle groups) use
- * any side — domain behaviours typically map all four sides to the same
- * radius-scaling drag.
- */
-export type ResizeHandlePlacement =
-  | 'top'
-  | 'right'
-  | 'bottom'
-  | 'left'
-  | 'top-left'
-  | 'top-right'
-  | 'bottom-left'
-  | 'bottom-right';
+// Style types moved to the pixi-free spec vocabulary (`specs/decorationStyle.ts`)
+// so domain packages can describe decorations without importing a backend.
+// Re-exported here so existing importers keep working.
+import type { ResizeHandleDecorationStyle, ResizeHandlePlacement } from '../../../specs/decorationStyle';
+export type { ResizeHandleDecorationStyle, ResizeHandlePlacement } from '../../../specs/decorationStyle';
 
-export interface ResizeHandleDecorationStyle {
-  /** Which AABB position the handle sits on. Default `'bottom-right'`. */
-  readonly placement?: ResizeHandlePlacement;
-  /** Side length of the square handle, px. Default `8`. */
-  readonly size?: number;
-  /** Handle fill colour. Default `0xffffff`. */
-  readonly bgFill?: number;
-  readonly bgAlpha?: number;
-  /** Handle outline colour. Default `0x6b7fff`. */
-  readonly strokeColor?: number;
-  /** Handle outline width. Default `1.5`. */
-  readonly strokeWidth?: number;
-  /** Optional CSS-style cursor hint for the host renderer's hit pipeline. */
-  readonly cursor?: string;
-  /** Visible only when truthy. Domain behaviours flip this on hover/select. Default `true`. */
-  readonly visible?: boolean;
-  /**
-   * Override the keyword-based `placement` resolution with raw shape-local
-   * coordinates. When set, `placement` is ignored — the handle's centre is
-   * placed at exactly `(x, y)` in the host shape's local frame. The
-   * reported hit geometry's `placement` field still reflects the
-   * configured `placement` (or `'bottom-right'` if omitted) so consumers
-   * that switch on it for resize-direction math still work.
-   */
-  readonly position?: { readonly x: number; readonly y: number };
-}
+
+
 
 /**
  * Shape-local hit geometry for a `ResizeHandleDecoration`. Same coordinate

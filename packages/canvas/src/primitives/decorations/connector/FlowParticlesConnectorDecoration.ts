@@ -3,44 +3,13 @@ import { ConnectorDecorationBase } from '../../base/ConnectorDecorationBase';
 import { samplePath } from '../../connectors/pathSampling';
 import type { Path, Point } from '../../types';
 
-/**
- * Connector decoration that animates `count` markers travelling along the
- * routed path at the same speed, evenly spread in phase. Useful for
- * visualising sustained flow / throughput on an edge (e.g. data streaming,
- * traffic).
- *
- * Same engine as `FlyMarkerConnectorDecoration` extended to N markers; one
- * arc-length table is built per repaint and shared across all particles.
- */
-export interface FlowParticlesConnectorDecorationStyle {
-  readonly color: number;
-  /** Marker silhouette. Default `'circle'`. */
-  readonly markerKind?: 'circle' | 'arrow' | 'square';
-  /** Number of particles. Clamped to `>= 1`. Default `5`. */
-  readonly count?: number;
-  /** Marker size in px. Default `6`. */
-  readonly size?: number;
-  /**
-   * Travel speed along the path in px/sec. Negative values reverse direction.
-   * Default `60`.
-   */
-  readonly speedPxPerSec?: number;
-  /**
-   * When `true` (default) particles wrap back to the start after reaching
-   * the end. Setting this to `false` makes all particles stall at the end
-   * once they arrive — usually only useful with `count: 1`.
-   */
-  readonly loop?: boolean;
-  /** Phase offset applied to every particle in `[0, 1]`. Default `0`. */
-  readonly phase?: number;
-  /**
-   * Rotate each marker so its local +x axis points along the local tangent.
-   * Default `true` for `'arrow'`, `false` for `'circle'` and `'square'`.
-   */
-  readonly orientToPath?: boolean;
-  /** Overall decoration alpha. Default `1`. */
-  readonly alpha?: number;
-}
+// Style types moved to the pixi-free spec vocabulary (`specs/decorationStyle.ts`)
+// so domain packages can describe decorations without importing a backend.
+// Re-exported here so existing importers keep working.
+import type { FlowParticlesConnectorDecorationStyle } from '../../../specs/decorationStyle';
+export type { FlowParticlesConnectorDecorationStyle } from '../../../specs/decorationStyle';
+
+
 
 export class FlowParticlesConnectorDecoration extends ConnectorDecorationBase<FlowParticlesConnectorDecorationStyle> {
   private particles: Graphics[] = [];

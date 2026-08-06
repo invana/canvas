@@ -13,6 +13,8 @@ export * from './style';
 export type * from './plane';
 export type * from './label';
 export type * from './decoration';
+export type * from './decorationStyle';
+export type * from './badge';
 export type * from './shape';
 export type * from './connector';
 export type * from './hit';

@@ -2,106 +2,15 @@ import { Graphics } from 'pixi.js';
 import { ShapeDecorationBase } from '../../base/ShapeDecorationBase';
 import type { Rect } from '../../types';
 
-/**
- * Placement of a `ToggleDecoration` relative to the host shape's AABB.
- *
- * - Cardinal sides (`top` / `right` / `bottom` / `left`) sit centred on the
- *   midpoint of that side.
- * - Corners (`top-left` / ... / `bottom-right`) sit on the corner itself.
- * - `inside-*` variants mirror the cardinal sides but pull inward by
- *   `radius + 4 px` so the toggle nests inside the silhouette (useful for
- *   circle groups where an outside toggle would float well past the rim).
- *
- * The toggle's gfx is positioned by its centre, so it half-overlaps the
- * silhouette edge in the outside variants — a touch-friendly hit target
- * that visually reads as "attached to the host".
- */
-export type TogglePlacement =
-  | 'top'
-  | 'right'
-  | 'bottom'
-  | 'left'
-  | 'top-left'
-  | 'top-right'
-  | 'bottom-left'
-  | 'bottom-right'
-  | 'inside-top'
-  | 'inside-right'
-  | 'inside-bottom'
-  | 'inside-left';
+// Style types moved to the pixi-free spec vocabulary (`specs/decorationStyle.ts`)
+// so domain packages can describe decorations without importing a backend.
+// Re-exported here so existing importers keep working.
+import type { ToggleDecorationStyle, ToggleHitGeometry, TogglePlacement } from '../../../specs/decorationStyle';
+export type { ToggleDecorationStyle, ToggleHitGeometry, TogglePlacement } from '../../../specs/decorationStyle';
 
-/**
- * Visual style of a `ToggleDecoration` — the small `+` / `−` button used to
- * collapse / expand compound groups, and by extension any "open this" /
- * "close this" affordance a domain layer wants to put on a shape.
- *
- * The decoration is pure-visual: it paints itself, exposes a shape-local
- * hit-geometry (`getLocalHitGeometry`), and emits no events. Domain
- * behaviours (e.g. `CollapseExpandBehaviour` in `@invana/graph`) read the
- * geometry and do the click-distance math against the host's
- * `shape:pointerdown` payload — keeps the decoration domain-free and
- * sidesteps Pixi event-bubbling through the shape gfx.
- */
-export interface ToggleDecorationStyle {
-  /**
-   * Which glyph the button shows. Domain layers flip this through
-   * `setDecoration` whenever the underlying collapsed-state changes.
-   * Default `'plus'`.
-   */
-  readonly state?: 'plus' | 'minus';
-  /** Where on the host AABB the toggle sits. Default `'bottom'`. */
-  readonly placement?: TogglePlacement;
-  /** Button outer radius, px. Default `10`. */
-  readonly radius?: number;
-  /** Button fill colour. Default `0xffffff` (white). */
-  readonly bgFill?: number;
-  /** Button fill alpha. Default `1`. */
-  readonly bgAlpha?: number;
-  /** Button outline colour. Default `0x6b7fff` (theme blue). */
-  readonly strokeColor?: number;
-  /** Button outline width, px. Default `1.5`. */
-  readonly strokeWidth?: number;
-  /** Glyph stroke colour. Default = `strokeColor`. */
-  readonly glyphColor?: number;
-  /** Glyph stroke width, px. Default `1.5`. */
-  readonly glyphWidth?: number;
-  /**
-   * Extra offset applied after placement resolution, in shape-local px.
-   * Use to nudge the toggle off a default placement without writing a
-   * custom placement (e.g. push a `bottom-right` toggle further out
-   * past a thick stroke).
-   */
-  readonly offsetX?: number;
-  readonly offsetY?: number;
-  /**
-   * Override the keyword-based `placement` resolution with raw shape-local
-   * coordinates. When set, `placement`, `offsetX`, and `offsetY` are all
-   * ignored — the toggle's centre is placed at exactly `(x, y)` in the
-   * host shape's local frame (centre-relative for centred shapes like
-   * `CircleShape`, top-left-relative for `RectShape`).
-   *
-   * Use when none of the 12 named placements lands where you want it
-   * (e.g. floating the toggle along a diagonal, or matching a specific
-   * UI mock that doesn't snap to AABB anchors).
-   */
-  readonly position?: { readonly x: number; readonly y: number };
-}
 
-/**
- * Shape-local hit geometry exposed by a `ToggleDecoration` instance. The
- * `cx` / `cy` coordinates are in the host shape's local frame (i.e. add
- * the host's spec `x` / `y` to convert to world). `radius` is the touch
- * radius — typically a touch larger than the visual radius so the button
- * stays easy to hit on coarse pointers.
- *
- * Domain behaviours read this and check `Math.hypot(worldX − host.x − cx,
- * worldY − host.y − cy) ≤ radius` in their `shape:pointerdown` handler.
- */
-export interface ToggleHitGeometry {
-  readonly cx: number;
-  readonly cy: number;
-  readonly radius: number;
-}
+
+
 
 /**
  * Default touch padding added to the visual radius when reporting the hit

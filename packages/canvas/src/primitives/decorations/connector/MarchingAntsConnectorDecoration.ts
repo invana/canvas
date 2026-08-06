@@ -1,36 +1,13 @@
 import { Graphics } from 'pixi.js';
 import { ConnectorDecorationBase } from '../../base/ConnectorDecorationBase';
 
-/**
- * Connector variant of marching-ants. Strokes the connector's routed path
- * with a dashed line whose `dashOffset` advances each frame, producing
- * a flowing/marching pattern along the line — useful for highlighting an
- * active edge, a route under consideration, a data flow, etc.
- *
- * Geometry is delegated to `host.connector.paintInto` with `dashArray` /
- * `dashOffset` overrides; the connector primitive samples the routed
- * path and emits dashes via the shared `dashedStroke` helper. Works on
- * every router / pathStyle (straight, orth, bezier, smooth — all produce
- * a `Path`).
- */
-export interface MarchingAntsConnectorDecorationStyle {
-  readonly color: number;
-  /** Stroke width in px. Default `1.5`. */
-  readonly strokeWidth?: number;
-  /** Dash length in px. Default `6`. */
-  readonly dashLength?: number;
-  /** Gap length in px. Default `4`. */
-  readonly gapLength?: number;
-  /**
-   * March speed in px/sec along the path. Default `24`.
-   * Negative values reverse the march direction.
-   */
-  readonly speedPxPerSec?: number;
-  /** Overall decoration alpha. Default `1`. */
-  readonly alpha?: number;
-  readonly cap?: 'butt' | 'round' | 'square';
-  readonly join?: 'miter' | 'round' | 'bevel';
-}
+// Style types moved to the pixi-free spec vocabulary (`specs/decorationStyle.ts`)
+// so domain packages can describe decorations without importing a backend.
+// Re-exported here so existing importers keep working.
+import type { MarchingAntsConnectorDecorationStyle } from '../../../specs/decorationStyle';
+export type { MarchingAntsConnectorDecorationStyle } from '../../../specs/decorationStyle';
+
+
 
 export class MarchingAntsConnectorDecoration extends ConnectorDecorationBase<MarchingAntsConnectorDecorationStyle> {
   private antsGfx = new Graphics();

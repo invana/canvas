@@ -3,44 +3,13 @@ import { ConnectorDecorationBase } from '../../base/ConnectorDecorationBase';
 import { samplePath } from '../../connectors/pathSampling';
 import type { Path, Point } from '../../types';
 
-/**
- * Connector decoration that animates a single marker travelling along the
- * routed path of its host. Useful for visualising direction, data flow, or
- * an active "in-flight" state on an edge. Works on every router / pathStyle
- * because it consumes the resolved `Path` via `samplePath`.
- *
- * The marker's silhouette is drawn once into `markerGfx`; only its position
- * and rotation are updated each frame. Position is derived from a
- * cumulative arc-length table rebuilt on `repaint` (host or style change),
- * so per-frame work is a binary search + interpolation.
- */
-export interface FlyMarkerConnectorDecorationStyle {
-  readonly color: number;
-  /** Marker silhouette. Default `'circle'`. */
-  readonly markerKind?: 'circle' | 'arrow' | 'square';
-  /** Marker size in px (diameter / arrow length / square side). Default `8`. */
-  readonly size?: number;
-  /**
-   * Travel speed along the path in px/sec. Negative values reverse direction.
-   * Default `80`.
-   */
-  readonly speedPxPerSec?: number;
-  /**
-   * When `true` (default) the marker wraps back to the start after reaching
-   * the end (or vice versa for negative speed). When `false` the marker
-   * stops at the end of the path until the decoration is removed.
-   */
-  readonly loop?: boolean;
-  /** Initial position along the path in `[0, 1]`. Default `0`. */
-  readonly phase?: number;
-  /**
-   * Rotate the marker so its local +x axis points along the local tangent.
-   * Default `true` for `'arrow'`, `false` for `'circle'` and `'square'`.
-   */
-  readonly orientToPath?: boolean;
-  /** Overall decoration alpha. Default `1`. */
-  readonly alpha?: number;
-}
+// Style types moved to the pixi-free spec vocabulary (`specs/decorationStyle.ts`)
+// so domain packages can describe decorations without importing a backend.
+// Re-exported here so existing importers keep working.
+import type { FlyMarkerConnectorDecorationStyle } from '../../../specs/decorationStyle';
+export type { FlyMarkerConnectorDecorationStyle } from '../../../specs/decorationStyle';
+
+
 
 export class FlyMarkerConnectorDecoration extends ConnectorDecorationBase<FlyMarkerConnectorDecorationStyle> {
   private markerGfx = new Graphics();

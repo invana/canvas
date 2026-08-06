@@ -1,33 +1,13 @@
 import { Graphics } from 'pixi.js';
 import { ShapeDecorationBase } from '../../base/ShapeDecorationBase';
 
-/**
- * Static ring that traces the host silhouette at a fixed outward offset.
- *
- * Geometry: one `paintInto` call with a negative inset, so the ring sits
- * cleanly *outside* the body — independent from the host's own stroke.
- * Multiple rings (e.g. inner + outer) compose by attaching multiple Ring
- * decorations with different `gap` values; this class itself paints one
- * band per instance.
- *
- * Works on every shape that implements `paintInto` (everything extending
- * `ShapeBase`). On shape kinds without `paintInto` (e.g. plain text) the
- * decoration silently clears — same fallback as `GlowDecoration`.
- */
-export interface RingDecorationStyle {
-  readonly color: number;
-  /** Ring stroke thickness, px. Default `2`. */
-  readonly width?: number;
-  /**
-   * Gap between the host silhouette and the ring's inner edge, px.
-   * Default `4`. Zero hugs the body; larger values produce a detached ring.
-   */
-  readonly gap?: number;
-  /** Ring alpha, `[0, 1]`. Default `1`. */
-  readonly alpha?: number;
-  /** Dashed ring — `[dashLength, gapLength]` in px. Default solid. */
-  readonly dashArray?: readonly [number, number];
-}
+// Style types moved to the pixi-free spec vocabulary (`specs/decorationStyle.ts`)
+// so domain packages can describe decorations without importing a backend.
+// Re-exported here so existing importers keep working.
+import type { RingDecorationStyle } from '../../../specs/decorationStyle';
+export type { RingDecorationStyle } from '../../../specs/decorationStyle';
+
+
 
 export class RingDecoration extends ShapeDecorationBase<RingDecorationStyle> {
   private readonly band = new Graphics();

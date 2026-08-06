@@ -1,37 +1,13 @@
 import { Graphics } from 'pixi.js';
 import { ConnectorDecorationBase } from '../../base/ConnectorDecorationBase';
 
-/**
- * Soft halo around the routed path of a connector. Repaints the path N
- * times with widening stroke and quadratic alpha falloff, producing a
- * glow that hugs whatever curve the path resolves to. Works on every
- * router / pathStyle because geometry is delegated to
- * `host.connector.paintInto`.
- *
- * Static by default. Supply `pulse` to animate brightness sinusoidally —
- * geometry is only repainted on `repaint`; per-frame work touches
- * `this.gfx.alpha` and nothing else, so the pulse is essentially free.
- */
-export interface GlowConnectorDecorationStyle {
-  readonly color: number;
-  /** Outermost glow extent in px (widest stroke). Default `12`. */
-  readonly radius?: number;
-  /** Number of feather layers (more = smoother + more expensive). Default `6`. */
-  readonly layers?: number;
-  /** Innermost (brightest) layer alpha. Default `0.55`. */
-  readonly innerAlpha?: number;
-  /**
-   * Optional brightness pulse. When omitted, the glow is static. When set,
-   * the decoration alpha-multiplies between `1` and `1 - amplitude` on a
-   * sinusoidal cycle of `periodMs` milliseconds.
-   */
-  readonly pulse?: {
-    /** Cycle length in ms. Default `1200`. */
-    readonly periodMs?: number;
-    /** How far below full brightness the dim phase reaches, `[0, 1]`. Default `0.5`. */
-    readonly amplitude?: number;
-  };
-}
+// Style types moved to the pixi-free spec vocabulary (`specs/decorationStyle.ts`)
+// so domain packages can describe decorations without importing a backend.
+// Re-exported here so existing importers keep working.
+import type { GlowConnectorDecorationStyle } from '../../../specs/decorationStyle';
+export type { GlowConnectorDecorationStyle } from '../../../specs/decorationStyle';
+
+
 
 export class GlowConnectorDecoration extends ConnectorDecorationBase<GlowConnectorDecorationStyle> {
   private layerGfx: Graphics[] = [];

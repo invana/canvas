@@ -12,24 +12,7 @@ import type {
   NodeStylingRegistry,
   NodeTypeRegistry,
 } from '../template/types';
-import type {
-  RingDecorationStyle,
-  GlowDecorationStyle,
-  PulseRingDecorationStyle,
-  MarchingAntsDecorationStyle,
-  LiquidFillDecorationStyle,
-  RingConnectorDecorationStyle,
-  GlowConnectorDecorationStyle,
-  MarchingAntsConnectorDecorationStyle,
-  RippleConnectorDecorationStyle,
-  FlyMarkerConnectorDecorationStyle,
-  FlowParticlesConnectorDecorationStyle,
-  RevealConnectorDecorationStyle,
-  ToggleDecorationStyle,
-  TogglePlacement,
-  ResizeHandleDecorationStyle,
-  SelectionFrameDecorationStyle,
-} from '@invana/canvas/primitives';
+import type { RingDecorationStyle, GlowDecorationStyle, PulseRingDecorationStyle, MarchingAntsDecorationStyle, LiquidFillDecorationStyle, RingConnectorDecorationStyle, GlowConnectorDecorationStyle, MarchingAntsConnectorDecorationStyle, RippleConnectorDecorationStyle, FlyMarkerConnectorDecorationStyle, FlowParticlesConnectorDecorationStyle, RevealConnectorDecorationStyle, ToggleDecorationStyle, TogglePlacement, ResizeHandleDecorationStyle, SelectionFrameDecorationStyle } from '@invana/canvas/specs';
 import type {
   GraphEdge,
   GraphNode,
@@ -778,7 +761,7 @@ export interface DecorationSpecCommon {
  * Discriminated union of decoration specs attachable to a node via
  * {@link NodeStyle.decorations}. Each variant pairs `kind` (the registered
  * canvas decoration name) with the matching style payload from
- * `@invana/canvas/primitives`.
+ * `@invana/canvas/specs`.
  *
  * Multiples are allowed — the same kind can appear several times (e.g. an
  * inner + outer ring on a single node), as long as their `id`s differ.

@@ -1,38 +1,13 @@
 import { Graphics } from 'pixi.js';
 import { ShapeDecorationBase } from '../../base/ShapeDecorationBase';
 
-/**
- * Classic "marching ants" selection outline. Strokes the host silhouette
- * with a dashed border whose `dashOffset` advances each frame, producing
- * the characteristic crawling-along-the-edge animation seen in selection
- * marquees (Photoshop, Figma, etc.).
- *
- * Geometry is delegated to `host.shape.paintInto` with `dashArray` /
- * `dashOffset` overrides — the shape primitive itself does the
- * silhouette tessellation. Works on every shape that implements
- * `paintInto` (anything extending `ShapeBase`).
- */
-export interface MarchingAntsDecorationStyle {
-  readonly color: number;
-  /** Stroke width in px. Default `1.5`. */
-  readonly strokeWidth?: number;
-  /** Dash length in px. Default `6`. */
-  readonly dashLength?: number;
-  /** Gap length in px. Default `4`. */
-  readonly gapLength?: number;
-  /**
-   * March speed in px/sec along the perimeter. Default `24`.
-   * Negative values reverse the march direction.
-   */
-  readonly speedPxPerSec?: number;
-  /**
-   * Distance from the host silhouette. Positive = inside, negative =
-   * outside. Default `0` (on the silhouette itself).
-   */
-  readonly inset?: number;
-  /** Overall decoration alpha. Default `1`. */
-  readonly alpha?: number;
-}
+// Style types moved to the pixi-free spec vocabulary (`specs/decorationStyle.ts`)
+// so domain packages can describe decorations without importing a backend.
+// Re-exported here so existing importers keep working.
+import type { MarchingAntsDecorationStyle } from '../../../specs/decorationStyle';
+export type { MarchingAntsDecorationStyle } from '../../../specs/decorationStyle';
+
+
 
 export class MarchingAntsDecoration extends ShapeDecorationBase<MarchingAntsDecorationStyle> {
   private antsGfx = new Graphics();

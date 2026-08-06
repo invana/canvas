@@ -38,10 +38,7 @@ import {
   type BehaviourOptions,
   type CanvasContext,
 } from '@invana/canvas';
-import type {
-  SelectionFrameHandleHit,
-  SelectionFramePlacement,
-} from '@invana/canvas/primitives';
+import type { SelectionFrameHandleHit, SelectionFramePlacement } from '@invana/canvas/specs';
 
 import { GraphLayer } from '../layer/GraphLayer';
 import type { GroupOptions, NodeStyle } from '../layer/types';

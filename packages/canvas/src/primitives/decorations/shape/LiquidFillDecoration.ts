@@ -1,59 +1,13 @@
 import { Container, FillGradient, Graphics } from 'pixi.js';
 import { ShapeDecorationBase } from '../../base/ShapeDecorationBase';
 
-/**
- * Liquid fill — paints a fluid level inside the host's silhouette, with a
- * vertical gradient and an optional wavy surface. Achieved without a "fill
- * provider" hook on shapes: the decoration paints a fluid polygon into its
- * own Graphics and masks the whole thing with the host silhouette via
- * `host.shape.paintInto({ fill: true })`.
- *
- * **Stroke compatibility.** When the host shape's stroke alignment is
- * `'outside'`, the stroke sits outside the silhouette and the mask leaves it
- * fully visible. For `'center'` / `'inside'`, the liquid covers the inside
- * portion of the stroke. Prefer `'outside'` for tank / pill diagrams.
- *
- * **Animation.** When `wave` is omitted the surface is a flat horizontal
- * line and `tick` returns `false` — the renderer retires the decoration
- * from its animation set, so still-water mode costs zero per frame after
- * `mount`. Supply `wave` to animate the meniscus.
- */
-export interface LiquidFillDecorationStyle {
-  /** Surface height as a fraction of host bounds height. `0` empty, `1` full. Default `0.6`. */
-  readonly fillLevel?: number;
-  /** Gradient colour at the surface. Default light blue (`0x9bbedb`). */
-  readonly colorTop?: number;
-  /** Gradient colour at the bottom. Default dark blue (`0x2d4d6e`). */
-  readonly colorBottom?: number;
-  /** Overall opacity of the fluid. Default `1`. */
-  readonly alpha?: number;
-  /**
-   * Wave configuration. Omit (or pass `undefined`) for a flat still surface.
-   * Provide for an animated meniscus — phase advances every frame.
-   */
-  readonly wave?: {
-    /** Peak vertical displacement of the surface, px. Default `3`. */
-    readonly amplitude?: number;
-    /** Distance between wave crests, px. Default `80`. */
-    readonly wavelength?: number;
-    /** Time for one full phase cycle, ms. Default `1800`. */
-    readonly periodMs?: number;
-    /** Sample points per wavelength. Higher = smoother + more expensive. Default `12`. */
-    readonly resolution?: number;
-  };
-  /**
-   * Optional thin highlight band stroked along the surface (gloss / meniscus
-   * effect). Opt-in: omit the field to skip drawing the highlight entirely.
-   */
-  readonly surfaceHighlight?: {
-    /** Default `0xffffff`. */
-    readonly color?: number;
-    /** Default `0.35`. */
-    readonly alpha?: number;
-    /** Stroke width in px. Default `3`. */
-    readonly thickness?: number;
-  };
-}
+// Style types moved to the pixi-free spec vocabulary (`specs/decorationStyle.ts`)
+// so domain packages can describe decorations without importing a backend.
+// Re-exported here so existing importers keep working.
+import type { LiquidFillDecorationStyle } from '../../../specs/decorationStyle';
+export type { LiquidFillDecorationStyle } from '../../../specs/decorationStyle';
+
+
 
 export class LiquidFillDecoration extends ShapeDecorationBase<LiquidFillDecorationStyle> {
   private maskGfx: Graphics | null = null;

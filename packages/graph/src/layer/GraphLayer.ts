@@ -18,7 +18,7 @@ import type { SpecStore } from '@invana/canvas';
 import { PrimitivesRenderer, WorldLayer, jsonSafe } from '@invana/canvas';
 import type { CanvasContext, LayerOptions, WorldLayerHit } from '@invana/canvas';
 import type { BaseConnectorSpec, BaseShapeSpec, ConnectorLabelStyle, ShapeLabelStyle } from '@invana/canvas/specs';
-import type { BadgeOptions } from '@invana/canvas/primitives';
+import type { BadgeOptions } from '@invana/canvas/specs';
 import type { DecorationSpec, EffectSpec, Rect, ShapeFillLayer } from '@invana/canvas/specs';
 
 import { GraphStore } from '../store/GraphStore';

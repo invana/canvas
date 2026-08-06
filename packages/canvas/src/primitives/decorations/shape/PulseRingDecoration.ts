@@ -1,30 +1,13 @@
 import { Graphics } from 'pixi.js';
 import { ShapeDecorationBase } from '../../base/ShapeDecorationBase';
 
-/**
- * Concentric rings that expand outward from the host's silhouette and fade
- * as they grow. A canonical "attention" decoration — pings, notifications,
- * "new arrival" indicators, sonar effects.
- *
- * Each ring traces the host silhouette via `paintInto` with a growing
- * `inset` (negative = outside) and shrinking alpha. Multiple concurrent
- * rings are scheduled by phase-offset across one period — so a `rings: 3`
- * decoration always shows three rings at different stages of expansion,
- * giving a steady visual rhythm.
- */
-export interface PulseRingDecorationStyle {
-  readonly color: number;
-  /** Peak expansion distance from the host silhouette, px. Default `24`. */
-  readonly maxRadius?: number;
-  /** Cycle length in ms. Default `1400`. */
-  readonly periodMs?: number;
-  /** Number of concurrent rings (phase-distributed). Default `2`. */
-  readonly rings?: number;
-  /** Stroke width of each ring, px. Default `2`. */
-  readonly strokeWidth?: number;
-  /** Initial (full-brightness) alpha at radius 0. Default `0.7`. */
-  readonly innerAlpha?: number;
-}
+// Style types moved to the pixi-free spec vocabulary (`specs/decorationStyle.ts`)
+// so domain packages can describe decorations without importing a backend.
+// Re-exported here so existing importers keep working.
+import type { PulseRingDecorationStyle } from '../../../specs/decorationStyle';
+export type { PulseRingDecorationStyle } from '../../../specs/decorationStyle';
+
+
 
 export class PulseRingDecoration extends ShapeDecorationBase<PulseRingDecorationStyle> {
   private ringGfx: Graphics[] = [];
