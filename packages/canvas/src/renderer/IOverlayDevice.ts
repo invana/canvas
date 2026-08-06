@@ -19,9 +19,15 @@
 
 /** Solid fill. Overlays never need image or inset fills. */
 export interface OverlayFill {
-  readonly color: number;
+  readonly color: number | string;
   readonly alpha?: number;
 }
+
+/**
+ * A bare colour is accepted wherever a fill is, since an opaque solid is the
+ * common case — `fill(0x1677ff)` rather than `fill({ color: 0x1677ff })`.
+ */
+export type OverlayFillLike = OverlayFill | number | string;
 
 /** Solid stroke, optionally dashed. */
 export interface OverlayStroke {
@@ -47,7 +53,7 @@ export interface IOverlayDevice {
   /** Flat `[x0, y0, x1, y1, …]` or point objects. */
   poly(points: readonly number[] | ReadonlyArray<{ x: number; y: number }>, close?: boolean): this;
 
-  fill(style: OverlayFill): this;
+  fill(style: OverlayFillLike): this;
   stroke(style: OverlayStroke): this;
 
   /** Hide without discarding — cheaper than clear + redraw for a blinking overlay. */

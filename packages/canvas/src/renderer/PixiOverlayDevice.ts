@@ -9,7 +9,7 @@
 
 import { Container, Graphics } from 'pixi.js';
 import { emitDashedStroke } from '../primitives/paint/dashedStroke';
-import type { IOverlayDevice, OverlayFill, OverlayStroke } from './IOverlayDevice';
+import type { IOverlayDevice, OverlayFillLike, OverlayStroke } from './IOverlayDevice';
 
 export class PixiOverlayDevice implements IOverlayDevice {
   private readonly root: Container;
@@ -106,7 +106,11 @@ export class PixiOverlayDevice implements IOverlayDevice {
     return this;
   }
 
-  fill(style: OverlayFill): this {
+  fill(style: OverlayFillLike): this {
+    if (typeof style === 'number' || typeof style === 'string') {
+      this.gfx.fill(style);
+      return this;
+    }
     this.gfx.fill({ color: style.color, alpha: style.alpha ?? 1 });
     return this;
   }

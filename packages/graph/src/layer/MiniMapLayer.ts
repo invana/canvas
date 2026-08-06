@@ -24,8 +24,8 @@
  * ```
  */
 
-import { Container, FederatedPointerEvent, Graphics } from 'pixi.js';
 import { BackgroundLayer, ScreenLayer, select, type CanvasContext, type ScreenLayerHit } from '@invana/canvas';
+import type { IOverlayDevice } from '@invana/canvas';
 import type { LayerOptions } from '@invana/canvas';
 import type { Rect } from '@invana/canvas/specs';
 
@@ -183,10 +183,12 @@ export class MiniMapLayer extends ScreenLayer<
   private ctxRef: CanvasContext | null = null;
 
   /** Inner content container (the minimap's drawable area). */
-  private inner: Container | null = null;
-  private bgGfx: Graphics | null = null;
-  private worldGfx: Graphics | null = null;
-  private viewportGfx: Graphics | null = null;
+  private bgGfx: IOverlayDevice | null = null;
+  private worldGfx: IOverlayDevice | null = null;
+  private viewportGfx: IOverlayDevice | null = null;
+  /** Screen-space origin of the minimap box; the overlays are moved here. */
+  private originX = 0;
+  private originY = 0;
 
   /** Per-frame projection scale + offset (world → minimap-local). */
   private scale = 1;
@@ -205,6 +207,9 @@ export class MiniMapLayer extends ScreenLayer<
 
   /** `theme:change` subscriber — repaints the chrome when the theme flips. */
   private offTheme: (() => void) | null = null;
+
+  /** DOM pointer-listener disposers for the drag interaction. */
+  private readonly pointerDisposers: Array<() => void> = [];
 
   constructor(opts: LayerOptions<MiniMapLayerOptions>) {
     super({
@@ -232,16 +237,12 @@ export class MiniMapLayer extends ScreenLayer<
     this.graph = graph;
     this.ctxRef = ctx;
 
-    // Build the screen-space minimap container.
-    this.inner = new Container();
-    this.inner.label = `${this.id}-inner`;
-    this.bgGfx = new Graphics();
-    this.worldGfx = new Graphics();
-    this.viewportGfx = new Graphics();
-    this.inner.addChild(this.bgGfx);
-    this.inner.addChild(this.worldGfx);
-    this.inner.addChild(this.viewportGfx);
-    this.container.addChild(this.inner);
+    // The minimap redraws on every camera move, so it is a transient overlay
+    // rather than published state (`docs/renderer-split-design.md` §3). Three
+    // devices keep the paint order: backdrop, mirrored graph, viewport box.
+    this.bgGfx = ctx.createOverlay(`${this.id}:bg`, 'screen');
+    this.worldGfx = ctx.createOverlay(`${this.id}:world`, 'screen');
+    this.viewportGfx = ctx.createOverlay(`${this.id}:viewport`, 'screen');
 
     if (this.opts.enableDrag) this.wireInteractions();
 
@@ -310,9 +311,14 @@ export class MiniMapLayer extends ScreenLayer<
     this.offCameraZoom = null;
     this.offResize = null;
 
-    this.inner?.removeFromParent();
-    this.inner?.destroy({ children: true });
-    this.inner = null;
+    for (const off of this.pointerDisposers) off();
+    this.pointerDisposers.length = 0;
+    this.bgGfx?.destroy();
+    this.worldGfx?.destroy();
+    this.viewportGfx?.destroy();
+    this.bgGfx = null;
+    this.worldGfx = null;
+    this.viewportGfx = null;
     this.bgGfx = null;
     this.worldGfx = null;
     this.viewportGfx = null;
@@ -373,7 +379,7 @@ export class MiniMapLayer extends ScreenLayer<
   }
 
   private layoutPosition(): void {
-    if (!this.inner) return;
+    if (!this.bgGfx) return;
     const { width, height, position, margin } = this.opts;
     const vp = this.viewportSize();
     // Resolve symmetric (number) or per-axis ({ x, y }) insets; missing axis → 10.
@@ -399,13 +405,17 @@ export class MiniMapLayer extends ScreenLayer<
         y = vp.height - height - my;
         break;
     }
-    this.inner.position.set(x, y);
+    this.originX = x;
+    this.originY = y;
+    this.bgGfx?.setPosition(x, y);
+    this.worldGfx?.setPosition(x, y);
+    this.viewportGfx?.setPosition(x, y);
   }
 
   // ─── Painting ───────────────────────────────────────────────────────────
 
   private repaint(): void {
-    if (!this.inner || !this.graph || !this.ctxRef) return;
+    if (!this.bgGfx || !this.graph || !this.ctxRef) return;
     this.projectBounds(this.effectiveBounds());
     this.paintBackground();
     this.paintWorld();
@@ -593,7 +603,7 @@ export class MiniMapLayer extends ScreenLayer<
    * the viewport rect extends beyond it. No-op when disabled or fully
    * transparent.
    */
-  private paintMask(g: Graphics, x: number, y: number, w: number, h: number): void {
+  private paintMask(g: IOverlayDevice, x: number, y: number, w: number, h: number): void {
     if (!this.opts.maskEnabled || this.opts.maskAlpha <= 0) return;
     const W = this.opts.width;
     const H = this.opts.height;
@@ -699,24 +709,52 @@ export class MiniMapLayer extends ScreenLayer<
 
   // ─── Interactions ───────────────────────────────────────────────────────
 
+  /**
+   * Pointer handling on the canvas element rather than on a pixi display object.
+   *
+   * The engine forbids raw backend events outside the renderer (root rule 6),
+   * and the minimap does not need picking: it owns a known screen rectangle, so
+   * a hit is a coordinate comparison. Move / up go on `window` so a drag that
+   * leaves the canvas still completes.
+   */
   private wireInteractions(): void {
-    const inner = this.inner;
-    if (!inner) return;
-    inner.eventMode = 'static';
-    inner.hitArea = {
-      contains: (x, y) => x >= 0 && x <= this.opts.width && y >= 0 && y <= this.opts.height,
-    };
-    inner.cursor = 'pointer';
-    inner.on('pointerdown', this.onMiniPointerDown);
-    inner.on('pointermove', this.onMiniPointerMove);
-    inner.on('pointerup', this.onMiniPointerUp);
-    inner.on('pointerupoutside', this.onMiniPointerUp);
+    const el = this.ctxRef?.canvasElement;
+    if (!el) return;
+
+    const onDown = (e: PointerEvent): void => this.onMiniPointerDown(e);
+    const onMove = (e: PointerEvent): void => this.onMiniPointerMove(e);
+    const onUp = (): void => this.onMiniPointerUp();
+
+    el.addEventListener('pointerdown', onDown);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+    this.pointerDisposers.push(
+      () => el.removeEventListener('pointerdown', onDown),
+      () => window.removeEventListener('pointermove', onMove),
+      () => window.removeEventListener('pointerup', onUp),
+      () => window.removeEventListener('pointercancel', onUp),
+    );
   }
 
-  private onMiniPointerDown = (e: FederatedPointerEvent): void => {
+  /**
+   * Pointer position in minimap-local pixels, or `null` when the event is
+   * outside the minimap box. Replaces pixi's `getLocalPosition` + `hitArea`.
+   */
+  private localFromEvent(e: PointerEvent): { x: number; y: number } | null {
+    const el = this.ctxRef?.canvasElement;
+    if (!el) return null;
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left - this.originX;
+    const y = e.clientY - rect.top - this.originY;
+    if (x < 0 || y < 0 || x > this.opts.width || y > this.opts.height) return null;
+    return { x, y };
+  }
+
+  private onMiniPointerDown = (e: PointerEvent): void => {
     const ctx = this.ctxRef;
-    if (!ctx || !this.inner) return;
-    const local = e.getLocalPosition(this.inner);
+    const local = this.localFromEvent(e);
+    if (!ctx || !local) return;
     const world = this.minimapToWorld(local.x, local.y);
     const vis = ctx.camera.getVisibleBounds();
     const cx = vis.x + vis.width / 2;
@@ -738,10 +776,17 @@ export class MiniMapLayer extends ScreenLayer<
     }
   };
 
-  private onMiniPointerMove = (e: FederatedPointerEvent): void => {
-    if (!this.isDragging || !this.ctxRef || !this.inner) return;
-    const local = e.getLocalPosition(this.inner);
-    const world = this.minimapToWorld(local.x, local.y);
+  private onMiniPointerMove = (e: PointerEvent): void => {
+    if (!this.isDragging || !this.ctxRef) return;
+    const el = this.ctxRef.canvasElement;
+    if (!el) return;
+    // Mid-drag the pointer may leave the box; keep panning from the raw
+    // coordinate rather than clamping to the rectangle.
+    const rect = el.getBoundingClientRect();
+    const world = this.minimapToWorld(
+      e.clientX - rect.left - this.originX,
+      e.clientY - rect.top - this.originY,
+    );
     this.panMainCameraTo(world.x - this.dragOffsetX, world.y - this.dragOffsetY);
   };
 

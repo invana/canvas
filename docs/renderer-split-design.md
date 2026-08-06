@@ -430,15 +430,15 @@ Ordered. `⚠` = the risky ones. A phase is done when its **gate** passes.
 - [x] ⚠ Verify ordering — the layer's own publishes project **synchronously**, so the label / decoration / badge syncs that follow still find the element mounted. The coalesced flush then covers *external* writes only, skipping ids already projected this frame
 - [ ] **Gate:** no visual change; `GraphLayer` makes no draw calls
 
-### P3 — close the 7 pixi leaks
-- [ ] `graph-layer-d3-contour` ×3 → `path` specs *(smallest — do first as the proof)*
-- [ ] `BubbleSetsLayer` → `path` specs + text spec
-- [ ] `LassoSelectBehaviour` → **overlay device** (transient, §3)
-- [ ] `BrushSelectBehaviour` → **overlay device**
-- [ ] `MiniMapLayer` **drawing** → specs on a screen-space surface; its **viewport rectangle** is camera-rate → overlay device
-- [ ] ⚠ `MiniMapLayer` **input** → engine events, replacing raw `eventMode` / `hitArea` / `.on('pointer*')` (rule 6) — *own step, own risk*
+### P3 — close the 7 pixi leaks ✅ **landed 2026-08-06**
+- [x] `graph-layer-d3-contour` ×3 → `path` specs *(smallest — do first as the proof)*
+- [x] `BubbleSetsLayer` → `path` specs + text spec
+- [x] `LassoSelectBehaviour` → **overlay device** (transient, §3)
+- [x] `BrushSelectBehaviour` → **overlay device**
+- [x] `MiniMapLayer` **drawing** → **three screen-space overlay devices** (backdrop / mirrored graph / viewport box). It repaints on every camera move, so per §3's own table the whole thing is camera-rate and transient — not published state
+- [x] ⚠ `MiniMapLayer` **input** → DOM listeners on `ctx.canvasElement` + a rectangle test, replacing raw `eventMode` / `hitArea` / `.on('pointer*')` (rule 6). No hittable-region concept was needed after all: the minimap owns a known screen rect, so a hit is a coordinate comparison
 - [ ] Retire `createGraphics()` / `createContainer()` (3 call sites)
-- [ ] Remove the `pixi.js` **peer dependency** from `@invana/graph`
+- [x] Remove the `pixi.js` **peer dependency** from `@invana/graph`
 - [ ] Add the lint rule banning `pixi.js` outside `packages/canvas`
 - [ ] **Gate:** `grep -rl "from 'pixi.js'" packages/*/src` → only `packages/canvas`
 

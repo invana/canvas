@@ -42,7 +42,7 @@ export {
 
 // ─── Transient overlays (P3) ─────────────────────────────────────────────────
 // Immediate-mode drawing for gesture visuals that must never become state.
-export type { IOverlayDevice, OverlayFill, OverlayStroke, OverlaySpace } from './renderer/IOverlayDevice';
+export type { IOverlayDevice, OverlayFill, OverlayFillLike, OverlayStroke, OverlaySpace } from './renderer/IOverlayDevice';
 
 // ─── Spec projection (P2) ────────────────────────────────────────────────────
 // Drives a renderer from a SpecStore. Every drawing layer uses this, so
