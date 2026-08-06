@@ -400,7 +400,20 @@ Ordered. `⚠` = the risky ones. A phase is done when its **gate** passes.
 ### P1 — specs become state ⚠ *D2 + D3 decided; unblocked*
 - [ ] Implement `store.specs[layerId]` — per-layer collections (D2 ✅)
 - [ ] Implement the **`specs:flush`** channel — generic `{ added, changed, removed }`, frame-coalesced (D8 ✅, §4.2b)
-- [ ] ⚠ Capture **baselines first**: heap + frame timing at 50k nodes, before any change
+- [x] ⚠ Capture **baselines first**: heap + frame timing at 50k nodes, before any change
+
+  **Measured 2026-08-06** (node, `--expose-gc`, 50k circle shapes with fill + stroke):
+
+  | | Today's push path | `store.specs` adds | Delta |
+  |---|---|---|---|
+  | Heap | 277.65 MB (**5 823 B/shape**) | 8.72 MB (**183 B/spec**) | **+3.1 %** |
+  | Build time | 160.4 ms `addShape` | 12.4 ms `Map.set` | +7.7 % |
+  | Per-flush read (500 ids) | — | 0.056 ms | negligible |
+
+  The fear behind this gate — "a second copy of visual state" — does not
+  materialise: a spec is ~183 B against a rendered shape's ~5.8 KB, because the
+  expensive part is the pixi display object, not the description. Positions stay
+  in typed arrays and are not duplicated. **Gate threshold set at ≤ 10 % heap.**
 - [ ] Confirm transient visuals are **not** modelled as specs — they use the overlay device (D3, §3)
 - [ ] `GraphLayer` publishes resolved specs instead of passing them to `addShape`
 - [ ] Renderer reads specs from the store (still called imperatively — transitional)
