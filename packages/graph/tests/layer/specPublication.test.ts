@@ -63,6 +63,14 @@ function settle(layer: GraphLayer): void {
   layer.flush();
 }
 
+/** The renderer is private by design; a test may still look at what it holds. */
+function shapeKindOf(layer: GraphLayer, id: string): string | undefined {
+  const internals = layer as unknown as {
+    _renderer?: { getShapeKind(id: string): string | undefined };
+  };
+  return internals._renderer?.getShapeKind(id);
+}
+
 const TWO_NODES_ONE_EDGE = {
   nodes: [
     { id: 'a', type: 'thing', position: { x: 0, y: 0 } },
@@ -119,6 +127,24 @@ describe('GraphLayer spec publication', () => {
     const specs = canvas.store.specs['graph']!;
     expect(specs.has('a')).toBe(false);
     expect(specs.has('b')).toBe(true);
+  });
+
+  it('projects a spec written directly to the store — the store drives the renderer (P2)', () => {
+    const { canvas, layer } = mountGraph();
+    layer.setData(TWO_NODES_ONE_EDGE);
+    settle(layer);
+
+    const specs = canvas.store.specs['graph']!;
+    // Nobody calls `addShape` here: a spec appears in the store, and the
+    // renderer picks it up through `specs:flush`.
+    specs.set('injected', { kind: 'circle', x: 500, y: 500, radius: 8 });
+    specs.flush();
+
+    expect(shapeKindOf(layer, 'injected')).toBe('circle');
+
+    specs.delete('injected');
+    specs.flush();
+    expect(shapeKindOf(layer, 'injected')).toBeUndefined();
   });
 
   it('does not publish specs resolved purely for measurement', () => {

@@ -422,12 +422,12 @@ Ordered. `⚠` = the risky ones. A phase is done when its **gate** passes.
 - [ ] ⚠ **Measure**: heap + flush cost on a 50k-node graph, before vs after
 - [ ] **Gate:** rendering byte-identical; memory delta acceptable
 
-### P2 — invert the call direction ⚠
-- [ ] Renderer subscribes to `data:flush` and to view changes on `mount`
-- [ ] Implement `added` / `changed` / `removed` projection from the delta
-- [ ] Remove every `addShape` / `updateShape` / `setDecoration` push from `GraphLayer`
-- [ ] Shrink the imperative surface to the §4 contract
-- [ ] ⚠ Verify ordering: creation, decoration attach, plane assignment, raise
+### P2 — invert the call direction ✅ **landed 2026-08-06**
+- [x] Renderer subscribes on mount — to **`specs:flush`**, projecting `added` / `changed` / `removed`
+- [x] Implement `added` / `changed` / `removed` projection from the delta. Shape vs connector is resolved by **which registry owns the `kind`** (`renderer.shapeKinds`), so no discriminator is baked into the vocabulary
+- [x] Remove every `addShape` / `updateShape` / `addConnector` / `updateConnector` push from `GraphLayer` — the five sites now publish, and `projectSpec` reads back from the store. **Decorations, labels and badges are not specs yet**, so those calls remain (they follow in a later phase)
+- [→] Shrink the imperative surface to the §4 contract — **partly**: element add/update/remove is off the imperative path; decorations/labels/badges/LOD are not
+- [x] ⚠ Verify ordering — the layer's own publishes project **synchronously**, so the label / decoration / badge syncs that follow still find the element mounted. The coalesced flush then covers *external* writes only, skipping ids already projected this frame
 - [ ] **Gate:** no visual change; `GraphLayer` makes no draw calls
 
 ### P3 — close the 7 pixi leaks

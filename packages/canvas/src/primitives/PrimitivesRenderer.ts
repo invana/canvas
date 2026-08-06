@@ -557,6 +557,18 @@ export class PrimitivesRenderer {
     this.shapeRegistry.set(kind, ctor as ShapeCtor);
   }
 
+  /**
+   * The shape kinds this renderer can draw, including any registered at runtime.
+   *
+   * Exists so a caller projecting specs from the store can tell a shape spec from
+   * a connector spec by asking which registry owns its `kind` — no discriminator
+   * has to be baked into the spec vocabulary. Read-only view; register through
+   * {@link registerShape}.
+   */
+  get shapeKinds(): ReadonlySet<string> {
+    return new Set(this.shapeRegistry.keys());
+  }
+
   registerRouter(kind: string, fn: IRouter): void {
     this.routerRegistry.set(kind, fn);
   }
