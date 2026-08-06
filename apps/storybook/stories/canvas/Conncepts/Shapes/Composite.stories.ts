@@ -3,7 +3,7 @@ import {
   Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, PrimitivesRenderer,
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
-import type { CompositeSpec } from '@invana/canvas/primitives';
+import type { CompositeSpec } from '@invana/canvas/specs';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 

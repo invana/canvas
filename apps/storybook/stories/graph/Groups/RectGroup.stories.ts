@@ -13,7 +13,7 @@ import {
   type GroupOptions,
   type NodeStyle,
 } from '@invana/graph';
-import type { TogglePlacement } from '@invana/canvas/primitives';
+import type { TogglePlacement } from '@invana/canvas/specs';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
 const meta: Meta = { title: 'graph/Groups/RectGroup' };

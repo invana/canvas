@@ -7,7 +7,7 @@ import {
   PrimitivesRenderer,
 } from '@invana/canvas';
 import type { CanvasContext } from '@invana/canvas';
-import type { TogglePlacement } from '@invana/canvas/primitives';
+import type { TogglePlacement } from '@invana/canvas/specs';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
