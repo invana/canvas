@@ -1,7 +1,7 @@
 {
   "name": "@invana/canvas",
   "version": "0.0.11",
-  "description": "WebGPU-first canvas rendering engine — Layer / Behaviour / Layout architecture (see architecture-proposal.md).",
+  "description": "WebGPU-first canvas rendering engine \u2014 Layer / Behaviour / Layout architecture (see architecture-proposal.md).",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -15,6 +15,11 @@
       "types": "./dist/primitives/index.d.ts",
       "import": "./dist/primitives/index.js",
       "default": "./dist/primitives/index.js"
+    },
+    "./specs": {
+      "types": "./dist/specs/index.d.ts",
+      "import": "./dist/specs/index.js",
+      "default": "./dist/specs/index.js"
     }
   },
   "typedocOptions": {

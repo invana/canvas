@@ -389,12 +389,12 @@ layouts, bounds and projection testable with no GPU.
 
 Ordered. `⚠` = the risky ones. A phase is done when its **gate** passes.
 
-### P0 — spec vocabulary (no behaviour change)
-- [ ] Create `canvas/src/specs/`: `shape.ts` · `connector.ts` · `decoration.ts` · `plane.ts` · `style.ts`
-- [ ] Move spec **types** out of `primitives/types.ts`, leaving `IShape` / `IConnector` (they carry `gfx`) renderer-side
-- [ ] Move pure spec maths to `specs/geometry.ts` — `boundsOfSpec` · `collapsedShapeSpec` · `fitShapeSpecToContent` · `scaleShapeSpec` · `connectorGeometryUnchanged`
-- [ ] Add the **`path` spec kind** (points + stroke + fill) — P3 depends on it
-- [ ] Repoint `@invana/graph` imports to `@invana/canvas/specs`
+### P0 — spec vocabulary (no behaviour change) ✅ **landed 2026-08-06**
+- [x] Create `canvas/src/specs/`: `shape.ts` · `connector.ts` · `decoration.ts` · `plane.ts` · `style.ts`
+- [x] Move spec **types** out of `primitives/types.ts`, leaving `IShape` / `IConnector` (they carry `gfx`) renderer-side
+- [x] Move pure spec maths to `specs/geometry.ts` — **only `connectorGeometryKey` qualified.** The other four (`boundsOfSpec` · `scaleShapeSpec` · `collapsedShapeSpec` · `fitShapeSpecToContent`) are three-line registry lookups; the maths lives in `static` methods on the shape classes, so it migrates in P4 instead
+- [x] Add the **`path` spec kind** (points + stroke + fill) — P3 depends on it
+- [x] Repoint `@invana/graph` imports to `@invana/canvas/specs`
 - [ ] **Gate:** `graph` compiles referencing `specs/` only; no visual change
 
 ### P1 — specs become state ⚠ *D2 + D3 decided; unblocked*
@@ -429,6 +429,7 @@ Ordered. `⚠` = the risky ones. A phase is done when its **gate** passes.
 - [ ] **Gate:** `grep -rl "from 'pixi.js'" packages/*/src` → only `packages/canvas`
 
 ### P4 — engine-side geometry + measurement
+- [ ] **Migrate the per-kind spec maths off the shape classes** into `specs/` as pure functions — `boundsOf` · `scaleSpec` · `collapsedOf` · `fitToContent`, joined by the new `contains`. Found in P0: these `static`s are the real spec maths, and under P6 they would otherwise leave with the renderer, taking bounds and picking with them
 - [ ] `contains(spec, x, y, tolerance)` per spec kind — circle · rect · ellipse · polygon · path · star · arc · regular-polygon · tabbed-rect · composite
 - [ ] ⚠ Replace `bodyGfx.containsPoint` in the hit-test narrow phase — must match stroke tolerance closely enough that no click feels different
 - [ ] `Layer.computeBounds()`; move `GraphLayer`'s existing data-derived override onto it

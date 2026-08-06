@@ -26,7 +26,8 @@
 
 import { Container, FederatedPointerEvent, Graphics } from 'pixi.js';
 import { BackgroundLayer, ScreenLayer, select, type CanvasContext, type ScreenLayerHit } from '@invana/canvas';
-import type { LayerOptions, Rect } from '@invana/canvas';
+import type { LayerOptions } from '@invana/canvas';
+import type { Rect } from '@invana/canvas/specs';
 
 import { GraphLayer } from './GraphLayer';
 import type { GraphNode } from '../store/types';

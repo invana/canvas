@@ -19,7 +19,7 @@
  */
 
 import { Behaviour, type BehaviourOptions, type CanvasContext } from '@invana/canvas';
-import type { BaseConnectorSpec } from '@invana/canvas';
+import type { BaseConnectorSpec } from '@invana/canvas/specs';
 
 import { GraphLayer } from '../layer/GraphLayer';
 import { UNKNOWN_TYPE } from '../store';

@@ -14,22 +14,10 @@
  */
 
 import { PrimitivesRenderer, WorldLayer, jsonSafe } from '@invana/canvas';
-import type {
-  BaseConnectorSpec,
-  BaseShapeSpec,
-  CanvasContext,
-  ConnectorLabelStyle,
-  LayerOptions,
-  ShapeLabelStyle,
-  WorldLayerHit,
-} from '@invana/canvas';
-import type {
-  BadgeOptions,
-  DecorationSpec,
-  EffectSpec,
-  Rect,
-  ShapeFillLayer,
-} from '@invana/canvas/primitives';
+import type { CanvasContext, LayerOptions, WorldLayerHit } from '@invana/canvas';
+import type { BaseConnectorSpec, BaseShapeSpec, ConnectorLabelStyle, ShapeLabelStyle } from '@invana/canvas/specs';
+import type { BadgeOptions } from '@invana/canvas/primitives';
+import type { DecorationSpec, EffectSpec, Rect, ShapeFillLayer } from '@invana/canvas/specs';
 
 import { GraphStore } from '../store/GraphStore';
 import type { EdgeDirection, GraphEdge, GraphNode } from '../store/types';

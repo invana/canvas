@@ -32,6 +32,7 @@ export { CircleShape } from './shapes/CircleShape';
 export { EllipseShape } from './shapes/EllipseShape';
 export { RectShape } from './shapes/RectShape';
 export { TabbedRectShape } from './shapes/TabbedRectShape';
+export { PathShape } from './shapes/PathShape';
 export { PolygonShape } from './shapes/PolygonShape';
 export { RegularPolygonShape } from './shapes/RegularPolygonShape';
 export { StarShape } from './shapes/StarShape';

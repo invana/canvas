@@ -43,6 +43,8 @@ import { CircleShape } from './shapes/CircleShape';
 import { EllipseShape } from './shapes/EllipseShape';
 import { RectShape } from './shapes/RectShape';
 import { TabbedRectShape } from './shapes/TabbedRectShape';
+import { connectorGeometryKey } from '../specs/geometry';
+import { PathShape } from './shapes/PathShape';
 import { PolygonShape } from './shapes/PolygonShape';
 import { RegularPolygonShape } from './shapes/RegularPolygonShape';
 import { StarShape } from './shapes/StarShape';
@@ -479,6 +481,9 @@ export class PrimitivesRenderer {
     this.registerShape('rect', RectShape);
     this.registerShape('tabbed-rect', TabbedRectShape);
     this.registerShape('polygon', PolygonShape);
+    // Computed geometry (contour bands, hulls, region outlines) — a point run
+    // rather than a parameterised silhouette. See `docs/renderer-split-design.md` §3.
+    this.registerShape('path', PathShape);
     this.registerShape('regular-polygon', RegularPolygonShape);
     this.registerShape('star', StarShape);
     this.registerShape('arc', ArcShape);
@@ -1076,13 +1081,7 @@ export class PrimitivesRenderer {
   connectorGeometryUnchanged(id: string, next: BaseConnectorSpec): boolean {
     const inst = this.connectorInstances.get(id);
     if (!inst) return false;
-    return this.strippedStrokeKey(inst.spec) === this.strippedStrokeKey(next);
-  }
-
-  /** Stable-ish key of a connector spec with `stroke` removed (geometry only). */
-  private strippedStrokeKey(spec: BaseConnectorSpec): string {
-    const { stroke: _stroke, ...geometry } = spec as BaseConnectorSpec & { stroke?: unknown };
-    return JSON.stringify(geometry);
+    return connectorGeometryKey(inst.spec) === connectorGeometryKey(next);
   }
 
   /**

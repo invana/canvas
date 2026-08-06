@@ -2,17 +2,9 @@
  * `GraphLayer` public types — option shapes and per-node/per-edge render-spec
  * hints that map domain data to primitive specs.
  */
-import type {
-  ShapeLabelStyle,
-  ConnectorLabelStyle,
-  ShapeFill,
-  ShapeLabelPlacement,
-  ConnectorLabelPlacement,
-  InsetAnchor,
-  CompositePart,
-  CompositeRootSpec,
-} from '@invana/canvas';
-import type { Point } from '@invana/canvas/primitives';
+import type { CompositePart, CompositeRootSpec } from '@invana/canvas';
+import type { ShapeLabelStyle, ConnectorLabelStyle, ShapeFill, ShapeLabelPlacement, ConnectorLabelPlacement, InsetAnchor } from '@invana/canvas/specs';
+import type { Point } from '@invana/canvas/specs';
 // Type-only (no runtime cycle): the template module declares its shapes in
 // terms of this file's `NodeShapeOptions`; we reference its registries here.
 import type {

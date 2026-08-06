@@ -15,7 +15,7 @@ export type RendererBackend = 'webgpu' | 'webgl' | 'canvas' | (string & {});
  * `IRenderer` — the **renderer seam**: the renderer-agnostic contract the
  * orchestrator (`@invana/canvas`) drives, implemented by a rendering package
  * (the first being `@invana/renderer-pixijs`). Pure types — this file imports no
- * drawing library, keeping the kernel a leaf (see `docs/canvas-renderer-split-plan.md`).
+ * drawing library, keeping the kernel a leaf (see `docs/renderer-split-design.md`).
  *
  * The renderer is a **pure projection of store state** — it holds no source of
  * truth. The unidirectional loop:

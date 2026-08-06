@@ -12,9 +12,9 @@ The engine. Implements the Layer / Behaviour / Layout / Renderer architecture de
 - `ColumnStore` — typed-array column store for **bulk hot data** (node positions, edge attrs). Domain packages extend it. Scales to millions of items at machine-rate mutations. See `architecture-proposal.md` §2.1 for the bifurcated state model rationale.
 - `DirtyBatcher` — pure, RAF-free; Canvas owns the single `requestAnimationFrame`
 - `LayerRegistry`, `BehaviourRegistry`, `SurfaceManager`
-- `ShapesRenderer` — primitive renderer with five extensible registries: shapes, connectors, markers, routers, **decorations**. Used by Layers; never added to `canvas.layers`.
+- `PrimitivesRenderer` — primitive renderer with five extensible registries: shapes, connectors, markers, routers, **decorations**. Used by Layers; never added to `canvas.layers`.
   - Base interfaces: `IShape`, `IConnector`, `IMarker`, `IRouter`, `IShapeDecoration`, `IConnectorDecoration`.
-  - Built-in shapes: `circle`, `rect`, `ellipse`, `polygon`, `path`, `image`, `text`.
+  - Built-in shapes: `circle`, `ellipse`, `rect`, `tabbed-rect`, `polygon`, `regular-polygon`, `star`, `arc`, `path`, `composite`. (`arrow` is registered here too — markers are shapes.) **There is no `image` or `text` kind**: images arrive via `ShapeFill` layers, text via the `label` decoration and composite `label` parts.
   - Built-in connectors: `line`, `curve`.
   - Built-in markers: `arrow`, `circle`, `square`, `diamond`. **Markers are sized off the host connector's stroke width** — specs use `*Scale` multipliers (e.g. `lengthScale`, `widthScale`), not absolute pixel dims, so changing `stroke.width` proportionally rescales the marker. Final base width is clamped to `≥ strokeWidth` so a thick line never feeds into a narrower marker. New marker shapes must follow this rule: take `strokeWidth` in `static paintInto(...)` / `static markerInset(...)` and resolve final geometry from multipliers × strokeWidth (with width-floor clamp where applicable). Connector body trim (`trimPathEnds` / `markerInset`) and marker paint share the same resolved `strokeWidth` so they always agree.
   - Built-in routers: `straight`, `orthogonal`, `bezier`.
