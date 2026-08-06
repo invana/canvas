@@ -30,8 +30,12 @@
  * ```
  */
 
-import { Container, Graphics } from 'pixi.js';
-import { Behaviour, type BehaviourOptions, type CanvasContext } from '@invana/canvas';
+import {
+  Behaviour,
+  type BehaviourOptions,
+  type CanvasContext,
+  type IOverlayDevice,
+} from '@invana/canvas';
 
 import { GraphLayer } from '../layer/GraphLayer';
 import type {
@@ -164,8 +168,7 @@ export class BrushSelectBehaviour extends Behaviour {
   private layer: GraphLayer | null = null;
   private ctxRef: CanvasContext | null = null;
 
-  private overlay: Container | null = null;
-  private gfx: Graphics | null = null;
+  private overlay: IOverlayDevice | null = null;
 
   private dragActive = false;
   private dragStart: { x: number; y: number } | null = null;
@@ -193,14 +196,8 @@ export class BrushSelectBehaviour extends Behaviour {
     this.ctxRef = ctx;
 
     // Mount the screen-space overlay.
-    this.overlay = new Container();
-    this.overlay.label = `${this.id}-overlay`;
-    this.overlay.zIndex = 9999;
-    ctx.stage.sortableChildren = true;
-    ctx.stage.addChild(this.overlay);
-    this.gfx = new Graphics();
-    this.gfx.label = 'brush:rect';
-    this.overlay.addChild(this.gfx);
+    // Transient gesture visual — never state (`docs/renderer-split-design.md` §3).
+    this.overlay = ctx.createOverlay(`${this.id}-overlay`, 'world');
 
     const el = ctx.canvasElement;
     if (!el) {
@@ -231,10 +228,7 @@ export class BrushSelectBehaviour extends Behaviour {
     this.cancelDrag();
     for (const off of this.listenerDisposers) off();
     this.listenerDisposers.length = 0;
-    this.gfx?.destroy();
-    this.gfx = null;
-    this.overlay?.removeFromParent();
-    this.overlay?.destroy({ children: true });
+    this.overlay?.destroy();
     this.overlay = null;
     this.layer = null;
     this.ctxRef = null;
@@ -355,7 +349,7 @@ export class BrushSelectBehaviour extends Behaviour {
   // ─── Drawing ────────────────────────────────────────────────────────────
 
   private drawRect(): void {
-    const g = this.gfx;
+    const g = this.overlay;
     if (!g || !this.dragStart || !this.dragCurrent) return;
     const x = Math.min(this.dragStart.x, this.dragCurrent.x);
     const y = Math.min(this.dragStart.y, this.dragCurrent.y);
@@ -363,66 +357,23 @@ export class BrushSelectBehaviour extends Behaviour {
     const h = Math.abs(this.dragCurrent.y - this.dragStart.y);
 
     const style = this.opts.style;
-    const fill = style.fill ?? 0x1677ff;
-    const fillAlpha = style.fillAlpha ?? 0.1;
-    const stroke = style.stroke ?? 0x1677ff;
-    const strokeAlpha = style.strokeAlpha ?? 0.8;
-    const strokeWidth = style.strokeWidth ?? 1;
-    const strokeDash = style.strokeDash ?? [4, 4];
+    const dash = style.strokeDash ?? [4, 4];
 
-    g.clear();
-    g.rect(x, y, w, h);
-    g.fill({ color: fill, alpha: fillAlpha });
-
-    if (strokeDash.length >= 2) {
-      this.drawDashedRect(g, x, y, w, h, strokeDash, stroke, strokeAlpha, strokeWidth);
-    } else {
-      g.rect(x, y, w, h);
-      g.stroke({ color: stroke, alpha: strokeAlpha, width: strokeWidth });
-    }
+    g.clear()
+      .rect(x, y, w, h)
+      .fill({ color: style.fill ?? 0x1677ff, alpha: style.fillAlpha ?? 0.1 })
+      .rect(x, y, w, h)
+      .stroke({
+        color: style.stroke ?? 0x1677ff,
+        alpha: style.strokeAlpha ?? 0.8,
+        width: style.strokeWidth ?? 1,
+        ...(dash.length >= 2 ? { dashArray: [dash[0]!, dash[1]!] as const } : {}),
+      });
   }
 
-  private drawDashedRect(
-    g: Graphics,
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-    dash: number[],
-    color: number,
-    alpha: number,
-    lineWidth: number,
-  ): void {
-    const dashLen = dash[0] ?? 4;
-    const gapLen = dash[1] ?? 4;
-    const sides: Array<[number, number, number, number]> = [
-      [x, y, x + w, y],
-      [x + w, y, x + w, y + h],
-      [x + w, y + h, x, y + h],
-      [x, y + h, x, y],
-    ];
-    for (const [x1, y1, x2, y2] of sides) {
-      const totalLen = Math.hypot(x2 - x1, y2 - y1);
-      if (totalLen === 0) continue;
-      const nx = (x2 - x1) / totalLen;
-      const ny = (y2 - y1) / totalLen;
-      let dist = 0;
-      let drawing = true;
-      while (dist < totalLen) {
-        const segLen = Math.min(drawing ? dashLen : gapLen, totalLen - dist);
-        if (drawing) {
-          g.moveTo(x1 + nx * dist, y1 + ny * dist);
-          g.lineTo(x1 + nx * (dist + segLen), y1 + ny * (dist + segLen));
-          g.stroke({ color, alpha, width: lineWidth });
-        }
-        dist += segLen;
-        drawing = !drawing;
-      }
-    }
-  }
 
   private clearRect(): void {
-    this.gfx?.clear();
+    this.overlay?.clear();
   }
 
   private rectHasArea(): boolean {

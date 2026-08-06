@@ -35,6 +35,7 @@
 
 import { Application, Container, type EventSystem, type Ticker } from 'pixi.js';
 import { Viewport } from 'pixi-viewport';
+import { PixiOverlayDevice } from '../renderer/PixiOverlayDevice';
 import {
   CanvasEventBus,
   createCanvasStore,
@@ -1161,6 +1162,8 @@ export class Canvas {
       layers: this.layers,
       behaviours: this.behaviours,
       canvasElement: this.app?.canvas,
+      createOverlay: (label, space = 'world') =>
+        new PixiOverlayDevice(space === 'screen' ? this.stage : this.world, label),
       showMessage: (text, timeout) => this.showMessage(text, timeout),
       clearMessage: () => this.clearMessage(),
     };

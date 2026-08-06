@@ -14,6 +14,7 @@
  */
 
 import type { Container } from 'pixi.js';
+import type { IOverlayDevice, OverlaySpace } from '../renderer/IOverlayDevice';
 import type { CanvasStore } from '@invana/canvas-store';
 import type { CanvasEventBus } from '@invana/canvas-store';
 import type { Camera } from '../camera/Camera';
@@ -80,6 +81,16 @@ export interface CanvasContext {
    * read this to find a parent element and to attach native DOM listeners.
    */
   readonly canvasElement?: HTMLCanvasElement;
+
+  /**
+   * A drawing device for a **transient** visual — a lasso, a brush rectangle, a
+   * drag ghost. Not for layer content: anything durable is a spec in the store
+   * (`docs/renderer-split-design.md` §3).
+   *
+   * Available to behaviours as well as layers, because a gesture overlay belongs
+   * to the gesture, not to any one layer.
+   */
+  createOverlay(label: string, space?: OverlaySpace): IOverlayDevice;
 
   /**
    * Show a transient message on the shared canvas message channel — the same

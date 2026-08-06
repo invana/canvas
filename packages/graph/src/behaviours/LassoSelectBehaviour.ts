@@ -13,8 +13,12 @@
  * pans/zooms with the camera).
  */
 
-import { Container, Graphics } from 'pixi.js';
-import { Behaviour, type BehaviourOptions, type CanvasContext } from '@invana/canvas';
+import {
+  Behaviour,
+  type BehaviourOptions,
+  type CanvasContext,
+  type IOverlayDevice,
+} from '@invana/canvas';
 
 import { GraphLayer } from '../layer/GraphLayer';
 import type {
@@ -126,8 +130,7 @@ export class LassoSelectBehaviour extends Behaviour {
   private layer: GraphLayer | null = null;
   private ctxRef: CanvasContext | null = null;
 
-  private overlay: Container | null = null;
-  private gfx: Graphics | null = null;
+  private overlay: IOverlayDevice | null = null;
 
   private dragActive = false;
   /** Polygon points in WORLD space. */
@@ -155,16 +158,10 @@ export class LassoSelectBehaviour extends Behaviour {
     this.layer = layer;
     this.ctxRef = ctx;
 
-    // World-space overlay so the polygon stays anchored when the user pans
-    // the camera mid-draw.
-    this.overlay = new Container();
-    this.overlay.label = `${this.id}-overlay`;
-    this.overlay.zIndex = 9999;
-    ctx.world.sortableChildren = true;
-    ctx.world.addChild(this.overlay);
-    this.gfx = new Graphics();
-    this.gfx.label = 'lasso:path';
-    this.overlay.addChild(this.gfx);
+    // World-space overlay so the polygon stays anchored when the user pans the
+    // camera mid-draw. Transient by definition — it never becomes state
+    // (`docs/renderer-split-design.md` §3).
+    this.overlay = ctx.createOverlay(`${this.id}-overlay`, 'world');
 
     const el = ctx.canvasElement;
     if (!el) return;
@@ -195,10 +192,7 @@ export class LassoSelectBehaviour extends Behaviour {
     this.cancelDrag();
     for (const off of this.listenerDisposers) off();
     this.listenerDisposers.length = 0;
-    this.gfx?.destroy();
-    this.gfx = null;
-    this.overlay?.removeFromParent();
-    this.overlay?.destroy({ children: true });
+    this.overlay?.destroy();
     this.overlay = null;
     this.layer = null;
     this.ctxRef = null;
@@ -321,79 +315,31 @@ export class LassoSelectBehaviour extends Behaviour {
   // ─── Drawing ────────────────────────────────────────────────────────────
 
   private drawPolygon(): void {
-    const g = this.gfx;
+    const g = this.overlay;
     if (!g || this.worldPoints.length < 2) return;
 
     const style = this.opts.style;
-    const fill = style.fill ?? 0x1677ff;
-    const fillAlpha = style.fillAlpha ?? 0.1;
-    const stroke = style.stroke ?? 0x1677ff;
-    const strokeAlpha = style.strokeAlpha ?? 0.8;
-    const strokeWidthPx = style.strokeWidth ?? 1;
-    const strokeDash = style.strokeDash ?? [4, 4];
-
     const zoom = this.ctxRef?.camera.scale ?? 1;
-    const lineWidth = strokeWidthPx / Math.max(zoom, 1e-6);
+    // Stroke width is authored in screen pixels; divide by zoom so the outline
+    // keeps its apparent thickness as the camera scales.
+    const lineWidth = (style.strokeWidth ?? 1) / Math.max(zoom, 1e-6);
+    const dash = style.strokeDash ?? [4, 4];
 
-    g.clear();
-    const first = this.worldPoints[0]!;
-    g.moveTo(first.x, first.y);
-    for (let i = 1; i < this.worldPoints.length; i++) {
-      const p = this.worldPoints[i]!;
-      g.lineTo(p.x, p.y);
-    }
-    g.closePath();
-    g.fill({ color: fill, alpha: fillAlpha });
-
-    if (strokeDash.length >= 2) {
-      this.drawDashedClosed(g, this.worldPoints, strokeDash, stroke, strokeAlpha, lineWidth, zoom);
-    } else {
-      g.moveTo(first.x, first.y);
-      for (let i = 1; i < this.worldPoints.length; i++) {
-        const p = this.worldPoints[i]!;
-        g.lineTo(p.x, p.y);
-      }
-      g.lineTo(first.x, first.y);
-      g.stroke({ color: stroke, alpha: strokeAlpha, width: lineWidth });
-    }
+    g.clear()
+      .poly(this.worldPoints, true)
+      .fill({ color: style.fill ?? 0x1677ff, alpha: style.fillAlpha ?? 0.1 })
+      .poly(this.worldPoints, true)
+      .stroke({
+        color: style.stroke ?? 0x1677ff,
+        alpha: style.strokeAlpha ?? 0.8,
+        width: lineWidth,
+        ...(dash.length >= 2 ? { dashArray: [dash[0]! / zoom, dash[1]! / zoom] as const } : {}),
+      });
   }
 
-  private drawDashedClosed(
-    g: Graphics,
-    points: ReadonlyArray<{ x: number; y: number }>,
-    dash: number[],
-    color: number,
-    alpha: number,
-    lineWidth: number,
-    zoom: number,
-  ): void {
-    const dashLen = (dash[0] ?? 4) / Math.max(zoom, 1e-6);
-    const gapLen = (dash[1] ?? 4) / Math.max(zoom, 1e-6);
-    const n = points.length;
-    for (let i = 0; i < n; i++) {
-      const a = points[i]!;
-      const b = points[(i + 1) % n]!;
-      const totalLen = Math.hypot(b.x - a.x, b.y - a.y);
-      if (totalLen === 0) continue;
-      const nx = (b.x - a.x) / totalLen;
-      const ny = (b.y - a.y) / totalLen;
-      let dist = 0;
-      let drawing = true;
-      while (dist < totalLen) {
-        const segLen = Math.min(drawing ? dashLen : gapLen, totalLen - dist);
-        if (drawing) {
-          g.moveTo(a.x + nx * dist, a.y + ny * dist);
-          g.lineTo(a.x + nx * (dist + segLen), a.y + ny * (dist + segLen));
-          g.stroke({ color, alpha, width: lineWidth });
-        }
-        dist += segLen;
-        drawing = !drawing;
-      }
-    }
-  }
 
   private clearPolygon(): void {
-    this.gfx?.clear();
+    this.overlay?.clear();
   }
 
   // ─── Selection ──────────────────────────────────────────────────────────
