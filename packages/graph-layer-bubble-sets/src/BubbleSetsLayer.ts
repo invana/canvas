@@ -16,7 +16,10 @@
  * schedules the same debounced recompute as `data:changed`.
  */
 
-import { WorldLayer } from '@invana/canvas';
+import { SpecProjector, WorldLayer } from '@invana/canvas';
+import type { SpecStore } from '@invana/canvas';
+import { PrimitivesRenderer } from '@invana/canvas/primitives';
+import type { BaseShapeSpec, PathSpec, ShapeLabelStyle } from '@invana/canvas/specs';
 import type { CanvasContext, LayerOptions, WorldLayerHit } from '@invana/canvas';
 import { GraphLayer } from '@invana/graph';
 import type { GraphNode } from '@invana/graph';
@@ -26,7 +29,6 @@ import {
   type IRectangle,
   type ILine,
 } from 'bubblesets-js';
-import { Container, Graphics, Text } from 'pixi.js';
 
 import {
   BUBBLE_SET_STYLE_DEFAULTS,
@@ -49,8 +51,11 @@ export class BubbleSetsLayer extends WorldLayer<
   private sets: BubbleSet[];
 
   private graph: GraphLayer | null = null;
-  private gfx: Graphics | null = null;
-  private labels: Container | null = null;
+  private renderer: PrimitivesRenderer | null = null;
+  private specs: SpecStore<BaseShapeSpec> | null = null;
+  private projector: SpecProjector<BaseShapeSpec> | null = null;
+  /** Hull ids published last pass, so sets that vanish are retired. */
+  private published: string[] = [];
   private readonly subs: Array<() => void> = [];
 
   // Browser `setTimeout` returns `number`; using `ReturnType<typeof setTimeout>`
@@ -85,8 +90,11 @@ export class BubbleSetsLayer extends WorldLayer<
       );
     }
     this.graph = graph;
-    this.gfx = this.createGraphics('bubble-sets-contours');
-    this.labels = this.createContainer('bubble-sets-labels');
+    // Hulls are durable, data-derived visuals — published as `path` specs and
+    // projected like any other element (`docs/renderer-split-design.md` §3).
+    this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+    this.specs = ctx.store.specsFor<BaseShapeSpec>(this.id);
+    this.projector = new SpecProjector(this.specs, this.renderer);
 
     const recompute = this.options.recompute ?? BUBBLE_SETS_LAYER_DEFAULTS.recompute;
     if (recompute === 'auto') {
@@ -104,8 +112,13 @@ export class BubbleSetsLayer extends WorldLayer<
       window.clearTimeout(this.debounceTimer);
       this.debounceTimer = null;
     }
-    this.gfx = null;
-    this.labels = null;
+    this.projector?.destroy();
+    this.projector = null;
+    this.specs?.clear();
+    this.specs = null;
+    this.published = [];
+    this.renderer?.destroy();
+    this.renderer = null;
     this.graph = null;
   }
 
@@ -181,8 +194,8 @@ export class BubbleSetsLayer extends WorldLayer<
 
   private scheduleRecompute(): void {
     // Pre-mount mutations are absorbed by the initial paint scheduled in
-    // `onMount`; nothing to do until `gfx` exists.
-    if (!this.gfx) return;
+    // `onMount`; nothing to do until the spec store exists.
+    if (!this.specs) return;
     if (this.debounceTimer !== null) window.clearTimeout(this.debounceTimer);
     const wait =
       this.options.recomputeDebounceMs ?? BUBBLE_SETS_LAYER_DEFAULTS.recomputeDebounceMs;
@@ -193,17 +206,15 @@ export class BubbleSetsLayer extends WorldLayer<
   }
 
   private computeAndPaint(): void {
-    const g = this.gfx;
-    const labels = this.labels;
+    const specs = this.specs;
     const graph = this.graph;
-    if (!g || !labels || !graph) return;
+    if (!specs || !graph) return;
 
     const t0 = performance.now();
-
-    g.clear();
-    labels.removeChildren().forEach((c) => c.destroy());
+    const painted: string[] = [];
 
     if (this.sets.length === 0) {
+      this.retireHulls(painted);
       this.emitRecompute(0, t0);
       return;
     }
@@ -261,9 +272,10 @@ export class BubbleSetsLayer extends WorldLayer<
         );
       }
 
-      this.paintSet(g, labels, set, path);
+      painted.push(...this.publishSet(set, path));
     }
 
+    this.retireHulls(painted);
     this.emitRecompute(this.sets.length, t0);
   }
 
@@ -299,59 +311,88 @@ export class BubbleSetsLayer extends WorldLayer<
     };
   }
 
-  private paintSet(g: Graphics, labels: Container, set: BubbleSet, path: PointPath): void {
+  /**
+   * Describe one set's hull as a `path` spec and publish it. Returns the ids
+   * used, so the caller can retire hulls that this pass no longer produces.
+   *
+   * The contour is a **closed quadratic spline** through segment midpoints —
+   * `smooth: true` on the spec, so the shape does the tracing. That is what
+   * turns marching-squares stair-stepping into a glassy contour, and it now
+   * happens in the geometry rather than at draw time here.
+   */
+  private publishSet(set: BubbleSet, path: PointPath): string[] {
     const pts = path.points;
-    if (pts.length < 3) return;
+    const specs = this.specs;
+    if (!specs || pts.length < 3) return [];
 
     const style = { ...BUBBLE_SET_STYLE_DEFAULTS, ...set.style };
-    const fill = style.fill;
-    const stroke = set.style?.stroke ?? fill;
+    const stroke = set.style?.stroke ?? style.fill;
+    const id = `${this.id}:hull:${set.id}`;
 
-    // Build the contour as a closed quadratic-Bezier spline through
-    // segment midpoints, not a straight polyline. Each input point is used
-    // as an off-curve quadratic control point, so the rendered curve is
-    // C¹ continuous regardless of the input's stair-stepping. This is what
-    // turns marching-squares output into a glassy contour at draw time —
-    // independent of how many smoothing iterations ran upstream.
-    tracedSmoothClosedPath(g, pts);
-    g.fill({ color: fill, alpha: style.fillOpacity });
-    tracedSmoothClosedPath(g, pts);
-    g.stroke({
-      color: stroke,
-      alpha: style.strokeOpacity,
-      width: style.strokeWidth,
-      join: 'round',
-      cap: 'round',
-    });
+    const spec: PathSpec = {
+      kind: 'path',
+      x: 0,
+      y: 0,
+      smooth: true,
+      points: pts.map((pt) => ({ x: pt.x, y: pt.y })),
+      fill: [{ kind: 'solid', color: style.fill, alpha: style.fillOpacity }],
+      stroke: {
+        color: stroke,
+        alpha: style.strokeOpacity,
+        width: style.strokeWidth,
+        join: 'round',
+        cap: 'round',
+      },
+      ...(set.label ? { label: this.labelStyleFor(set, pts, stroke) } : {}),
+    };
 
-    if (set.label) this.paintLabel(labels, set, pts, stroke);
-
+    specs.set(id, spec);
+    this.projector?.project(id);
     this.events.emit('set:painted', { setId: set.id, vertices: pts.length });
+    return [id];
   }
 
-  private paintLabel(
-    labels: Container,
+  /** Drop hulls published last pass that this pass no longer produced. */
+  private retireHulls(current: string[]): void {
+    const keep = new Set(current);
+    for (const id of this.published) {
+      if (keep.has(id)) continue;
+      this.specs?.delete(id);
+      this.projector?.unproject(id);
+    }
+    this.published = current;
+  }
+
+
+  /**
+   * Label styling for a set's hull, as a `label` decoration on the hull spec.
+   *
+   * Placement is expressed as a screen-space offset from the hull's own centre,
+   * because the decoration anchors to its host — so the anchor maths that used
+   * to position a free-floating `Text` becomes an offset here. `contour-end`
+   * keeps its tangent rotation; `centroid` sits at the middle with no rotation.
+   */
+  private labelStyleFor(
     set: BubbleSet,
     pts: ReadonlyArray<{ x: number; y: number }>,
     fallbackColor: number,
-  ): void {
+  ): ShapeLabelStyle {
     const label = set.label!;
     const placement = label.placement ?? 'contour-end';
 
-    let anchorX: number;
-    let anchorY: number;
-    let rotation = 0;
+    let cx = 0;
+    let cy = 0;
+    for (const p of pts) {
+      cx += p.x;
+      cy += p.y;
+    }
+    cx /= pts.length;
+    cy /= pts.length;
 
-    if (placement === 'centroid') {
-      let sx = 0;
-      let sy = 0;
-      for (const p of pts) {
-        sx += p.x;
-        sy += p.y;
-      }
-      anchorX = sx / pts.length;
-      anchorY = sy / pts.length;
-    } else {
+    let anchorX = cx;
+    let anchorY = cy;
+    let rotation = 0;
+    if (placement !== 'centroid') {
       // `contour-end` — last point, rotated along the local tangent.
       const end = pts[pts.length - 1]!;
       const prev = pts[Math.max(0, pts.length - 8)]!;
@@ -360,35 +401,27 @@ export class BubbleSetsLayer extends WorldLayer<
       rotation = Math.atan2(end.y - prev.y, end.x - prev.x);
     }
 
-    const fontSize = label.fontSize ?? 11;
-    const text = new Text({
-      text: label.text,
-      style: {
+    return {
+      content: {
+        kind: 'text',
+        text: label.text,
         fontFamily: 'system-ui, -apple-system, sans-serif',
-        fontSize,
+        fontSize: label.fontSize ?? 11,
         fontWeight: '600',
         fill: label.color ?? 0xffffff,
-        padding: 2,
       },
-    });
-    text.anchor.set(0.5);
-    text.x = anchorX;
-    text.y = anchorY;
-    text.rotation = rotation;
-
-    // Background pill behind the text, sized to the rendered Text.
-    const bg = new Graphics();
-    const w = text.width + 12;
-    const h = text.height + 4;
-    bg.roundRect(-w / 2, -h / 2, w, h, Math.min(h / 2, 6));
-    bg.fill({ color: set.style?.stroke ?? fallbackColor, alpha: 0.95 });
-    bg.x = anchorX;
-    bg.y = anchorY;
-    bg.rotation = rotation;
-
-    labels.addChild(bg);
-    labels.addChild(text);
+      background: {
+        fill: set.style?.stroke ?? fallbackColor,
+        fillAlpha: 0.95,
+        radius: 6,
+        padding: [2, 6],
+      },
+      placement: 'center',
+      offset: { x: anchorX - cx, y: anchorY - cy },
+      rotation,
+    };
   }
+
 
   private emitRecompute(sets: number, t0: number): void {
     this.events.emit('recompute', { sets, durationMs: performance.now() - t0 });
@@ -407,23 +440,6 @@ export class BubbleSetsLayer extends WorldLayer<
  * draws as a smooth curve. The smoothing happens at the draw layer, so
  * we no longer pay for it in the smoothing pipeline.
  */
-function tracedSmoothClosedPath(g: Graphics, pts: ReadonlyArray<{ x: number; y: number }>): void {
-  const n = pts.length;
-  if (n < 3) return;
-  const last = pts[n - 1]!;
-  const first = pts[0]!;
-  let mx = (last.x + first.x) * 0.5;
-  let my = (last.y + first.y) * 0.5;
-  g.moveTo(mx, my);
-  for (let i = 0; i < n; i++) {
-    const a = pts[i]!;
-    const b = pts[(i + 1) % n]!;
-    mx = (a.x + b.x) * 0.5;
-    my = (a.y + b.y) * 0.5;
-    g.quadraticCurveTo(a.x, a.y, mx, my);
-  }
-  g.closePath();
-}
 
 /**
  * Chaikin's corner-cutting subdivision. Each iteration replaces every
