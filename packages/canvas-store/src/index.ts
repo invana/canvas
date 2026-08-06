@@ -165,3 +165,6 @@ export {
   type CanvasStoreObserver,
   type CreateCanvasStoreOptions,
 } from './CanvasStore';
+
+// Durable visual description — layers publish, renderers project (P1).
+export { SpecStore, type SpecFlush } from './specs/SpecStore';

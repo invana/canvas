@@ -13,6 +13,7 @@
  * `apps/docs/graph/events.md` for the event model.
  */
 
+import type { SpecStore } from '@invana/canvas';
 import { PrimitivesRenderer, WorldLayer, jsonSafe } from '@invana/canvas';
 import type { CanvasContext, LayerOptions, WorldLayerHit } from '@invana/canvas';
 import type { BaseConnectorSpec, BaseShapeSpec, ConnectorLabelStyle, ShapeLabelStyle } from '@invana/canvas/specs';
@@ -137,6 +138,8 @@ export class GraphLayer extends WorldLayer<
    * events on `graph.getRenderer().events`. Returns `undefined` before mount.
    */
   private _renderer?: PrimitivesRenderer;
+  /** Durable spec collection for this layer — see `docs/renderer-split-design.md` §2. */
+  private specStore?: SpecStore<BaseShapeSpec | BaseConnectorSpec>;
 
   /** Renderer accessor for behaviours. Undefined before `onMount`. */
   getRenderer(): PrimitivesRenderer | undefined {
@@ -323,6 +326,10 @@ export class GraphLayer extends WorldLayer<
     // drive it. The layer still owns the reference + renders from its granular
     // events — registration is additive.
     ctx.store.setSource(this.id, this.store);
+    // P1 — the durable visual description. Every spec this layer resolves is
+    // published here; today the renderer is still pushed to as well, and P2
+    // inverts that so it subscribes to `specs:flush` instead.
+    this.specStore = ctx.store.specsFor<BaseShapeSpec | BaseConnectorSpec>(this.id);
     this._renderer = new PrimitivesRenderer({
       container: this.container,
       camera: ctx.camera,
@@ -408,6 +415,7 @@ export class GraphLayer extends WorldLayer<
         this.dirtyStateNodes.delete(nodeId);
         this.nodeDecorationSlots.delete(nodeId);
         this.nodeBadgeSlots.delete(nodeId);
+        this.unpublishSpec(nodeId);
         this._renderer?.removeShape(nodeId);
         this.dirtyGroups.delete(nodeId);
         this.lastCollapsedByGroup.delete(nodeId);
@@ -441,6 +449,7 @@ export class GraphLayer extends WorldLayer<
         this.deferredEdgeInstalls.delete(edgeId);
         this.edgeDecorationSlots.delete(edgeId);
         this.edgeBadgeSlots.delete(edgeId);
+        this.unpublishSpec(edgeId);
         this._renderer?.removeConnector(edgeId);
       }),
       // Runtime (presence) state toggles — mark dirty; the flush handler drains
@@ -745,6 +754,7 @@ export class GraphLayer extends WorldLayer<
   private detachAllFromRenderer(): void {
     const renderer = this._renderer;
     if (!renderer) return;
+    this.specStore?.clear();
     for (const node of this.store.nodes()) renderer.removeShape(node.id);
     for (const edge of this.store.edges()) renderer.removeConnector(edge.id);
     this.dirtyConnectors.clear();
@@ -1648,6 +1658,7 @@ export class GraphLayer extends WorldLayer<
     const node = this.store.getNode(id);
     if (!node) return;
     const spec = this.nodeSpec(node);
+    this.publishSpec(id, spec);
     const currentKind = this._renderer.getShapeKind(id);
     if (currentKind === undefined) {
       this._renderer.addShape(id, spec);
@@ -1775,7 +1786,9 @@ export class GraphLayer extends WorldLayer<
 
   private installNodeShape(node: GraphNode): void {
     if (!this._renderer) return;
-    this._renderer.addShape(node.id, this.nodeSpec(node));
+    const spec = this.nodeSpec(node);
+    this.publishSpec(node.id, spec);
+    this._renderer.addShape(node.id, spec);
     this.syncNodeLabel(node.id);
     this.syncNodeDecorations(node.id);
     this.syncNodeBadges(node.id);
@@ -1789,6 +1802,7 @@ export class GraphLayer extends WorldLayer<
       this.deferredEdgeInstalls.add(edge.id);
       return;
     }
+    this.publishSpec(edge.id, spec);
     this._renderer.addConnector(edge.id, spec);
     this.syncEdgeLabel(edge.id);
     this.syncEdgeDecorations(edge.id);
@@ -2130,6 +2144,7 @@ export class GraphLayer extends WorldLayer<
     // `kind` (e.g. `circle` → `rect`). `updateShape` can't safely change
     // kind because the underlying `IShape` class is fixed at construction.
     const spec = this.nodeSpec(node);
+    this.publishSpec(node.id, spec);
     const currentKind = this._renderer.getShapeKind(node.id);
     if (currentKind === undefined) {
       this._renderer.addShape(node.id, spec);
@@ -2669,12 +2684,29 @@ export class GraphLayer extends WorldLayer<
     // underlying `recomputeConnectorPath` rebuilds the routed geometry,
     // so router / pathStyle / marker changes still apply cleanly.
     const spec = this.edgeSpec(edge);
+    this.publishSpec(edge.id, spec);
     if (this._renderer.hasConnector(edge.id)) {
       this._renderer.updateConnector(edge.id, spec);
     } else {
       this._renderer.addConnector(edge.id, spec);
     }
     this.syncEdgeLabel(edge.id);
+  }
+
+  // ── Spec publication (P1) ─────────────────────────────────────────────────
+
+  /**
+   * Publish a resolved spec as durable state. Called wherever a spec is computed
+   * **for rendering** — never for measurement (`boundsOfSpec` callers resolve a
+   * throwaway spec and must not write it).
+   */
+  private publishSpec(id: string, spec: BaseShapeSpec | BaseConnectorSpec): void {
+    this.specStore?.set(id, spec);
+  }
+
+  /** Drop a published spec — pairs with `removeShape` / `removeConnector`. */
+  private unpublishSpec(id: string): void {
+    this.specStore?.delete(id);
   }
 }
 
@@ -3142,4 +3174,5 @@ function resolveEdgeStyleFields<D>(
     if (v !== undefined) out[k as string] = v;
   }
   return out as Partial<EdgeStyle>;
+
 }

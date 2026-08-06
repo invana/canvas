@@ -40,6 +40,11 @@ export {
   type CanvasView,
 } from '@invana/canvas-store';
 
+// ─── Specs as state (P1) ─────────────────────────────────────────────────────
+// The durable visual description a layer publishes and a renderer projects.
+// Re-exported so domain layers reach it without a direct kernel dependency.
+export { SpecStore, type SpecFlush } from '@invana/canvas-store';
+
 // ─── State ──────────────────────────────────────────────────────────────
 export { createLayerStore } from './state/Store';
 export type { Store, StoreApi, CreateLayerStoreOptions } from './state/Store';

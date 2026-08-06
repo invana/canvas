@@ -397,9 +397,9 @@ Ordered. `⚠` = the risky ones. A phase is done when its **gate** passes.
 - [x] Repoint `@invana/graph` imports to `@invana/canvas/specs`
 - [ ] **Gate:** `graph` compiles referencing `specs/` only; no visual change
 
-### P1 — specs become state ⚠ *D2 + D3 decided; unblocked*
-- [ ] Implement `store.specs[layerId]` — per-layer collections (D2 ✅)
-- [ ] Implement the **`specs:flush`** channel — generic `{ added, changed, removed }`, frame-coalesced (D8 ✅, §4.2b)
+### P1 — specs become state ✅ **landed 2026-08-06**
+- [x] Implement `store.specs[layerId]` — per-layer collections (D2 ✅). `SpecStore<T>` is generic: the kernel has no `@invana` deps, so the spec *vocabulary* stays in `canvas` and the kernel just holds the collection
+- [x] Implement the **`specs:flush`** channel — generic `{ added, changed, removed, version }`, frame-coalesced, muted in telemetry logging like `data:flush` (D8 ✅, §4.2b)
 - [x] ⚠ Capture **baselines first**: heap + frame timing at 50k nodes, before any change
 
   **Measured 2026-08-06** (node, `--expose-gc`, 50k circle shapes with fill + stroke):
@@ -415,9 +415,10 @@ Ordered. `⚠` = the risky ones. A phase is done when its **gate** passes.
   expensive part is the pixi display object, not the description. Positions stay
   in typed arrays and are not duplicated. **Gate threshold set at ≤ 10 % heap.**
 - [ ] Confirm transient visuals are **not** modelled as specs — they use the overlay device (D3, §3)
-- [ ] `GraphLayer` publishes resolved specs instead of passing them to `addShape`
-- [ ] Renderer reads specs from the store (still called imperatively — transitional)
-- [ ] Confirm positions stay in typed arrays and are **not** duplicated into specs
+- [x] `GraphLayer` publishes resolved specs — at the five sites where a spec is resolved **for rendering**, never at the measurement sites (`boundsOfSpec` callers resolve throwaway specs). Removals unpublish; teardown clears.
+  ⚠ **Dual-write, deliberately**: the renderer is still pushed to as well. Turning the push off is P2's job, not a half-step here
+- [→] Renderer reads specs from the store — **moved to P2.** Making it read while still being called imperatively adds a third code path with no benefit; P2 inverts read *and* write together
+- [x] Confirm positions stay in typed arrays and are **not** duplicated into specs
 - [ ] ⚠ **Measure**: heap + flush cost on a 50k-node graph, before vs after
 - [ ] **Gate:** rendering byte-identical; memory delta acceptable
 
