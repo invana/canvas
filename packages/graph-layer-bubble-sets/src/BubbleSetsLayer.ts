@@ -18,7 +18,6 @@
 
 import { SpecProjector, WorldLayer } from '@invana/canvas';
 import type { SpecStore } from '@invana/canvas';
-import { PrimitivesRenderer } from '@invana/canvas/primitives';
 import type { BaseShapeSpec, PathSpec, ShapeLabelStyle } from '@invana/canvas/specs';
 import type { CanvasContext, LayerOptions, WorldLayerHit } from '@invana/canvas';
 import { GraphLayer } from '@invana/graph';
@@ -51,7 +50,6 @@ export class BubbleSetsLayer extends WorldLayer<
   private sets: BubbleSet[];
 
   private graph: GraphLayer | null = null;
-  private renderer: PrimitivesRenderer | null = null;
   private specs: SpecStore<BaseShapeSpec> | null = null;
   private projector: SpecProjector<BaseShapeSpec> | null = null;
   /** Hull ids published last pass, so sets that vanish are retired. */
@@ -92,9 +90,10 @@ export class BubbleSetsLayer extends WorldLayer<
     this.graph = graph;
     // Hulls are durable, data-derived visuals — published as `path` specs and
     // projected like any other element (`docs/renderer-split-design.md` §3).
-    this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+    // The surface owns this renderer; the layer borrows it and must not destroy it.
+    const renderer = this.surface.primitives;
     this.specs = ctx.store.specsFor<BaseShapeSpec>(this.id);
-    this.projector = new SpecProjector(this.specs, this.renderer);
+    this.projector = new SpecProjector(this.specs, renderer);
 
     const recompute = this.options.recompute ?? BUBBLE_SETS_LAYER_DEFAULTS.recompute;
     if (recompute === 'auto') {
@@ -117,8 +116,6 @@ export class BubbleSetsLayer extends WorldLayer<
     this.specs?.clear();
     this.specs = null;
     this.published = [];
-    this.renderer?.destroy();
-    this.renderer = null;
     this.graph = null;
   }
 

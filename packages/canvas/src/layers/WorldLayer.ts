@@ -15,7 +15,8 @@
  * consumers passing screen coords to a world layer or vice versa.
  */
 
-import { Container, Graphics } from 'pixi.js';
+import type { Container } from 'pixi.js';
+import type { ISurface } from '../renderer/ISurface';
 import type { CanvasContext } from '../context/CanvasContext';
 import type { EventMap } from '@invana/canvas-store';
 import { Layer, type LayerOptions } from './Layer';
@@ -35,7 +36,7 @@ export abstract class WorldLayer<
   THit extends WorldLayerHit = WorldLayerHit,
 > extends Layer<TOptions, TState, TEvents, TDirtyBucket> {
   /** Backing field — assigned in `mount`, cleared in `unmount`. */
-  protected _container?: Container;
+  protected _surface?: ISurface;
 
   /**
    * Root pixi `Container` (RenderGroup) for this layer. Available from
@@ -44,11 +45,32 @@ export abstract class WorldLayer<
    * Pass to `ShapesRenderer` as the `container` option when wiring up a renderer
    * inside `onMount`. Subclass-only — not part of the external layer API.
    */
+  /**
+   * This layer's slice of the renderer — its drawing device, overlays,
+   * visibility and paint order. Available from `onMount(ctx)` for the layer's
+   * lifetime; throws before mount / after unmount.
+   *
+   * Replaces the raw pixi `Container` layers used to be handed: a layer
+   * describes what it wants drawn and never touches a display object.
+   */
+  /**
+   * The pixi root of this layer's surface.
+   *
+   * @deprecated Renderer-side escape hatch for in-package layers that paint
+   * objects the primitives and overlay vocabularies don't cover (currently only
+   * `BackgroundLayer`'s tiling pattern). Everything else describes content as
+   * specs, or draws transients through `surface.overlay(...)`. Goes away when
+   * the drawing bodies move to `@invana/renderer-pixijs`.
+   */
   protected get container(): Container {
-    if (!this._container) {
-      throw new Error(`WorldLayer "${this.id}" container accessed before mount`);
+    return (this.surface as unknown as { root: Container }).root;
+  }
+
+  protected get surface(): ISurface {
+    if (!this._surface) {
+      throw new Error(`WorldLayer "${this.id}" surface accessed before mount`);
     }
-    return this._container;
+    return this._surface;
   }
 
   constructor(opts: LayerOptions<TOptions>) {
@@ -56,55 +78,28 @@ export abstract class WorldLayer<
   }
 
   override mount(ctx: CanvasContext): void {
-    // Build the root container BEFORE calling `super.mount(ctx)` so that
-    // `onMount(ctx)` (invoked by `Layer.mount`) can rely on `this.container`.
-    const root = new Container({ isRenderGroup: true });
-    root.label = this.id;
-    if (this.zIndex !== 0) {
-      root.zIndex = this.zIndex;
-      ctx.world.sortableChildren = true;
-    }
-    root.visible = this.visible;
-    ctx.world.addChild(root);
-    this._container = root;
+    // Build the surface BEFORE `super.mount(ctx)` so `onMount(ctx)` can rely on
+    // `this.surface`.
+    const surface = ctx.createSurface('world', this.id);
+    if (this.zIndex !== 0) surface.setZIndex(this.zIndex);
+    surface.setVisible(this.visible);
+    this._surface = surface;
     super.mount(ctx);
   }
 
   /** Keep the pixi container in sync when `layer.visible` is toggled. */
   protected override onVisibleChange(value: boolean): void {
-    if (this._container) this._container.visible = value;
+    this._surface?.setVisible(value);
   }
 
   override unmount(): void {
     if (!this.mounted) return;
     super.unmount();
-    this._container?.destroy({ children: true });
-    this._container = undefined;
+    this._surface?.destroy();
+    this._surface = undefined;
   }
 
-  /**
-   * Create a pixi `Graphics` attached to this layer's root container. The
-   * sanctioned way for layer authors to obtain a `Graphics` for direct
-   * painting via `@invana/canvas/draw` primitives — keeps pixi internal
-   * (no `new Graphics()` in user code).
-   */
-  createGraphics(label?: string): Graphics {
-    const g = new Graphics();
-    if (label) g.label = label;
-    this.container.addChild(g);
-    return g;
-  }
 
-  /**
-   * Create a plain pixi `Container` attached to this layer's root container.
-   * Useful as a parent for mounted display objects (e.g. text sprites).
-   */
-  createContainer(label?: string): Container {
-    const c = new Container();
-    if (label) c.label = label;
-    this.container.addChild(c);
-    return c;
-  }
 
   /**
    * Update this layer's z-order relative to its peers. Keeps the iteration
@@ -114,11 +109,7 @@ export abstract class WorldLayer<
    */
   setZIndex(z: number): void {
     this.zIndex = z;
-    if (this._container) {
-      this._container.zIndex = z;
-      const parent = this._container.parent;
-      if (parent) parent.sortableChildren = true;
-    }
+    this._surface?.setZIndex(z);
   }
 
   /**
@@ -126,9 +117,11 @@ export abstract class WorldLayer<
    * Delegates to Pixi's `getLocalBounds()` — a one-shot scene-graph traversal.
    * Suitable for "fit to content" calls; do not call every frame.
    */
-  getBounds(): { x: number; y: number; width: number; height: number } {
-    const b = this.container.getLocalBounds();
-    return { x: b.minX, y: b.minY, width: b.maxX - b.minX, height: b.maxY - b.minY };
+  getBounds(): { x: number; y: number; width: number; height: number } | null {
+    // Subclasses that know their own data override this (see `GraphLayer`).
+    // Without a scene-graph walk there is nothing generic to measure, so the
+    // honest answer is "nothing to fit" rather than a zero rect.
+    return null;
   }
 
   /**

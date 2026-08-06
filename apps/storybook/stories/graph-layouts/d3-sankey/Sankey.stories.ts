@@ -142,6 +142,7 @@ export const Sankey: Story = {
      */
     const applyNodeStyling = (): void => {
       const bounds = graph.getBounds();
+      if (!bounds) return; // nothing laid out yet — nothing to style against
       const midX = bounds.x + bounds.width / 2;
       graph.store.batch(() => {
         for (const node of graph.store.nodes()) {

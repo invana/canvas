@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { PixiSurface } from '../../src/renderer/PixiSurface';
 import { BehaviourRegistry } from '../../src/registries/BehaviourRegistry';
 import { LayerRegistry } from '../../src/registries/LayerRegistry';
 import { CanvasEventBus } from '@invana/canvas-store';
@@ -21,7 +22,8 @@ function makeContext() {
   let ctx: CanvasContext;
   const layers = new LayerRegistry({ getContext: () => ctx, bus });
   const behaviours = new BehaviourRegistry({ getContext: () => ctx, bus });
-  ctx = { events: bus, store: createCanvasStore(), world, stage, camera, gestures: new DefaultGestureArbiter(), layers, behaviours, theme: { current: () => null, set: () => {} }, showMessage: () => {}, clearMessage: () => {}, createOverlay: () => ({}) as never };
+  ctx = { events: bus, store: createCanvasStore(), world, stage, camera, gestures: new DefaultGestureArbiter(), layers, behaviours, theme: { current: () => null, set: () => {} }, showMessage: () => {}, clearMessage: () => {}, createOverlay: () => ({}) as never, createSurface: (space, id) =>
+      new PixiSurface({ id, space, parent: space === 'screen' ? stage : world, camera }) };
   return ctx;
 }
 

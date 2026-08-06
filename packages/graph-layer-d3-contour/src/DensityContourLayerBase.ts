@@ -19,7 +19,6 @@
 
 import { SpecProjector, WorldLayer } from '@invana/canvas';
 import type { SpecStore } from '@invana/canvas';
-import { PrimitivesRenderer } from '@invana/canvas/primitives';
 import type { BaseShapeSpec, PathSpec } from '@invana/canvas/specs';
 import type { CanvasContext, LayerOptions, WorldLayerHit } from '@invana/canvas';
 import { GraphLayer } from '@invana/graph';
@@ -47,7 +46,6 @@ export abstract class DensityContourLayerBase<
   private readonly graphLayerId: string;
 
   private graph: GraphLayer | null = null;
-  private renderer: PrimitivesRenderer | null = null;
   private specs: SpecStore<BaseShapeSpec> | null = null;
   private projector: SpecProjector<BaseShapeSpec> | null = null;
   /** Ids published on the previous recompute, so stale bands are retired. */
@@ -86,9 +84,10 @@ export abstract class DensityContourLayerBase<
     this.graph = graph;
     // Bands are published as `path` specs and projected like any other element —
     // no raw drawing surface. See `docs/renderer-split-design.md` §3.
-    this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+    // The surface owns this renderer; the layer borrows it and must not destroy it.
+    const renderer = this.surface.primitives;
     this.specs = ctx.store.specsFor<BaseShapeSpec>(this.id);
-    this.projector = new SpecProjector(this.specs, this.renderer);
+    this.projector = new SpecProjector(this.specs, renderer);
 
     const recompute = this.options.recompute ?? DENSITY_CONTOUR_BASE_DEFAULTS.recompute;
     if (recompute === 'auto') {
@@ -111,8 +110,6 @@ export abstract class DensityContourLayerBase<
     this.specs?.clear();
     this.specs = null;
     this.published = [];
-    this.renderer?.destroy();
-    this.renderer = null;
     this.graph = null;
   }
 

@@ -1088,7 +1088,15 @@ export class GraphLayer extends WorldLayer<
    *   `false`). Falls back to the base scene-graph bounds before the renderer
    *   mounts or when nothing visible is aggregated.
    */
-  override getBounds(opts?: { includeHidden?: boolean }): Rect {
+  /**
+   * World-space AABB of this layer's content, or `null` when there is nothing
+   * to measure — an empty graph, or a layer whose renderer hasn't mounted.
+   *
+   * `null` rather than a zero rect because callers fit the camera to this: a
+   * zero rect produces a nonsense camera, whereas `null` lets them skip the fit
+   * (`docs/renderer-split-design.md` D3).
+   */
+  override getBounds(opts?: { includeHidden?: boolean }): Rect | null {
     const includeHidden = opts?.includeHidden ?? false;
     const renderer = this._renderer;
     if (!renderer) return super.getBounds();

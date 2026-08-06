@@ -327,7 +327,13 @@ export class Camera {
    * is visible (limited by the smaller axis), centres it. `padding` is in
    * screen pixels around the rect.
    */
-  fitContent(worldRect: Rect, padding = 24): void {
+  fitContent(worldRect: Rect | null | undefined, padding = 24): void {
+    // `null` means "nothing to measure" — an empty graph, or a layer whose
+    // renderer hasn't mounted. Fitting to a zero rect would produce a nonsense
+    // camera, so the honest response is to leave the view alone. Accepting it
+    // here keeps the null-check out of every call site
+    // (`docs/renderer-split-design.md` D3).
+    if (!worldRect) return;
     const availW = Math.max(1, this._screenWidth - padding * 2);
     const availH = Math.max(1, this._screenHeight - padding * 2);
     const scaleX = availW / Math.max(1, worldRect.width);
