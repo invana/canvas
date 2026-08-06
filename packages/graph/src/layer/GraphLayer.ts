@@ -13,6 +13,7 @@
  * `apps/docs/graph/events.md` for the event model.
  */
 
+import { SpecProjector } from '@invana/canvas';
 import type { SpecStore } from '@invana/canvas';
 import { PrimitivesRenderer, WorldLayer, jsonSafe } from '@invana/canvas';
 import type { CanvasContext, LayerOptions, WorldLayerHit } from '@invana/canvas';
@@ -140,12 +141,7 @@ export class GraphLayer extends WorldLayer<
   private _renderer?: PrimitivesRenderer;
   /** Durable spec collection for this layer — see `docs/renderer-split-design.md` §2. */
   private specStore?: SpecStore<BaseShapeSpec | BaseConnectorSpec>;
-  private offSpecFlush?: () => void;
-  /**
-   * Ids already projected synchronously this frame, so the coalesced flush does
-   * not redraw them a second time. Cleared on every flush.
-   */
-  private readonly projectedThisFrame = new Set<string>();
+  private projector?: SpecProjector<BaseShapeSpec | BaseConnectorSpec>;
 
   /** Renderer accessor for behaviours. Undefined before `onMount`. */
   getRenderer(): PrimitivesRenderer | undefined {
@@ -332,21 +328,9 @@ export class GraphLayer extends WorldLayer<
     // drive it. The layer still owns the reference + renders from its granular
     // events — registration is additive.
     ctx.store.setSource(this.id, this.store);
-    // P1 — the durable visual description. Every spec this layer resolves is
-    // published here; today the renderer is still pushed to as well, and P2
-    // inverts that so it subscribes to `specs:flush` instead.
+    // P1/P2 — the durable visual description. Every spec this layer resolves is
+    // published here, and the projector below turns the store into pixels.
     this.specStore = ctx.store.specsFor<BaseShapeSpec | BaseConnectorSpec>(this.id);
-    // P2 — the store drives the renderer. Specs this layer publishes are
-    // projected synchronously (so the label / decoration syncs that follow find
-    // the element mounted); this subscription catches everything *else* that
-    // writes a spec — a behaviour, a tool, a restored session — so the renderer
-    // is genuinely a function of the store rather than of our call sites.
-    this.offSpecFlush = this.specStore.onFlush((delta) => {
-      for (const id of delta.added) if (!this.projectedThisFrame.has(id)) this.projectSpec(id);
-      for (const id of delta.changed) if (!this.projectedThisFrame.has(id)) this.projectSpec(id);
-      for (const id of delta.removed) this.unprojectSpec(id);
-      this.projectedThisFrame.clear();
-    });
     this._renderer = new PrimitivesRenderer({
       container: this.container,
       camera: ctx.camera,
@@ -356,6 +340,17 @@ export class GraphLayer extends WorldLayer<
       // Forwarded so the renderer's pointer router can apply
       // `cursor: pointer` on shape / connector hover.
       ...(ctx.canvasElement ? { canvasElement: ctx.canvasElement } : {}),
+    });
+    // P2 — the store drives the renderer. Specs this layer publishes project
+    // synchronously (the label / decoration syncs that follow need the element
+    // mounted); the projector's flush subscription catches every *other* writer.
+    this.projector = new SpecProjector(this.specStore, this._renderer, {
+      onKindChange: (changed) => {
+        // `removeShape` disposes attached decorations + badges — drop our tracking
+        // so the next sync treats it as a fresh mount, not a diff against ghosts.
+        this.nodeDecorationSlots.delete(changed);
+        this.nodeBadgeSlots.delete(changed);
+      },
     });
 
     // Initial sync — render anything the store already has. Document `states`
@@ -615,9 +610,8 @@ export class GraphLayer extends WorldLayer<
   protected override onUnmount(): void {
     for (const off of this.subs) off();
     this.subs.length = 0;
-    this.offSpecFlush?.();
-    this.offSpecFlush = undefined;
-    this.projectedThisFrame.clear();
+    this.projector?.destroy();
+    this.projector = undefined;
     this.store.bindBus(undefined);
     this._renderer?.destroy();
     this._renderer = undefined;
@@ -2687,63 +2681,15 @@ export class GraphLayer extends WorldLayer<
    */
   private publishSpec(id: string, spec: BaseShapeSpec | BaseConnectorSpec): void {
     this.specStore?.set(id, spec);
-    this.projectedThisFrame.add(id);
-    this.projectSpec(id);
+    this.projector?.project(id);
   }
 
-  /**
-   * Drive the renderer from whatever the store currently holds for `id`.
-   *
-   * Shapes and connectors are told apart by the registry the spec's `kind`
-   * belongs to — the renderer already thinks in those terms, so no discriminator
-   * has to be baked into the vocabulary.
-   *
-   * Instance-preserving by default: an existing element of the same kind is
-   * updated (keeping `gfxScale`, decorations, badges, effects) and only a *kind*
-   * change forces remove + add, because the underlying `IShape` class is fixed at
-   * construction.
-   */
-  private projectSpec(id: string): void {
-    const renderer = this._renderer;
-    const spec = this.specStore?.get(id);
-    if (!renderer || !spec) return;
-
-    if (renderer.shapeKinds.has(spec.kind)) {
-      const shapeSpec = spec as BaseShapeSpec;
-      const currentKind = renderer.getShapeKind(id);
-      if (currentKind === undefined) {
-        renderer.addShape(id, shapeSpec);
-      } else if (currentKind === shapeSpec.kind) {
-        renderer.updateShape<BaseShapeSpec>(id, shapeSpec);
-      } else {
-        renderer.removeShape(id);
-        // `removeShape` disposes every mounted decoration AND badge on the host.
-        // Drop our tracking so the next sync treats it as a full mount instead
-        // of diffing against ghost slots.
-        this.nodeDecorationSlots.delete(id);
-        this.nodeBadgeSlots.delete(id);
-        renderer.addShape(id, shapeSpec);
-      }
-      return;
-    }
-
-    const connectorSpec = spec as BaseConnectorSpec;
-    if (renderer.hasConnector(id)) renderer.updateConnector(id, connectorSpec);
-    else renderer.addConnector(id, connectorSpec);
-  }
-
-  /** Drop a published spec — pairs with `removeShape` / `removeConnector`. */
+  /** Drop a published spec — pairs with the projector's removal path. */
   private unpublishSpec(id: string): void {
     this.specStore?.delete(id);
+    this.projector?.unproject(id);
   }
 
-  /** Remove whatever the renderer holds for `id`, whichever kind it is. */
-  private unprojectSpec(id: string): void {
-    const renderer = this._renderer;
-    if (!renderer) return;
-    if (renderer.getShapeKind(id) !== undefined) renderer.removeShape(id);
-    else if (renderer.hasConnector(id)) renderer.removeConnector(id);
-  }
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────

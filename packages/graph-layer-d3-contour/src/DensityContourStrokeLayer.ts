@@ -12,8 +12,8 @@
  */
 
 import type { ContourMultiPolygon } from 'd3-contour';
-import type { Graphics } from 'pixi.js';
 
+import type { PathSpec } from '@invana/canvas/specs';
 import { DensityContourLayerBase } from './DensityContourLayerBase';
 import { DENSITY_CONTOUR_PALETTES, lerpColor, sampleStops } from './palettes';
 import type { DensityContourStrokeLayerOptions } from './types';
@@ -34,33 +34,34 @@ function resolveStops(
 
 export class DensityContourStrokeLayer extends DensityContourLayerBase<DensityContourStrokeLayerOptions> {
   override readonly kind = 'density-contour-stroke-layer';
-  protected paintDensity(
-    g: Graphics,
+  protected buildBands(
     density: ContourMultiPolygon[],
     offsetX: number,
     offsetY: number,
-  ): void {
+  ): PathSpec[] {
     const total = density.length;
     const widthAt = this.resolveWidth();
     const strokeAt = this.resolveStrokeColor();
+    const out: PathSpec[] = [];
 
     density.forEach((band, i) => {
       const w = widthAt(i, total, band.value);
-      if (w <= 0) return; // skip; nothing to paint for this band
+      if (w <= 0) return; // nothing to draw for this band
 
       for (const polygon of band.coordinates) {
         const outer = polygon[0];
         if (!outer || outer.length < 3) continue;
-        const flat: number[] = new Array(outer.length * 2);
-        for (let k = 0; k < outer.length; k++) {
-          const pt = outer[k]!;
-          flat[k * 2] = (pt[0] ?? 0) + offsetX;
-          flat[k * 2 + 1] = (pt[1] ?? 0) + offsetY;
-        }
-        g.poly(flat);
+        out.push({
+          kind: 'path',
+          x: 0,
+          y: 0,
+          closed: true,
+          points: outer.map((pt) => ({ x: (pt[0] ?? 0) + offsetX, y: (pt[1] ?? 0) + offsetY })),
+          stroke: { color: strokeAt(band.value, i, total), width: w },
+        });
       }
-      g.stroke({ color: strokeAt(band.value, i, total), width: w });
     });
+    return out;
   }
 
   /**

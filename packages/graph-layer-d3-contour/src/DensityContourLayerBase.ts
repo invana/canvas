@@ -17,11 +17,13 @@
  * (subscription, debounce timer, bounds math) is owned here.
  */
 
-import { WorldLayer } from '@invana/canvas';
+import { SpecProjector, WorldLayer } from '@invana/canvas';
+import type { SpecStore } from '@invana/canvas';
+import { PrimitivesRenderer } from '@invana/canvas/primitives';
+import type { BaseShapeSpec, PathSpec } from '@invana/canvas/specs';
 import type { CanvasContext, LayerOptions, WorldLayerHit } from '@invana/canvas';
 import { GraphLayer } from '@invana/graph';
 import { contourDensity, type ContourMultiPolygon } from 'd3-contour';
-import type { Graphics } from 'pixi.js';
 
 import type {
   DensityContourLayerBaseOptions,
@@ -45,7 +47,11 @@ export abstract class DensityContourLayerBase<
   private readonly graphLayerId: string;
 
   private graph: GraphLayer | null = null;
-  protected gfx: Graphics | null = null;
+  private renderer: PrimitivesRenderer | null = null;
+  private specs: SpecStore<BaseShapeSpec> | null = null;
+  private projector: SpecProjector<BaseShapeSpec> | null = null;
+  /** Ids published on the previous recompute, so stale bands are retired. */
+  private published: string[] = [];
   private readonly subs: Array<() => void> = [];
 
   // Browser `setTimeout` returns `number`; using `ReturnType<typeof setTimeout>`
@@ -78,7 +84,11 @@ export abstract class DensityContourLayerBase<
       );
     }
     this.graph = graph;
-    this.gfx = this.createGraphics('density-bands');
+    // Bands are published as `path` specs and projected like any other element —
+    // no raw drawing surface. See `docs/renderer-split-design.md` §3.
+    this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+    this.specs = ctx.store.specsFor<BaseShapeSpec>(this.id);
+    this.projector = new SpecProjector(this.specs, this.renderer);
 
     const recompute = this.options.recompute ?? DENSITY_CONTOUR_BASE_DEFAULTS.recompute;
     if (recompute === 'auto') {
@@ -96,7 +106,13 @@ export abstract class DensityContourLayerBase<
       window.clearTimeout(this.debounceTimer);
       this.debounceTimer = null;
     }
-    this.gfx = null;
+    this.projector?.destroy();
+    this.projector = null;
+    this.specs?.clear();
+    this.specs = null;
+    this.published = [];
+    this.renderer?.destroy();
+    this.renderer = null;
     this.graph = null;
   }
 
@@ -143,9 +159,9 @@ export abstract class DensityContourLayerBase<
   }
 
   private computeAndPaint(): void {
-    const g = this.gfx;
+    const specs = this.specs;
     const graph = this.graph;
-    if (!g || !graph) return;
+    if (!specs || !graph) return;
 
     const t0 = performance.now();
 
@@ -159,9 +175,10 @@ export abstract class DensityContourLayerBase<
       points.push({ x: p.x, y: p.y });
     }
 
-    g.clear();
-
-    if (points.length === 0) return;
+    if (points.length === 0) {
+      this.retireBands([]);
+      return;
+    }
 
     const pad = this.options.padding ?? DENSITY_CONTOUR_BASE_DEFAULTS.padding;
     let minX = Infinity,
@@ -189,7 +206,7 @@ export abstract class DensityContourLayerBase<
       .thresholds(this.options.thresholds ?? DENSITY_CONTOUR_BASE_DEFAULTS.thresholds)
       .cellSize(this.options.cellSize ?? DENSITY_CONTOUR_BASE_DEFAULTS.cellSize)(points);
 
-    this.paintDensity(g, density, minX, minY);
+    this.retireBands(this.publishBands(specs, this.buildBands(density, minX, minY)));
 
     // `recompute` is part of the base event contract — subclass event maps
     // must extend `DensityContourLayerEvents`, so this emit is always
@@ -206,15 +223,40 @@ export abstract class DensityContourLayerBase<
   }
 
   /**
-   * Render the iso-bands into `g`. The bands are ordered low-density →
-   * high-density; subclasses typically paint in that order so denser bands
-   * sit on top. `offsetX`/`offsetY` are the world-space origin of the
+   * Describe the iso-bands as `path` specs. Bands arrive low-density →
+   * high-density; emit in that order so denser bands sit on top (later specs get
+   * a higher `zIndex`). `offsetX`/`offsetY` are the world-space origin of the
    * compute grid — add them to each polygon point.
+   *
+   * Subclasses *describe*; they never draw. That is what lets these bands render
+   * on any backend and appear in a serialised canvas.
    */
-  protected abstract paintDensity(
-    g: Graphics,
+  protected abstract buildBands(
     density: ContourMultiPolygon[],
     offsetX: number,
     offsetY: number,
-  ): void;
+  ): PathSpec[];
+
+  /** Publish this pass's bands, returning the ids used. */
+  private publishBands(specs: SpecStore<BaseShapeSpec>, bands: PathSpec[]): string[] {
+    const ids: string[] = [];
+    bands.forEach((spec, i) => {
+      const id = `${this.id}:band:${i}`;
+      ids.push(id);
+      specs.set(id, { ...spec, zIndex: i });
+      this.projector?.project(id);
+    });
+    return ids;
+  }
+
+  /** Drop bands published last pass that this pass no longer produced. */
+  private retireBands(current: string[]): void {
+    const keep = new Set(current);
+    for (const id of this.published) {
+      if (keep.has(id)) continue;
+      this.specs?.delete(id);
+      this.projector?.unproject(id);
+    }
+    this.published = current;
+  }
 }

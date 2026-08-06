@@ -40,6 +40,12 @@ export {
   type CanvasView,
 } from '@invana/canvas-store';
 
+// ─── Spec projection (P2) ────────────────────────────────────────────────────
+// Drives a renderer from a SpecStore. Every drawing layer uses this, so
+// "the renderer is a projection of state" holds engine-wide.
+export { SpecProjector } from './renderer/SpecProjector';
+export type { SpecProjectionTarget, SpecProjectorOptions } from './renderer/SpecProjector';
+
 // ─── Specs as state (P1) ─────────────────────────────────────────────────────
 // The durable visual description a layer publishes and a renderer projects.
 // Re-exported so domain layers reach it without a direct kernel dependency.
