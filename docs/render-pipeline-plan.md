@@ -14,7 +14,7 @@ Sibling docs:
 - [`large-graph-load-pipeline-plan.md`](./large-graph-load-pipeline-plan.md) — the
   *initial load* freeze. Its batched install becomes **one intent class** here
   rather than a special case.
-- [`renderer-pixijs-extraction-plan.md`](./renderer-pixijs-extraction-plan.md) — the
+- [`renderer-split-design.md`](./renderer-split-design.md) — the
   `IRenderer` seam this pipeline sits on top of, and the enabler for the worker
   option in §8.
 
@@ -242,7 +242,7 @@ stays perfectly smooth while the canvas is busy. Cost:
 
 **Verdict: not now.** But note the payoff already queued up — once drawing sits
 behind `IRenderer` / `IPrimitivesRenderer`
-([`renderer-pixijs-extraction-plan.md`](./renderer-pixijs-extraction-plan.md)), a
+([`renderer-split-design.md`](./renderer-split-design.md)), a
 worker renderer is *just another implementation of that interface* with a
 postMessage transport. The extraction buys the option for free. Don't build for
 it; don't foreclose it.

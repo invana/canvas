@@ -495,7 +495,7 @@ still under `shapeLayer` (R1). The two readouts are complementary: devtools for
 | `doc:docs/render-planes-and-emphasis-plan.md` | design of record for planes | proposed; **planes half stands**, emphasis half superseded | The five-stripe vocabulary, the `RenderLayer` verification (§3.1), the `.visible` finding (§4.1.2), the `plane` vs `zIndex` litmus (§4.1.3). This RFC **must not** hardcode two planes. **Three of its statements are now stale** — see the corrections table in §2.4 (C1–C3) |
 | `doc:docs/group-frame-paint-band-plan.md` | superseded by the above | superseded | Why reparenting lost to `attach()` — the reason a naive tree walk misleads (R1) |
 | `rfc:fix-2026-08-05-group-frame-occludes-edges` | landed the `backdrop` plane | landed | The one live consumer of stripe routing; its behaviour is this RFC's control (V5) |
-| `doc:docs/renderer-pixijs-extraction-plan.md` | relates-to | planned | Any introspection type must be pixi-free so it survives the renderer extraction |
+| `doc:docs/renderer-split-design.md` | relates-to | planned | Any introspection type must be pixi-free so it survives the renderer extraction |
 | `doc:docs/ui-consolidation-plan.md` | relates-to | in progress | Editors land in `pkg:@invana/canvas-ui`, not `pkg:@invana/canvas-react` |
 
 ---
@@ -532,7 +532,7 @@ still under `shapeLayer` (R1). The two readouts are complementary: devtools for
 | U1 | `doc:docs/render-planes-and-emphasis-plan.md` (2 → 5 stripes) | The readout must be data-driven off the renderer's own list | Hardcoding two stripes makes the overlay lie the day `foreground` lands |
 | U2 | pixi 8 `RenderLayer` semantics | `attachedCount` has no public accessor guarantee; may need to be tracked renderer-side rather than read off the object | If read off pixi internals, a pixi bump breaks the count |
 | U3 | `sym:PrimitivesRenderer` construction order (`#L434-L457`) | `order` in `PlaneInfo` is that literal sequence | A reorder silently changes the displayed truth — acceptable, that *is* the truth |
-| U4 | `doc:docs/renderer-pixijs-extraction-plan.md` | `PlaneInfo` must stay a plain data type | A pixi-typed field would have to be re-cut during extraction |
+| U4 | `doc:docs/renderer-split-design.md` | `PlaneInfo` must stay a plain data type | A pixi-typed field would have to be re-cut during extraction |
 
 ### Downstream — things that could break
 
