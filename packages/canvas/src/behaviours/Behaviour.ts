@@ -18,6 +18,7 @@
  */
 
 import type { CanvasContext } from '../context/CanvasContext';
+import type { GestureClaimOptions } from '../input/GestureArbiter';
 
 /** What `BehaviourRegistry` sees. */
 export interface IBehaviour {
@@ -92,6 +93,14 @@ export abstract class Behaviour<TOptions extends BehaviourOptions = BehaviourOpt
    */
   protected _options: TOptions;
 
+  /**
+   * Release function for this behaviour's live gesture claim, or `null` when it
+   * holds none. Held privately (not `protected`) so the only way to end a claim
+   * is {@link releaseGesture} — which nulls the field *before* invoking it, so a
+   * double release can't happen even under re-entrancy.
+   */
+  private _gestureRelease: (() => void) | null = null;
+
   constructor(opts: TOptions) {
     this.id = opts.id;
     this.targetLayerId = opts.targetLayerId;
@@ -125,6 +134,9 @@ export abstract class Behaviour<TOptions extends BehaviourOptions = BehaviourOpt
     const ctx = this.ctx;
     this._enabled = false;
     this.onDestroy(ctx);
+    // Safety net (see `GestureArbiter`): a claim stranded by an unmount would
+    // freeze the camera and every other gesture for the life of the canvas.
+    this.releaseGesture();
     this.ctx = undefined;
   }
 
@@ -138,6 +150,9 @@ export abstract class Behaviour<TOptions extends BehaviourOptions = BehaviourOpt
     if (!this._enabled) return;
     this._enabled = false;
     this.onDisable();
+    // Same safety net as `destroy()` — disabling mid-gesture must not strand
+    // the claim, even if the subclass forgot to end its drag.
+    this.releaseGesture();
   }
 
   /**
@@ -214,6 +229,49 @@ export abstract class Behaviour<TOptions extends BehaviourOptions = BehaviourOpt
    */
   protected get isEnabled(): boolean {
     return this._enabled;
+  }
+
+  // ─── Gesture arbitration ─────────────────────────────────────────────────
+
+  /**
+   * Take exclusive ownership of the pointer gesture for the duration of a drag
+   * (`ctx.gestures`, see `input/GestureArbiter.ts`). Returns `false` when
+   * another behaviour already owns it — the caller must then **not** start its
+   * gesture, because two behaviours steering the same pointer is exactly what
+   * the arbiter exists to prevent.
+   *
+   * Claiming also suspends camera panning: `DragPanBehaviour` watches the
+   * arbiter and yields while anybody else owns the gesture. That replaces the
+   * old `camera.viewport.plugins.pause('drag')` reach-through, which put a
+   * `pixi-viewport` internal in the hands of domain behaviours.
+   *
+   * Pair every successful claim with {@link releaseGesture} on **every** exit
+   * path — pointerup, pointercancel, abort. `disable()` and `destroy()` release
+   * automatically as a backstop.
+   */
+  protected claimGesture(opts?: GestureClaimOptions): boolean {
+    const gestures = this.ctx?.gestures;
+    if (!gestures) return false;
+    const release = gestures.claim(this.id, opts);
+    if (release === null) return false;
+    this._gestureRelease = release;
+    return true;
+  }
+
+  /**
+   * End this behaviour's gesture claim. Safe to call any number of times and
+   * when no claim is held — the arbiter identifies claims by token, so a stale
+   * release can never evict a later owner.
+   */
+  protected releaseGesture(): void {
+    const release = this._gestureRelease;
+    this._gestureRelease = null;
+    release?.();
+  }
+
+  /** Does this behaviour currently hold the gesture? */
+  protected get hasGestureClaim(): boolean {
+    return this._gestureRelease !== null;
   }
 
   /**

@@ -12,6 +12,14 @@
  * A decelerate plugin is added alongside by default, giving momentum after
  * the pointer lifts. Disable with `decelerate: false`.
  *
+ * **Yielding.** Panning is the lowest-priority pointer gesture: while another
+ * behaviour owns the gesture (`ctx.gestures.owner` — a node drag, a lasso, a
+ * brush, a resize, an edge draw), this behaviour suspends its own pan plugin
+ * and restores it on release. Before P5 the inverse held — each of those
+ * behaviours reached into `camera.viewport.plugins` to pause `'drag'` — which
+ * scattered a `pixi-viewport` internal across six domain behaviours and left
+ * the camera resumed by whichever gesture finished first.
+ *
  * The canvas cursor swaps to `dragCursor` (`'grabbing'` by default) the moment
  * a qualifying pointer is pressed — so it reads as "holding the canvas, ready
  * to drag" before any movement happens — and restores on release. The press is
@@ -67,6 +75,11 @@ export class DragPanBehaviour extends Behaviour<DragPanBehaviourOptions> {
   /** Cursor saved when the pan pointer is pressed, restored on release. */
   private prevCursor: string | null = null;
 
+  /** Unsubscribe from the gesture arbiter; set while enabled. */
+  private offGestures?: () => void;
+  /** Whether the pan plugin is currently suspended for another gesture owner. */
+  private yielding = false;
+
   constructor(opts: DragPanBehaviourOptions) {
     const modifier = opts.modifier ?? 'none';
     const gesture = modifier === 'none' ? 'drag' : `${modifier}+drag`;
@@ -91,10 +104,21 @@ export class DragPanBehaviour extends Behaviour<DragPanBehaviourOptions> {
     // Fallback for the `space` modifier, which can't be read off a pointer
     // event: pixi-viewport fires `drag-start` only once the gesture moves.
     vp.on('drag-start', this.armCursor);
+
+    // Track gesture ownership. Seeded from the current owner so enabling
+    // mid-gesture (a tool switch, a live `setOptions`) doesn't re-arm panning
+    // underneath someone else's drag.
+    const gestures = this.ctx!.gestures;
+    this.yielding = false;
+    this.offGestures = gestures.onOwnerChange(this.applyYield);
+    this.applyYield(gestures.owner);
   }
 
   protected onDisable(): void {
     const vp = this.ctx!.camera.viewport;
+    this.offGestures?.();
+    this.offGestures = undefined;
+    this.yielding = false;
     this.canvasEl?.removeEventListener('pointerdown', this.onPointerDown);
     vp.off('drag-start', this.armCursor);
     this.restoreCursor(); // restore + drop window listeners if disabled mid-gesture
@@ -103,6 +127,23 @@ export class DragPanBehaviour extends Behaviour<DragPanBehaviourOptions> {
     // toggling `decelerate` off cleanly removes the previously-installed plugin.
     vp.plugins.remove('decelerate');
   }
+
+  /**
+   * Suspend / restore the pan plugin to match gesture ownership. Only the
+   * `drag` plugin is touched — `decelerate` is left running so an in-flight
+   * momentum glide finishes as it always has. Edge-triggered: pixi-viewport's
+   * `pause`/`resume` are cheap but `resume()` resets the plugin, so we only
+   * call them when the yield state actually flips.
+   */
+  private readonly applyYield = (owner: string | null): void => {
+    const shouldYield = owner !== null && owner !== this.id;
+    if (shouldYield === this.yielding) return;
+    this.yielding = shouldYield;
+    const vp = this.ctx?.camera.viewport;
+    if (!vp) return;
+    if (shouldYield) vp.plugins.pause('drag');
+    else vp.plugins.resume('drag');
+  };
 
   private readonly onPointerDown = (e: PointerEvent): void => {
     if (!this._enabled) return;

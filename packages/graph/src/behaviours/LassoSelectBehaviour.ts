@@ -248,7 +248,10 @@ export class LassoSelectBehaviour extends Behaviour {
       return;
     }
 
-    this.ctxRef?.camera.viewport.plugins.pause('drag');
+    // Take the pointer so the camera doesn't pan while the lasso is drawn (and
+    // no other gesture starts on top of it). Refused = someone else is already
+    // mid-gesture, so don't begin a lasso.
+    if (!this.claimGesture()) return;
 
     this.dragActive = true;
     this.worldPoints = [{ x: world.x, y: world.y }];
@@ -276,7 +279,7 @@ export class LassoSelectBehaviour extends Behaviour {
 
   private handlePointerUp(_e: PointerEvent): void {
     if (!this.dragActive) {
-      this.ctxRef?.camera.viewport.plugins.resume('drag');
+      this.releaseGesture();
       return;
     }
     this.clearPolygon();
@@ -287,7 +290,7 @@ export class LassoSelectBehaviour extends Behaviour {
     } else if (this.opts.clearOnBackground) {
       this.clearSelection();
     }
-    this.ctxRef?.camera.viewport.plugins.resume('drag');
+    this.releaseGesture();
     this.dragActive = false;
     this.worldPoints = [];
     this.lastScreen = null;
@@ -297,7 +300,7 @@ export class LassoSelectBehaviour extends Behaviour {
   private cancelDrag(): void {
     if (!this.dragActive) return;
     this.clearPolygon();
-    this.ctxRef?.camera.viewport.plugins.resume('drag');
+    this.releaseGesture();
     this.dragActive = false;
     this.worldPoints = [];
     this.lastScreen = null;

@@ -389,6 +389,12 @@ export class DragNodeBehaviour extends Behaviour<DragNodeBehaviourOptions> {
     worldY: number,
   ): void {
     if (!this.layer) return;
+
+    // Take the pointer before recording any state: the claim stops the camera
+    // panning under the drag, and a refusal means another behaviour (a resize
+    // handle, an edge draw) already owns this press — so we don't start.
+    if (!this.claimGesture()) return;
+
     this.state = {
       primaryId,
       ids,
@@ -397,9 +403,6 @@ export class DragNodeBehaviour extends Behaviour<DragNodeBehaviourOptions> {
       starts: new Map(),
       moved: false,
     };
-
-    // Pause the camera-drag plugin so the world doesn't pan while moving the node.
-    this.ctxRef?.camera.viewport.plugins.pause('drag');
 
     // Window-level move/up listeners — same rationale as DragShapeBehaviour.
     window.addEventListener('pointermove', this.onWindowPointerMove);
@@ -413,9 +416,9 @@ export class DragNodeBehaviour extends Behaviour<DragNodeBehaviourOptions> {
       // of the drag. Without this, the cursor crossing the canvas bounds —
       // over a lil-gui panel, the storybook chrome, or off the page — fires
       // `pointercancel` on the document, prematurely ending the drag and
-      // (because we paused the camera viewport's drag plugin on startDrag
-      // and resume it in endDrag) handing the still-held button off to the
-      // camera-pan plugin mid-gesture. Capturing keeps every subsequent
+      // (because we hold the gesture claim from beginDrag and release it in
+      // endDrag) handing the still-held button off to the camera-pan
+      // behaviour mid-gesture. Capturing keeps every subsequent
       // pointermove routed to the canvas.
       if (this.capturedPointerId !== null) {
         try {
@@ -450,7 +453,8 @@ export class DragNodeBehaviour extends Behaviour<DragNodeBehaviourOptions> {
     }
     this.capturedPointerId = null;
 
-    this.ctxRef?.camera.viewport.plugins.resume('drag');
+    // Hand the pointer back — camera panning resumes here.
+    this.releaseGesture();
     this.state = null;
 
     // Only emit `drag-end` when we actually emitted `drag-start` — a plain

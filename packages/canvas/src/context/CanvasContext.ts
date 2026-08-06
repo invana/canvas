@@ -18,6 +18,7 @@ import type { IOverlayDevice, OverlaySpace } from '../renderer/IOverlayDevice';
 import type { CanvasStore } from '@invana/canvas-store';
 import type { CanvasEventBus } from '@invana/canvas-store';
 import type { Camera } from '../camera/Camera';
+import type { GestureArbiter } from '../input/GestureArbiter';
 import type { LayerRegistry } from '../registries/LayerRegistry';
 import type { BehaviourRegistry } from '../registries/BehaviourRegistry';
 import type { ThemeState } from '../theme/types';
@@ -35,6 +36,19 @@ export interface CanvasContext {
 
   /** Camera — pan/zoom/projection. Wraps a `pixi-viewport` `Viewport`. */
   readonly camera: Camera;
+
+  /**
+   * Pointer-gesture arbitration — at most one owner at a time. A behaviour that
+   * needs the pointer to itself (drag, lasso, brush, resize, edge draw) claims
+   * it here rather than suspending the camera's pan plugin behind its back;
+   * `DragPanBehaviour` yields whenever `gestures.owner` names somebody else.
+   *
+   * Behaviours should reach for `Behaviour.claimGesture` /
+   * `Behaviour.releaseGesture` instead of calling this directly — the base class
+   * releases on `disable()` / `destroy()`, and a stranded claim would freeze
+   * both the camera and every other gesture.
+   */
+  readonly gestures: GestureArbiter;
 
   /** Canvas-wide event bus + telemetry tap channel. */
   readonly events: CanvasEventBus;

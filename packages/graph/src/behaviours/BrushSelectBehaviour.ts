@@ -287,8 +287,10 @@ export class BrushSelectBehaviour extends Behaviour {
       return;
     }
 
-    // Pause camera pan so the canvas doesn't move while the brush is drawn.
-    this.ctxRef?.camera.viewport.plugins.pause('drag');
+    // Take the pointer so the camera doesn't pan while the brush is drawn (and
+    // no other gesture starts on top of it). Refused = someone else is already
+    // mid-gesture, so don't begin a brush.
+    if (!this.claimGesture()) return;
 
     this.dragActive = true;
     this.dragStart = p;
@@ -319,7 +321,7 @@ export class BrushSelectBehaviour extends Behaviour {
 
   private handlePointerUp(_e: PointerEvent): void {
     if (!this.dragActive || !this.dragStart || !this.dragCurrent) {
-      this.ctxRef?.camera.viewport.plugins.resume('drag');
+      this.releaseGesture();
       this.dragActive = false;
       return;
     }
@@ -331,7 +333,7 @@ export class BrushSelectBehaviour extends Behaviour {
     } else if (this.opts.clearOnBackground) {
       this.clearSelection();
     }
-    this.ctxRef?.camera.viewport.plugins.resume('drag');
+    this.releaseGesture();
     this.dragActive = false;
     this.dragStart = null;
     this.dragCurrent = null;
@@ -340,7 +342,7 @@ export class BrushSelectBehaviour extends Behaviour {
   private cancelDrag(): void {
     if (!this.dragActive) return;
     this.clearRect();
-    this.ctxRef?.camera.viewport.plugins.resume('drag');
+    this.releaseGesture();
     this.dragActive = false;
     this.dragStart = null;
     this.dragCurrent = null;

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { WorldLayer } from '../../src/layers/WorldLayer';
 import { CanvasEventBus } from '@invana/canvas-store';
 import { Camera } from '../../src/camera/Camera';
+import { DefaultGestureArbiter } from '../../src/input/GestureArbiter';
 import { LayerRegistry } from '../../src/registries/LayerRegistry';
 import { BehaviourRegistry } from '../../src/registries/BehaviourRegistry';
 import type { CanvasContext } from '../../src/context/CanvasContext';
@@ -32,7 +33,7 @@ function makeContext() {
   let ctx: CanvasContext;
   const layers = new LayerRegistry({ getContext: () => ctx, bus });
   const behaviours = new BehaviourRegistry({ getContext: () => ctx, bus });
-  ctx = { events: bus, store: createCanvasStore(), world, stage, camera, layers, behaviours, theme: { current: () => null, set: () => {} }, showMessage: () => {}, clearMessage: () => {}, createOverlay: () => ({}) as never };
+  ctx = { events: bus, store: createCanvasStore(), world, stage, camera, gestures: new DefaultGestureArbiter(), layers, behaviours, theme: { current: () => null, set: () => {} }, showMessage: () => {}, clearMessage: () => {}, createOverlay: () => ({}) as never };
   return ctx;
 }
 

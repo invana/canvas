@@ -10,8 +10,10 @@
  * What happens on drag:
  *   1. `shape:pointerdown` from the renderer → drag start. Records the
  *      pointer's world position and the shape's current `(spec.x, spec.y)`.
- *   2. The viewport's pan plugin is paused so the camera doesn't pan while
- *      you're moving a shape.
+ *   2. The pointer gesture is claimed (`ctx.gestures`) so the camera stops
+ *      panning and no other gesture starts on top of the move. A refused claim
+ *      means another behaviour already owns the pointer — the drag doesn't
+ *      start.
  *   3. Window-level `pointermove` updates the shape via
  *      `renderer.updateShape(id, { x, y })` so the click point stays under
  *      the cursor. Window events are used (rather than pixi container events)
@@ -22,7 +24,8 @@
  *      obstacle for an obstacle-aware router. Set `false` if you're moving
  *      a node whose edges should re-route via a smarter graph-level signal
  *      (or if you have thousands of edges and the cost matters).
- *   5. `pointerup` / `pointercancel` → drag end. Viewport pan resumes.
+ *   5. `pointerup` / `pointercancel` → drag end. The gesture claim is released
+ *      and camera panning resumes.
  *
  * The behaviour observes the renderer's public surface only: subscribes to
  * `shape:pointerdown`, calls `getShapePosition` / `updateShape` /
@@ -72,7 +75,6 @@ export class DragShapeBehaviour extends Behaviour<DragShapeBehaviourOptions> {
 
   private state: DragState | null = null;
   private offShapeDown?: () => void;
-  private viewport?: CanvasContext['camera']['viewport'];
   private canvasEl: HTMLCanvasElement | null = null;
   private prevCursor: string | null = null;
 
@@ -81,13 +83,11 @@ export class DragShapeBehaviour extends Behaviour<DragShapeBehaviourOptions> {
   }
 
   protected override onRegister(ctx: CanvasContext): void {
-    this.viewport = ctx.camera.viewport;
-
-    // Pixi-viewport's Viewport stores the `EventSystem` it was constructed
-    // with, and the EventSystem exposes `.domElement` — the actual HTMLCanvas
-    // pixi renders into. We use this canvas for `getBoundingClientRect()`
-    // when converting window pointer coords to screen coords during drag.
-    this.canvasEl = readCanvasElement(this.viewport);
+    // The canvas element backs `getBoundingClientRect()` when converting window
+    // pointer coords to screen coords during a drag, and the cursor swap.
+    // `null` on the headless `initWithStage` path — the drag still works, just
+    // without the cursor swap and assuming a window-origin canvas.
+    this.canvasEl = ctx.canvasElement ?? null;
 
     const onShapeDown = (e: { id: string; worldX: number; worldY: number }): void => {
       if (!this._enabled) return;
@@ -111,14 +111,15 @@ export class DragShapeBehaviour extends Behaviour<DragShapeBehaviourOptions> {
   }
 
   private startDrag(id: string, worldX: number, worldY: number, shapePos: { x: number; y: number }): void {
+    // Take the pointer before touching any state: a refusal means another
+    // behaviour is already mid-gesture, so this drag must not begin.
+    if (!this.claimGesture()) return;
+
     this.state = {
       id,
       pointerWorldStart: { x: worldX, y: worldY },
       shapePosStart: shapePos,
     };
-
-    // Pause the viewport's pan plugin so we don't pan while moving a shape.
-    this.viewport?.plugins.pause('drag');
 
     // Window-level move/up listeners. DOM events are the most reliable
     // source for drag flows — they fire regardless of which pixi target is
@@ -147,7 +148,8 @@ export class DragShapeBehaviour extends Behaviour<DragShapeBehaviourOptions> {
       this.prevCursor = null;
     }
 
-    this.viewport?.plugins.resume('drag');
+    // Hand the pointer back — camera panning resumes here.
+    this.releaseGesture();
     this.state = null;
   }
 
@@ -173,24 +175,4 @@ export class DragShapeBehaviour extends Behaviour<DragShapeBehaviourOptions> {
     const rect = this.canvasEl.getBoundingClientRect();
     return { screenX: clientX - rect.left, screenY: clientY - rect.top };
   }
-}
-
-/**
- * Best-effort recovery of the `HTMLCanvasElement` pixi is rendering into.
- * Pixi-viewport's Viewport receives an `EventSystem` in its constructor
- * options and stores it on `.options.events`; the EventSystem exposes the
- * canvas via `.domElement`. Falls back to `null` when the structure differs
- * (headless test stages, custom Canvas wiring, etc.) — the drag still works,
- * just without cursor swap or perfectly accurate coord conversion when the
- * canvas is offset from the window origin.
- */
-function readCanvasElement(
-  viewport: CanvasContext['camera']['viewport'] | undefined,
-): HTMLCanvasElement | null {
-  if (!viewport) return null;
-  const events = (viewport as unknown as {
-    options?: { events?: { domElement?: HTMLCanvasElement } };
-  }).options?.events;
-  const el = events?.domElement;
-  return el instanceof HTMLCanvasElement ? el : null;
 }

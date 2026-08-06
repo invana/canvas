@@ -7,8 +7,11 @@
  * **Design notes**
  *
  * - The Camera owns no input gestures — those live in opt-in camera-input
- *   `Behaviour`s (proposal §2.6) which reach for `viewport.drag()`,
- *   `viewport.wheel()`, etc. via the `viewport` accessor on this class.
+ *   `Behaviour`s (proposal §2.6). They configure the camera's zoom inputs
+ *   through {@link Camera.configureInput}, which keeps the `pixi-viewport`
+ *   plugin vocabulary inside this class (`docs/renderer-split-design.md` §9,
+ *   P5). The raw `viewport` accessor survives for the pan plugin until P6
+ *   moves the binding into the renderer package.
  * - All transform math delegates to the underlying `Viewport`. Position/scale
  *   on the Viewport `Container` is the single source of truth, so Camera
  *   methods and Viewport plugins stay in sync automatically.
@@ -41,6 +44,53 @@ export interface Rect {
   width: number;
   height: number;
 }
+
+/**
+ * A modifier key a camera input gesture can be gated on. Named semantically
+ * rather than as key codes so the contract survives the renderer swap — the
+ * mapping to `pixi-viewport`'s `keyToPress` codes lives in {@link Camera}.
+ */
+export type CameraInputModifier = 'control' | 'shift' | 'alt' | 'meta';
+
+/** Wheel-zoom input configuration — see {@link Camera.configureInput}. */
+export interface WheelInputOptions {
+  /** Zoom fraction per wheel tick. Default `0.1` (10%). */
+  percent?: number;
+  /** Smooth-scroll frame count; `false` = instant snap. Default `false`. */
+  smooth?: false | number;
+  /**
+   * Require this modifier to be held for the wheel to zoom, leaving plain
+   * scroll to the page. `null` / omitted = no modifier.
+   */
+  modifier?: CameraInputModifier | null;
+  /** Treat a two-finger trackpad pinch as zoom rather than scroll. Default `true`. */
+  trackpadPinch?: boolean;
+}
+
+/** Pinch-zoom input configuration — see {@link Camera.configureInput}. */
+export interface PinchInputOptions {
+  /** Suppress the implicit pan that accompanies a pinch. Default `false`. */
+  noDrag?: boolean;
+  /** Zoom speed multiplier. Default `0.1`. */
+  percent?: number;
+}
+
+/**
+ * Patch for {@link Camera.configureInput}. An omitted key leaves that input
+ * untouched; `null` removes it.
+ */
+export interface CameraInputConfig {
+  wheel?: WheelInputOptions | null;
+  pinch?: PinchInputOptions | null;
+}
+
+/** Semantic modifier → the `pixi-viewport` key codes for that physical key. */
+const MODIFIER_KEYS: Record<CameraInputModifier, string[]> = {
+  control: ['ControlLeft', 'ControlRight'],
+  shift: ['ShiftLeft', 'ShiftRight'],
+  alt: ['AltLeft', 'AltRight'],
+  meta: ['MetaLeft', 'MetaRight'],
+};
 
 export interface CameraOptions {
   /**
@@ -344,6 +394,48 @@ export class Camera {
   getVisibleBounds(): Rect {
     const r = this.viewport.getVisibleBounds();
     return { x: r.x, y: r.y, width: r.width, height: r.height };
+  }
+
+  // ─── Input configuration ─────────────────────────────────────────────────
+
+  /**
+   * Configure the camera's own zoom inputs. This is the seam camera-input
+   * behaviours use instead of reaching for `viewport.wheel()` / `viewport.pinch()`:
+   * the options are described semantically (`percent`, `modifier`) and the
+   * `pixi-viewport` realisation stays here, so P6 can move it into the renderer
+   * package without touching `WheelZoomBehaviour` / `PinchZoomBehaviour`.
+   *
+   * Patch semantics — an omitted key is left alone, `null` removes that input:
+   *
+   * ```ts
+   * camera.configureInput({ wheel: { percent: 0.2, modifier: 'control' } });
+   * camera.configureInput({ wheel: null });   // wheel zoom off, pinch untouched
+   * ```
+   *
+   * Re-configuring an already-installed input replaces it, because the
+   * underlying plugins read their config only at install time.
+   */
+  configureInput(config: CameraInputConfig): void {
+    if (config.wheel !== undefined) {
+      this.viewport.plugins.remove('wheel');
+      const w = config.wheel;
+      if (w) {
+        const modifier = w.modifier ?? null;
+        this.viewport.wheel({
+          percent: w.percent ?? 0.1,
+          smooth: w.smooth ?? false,
+          keyToPress: modifier ? MODIFIER_KEYS[modifier] : undefined,
+          trackpadPinch: w.trackpadPinch ?? true,
+        });
+      }
+    }
+    if (config.pinch !== undefined) {
+      this.viewport.plugins.remove('pinch');
+      const p = config.pinch;
+      if (p) {
+        this.viewport.pinch({ noDrag: p.noDrag ?? false, percent: p.percent ?? 0.1 });
+      }
+    }
   }
 
   // ─── Internal ────────────────────────────────────────────────────────────

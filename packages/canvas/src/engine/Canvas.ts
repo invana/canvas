@@ -45,6 +45,7 @@ import {
 
 import { CanvasThemeState } from '../theme/CanvasThemeState';
 import { Camera } from '../camera/Camera';
+import { DefaultGestureArbiter, type GestureArbiter } from '../input/GestureArbiter';
 import type { Rect } from '../primitives/types';
 import { FrameMeter } from './FrameMeter';
 import { InteractionTracker } from './InteractionTracker';
@@ -211,6 +212,14 @@ export class Canvas {
    */
   stage!: Container;
   camera!: Camera;
+
+  /**
+   * Pointer-gesture arbitration for this canvas — see `input/GestureArbiter.ts`.
+   * Built in the constructor (no dependency on the scene graph) so it is live
+   * before any behaviour registers, and handed to every participant as
+   * `ctx.gestures`.
+   */
+  readonly gestures: GestureArbiter;
   readonly layers: LayerRegistry;
   readonly behaviours: BehaviourRegistry;
   readonly layouts: LayoutRegistry;
@@ -264,6 +273,7 @@ export class Canvas {
     this.store = createCanvasStore(opts.telemetry ? { telemetry: opts.telemetry } : {});
     this.events = this.store.events;
     this.themeState = new CanvasThemeState(this.events);
+    this.gestures = new DefaultGestureArbiter();
     // Frame attribution reads the same bus; the meter (a field initialiser) is
     // fed per frame in `tickOnce`. Both always-on and near-free.
     this._interactions = new InteractionTracker(this.events);
@@ -1159,6 +1169,7 @@ export class Canvas {
       world: this.world,
       stage: this.stage,
       camera: this.camera,
+      gestures: this.gestures,
       layers: this.layers,
       behaviours: this.behaviours,
       canvasElement: this.app?.canvas,

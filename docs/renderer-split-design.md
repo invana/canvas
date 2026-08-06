@@ -443,13 +443,15 @@ Ordered. `⚠` = the risky ones. A phase is done when its **gate** passes.
 - [ ] **Gate:** `grep -rl "from 'pixi.js'" packages/*/src` → only `packages/canvas`
 
 ### P4 — engine-side geometry + measurement
-- [ ] **Migrate the per-kind spec maths off the shape classes** into `specs/` as pure functions — `boundsOf` · `scaleSpec` · `collapsedOf` · `fitToContent`, joined by the new `contains`. Found in P0: these `static`s are the real spec maths, and under P6 they would otherwise leave with the renderer, taking bounds and picking with them
-- [ ] `contains(spec, x, y, tolerance)` per spec kind — circle · rect · ellipse · polygon · path · star · arc · regular-polygon · tabbed-rect · composite
-- [ ] ⚠ Replace `bodyGfx.containsPoint` in the hit-test narrow phase — must match stroke tolerance closely enough that no click feels different
+- [x] **Migrate the per-kind spec maths off the shape classes** into `specs/shapeGeometry/` as pure functions — `boundsOf` · `scaleSpec` · `collapsedOf` · `fitToContent`, joined by the new `contains`. Found in P0: these `static`s are the real spec maths, and under P6 they would otherwise leave with the renderer, taking bounds and picking with them.
+  The shape classes now delegate; `_polyUtils` and the whole tabbed-rect silhouette moved with them, and the composite's **spec types** moved to `specs/shape.ts` (they were the last spec vocabulary still living in a shape file)
+- [x] `contains(spec, x, y, tolerance)` per spec kind — circle · rect · ellipse · polygon · path · star · arc · regular-polygon · tabbed-rect · composite
+- [x] ⚠ Replace `bodyGfx.containsPoint` in the hit-test narrow phase — must match stroke tolerance closely enough that no click feels different.
+  Two pixi behaviours are reproduced deliberately: a shape with **no silhouette fill is hollow** (only its stroke band picks), and the stroke widens by pixi's `outer = (1 - alignment) * width` split. `getHitArea()` remains the fallback for `registerShape` kinds the spec geometry doesn't know
 - [ ] `Layer.computeBounds()`; move `GraphLayer`'s existing data-derived override onto it
 - [ ] `measureText` seam (backend-provided)
 - [ ] Null-guard the 3 `fitContent` call sites in `canvas-react`
-- [ ] Headless picking test — **mandate granted (G6)**; also cover spec projection, layout output and bounds
+- [x] Headless picking test — **mandate granted (G6)**: `packages/canvas/tests/specs/contains.test.ts` covers all ten kinds (inside / outside / stroke edge / concave notch) with no renderer mounted. Spec projection, layout output and bounds are still uncovered
 - [ ] **Gate:** picking resolves with no GPU
 
 ### P5 — gesture arbiter + camera input

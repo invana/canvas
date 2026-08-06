@@ -1,0 +1,61 @@
+{
+  "name": "@invana/renderer-pixijs",
+  "version": "0.0.11",
+  "description": "PixiJS drawing backend for @invana/canvas — implements IRenderer + IPrimitivesRenderer, owns the Application, viewport, primitives, textures and fonts.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typedocOptions": {
+    "entryPoints": [
+      "src/index.ts"
+    ]
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "pixi.js": "^8.18.1",
+    "pixi-viewport": "^6.0.3",
+    "rbush": "^4.0.1"
+  },
+  "peerDependencies": {
+    "@invana/canvas": "workspace:*",
+    "@invana/canvas-store": "workspace:*"
+  },
+  "devDependencies": {
+    "@invana/canvas": "workspace:*",
+    "@invana/canvas-store": "workspace:*",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/rbush": "^4.0.0",
+    "tsup": "^8.3.5",
+    "typescript": "5.9.2"
+  },
+  "keywords": [
+    "canvas",
+    "renderer",
+    "pixijs",
+    "webgpu",
+    "webgl",
+    "backend"
+  ],
+  "license": "Apache-2.0",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -359,6 +359,11 @@ export class NodeResizeBehaviour extends Behaviour {
     const worldBounds = renderer.getShapeWorldBounds(nodeId);
     if (!worldBounds) return;
 
+    // Take the pointer after every eligibility check has passed — claiming for
+    // a drag we then abandon would block the camera and other gestures for
+    // nothing. A refusal means another behaviour is already mid-gesture.
+    if (!this.claimGesture()) return;
+
     this.state = {
       id: nodeId,
       placement,
@@ -378,7 +383,6 @@ export class NodeResizeBehaviour extends Behaviour {
       },
     };
 
-    this.ctxRef?.camera.viewport.plugins.pause('drag');
     window.addEventListener('pointermove', this.onWindowPointerMove);
     window.addEventListener('pointerup', this.onWindowPointerUp);
     window.addEventListener('pointercancel', this.onWindowPointerUp);
@@ -398,7 +402,8 @@ export class NodeResizeBehaviour extends Behaviour {
       this.canvasEl.style.cursor = this.prevCursor;
       this.prevCursor = null;
     }
-    this.ctxRef?.camera.viewport.plugins.resume('drag');
+    // Hand the pointer back — camera panning resumes here.
+    this.releaseGesture();
     this.state = null;
   }
 
