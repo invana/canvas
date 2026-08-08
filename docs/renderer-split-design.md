@@ -560,9 +560,40 @@ classified. **(a)** spec state · **(b)** per-frame command · **(c)** engine-si
   (three historical mentions survive in comments). `PrimitivesRenderer`'s one use was a cast
   around `getVisibleBounds()`, which `Camera` already exposes typed
 
+### P5.5 — split `primitives/` into drawing vs geometry ✅ **landed 2026-08-09**
+
+Discovered while mapping the extraction: of the 78 files in `primitives/`, **only 39 imported
+pixi**. The rest were routers, path styles, anchors, path sampling, badge placement and tweens —
+code a three.js backend would reuse verbatim. Moving them into the pixi package would have
+contradicted §5 ("geometry answers must not require the backend"), the same rule that already put
+picking (D5) and bounds (P4) engine-side. So the folder was split *before* the move, and
+`primitives/` is now exactly the set that leaves.
+
+| Moved engine-side | Files | Why |
+|---|---|---|
+| `src/connectors/` — `routers/` · `pathStyles/` · `anchors/` · `pathSampling.ts` | 25 | spec in, `Path` out; no display object |
+| `src/badges/` | 3 | placement maths over a host `Rect` / `Path` |
+| `src/animation/` | 2 | `Tween` produces numbers, not pixels |
+| barrels for the three | 3 | so the root re-exports them, not `primitives/index.ts` |
+
+- [x] All 30 moved files depend only on `specs/` — every shared type (`IRouter`, `IPathStyle`,
+  `IAnchor`, `Path`, `Point`, `Vec2`, `Obstacle`, `Endpoint`) was already there from P0, so no type
+  surgery was needed
+- [x] `primitives/index.ts` no longer re-exports any of it; the root barrel does
+- [x] ⚠ **Dependency direction verified one-way**: 26 imports run drawing → geometry, **zero** run
+  geometry → drawing
+- [x] **Gate:** `primitives/` is 48 files, 39 with pixi; the engine-side 33 have **zero**
+
+⚠ **Correction to the first classification.** Effects (4) and the decoration / effect base classes
+(4) were initially counted as "pure" because they import no pixi. They stay with the drawing after
+all: `ShapeEffectHostInfo` and `ConnectorEffectHostInfo` hold live `IShape` / `IConnector`
+references, and the decoration bases extend `PrimitiveBase` and write `this.gfx`. The dividing line
+is therefore **"does it reference a live primitive instance"**, not "does it import pixi" — a
+sharper test, and the one to apply to anything added later.
+
 ### P6 — extract `@invana/renderer-pixijs` ⚠ *the big one*
 - [x] Scaffold the package — tsup, `peerDependencies` on `canvas` + `canvas-store`, `pixi.js` dep, turbo, matching version *(eslint config added 2026-08-07; it had none, so `pnpm lint` failed there)*
-- [ ] Move `primitives/` (37 files), `textures/`, `fonts/`
+- [ ] Move `primitives/` (**48 files after the P5.5 split**, 39 with pixi), `textures/`, `fonts/`
 - [x] Split `engine/Canvas.ts` — `Application` + viewport bootstrap out into `PixiRenderer` (P4.5). **Render loop not yet**: pixi's ticker still drives `Canvas.tick`
 - [x] Split `camera/Camera.ts` — pixi-viewport binding out into `PixiViewportBinding` behind `ICameraBinding`; abstract transform stays (P4.5)
 - [ ] Implement `ISurface`; `WorldLayer` / `ScreenLayer` ask `ctx.renderer.createSurface(...)` instead of `new Container(...)`

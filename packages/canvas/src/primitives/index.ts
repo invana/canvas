@@ -1,7 +1,11 @@
-// Public surface for `primitives/`.
+// Public surface for `primitives/` — **the drawing half only**.
 //
-// Architecture: see `primitives-redesign-plan.md` (macro) and
-// `primitives-v0-plan.md` (this v0 slice) at the repo root.
+// Everything here touches a display object, which is what makes this folder the
+// unit that moves to `@invana/renderer-pixijs` (§9, P6). Geometry that a second
+// backend would reuse verbatim — routers, path styles, anchors, path sampling,
+// badge placement, tweens — lives engine-side in `src/connectors/`,
+// `src/badges/` and `src/animation/`, and is re-exported from the package root
+// rather than from here.
 
 // ─── Renderer ──────────────────────────────────────────────────────────────
 export { PrimitivesRenderer } from './PrimitivesRenderer';
@@ -15,17 +19,6 @@ export { ShapeDecorationBase } from './base/ShapeDecorationBase';
 export { ConnectorDecorationBase } from './base/ConnectorDecorationBase';
 export { EffectBase } from './base/EffectBase';
 export { ConnectorEffectBase } from './base/ConnectorEffectBase';
-
-// ─── Animation primitive ───────────────────────────────────────────────────
-export { Tween } from './animation/Tween';
-export type { TweenOptions } from './animation/Tween';
-export {
-  linear,
-  easeInOutSine,
-  easeOutCubic,
-  easeInOutCubic,
-} from './animation/easings';
-export type { Easing } from './animation/easings';
 
 // ─── Built-in primitives ──────────────────────────────────────────────────
 export { CircleShape } from './shapes/CircleShape';
@@ -42,32 +35,6 @@ export type { CompositeSpec, CompositePart, CompositeRootSpec } from './shapes/C
 export { Connector } from './connectors/Connector';
 export { ArrowMarker, arrowMarkerSpec } from './markers/ArrowMarker';
 export type { ArrowMarkerSpec } from './markers/ArrowMarker';
-
-// ─── Built-in routers ──────────────────────────────────────────────────────
-export { straightRouter } from './connectors/routers/straight';
-export { orthRouter } from './connectors/routers/orth';
-export { manhattanRouter } from './connectors/routers/manhattan';
-export { metroRouter } from './connectors/routers/metro';
-export { erRouter } from './connectors/routers/er';
-export { oneSideRouter } from './connectors/routers/oneSide';
-
-// ─── Built-in pathStyles ───────────────────────────────────────────────────
-export { normalPathStyle } from './connectors/pathStyles/normal';
-export { roundedPathStyle } from './connectors/pathStyles/rounded';
-export { bezierPathStyle } from './connectors/pathStyles/bezier';
-export { quadraticPathStyle } from './connectors/pathStyles/quadratic';
-export { bumpRadialPathStyle } from './connectors/pathStyles/bumpRadial';
-export { smoothPathStyle } from './connectors/pathStyles/smooth';
-export {
-  loopCurvePathStyle,
-  LOOP_CURVE_PRESETS,
-  type LoopCurvePresetName,
-} from './connectors/pathStyles/loopCurve';
-
-// ─── Built-in anchors ──────────────────────────────────────────────────────
-export { centerAnchor } from './connectors/anchors/center';
-export { boundaryAnchor } from './connectors/anchors/boundary';
-export { perpendicularAnchor } from './connectors/anchors/perpendicular';
 
 // ─── Built-in decorations ──────────────────────────────────────────────────
 export { GlowDecoration } from './decorations/shape/GlowDecoration';
@@ -135,29 +102,6 @@ export type {
   FadeInConnectorEffectStyle,
   FadeInEasingName,
 } from './effects/connector/FadeInConnectorEffect';
-
-// ─── Badges ────────────────────────────────────────────────────────────────
-export type {
-  BadgeOptions,
-  BadgePlacement,
-  ConnectorBadgePlacement,
-  NamedBadgePlacement,
-} from './badges/types';
-export {
-  placementToHostAnchor,
-  originToBadgeLocal,
-  mirrorPlacement,
-  resolveBadgePosition,
-} from './badges/placement';
-
-// ─── Path utilities ────────────────────────────────────────────────────────
-export {
-  samplePath,
-  samplePathAt,
-  tangentAt,
-  pathBounds,
-  distanceToPolylineSq,
-} from './connectors/pathSampling';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 export type {

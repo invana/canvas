@@ -6,7 +6,7 @@ import type {
   ConnectorPaintStyle,
   Path,
 } from '../types';
-import { samplePath } from './pathSampling';
+import { samplePath } from '../../connectors/pathSampling';
 
 /**
  * The single concrete connector class. Renders any `Path` natively via

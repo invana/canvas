@@ -1,14 +1,14 @@
 import { Graphics } from 'pixi.js';
 import { ConnectorDecorationBase } from '../../base/ConnectorDecorationBase';
-import { samplePath } from '../../connectors/pathSampling';
-import { Tween } from '../../animation/Tween';
+import { samplePath } from '../../../connectors/pathSampling';
+import { Tween } from '../../../animation/Tween';
 import {
   easeInOutCubic,
   easeInOutSine,
   easeOutCubic,
   linear,
   type Easing,
-} from '../../animation/easings';
+} from '../../../animation/easings';
 import type { Path, Point } from '../../types';
 
 // Style types moved to the pixi-free spec vocabulary (`specs/decorationStyle.ts`)

@@ -1,6 +1,6 @@
 import { Graphics } from 'pixi.js';
 import { ConnectorDecorationBase } from '../../base/ConnectorDecorationBase';
-import { samplePath } from '../../connectors/pathSampling';
+import { samplePath } from '../../../connectors/pathSampling';
 import type { Path, Point } from '../../types';
 
 // Style types moved to the pixi-free spec vocabulary (`specs/decorationStyle.ts`)

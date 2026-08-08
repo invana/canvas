@@ -1,5 +1,5 @@
-import { Tween } from '../primitives/animation/Tween';
-import { easeOutCubic, type Easing } from '../primitives/animation/easings';
+import { Tween } from '../animation/Tween';
+import { easeOutCubic, type Easing } from '../animation/easings';
 
 /**
  * Options for {@link animatePositions}.

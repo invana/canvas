@@ -243,6 +243,55 @@ export type { LayoutEvents, LayoutEndReason, LayoutOptions } from './layouts/Lay
 export { animatePositions, DEFAULT_POSITION_TRANSITION_MS } from './layouts/animatePositions';
 export type { PositionTransition, PositionTransitionOptions } from './layouts/animatePositions';
 
+// ─── Engine-side geometry + time (P6 split) ──────────────────────────────
+// Routers, path styles, anchors, path sampling, badge placement and tweens
+// answer *geometry* and *timing* questions — a spec goes in, a path or a number
+// comes out, with no display object anywhere. §5 requires that such answers not
+// need a backend (the same rule that put picking and bounds engine-side), so
+// these stay in `@invana/canvas` when `primitives/` leaves for the pixi package
+// and a second backend reuses them unchanged.
+export {
+  centerAnchor,
+  boundaryAnchor,
+  perpendicularAnchor,
+  edgePortAnchor,
+  silhouettePortAnchor,
+  straightRouter,
+  orthRouter,
+  manhattanRouter,
+  metroRouter,
+  erRouter,
+  oneSideRouter,
+  normalPathStyle,
+  roundedPathStyle,
+  bezierPathStyle,
+  quadraticPathStyle,
+  bumpRadialPathStyle,
+  bumpHorizontalPathStyle,
+  smoothPathStyle,
+  stepRadialPathStyle,
+  bundlePathStyle,
+  loopPolylinePathStyle,
+  loopCurvePathStyle,
+  LOOP_CURVE_PRESETS,
+  samplePath,
+  samplePathAt,
+  pathBounds,
+  trimPathEnds,
+  distanceToPolylineSq,
+  type LoopCurvePresetName,
+} from './connectors';
+
+export {
+  resolveBadgePosition,
+  originToBadgeLocal,
+  resolveConnectorBadgePosition,
+} from './badges';
+export type { BadgeOptions, BadgePlacement, NamedBadgePlacement, ConnectorBadgePlacement } from './badges';
+
+export { Tween } from './animation';
+export type { TweenOptions } from './animation';
+
 // ─── Animation easings (reusable by layouts / effects / consumers) ────────
 export {
   linear,
@@ -252,8 +301,8 @@ export {
   easeOutQuad,
   resolveEasing,
   EASING_NAMES,
-} from './primitives/animation/easings';
-export type { Easing, EasingName } from './primitives/animation/easings';
+} from './animation/easings';
+export type { Easing, EasingName } from './animation/easings';
 
 // ─── Registries ─────────────────────────────────────────────────────────
 export { LayerRegistry } from './registries/LayerRegistry';

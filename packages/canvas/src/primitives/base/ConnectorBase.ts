@@ -5,7 +5,7 @@ import {
   samplePath,
   tangentAt,
   trimPathEnds,
-} from '../connectors/pathSampling';
+} from '../../connectors/pathSampling';
 import type {
   BaseConnectorSpec,
   ConnectorHostInfo,

@@ -1,6 +1,6 @@
 import { EffectBase } from '../../base/EffectBase';
-import { Tween } from '../../animation/Tween';
-import { linear } from '../../animation/easings';
+import { Tween } from '../../../animation/Tween';
+import { linear } from '../../../animation/easings';
 import type { EffectTarget, TransformDelta } from '../../types';
 
 /**

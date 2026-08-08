@@ -1,12 +1,12 @@
 import { ConnectorEffectBase } from '../../base/ConnectorEffectBase';
-import { Tween } from '../../animation/Tween';
+import { Tween } from '../../../animation/Tween';
 import {
   easeInOutCubic,
   easeInOutSine,
   easeOutCubic,
   linear,
   type Easing,
-} from '../../animation/easings';
+} from '../../../animation/easings';
 import type { EffectTarget, StyleOverride } from '../../types';
 
 /** Named easings accepted by the fade-in style payload. */

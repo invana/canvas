@@ -17,7 +17,7 @@
 
 import { Container, Graphics } from 'pixi.js';
 import { ConnectorDecorationBase } from '../../base/ConnectorDecorationBase';
-import { samplePathAt } from '../../connectors/pathSampling';
+import { samplePathAt } from '../../../connectors/pathSampling';
 import {
   applyLabelResolution,
   mountLabelContent,
