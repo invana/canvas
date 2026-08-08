@@ -33,8 +33,9 @@
  *     standing up a renderer.
  */
 
-import type { Application, Container, Ticker } from 'pixi.js';
+import type { Container } from 'pixi.js';
 import { PixiRenderer } from '../renderer/PixiRenderer';
+import type { IRenderer } from '../renderer/IRenderer';
 import {
   CanvasEventBus,
   createCanvasStore,
@@ -193,22 +194,7 @@ export class Canvas {
    * to guard if needed.
    */
   readonly events: CanvasEventBus;
-  /**
-   * The world container — a `pixi-viewport` `Viewport` instance attached to
-   * `app.stage`. Camera-transformed; `WorldLayer`s mount their roots here.
-   * Typed as `Container` so consumers don't depend on `pixi-viewport` — the
-   * `Viewport` itself is private to `Camera`, reachable only through its typed
-   * surface (`pan` / `setZoom` / `setTransform` / `configureInput`).
-   */
-  world!: Container;
 
-  /**
-   * The pixi `Application.stage` (or, for `initWithStage`, the caller-
-   * provided stage). `ScreenLayer`s mount their roots directly here, as
-   * siblings of `world` — `world` is added first (bottom), each ScreenLayer
-   * after (above). No "screen" wrapper container.
-   */
-  stage!: Container;
   camera!: Camera;
 
   /**
@@ -235,7 +221,9 @@ export class Canvas {
    * no pixi object of its own — the `Application`, the viewport, the surfaces
    * and the texture pool all live behind this.
    */
-  private _renderer?: PixiRenderer;
+  private _renderer?: IRenderer;
+  /** Stops the frame loop the renderer drives. Set while initialised. */
+  private _stopLoop?: () => void;
   private _isInitialised = false;
   /** True once this canvas has acquired the shared TexturePool (real `init` only). */
   /** Last message pushed on the message channel; `null` when idle / cleared. */
@@ -297,13 +285,17 @@ export class Canvas {
   }
 
   /**
-   * Pixi `Application`, available after `init()` (not `initWithStage`).
+   * The mounted drawing backend, or `undefined` before `init()`.
    *
-   * ⚠ A **backend escape hatch**, kept for consumers that had it. The engine
-   * itself no longer touches it — the `Application` belongs to `PixiRenderer`.
+   * Replaces the old `application` getter, which handed out pixi's
+   * `Application` and could not survive the backend split — a getter typed in
+   * pixi nouns forces every consumer to know which backend is mounted. Reach
+   * for a *capability* (`renderer.capabilities`, `renderer.extract?.()`)
+   * instead; if you genuinely need the pixi object, narrow the backend
+   * yourself with an `instanceof PixiRenderer` at the call site.
    */
-  get application(): Application | undefined {
-    return this._renderer instanceof PixiRenderer ? this._renderer.application : undefined;
+  get renderer(): IRenderer | undefined {
+    return this._renderer;
   }
 
   // ─── Init paths ──────────────────────────────────────────────────────────
@@ -349,7 +341,7 @@ export class Canvas {
     const width = opts.width ?? container.clientWidth;
     const height = opts.height ?? container.clientHeight;
     this._wireScene(width, height);
-    renderer.application?.ticker.add(this.tick, this);
+    this._stopLoop = renderer.startLoop((dtMs) => this.tickOnce(dtMs));
 
     this._isInitialised = true;
 
@@ -617,11 +609,6 @@ export class Canvas {
    */
   get frames(): FrameMeter {
     return this._frames;
-  }
-
-  /** Pixi ticker callback. Bound via `add(this.tick, this)`. */
-  private tick(ticker: Ticker): void {
-    this.tickOnce(ticker.deltaMS);
   }
 
   // ─── Serialisable config ────────────────────────────────────────────────
@@ -956,7 +943,8 @@ export class Canvas {
     if (!this._isInitialised) return;
 
     this._interactions.dispose();
-    this._renderer?.application?.ticker.remove(this.tick, this);
+    this._stopLoop?.();
+    this._stopLoop = undefined;
     // Registries first: layers unmount and destroy their surfaces while the
     // backend is still alive.
     this.layers?.clear();
@@ -983,9 +971,6 @@ export class Canvas {
    */
   private _wireScene(screenWidth: number, screenHeight: number): void {
     const renderer = this._renderer!;
-    this.world = renderer.world;
-    this.stage = renderer.stage;
-
     this.camera = new Camera({
       binding: renderer.createCameraBinding(),
       screenWidth,
@@ -1011,8 +996,6 @@ export class Canvas {
       events: this.events,
       store: this.store,
       theme: this.themeState,
-      world: this.world,
-      stage: this.stage,
       camera: this.camera,
       gestures: this.gestures,
       layers: this.layers,

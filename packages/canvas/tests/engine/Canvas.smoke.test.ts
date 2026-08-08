@@ -92,14 +92,12 @@ describe('Canvas — end-to-end smoke', () => {
 
     expect(canvas.isInitialised).toBe(true);
     expect(canvas.events).toBeDefined();
-    expect(canvas.world).toBeDefined();
-    expect(canvas.stage).toBeDefined();
+    expect(canvas.renderer).toBeDefined();
     expect(canvas.camera).toBeDefined();
     expect(canvas.layers).toBeDefined();
     expect(canvas.behaviours).toBeDefined();
     expect(canvas.context.events).toBe(canvas.events);
-    expect(canvas.context.world).toBe(canvas.world);
-    expect(canvas.context.stage).toBe(canvas.stage);
+
     expect(canvas.context.camera).toBe(canvas.camera);
     expect(canvas.context.layers).toBe(canvas.layers);
     expect(canvas.context.behaviours).toBe(canvas.behaviours);

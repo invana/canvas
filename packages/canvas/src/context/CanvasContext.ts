@@ -13,7 +13,6 @@
  * passes it down. Tests can construct a stub by satisfying these fields.
  */
 
-import type { Container } from 'pixi.js';
 import type { IOverlayDevice, OverlaySpace } from '../renderer/IOverlayDevice';
 import type { ISurface, SurfaceOptions, SurfaceSpace } from '../renderer/ISurface';
 import type { CanvasStore } from '@invana/canvas-store';
@@ -72,23 +71,7 @@ export interface CanvasContext {
    */
   readonly theme: ThemeState;
 
-  /**
-   * The world container — a `pixi-viewport` `Viewport` instance. Camera-
-   * transformed; `WorldLayer.mount` attaches its root sub-layer container
-   * here. Typed as `Container` so domain code doesn't depend on
-   * `pixi-viewport` — the `Viewport` itself is private to {@link Camera}, whose
-   * typed surface (`pan` / `setZoom` / `setTransform` / `configureInput`) is
-   * the only way to reach it.
-   */
-  readonly world: Container;
 
-  /**
-   * The pixi `app.stage` (or test stage) — the renderer root. `ScreenLayer.mount`
-   * attaches its root container here, as a sibling of `world`. Pixi's child
-   * order = draw order: `world` is added first (bottom), each `ScreenLayer`'s
-   * root is added after (above). No screen-wrapper container exists.
-   */
-  readonly stage: Container;
 
   /**
    * The underlying HTMLCanvasElement when running in DOM mode (`Canvas.init`).

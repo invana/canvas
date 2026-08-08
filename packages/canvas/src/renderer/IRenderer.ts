@@ -43,9 +43,11 @@
  */
 
 import type { RendererBackend, RendererInitOptions } from '@invana/canvas-store';
+import type { Camera } from '../camera/Camera';
 import type { ICameraBinding } from '../camera/ICameraBinding';
+import type { Rect } from '../specs/geometry';
 import type { IOverlayDevice, OverlaySpace } from './IOverlayDevice';
-import type { ISurface, SurfaceSpace } from './ISurface';
+import type { ISurface, SurfaceOptions, SurfaceSpace } from './ISurface';
 
 /**
  * What a backend can and cannot do. The engine reads this to degrade rather
@@ -95,7 +97,7 @@ export interface IRenderer {
    * overlays, visibility and paint order. This replaces a layer constructing a
    * backend container for itself.
    */
-  createSurface(space: SurfaceSpace, id: string): ISurface;
+  createSurface(space: SurfaceSpace, id: string, opts?: SurfaceOptions): ISurface;
 
   /**
    * A standalone transient device not owned by any layer — a lasso, a brush
@@ -111,6 +113,20 @@ export interface IRenderer {
    */
   createCameraBinding(): ICameraBinding;
 
+  /**
+   * Hand back the engine's `Camera` once it wraps this renderer's binding.
+   * Surfaces need it (hit-floor scaling, label-raster priority), so the order is
+   * `createCameraBinding` → `new Camera` → `attachCamera` → `createSurface`.
+   */
+  attachCamera(camera: Camera): void;
+
+  /**
+   * World-space bounds of everything drawn, or `null` when nothing is. Used by
+   * `area: 'content'` export. The backend answers because only it knows what is
+   * actually mounted.
+   */
+  worldContentBounds(): Rect | null;
+
   /** The drawing surface, when there is one. `null` on a headless backend. */
   readonly canvasElement: HTMLCanvasElement | null;
 
@@ -118,18 +134,39 @@ export interface IRenderer {
   resize(width: number, height: number): void;
 
   /**
-   * Advance backend-owned animation and present. The engine owns the only
-   * `requestAnimationFrame` (G3) and calls this once per frame; a renderer must
-   * never schedule its own.
+   * Advance backend-owned animation and present. Called once per frame by
+   * whoever drives the loop.
    */
   tick(dtMs: number): void;
+
+  /**
+   * Start driving the frame loop, calling `onFrame(dtMs)` each frame. Returns a
+   * stop function.
+   *
+   * ⚠ **This is a transitional seam, and it is the wrong way round.** G3 says
+   * the *engine* owns the only `requestAnimationFrame` and calls
+   * {@link tick} — a renderer scheduling frames is exactly what that decision
+   * forbids. But pixi's `Application.ticker` drives the loop today, and
+   * inverting it changes frame scheduling for every story. Putting the
+   * inversion inside the package move would have made a regression impossible
+   * to bisect: you could not tell a move bug from a scheduling bug.
+   *
+   * So the seam exists to keep the move behaviour-neutral. When G3 lands, this
+   * method disappears and `tick` is driven from the engine's own rAF.
+   */
+  startLoop(onFrame: (dtMs: number) => void): () => void;
 
   /**
    * Raster capture, capability-gated by {@link RendererCapabilities.rasterExport}
    * (G1). Vector/SVG export is engine-side and spec-driven, so it is *not* here —
    * it works on every backend including headless.
    */
-  extract?(opts?: { region?: { x: number; y: number; width: number; height: number }; scale?: number }): Promise<Blob>;
+  extract?(opts: {
+    /** World-space region to capture. */
+    region: Rect;
+    /** Output pixels per world unit. */
+    resolution: number;
+  }): HTMLCanvasElement;
 
   /** Tear down: release the backend, the DOM surface, and every listener. */
   destroy(): void;

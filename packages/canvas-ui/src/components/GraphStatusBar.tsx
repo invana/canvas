@@ -63,9 +63,9 @@ export function GraphStatusBar({
   }, [resolved, layerId]);
 
   // Pointer world position — the canvas-wide bus drops high-frequency
-  // pointermove, so listen on the pixi canvas element and project to world.
+  // pointermove, so listen on the drawing surface itself and project to world.
   useEffect(() => {
-    const el = resolved.application?.canvas;
+    const el = resolved.renderer?.canvasElement;
     if (!el) return;
     const onMove = (e: PointerEvent): void => setPointer(resolved.camera.toWorld(e.offsetX, e.offsetY));
     const onLeave = (): void => setPointer(null);

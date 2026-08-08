@@ -15,7 +15,7 @@
  * export all stay above this line.
  */
 
-import { Application, Container, type EventSystem } from 'pixi.js';
+import { Application, Container, Rectangle, type EventSystem } from 'pixi.js';
 import { Viewport } from 'pixi-viewport';
 import type { CanvasEventBus, RendererBackend } from '@invana/canvas-store';
 
@@ -26,6 +26,7 @@ import { acquireSharedTexturePool, releaseSharedTexturePool } from '../engine/sh
 import { resolveRenderPreference } from '../engine/rendererSupport';
 import type { IOverlayDevice, OverlaySpace } from './IOverlayDevice';
 import type { IRenderer, RendererCapabilities, RendererMountOptions } from './IRenderer';
+import type { Rect } from '../specs/geometry';
 import type { ISurface, SurfaceOptions, SurfaceSpace } from './ISurface';
 import { PixiOverlayDevice } from './PixiOverlayDevice';
 import { PixiSurface } from './PixiSurface';
@@ -256,8 +257,53 @@ export class PixiRenderer implements IRenderer {
     /* pixi presents on its own ticker; nothing extra to advance yet */
   }
 
+  /**
+   * Drive the frame loop off pixi's `Application.ticker` — see the ⚠ on
+   * `IRenderer.startLoop` for why the renderer still owns this. No-op on the
+   * headless path, which has no ticker and no frames.
+   */
+  startLoop(onFrame: (dtMs: number) => void): () => void {
+    const ticker = this.app?.ticker;
+    if (!ticker) return () => {};
+    const cb = (t: { deltaMS: number }): void => onFrame(t.deltaMS);
+    ticker.add(cb);
+    return () => ticker.remove(cb);
+  }
+
   resize(width: number, height: number): void {
     this.app?.renderer.resize(width, height);
+  }
+
+  worldContentBounds(): Rect | null {
+    const world = this._world;
+    if (!world) return null;
+    const b = world.getLocalBounds();
+    if (!(b.width > 0) || !(b.height > 0)) return null;
+    return { x: b.minX, y: b.minY, width: b.width, height: b.height };
+  }
+
+  /**
+   * Raster capture (G1). Extracts onto a **fully transparent clear** so the
+   * caller composites its own background — which is what keeps a
+   * `'transparent'` request honest.
+   *
+   * `region` is world-local (the world container's own space, before the camera
+   * transform), matching what `captureRect` computes.
+   */
+  extract(opts: { region: Rect; resolution: number }): HTMLCanvasElement {
+    const renderer = this.app?.renderer;
+    if (!renderer?.extract) {
+      throw new Error(
+        'PixiRenderer.extract: a GPU renderer is required (unavailable in headless mode).',
+      );
+    }
+    const r = opts.region;
+    return renderer.extract.canvas({
+      target: this.requireWorld(),
+      frame: new Rectangle(r.x, r.y, r.width, r.height),
+      resolution: opts.resolution,
+      clearColor: [0, 0, 0, 0],
+    }) as HTMLCanvasElement;
   }
 
   // ─── Reporting ───────────────────────────────────────────────────────────
