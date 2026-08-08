@@ -76,8 +76,9 @@ export interface CanvasContext {
    * The world container — a `pixi-viewport` `Viewport` instance. Camera-
    * transformed; `WorldLayer.mount` attaches its root sub-layer container
    * here. Typed as `Container` so domain code doesn't depend on
-   * `pixi-viewport`; reach for the `Viewport`-specific API via
-   * `camera.viewport`.
+   * `pixi-viewport` — the `Viewport` itself is private to {@link Camera}, whose
+   * typed surface (`pan` / `setZoom` / `setTransform` / `configureInput`) is
+   * the only way to reach it.
    */
   readonly world: Container;
 

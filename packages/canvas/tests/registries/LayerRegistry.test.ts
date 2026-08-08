@@ -3,6 +3,7 @@ import { PixiSurface } from '../../src/renderer/PixiSurface';
 import { LayerRegistry } from '../../src/registries/LayerRegistry';
 import { CanvasEventBus } from '@invana/canvas-store';
 import { Camera } from '../../src/camera/Camera';
+import { PixiViewportBinding } from '../../src/camera/PixiViewportBinding';
 import { DefaultGestureArbiter } from '../../src/input/GestureArbiter';
 import { BehaviourRegistry } from '../../src/registries/BehaviourRegistry';
 import type { ILayer } from '../../src/layers/Layer';
@@ -16,7 +17,7 @@ function makeContext() {
   const bus = new CanvasEventBus();
   const { stage, world } = makeTestScene();
   const camera = new Camera({
-    viewport: world,
+    binding: new PixiViewportBinding(world),
     screenWidth: 800,
     screenHeight: 600,
     bus,

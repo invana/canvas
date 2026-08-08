@@ -62,8 +62,10 @@ export {
 export { DirtyBatcher, type DirtySnapshot } from './data/DirtyBatcher';
 export type { DataSource } from './data/DataSource';
 
-// ── Renderer seam (types only — implemented by a rendering package, e.g. @invana/renderer-pixijs) ──
-export type { IRenderer, RendererBackend } from './renderer/IRenderer';
+// ── Renderer seam: the device-shaped half only ────────────────────────────────
+// `IRenderer` itself lives in `@invana/canvas` — it is made of spec vocabulary,
+// which the kernel does not own. See `renderer/IRenderer.ts` for the full note.
+export type { RendererBackend } from './renderer/IRenderer';
 export type { RendererInitOptions } from './renderer/RendererInitOptions';
 
 // ── Events ────────────────────────────────────────────────────────────────────

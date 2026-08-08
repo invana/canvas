@@ -442,32 +442,129 @@ Ordered. `⚠` = the risky ones. A phase is done when its **gate** passes.
 - [ ] Add the lint rule banning `pixi.js` outside `packages/canvas`
 - [ ] **Gate:** `grep -rl "from 'pixi.js'" packages/*/src` → only `packages/canvas`
 
-### P4 — engine-side geometry + measurement
+### P4 — engine-side geometry + measurement 🚧 *picking done; measurement + bounds outstanding*
 - [x] **Migrate the per-kind spec maths off the shape classes** into `specs/shapeGeometry/` as pure functions — `boundsOf` · `scaleSpec` · `collapsedOf` · `fitToContent`, joined by the new `contains`. Found in P0: these `static`s are the real spec maths, and under P6 they would otherwise leave with the renderer, taking bounds and picking with them.
   The shape classes now delegate; `_polyUtils` and the whole tabbed-rect silhouette moved with them, and the composite's **spec types** moved to `specs/shape.ts` (they were the last spec vocabulary still living in a shape file)
 - [x] `contains(spec, x, y, tolerance)` per spec kind — circle · rect · ellipse · polygon · path · star · arc · regular-polygon · tabbed-rect · composite
 - [x] ⚠ Replace `bodyGfx.containsPoint` in the hit-test narrow phase — must match stroke tolerance closely enough that no click feels different.
   Two pixi behaviours are reproduced deliberately: a shape with **no silhouette fill is hollow** (only its stroke band picks), and the stroke widens by pixi's `outer = (1 - alignment) * width` split. `getHitArea()` remains the fallback for `registerShape` kinds the spec geometry doesn't know
+- [x] ⚠ **Lift the whole picking engine out of the renderer** — `hit/PickingIndex.ts`. The
+  index was *inside* `PrimitivesRenderer` (rbush, hit boxes, `hitTest`, `pickHover`, the
+  two-band ranking, culling), so under P6 it would have left with pixi, contradicting D5.
+  It now lives engine-side and the renderer is only its **`HitGeometrySource`**.
+  **Pull, not push, and this is the load-bearing decision:** three facts are the renderer's
+  to know — the visual `scale` a LOD behaviour writes without touching the spec, a
+  connector's routed polyline (the router runs at draw time), and a `registerShape` custom
+  kind's silhouette. Reading them at query time keeps picking answering against what is on
+  screen; pushing them would add a second staleness surface beside the deferred-bbox one,
+  and a stale pick is felt immediately
+- [x] Hit **bounds** are spec-derived — `boundsOfSpec(spec)` × the record's scale, with the
+  instance's `bounds()` kept only as the custom-kind fallback. `shapeWorldBounds` and the
+  hit boxes are now one implementation, so they cannot drift
+- [x] `cull()` → **`setVisibleSet(ids | null)`** (G4) — the engine computes the visible set
+  from its index, the renderer only applies it. `cull` / `uncull` remain as conveniences
+  over it; neither had any caller outside the renderer
 - [ ] `Layer.computeBounds()`; move `GraphLayer`'s existing data-derived override onto it
 - [ ] `measureText` seam (backend-provided)
 - [ ] Null-guard the 3 `fitContent` call sites in `canvas-react`
-- [x] Headless picking test — **mandate granted (G6)**: `packages/canvas/tests/specs/contains.test.ts` covers all ten kinds (inside / outside / stroke edge / concave notch) with no renderer mounted. Spec projection, layout output and bounds are still uncovered
-- [ ] **Gate:** picking resolves with no GPU
+- [x] Headless picking test — **mandate granted (G6)**: `tests/specs/contains.test.ts` covers
+  all ten kinds (inside / outside / stroke edge / concave notch), and
+  `tests/hit/PickingIndex.test.ts` (19 tests) now covers the *engine*: ranking, hit floor vs
+  zoom, the scale divisor, deferred-bbox flush, both hover heuristics and connector hit-box
+  splitting — with no renderer mounted, no GPU, no DOM. Spec projection and layout output
+  are still uncovered
+- [x] **Gate:** picking resolves with no GPU
 
-### P5 — gesture arbiter + camera input
-- [ ] `GestureArbiter` — `claim(owner) → release`, `owner`
-- [ ] `DragPanBehaviour` yields when `gestures.owner` is set
-- [ ] Migrate the 16 `camera.viewport.plugins.pause/resume` uses → claim/release (5 graph behaviours + `DragShapeBehaviour`)
-- [ ] ⚠ Release on unmount / gesture abort — a leaked claim freezes the camera
-- [ ] `camera.configureInput({ wheel, pinch })`; migrate `WheelZoomBehaviour` + `PinchZoomBehaviour`
-- [ ] Remove the public `camera.viewport` handle
-- [ ] **Gate:** no `camera.viewport` outside renderer-side code
+**One deliberate behaviour change, recorded because it is not a pure move.** A connector's
+single-box index entry was the AABB of its raw `Path` **including bezier control points**
+(`pathBounds`); it is now the AABB of the **sampled polyline** — the same polyline the narrow
+phase measures distance against. The box is therefore tighter for curved edges. Picks are
+unchanged: any point the narrow phase would have accepted still falls inside the box (the
+padding is exactly the hit tolerance, and the floor band rides on the *query* padding, not the
+entry), so only candidates the narrow phase was going to reject anyway are pruned. Culling
+becomes marginally less conservative in the same way.
+
+### P4.5 — the renderer contract becomes real 🚧 **landed 2026-08-08 (classification pending in part)**
+
+Not a phase in the original plan; it turned out to sit between P4 and P6, because P6 cannot
+move a contract that doesn't exist.
+
+- [x] ⚠ **The kernel's `IRenderer` was a fiction — retired.** It declared
+  `applyView` / `applyData`: an orchestrator-pushes-deltas model that **P2 replaced** with spec
+  state + `specs:flush` + `SpecProjector`. It had zero implementers *and* zero callers, which is
+  precisely how a stale interface survives unnoticed. The real contract also turns out to be
+  *made of spec vocabulary* (surfaces project `BaseShapeSpec`; overlays draw engine geometry),
+  and the kernel imports no `@invana` package — so it could never have lived there without
+  inverting the layering. `@invana/canvas-store` keeps only `RendererBackend` +
+  `RendererInitOptions`, the genuinely device-shaped half
+- [x] **`IRenderer` now lives in `canvas/src/renderer/IRenderer.ts`** and describes what actually
+  happens: `mount` → `createSurface` / `createOverlay` / `createCameraBinding` → `tick`, plus
+  `backend`, `capabilities`, `resize`, optional `extract`. Input is **not** a member (a renderer
+  publishes `input:*` on the shared bus); nor is picking (D5)
+- [x] **`PixiRenderer` — the first implementer.** Owns the `Application`, the WebGPU→WebGL
+  fallback, the shared texture-pool ref-count, the render-crash guard, the drawing surface and
+  its resize plumbing, the scene root, and the surface / overlay / camera-binding factories.
+  `Canvas.init` went from ~90 lines of pixi bring-up to `new PixiRenderer(...)` + `mount(...)`;
+  `Canvas` holds no `Application`, `Viewport` or `Container` of its own
+- [x] ⚠ **`Camera` is pixi-free** — the pixi-viewport realisation moved behind
+  **`ICameraBinding`** (`PixiViewportBinding`). This is P6's "split camera/Camera.ts" row, landed
+  early because P5 had already funnelled every viewport touch through `Camera`, which made the
+  extraction mechanical. `Camera` keeps the semantics (clamp, anchored zoom, fit, bus, store
+  sync); the binding keeps the plugin registry and the key-code mapping.
+  New: `tests/camera/CameraHeadless.test.ts` drives the whole camera through a fake binding —
+  no pixi, no GPU, no DOM
+- [ ] ⚠ **The clock is still inverted (G3).** Pixi's `Application.ticker` drives `Canvas.tick`,
+  which calls `renderer.tick(dt)` — the engine does *not* own the only rAF yet. `PixiRenderer.tick`
+  is deliberately a no-op stub rather than a lie. Inverting it changes frame scheduling for every
+  story, so it gets its own step
+- [ ] `attachCamera` ordering — surfaces need a `Camera` (hit-floor scaling, label-raster
+  priority), so the sequence is `createCameraBinding` → `new Camera` → `attachCamera` →
+  `createSurface`. Works, but it is a construction-order constraint encoded in a throw rather
+  than in types
+
+**Where the imperative surface lands.** ~30 methods `@invana/graph` calls on `layer.renderer`,
+classified. **(a)** spec state · **(b)** per-frame command · **(c)** engine-side geometry answer ·
+**(d)** stays on the renderer contract.
+
+| Methods | Verdict | Status |
+|---|---|---|
+| `addShape` · `updateShape` · `removeShape` · `addConnector` · `updateConnector` · `removeConnector` · `hasShape` · `hasConnector` | **(d)** — this *is* `SpecProjectionTarget`, driven from `specs:flush`. Graph's direct calls are the pre-P2 path | ✅ contract exists; graph's remaining direct calls are P6 cleanup |
+| `hitTest` | **(c)** — `PickingIndex`; the renderer forwards | ✅ landed (P4) |
+| `getShapeWorldBounds` · `getShapePosition` · `getConnectorPolyline` · `connectorGeometryUnchanged` | **(c)** — spec + routed-path geometry | 🚧 `getShapeWorldBounds` now reads through the index; the rest still read instances |
+| `boundsOfSpec` · `scaleShapeSpec` · `fitShapeSpecToContent` | **(c)** — pure spec maths already in `specs/shapeGeometry/`; the renderer only adds registry lookup for custom kinds | 🚧 needs a registry-backed engine-side helper so the wrapper can go |
+| `setShapeTextVisible` · `setShapeIconVisible` · `setShapeImageVisible` · `setLabelsResolution` | **(b)** — collapse into **`setLODLevel(level)`** (G5). The renderer decides what a level shows; zero spec churn on zoom | 📋 API change with graph-side consumers (`TextLODBehaviour`, `NodeScaleLODBehaviour`) |
+| `cull` / `uncull` | **(b)** — `setVisibleSet(ids \| null)` (G4) | ✅ landed |
+| `setDecoration` (15 sites) · `setBadge` · `removeBadge` · `getDecoration` · `setDecorationVisible` | **(a)** — decoration *styles* and badges joined the spec vocabulary in `839d1a2`, but **attachment is still imperative**. This is the single largest remaining block | 📋 the big one; own step |
+| `getDecorationWorldBounds` | **(c)** once decorations are specs; **(d)** until then — it reads a live gfx container | 📋 blocked on the row above |
+| `measureLabel` | **(d)**, capability-gated — this is the `measureText` seam. Text metrics are irreducibly backend-specific (SDF vs canvas-2d disagree) | 📋 P4 row still open |
+| `scaleShape` · `moveShape` · `setConnectorStroke` · `scaleConnectorStroke` | **(b)** — per-frame fast paths that deliberately bypass spec churn. They stay commands; making them spec writes would put drag/zoom noise into state (D3's reasoning, applied to transforms) | ✅ decided, no change needed |
+| `reindexScaledShapeHits` · `reanchorAllConnectors` | **(b)** — settle-time flushes. `reindexScaledShapeHits` is already engine-side (`PickingIndex.reindexShapes`); `reanchorAllConnectors` is genuinely renderer work (re-routing) | ✅ decided |
+
+### P5 — gesture arbiter + camera input ✅ **landed 2026-08-07**
+- [x] `GestureArbiter` — `claim(owner) → release`, `owner`
+- [x] `DragPanBehaviour` yields when `gestures.owner` is set
+- [x] Migrate the 16 `camera.viewport.plugins.pause/resume` uses → claim/release (5 graph behaviours + `DragShapeBehaviour`)
+- [x] ⚠ Release on unmount / gesture abort — a leaked claim freezes the camera
+- [x] `camera.configureInput({ wheel, pinch })`; migrate `WheelZoomBehaviour` + `PinchZoomBehaviour`
+- [x] Remove the public `camera.viewport` handle — the `Viewport` is now **private** to `Camera`.
+  Three seams replaced the reach-throughs: `configureInput({ drag })` (pan + momentum, the
+  last plugin still installed from outside), `setDragSuspended(bool)` for gesture yielding,
+  and `onDragStart(fn)` for the `space`-modifier cursor fallback.
+  ⚠ **`setTransform({x,y,zoom}, { clamp })` is the one genuinely new capability**: a layer
+  mirroring an *external* camera authority needs to write the transform verbatim (no centre
+  re-anchoring) and outside the canvas's zoom clamp — `MapLayer` was writing
+  `viewport.scale/position` raw for exactly that reason, and web mercator's `2 ** 22` sits far
+  past the default ceiling of 100. It emits `input:camera:zoom` only when the scale changed,
+  which is the pan-only optimisation `MapLayer` used to hand-roll
+- [x] **Gate:** no `camera.viewport` outside renderer-side code — **zero live callers repo-wide**
+  (three historical mentions survive in comments). `PrimitivesRenderer`'s one use was a cast
+  around `getVisibleBounds()`, which `Camera` already exposes typed
 
 ### P6 — extract `@invana/renderer-pixijs` ⚠ *the big one*
-- [ ] Scaffold the package — tsup, `peerDependencies` on `canvas` + `canvas-store`, `pixi.js` dep, turbo, matching version
+- [x] Scaffold the package — tsup, `peerDependencies` on `canvas` + `canvas-store`, `pixi.js` dep, turbo, matching version *(eslint config added 2026-08-07; it had none, so `pnpm lint` failed there)*
 - [ ] Move `primitives/` (37 files), `textures/`, `fonts/`
-- [ ] Split `engine/Canvas.ts` — `Application` + viewport bootstrap + render loop out; lifecycle stays
-- [ ] Split `camera/Camera.ts` — pixi-viewport binding out; abstract transform stays
+- [x] Split `engine/Canvas.ts` — `Application` + viewport bootstrap out into `PixiRenderer` (P4.5). **Render loop not yet**: pixi's ticker still drives `Canvas.tick`
+- [x] Split `camera/Camera.ts` — pixi-viewport binding out into `PixiViewportBinding` behind `ICameraBinding`; abstract transform stays (P4.5)
 - [ ] Implement `ISurface`; `WorldLayer` / `ScreenLayer` ask `ctx.renderer.createSurface(...)` instead of `new Container(...)`
 - [ ] `CanvasContext`: drop `world` / `stage`; add `renderer`, `measure`, `gestures`
 - [ ] `Canvas.init({ renderer? })` — **optional**, lazy-import default (D1, §4.6); declare `renderer-pixijs` an optional peer

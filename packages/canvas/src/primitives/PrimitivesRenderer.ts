@@ -35,7 +35,12 @@ import { Container, RenderLayer, type FederatedPointerEvent } from 'pixi.js';
 import type { Camera } from '../camera/Camera';
 import { EventEmitter } from '@invana/canvas-store';
 import { TextureRegistry } from '../textures/TextureRegistry';
-import { HitIndex } from '../hit/HitIndex';
+import {
+  PickingIndex,
+  type ConnectorHitRecord,
+  type HitGeometrySource,
+  type ShapeHitRecord,
+} from '../hit/PickingIndex';
 import { ShapeInstance } from '../instancing/ShapeInstance';
 import { ConnectorInstance } from '../instancing/ConnectorInstance';
 import { shapeSpecToSvg, connectorToSvg } from '../export/svgExport';
@@ -44,7 +49,6 @@ import { EllipseShape } from './shapes/EllipseShape';
 import { RectShape } from './shapes/RectShape';
 import { TabbedRectShape } from './shapes/TabbedRectShape';
 import { connectorGeometryKey } from '../specs/geometry';
-import { containsSpec } from '../specs/shapeGeometry';
 import { PathShape } from './shapes/PathShape';
 import { PolygonShape } from './shapes/PolygonShape';
 import { RegularPolygonShape } from './shapes/RegularPolygonShape';
@@ -75,7 +79,7 @@ import { boundaryAnchor } from './connectors/anchors/boundary';
 import { perpendicularAnchor } from './connectors/anchors/perpendicular';
 import { edgePortAnchor } from './connectors/anchors/edgePort';
 import { silhouettePortAnchor } from './connectors/anchors/silhouettePort';
-import { distanceToPolylineSq, pathBounds, samplePath, trimPathEnds } from './connectors/pathSampling';
+import { samplePath, trimPathEnds } from './connectors/pathSampling';
 import { ArrowMarker } from './markers/ArrowMarker';
 import { GlowDecoration } from './decorations/shape/GlowDecoration';
 import { PulseRingDecoration } from './decorations/shape/PulseRingDecoration';
@@ -234,23 +238,7 @@ const DEFAULT_HOVER_HYSTERESIS_PX = 5;
 /** Default for {@link PrimitivesRendererOptions.hoverNodeIncidencePx}. */
 const DEFAULT_HOVER_NODE_INCIDENCE_PX = 20;
 
-/**
- * Max number of segment boxes a single connector is split into for the hit
- * index (edge-pick correctness H). Caps the rbush entry-count multiplier: an
- * edge indexes as at most this many boxes, so a 5k-edge graph stays bounded.
- */
-const CONNECTOR_HIT_MAX_BOXES = 8;
-
-/**
- * Target arc length (world units) per connector hit box. An edge shorter than
- * this indexes as a single loose AABB (no change); longer edges split into
- * `ceil(len / this)` boxes, capped at {@link CONNECTOR_HIT_MAX_BOXES}. Tuned
- * for the pixel-ish coordinate ranges these datasets use; graphs in tiny
- * normalized ranges simply fall back to one box per edge.
- */
-const CONNECTOR_HIT_SPLIT_LEN = 80;
-
-export class PrimitivesRenderer {
+export class PrimitivesRenderer implements HitGeometrySource {
   private readonly shapeRegistry = new Map<string, ShapeCtor>();
   private readonly routerRegistry = new Map<string, IRouter>();
   private readonly pathStyleRegistry = new Map<string, IPathStyle>();
@@ -280,28 +268,15 @@ export class PrimitivesRenderer {
    */
   private readonly badges = new Map<string, Map<string, BadgeOptions>>();
 
-  private readonly hit = new HitIndex();
-
   /**
-   * Shape ids whose `gfx` was translated via {@link moveShape} since the last
-   * hit-index reflush. `moveShape` skips the per-call rbush update (an O(N)
-   * remove+insert that becomes O(N²) across a full position sweep — same
-   * reasoning as {@link scaleShape}); the stale hit-bboxes are bulk-reindexed
-   * lazily on the next {@link hitTest}, so a layout settle / drag that's never
-   * queried mid-flight pays nothing for hit accuracy.
+   * The engine's picking engine (`hit/PickingIndex`) — spatial index, hit boxes
+   * and narrow-phase geometry, all derived from **specs**. Picking is
+   * interaction rather than drawing (design D5), so it lives in
+   * `@invana/canvas` and stays behind when the pixi backend is extracted; this
+   * renderer is only its {@link HitGeometrySource}, answering the three things a
+   * spec can't carry (visual scale, routed polyline, custom-kind silhouette).
    */
-  private readonly movedShapeHits = new Set<string>();
-
-  /**
-   * Connector ids whose path was recomputed (re-routed) since the last
-   * hit-index reflush. The edge analog of {@link movedShapeHits}: during a
-   * layout settle EVERY incident edge re-routes each tick, and a per-edge
-   * `hit.insert` (an O(N) rbush remove+insert) would be O(N²) per frame —
-   * the dominant cost on large graphs. Existing edges defer here and are
-   * bulk-reindexed lazily in {@link flushMovedHits}; only brand-new edges
-   * insert immediately (a deferred bbox-update can't add a missing entry).
-   */
-  private readonly movedConnectorHits = new Set<string>();
+  private readonly picking: PickingIndex;
 
   /**
    * Most recently-pushed label rasterisation resolution. `null` until a
@@ -381,11 +356,6 @@ export class PrimitivesRenderer {
   private raisedIds: ReadonlySet<string> = new Set();
   readonly camera: Camera;
   private readonly textureRegistry: TextureRegistry;
-  private readonly hitFloorPx: number;
-  /** Hover hysteresis margin in screen px (edge-pick I). See the option's TSDoc. */
-  private readonly hoverHysteresisPx: number;
-  /** Hover node-incidence radius in screen px (edge-pick J). See the option's TSDoc. */
-  private readonly hoverNodeIncidencePx: number;
   /** DOM canvas element used by the router for cursor styling. */
   private readonly canvasElement: HTMLCanvasElement | null;
 
@@ -403,12 +373,6 @@ export class PrimitivesRenderer {
    * `HoverActivateBehaviour` mid-drag.
    */
   private pointerDown = false;
-  /**
-   * When `false`, {@link hitTest} short-circuits to `null` so nothing this
-   * renderer holds is interactive — used to suppress a whole hidden layer's
-   * elements from picking (the owning layer toggles it in `onVisibleChange`).
-   */
-  private hitEnabled = true;
   /** Last left-click time + target — drives double-click detection. */
   private lastLeftClick: { kind: 'shape' | 'connector'; id: string; t: number } | null = null;
   /** Pointer-router subscriptions to clean up on `destroy`. */
@@ -426,10 +390,14 @@ export class PrimitivesRenderer {
     this._container = opts.container;
     this.camera = opts.camera;
     this.textureRegistry = opts.textureRegistry ?? new TextureRegistry();
-    this.hitFloorPx = opts.hitFloorPx ?? DEFAULT_HIT_FLOOR_PX;
-    this.hoverHysteresisPx = opts.hoverHysteresisPx ?? DEFAULT_HOVER_HYSTERESIS_PX;
-    this.hoverNodeIncidencePx = opts.hoverNodeIncidencePx ?? DEFAULT_HOVER_NODE_INCIDENCE_PX;
     this.canvasElement = opts.canvasElement ?? null;
+    this.picking = new PickingIndex({
+      source: this,
+      camera: opts.camera,
+      hitFloorPx: opts.hitFloorPx ?? DEFAULT_HIT_FLOOR_PX,
+      hoverHysteresisPx: opts.hoverHysteresisPx ?? DEFAULT_HOVER_HYSTERESIS_PX,
+      hoverNodeIncidencePx: opts.hoverNodeIncidencePx ?? DEFAULT_HOVER_NODE_INCIDENCE_PX,
+    });
     // Insertion order = render order in Pixi. Adding the connector layer
     // first then the shape layer puts shapes on top — so any connector
     // decoration that extends past a path endpoint (glow halo, ripple
@@ -645,16 +613,16 @@ export class PrimitivesRenderer {
     // returned by `hitTest` (no invisible-but-clickable). It re-enters on the
     // next `updateShape` that flips `visible` back on.
     if (spec.visible !== false) {
-      this.hit.insert(id, 'shape', this.shapeWorldBounds(inst), spec.zIndex ?? 0);
+      this.picking.insertShape(id, spec.zIndex ?? 0);
     }
     // Per-shape Pixi event dispatch is bypassed — the renderer's global
     // pointer router (see `installPointerRouter`) handles hit-routing
     // via `hitTest`. Disabling `eventMode` on the gfx skips Pixi's
     // per-shape hit-test walk on every pointer event (the perf win on
-    // dense graphs). `hitTest`'s narrow phase answers from the spec
-    // ({@link shapeContainsLocal}); the geometric `hitArea` set by
-    // `ShapeBase` is left in place as the fallback for custom shape kinds
-    // the spec geometry doesn't know.
+    // dense graphs). `hitTest`'s narrow phase answers from the spec, in
+    // `PickingIndex`; the geometric `hitArea` set by `ShapeBase` is left in
+    // place and handed over as `ShapeHitRecord.containsLocal`, the fallback for
+    // custom shape kinds the spec geometry doesn't know.
     shape.gfx.eventMode = 'none';
     // Enforce the plane invariant at add time: a shape declaring `'backdrop'`
     // is attached to that stripe before its first paint, so a group frame never
@@ -699,9 +667,9 @@ export class PrimitivesRenderer {
     // (so it stops being hittable), a now-visible one is (re-)inserted. `insert`
     // handles both the "already indexed" and "was hidden" cases idempotently.
     if (inst.spec.visible === false) {
-      this.hit.remove(id);
+      this.picking.remove(id);
     } else {
-      this.hit.insert(id, 'shape', this.shapeWorldBounds(inst), inst.spec.zIndex ?? 0);
+      this.picking.insertShape(id, inst.spec.zIndex ?? 0);
     }
     if (inst.decorations.size > 0) this.refreshShapeDecorations(inst);
     if (this.badges.has(id)) this.reanchorBadges(id);
@@ -793,20 +761,33 @@ export class PrimitivesRenderer {
       width: visibleBounds.width + 2 * padWorld,
       height: visibleBounds.height + 2 * padWorld,
     };
-    const visible = new Set<string>();
-    for (const e of this.hit.searchRect(rect)) visible.add(e.id);
+    this.setVisibleSet(this.picking.visibleIds(rect));
+  }
+
+  /**
+   * Declare which elements should be drawn this frame — the per-frame visible
+   * set (design G4). **Policy is the engine's**: it decides what is on screen
+   * from its own index, and the renderer only applies the answer, which is what
+   * keeps culling identical across backends.
+   *
+   * `null` restores everything (the old `uncull`). Elements outside the picking
+   * index — hidden or non-hittable — are left untouched either way, so an
+   * explicitly-hidden shape is never revived by a cull pass.
+   */
+  setVisibleSet(ids: ReadonlySet<string> | null): void {
     for (const [id, inst] of this.shapeInstances) {
-      if (this.hit.has(id)) inst.shape.gfx.renderable = visible.has(id);
+      if (ids === null) inst.shape.gfx.renderable = true;
+      else if (this.picking.has(id)) inst.shape.gfx.renderable = ids.has(id);
     }
     for (const [id, inst] of this.connectorInstances) {
-      if (this.hit.has(id)) inst.connector.gfx.renderable = visible.has(id);
+      if (ids === null) inst.connector.gfx.renderable = true;
+      else if (this.picking.has(id)) inst.connector.gfx.renderable = ids.has(id);
     }
   }
 
   /** Undo culling — restore `renderable` on every shape / connector. */
   uncull(): void {
-    for (const inst of this.shapeInstances.values()) inst.shape.gfx.renderable = true;
-    for (const inst of this.connectorInstances.values()) inst.connector.gfx.renderable = true;
+    this.setVisibleSet(null);
   }
 
   /**
@@ -848,7 +829,7 @@ export class PrimitivesRenderer {
     pos.x = x;
     pos.y = y;
     inst.shape.gfx.position.set(x, y);
-    this.movedShapeHits.add(id);
+    this.picking.markShapeMoved(id);
     if (this.badges.has(id)) this.reanchorBadges(id);
   }
 
@@ -919,38 +900,7 @@ export class PrimitivesRenderer {
    * hit-test accuracy snaps back the moment the user stops zooming.
    */
   reindexScaledShapeHits(ids?: Iterable<string>): void {
-    const updates: Array<{ id: string; rects: Rect[] }> = [];
-    const sourceIds: Iterable<string> = ids ?? this.shapeInstances.keys();
-    for (const id of sourceIds) {
-      const inst = this.shapeInstances.get(id);
-      if (!inst) continue;
-      updates.push({ id, rects: [this.shapeWorldBounds(inst)] });
-    }
-    this.hit.bulkUpdateBoxes(updates);
-  }
-
-  /**
-   * Flush deferred hit-bbox updates from {@link moveShape} (shapes) and
-   * {@link indexConnector} (re-routed connectors) in a SINGLE rbush rebuild.
-   * Called lazily from {@link hitTest} the first time a query needs accurate
-   * bounds, so a layout settle / drag with no pointer interaction pays nothing
-   * — and when it does pay, it's one O(N log N) `bulkUpdateBoxes`, never the
-   * O(N²) of per-id `remove + insert`.
-   */
-  private flushMovedHits(): void {
-    if (this.movedShapeHits.size === 0 && this.movedConnectorHits.size === 0) return;
-    const updates: Array<{ id: string; rects: Rect[] }> = [];
-    for (const id of this.movedShapeHits) {
-      const inst = this.shapeInstances.get(id);
-      if (inst) updates.push({ id, rects: [this.shapeWorldBounds(inst)] });
-    }
-    for (const id of this.movedConnectorHits) {
-      const inst = this.connectorInstances.get(id);
-      if (inst && inst.path.length >= 2) updates.push({ id, rects: this.connectorHitBoxes(inst) });
-    }
-    this.movedShapeHits.clear();
-    this.movedConnectorHits.clear();
-    this.hit.bulkUpdateBoxes(updates);
+    this.picking.reindexShapes(ids);
   }
 
   /**
@@ -1018,8 +968,7 @@ export class PrimitivesRenderer {
     // as a stale entry.
     this.backdropPlane.detach(inst.shape.gfx);
     inst.shape.destroy();
-    this.hit.remove(id);
-    this.movedShapeHits.delete(id);
+    this.picking.remove(id);
     this.shapeInstances.delete(id);
     // Drop stale sub-part hover if this was the host (no `partout` — it's gone).
     if (this.currentPart?.id === id) this.currentPart = null;
@@ -1224,8 +1173,7 @@ export class PrimitivesRenderer {
     for (const fx of inst.effects.values()) this.disposeEffect(fx);
     inst.effects.clear();
     this.connectorHostsWithEffects.delete(inst);
-    this.hit.remove(id);
-    this.movedConnectorHits.delete(id);
+    this.picking.remove(id);
     inst.connector.destroy();
     this.connectorInstances.delete(id);
   }
@@ -1714,9 +1662,7 @@ export class PrimitivesRenderer {
   private tickLabelRasterise(): void {
     const target = this.trackedLabelResolution;
     if (target === null) return;
-    const viewport = (this.camera.viewport as unknown as {
-      getVisibleBounds: () => { x: number; y: number; width: number; height: number };
-    }).getVisibleBounds();
+    const viewport = this.camera.getVisibleBounds();
     let budget = PrimitivesRenderer.LABEL_RASTER_PER_TICK;
     // First pass: in-viewport labels.
     const offscreen: Array<{ setResolution: (r: number) => void }> = [];
@@ -1882,273 +1828,66 @@ export class PrimitivesRenderer {
    * this from `onVisibleChange` so a hidden layer's elements aren't clickable.
    */
   setHitTestEnabled(enabled: boolean): void {
-    this.hitEnabled = enabled;
+    this.picking.setEnabled(enabled);
   }
 
   hitTest(worldX: number, worldY: number, exclude?: ReadonlySet<string>): HitResult | null {
-    if (!this.hitEnabled) return null;
-    // Stale hit-bboxes from deferred moves / re-routes are reindexed once,
-    // here — the first time a query actually needs accurate bounds. A layout
-    // settle / drag that nobody hovers over never pays for it.
-    this.flushMovedHits();
-    const floorWorld = this.hitFloorWorld();
-    const candidates = this.hit.query(worldX, worldY, floorWorld);
-    if (candidates.length === 0) return null;
+    return this.picking.hitTest(worldX, worldY, exclude);
+  }
 
-    let bestExact: { kind: 'shape' | 'connector'; id: string; distSq: number; zIndex: number } | null = null;
-    let bestFloor: { kind: 'shape' | 'connector'; id: string; distSq: number } | null = null;
-    const floorSq = floorWorld * floorWorld;
+  // ─── HitGeometrySource — this renderer's half of the picking contract ─────
 
-    for (const c of candidates) {
-      // Skip excluded ids — e.g. a transient drag preview (rubber-band edge)
-      // that sits under the cursor and would otherwise mask the real target.
-      if (exclude?.has(c.id)) continue;
-      const res = this.geometricHit(c.kind, c.id, worldX, worldY);
-      if (!res) continue;
-      if (res.exact) {
-        // Rank to match render order: zIndex first (higher = on top), then
-        // shape-over-connector on a tie (nodes draw above edges), then the
-        // closest origin/polyline within the same kind.
-        const kindRank = c.kind === 'shape' ? 1 : 0;
-        const bestKindRank = bestExact && bestExact.kind === 'shape' ? 1 : 0;
-        if (
-          bestExact === null ||
-          c.zIndex > bestExact.zIndex ||
-          (c.zIndex === bestExact.zIndex &&
-            (kindRank > bestKindRank ||
-              (kindRank === bestKindRank && res.distSq < bestExact.distSq)))
-        ) {
-          bestExact = { kind: c.kind, id: c.id, distSq: res.distSq, zIndex: c.zIndex };
-        }
-      } else if (res.distSq <= floorSq) {
-        if (bestFloor === null || res.distSq < bestFloor.distSq) {
-          bestFloor = { kind: c.kind, id: c.id, distSq: res.distSq };
-        }
-      }
-    }
-
-    const winner = bestExact ?? bestFloor;
-    return winner ? { kind: winner.kind, id: winner.id } : null;
+  /**
+   * The facts about a shape that a spec can't carry: the visual scale a LOD
+   * behaviour wrote onto `gfx` without rebuilding geometry, and — for a
+   * `registerShape` custom kind the spec vocabulary has never heard of — the
+   * instance's own silhouette and local bounds.
+   *
+   * `gfxScale` matters because `NodeScaleLODBehaviour` (and
+   * `HoverActivateBehaviour.zoomedOutScale`) inflate a shape visually without
+   * touching its spec; the index divides world deltas by it before the narrow
+   * phase, so a 5×-scaled shape whose silhouette covers the cursor still picks.
+   */
+  shapeRecord(id: string): ShapeHitRecord | null {
+    const inst = this.shapeInstances.get(id);
+    if (!inst) return null;
+    return {
+      spec: inst.spec,
+      scale: inst.gfxScale,
+      containsLocal: (x, y) => inst.shape.getHitArea().contains(x, y),
+      localBounds: () => inst.shape.bounds(),
+    };
   }
 
   /**
-   * Squared tolerance (world units) for an *exact* connector hit:
-   * `(strokeWidth / 2 + slop)²`. The slop adds 4 world units of
-   * forgiveness on top of the stroke half-width since 1-px-stroke
-   * lines are genuinely hard to click pixel-perfect.
+   * A connector's spec plus its **routed, sampled** polyline. Routing happens
+   * here (the router registry is renderer-side), and the sample is memoised on
+   * the instance, so this is a cheap read per query.
    */
-  private connectorHitToleranceSq(inst: ConnectorInstance): number {
-    const sw = inst.spec.stroke?.width ?? 1;
-    const slop = 4;
-    const r = sw / 2 + slop;
-    return r * r;
-  }
-
-  /**
-   * Geometric test that returns *both* whether the cursor exactly
-   * contains the shape/connector AND the squared distance to the
-   * shape's origin (or to the connector's nearest polyline point) —
-   * used together by {@link hitTest} for the two-band ranking.
-   */
-  private geometricHit(
-    kind: 'shape' | 'connector',
-    id: string,
-    worldX: number,
-    worldY: number,
-  ): { exact: boolean; distSq: number } | null {
-    if (kind === 'shape') {
-      const inst = this.shapeInstances.get(id);
-      if (!inst) return null;
-      const dx = worldX - inst.spec.x;
-      const dy = worldY - inst.spec.y;
-      // World-space distance to the shape's origin — used for closest-
-      // wins ranking + the floor-radius fallback. Independent of any
-      // `gfx.scale` multiplier the shape carries (the visual centre
-      // doesn't move under a uniform scale-about-origin).
-      const distSq = dx * dx + dy * dy;
-      // The shape's geometric `hitArea` operates in its *local* frame
-      // — i.e. before `gfx.scale` is applied. `NodeScaleLODBehaviour`
-      // (and `HoverActivateBehaviour.zoomedOutScale`) write `gfx.scale`
-      // to inflate visuals without rebuilding geometry, so we must
-      // divide world-space deltas by `gfxScale` before consulting
-      // `contains` — otherwise a 5×-scaled shape whose visible
-      // silhouette covers the cursor reports `false`.
-      const s = inst.gfxScale || 1;
-      const exact = this.shapeContainsLocal(inst, dx / s, dy / s);
-      return { exact, distSq };
-    }
+  connectorRecord(id: string): ConnectorHitRecord | null {
     const inst = this.connectorInstances.get(id);
     if (!inst) return null;
-    const poly = this.sampledConnectorPolyline(inst);
-    const distSq = distanceToPolylineSq(poly, worldX, worldY);
-    const exact = distSq <= this.connectorHitToleranceSq(inst);
-    return { exact, distSq };
+    return { spec: inst.spec, polyline: this.sampledConnectorPolyline(inst) };
+  }
+
+  shapeIds(): Iterable<string> {
+    return this.shapeInstances.keys();
   }
 
   /**
-   * Narrow-phase containment for one shape, in its **local** frame.
+   * Hover-specific pick — {@link hitTest}'s winner refined by the index's two
+   * hover heuristics (node-incidence bias and hysteresis; see
+   * `PickingIndex.pickHover`). **Click / drag picking deliberately stays on the
+   * raw {@link hitTest}** — a press must resolve exactly what is under the
+   * cursor, with no memory of the last hover — so this is called only from
+   * {@link routePointerMove}.
    *
-   * Answered from the **spec** ({@link containsSpec}) — pure geometry, no
-   * display object consulted — so picking is identical across backends and
-   * works with no GPU (`docs/renderer-split-design.md` §4.5). A spec kind the
-   * engine has no geometry for is necessarily a `registerShape` custom kind;
-   * those still fall back to asking the instance for its `hitArea`, which is
-   * the only thing that knows their silhouette.
-   */
-  private shapeContainsLocal(
-    inst: ShapeInstance,
-    localX: number,
-    localY: number,
-  ): boolean {
-    const exact = containsSpec(inst.spec, localX, localY);
-    if (exact !== undefined) return exact;
-    return inst.shape.getHitArea().contains(localX, localY);
-  }
-
-  /** {@link hoverHysteresisPx} in world units at the current camera scale. */
-  private hoverHysteresisWorld(): number {
-    return this.hoverHysteresisPx / Math.max(this.camera.scale, 1e-6);
-  }
-
-  /** {@link hoverNodeIncidencePx} in world units at the current camera scale. */
-  private hoverIncidenceWorld(): number {
-    return this.hoverNodeIncidencePx / Math.max(this.camera.scale, 1e-6);
-  }
-
-  /**
-   * Hover-specific pick: {@link hitTest}'s winner, refined by two hover-only
-   * heuristics that make tracing an edge out of a dense bundle reliable.
-   * **Click / drag picking deliberately stays on the raw {@link hitTest}** — a
-   * press must resolve exactly what is under the cursor, with no memory of the
-   * last hover — so this method is called only from {@link routePointerMove}.
-   *
-   * - **Node-incidence bias (J).** When the raw winner is a connector but the
-   *   cursor also sits within {@link hoverNodeIncidencePx} of a shape's centre,
-   *   an edge *incident to that shape* (an endpoint at the node) is preferred
-   *   over an unrelated edge merely passing through the region. Incident edges
-   *   fan out and separate near their shared endpoint — where you aim. The test
-   *   is purely geometric (endpoint ≈ node centre), so the renderer stays
-   *   domain-free; it never inspects graph adjacency.
-   * - **Hysteresis (I).** The currently-hovered element of the *same kind* is
-   *   kept unless the new winner is closer by more than {@link hoverHysteresisPx}
-   *   — and only while the old target is still genuinely under the cursor — so a
-   *   sub-pixel jitter between two near-equidistant edges doesn't flicker the
-   *   highlight.
-   *
-   * Falls back to identical behaviour to {@link hitTest} when both margins are
-   * `0` or nothing nearby qualifies.
+   * `currentHover` is passed in rather than read by the index: hover is
+   * interaction bookkeeping this renderer owns, and the index stays a pure
+   * query surface.
    */
   private pickHover(worldX: number, worldY: number): HitResult | null {
-    if (!this.hitEnabled) return null;
-    this.flushMovedHits();
-    const floorWorld = this.hitFloorWorld();
-    const incidenceWorld = this.hoverIncidenceWorld();
-    // Widen the bbox query enough to also see the nearby shape centres the
-    // incidence bias needs — otherwise a node whose centre is just outside the
-    // hit-floor pad is invisible to the pick and the bias can't fire.
-    const candidates = this.hit.query(worldX, worldY, Math.max(floorWorld, incidenceWorld));
-    if (candidates.length === 0) return null;
-
-    const floorSq = floorWorld * floorWorld;
-    const incidenceSq = incidenceWorld * incidenceWorld;
-
-    let bestExact: { kind: 'shape' | 'connector'; id: string; distSq: number; zIndex: number } | null = null;
-    let bestFloor: { kind: 'shape' | 'connector'; id: string; distSq: number } | null = null;
-    // Shape centres within the incidence radius of the cursor — the candidate
-    // "nearby nodes" the incidence bias measures edge endpoints against.
-    const nearbyCentres: Array<{ x: number; y: number }> = [];
-    // Exact connector hits + their two endpoints, for the incidence test.
-    const exactConnectors: Array<{ id: string; distSq: number; ax: number; ay: number; bx: number; by: number }> = [];
-
-    for (const c of candidates) {
-      if (c.kind === 'shape') {
-        const inst = this.shapeInstances.get(c.id);
-        if (!inst) continue;
-        const dx = worldX - inst.spec.x;
-        const dy = worldY - inst.spec.y;
-        const distSq = dx * dx + dy * dy;
-        if (distSq <= incidenceSq) nearbyCentres.push({ x: inst.spec.x, y: inst.spec.y });
-        const s = inst.gfxScale || 1;
-        if (this.shapeContainsLocal(inst, dx / s, dy / s)) {
-          const bestKindRank = bestExact && bestExact.kind === 'shape' ? 1 : 0;
-          if (
-            bestExact === null ||
-            c.zIndex > bestExact.zIndex ||
-            (c.zIndex === bestExact.zIndex && (1 > bestKindRank || (1 === bestKindRank && distSq < bestExact.distSq)))
-          ) {
-            bestExact = { kind: 'shape', id: c.id, distSq, zIndex: c.zIndex };
-          }
-        } else if (distSq <= floorSq && (bestFloor === null || distSq < bestFloor.distSq)) {
-          bestFloor = { kind: 'shape', id: c.id, distSq };
-        }
-      } else {
-        const inst = this.connectorInstances.get(c.id);
-        if (!inst) continue;
-        const poly = this.sampledConnectorPolyline(inst);
-        const distSq = distanceToPolylineSq(poly, worldX, worldY);
-        if (distSq <= this.connectorHitToleranceSq(inst) && poly.length >= 2) {
-          const a = poly[0]!;
-          const b = poly[poly.length - 1]!;
-          exactConnectors.push({ id: c.id, distSq, ax: a.x, ay: a.y, bx: b.x, by: b.y });
-          const bestKindRank = bestExact && bestExact.kind === 'shape' ? 1 : 0;
-          if (
-            bestExact === null ||
-            c.zIndex > bestExact.zIndex ||
-            (c.zIndex === bestExact.zIndex && (0 > bestKindRank || (0 === bestKindRank && distSq < bestExact.distSq)))
-          ) {
-            bestExact = { kind: 'connector', id: c.id, distSq, zIndex: c.zIndex };
-          }
-        } else if (distSq <= floorSq && (bestFloor === null || distSq < bestFloor.distSq)) {
-          bestFloor = { kind: 'connector', id: c.id, distSq };
-        }
-      }
-    }
-
-    const base = bestExact ?? bestFloor;
-    if (!base) return null;
-    let win: { kind: 'shape' | 'connector'; id: string; distSq: number } = {
-      kind: base.kind,
-      id: base.id,
-      distSq: base.distSq,
-    };
-
-    // (J) Node-incidence bias — only when the winner is an edge, we have a
-    // nearby node, and the winning edge is *not* incident to it.
-    if (win.kind === 'connector' && nearbyCentres.length > 0 && exactConnectors.length > 0) {
-      const isIncident = (e: { ax: number; ay: number; bx: number; by: number }): boolean =>
-        nearbyCentres.some(
-          (n) =>
-            (e.ax - n.x) * (e.ax - n.x) + (e.ay - n.y) * (e.ay - n.y) <= incidenceSq ||
-            (e.bx - n.x) * (e.bx - n.x) + (e.by - n.y) * (e.by - n.y) <= incidenceSq,
-        );
-      const winnerIncident = exactConnectors.some((e) => e.id === win.id && isIncident(e));
-      if (!winnerIncident) {
-        let bestInc: { id: string; distSq: number } | null = null;
-        for (const e of exactConnectors) {
-          if (isIncident(e) && (bestInc === null || e.distSq < bestInc.distSq)) {
-            bestInc = { id: e.id, distSq: e.distSq };
-          }
-        }
-        if (bestInc) win = { kind: 'connector', id: bestInc.id, distSq: bestInc.distSq };
-      }
-    }
-
-    // (I) Hysteresis — keep the current same-kind hover unless the new winner is
-    // closer by more than the margin, and only while the old target is still a
-    // genuine hit under the cursor (re-probed here). Cross-kind moves (edge→node)
-    // switch immediately so landing on a node always wins.
-    const cur = this.currentHover;
-    if (cur && cur.kind === win.kind && cur.id !== win.id) {
-      const curHit = this.geometricHit(cur.kind, cur.id, worldX, worldY);
-      if (curHit && (curHit.exact || curHit.distSq <= floorSq)) {
-        const margin = this.hoverHysteresisWorld();
-        if (Math.sqrt(win.distSq) + margin >= Math.sqrt(curHit.distSq)) {
-          return { kind: cur.kind, id: cur.id };
-        }
-      }
-    }
-
-    return { kind: win.kind, id: win.id };
+    return this.picking.pickHover(worldX, worldY, this.currentHover);
   }
 
   /**
@@ -2365,17 +2104,6 @@ export class PrimitivesRenderer {
         });
       }
     }
-  }
-
-  /**
-   * `hitFloorPx` translated into world units at the current camera scale.
-   * The clamp guards against a zero/NaN scale from a misconfigured camera —
-   * with a divide-by-zero, the floor would balloon to `Infinity` and every
-   * pointer event would hit every shape.
-   */
-  private hitFloorWorld(): number {
-    const scale = this.camera.scale;
-    return this.hitFloorPx / Math.max(scale, 1e-6);
   }
 
   // ─── Diagnostics ────────────────────────────────────────────────────────
@@ -2607,8 +2335,7 @@ export class PrimitivesRenderer {
    * wants to fit content to a selection, or a debug overlay.
    */
   getShapeWorldBounds(id: string): Rect | null {
-    const inst = this.shapeInstances.get(id);
-    return inst ? this.shapeWorldBounds(inst) : null;
+    return this.picking.shapeWorldBounds(id);
   }
 
   /**
@@ -2695,23 +2422,23 @@ export class PrimitivesRenderer {
     for (const id of [...this.shapeInstances.keys()]) this.removeShape(id);
     for (const id of [...this.connectorInstances.keys()]) this.removeConnector(id);
     this.animated.clear();
-    this.hit.clear();
-    this.movedShapeHits.clear();
-    this.movedConnectorHits.clear();
+    this.picking.clear();
     this.events.removeAllListeners();
   }
 
   // ─── Internals ──────────────────────────────────────────────────────────
 
+  /**
+   * World-space AABB of a shape, via the picking index so bounds and hit boxes
+   * can never disagree. The `null` branch is unreachable for a live instance
+   * (the index falls back to `shape.bounds()` for custom kinds); it exists
+   * because the index is keyed by id and an id can always be unknown.
+   */
   private shapeWorldBounds(inst: ShapeInstance): Rect {
-    const local = inst.shape.bounds();
-    const s = inst.gfxScale;
-    return {
-      x: inst.spec.x + local.x * s,
-      y: inst.spec.y + local.y * s,
-      width: local.width * s,
-      height: local.height * s,
-    };
+    return (
+      this.picking.shapeWorldBounds(inst.id) ??
+      { x: inst.spec.x, y: inst.spec.y, width: 0, height: 0 }
+    );
   }
 
   private routePath(spec: BaseConnectorSpec): Path {
@@ -2878,98 +2605,19 @@ export class PrimitivesRenderer {
     // A hidden connector (collapse self-loop or effectively-hidden edge) is
     // culled from drawing and must not be hittable either.
     if (inst.spec.visible === false || inst.path.length < 2) {
-      this.hit.remove(inst.id);
-      this.movedConnectorHits.delete(inst.id);
+      this.picking.remove(inst.id);
       return;
     }
-    // Existing entry → defer the bbox refresh. `hit.insert` does an O(N) rbush
+    // Existing entry → defer the bbox refresh. Re-indexing does an O(N) rbush
     // remove+insert; doing that per edge while a settle re-routes thousands of
     // edges each tick is O(N²). The deferred set is bulk-rebuilt (O(N log N),
     // once) on the next `hitTest`. A brand-new edge has no entry to update, so
     // it must insert now to be hittable.
-    if (this.hit.has(inst.id)) {
-      this.movedConnectorHits.add(inst.id);
+    if (this.picking.has(inst.id)) {
+      this.picking.markConnectorMoved(inst.id);
       return;
     }
-    this.hit.insert(inst.id, 'connector', this.connectorHitBoxes(inst), inst.spec.zIndex ?? 0);
-  }
-
-  /** World-space hit bbox for a connector: its path bounds inflated by half the
-   * stroke width plus a small slop so thin edges stay grabbable. */
-  private connectorHitRect(inst: ConnectorInstance): Rect {
-    const bb = pathBounds(inst.path);
-    const pad = (inst.spec.stroke?.width ?? 1) / 2 + 4;
-    return { x: bb.x - pad, y: bb.y - pad, width: bb.width + pad * 2, height: bb.height + pad * 2 };
-  }
-
-  /**
-   * World-space hit **boxes** for a connector — the segment-level hit index
-   * (edge-pick correctness H). A single loose AABB over a long diagonal edge
-   * makes that edge a candidate for every point in a huge empty box; splitting
-   * the sampled polyline into up to {@link CONNECTOR_HIT_MAX_BOXES} tight boxes
-   * (cut at equal arc-length, so straight diagonals subdivide and curves — which
-   * `samplePath` already densifies — get one box per run) keeps the candidate
-   * set to edges *physically near* the cursor, making "nearest" cheaper and more
-   * meaningful in a bundle. Short edges collapse to one box (identical to
-   * {@link connectorHitRect}), so nothing regresses.
-   */
-  private connectorHitBoxes(inst: ConnectorInstance): Rect[] {
-    const poly = this.sampledConnectorPolyline(inst);
-    const pad = (inst.spec.stroke?.width ?? 1) / 2 + 4;
-    if (poly.length < 2) return [this.connectorHitRect(inst)];
-
-    // Total arc length + per-segment lengths.
-    let total = 0;
-    const segLen: number[] = [];
-    for (let i = 0; i < poly.length - 1; i++) {
-      const a = poly[i]!;
-      const b = poly[i + 1]!;
-      const l = Math.hypot(b.x - a.x, b.y - a.y);
-      segLen.push(l);
-      total += l;
-    }
-    // One box below the split threshold — same loose AABB as before.
-    const n = Math.min(CONNECTOR_HIT_MAX_BOXES, Math.max(1, Math.ceil(total / CONNECTOR_HIT_SPLIT_LEN)));
-    if (n <= 1 || total === 0) return [this.connectorHitRect(inst)];
-
-    const step = total / n;
-    const rects: Rect[] = [];
-    let boundary = step; // next arc-length cut
-    let acc = 0; // arc length at the current segment's start point
-    let minX = poly[0]!.x;
-    let minY = poly[0]!.y;
-    let maxX = minX;
-    let maxY = minY;
-    const expand = (x: number, y: number): void => {
-      if (x < minX) minX = x;
-      if (y < minY) minY = y;
-      if (x > maxX) maxX = x;
-      if (y > maxY) maxY = y;
-    };
-    const flush = (): void => {
-      rects.push({ x: minX - pad, y: minY - pad, width: maxX - minX + pad * 2, height: maxY - minY + pad * 2 });
-    };
-    for (let i = 0; i < poly.length - 1; i++) {
-      const a = poly[i]!;
-      const b = poly[i + 1]!;
-      const l = segLen[i]!;
-      // Cut this segment wherever an arc-length boundary falls inside it, so a
-      // long straight run still yields several boxes hugging the line.
-      while (l > 0 && rects.length < n - 1 && boundary <= acc + l + 1e-9) {
-        const t = (boundary - acc) / l;
-        const cx = a.x + (b.x - a.x) * t;
-        const cy = a.y + (b.y - a.y) * t;
-        expand(cx, cy);
-        flush();
-        minX = maxX = cx;
-        minY = maxY = cy;
-        boundary += step;
-      }
-      expand(b.x, b.y);
-      acc += l;
-    }
-    flush();
-    return rects;
+    this.picking.insertConnector(inst.id, inst.spec.zIndex ?? 0);
   }
 
   private refreshShapeDecorations(

@@ -58,6 +58,32 @@ export {
 export { hasSilhouetteFill } from './specs/style';
 export type { ShapeSpec } from './specs';
 
+// ─── The renderer seam ───────────────────────────────────────────────────────
+// `IRenderer` lives here rather than in the kernel because it is made of spec
+// vocabulary. `PixiRenderer` is its first implementation and the class P6 moves
+// into `@invana/renderer-pixijs`.
+export { PixiRenderer, type PixiRendererOptions } from './renderer/PixiRenderer';
+export type {
+  IRenderer,
+  RendererCapabilities,
+  RendererMountOptions,
+} from './renderer/IRenderer';
+
+// ─── Picking (D5) ────────────────────────────────────────────────────────────
+// Picking is interaction, not drawing, so the index and the narrow-phase
+// geometry live here rather than in a backend. A rendering package implements
+// `HitGeometrySource` — the three facts a spec can't carry (visual scale,
+// routed polyline, custom-kind silhouette) — and the engine answers the picks.
+export { PickingIndex, connectorHitBoxes } from './hit/PickingIndex';
+export type {
+  ConnectorHitRecord,
+  HitGeometrySource,
+  HitPolyline,
+  PickingCamera,
+  PickingIndexOptions,
+  ShapeHitRecord,
+} from './hit/PickingIndex';
+
 // ─── Gesture arbitration (P5) ────────────────────────────────────────────────
 // One gesture owns the pointer at a time; camera behaviours yield to it. This
 // replaces behaviours reaching into pixi-viewport's plugin registry to pause it.
@@ -128,7 +154,15 @@ export {
 
 // ─── Camera ─────────────────────────────────────────────────────────────
 export { Camera } from './camera/Camera';
-export type { CameraOptions, Rect, Point } from './camera/Camera';
+export type { CameraOptions, CameraTransform, Rect, Point } from './camera/Camera';
+// The renderer's half of the camera. `Camera` holds the semantics and no
+// backend type; a rendering package implements the binding (P6).
+export { PixiViewportBinding } from './camera/PixiViewportBinding';
+export type {
+  CameraChangeKind,
+  CameraTransformValue,
+  ICameraBinding,
+} from './camera/ICameraBinding';
 
 // ─── Context ────────────────────────────────────────────────────────────
 export type { CanvasContext } from './context/CanvasContext';

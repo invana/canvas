@@ -82,15 +82,6 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
   private originalCanvasPointerEvents: string | null = null;
   private originalCanvasPosition: string | null = null;
   private originalCanvasZIndex: string | null = null;
-  /**
-   * Last camera scale we pushed to the bus on a `camera:zoom` event.
-   * `syncCameraFromMap` writes the viewport directly (it has to, to mirror
-   * MapLibre's transform exactly), so the bus only learns about zoom
-   * changes when we emit them. Skip the emit when scale is unchanged
-   * (pan-only frames) so listeners like `ScreenSizeBehaviour` don't pay
-   * the O(N) reflow cost on every pan tick.
-   */
-  private lastEmittedScale: number | null = null;
   private readonly handleMapMove = (): void => this.syncCameraFromMap();
 
   constructor(opts: LayerOptions<MapLayerOptions>) {
@@ -299,7 +290,6 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
     this.originalCanvasPointerEvents = null;
     this.originalCanvasPosition = null;
     this.originalCanvasZIndex = null;
-    this.lastEmittedScale = null;
   }
 
   /**
@@ -332,30 +322,19 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
     const tx = screenRef.x - worldRef.x * scale;
     const ty = screenRef.y - worldRef.y * scale;
 
-    // Direct viewport writes — `camera.setZoom` / `setPosition` would
-    // re-anchor at the viewport centre (their own math), which doesn't
-    // match MapLibre's exact transform. We mirror the transform raw, then
-    // bridge the resulting camera change onto the canvas event bus below
-    // so behaviours subscribed to `input:camera:zoom` / `input:camera:pan` (e.g.
-    // `ScreenSizeBehaviour`, `TextResolutionLODBehaviour`) react to
-    // MapLibre-driven pan/zoom too. Without this bridge those listeners
-    // are silently never called when the map drives the camera.
-    ctx.camera.viewport.scale.set(scale);
-    ctx.camera.viewport.position.set(tx, ty);
-
-    // `input:camera:zoom` only when scale actually changes — most map gestures
-    // are pan-only and the reflow listeners are O(N) over their tracked
-    // entities, so we don't want to fire on every move tick during a
-    // long pan.
-    if (this.lastEmittedScale === null || this.lastEmittedScale !== scale) {
-      ctx.events.emit('input:camera:zoom', {
-        scale,
-        centerX: ctx.camera.screenWidth / 2,
-        centerY: ctx.camera.screenHeight / 2,
-      });
-      this.lastEmittedScale = scale;
-    }
-    ctx.events.emit('input:camera:pan', { x: tx, y: ty });
+    // `setTransform` is the mirror-an-external-camera seam: it writes the
+    // transform exactly as solved above (`setZoom` / `setPosition` would
+    // re-anchor at the viewport centre with their own math, which doesn't match
+    // MapLibre's), and emits `input:camera:zoom` / `input:camera:pan` on the
+    // canvas bus so behaviours like `ScreenSizeBehaviour` and
+    // `TextResolutionLODBehaviour` react to MapLibre-driven pan/zoom too.
+    // Zoom is emitted only when the scale actually changed — most map gestures
+    // are pan-only and those listeners are O(N) over their tracked entities.
+    //
+    // `clamp: false` because the camera's default zoom ceiling (100) sits far
+    // below web mercator's scale range (2 ** 22 at max zoom); clamping would
+    // peg the canvas away from the basemap.
+    ctx.camera.setTransform({ x: tx, y: ty, zoom: scale }, { clamp: false });
 
     this.events.emit('map:move', {
       center: [map.getCenter().lng, map.getCenter().lat],

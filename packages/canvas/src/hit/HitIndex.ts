@@ -16,7 +16,7 @@
  */
 
 import RBush from 'rbush';
-import type { Rect } from '../primitives/types';
+import type { Rect } from '../specs/geometry';
 
 export interface HitEntry {
   readonly id: string;

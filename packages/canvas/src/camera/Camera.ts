@@ -1,20 +1,24 @@
 /**
- * `Camera` — pan/zoom/projection facade over a `pixi-viewport` `Viewport`.
+ * `Camera` — the engine's pan/zoom/projection facade.
  *
  * Architecture: see `architecture-proposal.md` §2.4 (CanvasContext.camera) and
  * §2.6 (camera input is a Behaviour, not a hard-coded gesture).
  *
  * **Design notes**
  *
+ * - **No backend type crosses this class.** The concrete viewport lives behind
+ *   {@link ICameraBinding} — `PixiViewportBinding` today, an orthographic
+ *   three.js camera later. Camera owns the *semantics* (clamping, anchored zoom,
+ *   fit-to-rect, bus events, store sync); the binding owns the realisation
+ *   (`docs/renderer-split-design.md` §9, P5/P6).
  * - The Camera owns no input gestures — those live in opt-in camera-input
- *   `Behaviour`s (proposal §2.6). They configure the camera's zoom inputs
- *   through {@link Camera.configureInput}, which keeps the `pixi-viewport`
- *   plugin vocabulary inside this class (`docs/renderer-split-design.md` §9,
- *   P5). The raw `viewport` accessor survives for the pan plugin until P6
- *   moves the binding into the renderer package.
- * - All transform math delegates to the underlying `Viewport`. Position/scale
- *   on the Viewport `Container` is the single source of truth, so Camera
- *   methods and Viewport plugins stay in sync automatically.
+ *   `Behaviour`s (proposal §2.6). They configure inputs through
+ *   {@link Camera.configureInput} / {@link Camera.setDragSuspended} /
+ *   {@link Camera.onDragStart}, described semantically (`percent`, `modifier`),
+ *   so a behaviour never names a plugin.
+ * - The **binding is the single source of truth** for the transform: Camera
+ *   reads it back rather than caching, so a gesture driven inside the backend
+ *   and a programmatic `pan()` can't drift apart.
  * - Coordinate model (uniform scale, no rotation):
  *
  *     screen.x = world.x * scale + tx
@@ -30,76 +34,33 @@
  *   telemetry sees every camera change.
  */
 
-import type { Viewport } from 'pixi-viewport';
 import { select, type CanvasEventBus, type CanvasStore } from '@invana/canvas-store';
+import type { Point, Rect } from '../specs/geometry';
+import type {
+  CameraInputConfig,
+  CameraTransformValue,
+  ICameraBinding,
+} from './ICameraBinding';
 
-export interface Point {
-  x: number;
-  y: number;
-}
+export type { Point, Rect };
+export type {
+  CameraInputConfig,
+  CameraInputModifier,
+  DragInputOptions,
+  PinchInputOptions,
+  WheelInputOptions,
+} from './ICameraBinding';
 
-export interface Rect {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-/**
- * A modifier key a camera input gesture can be gated on. Named semantically
- * rather than as key codes so the contract survives the renderer swap — the
- * mapping to `pixi-viewport`'s `keyToPress` codes lives in {@link Camera}.
- */
-export type CameraInputModifier = 'control' | 'shift' | 'alt' | 'meta';
-
-/** Wheel-zoom input configuration — see {@link Camera.configureInput}. */
-export interface WheelInputOptions {
-  /** Zoom fraction per wheel tick. Default `0.1` (10%). */
-  percent?: number;
-  /** Smooth-scroll frame count; `false` = instant snap. Default `false`. */
-  smooth?: false | number;
-  /**
-   * Require this modifier to be held for the wheel to zoom, leaving plain
-   * scroll to the page. `null` / omitted = no modifier.
-   */
-  modifier?: CameraInputModifier | null;
-  /** Treat a two-finger trackpad pinch as zoom rather than scroll. Default `true`. */
-  trackpadPinch?: boolean;
-}
-
-/** Pinch-zoom input configuration — see {@link Camera.configureInput}. */
-export interface PinchInputOptions {
-  /** Suppress the implicit pan that accompanies a pinch. Default `false`. */
-  noDrag?: boolean;
-  /** Zoom speed multiplier. Default `0.1`. */
-  percent?: number;
-}
-
-/**
- * Patch for {@link Camera.configureInput}. An omitted key leaves that input
- * untouched; `null` removes it.
- */
-export interface CameraInputConfig {
-  wheel?: WheelInputOptions | null;
-  pinch?: PinchInputOptions | null;
-}
-
-/** Semantic modifier → the `pixi-viewport` key codes for that physical key. */
-const MODIFIER_KEYS: Record<CameraInputModifier, string[]> = {
-  control: ['ControlLeft', 'ControlRight'],
-  shift: ['ShiftLeft', 'ShiftRight'],
-  alt: ['AltLeft', 'AltRight'],
-  meta: ['MetaLeft', 'MetaRight'],
-};
+/** An absolute camera transform — world (0,0) at `(x, y)` screen px, uniform `zoom`. */
+export type CameraTransform = CameraTransformValue;
 
 export interface CameraOptions {
   /**
-   * The `Viewport` instance the camera transforms. Created by `Canvas` and
-   * attached to `app.stage` as the world root. Camera mutates its
-   * `position` / `scale` directly via Viewport's typed methods.
+   * The renderer's viewport, behind the pixi-free {@link ICameraBinding} seam.
+   * Created by the renderer (`Canvas` wires `PixiViewportBinding` today).
    */
-  viewport: Viewport;
-  /** Initial viewport size in CSS pixels. Mirrors the Viewport's own `screenWidth`/`screenHeight` for projection math. */
+  binding: ICameraBinding;
+  /** Initial viewport size in CSS pixels. Mirrors the binding's own screen size for projection math. */
   screenWidth: number;
   screenHeight: number;
   /** Optional bus for `input:camera:zoom` / `input:camera:pan` events. */
@@ -107,8 +68,8 @@ export interface CameraOptions {
   /**
    * Optional kernel store. When present, the camera keeps
    * `store.view.interaction.camera` (the abstract `{x,y,zoom}` transform) in sync
-   * with the pixi viewport **both ways** — gestures/mutators push into the store,
-   * and external `actions.camera.*` writes apply to the viewport.
+   * with the binding **both ways** — gestures/mutators push into the store,
+   * and external `actions.camera.*` writes apply to the binding.
    */
   store?: CanvasStore;
   /** Initial uniform scale. Default 1. */
@@ -123,13 +84,11 @@ export interface CameraOptions {
 
 export class Camera {
   /**
-   * The underlying `pixi-viewport` `Viewport`. Public for engine internals
-   * (camera-input behaviours that need `viewport.drag()` / `viewport.snap()`
-   * / `viewport.animate()` etc.). Domain code should go through Camera's
-   * typed methods (`pan`, `setZoom`, `toWorld`, ...) rather than touching
-   * Viewport directly.
+   * The renderer's viewport, behind the pixi-free binding seam. **Private** —
+   * nothing outside this class reaches the backend, which is what lets P6 move
+   * the realisation into `@invana/renderer-pixijs` without a public break.
    */
-  readonly viewport: Viewport;
+  private readonly binding: ICameraBinding;
 
   private readonly bus?: CanvasEventBus;
 
@@ -140,13 +99,17 @@ export class Camera {
 
   /** Kernel store (optional) — the home of the abstract `interaction.camera` transform. */
   private readonly store?: CanvasStore;
-  /** Re-entrancy guard so viewport↔store sync never ping-pongs. */
+  /** Re-entrancy guard so binding↔store sync never ping-pongs. */
   private _syncing = false;
   /** Unsubscribe for the `interaction.camera` slice subscription. */
   private _offStoreCam?: () => void;
+  /** Unsubscribe for the binding's backend-driven transform reports. */
+  private _offBindingChange?: () => void;
+  /** Whether drag-panning is currently yielded to another gesture owner. */
+  private _dragSuspended = false;
 
   constructor(opts: CameraOptions) {
-    this.viewport = opts.viewport;
+    this.binding = opts.binding;
     this.bus = opts.bus;
     this.store = opts.store;
     this._screenWidth = opts.screenWidth;
@@ -154,34 +117,33 @@ export class Camera {
     this._minScale = opts.minScale ?? 0.01;
     this._maxScale = opts.maxScale ?? 100;
 
-    const initialScale = this.clampScale(opts.initialScale ?? 1);
-    this.viewport.scale.set(initialScale);
-    this.viewport.position.set(opts.initialX ?? 0, opts.initialY ?? 0);
-
-    // Bridge pixi-viewport's plugin-driven events to the canvas bus. Without
-    // this, interactive pan/zoom (drag, wheel, pinch — all driven via
-    // `viewport.drag()` / `viewport.wheel()` / etc. inside camera-input
-    // behaviours) never reaches `camera:pan` / `camera:zoom` listeners,
-    // because plugin-driven mutations bypass Camera's typed mutators.
-    // Direct `.position.set` / `.scale.set` calls from this class don't
-    // trigger viewport's 'moved' / 'zoomed', so we don't double-emit.
-    this.viewport.on('moved', () => {
-      this.bus?.emit('input:camera:pan', { x: this.viewport.position.x, y: this.viewport.position.y });
-      this.pushToStore();
+    this.binding.setTransform({
+      x: opts.initialX ?? 0,
+      y: opts.initialY ?? 0,
+      zoom: this.clampScale(opts.initialScale ?? 1),
     });
-    this.viewport.on('zoomed', () => {
-      this.bus?.emit('input:camera:zoom', {
-        scale: this.viewport.scale.x,
-        centerX: this._screenWidth / 2,
-        centerY: this._screenHeight / 2,
-      });
-      this.bus?.emit('input:camera:pan', { x: this.viewport.position.x, y: this.viewport.position.y });
+
+    // Bridge backend-driven transform changes to the canvas bus. Without this,
+    // interactive pan/zoom (drag, wheel, pinch, momentum — all driven inside the
+    // backend) never reaches `camera:pan` / `camera:zoom` listeners, because
+    // those mutations bypass Camera's typed mutators. Changes Camera itself
+    // makes are not reported back, so there's no double-emit.
+    this._offBindingChange = this.binding.onTransformChange((kind) => {
+      const t = this.binding.getTransform();
+      if (kind === 'zoom') {
+        this.bus?.emit('input:camera:zoom', {
+          scale: t.zoom,
+          centerX: this._screenWidth / 2,
+          centerY: this._screenHeight / 2,
+        });
+      }
+      this.bus?.emit('input:camera:pan', { x: t.x, y: t.y });
       this.pushToStore();
     });
 
     // Bidirectional bind to `store.view.interaction.camera`: seed it from the
-    // initial viewport transform, then apply any external `actions.camera.*` write
-    // back onto the viewport (the `_syncing` guard breaks the feedback loop).
+    // initial transform, then apply any external `actions.camera.*` write back
+    // onto the binding (the `_syncing` guard breaks the feedback loop).
     if (this.store) {
       this.pushToStore();
       const cameraSlice = select(this.store.view, (s) => s.interaction.camera);
@@ -190,15 +152,13 @@ export class Camera {
   }
 
   /**
-   * Push the current viewport transform into `store.view.interaction.camera`.
-   * Called from every camera mutation (gesture + programmatic). No-op when the
-   * store already matches or a store→viewport apply is in flight.
+   * Push the current transform into `store.view.interaction.camera`. Called from
+   * every camera mutation (gesture + programmatic). No-op when the store already
+   * matches or a store→binding apply is in flight.
    */
   private pushToStore(): void {
     if (!this.store || this._syncing) return;
-    const x = this.viewport.position.x;
-    const y = this.viewport.position.y;
-    const zoom = this.viewport.scale.x;
+    const { x, y, zoom } = this.binding.getTransform();
     const cur = this.store.view.getState().interaction.camera;
     if (cur.x === x && cur.y === y && cur.zoom === zoom) return;
     this._syncing = true;
@@ -210,25 +170,18 @@ export class Camera {
   }
 
   /**
-   * Apply `store.view.interaction.camera` onto the viewport — realises an external
-   * `actions.camera.*` write. No-op when the viewport already matches or a
-   * viewport→store push is in flight. `position.set`/`scale.set` don't fire the
-   * viewport's `moved`/`zoomed`, so this doesn't re-enter.
+   * Apply `store.view.interaction.camera` onto the binding — realises an external
+   * `actions.camera.*` write. No-op when the binding already matches or a
+   * binding→store push is in flight.
    */
   private applyFromStore(): void {
     if (!this.store || this._syncing) return;
     const c = this.store.view.getState().interaction.camera;
-    if (
-      this.viewport.position.x === c.x &&
-      this.viewport.position.y === c.y &&
-      this.viewport.scale.x === c.zoom
-    ) {
-      return;
-    }
+    const cur = this.binding.getTransform();
+    if (cur.x === c.x && cur.y === c.y && cur.zoom === c.zoom) return;
     this._syncing = true;
     try {
-      this.viewport.scale.set(this.clampScale(c.zoom));
-      this.viewport.position.set(c.x, c.y);
+      this.binding.setTransform({ x: c.x, y: c.y, zoom: this.clampScale(c.zoom) });
     } finally {
       this._syncing = false;
     }
@@ -238,16 +191,16 @@ export class Camera {
 
   /** Current uniform scale. */
   get scale(): number {
-    return this.viewport.scale.x;
+    return this.binding.getTransform().zoom;
   }
 
   /** Current world-container x in screen pixels. (Where world (0,0) sits.) */
   get x(): number {
-    return this.viewport.position.x;
+    return this.binding.getTransform().x;
   }
 
   get y(): number {
-    return this.viewport.position.y;
+    return this.binding.getTransform().y;
   }
 
   get screenWidth(): number {
@@ -265,8 +218,9 @@ export class Camera {
    * in screen pixels. Most consumers want `pan(dx, dy)` instead.
    */
   setPosition(x: number, y: number): void {
-    if (x === this.x && y === this.y) return;
-    this.viewport.position.set(x, y);
+    const cur = this.binding.getTransform();
+    if (x === cur.x && y === cur.y) return;
+    this.binding.setTransform({ x, y, zoom: cur.zoom });
     this.bus?.emit('input:camera:pan', { x, y });
     this.pushToStore();
   }
@@ -278,6 +232,42 @@ export class Camera {
   }
 
   /**
+   * Write an absolute `{ x, y, zoom }` transform in one step — the seam for a
+   * layer mirroring an **external** camera authority (a MapLibre basemap, a
+   * remote collaborator's viewport, a replayed session).
+   *
+   * Unlike `setZoom` + `setPosition`, this re-anchors nothing: the transform
+   * lands exactly as given, because the external authority has already solved
+   * for it and any re-anchoring here would desync the two views. `zoom` is
+   * emitted only when it actually changed — most mirrored gestures are pan-only
+   * and the `input:camera:zoom` listeners are O(N) over their tracked elements.
+   *
+   * @param t      The transform to apply.
+   * @param opts.clamp  Apply the camera's min/max zoom clamp. Default `true`.
+   *   Pass `false` when mirroring an authority with its own scale range — a web
+   *   mercator basemap runs to `2 ** 22`, far past the camera's default ceiling
+   *   of 100, and clamping would silently peg the canvas away from the map.
+   */
+  setTransform(t: CameraTransform, opts?: { clamp?: boolean }): void {
+    const zoom = opts?.clamp === false ? t.zoom : this.clampScale(t.zoom);
+    const cur = this.binding.getTransform();
+    const zoomChanged = zoom !== cur.zoom;
+    if (!zoomChanged && t.x === cur.x && t.y === cur.y) return;
+
+    this.binding.setTransform({ x: t.x, y: t.y, zoom });
+
+    if (zoomChanged) {
+      this.bus?.emit('input:camera:zoom', {
+        scale: zoom,
+        centerX: this._screenWidth / 2,
+        centerY: this._screenHeight / 2,
+      });
+    }
+    this.bus?.emit('input:camera:pan', { x: t.x, y: t.y });
+    this.pushToStore();
+  }
+
+  /**
    * Set absolute scale, anchored at the viewport centre. The world point at
    * the centre stays put. For zoom-around-an-arbitrary-point semantics use
    * `zoomAt`.
@@ -285,8 +275,7 @@ export class Camera {
   setZoom(scale: number): void {
     const next = this.clampScale(scale);
     if (next === this.scale) return;
-    // `setZoom(scale, true)` keeps the world centre under the screen centre.
-    this.viewport.setZoom(next, true);
+    this.binding.zoomToCentre(next);
     this.bus?.emit('input:camera:zoom', {
       scale: next,
       centerX: this._screenWidth / 2,
@@ -300,9 +289,9 @@ export class Camera {
    * Multiply scale by `factor`, holding the world point under the screen
    * cursor `(centerX, centerY)` in place. Default centre = viewport centre.
    *
-   * Viewport has no built-in arbitrary-anchor zoom, so we do the math here:
-   * project the anchor to world, change scale, then translate so the same
-   * world point lands at the same screen point.
+   * Bindings offer only centre-anchored zoom, so the arbitrary-anchor math is
+   * done here: project the anchor to world, change scale, then translate so the
+   * same world point lands at the same screen point.
    */
   zoomAt(
     factor: number,
@@ -312,11 +301,11 @@ export class Camera {
     const before = this.toWorld(centerX, centerY);
     const nextScale = this.clampScale(this.scale * factor);
     if (nextScale === this.scale) return;
-    this.viewport.scale.set(nextScale);
-    this.viewport.position.set(
-      centerX - before.x * nextScale,
-      centerY - before.y * nextScale,
-    );
+    this.binding.setTransform({
+      x: centerX - before.x * nextScale,
+      y: centerY - before.y * nextScale,
+      zoom: nextScale,
+    });
     this.bus?.emit('input:camera:zoom', { scale: nextScale, centerX, centerY });
     this.bus?.emit('input:camera:pan', { x: this.x, y: this.y });
     this.pushToStore();
@@ -345,8 +334,7 @@ export class Camera {
     const tx = this._screenWidth / 2 - cx * next;
     const ty = this._screenHeight / 2 - cy * next;
 
-    this.viewport.scale.set(next);
-    this.viewport.position.set(tx, ty);
+    this.binding.setTransform({ x: tx, y: ty, zoom: next });
 
     this.bus?.emit('input:camera:zoom', {
       scale: next,
@@ -364,33 +352,31 @@ export class Camera {
    * that should locate a target without rescaling the view.
    */
   centerOn(worldX: number, worldY: number): void {
-    const scale = this.viewport.scale.x;
+    const scale = this.scale;
     const tx = this._screenWidth / 2 - worldX * scale;
     const ty = this._screenHeight / 2 - worldY * scale;
-    this.viewport.position.set(tx, ty);
+    this.binding.setTransform({ x: tx, y: ty, zoom: scale });
     this.bus?.emit('input:camera:pan', { x: tx, y: ty });
     this.pushToStore();
   }
 
-  /** Update on viewport resize. Forwards to Viewport so its hit-area + plugin math stays correct. */
+  /** Update on viewport resize. Forwarded so the binding's own math stays correct. */
   resize(screenWidth: number, screenHeight: number): void {
     this._screenWidth = screenWidth;
     this._screenHeight = screenHeight;
-    this.viewport.resize(screenWidth, screenHeight);
+    this.binding.resize(screenWidth, screenHeight);
   }
 
   // ─── Projection ──────────────────────────────────────────────────────────
 
   /** Screen → world. */
   toWorld(screenX: number, screenY: number): Point {
-    const p = this.viewport.toWorld<Point>(screenX, screenY);
-    return { x: p.x, y: p.y };
+    return this.binding.toWorld(screenX, screenY);
   }
 
   /** World → screen. */
   toScreen(worldX: number, worldY: number): Point {
-    const p = this.viewport.toScreen<Point>(worldX, worldY);
-    return { x: p.x, y: p.y };
+    return this.binding.toScreen(worldX, worldY);
   }
 
   /**
@@ -398,18 +384,17 @@ export class Camera {
    * (per `decorations-plan.md` §11.6) and minimap layers.
    */
   getVisibleBounds(): Rect {
-    const r = this.viewport.getVisibleBounds();
-    return { x: r.x, y: r.y, width: r.width, height: r.height };
+    return this.binding.getVisibleBounds();
   }
 
   // ─── Input configuration ─────────────────────────────────────────────────
 
   /**
-   * Configure the camera's own zoom inputs. This is the seam camera-input
-   * behaviours use instead of reaching for `viewport.wheel()` / `viewport.pinch()`:
-   * the options are described semantically (`percent`, `modifier`) and the
-   * `pixi-viewport` realisation stays here, so P6 can move it into the renderer
-   * package without touching `WheelZoomBehaviour` / `PinchZoomBehaviour`.
+   * Configure the camera's own pan / zoom inputs. This is the seam camera-input
+   * behaviours use instead of naming a backend plugin: the options are described
+   * semantically (`percent`, `modifier`) and the realisation lives in the
+   * binding, so `DragPanBehaviour` / `WheelZoomBehaviour` / `PinchZoomBehaviour`
+   * survive the renderer swap unchanged.
    *
    * Patch semantics — an omitted key is left alone, `null` removes that input:
    *
@@ -419,46 +404,57 @@ export class Camera {
    * ```
    *
    * Re-configuring an already-installed input replaces it, because the
-   * underlying plugins read their config only at install time.
+   * underlying inputs read their config only at install time.
    */
   configureInput(config: CameraInputConfig): void {
-    if (config.wheel !== undefined) {
-      this.viewport.plugins.remove('wheel');
-      const w = config.wheel;
-      if (w) {
-        const modifier = w.modifier ?? null;
-        this.viewport.wheel({
-          percent: w.percent ?? 0.1,
-          smooth: w.smooth ?? false,
-          keyToPress: modifier ? MODIFIER_KEYS[modifier] : undefined,
-          trackpadPinch: w.trackpadPinch ?? true,
-        });
-      }
-    }
-    if (config.pinch !== undefined) {
-      this.viewport.plugins.remove('pinch');
-      const p = config.pinch;
-      if (p) {
-        this.viewport.pinch({ noDrag: p.noDrag ?? false, percent: p.percent ?? 0.1 });
-      }
-    }
+    if (config.drag !== undefined) this._dragSuspended = false;
+    this.binding.configureInput(config);
+  }
+
+  /**
+   * Suspend / restore drag-panning without tearing the input down. This is how
+   * gesture arbitration yields the camera: while another behaviour owns the
+   * pointer (a node drag, a lasso, a resize) panning is suspended, and it
+   * resumes when that gesture releases.
+   *
+   * Momentum is deliberately left running, so an in-flight glide finishes as it
+   * always has. Edge-triggered — restoring resets the underlying input, so a
+   * repeated call in the same state is a no-op.
+   */
+  setDragSuspended(suspended: boolean): void {
+    if (suspended === this._dragSuspended) return;
+    this._dragSuspended = suspended;
+    this.binding.setDragSuspended(suspended);
+  }
+
+  /**
+   * Subscribe to the start of a drag-pan gesture — fired once the pointer has
+   * actually moved enough to pan. `DragPanBehaviour` uses it as the cursor
+   * fallback for the `space` modifier, which can't be read off a pointer event.
+   *
+   * @returns an unsubscribe function.
+   */
+  onDragStart(fn: () => void): () => void {
+    return this.binding.onDragStart(fn);
   }
 
   // ─── Internal ────────────────────────────────────────────────────────────
 
   /**
-   * Advance viewport plugins that animate over time (decelerate, snap, etc.).
-   * Called by `Canvas.tickOnce()` every frame. No-op until a camera-input
-   * behaviour enables a plugin that uses `update()`.
+   * Advance time-based input animation (momentum, snap). Called by
+   * `Canvas.tickOnce()` every frame — the engine owns the only clock (G3).
+   * No-op until a camera-input behaviour enables an input that animates.
    */
   tick(dt: number): void {
-    this.viewport.update(dt);
+    this.binding.tick(dt);
   }
 
-  /** Tear down the store subscription. Called by `Canvas.destroy`. */
+  /** Tear down subscriptions. Called by `Canvas.destroy`. */
   dispose(): void {
     this._offStoreCam?.();
     this._offStoreCam = undefined;
+    this._offBindingChange?.();
+    this._offBindingChange = undefined;
   }
 
   private clampScale(scale: number): number {

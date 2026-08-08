@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Camera, type CameraOptions } from '../../src/camera/Camera';
+import { PixiViewportBinding } from '../../src/camera/PixiViewportBinding';
 import { CanvasEventBus } from '@invana/canvas-store';
 import { makeTestScene } from '../_helpers/makeWorld';
 
@@ -7,7 +8,7 @@ function makeCamera(opts: Partial<CameraOptions> = {}) {
   const { world } = makeTestScene();
   const bus = new CanvasEventBus();
   const camera = new Camera({
-    viewport: world,
+    binding: new PixiViewportBinding(world),
     screenWidth: 800,
     screenHeight: 600,
     bus,
@@ -181,7 +182,7 @@ describe('Camera — bus interactions reach taps', () => {
 describe('Camera — without a bus', () => {
   it('works fine; just no events emitted', () => {
     const { world } = makeTestScene();
-    const camera = new Camera({ viewport: world, screenWidth: 800, screenHeight: 600 });
+    const camera = new Camera({ binding: new PixiViewportBinding(world), screenWidth: 800, screenHeight: 600 });
     expect(() => {
       camera.pan(100, 50);
       camera.setZoom(2);
@@ -190,9 +191,50 @@ describe('Camera — without a bus', () => {
   });
 });
 
-describe('Camera — viewport accessor', () => {
-  it('exposes the underlying Viewport for engine internals', () => {
+describe('Camera — setTransform (mirroring an external camera)', () => {
+  it('writes the transform verbatim, with no centre re-anchoring', () => {
     const { camera, world } = makeCamera();
-    expect(camera.viewport).toBe(world);
+    camera.setTransform({ x: 120, y: -40, zoom: 3 });
+    expect(camera.scale).toBe(3);
+    expect(camera.x).toBe(120);
+    expect(camera.y).toBe(-40);
+    expect(world.scale.x).toBe(3);
+    expect(world.position.x).toBe(120);
+  });
+
+  it('emits zoom only when the scale actually changed', () => {
+    const { camera, bus } = makeCamera();
+    const zoom = vi.fn();
+    const pan = vi.fn();
+    bus.on('input:camera:zoom', zoom);
+    bus.on('input:camera:pan', pan);
+
+    camera.setTransform({ x: 10, y: 10, zoom: 2 });
+    expect(zoom).toHaveBeenCalledTimes(1);
+    expect(pan).toHaveBeenCalledTimes(1);
+
+    // Pan-only frame — the O(N) zoom listeners must not be woken.
+    camera.setTransform({ x: 20, y: 30, zoom: 2 });
+    expect(zoom).toHaveBeenCalledTimes(1);
+    expect(pan).toHaveBeenCalledTimes(2);
+  });
+
+  it('is a no-op when nothing changed', () => {
+    const { camera, bus } = makeCamera({ initialScale: 2, initialX: 5, initialY: 6 });
+    const pan = vi.fn();
+    bus.on('input:camera:pan', pan);
+    camera.setTransform({ x: 5, y: 6, zoom: 2 });
+    expect(pan).not.toHaveBeenCalled();
+  });
+
+  it('clamps by default, and honours clamp: false for external scale ranges', () => {
+    const a = makeCamera({ maxScale: 10 });
+    a.camera.setTransform({ x: 0, y: 0, zoom: 1000 });
+    expect(a.camera.scale).toBe(10);
+
+    // A web-mercator basemap runs far past the camera's ceiling.
+    const b = makeCamera({ maxScale: 10 });
+    b.camera.setTransform({ x: 0, y: 0, zoom: 1000 }, { clamp: false });
+    expect(b.camera.scale).toBe(1000);
   });
 });
