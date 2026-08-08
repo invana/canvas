@@ -4,18 +4,18 @@
  * Architecture: see `architecture-proposal.md` §2.1.
  *
  * - Camera-affected: pans / zooms with the camera.
- * - Owns a root pixi `Container` (RenderGroup) attached to `surfaces.world`.
+ * - Owns a `world`-space surface, obtained from the renderer at mount.
  * - `hitTest(worldX, worldY)` — input is in world coordinates.
  *
- * Subclasses call `this.createGraphics(label?)` or `this.createContainer(label?)`
- * to add pixi display objects, and override `onMount(ctx)` to wire up renderers.
+ * Subclasses publish specs (durable content) or draw through
+ * `this.surface.overlay(...)` (transient visuals), and override `onMount(ctx)`
+ * to wire themselves up. No display object is ever constructed by a layer.
  * For stacked draw-order (e.g. edges below nodes), use separate Layer instances.
  *
  * The type-distinct `hitTest` signature (vs. `ScreenLayer`'s) is what stops
  * consumers passing screen coords to a world layer or vice versa.
  */
 
-import type { Container } from 'pixi.js';
 import type { ISurface, SurfaceOptions } from '../renderer/ISurface';
 import type { CanvasContext } from '../context/CanvasContext';
 import type { EventMap } from '@invana/canvas-store';
@@ -38,33 +38,6 @@ export abstract class WorldLayer<
   /** Backing field — assigned in `mount`, cleared in `unmount`. */
   protected _surface?: ISurface;
 
-  /**
-   * Root pixi `Container` (RenderGroup) for this layer. Available from
-   * `onMount(ctx)` for the layer's lifetime. Throws before mount / after unmount.
-   *
-   * Pass to `ShapesRenderer` as the `container` option when wiring up a renderer
-   * inside `onMount`. Subclass-only — not part of the external layer API.
-   */
-  /**
-   * This layer's slice of the renderer — its drawing device, overlays,
-   * visibility and paint order. Available from `onMount(ctx)` for the layer's
-   * lifetime; throws before mount / after unmount.
-   *
-   * Replaces the raw pixi `Container` layers used to be handed: a layer
-   * describes what it wants drawn and never touches a display object.
-   */
-  /**
-   * The pixi root of this layer's surface.
-   *
-   * @deprecated Renderer-side escape hatch for in-package layers that paint
-   * objects the primitives and overlay vocabularies don't cover (currently only
-   * `BackgroundLayer`'s tiling pattern). Everything else describes content as
-   * specs, or draws transients through `surface.overlay(...)`. Goes away when
-   * the drawing bodies move to `@invana/renderer-pixijs`.
-   */
-  protected get container(): Container {
-    return (this.surface as unknown as { root: Container }).root;
-  }
 
   protected get surface(): ISurface {
     if (!this._surface) {
@@ -97,7 +70,7 @@ export abstract class WorldLayer<
     super.mount(ctx);
   }
 
-  /** Keep the pixi container in sync when `layer.visible` is toggled. */
+  /** Keep the surface in sync when `layer.visible` is toggled. */
   protected override onVisibleChange(value: boolean): void {
     this._surface?.setVisible(value);
   }
@@ -113,8 +86,8 @@ export abstract class WorldLayer<
 
   /**
    * Update this layer's z-order relative to its peers. Keeps the iteration
-   * field (`this.zIndex`, used by `LayerRegistry.byZOrder()`) and the pixi
-   * container's `zIndex` in sync, and flips `surfaces.world` into sorted mode
+   * field (`this.zIndex`, used by `LayerRegistry.byZOrder()`) and the surface's
+   * paint order in sync, and flips `surfaces.world` into sorted mode
    * so the change renders.
    */
   setZIndex(z: number): void {

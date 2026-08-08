@@ -35,6 +35,47 @@ export interface SurfaceOptions {
   hitFloorPx?: number;
 }
 
+/**
+ * A full-surface backdrop: a solid fill, optionally overlaid with a repeating
+ * tile that can be offset and scaled to follow the camera.
+ *
+ * The split of responsibility is the point. The **engine** decides what the
+ * pattern looks like — dots, grid, lines, spacing, colour, DPR — and rasterises
+ * one tile with a 2D canvas, which needs no backend at all. The **backend**
+ * decides how that tile is repeated across the surface, which is the only part
+ * that touches the GPU.
+ *
+ * This is deliberately not a spec and not an overlay. A backdrop is neither
+ * durable content (it is derived from theme + camera, never authored) nor a
+ * transient gesture visual — it is a property of the surface itself.
+ */
+export interface SurfaceBackdrop {
+  /** Solid fill painted behind everything on the surface. */
+  readonly color: number | string;
+  /** Surface size in CSS pixels. */
+  readonly width: number;
+  readonly height: number;
+  /** Optional repeating tile drawn over the solid fill. */
+  readonly tile?: {
+    /**
+     * One tile, already rasterised by the engine. A plain DOM image source, so
+     * a backend wraps it in whatever texture type it uses.
+     *
+     * Identity matters: a backend may cache its texture and rebuild only when
+     * this changes, so pass the *same* object when only the transform moves.
+     */
+    readonly source: CanvasImageSource;
+    /** Uniform scale applied to the tile. */
+    readonly scale: number;
+    /** Tile offset in surface pixels — how the pattern tracks the camera. */
+    readonly offsetX: number;
+    readonly offsetY: number;
+    readonly alpha?: number;
+    /** `false` hides the tile while keeping the solid fill. */
+    readonly visible?: boolean;
+  };
+}
+
 export interface ISurface {
   /** Stable id — the owning layer's id. Names the surface in a scene tree. */
   readonly id: string;
@@ -53,6 +94,13 @@ export interface ISurface {
    * (a minimap's viewport box, a hover outline). Anything durable is a spec.
    */
   overlay(label: string): IOverlayDevice;
+
+  /**
+   * Paint (or clear, with `null`) this surface's backdrop. Cheap to call every
+   * frame: a backend rebuilds its tile texture only when `tile.source` changes
+   * identity, so a camera-following pattern costs a transform write.
+   */
+  setBackdrop(backdrop: SurfaceBackdrop | null): void;
 
   setVisible(visible: boolean): void;
   setZIndex(z: number): void;

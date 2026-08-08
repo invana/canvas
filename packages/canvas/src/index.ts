@@ -401,5 +401,3 @@ export { loadIconFont } from './fonts/loadIconFont';
 // ─── Pixi re-export for paint callbacks ────────────────────────────────
 //
 // `Graphics` is re-exported so consumers writing `paint(g => ...)` style
-// callbacks can type the parameter without a raw `pixi.js` import.
-export type { Graphics } from 'pixi.js';
