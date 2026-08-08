@@ -105,6 +105,12 @@ export type { IOverlayDevice, OverlayFill, OverlayFillLike, OverlayStroke, Overl
 // "the renderer is a projection of state" holds engine-wide.
 export { SpecProjector } from './renderer/SpecProjector';
 export type { SpecProjectionTarget, SpecProjectorOptions } from './renderer/SpecProjector';
+// The full device a domain layer drives: spec projection plus the per-frame
+// commands and geometry answers it still calls directly. Pixi-free, so
+// `@invana/graph` targets a backend it never imports.
+export type { IElementRenderer, MountedDecoration, CustomElementCtor } from './renderer/IElementRenderer';
+export type { ISurface, ISurfaceHost, SurfaceOptions, SurfaceSpace } from './renderer/ISurface';
+export type { ElementEventMap } from './specs/elementEvents';
 
 // ─── Specs as state (P1) ─────────────────────────────────────────────────────
 // The durable visual description a layer publishes and a renderer projects.

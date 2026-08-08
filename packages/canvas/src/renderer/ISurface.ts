@@ -17,10 +17,23 @@
  */
 
 import type { IOverlayDevice } from './IOverlayDevice';
-import type { SpecProjectionTarget } from './SpecProjector';
+import type { IElementRenderer } from './IElementRenderer';
 
 /** Which space a surface's contents live in. */
 export type SurfaceSpace = 'world' | 'screen';
+
+/**
+ * Per-layer knobs for the device a surface builds. These are *engine policy a
+ * layer owns*, not device config — a graph layer with tiny nodes wants a larger
+ * hit floor than a layer of big cards, and only the layer knows that.
+ */
+export interface SurfaceOptions {
+  /**
+   * Minimum hover/click target in screen pixels, used as a fallback when no
+   * silhouette contains the cursor. See `PrimitivesRendererOptions.hitFloorPx`.
+   */
+  hitFloorPx?: number;
+}
 
 export interface ISurface {
   /** Stable id — the owning layer's id. Names the surface in a scene tree. */
@@ -28,10 +41,12 @@ export interface ISurface {
   readonly space: SurfaceSpace;
 
   /**
-   * The drawing device for this layer's **durable** content — the target a
-   * `SpecProjector` drives from the store.
+   * This layer's drawing device: the target a `SpecProjector` drives from the
+   * store, plus the per-frame commands and geometry answers a domain layer
+   * still calls directly. Pixi-free, so `@invana/graph` drives a backend it
+   * never imports.
    */
-  readonly primitives: SpecProjectionTarget;
+  readonly primitives: IElementRenderer;
 
   /**
    * An immediate-mode device for **transient** visuals owned by this layer
@@ -46,8 +61,8 @@ export interface ISurface {
 
 /**
  * The lifecycle half of the renderer contract: how surfaces come into being.
- * The drawing half is {@link SpecProjectionTarget}, reached through a surface.
+ * The drawing half is {@link IElementRenderer}, reached through a surface.
  */
 export interface ISurfaceHost {
-  createSurface(space: SurfaceSpace, id: string): ISurface;
+  createSurface(space: SurfaceSpace, id: string, opts?: SurfaceOptions): ISurface;
 }

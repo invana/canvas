@@ -1018,7 +1018,7 @@ export class Canvas {
       layers: this.layers,
       behaviours: this.behaviours,
       ...(renderer.canvasElement ? { canvasElement: renderer.canvasElement } : {}),
-      createSurface: (space, id) => renderer.createSurface(space, id),
+      createSurface: (space, id, opts) => renderer.createSurface(space, id, opts),
       createOverlay: (label, space) => renderer.createOverlay(label, space),
       showMessage: (text, timeout) => this.showMessage(text, timeout),
       clearMessage: () => this.clearMessage(),

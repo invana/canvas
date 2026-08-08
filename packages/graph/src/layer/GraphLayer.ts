@@ -15,7 +15,7 @@
 
 import { SpecProjector } from '@invana/canvas';
 import type { SpecStore } from '@invana/canvas';
-import { PrimitivesRenderer, WorldLayer, jsonSafe } from '@invana/canvas';
+import { WorldLayer, jsonSafe, type IElementRenderer, type SurfaceOptions } from '@invana/canvas';
 import type { CanvasContext, LayerOptions, WorldLayerHit } from '@invana/canvas';
 import type { BaseConnectorSpec, BaseShapeSpec, ConnectorLabelStyle, ShapeLabelStyle } from '@invana/canvas/specs';
 import type { BadgeOptions } from '@invana/canvas/specs';
@@ -138,13 +138,13 @@ export class GraphLayer extends WorldLayer<
    * Public so behaviours can subscribe to `shape:*` / `connector:*` pointer
    * events on `graph.getRenderer().events`. Returns `undefined` before mount.
    */
-  private _renderer?: PrimitivesRenderer;
+  private _renderer?: IElementRenderer;
   /** Durable spec collection for this layer — see `docs/renderer-split-design.md` §2. */
   private specStore?: SpecStore<BaseShapeSpec | BaseConnectorSpec>;
   private projector?: SpecProjector<BaseShapeSpec | BaseConnectorSpec>;
 
   /** Renderer accessor for behaviours. Undefined before `onMount`. */
-  getRenderer(): PrimitivesRenderer | undefined {
+  getRenderer(): IElementRenderer | undefined {
     return this._renderer;
   }
 
@@ -318,6 +318,17 @@ export class GraphLayer extends WorldLayer<
     return {};
   }
 
+  /**
+   * Hand the layer's hit floor to the device the surface builds. Graph nodes
+   * can be small at low zoom, so this layer raises the pick tolerance above the
+   * renderer-wide default.
+   */
+  protected override surfaceOptions(): SurfaceOptions | undefined {
+    return this.options.hitFloorPx !== undefined
+      ? { hitFloorPx: this.options.hitFloorPx }
+      : undefined;
+  }
+
   protected override onMount(ctx: CanvasContext): void {
     // Route the store's events onto the canvas tap channel so telemetry sees
     // every data + interaction-state mutation (§ 6). Detached in onUnmount.
@@ -331,16 +342,12 @@ export class GraphLayer extends WorldLayer<
     // P1/P2 — the durable visual description. Every spec this layer resolves is
     // published here, and the projector below turns the store into pixels.
     this.specStore = ctx.store.specsFor<BaseShapeSpec | BaseConnectorSpec>(this.id);
-    this._renderer = new PrimitivesRenderer({
-      container: this.container,
-      camera: ctx.camera,
-      ...(this.options.hitFloorPx !== undefined
-        ? { hitFloorPx: this.options.hitFloorPx }
-        : {}),
-      // Forwarded so the renderer's pointer router can apply
-      // `cursor: pointer` on shape / connector hover.
-      ...(ctx.canvasElement ? { canvasElement: ctx.canvasElement } : {}),
-    });
+    // The surface *is* this layer's slice of the renderer — it already owns a
+    // drawing device bound to this layer's root. Constructing a second one here
+    // (as this did until P6) meant two renderers per graph layer drawing into
+    // the same container, and it made `@invana/graph` import the pixi backend
+    // by name. Now the backend is whatever the canvas mounted.
+    this._renderer = this.surface.primitives;
     // P2 — the store drives the renderer. Specs this layer publishes project
     // synchronously (the label / decoration syncs that follow need the element
     // mounted); the projector's flush subscription catches every *other* writer.
@@ -613,7 +620,9 @@ export class GraphLayer extends WorldLayer<
     this.projector?.destroy();
     this.projector = undefined;
     this.store.bindBus(undefined);
-    this._renderer?.destroy();
+    // Not ours to destroy: the renderer belongs to the surface, which tears it
+    // down in its own `destroy()` when the layer unmounts. Releasing the
+    // reference is all this layer owes.
     this._renderer = undefined;
   }
 

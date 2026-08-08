@@ -15,7 +15,7 @@
 
 import type { Container } from 'pixi.js';
 import type { IOverlayDevice, OverlaySpace } from '../renderer/IOverlayDevice';
-import type { ISurface, SurfaceSpace } from '../renderer/ISurface';
+import type { ISurface, SurfaceOptions, SurfaceSpace } from '../renderer/ISurface';
 import type { CanvasStore } from '@invana/canvas-store';
 import type { CanvasEventBus } from '@invana/canvas-store';
 import type { Camera } from '../camera/Camera';
@@ -114,7 +114,7 @@ export interface CanvasContext {
    * themselves, and is the seam a second backend implements
    * (`docs/renderer-split-design.md` §4).
    */
-  createSurface(space: SurfaceSpace, id: string): ISurface;
+  createSurface(space: SurfaceSpace, id: string, opts?: SurfaceOptions): ISurface;
 
   /**
    * Show a transient message on the shared canvas message channel — the same

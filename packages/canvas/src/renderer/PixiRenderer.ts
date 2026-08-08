@@ -26,7 +26,7 @@ import { acquireSharedTexturePool, releaseSharedTexturePool } from '../engine/sh
 import { resolveRenderPreference } from '../engine/rendererSupport';
 import type { IOverlayDevice, OverlaySpace } from './IOverlayDevice';
 import type { IRenderer, RendererCapabilities, RendererMountOptions } from './IRenderer';
-import type { ISurface, SurfaceSpace } from './ISurface';
+import type { ISurface, SurfaceOptions, SurfaceSpace } from './ISurface';
 import { PixiOverlayDevice } from './PixiOverlayDevice';
 import { PixiSurface } from './PixiSurface';
 
@@ -201,7 +201,7 @@ export class PixiRenderer implements IRenderer {
 
   // ─── Devices ─────────────────────────────────────────────────────────────
 
-  createSurface(space: SurfaceSpace, id: string): ISurface {
+  createSurface(space: SurfaceSpace, id: string, opts?: SurfaceOptions): ISurface {
     const parent = space === 'screen' ? this.requireStage() : this.requireWorld();
     return new PixiSurface({
       id,
@@ -209,7 +209,10 @@ export class PixiRenderer implements IRenderer {
       parent,
       camera: this.requireCamera(),
       canvasElement: this.canvasElement,
-      ...(this.hitFloorPx !== undefined ? { hitFloorPx: this.hitFloorPx } : {}),
+      // The layer's own policy wins over the renderer-wide default.
+      ...((opts?.hitFloorPx ?? this.hitFloorPx) !== undefined
+        ? { hitFloorPx: opts?.hitFloorPx ?? this.hitFloorPx }
+        : {}),
     });
   }
 

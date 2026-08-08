@@ -16,7 +16,7 @@
  */
 
 import type { Container } from 'pixi.js';
-import type { ISurface } from '../renderer/ISurface';
+import type { ISurface, SurfaceOptions } from '../renderer/ISurface';
 import type { CanvasContext } from '../context/CanvasContext';
 import type { EventMap } from '@invana/canvas-store';
 import { Layer, type LayerOptions } from './Layer';
@@ -75,10 +75,20 @@ export abstract class ScreenLayer<
     super(opts);
   }
 
+  /**
+   * Per-layer options for the drawing device this layer's surface builds.
+   * Override when the layer owns policy the renderer can't know — a graph layer
+   * with pinpoint nodes wants a larger hit floor than one of big cards.
+   * Read once, at mount.
+   */
+  protected surfaceOptions(): SurfaceOptions | undefined {
+    return undefined;
+  }
+
   override mount(ctx: CanvasContext): void {
     // Build the surface BEFORE `super.mount(ctx)` so `onMount(ctx)` can rely on
     // `this.surface`.
-    const surface = ctx.createSurface('screen', this.id);
+    const surface = ctx.createSurface('screen', this.id, this.surfaceOptions());
     if (this.zIndex !== 0) surface.setZIndex(this.zIndex);
     surface.setVisible(this.visible);
     this._surface = surface;

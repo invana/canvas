@@ -73,7 +73,7 @@ import {
   type CanvasContext,
   type ElementScaleLODBehaviourOptions,
   type NumberOrGetter,
-  type PrimitivesRenderer,
+  type IElementRenderer,
 } from '@invana/canvas';
 
 import type { GraphLayer } from '../layer/GraphLayer';
@@ -305,7 +305,7 @@ export class NodeScaleLODBehaviour extends ElementScaleLODBehaviour<NodeScaleLOD
 
   private writeLayerBaseline(
     layer: GraphLayer,
-    renderer: PrimitivesRenderer,
+    renderer: IElementRenderer,
     mode: 'target' | 'worldUnit',
     config: NodeScaleLODConfig,
   ): void {

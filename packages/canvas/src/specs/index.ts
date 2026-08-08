@@ -23,3 +23,4 @@ export type * from './stats';
 // Spec maths — bounds / scale / collapse / fit / contains, per kind. Pure
 // functions, so a value export.
 export * from './shapeGeometry';
+export * from './elementEvents';

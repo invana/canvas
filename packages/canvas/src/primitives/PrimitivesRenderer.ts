@@ -35,6 +35,7 @@ import { Container, RenderLayer, type FederatedPointerEvent } from 'pixi.js';
 import type { Camera } from '../camera/Camera';
 import { EventEmitter } from '@invana/canvas-store';
 import { TextureRegistry } from '../textures/TextureRegistry';
+import type { IElementRenderer } from '../renderer/IElementRenderer';
 import {
   PickingIndex,
   type ConnectorHitRecord,
@@ -238,7 +239,7 @@ const DEFAULT_HOVER_HYSTERESIS_PX = 5;
 /** Default for {@link PrimitivesRendererOptions.hoverNodeIncidencePx}. */
 const DEFAULT_HOVER_NODE_INCIDENCE_PX = 20;
 
-export class PrimitivesRenderer implements HitGeometrySource {
+export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
   private readonly shapeRegistry = new Map<string, ShapeCtor>();
   private readonly routerRegistry = new Map<string, IRouter>();
   private readonly pathStyleRegistry = new Map<string, IPathStyle>();
