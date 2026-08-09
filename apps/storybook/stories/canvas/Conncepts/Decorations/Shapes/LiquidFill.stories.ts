@@ -4,9 +4,8 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -31,10 +30,10 @@ export const LiquidFillStory: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -96,7 +95,7 @@ export const LiquidFillStory: Story = {
       periodMs: 1800,
       highlight: true,
       highlightAlpha: 0.45,
-      highlightThickness: 4,
+      highlightThickness: 4
     };
 
     const apply = () => {
@@ -110,8 +109,8 @@ export const LiquidFillStory: Story = {
               wave: {
                 amplitude: settings.amplitude,
                 wavelength: settings.wavelength,
-                periodMs: settings.periodMs,
-              },
+                periodMs: settings.periodMs
+              }
             }
           : {}),
         ...(settings.highlight
@@ -119,10 +118,10 @@ export const LiquidFillStory: Story = {
               surfaceHighlight: {
                 color: 0xffffff,
                 alpha: settings.highlightAlpha,
-                thickness: settings.highlightThickness,
-              },
+                thickness: settings.highlightThickness
+              }
             }
-          : {}),
+          : {})
       };
       for (const id of hostIds) {
         layer.renderer.setDecoration(id, 'liquid', { kind: 'liquid-fill', style });
@@ -142,8 +141,8 @@ export const LiquidFillStory: Story = {
           stroke: {
             color: settings.strokeColor,
             width: settings.strokeWidth,
-            alpha: settings.strokeAlpha,
-          },
+            alpha: settings.strokeAlpha
+          }
         });
       }
     };
@@ -173,5 +172,5 @@ export const LiquidFillStory: Story = {
     hlFolder.add(settings, 'highlightThickness', 0, 12, 0.5).onChange(apply);
 
     canvas.camera.fitContent(layer.getBounds(), 200);
-  },
+  }
 };

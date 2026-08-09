@@ -11,7 +11,7 @@ import {
   type GraphNode,
   type NodeShapeOptions,
 
-  type NodeStyle,} from '@invana/graph';
+  type NodeStyle} from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -54,9 +54,9 @@ export const ParallelEdgeStory: Story = {
         kind: 'polygon',
         vertices: Array.from({ length: 32 }, (_, i) => ({
           x: Math.cos((i / 32) * Math.PI * 2) * 50,
-          y: Math.sin((i / 32) * Math.PI * 2) * 30,
-        })),
-      },
+          y: Math.sin((i / 32) * Math.PI * 2) * 30
+        }))
+      }
     };
 
     const PATH_TYPES: readonly EdgePathType[] = [
@@ -84,7 +84,7 @@ export const ParallelEdgeStory: Story = {
       count: 7,
       spacing: 12,
       radius: 14,
-      beta: 0.85,
+      beta: 0.85
     };
 
     const nodes: GraphNode[] = [
@@ -106,8 +106,8 @@ export const ParallelEdgeStory: Story = {
             ? { radius: settings.radius }
             : settings.pathType === 'bundle'
               ? { beta: settings.beta }
-              : undefined,
-      },
+              : undefined
+      }
     });
 
     // Build the initial content (data is content, not config): seed the
@@ -117,14 +117,14 @@ export const ParallelEdgeStory: Story = {
       ...n,
       // `GraphNode.style` is `unknown` (the store avoids a layer
       // dependency), so narrow it to read the shape back.
-      style: { ...(n.style as NodeStyle), shape: initShape },
+      style: { ...(n.style as NodeStyle), shape: initShape }
     }));
     const initEdgeStyle = edgeStyleForCurrentSettings();
     const initEdges: GraphEdge[] = Array.from({ length: settings.count }, (_, i) => ({ type: 'edge',
       id: `e${i}`,
       source: 'a',
       target: 'b',
-      style: initEdgeStyle,
+      style: initEdgeStyle
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-behaviour-parallel-edge')!;
@@ -133,7 +133,7 @@ export const ParallelEdgeStory: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes: initNodes, edges: initEdges } },
+      options: { initData: { nodes: initNodes, edges: initEdges } }
     });
     canvas.layers.add(graph);
 
@@ -148,8 +148,8 @@ export const ParallelEdgeStory: Story = {
     const canvasOptions = {
       layers: {
         graph: {
-          edge: { style: { strokeColor: 0x64748b, strokeWidth: 2, strokeCap: 'round' } },
-        },
+          edge: { style: { strokeColor: 0x64748b, strokeWidth: 2, strokeCap: 'round' } }
+        }
       },
       behaviours: {
         pan: { enabled: true },
@@ -158,10 +158,10 @@ export const ParallelEdgeStory: Story = {
           enabled: true,
           spacing: settings.spacing,
           basis: 'auto',
-          anchorOffset: true,
+          anchorOffset: true
         },
-        'drag-node': { enabled: true },
-      },
+        'drag-node': { enabled: true }
+      }
     };
 
     await canvas.init({ container, autoResize: true, config: canvasOptions });
@@ -216,5 +216,5 @@ export const ParallelEdgeStory: Story = {
     gui.add(settings, 'beta', 0, 1, 0.01).onChange(applyEdgeStyle);
 
     canvas.camera.fitContent(graph.getBounds(), 100);
-  },
+  }
 };

@@ -44,9 +44,9 @@ export const PerNodeOverrideStory: Story = {
           labelColor: 0x1f2937,
           labelPlacement: 'bottom',
           labelFontSize: 12,
-          labelOffsetY: 8,
+          labelOffsetY: 8
         },
-        states: ['hovered'],
+        states: ['hovered']
       },
       { type: 'node',
         id: 'orange',
@@ -60,12 +60,12 @@ export const PerNodeOverrideStory: Story = {
           labelColor: 0x1f2937,
           labelPlacement: 'bottom',
           labelFontSize: 12,
-          labelOffsetY: 8,
+          labelOffsetY: 8
         },
         state: {
-          hovered: { bgStrokeColor: 0xffaa00, bgStrokeWidth: 4 },
+          hovered: { bgStrokeColor: 0xffaa00, bgStrokeWidth: 4 }
         },
-        states: ['hovered'],
+        states: ['hovered']
       },
       { type: 'node',
         id: 'red',
@@ -79,12 +79,12 @@ export const PerNodeOverrideStory: Story = {
           labelColor: 0x1f2937,
           labelPlacement: 'bottom',
           labelFontSize: 12,
-          labelOffsetY: 8,
+          labelOffsetY: 8
         },
         state: {
-          hovered: { bgStrokeColor: 0xef4444, bgStrokeWidth: 6, bgFill: 0xfde2e2 },
+          hovered: { bgStrokeColor: 0xef4444, bgStrokeWidth: 6, bgFill: 0xfde2e2 }
         },
-        states: ['hovered'],
+        states: ['hovered']
       },
     ];
 
@@ -93,17 +93,17 @@ export const PerNodeOverrideStory: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes, edges: [] } },
+      options: { initData: { nodes, edges: [] } }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
 
     const canvasOptions = {
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

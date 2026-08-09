@@ -40,7 +40,7 @@ export const Png: Story = {
     const IMAGES: Record<string, string> = {
       'rocket':    'https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/1f680.png',
       'star':      'https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/1f31f.png',
-      'lightbulb': 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/1f4a1.png',
+      'lightbulb': 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/1f4a1.png'
     };
 
     const settings = {
@@ -48,7 +48,7 @@ export const Png: Story = {
       alpha: 1,
       fit: 'cover' as 'cover' | 'contain',
       padding: 10,
-      bgFill: 0x6366f1,
+      bgFill: 0x6366f1
     };
 
     const shapeForType = (type: string | undefined): NodeShapeOptions => {
@@ -69,7 +69,7 @@ export const Png: Story = {
               { x: -r,       y: 0 },
               { x: -r * 0.5, y: r * 0.866 },
               { x: r * 0.5,  y: r * 0.866 },
-            ],
+            ]
           };
         default:
           throw new Error(`unknown node type "${type}"`);
@@ -95,12 +95,12 @@ export const Png: Story = {
               url: IMAGES[settings.image]!,
               alpha: settings.alpha,
               fit: settings.fit,
-              padding: settings.padding,
+              padding: settings.padding
             }),
-            labelText: (n) => n.type ?? '?',
-          },
-        },
-      },
+            labelText: (n) => n.type ?? '?'
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -122,12 +122,12 @@ export const Png: Story = {
               labelBackgroundStrokeColor: 0xcbd5e1,
               labelBackgroundStrokeWidth: 1,
               labelBackgroundCornerRadius: 4,
-              labelBackgroundPadding: 3,
-            },
-          },
-        },
+              labelBackgroundPadding: 3
+            }
+          }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
@@ -145,5 +145,5 @@ export const Png: Story = {
     gui.add(settings, 'padding', 0, 30, 1).onChange(rerenderAll);
     gui.add(settings, 'alpha', 0, 1, 0.05).onChange(rerenderAll);
     gui.addColor(settings, 'bgFill').name('bg fill').onChange(rerenderAll);
-  },
+  }
 };

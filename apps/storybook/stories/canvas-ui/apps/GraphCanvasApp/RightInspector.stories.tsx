@@ -60,7 +60,7 @@ function RightInspectorApp() {
       header={{
         title: 'Right Inspector',
         center: <GraphControlsToolbar />,
-        right: (ctx) => <ThemeToggle ctx={ctx} />,
+        right: (ctx) => <ThemeToggle ctx={ctx} />
       }}
       // The docked, resizable right region — its content is driven by selection.
       right={{ content: rightPanel, defaultSize: 24, minSize: 16, collapsible: true }}
@@ -79,5 +79,5 @@ export const RightInspectorStory: Story = {
     <ThemeProvider>
       <RightInspectorApp />
     </ThemeProvider>
-  ),
+  )
 };

@@ -39,16 +39,16 @@ export const Decorations: Story = {
           labelColor: 0x1f2937,
           labelPlacement: 'bottom',
           labelFontSize: 12,
-          labelOffsetY: 8,
+          labelOffsetY: 8
         },
         state: {
           selected: {
             decorations: [
               { kind: 'ring', id: 'select', color: 0xfacc15, width: 4, gap: 3, alpha: 0.9 },
-            ],
-          },
+            ]
+          }
         },
-        states: ['selected'],
+        states: ['selected']
       },
       { type: 'node',
         id: 'err',
@@ -62,16 +62,16 @@ export const Decorations: Story = {
           labelColor: 0x2c3e50,
           labelPlacement: 'center',
           labelFontSize: 12,
-          labelFontWeight: 600,
+          labelFontWeight: 600
         },
         state: {
           error: {
             decorations: [
               { kind: 'marching-ants', id: 'err-border', color: 0xff0000, strokeWidth: 2 },
-            ],
-          },
+            ]
+          }
         },
-        states: ['error'],
+        states: ['error']
       },
       { type: 'node',
         id: 'glow',
@@ -85,16 +85,16 @@ export const Decorations: Story = {
           labelColor: 0x1f2937,
           labelPlacement: 'bottom',
           labelFontSize: 12,
-          labelOffsetY: 8,
+          labelOffsetY: 8
         },
         state: {
           active: {
             decorations: [
               { kind: 'glow', id: 'active-glow', color: 0x10b981, strokeWidth: 14, innerAlpha: 0.7 },
-            ],
-          },
+            ]
+          }
         },
-        states: ['active'],
+        states: ['active']
       },
     ];
 
@@ -103,17 +103,17 @@ export const Decorations: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes, edges: [] } },
+      options: { initData: { nodes, edges: [] } }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
 
     const canvasOptions = {
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

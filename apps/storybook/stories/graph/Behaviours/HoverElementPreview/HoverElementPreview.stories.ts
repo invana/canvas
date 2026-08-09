@@ -12,7 +12,7 @@ import {
   GraphCanvas,
   GraphLayer,
   type GraphNode,
-  type GraphEdge,
+  type GraphEdge
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
@@ -42,9 +42,9 @@ export const HoverElementPreviewStory: Story = {
           description: 'Mathematician and writer, credited as the first computer programmer.',
           email: 'ada@analytical.engine',
           score: 0.98,
-          avatar: 'https://i.pravatar.cc/96?img=5',
+          avatar: 'https://i.pravatar.cc/96?img=5'
         },
-        style: { labelText: 'Ada' },
+        style: { labelText: 'Ada' }
       },
       {
         id: '6ba7b810-9dad-11d1-80b4-00c04fd430c8',
@@ -55,9 +55,9 @@ export const HoverElementPreviewStory: Story = {
           description: 'Pioneer of theoretical computer science and artificial intelligence.',
           email: 'alan@turing.machine',
           score: 0.99,
-          avatar: 'https://i.pravatar.cc/96?img=12',
+          avatar: 'https://i.pravatar.cc/96?img=12'
         },
-        style: { labelText: 'Alan' },
+        style: { labelText: 'Alan' }
       },
       {
         id: '7c9e6679-7425-40de-944b-e07fc1f90ae7',
@@ -68,9 +68,9 @@ export const HoverElementPreviewStory: Story = {
           description: 'Computer scientist; popularised machine-independent programming languages.',
           email: 'grace@cobol.dev',
           score: 0.95,
-          avatar: 'https://i.pravatar.cc/96?img=47',
+          avatar: 'https://i.pravatar.cc/96?img=47'
         },
-        style: { labelText: 'Grace' },
+        style: { labelText: 'Grace' }
       },
       {
         id: '9f8e7d6c-5b4a-3c2d-1e0f-a9b8c7d6e5f4',
@@ -81,9 +81,9 @@ export const HoverElementPreviewStory: Story = {
           description: 'Foundational contributions to algorithms and structured programming.',
           email: 'edsger@shortest.path',
           score: 0.93,
-          avatar: 'https://i.pravatar.cc/96?img=33',
+          avatar: 'https://i.pravatar.cc/96?img=33'
         },
-        style: { labelText: 'Edsger' },
+        style: { labelText: 'Edsger' }
       },
       {
         id: '110ec58a-a0f2-4ac4-8393-c866d813b8d1',
@@ -94,9 +94,9 @@ export const HoverElementPreviewStory: Story = {
           description: 'Orbital-mechanics calculations critical to early US crewed spaceflight.',
           email: 'katherine@orbit.nasa',
           score: 0.97,
-          avatar: 'https://i.pravatar.cc/96?img=20',
+          avatar: 'https://i.pravatar.cc/96?img=20'
         },
-        style: { labelText: 'Katherine' },
+        style: { labelText: 'Katherine' }
       },
     ];
     const edges: GraphEdge[] = [
@@ -298,7 +298,7 @@ export const HoverElementPreviewStory: Story = {
     // ─── The behaviour ────────────────────────────────────────────────────────
     const preview = new HoverElementPreviewBehaviour({
       id: 'preview',
-      targetLayerId: 'graph',
+      targetLayerId: 'graph'
     });
     canvas.behaviours.register(preview);
 
@@ -333,7 +333,7 @@ export const HoverElementPreviewStory: Story = {
       offsetY: 0,
       edgeMargin: 8,
       // ── readout ──
-      showing: '—',
+      showing: '—'
     };
 
     // Re-assemble the serializable card spec from the GUI settings. Omitting a
@@ -397,13 +397,13 @@ export const HoverElementPreviewStory: Story = {
               bgStrokeWidth: 2,
               labelColor: 0xf8fafc,
               labelFontSize: 12,
-              labelPlacement: 'center',
-            },
+              labelPlacement: 'center'
+            }
           },
           edge: {
-            style: { strokeColor: 0xcbd5e1, strokeWidth: 2, arrowTargetShape: 'none' },
-          },
-        },
+            style: { strokeColor: 0xcbd5e1, strokeWidth: 2, arrowTargetShape: 'none' }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
@@ -415,9 +415,9 @@ export const HoverElementPreviewStory: Story = {
           placement: settings.placement,
           interactive: settings.interactive,
           targets: ['node', 'edge'] as GraphElementKind[],
-          card: buildCardSpec(),
-        },
-      },
+          card: buildCardSpec()
+        }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -514,5 +514,5 @@ export const HoverElementPreviewStory: Story = {
     layoutFolder.add(settings, 'edgeMargin', 0, 40, 1).name('edge margin').onChange(repositionShown);
 
     gui.add(settings, 'showing').disable();
-  },
+  }
 };

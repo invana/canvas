@@ -48,9 +48,9 @@ export const EdgeTransitionsStory: Story = {
           labelText: 'resting + built-in hover',
           labelColor: 0x1f2937,
           labelFontSize: 12,
-          labelOffsetY: -10,
+          labelOffsetY: -10
         },
-        states: ['hovered'],
+        states: ['hovered']
       },
       { type: 'edge',
         id: 'e2',
@@ -63,12 +63,12 @@ export const EdgeTransitionsStory: Story = {
           labelText: 'override hover → orange',
           labelColor: 0x1f2937,
           labelFontSize: 12,
-          labelOffsetY: -10,
+          labelOffsetY: -10
         },
         state: {
-          hovered: { strokeColor: 0xffaa00, strokeWidth: 5 },
+          hovered: { strokeColor: 0xffaa00, strokeWidth: 5 }
         },
-        states: ['hovered'],
+        states: ['hovered']
       },
       { type: 'edge',
         id: 'e3',
@@ -81,16 +81,16 @@ export const EdgeTransitionsStory: Story = {
           labelText: 'selected → dashed yellow',
           labelColor: 0x1f2937,
           labelFontSize: 12,
-          labelOffsetY: -10,
+          labelOffsetY: -10
         },
         state: {
           selected: {
             strokeColor: 0xfacc15,
             strokeWidth: 4,
-            strokeDashArray: [6, 4],
-          },
+            strokeDashArray: [6, 4]
+          }
         },
-        states: ['selected'],
+        states: ['selected']
       },
     ];
 
@@ -99,17 +99,17 @@ export const EdgeTransitionsStory: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes, edges } },
+      options: { initData: { nodes, edges } }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
 
     const canvasOptions = {
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

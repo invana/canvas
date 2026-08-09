@@ -29,7 +29,7 @@ import {
   GraphControlsToolbar,
   GraphStatusBar,
   ToolbarItems,
-  useSidePanels,
+  useSidePanels
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData, GraphNode } from '@invana/graph';
@@ -83,7 +83,7 @@ export const CitationNetworkStory: Story = {
           label: 'Settings',
           render: (canvas) => (
             <CanvasSettingsEditorPanel canvas={canvas} className="border-0 bg-transparent shadow-none" />
-          ),
+          )
         },
       ],
       { section: { defaultSize: '360px', maxSize: '460px' } },
@@ -95,7 +95,7 @@ export const CitationNetworkStory: Story = {
     const data: GraphData = useMemo(
       () => ({
         nodes: paperCitations.nodes.map((n) => ({ ...n, type: (n.data as PaperNodeData).subject })),
-        edges: paperCitations.edges.map((e) => ({ ...e })),
+        edges: paperCitations.edges.map((e) => ({ ...e }))
       }),
       [],
     );
@@ -113,8 +113,8 @@ export const CitationNetworkStory: Story = {
             // highlighted neighbourhood reads fine against the watercolor
             // background without it.
             degree: 1,
-            direction: 'both',
-          },
+            direction: 'both'
+          }
         },
         layers: {
           graph: {
@@ -125,16 +125,16 @@ export const CitationNetworkStory: Story = {
                 bgAlpha: 0.95,
                 // No stroke at base scale — keeps the dots reading as pinpoints
                 // rather than rings (matches the reference screenshot).
-                bgStrokeWidth: 0,
+                bgStrokeWidth: 0
               },
               state: {
                 hovered: {
                   shape: { kind: 'circle', radius: 5 },
                   bgStrokeColor: 0xfbbf24,
-                  bgStrokeWidth: 1.5,
+                  bgStrokeWidth: 1.5
                 },
-                dimmed: { bgAlpha: 0.15 },
-              },
+                dimmed: { bgAlpha: 0.15 }
+              }
             },
             edge: {
               style: {
@@ -145,19 +145,19 @@ export const CitationNetworkStory: Story = {
                   pathType: 'bezier',
                   sourceAnchor: 'boundary',
                   targetAnchor: 'boundary',
-                  pathStyleOpts: { axis: 'h', tension: 0.5 },
+                  pathStyleOpts: { axis: 'h', tension: 0.5 }
                 },
                 strokeColor: DEFAULT_FILL,
                 strokeWidth: 1,
                 strokeAlpha: 0.6,
-                arrowTargetShape: 'none',
+                arrowTargetShape: 'none'
               },
               state: {
                 highlighted: { strokeColor: 0xfbbf24, strokeAlpha: 0.9, strokeWidth: 1.2 },
-                dimmed: { strokeAlpha: 0.04 },
-              },
-            },
-          },
+                dimmed: { strokeAlpha: 0.04 }
+              }
+            }
+          }
         },
         layouts: {
           'graph-force': {
@@ -168,9 +168,9 @@ export const CitationNetworkStory: Story = {
             animate: false,
             link: {},
             charge: {},
-            center: { x: 0, y: 0 },
-          },
-        },
+            center: { x: 0, y: 0 }
+          }
+        }
       }),
       // SUBJECT_FILL / DEFAULT_FILL are render-local literals the config closes
       // over once.
@@ -202,7 +202,7 @@ export const CitationNetworkStory: Story = {
                     label: 'Density overlay: off',
                     activeLabel: 'Density overlay: on',
                     active: densityOn,
-                    onToggle: () => setDensityOn((v) => !v),
+                    onToggle: () => setDensityOn((v) => !v)
                   },
                   ...dock.items,
                   {
@@ -213,11 +213,11 @@ export const CitationNetworkStory: Story = {
                     label: 'Switch to dark theme',
                     activeLabel: 'Switch to light theme',
                     active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme,
+                    onToggle: ctx.toggleTheme
                   },
                 ]}
               />
-            ),
+            )
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
           right={dock.region}
@@ -239,5 +239,5 @@ export const CitationNetworkStory: Story = {
         </GraphCanvasApp>
       </ThemeProvider>
     );
-  },
+  }
 };

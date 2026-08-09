@@ -5,10 +5,9 @@ import {
   WheelZoomBehaviour,
   DragShapeBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
   arrowMarkerSpec,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
@@ -34,10 +33,10 @@ export const Rotation: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -69,7 +68,7 @@ export const Rotation: Story = {
         source: { kind: 'shape', shapeId: `${e.id}-src`, anchor: 'boundary' },
         target: { kind: 'shape', shapeId: `${e.id}-tgt`, anchor: 'boundary' },
         stroke: { color: 0xcbd5e1, width: 1.5 },
-        targetMarker: arrowMarkerSpec({ lengthScale: 6, widthScale: 4, fill: 0xcbd5e1 }),
+        targetMarker: arrowMarkerSpec({ lengthScale: 6, widthScale: 4, fill: 0xcbd5e1 })
       });
     }
 
@@ -77,7 +76,7 @@ export const Rotation: Story = {
       text: 'flows-to',
       autoRotate: true,
       keepUpright: true,
-      offsetY: -8,
+      offsetY: -8
     };
 
     const apply = (): void => {
@@ -90,8 +89,8 @@ export const Rotation: Story = {
             placement: 'center',
             autoRotate: settings.autoRotate,
             keepUpright: settings.keepUpright,
-            offset: { y: settings.offsetY },
-          },
+            offset: { y: settings.offsetY }
+          }
         });
       }
     };
@@ -105,5 +104,5 @@ export const Rotation: Story = {
     gui.add(settings, 'autoRotate').onChange(apply);
     gui.add(settings, 'keepUpright').name('keepUpright (when autoRotate)').onChange(apply);
     gui.add(settings, 'offsetY', -30, 30, 1).name('offset.y (post-rotation)').onChange(apply);
-  },
+  }
 };

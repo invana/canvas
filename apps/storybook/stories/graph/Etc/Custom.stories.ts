@@ -38,17 +38,17 @@ export const Custom: Story = {
           labelColor: 0x2c3e50,
           labelPlacement: 'center',
           labelFontSize: 14,
-          labelFontWeight: 700,
+          labelFontWeight: 700
         },
         state: {
           criticalAlert: {
             bgFill: 0xffaa00,
             bgStrokeColor: 0xff0000,
             bgStrokeWidth: 4,
-            labelColor: 0xffffff,
-          },
+            labelColor: 0xffffff
+          }
         },
-        states: ['criticalAlert'],
+        states: ['criticalAlert']
       },
       { type: 'node',
         id: 'alert-2',
@@ -62,17 +62,17 @@ export const Custom: Story = {
           labelColor: 0x2c3e50,
           labelPlacement: 'center',
           labelFontSize: 14,
-          labelFontWeight: 700,
+          labelFontWeight: 700
         },
         state: {
           criticalAlert: {
             bgFill: 0xffaa00,
             bgStrokeColor: 0xff0000,
             bgStrokeWidth: 4,
-            labelColor: 0xffffff,
-          },
+            labelColor: 0xffffff
+          }
         },
-        states: ['criticalAlert'],
+        states: ['criticalAlert']
       },
       { type: 'node',
         id: 'pinned',
@@ -86,16 +86,16 @@ export const Custom: Story = {
           labelColor: 0x2c3e50,
           labelPlacement: 'center',
           labelFontSize: 14,
-          labelFontWeight: 700,
+          labelFontWeight: 700
         },
         state: {
           pinned: {
             bgFill: 0xfde68a,
             bgStrokeColor: 0xb45309,
-            bgStrokeWidth: 3,
-          },
+            bgStrokeWidth: 3
+          }
         },
-        states: ['pinned'],
+        states: ['pinned']
       },
     ];
 
@@ -104,17 +104,17 @@ export const Custom: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes, edges: [] } },
+      options: { initData: { nodes, edges: [] } }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
 
     const canvasOptions = {
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

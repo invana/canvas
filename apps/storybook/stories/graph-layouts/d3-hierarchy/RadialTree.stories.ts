@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
   DragPanBehaviour,
-  WheelZoomBehaviour,
+  WheelZoomBehaviour
 } from '@invana/canvas';
 import { GraphCanvas, GraphLayer, TextResolutionLODBehaviour, ThemeBehaviour } from '@invana/graph';
 import type { ShapeLabelStyle } from '@invana/canvas';
@@ -35,7 +35,7 @@ export const RadialTreeStory: Story = {
       showLabels: true,
       labelFontSize: 9,
       // Zoom-aware label sharpness — see Cluster.stories.ts for rationale.
-      sharpLabelsOnZoom: true,
+      sharpLabelsOnZoom: true
     };
 
     // Depth-based color ramp (warm root → cool leaves), pre-converted to
@@ -83,15 +83,15 @@ export const RadialTreeStory: Story = {
           id: n.id,
           type: 'node',
           style: {
-            bgFill: settings.colorByDepth ? colorAt(n.data.depth) : 0x1f2937,
-          },
+            bgFill: settings.colorByDepth ? colorAt(n.data.depth) : 0x1f2937
+          }
         })),
         edges: data.edges.map((e) => ({
           id: e.id,
           type: 'edge',
           source: e.source,
-          target: e.target,
-        })),
+          target: e.target
+        }))
       };
     };
 
@@ -152,18 +152,18 @@ export const RadialTreeStory: Story = {
               text: meta.name,
               fontSize: settings.labelFontSize,
               fontWeight: 500,
-              fill: 0x0f172a,
+              fill: 0x0f172a
             },
             placement: 'center',
             offset: {
               x: radialDist * Math.cos(theta),
-              y: radialDist * Math.sin(theta),
+              y: radialDist * Math.sin(theta)
             },
-            rotation: isLeftHalf ? theta + Math.PI : theta,
+            rotation: isLeftHalf ? theta + Math.PI : theta
           };
 
           graph.store.updateNode(node.id, {
-            style: { ...(node.style ?? {}), labelStyle },
+            style: { ...(node.style ?? {}), labelStyle }
           });
         }
       });
@@ -189,11 +189,11 @@ export const RadialTreeStory: Story = {
               pathType: 'bump-radial',
               // `center` anchor: don't trim endpoints to the node boundary.
               sourceAnchor: 'center',
-              targetAnchor: 'center',
-            },
-          },
-        },
-      },
+              targetAnchor: 'center'
+            }
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
 
@@ -205,7 +205,7 @@ export const RadialTreeStory: Story = {
     // the `graph` layer must exist first (it does).
     const labelResolutionLOD = new TextResolutionLODBehaviour({
       id: 'label-resolution',
-      targetLayerId: 'graph',
+      targetLayerId: 'graph'
     });
     canvas.behaviours.register(labelResolutionLOD);
 
@@ -223,10 +223,10 @@ export const RadialTreeStory: Story = {
               strokeColor: 0x94a3b8,
               strokeWidth: settings.edgeStrokeWidth,
               strokeAlpha: settings.edgeAlpha,
-              arrowTargetShape: 'none',
-            },
-          },
-        },
+              arrowTargetShape: 'none'
+            }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
@@ -236,9 +236,9 @@ export const RadialTreeStory: Story = {
           enabled: true,
           mode: 'system',
           light: { backgroundColor: '#f8fafc' },
-          dark: { backgroundColor: '#0b1220' },
-        },
-      },
+          dark: { backgroundColor: '#0b1220' }
+        }
+      }
     };
 
     await canvas.init({ container, autoResize: true, config: canvasOptions });
@@ -292,5 +292,5 @@ export const RadialTreeStory: Story = {
       .onChange((on: boolean) => (on ? labelResolutionLOD.enable() : labelResolutionLOD.disable()));
 
     gui.add({ refit: () => canvas.camera.fitContent(graph.getBounds(), 80) }, 'refit').name('Re-fit camera');
-  },
+  }
 };

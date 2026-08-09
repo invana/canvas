@@ -49,7 +49,7 @@ export const LayerVisibilityStory: Story = {
       targetLayerId: 'graph',
       charge: { strength: -240 },
       link: { distance: 70 },
-      animate: false,
+      animate: false
     });
     canvas.layouts.add(force);
     onStoryTeardown(() => force.stop());
@@ -62,17 +62,17 @@ export const LayerVisibilityStory: Story = {
         layers: {
           graph: {
             node: { style: { shape: { kind: 'circle', radius: 7 }, bgFill: 0x60a5fa } },
-            edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 1 } },
-          },
+            edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 1 } }
+          }
         },
-        activeLayout: 'force',
-      },
+        activeLayout: 'force'
+      }
     });
 
     const settings = {
       graphVisible: true,
       minimapVisible: true,
-      lastEvent: '—',
+      lastEvent: '—'
     };
 
     const gui = new GUI({ title: 'Layer visibility' });
@@ -89,5 +89,5 @@ export const LayerVisibilityStory: Story = {
         settings.lastEvent = `${id} → ${visible ? 'visible' : 'hidden'}`;
       }),
     );
-  },
+  }
 };

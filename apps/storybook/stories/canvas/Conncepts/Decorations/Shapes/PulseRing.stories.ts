@@ -4,9 +4,8 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -26,10 +25,10 @@ export const PulseRingStory: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -73,7 +72,7 @@ export const PulseRingStory: Story = {
     const settings = {
       fillColor: 0x4f9cf9,
       color: 0xfb923c, maxRadius: 40, periodMs: 1600, rings: 2,
-      strokeWidth: 2, innerAlpha: 0.7,
+      strokeWidth: 2, innerAlpha: 0.7
     };
 
     const apply = () => {
@@ -81,7 +80,7 @@ export const PulseRingStory: Story = {
       for (const id of hostIds) {
         layer.renderer.setDecoration(id, 'pulse-ring', {
           kind: 'pulse-ring',
-          style: { ...style },
+          style: { ...style }
         });
       }
     };
@@ -109,5 +108,5 @@ export const PulseRingStory: Story = {
     // eslint-disable-next-line no-console
     console.log('[PulseRing debug] layer.getBounds()', layer.getBounds(), 'using debug bounds:', debugBounds);
     canvas.camera.fitContent(debugBounds, 200);
-  },
+  }
 };

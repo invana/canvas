@@ -59,7 +59,7 @@ const data: GraphData = {
     { type: 'edge', id: 'core-cache', source: 'core', target: 'cache' },
     { type: 'edge', id: 'worker-core', source: 'worker', target: 'core' },
     { type: 'edge', id: 'core-gauge', source: 'core', target: 'gauge' },
-  ],
+  ]
 };
 
 export const ExportStateStory: Story = {
@@ -84,7 +84,7 @@ export const ExportStateStory: Story = {
               <ClearCanvasToolbar bare targetLayerId="graph" canvas={ctx.canvas} />
               <ExportStateToolbar bare filename="my-scene" canvas={ctx.canvas} />
             </>
-          ),
+          )
         }}
       >
         <BackgroundLayer id="background" type="pattern" patternType="dots" backgroundColor="#0b1220" color="#1e293b" />
@@ -100,8 +100,8 @@ export const ExportStateStory: Story = {
               labelText: (n: GraphNode) => (n.data as { name: string }).name,
               labelColor: 0xf8fafc,
               labelFontSize: 12,
-              labelPlacement: 'center',
-            },
+              labelPlacement: 'center'
+            }
           }}
           edge={{ style: { strokeColor: 0x64748b, strokeWidth: 2 } }}
         />
@@ -111,5 +111,5 @@ export const ExportStateStory: Story = {
         <WheelZoomBehaviour id="zoom" enabled />
       </GraphCanvasApp>
     </ThemeProvider>
-  ),
+  )
 };

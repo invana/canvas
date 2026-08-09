@@ -3,7 +3,7 @@ import {
   BackgroundLayer,
   DevInfoLayer,
   DragPanBehaviour,
-  WheelZoomBehaviour,
+  WheelZoomBehaviour
 } from '@invana/canvas';
 import { GraphCanvas, GraphLayer, ThemeBehaviour } from '@invana/graph';
 import type { ShapeLabelStyle } from '@invana/canvas';
@@ -39,7 +39,7 @@ export const Sankey: Story = {
       // Labels follow the d3 example: left-half nodes label to the right
       // of the rect; right-half nodes label to the left.
       showLabels: true,
-      labelFontSize: 10,
+      labelFontSize: 10
     };
 
     // d3's schemeCategory10
@@ -70,7 +70,7 @@ export const Sankey: Story = {
       id: 'graph',
       // Data is content → it rides on `initData`. The layout overrides shape
       // per node; literal base style for nodes/edges lives in `canvasOptions`.
-      options: { initData: ukEnergyFlowAsGraph() },
+      options: { initData: ukEnergyFlowAsGraph() }
     });
     canvas.layers.add(graph);
 
@@ -98,8 +98,8 @@ export const Sankey: Story = {
             // case before per-node category styling runs.
             style: {
               shape: { kind: 'rect', width: 15, height: 30 },
-              bgFill: 0x64748b,
-            },
+              bgFill: 0x64748b
+            }
           },
           edge: {
             style: {
@@ -107,10 +107,10 @@ export const Sankey: Story = {
               strokeColor: settings.linkStroke,
               strokeWidth: 1,
               strokeAlpha: settings.linkAlpha,
-              arrowTargetShape: 'none',
-            },
-          },
-        },
+              arrowTargetShape: 'none'
+            }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
@@ -119,8 +119,8 @@ export const Sankey: Story = {
           enabled: true,
           mode: 'system',
           light: { backgroundColor: '#ffffff', color: '#94a3b8' },
-          dark: { backgroundColor: '#0b1220', color: '#475569' },
-        },
+          dark: { backgroundColor: '#0b1220', color: '#475569' }
+        }
       },
       layouts: {
         sankey: {
@@ -128,10 +128,10 @@ export const Sankey: Story = {
           nodeWidth: 15,
           nodePadding: 10,
           iterations: 6,
-          nodeAlign: 'justify' as 'left' | 'right' | 'center' | 'justify',
-        },
+          nodeAlign: 'justify' as 'left' | 'right' | 'center' | 'justify'
+        }
       },
-      activeLayout: 'sankey',
+      activeLayout: 'sankey'
     };
 
     /**
@@ -164,10 +164,10 @@ export const Sankey: Story = {
                 kind: 'text',
                 text: data.name,
                 fontSize: settings.labelFontSize,
-                fill: 0x0f172a,
+                fill: 0x0f172a
               },
               placement: onLeftHalf ? 'right' : 'left',
-              offset: { x: onLeftHalf ? 4 : -4 },
+              offset: { x: onLeftHalf ? 4 : -4 }
             };
             (baseStyle as { labelStyle?: ShapeLabelStyle }).labelStyle = labelStyle;
           }
@@ -193,8 +193,8 @@ export const Sankey: Story = {
             style: {
               ...baseStyle,
               strokeColor: stroke,
-              strokeAlpha: settings.linkAlpha,
-            },
+              strokeAlpha: settings.linkAlpha
+            }
           });
         }
       });
@@ -243,5 +243,5 @@ export const Sankey: Story = {
     labels.add(settings, 'labelFontSize', 6, 20, 1).onChange(applyNodeStyling);
 
     gui.add({ refit: () => canvas.camera.fitContent(graph.getBounds(), 80) }, 'refit').name('Re-fit camera');
-  },
+  }
 };

@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas, DragPanBehaviour, DragShapeBehaviour, WheelZoomBehaviour,
-  WorldLayer, PrimitivesRenderer, arrowMarkerSpec,
+  WorldLayer, arrowMarkerSpec,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
 const meta: Meta = { title: 'canvas/concepts/Connectors/PathStyles/LoopPolyline/Overview' };
@@ -39,10 +39,10 @@ export const Overview: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -61,7 +61,7 @@ export const Overview: Story = {
     canvas.behaviours.register(new DragShapeBehaviour({
       id: 'drag-shape',
       enabled: true,
-      renderer: layer.renderer,
+      renderer: layer.renderer
     }));
 
     const FILL = 0x4f7ff5;
@@ -77,13 +77,13 @@ export const Overview: Story = {
       kind: 'rect', x: -260 - RECT_HX, y: -RECT_HY,
       width: RECT_W, height: RECT_H,
       fill: { kind: 'solid', color: FILL },
-      stroke: { color: 0x2563eb, width: 0 },
+      stroke: { color: 0x2563eb, width: 0 }
     });
     // Circle host on the right.
     layer.renderer.addShape('circ-host', {
       kind: 'circle', x: 200, y: 0, radius: CIRC_R,
       fill: { kind: 'solid', color: FILL },
-      stroke: { color: 0x2563eb, width: 0 },
+      stroke: { color: 0x2563eb, width: 0 }
     });
 
     const CARDINALS = ['top', 'right', 'bottom', 'left'] as const;
@@ -101,12 +101,12 @@ export const Overview: Story = {
           side,
           baseOffset: isVertical ? RECT_HY : RECT_HX,
           stubLength: 18,
-          gap: 22,
+          gap: 22
         },
         source: { kind: 'shape', shapeId: 'rect-host', anchor: 'center' },
         target: { kind: 'shape', shapeId: 'rect-host', anchor: 'center' },
         stroke: { color: LOOP_STROKE, width: LOOP_WIDTH },
-        targetMarker: arrowMarkerSpec({ lengthScale: 5, widthScale: 4, fill: LOOP_STROKE }),
+        targetMarker: arrowMarkerSpec({ lengthScale: 5, widthScale: 4, fill: LOOP_STROKE })
       });
     }
     for (const side of CORNERS) {
@@ -119,12 +119,12 @@ export const Overview: Story = {
           baseOffsetX: RECT_HX,
           baseOffsetY: RECT_HY,
           stubLength: 14,
-          gap: 14,
+          gap: 14
         },
         source: { kind: 'shape', shapeId: 'rect-host', anchor: 'center' },
         target: { kind: 'shape', shapeId: 'rect-host', anchor: 'center' },
         stroke: { color: LOOP_STROKE, width: LOOP_WIDTH },
-        targetMarker: arrowMarkerSpec({ lengthScale: 5, widthScale: 4, fill: LOOP_STROKE }),
+        targetMarker: arrowMarkerSpec({ lengthScale: 5, widthScale: 4, fill: LOOP_STROKE })
       });
     }
 
@@ -138,12 +138,12 @@ export const Overview: Story = {
         router: 'straight',
         pathStyle: 'loop-polyline',
         pathStyleOpts: {
-          side, baseOffset: CIRC_CARDINAL_BASE, stubLength: 16, gap: CIRC_GAP,
+          side, baseOffset: CIRC_CARDINAL_BASE, stubLength: 16, gap: CIRC_GAP
         },
         source: { kind: 'shape', shapeId: 'circ-host', anchor: 'center' },
         target: { kind: 'shape', shapeId: 'circ-host', anchor: 'center' },
         stroke: { color: LOOP_STROKE, width: LOOP_WIDTH },
-        targetMarker: arrowMarkerSpec({ lengthScale: 5, widthScale: 4, fill: LOOP_STROKE }),
+        targetMarker: arrowMarkerSpec({ lengthScale: 5, widthScale: 4, fill: LOOP_STROKE })
       });
     }
     const CORNER_GAP = 14;
@@ -161,15 +161,15 @@ export const Overview: Story = {
           baseOffsetX: CIRC_CORNER_BASE,
           baseOffsetY: CIRC_CORNER_BASE,
           stubLength: 14,
-          gap: CORNER_GAP,
+          gap: CORNER_GAP
         },
         source: { kind: 'shape', shapeId: 'circ-host', anchor: 'center' },
         target: { kind: 'shape', shapeId: 'circ-host', anchor: 'center' },
         stroke: { color: LOOP_STROKE, width: LOOP_WIDTH },
-        targetMarker: arrowMarkerSpec({ lengthScale: 5, widthScale: 4, fill: LOOP_STROKE }),
+        targetMarker: arrowMarkerSpec({ lengthScale: 5, widthScale: 4, fill: LOOP_STROKE })
       });
     }
 
     canvas.camera.fitContent(layer.getBounds(), 80);
-  },
+  }
 };

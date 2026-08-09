@@ -5,9 +5,8 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'canvas/concepts/Events/shape:pointer*' };
@@ -27,15 +26,12 @@ export const ShapePointerStory: Story = {
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() {
         return {};
       }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({
-          container: this.container,
-          camera: ctx.camera,
-        });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() {
         return null;
@@ -59,7 +55,7 @@ export const ShapePointerStory: Story = {
       y: 0,
       radius: 50,
       fill: { kind: 'solid', color: 0x4f9cf9 },
-      stroke: { color: 0x1d4ed8, width: 2 },
+      stroke: { color: 0x1d4ed8, width: 2 }
     });
     layer.renderer.addShape('rect-1', {
       kind: 'rect',
@@ -68,9 +64,9 @@ export const ShapePointerStory: Story = {
       width: 100,
       height: 80,
       fill: { kind: 'solid', color: 0x10b981 },
-      stroke: { color: 0x047857, width: 2 },
+      stroke: { color: 0x047857, width: 2 }
     });
 
     canvas.camera.fitContent(layer.getBounds(), 100);
-  },
+  }
 };

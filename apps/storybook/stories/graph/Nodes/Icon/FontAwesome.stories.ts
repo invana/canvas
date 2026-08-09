@@ -39,7 +39,7 @@ export const FontAwesomeStory: Story = {
       'fa-star':     '',
       'fa-bell':     '',
       'fa-gear':     '',
-      'fa-bolt':     '',
+      'fa-bolt':     ''
     };
     const FA_FAMILY = 'Font Awesome 6 Free';
     const FA_WEIGHT = 900;
@@ -64,7 +64,7 @@ export const FontAwesomeStory: Story = {
       color: 0xffffff,
       sizeRatio: 0.55,
       anchor: 'center' as InsetAnchor,
-      bgFill: 0x6366f1,
+      bgFill: 0x6366f1
     };
 
     const shapeForType = (type: string | undefined): NodeShapeOptions => {
@@ -85,7 +85,7 @@ export const FontAwesomeStory: Story = {
               { x: -r,       y: 0 },
               { x: -r * 0.5, y: r * 0.866 },
               { x: r * 0.5,  y: r * 0.866 },
-            ],
+            ]
           };
         default:
           throw new Error(`unknown node type "${type}"`);
@@ -113,12 +113,12 @@ export const FontAwesomeStory: Story = {
               fontWeight: FA_WEIGHT,
               color: settings.color,
               sizeRatio: settings.sizeRatio,
-              anchor: settings.anchor,
+              anchor: settings.anchor
             }),
-            labelText: (n) => n.type ?? '?',
-          },
-        },
-      },
+            labelText: (n) => n.type ?? '?'
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -140,12 +140,12 @@ export const FontAwesomeStory: Story = {
               labelBackgroundStrokeColor: 0xcbd5e1,
               labelBackgroundStrokeWidth: 1,
               labelBackgroundCornerRadius: 4,
-              labelBackgroundPadding: 3,
-            },
-          },
-        },
+              labelBackgroundPadding: 3
+            }
+          }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
@@ -163,5 +163,5 @@ export const FontAwesomeStory: Story = {
     gui.add(settings, 'sizeRatio', 0.1, 1, 0.05).onChange(rerenderAll);
     gui.add(settings, 'anchor', ['center', 'top-left', 'top-right', 'bottom-left', 'bottom-right']).onChange(rerenderAll);
     gui.addColor(settings, 'bgFill').name('bg fill').onChange(rerenderAll);
-  },
+  }
 };

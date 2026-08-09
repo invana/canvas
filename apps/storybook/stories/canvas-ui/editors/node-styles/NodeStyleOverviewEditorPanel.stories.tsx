@@ -12,7 +12,7 @@ import {
   colorToForm,
   formToColor,
   recolorNodeStyle,
-  type NodeStyleOverviewFields,
+  type NodeStyleOverviewFields
 } from '@invana/canvas-ui';
 import { useCanvas } from '@invana/canvas-react';
 
@@ -74,5 +74,5 @@ export const NodeStyleOverviewEditorPanelStory: Story = {
       data={MIXED_DATA}
       panel={<Panel />}
     />
-  ),
+  )
 };

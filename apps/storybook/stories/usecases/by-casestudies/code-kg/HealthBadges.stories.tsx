@@ -32,7 +32,7 @@ import {
   GraphControlsToolbar,
   GraphStatusBar,
   ToolbarItems,
-  useSidePanels,
+  useSidePanels
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData, GraphNode, NodeBadge } from '@invana/graph';
@@ -85,7 +85,7 @@ export const HealthBadgesStory: Story = {
           label: 'Settings',
           render: (canvas) => (
             <CanvasSettingsEditorPanel canvas={canvas} className="border-0 bg-transparent shadow-none" />
-          ),
+          )
         },
       ],
       { section: { defaultSize: '360px', maxSize: '460px' } },
@@ -100,7 +100,7 @@ export const HealthBadgesStory: Story = {
         nodes: invanaCodeKg.nodes.filter((n) => files.has(n.id)),
         edges: invanaCodeKg.edges.filter(
           (e) => e.type === 'imports' && files.has(e.source) && files.has(e.target),
-        ),
+        )
       };
     }, []);
 
@@ -112,7 +112,7 @@ export const HealthBadgesStory: Story = {
           // Cluster colours come from the `bgFill` resolver below.
           color: { enabled: false },
           hover: { enabled: true, state: 'highlighted', inactiveState: 'dimmed', degree: 1, direction: 'both' },
-          'click-select': { enabled: true, multiple: true, trigger: ['shift'] },
+          'click-select': { enabled: true, multiple: true, trigger: ['shift'] }
         },
         layers: {
           background: { type: 'pattern', patternType: 'dots', size: 1.2, spacing: 26, alpha: 0.7 },
@@ -141,7 +141,7 @@ export const HealthBadgesStory: Story = {
                       strokeWidth: 1.5,
                       labelText: `${d.coverage}%`,
                       labelColor: 0xffffff,
-                      labelFontSize: 10,
+                      labelFontSize: 10
                     });
                   }
                   if ((d.errors ?? 0) > 0) {
@@ -155,7 +155,7 @@ export const HealthBadgesStory: Story = {
                       strokeWidth: 1.5,
                       labelText: String(d.errors ?? 0),
                       labelColor: 0xffffff,
-                      labelFontSize: 11,
+                      labelFontSize: 11
                     });
                   }
                   return badges;
@@ -166,13 +166,13 @@ export const HealthBadgesStory: Story = {
                 labelColor: 0xffffff,
                 labelFontSize: 12,
                 labelFontWeight: 600,
-                labelPlacement: 'center',
+                labelPlacement: 'center'
               },
               state: {
                 // Sharper highlight ring against the saturated cluster fills.
                 highlighted: { bgStrokeColor: 0xfbbf24, bgStrokeWidth: 3 },
-                selected: { bgStrokeColor: 0xffffff, bgStrokeWidth: 4 },
-              },
+                selected: { bgStrokeColor: 0xffffff, bgStrokeWidth: 4 }
+              }
             },
             edge: {
               style: {
@@ -182,23 +182,23 @@ export const HealthBadgesStory: Story = {
                 strokeAlpha: 0.75,
                 arrowTargetShape: 'triangle',
                 arrowTargetSize: 8,
-                arrowTargetColor: 0x94a3b8,
+                arrowTargetColor: 0x94a3b8
               },
               state: {
                 highlighted: {
                   strokeColor: 0xfbbf24,
                   strokeWidth: 2,
                   strokeAlpha: 1,
-                  arrowTargetColor: 0xfbbf24,
-                },
-              },
-            },
+                  arrowTargetColor: 0xfbbf24
+                }
+              }
+            }
           },
-          minimap: { position: 'bottom-right', width: 220, height: 160 },
+          minimap: { position: 'bottom-right', width: 220, height: 160 }
         },
         layouts: {
-          elk: { algorithm: 'layered', direction, nodeSpacing: 28, layerSpacing: 90 },
-        },
+          elk: { algorithm: 'layered', direction, nodeSpacing: 28, layerSpacing: 90 }
+        }
       }),
       // CLUSTER_FILL is a render-local literal the config closes over once.
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -228,7 +228,7 @@ export const HealthBadgesStory: Story = {
                     label: 'Direction',
                     value: direction,
                     options: { RIGHT: 'Right', DOWN: 'Down', LEFT: 'Left', UP: 'Up' },
-                    onChange: (v) => setDirection(v as ElkDirection),
+                    onChange: (v) => setDirection(v as ElkDirection)
                   },
                   {
                     type: 'toggle',
@@ -237,7 +237,7 @@ export const HealthBadgesStory: Story = {
                     label: 'Minimap: off',
                     activeLabel: 'Minimap: on',
                     active: minimapOn,
-                    onToggle: () => setMinimapOn((v) => !v),
+                    onToggle: () => setMinimapOn((v) => !v)
                   },
                   ...dock.items,
                   {
@@ -248,11 +248,11 @@ export const HealthBadgesStory: Story = {
                     label: 'Switch to dark theme',
                     activeLabel: 'Switch to light theme',
                     active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme,
+                    onToggle: ctx.toggleTheme
                   },
                 ]}
               />
-            ),
+            )
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
           right={dock.region}
@@ -265,5 +265,5 @@ export const HealthBadgesStory: Story = {
         </GraphCanvasApp>
       </ThemeProvider>
     );
-  },
+  }
 };

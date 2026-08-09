@@ -48,7 +48,7 @@ export const Stroke: Story = {
       dashOff: 0,
       dashOffset: 0,
       strokeCap: 'butt' as 'butt' | 'round' | 'square',
-      strokeJoin: 'miter' as 'miter' | 'round' | 'bevel',
+      strokeJoin: 'miter' as 'miter' | 'round' | 'bevel'
     };
 
     const shapeForType = (type: string | undefined): NodeShapeOptions => {
@@ -74,7 +74,7 @@ export const Stroke: Story = {
               { x: -r,       y: 0 },
               { x: -r * 0.5, y: r * 0.866 },
               { x: r * 0.5,  y: r * 0.866 },
-            ],
+            ]
           };
         default:
           throw new Error(`unknown node type "${type}"`);
@@ -108,10 +108,10 @@ export const Stroke: Story = {
             bgStrokeDashOffset: () => settings.dashOffset,
             bgStrokeCap:        () => settings.strokeCap,
             bgStrokeJoin:       () => settings.strokeJoin,
-            labelText:          (n) => n.type ?? '?',
-          },
-        },
-      },
+            labelText:          (n) => n.type ?? '?'
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -133,12 +133,12 @@ export const Stroke: Story = {
               labelBackgroundStrokeColor: 0xcbd5e1,
               labelBackgroundStrokeWidth: 1,
               labelBackgroundCornerRadius: 4,
-              labelBackgroundPadding: 3,
-            },
-          },
-        },
+              labelBackgroundPadding: 3
+            }
+          }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
@@ -168,5 +168,5 @@ export const Stroke: Story = {
     d.add(settings, 'dashOn', 0, 40, 1).name('on (0 = solid)').onChange(rerenderAll);
     d.add(settings, 'dashOff', 0, 40, 1).name('off (0 = solid)').onChange(rerenderAll);
     d.add(settings, 'dashOffset', 0, 40, 1).name('offset').onChange(rerenderAll);
-  },
+  }
 };

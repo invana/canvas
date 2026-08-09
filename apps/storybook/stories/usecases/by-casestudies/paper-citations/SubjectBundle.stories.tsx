@@ -31,7 +31,7 @@ import {
   GraphControlsToolbar,
   GraphStatusBar,
   ToolbarItems,
-  useSidePanels,
+  useSidePanels
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData, GraphNode } from '@invana/graph';
@@ -59,7 +59,7 @@ export const SubjectBundleStory: Story = {
           label: 'Settings',
           render: (canvas) => (
             <CanvasSettingsEditorPanel canvas={canvas} className="border-0 bg-transparent shadow-none" />
-          ),
+          )
         },
       ],
       { section: { defaultSize: '360px', maxSize: '460px' } },
@@ -85,7 +85,7 @@ export const SubjectBundleStory: Story = {
       const CENTROIDS: Record<FocusSubject, { x: number; y: number }> = {
         Neural_Networks: { x: 0, y: -200 },
         Reinforcement_Learning: { x: -260, y: 140 },
-        Genetic_Algorithms: { x: 260, y: 140 },
+        Genetic_Algorithms: { x: 260, y: 140 }
       };
       const SUBJECT_FILL: Record<FocusSubject, number> = {
         Neural_Networks: 0x2563eb, // blue
@@ -121,7 +121,7 @@ export const SubjectBundleStory: Story = {
             id: p.id,
             type: subject,
             data: p.data,
-            position: { x: c.x + r * Math.cos(theta), y: c.y + r * Math.sin(theta) },
+            position: { x: c.x + r * Math.cos(theta), y: c.y + r * Math.sin(theta) }
           });
         });
       }
@@ -157,13 +157,13 @@ export const SubjectBundleStory: Story = {
               sourceAnchor: 'center' as const,
               targetAnchor: 'center' as const,
               pathStyleOpts: { beta: BETA },
-              waypoints: waypointsFor(e.source, e.target),
+              waypoints: waypointsFor(e.source, e.target)
             },
             strokeColor: SUBJECT_FILL[subjectById.get(e.source)!] ?? 0x64748b,
             strokeWidth: EDGE_WIDTH,
             strokeAlpha: EDGE_ALPHA,
-            arrowTargetShape: 'none' as const,
-          },
+            arrowTargetShape: 'none' as const
+          }
         }));
 
       return { data: { nodes, edges } as GraphData, subjectFill: SUBJECT_FILL as Record<string, number> };
@@ -176,7 +176,7 @@ export const SubjectBundleStory: Story = {
         behaviours: {
           // Subject colours come from the `bgFill` resolver below.
           color: { enabled: false },
-          hover: { enabled: true, state: 'hovered', degree: 1, direction: 'both' },
+          hover: { enabled: true, state: 'hovered', degree: 1, direction: 'both' }
         },
         layers: {
           graph: {
@@ -185,15 +185,15 @@ export const SubjectBundleStory: Story = {
                 bgFill: (n: GraphNode) => subjectFill[(n.data as PaperNodeData).subject] ?? 0x64748b,
                 shape: { kind: 'circle', radius: 4 },
                 bgAlpha: 0.95,
-                bgStrokeWidth: 0,
+                bgStrokeWidth: 0
               },
               state: {
                 hovered: {
                   bgStrokeColor: 0xfbbf24,
                   bgStrokeWidth: 1.6,
-                  shape: { kind: 'circle', radius: 6 },
-                },
-              },
+                  shape: { kind: 'circle', radius: 6 }
+                }
+              }
             },
             edge: {
               // Per-edge styles (above) carry the routes; this is the fallback
@@ -202,12 +202,12 @@ export const SubjectBundleStory: Story = {
                 shape: { pathType: 'bundle', sourceAnchor: 'center', targetAnchor: 'center' },
                 strokeWidth: 0.9,
                 strokeAlpha: 0.45,
-                arrowTargetShape: 'none',
+                arrowTargetShape: 'none'
               },
-              state: { highlighted: { strokeAlpha: 0.95, strokeWidth: 1.7 } },
-            },
-          },
-        },
+              state: { highlighted: { strokeAlpha: 0.95, strokeWidth: 1.7 } }
+            }
+          }
+        }
       }),
       [subjectFill],
     );
@@ -245,16 +245,16 @@ export const SubjectBundleStory: Story = {
                     label: 'Switch to dark theme',
                     activeLabel: 'Switch to light theme',
                     active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme,
+                    onToggle: ctx.toggleTheme
                   },
                 ]}
               />
-            ),
+            )
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
           right={dock.region}
         />
       </ThemeProvider>
     );
-  },
+  }
 };

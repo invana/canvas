@@ -11,7 +11,7 @@ import {
   type GraphEdge,
   type GraphNode,
   type GroupOptions,
-  type NodeStyle,
+  type NodeStyle
 } from '@invana/graph';
 import type { TogglePlacement } from '@invana/canvas/specs';
 import { createContainer, onStoryTeardown } from '../../div-util';
@@ -68,7 +68,7 @@ export const RectGroupStory: Story = {
       togglePosX: 0,
       togglePosY: 0,
       // Frame paint
-      bgVariant: 'filled' as 'filled' | 'stroke-only' | 'ghost',
+      bgVariant: 'filled' as 'filled' | 'stroke-only' | 'ghost'
     };
 
     const variantStyle = (
@@ -96,14 +96,14 @@ export const RectGroupStory: Story = {
             padding: settings.padding,
             headerHeight: settings.headerHeight,
             behindChildren: settings.behindChildren,
-            userResizable: settings.userResizable,
+            userResizable: settings.userResizable
           },
           labelText: 'Group A',
           labelColor: 0x6b7fff,
           labelFontSize: 11,
           labelFontWeight: 600,
-          labelPlacement: 'inside-top-left',
-        },
+          labelPlacement: 'inside-top-left'
+        }
       },
       { type: 'node',
         id: 'node1',
@@ -116,8 +116,8 @@ export const RectGroupStory: Story = {
           labelColor: 0x334155,
           labelFontSize: 12,
           labelPlacement: 'bottom',
-          labelOffsetY: 6,
-        },
+          labelOffsetY: 6
+        }
       },
       { type: 'node',
         id: 'node2',
@@ -130,8 +130,8 @@ export const RectGroupStory: Story = {
           labelColor: 0x334155,
           labelFontSize: 12,
           labelPlacement: 'bottom',
-          labelOffsetY: 6,
-        },
+          labelOffsetY: 6
+        }
       },
       { type: 'node',
         id: 'node3',
@@ -144,8 +144,8 @@ export const RectGroupStory: Story = {
           labelColor: 0x334155,
           labelFontSize: 12,
           labelPlacement: 'bottom',
-          labelOffsetY: 6,
-        },
+          labelOffsetY: 6
+        }
       },
     ];
 
@@ -172,8 +172,8 @@ export const RectGroupStory: Story = {
         zoom: { enabled: true },
         drag: { enabled: true },
         'collapse-expand': { enabled: true },
-        resize: { enabled: true },
-      },
+        resize: { enabled: true }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -197,7 +197,7 @@ export const RectGroupStory: Story = {
         userResizable: settings.userResizable,
         width: settings.width,
         height: settings.height,
-        togglePlacement,
+        togglePlacement
       };
       graph.store.updateNode('group-a', {
         style: {
@@ -210,8 +210,8 @@ export const RectGroupStory: Story = {
           shape: priorShape?.kind === 'rect'
             ? { ...priorShape, width: settings.width, height: settings.height }
             : priorShape,
-          group,
-        },
+          group
+        }
       });
       // Open / closed is a node *state*, not a group option — same channel the
       // `+` / `−` toggle writes to.
@@ -254,5 +254,5 @@ export const RectGroupStory: Story = {
 
     const frame = gui.addFolder('Frame paint');
     frame.add(settings, 'bgVariant', ['filled', 'stroke-only', 'ghost']).onChange(apply);
-  },
+  }
 };

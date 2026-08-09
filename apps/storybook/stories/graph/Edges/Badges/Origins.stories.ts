@@ -6,7 +6,7 @@ import {
   GraphLayer,
   type BadgeOrigin,
   type GraphEdge,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -56,8 +56,8 @@ export const Origins: Story = {
           labelColor: 0x0f172a,
           labelFontSize: 11,
           labelPlacement: 'left',
-          labelOffsetX: -10,
-        },
+          labelOffsetX: -10
+        }
       },
       {
         id: `tgt-${i}`,
@@ -65,8 +65,8 @@ export const Origins: Story = {
         position: { x: 260, y: (i - 1.5) * 110 },
         style: {
           shape: { kind: 'circle', radius: 14 },
-          bgFill: 0x34d399,
-        },
+          bgFill: 0x34d399
+        }
       },
     ]);
 
@@ -84,10 +84,10 @@ export const Origins: Story = {
             shape: { kind: 'rect', width: 24, height: 18, cornerRadius: 4 },
             fill: 0xdc2626,
             strokeColor: 0xffffff,
-            strokeWidth: 1.5,
+            strokeWidth: 1.5
           },
-        ],
-      },
+        ]
+      }
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>(
@@ -98,7 +98,7 @@ export const Origins: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes, edges } },
+      options: { initData: { nodes, edges } }
     });
     canvas.layers.add(graph);
 
@@ -108,11 +108,11 @@ export const Origins: Story = {
 
     const canvasOptions = {
       layers: {
-        graph: { edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 1.5, arrowTargetShape: 'none' } } },
+        graph: { edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 1.5, arrowTargetShape: 'none' } } }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true }, 'drag-node': { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true }, 'drag-node': { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

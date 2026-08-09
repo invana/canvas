@@ -29,5 +29,5 @@ export const BehaviourRegisteredStory: Story = {
     setTimeout(() => {
       canvas.behaviours.register(new PinchZoomBehaviour({ id: 'pinch-zoom', enabled: false }));
     }, 1300);
-  },
+  }
 };

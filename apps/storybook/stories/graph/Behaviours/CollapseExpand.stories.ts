@@ -10,7 +10,7 @@ import {
   type GraphEdge,
   type GraphNode,
   type GroupOptions,
-  type NodeStyle,
+  type NodeStyle
 } from '@invana/graph';
 import type { TogglePlacement } from '@invana/canvas/specs';
 import { createContainer, onStoryTeardown } from '../../div-util';
@@ -58,7 +58,7 @@ export const CollapseExpandStory: Story = {
       collapsed: false,
       togglePlacement: 'bottom' as TogglePlacement | 'custom',
       togglePosX: 0,
-      togglePosY: 60,
+      togglePosY: 60
     };
 
     const nodes: GraphNode[] = [
@@ -70,25 +70,25 @@ export const CollapseExpandStory: Story = {
           bgFill: 0xb4c0e9,
           bgStrokeColor: 0x6b7fff,
           bgStrokeWidth: 1,
-          group: { autoFit: true, padding: 24 },
-        },
+          group: { autoFit: true, padding: 24 }
+        }
       },
       { type: 'node',
         id: 'node1',
         parentId: 'group-a',
         position: { x: -28, y: 0 },
-        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6 },
+        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6 }
       },
       { type: 'node',
         id: 'node2',
         parentId: 'group-a',
         position: { x: 28, y: 0 },
-        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6 },
+        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6 }
       },
       { type: 'node',
         id: 'outside',
         position: { x: 240, y: 0 },
-        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6 },
+        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6 }
       },
     ];
 
@@ -97,7 +97,7 @@ export const CollapseExpandStory: Story = {
         id: 'cross',
         source: 'node2',
         target: 'outside',
-        style: { strokeColor: 0x94a3b8, strokeWidth: 1, arrowTargetShape: 'none' },
+        style: { strokeColor: 0x94a3b8, strokeWidth: 1, arrowTargetShape: 'none' }
       },
     ];
 
@@ -115,7 +115,7 @@ export const CollapseExpandStory: Story = {
 
     const collapseExpand = new CollapseExpandBehaviour({
       id: 'collapse-expand',
-      targetLayerId: 'graph',
+      targetLayerId: 'graph'
     });
     canvas.behaviours.register(collapseExpand);
 
@@ -124,8 +124,8 @@ export const CollapseExpandStory: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         drag: { enabled: true },
-        'collapse-expand': { enabled: settings.behaviourEnabled },
-      },
+        'collapse-expand': { enabled: settings.behaviourEnabled }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -141,7 +141,7 @@ export const CollapseExpandStory: Story = {
           : settings.togglePlacement;
       const priorGroup = (priorStyle.group ?? {}) as GroupOptions;
       graph.store.updateNode('group-a', {
-        style: { ...priorStyle, group: { ...priorGroup, togglePlacement } },
+        style: { ...priorStyle, group: { ...priorGroup, togglePlacement } }
       });
       // Open / closed is a node *state*, not a style field — the same channel
       // the toggle button writes to.
@@ -172,5 +172,5 @@ export const CollapseExpandStory: Story = {
       .add(settings, 'togglePosY', -200, 200, 1)
       .name('custom posY')
       .onChange(applyGroupOptions);
-  },
+  }
 };

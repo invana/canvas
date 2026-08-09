@@ -5,9 +5,8 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'canvas/concepts/Events/connector:pointer*' };
@@ -27,15 +26,12 @@ export const ConnectorPointerStory: Story = {
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() {
         return {};
       }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({
-          container: this.container,
-          camera: ctx.camera,
-        });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() {
         return null;
@@ -59,9 +55,9 @@ export const ConnectorPointerStory: Story = {
       pathStyle: 'normal',
       source: { kind: 'point', x: -120, y: 0 },
       target: { kind: 'point', x: 120, y: 0 },
-      stroke: { color: 0x4f9cf9, width: 4 },
+      stroke: { color: 0x4f9cf9, width: 4 }
     });
 
     canvas.camera.fitContent(layer.getBounds(), 100);
-  },
+  }
 };

@@ -39,7 +39,7 @@ const LAYOUTS: Record<string, LayoutFactory> = {
   // flips to Stop while the simulation runs (click Stop to halt it in place).
   'd3-force': () =>
     new D3ForceLayout({ charge: { strength: -240 }, link: { distance: 70 }, animate: true }),
-  'elk-layered': () => new ElkLayout({ algorithm: 'layered', direction: 'RIGHT' }),
+  'elk-layered': () => new ElkLayout({ algorithm: 'layered', direction: 'RIGHT' })
 };
 const LAYOUT_LABEL: Record<string, string> = { 'd3-force': 'Force', 'elk-layered': 'Layered' };
 
@@ -78,12 +78,12 @@ export const FullFeaturedStory: Story = {
               charge: { strength: -240 },
               link: { distance: 70 },
               collide: { radius: 18 },
-              animate: false,
-            },
+              animate: false
+            }
           },
           // Community colours come from the bundle's own ColorByBehaviour —
           // one option instead of a local palette plus a bgFill resolver.
-          behaviours: { color: { enabled: true, nodeValueKey: 'data.group' } },
+          behaviours: { color: { enabled: true, nodeValueKey: 'data.group' } }
         }}
         header={{
           title: 'Graph Canvas App',
@@ -94,7 +94,7 @@ export const FullFeaturedStory: Story = {
               <DevInfoToggleButton corner="top-left" margin={{ x: 12, y: 48 }} />
               <ThemeToggle ctx={ctx} />
             </>
-          ),
+          )
         }}
         footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
         // The docked right region is **hidden by default** and only mounts once
@@ -114,7 +114,7 @@ export const FullFeaturedStory: Story = {
                 defaultSize: '320px',
                 // minSize: '0px',
                 maxSize: '320px',
-                collapsible: false,
+                collapsible: false
               }
             : undefined
         }
@@ -135,5 +135,5 @@ export const FullFeaturedStory: Story = {
       </GraphCanvasApp>
     </ThemeProvider>
     );
-  },
+  }
 };

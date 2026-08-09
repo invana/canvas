@@ -5,10 +5,9 @@ import {
   WheelZoomBehaviour,
   DragShapeBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
   arrowMarkerSpec,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
@@ -31,10 +30,10 @@ export const Wrap: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -61,7 +60,7 @@ export const Wrap: Story = {
       source: { kind: 'shape', shapeId: 'src', anchor: 'boundary' },
       target: { kind: 'shape', shapeId: 'tgt', anchor: 'boundary' },
       stroke: { color: 0xcbd5e1, width: 1.5 },
-      targetMarker: arrowMarkerSpec({ lengthScale: 6, widthScale: 4, fill: 0xcbd5e1 }),
+      targetMarker: arrowMarkerSpec({ lengthScale: 6, widthScale: 4, fill: 0xcbd5e1 })
     });
 
     const settings = {
@@ -71,7 +70,7 @@ export const Wrap: Story = {
       maxLines: 3,
       wordWrap: true,
       overflow: 'ellipsis' as 'clip' | 'ellipsis',
-      autoRotate: false,
+      autoRotate: false
     };
 
     const apply = (): void => {
@@ -85,11 +84,11 @@ export const Wrap: Story = {
             ...(settings.maxHeight > 0 ? { maxHeight: settings.maxHeight } : {}),
             ...(settings.maxLines  > 0 ? { maxLines:  settings.maxLines  } : {}),
             wordWrap: settings.wordWrap,
-            overflow: settings.overflow,
+            overflow: settings.overflow
           },
           placement: 'center',
-          autoRotate: settings.autoRotate,
-        },
+          autoRotate: settings.autoRotate
+        }
       });
     };
     apply();
@@ -106,5 +105,5 @@ export const Wrap: Story = {
     wr.add(settings, 'maxLines',  1,   6,  1).onChange(apply);
     wr.add(settings, 'wordWrap').onChange(apply);
     wr.add(settings, 'overflow', ['clip', 'ellipsis']).onChange(apply);
-  },
+  }
 };

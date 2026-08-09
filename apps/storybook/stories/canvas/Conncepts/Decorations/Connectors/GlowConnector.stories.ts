@@ -4,10 +4,9 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
   arrowMarkerSpec,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -28,10 +27,10 @@ export const GlowConnectorStory: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -48,19 +47,19 @@ export const GlowConnectorStory: Story = {
 
     layer.renderer.addShape('a', {
       kind: 'circle', x: -180, y: -60, radius: 24,
-      fill: { kind: 'solid', color: 0x4f9cf9 },
+      fill: { kind: 'solid', color: 0x4f9cf9 }
     });
     layer.renderer.addShape('b', {
       kind: 'circle', x: 180, y: -60, radius: 24,
-      fill: { kind: 'solid', color: 0x10b981 },
+      fill: { kind: 'solid', color: 0x10b981 }
     });
     layer.renderer.addShape('c', {
       kind: 'circle', x: -180, y: 60, radius: 24,
-      fill: { kind: 'solid', color: 0xfb923c },
+      fill: { kind: 'solid', color: 0xfb923c }
     });
     layer.renderer.addShape('d', {
       kind: 'circle', x: 180, y: 60, radius: 24,
-      fill: { kind: 'solid', color: 0xa78bfa },
+      fill: { kind: 'solid', color: 0xa78bfa }
     });
 
     layer.renderer.addConnector('a-to-b', {
@@ -70,7 +69,7 @@ export const GlowConnectorStory: Story = {
       source: { kind: 'shape', shapeId: 'a', anchor: 'boundary' },
       target: { kind: 'shape', shapeId: 'b', anchor: 'boundary' },
       stroke: { color: 0x111827, width: 2 },
-      targetMarker: arrowMarkerSpec({ lengthScale: 6, widthScale: 4, fill: 0x111827 }),
+      targetMarker: arrowMarkerSpec({ lengthScale: 6, widthScale: 4, fill: 0x111827 })
     });
     layer.renderer.addConnector('c-to-d', {
       kind: 'connector',
@@ -80,7 +79,7 @@ export const GlowConnectorStory: Story = {
       source: { kind: 'shape', shapeId: 'c', anchor: 'boundary' },
       target: { kind: 'shape', shapeId: 'd', anchor: 'boundary' },
       stroke: { color: 0x111827, width: 2 },
-      targetMarker: arrowMarkerSpec({ lengthScale: 6, widthScale: 4, fill: 0x111827 }),
+      targetMarker: arrowMarkerSpec({ lengthScale: 6, widthScale: 4, fill: 0x111827 })
     });
 
     const settings = {
@@ -90,7 +89,7 @@ export const GlowConnectorStory: Story = {
       innerAlpha: 0.6,
       pulseOn: false,
       pulsePeriodMs: 1200,
-      pulseAmplitude: 0.5,
+      pulseAmplitude: 0.5
     };
 
     const apply = () => {
@@ -101,15 +100,15 @@ export const GlowConnectorStory: Story = {
         innerAlpha: settings.innerAlpha,
         ...(settings.pulseOn
           ? { pulse: { periodMs: settings.pulsePeriodMs, amplitude: settings.pulseAmplitude } }
-          : {}),
+          : {})
       };
       layer.renderer.setDecoration('a-to-b', 'glow-connector', {
         kind: 'glow-connector',
-        style,
+        style
       });
       layer.renderer.setDecoration('c-to-d', 'glow-connector', {
         kind: 'glow-connector',
-        style,
+        style
       });
     };
     apply();
@@ -126,5 +125,5 @@ export const GlowConnectorStory: Story = {
     pulseFolder.add(settings, 'pulseAmplitude', 0, 1, 0.05).onChange(apply);
 
     canvas.camera.fitContent(layer.getBounds(), 100);
-  },
+  }
 };

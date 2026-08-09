@@ -35,7 +35,7 @@ import {
   ToolbarItems,
   FindInCanvasViewPanel,
   CanvasFiltersViewPanel,
-  useSidePanels,
+  useSidePanels
 } from '@invana/canvas-ui';
 import { topicCartography } from '@invana/graph-datasets/topic-cartography';
 import { ThemeProvider } from '@invana/themes';
@@ -72,9 +72,9 @@ export const FindInCanvasViewPanelStory: Story = {
       () => ({
         nodes: topicCartography.nodes.map((n) => ({
           ...n,
-          position: { x: n.data.x, y: n.data.y },
+          position: { x: n.data.x, y: n.data.y }
         })),
-        edges: topicCartography.edges,
+        edges: topicCartography.edges
       }),
       [],
     );
@@ -117,7 +117,7 @@ export const FindInCanvasViewPanelStory: Story = {
                     label: 'Minimap: off',
                     activeLabel: 'Minimap: on',
                     active: minimapOn,
-                    onToggle: () => setMinimapOn((v) => !v),
+                    onToggle: () => setMinimapOn((v) => !v)
                   },
                   {
                     type: 'toggle',
@@ -126,7 +126,7 @@ export const FindInCanvasViewPanelStory: Story = {
                     label: 'Dev overlay: off',
                     activeLabel: 'Dev overlay: on',
                     active: devOn,
-                    onToggle: () => setDevOn((v) => !v),
+                    onToggle: () => setDevOn((v) => !v)
                   },
                   {
                     type: 'toggle',
@@ -136,11 +136,11 @@ export const FindInCanvasViewPanelStory: Story = {
                     label: 'Switch to dark theme',
                     activeLabel: 'Switch to light theme',
                     active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme,
+                    onToggle: ctx.toggleTheme
                   },
                 ]}
               />
-            ),
+            )
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
           // The active panel docks into the app's resizable `right` region (or none).
@@ -156,5 +156,5 @@ export const FindInCanvasViewPanelStory: Story = {
         </GraphCanvasApp>
       </ThemeProvider>
     );
-  },
+  }
 };

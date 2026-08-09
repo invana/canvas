@@ -31,12 +31,12 @@ import {
   GraphControlsToolbar,
   GraphStatusBar,
   ToolbarItems,
-  useSidePanels,
+  useSidePanels
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData, GraphNode } from '@invana/graph';
 import {
-  citations,
+  citations
 } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider } from '@invana/themes';
 import { Moon, Settings, Sun } from 'lucide-react';
@@ -78,7 +78,7 @@ export const CitationGraphStory: Story = {
           label: 'Settings',
           render: (canvas) => (
             <CanvasSettingsEditorPanel canvas={canvas} className="border-0 bg-transparent shadow-none" />
-          ),
+          )
         },
       ],
       { section: { defaultSize: '360px', maxSize: '460px' } },
@@ -94,8 +94,8 @@ export const CitationGraphStory: Story = {
           id: e.id,
           source: e.source,
           target: e.target,
-          data: e.data,
-        })),
+          data: e.data
+        }))
       }),
       [],
     );
@@ -110,7 +110,7 @@ export const CitationGraphStory: Story = {
           // colour-by-type behaviour must not repaint the fills.
           color: { enabled: false },
           hover: { enabled: true, state: 'hovered', inactiveState: 'dimmed', degree: 1, direction: 'both' },
-          'click-select': { enabled: true, multiple: true, trigger: ['shift'] },
+          'click-select': { enabled: true, multiple: true, trigger: ['shift'] }
         },
         layers: {
           graph: {
@@ -119,7 +119,7 @@ export const CitationGraphStory: Story = {
                 shape: (n: GraphNode) => ({
                   kind: 'circle' as const,
                   // log scales 1 → 900 citations into ~3 → 11 px radius.
-                  radius: 3 + Math.log10((n.data as CitationsNodeData).citationsCount + 1) * 3,
+                  radius: 3 + Math.log10((n.data as CitationsNodeData).citationsCount + 1) * 3
                 }),
                 bgFill: (n: GraphNode) => TOPIC_FILL[(n.data as CitationsNodeData).topic],
                 labelText: (n: GraphNode) => (n.data as CitationsNodeData).title,
@@ -136,35 +136,35 @@ export const CitationGraphStory: Story = {
                 // Peripheral labels stay hidden until the viewer zooms in;
                 // high-priority (top-cited) labels push through
                 // `LabelCollisionBehaviour` and remain visible.
-                labelMinZoom: 0.6,
+                labelMinZoom: 0.6
               },
               state: {
                 hovered: {
                   bgStrokeColor: 0xfbbf24,
                   bgStrokeWidth: 2,
                   labelForceShow: true,
-                  labelFontSize: 12,
+                  labelFontSize: 12
                 },
                 selected: { bgStrokeColor: 0xffffff, bgStrokeWidth: 1.5, labelForceShow: true },
-                dimmed: { bgAlpha: 0.15 },
-              },
+                dimmed: { bgAlpha: 0.15 }
+              }
             },
             edge: {
               style: {
                 strokeColor: 0xcbd5e1,
                 strokeWidth: 0.6,
                 strokeAlpha: 0.25,
-                arrowTargetShape: 'none',
+                arrowTargetShape: 'none'
               },
               state: {
-                highlighted: { strokeColor: 0xfbbf24, strokeWidth: 1.2, strokeAlpha: 0.9 },
-              },
-            },
-          },
+                highlighted: { strokeColor: 0xfbbf24, strokeWidth: 1.2, strokeAlpha: 0.9 }
+              }
+            }
+          }
         },
         layouts: {
-          'graph-force': { link: { distance: 36 }, charge: { strength: -80 }, collide: { radius: 12 } },
-        },
+          'graph-force': { link: { distance: 36 }, charge: { strength: -80 }, collide: { radius: 12 } }
+        }
       }),
       // TOPIC_FILL is a render-local literal; the config closes over it once.
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -198,11 +198,11 @@ export const CitationGraphStory: Story = {
                     label: 'Switch to dark theme',
                     activeLabel: 'Switch to light theme',
                     active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme,
+                    onToggle: ctx.toggleTheme
                   },
                 ]}
               />
-            ),
+            )
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
           right={dock.region}
@@ -232,5 +232,5 @@ export const CitationGraphStory: Story = {
         </GraphCanvasApp>
       </ThemeProvider>
     );
-  },
+  }
 };

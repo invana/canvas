@@ -15,7 +15,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   CanvasPagesViewPanel,
   type CanvasPage,
-  type CanvasPageMenuItem,
+  type CanvasPageMenuItem
 } from '@invana/canvas-ui';
 import { Copy, Pencil, Trash2 } from 'lucide-react';
 import { ThemeProvider } from '@invana/themes';
@@ -74,7 +74,7 @@ function PageActionsDemo() {
   const pages: CanvasPage[] = items.map((x) => ({
     id: x.id,
     title: x.title,
-    content: <DemoBoard title={x.title} hue={x.hue} />,
+    content: <DemoBoard title={x.title} hue={x.hue} />
   }));
 
   const pageMenuItems: CanvasPageMenuItem[] = [
@@ -87,7 +87,7 @@ function PageActionsDemo() {
       destructive: true,
       separatorBefore: true,
       disabled: items.length <= 1,
-      onSelect: remove,
+      onSelect: remove
     },
   ];
 

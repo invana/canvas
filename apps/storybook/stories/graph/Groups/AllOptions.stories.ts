@@ -11,7 +11,7 @@ import {
   type GraphEdge,
   type GraphNode,
   type GroupOptions,
-  type NodeStyle,
+  type NodeStyle
 } from '@invana/graph';
 import type { ShapeLabelPlacement, TogglePlacement } from '@invana/canvas/specs';
 import { createContainer, onStoryTeardown } from '../../div-util';
@@ -108,7 +108,7 @@ export const AllOptionsStory: Story = {
       // ─── Behaviours ─────────────────────────────────────────────
       dragEnabled: true,
       collapseEnabled: true,
-      resizeEnabled: true,
+      resizeEnabled: true
     };
 
     const nodes: GraphNode[] = [
@@ -122,32 +122,32 @@ export const AllOptionsStory: Story = {
           bgStrokeWidth: settings.bgStrokeWidth,
           group: {
             autoFit: settings.autoFit,
-            padding: settings.padding,
+            padding: settings.padding
           },
           labelText: settings.labelText,
           labelColor: settings.labelColor,
           labelFontSize: settings.labelFontSize,
           labelFontWeight: settings.labelFontWeight,
-          labelPlacement: settings.labelPlacement,
-        },
+          labelPlacement: settings.labelPlacement
+        }
       },
       { type: 'node',
         id: 'node1',
         parentId: 'group-a',
         position: { x: -50, y: -30 },
-        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6, labelText: 'node1', labelPlacement: 'bottom', labelOffsetY: 6, labelColor: 0x334155, labelFontSize: 12 },
+        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6, labelText: 'node1', labelPlacement: 'bottom', labelOffsetY: 6, labelColor: 0x334155, labelFontSize: 12 }
       },
       { type: 'node',
         id: 'node2',
         parentId: 'group-a',
         position: { x: 50, y: -30 },
-        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6, labelText: 'node2', labelPlacement: 'bottom', labelOffsetY: 6, labelColor: 0x334155, labelFontSize: 12 },
+        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6, labelText: 'node2', labelPlacement: 'bottom', labelOffsetY: 6, labelColor: 0x334155, labelFontSize: 12 }
       },
       { type: 'node',
         id: 'node3',
         parentId: 'group-a',
         position: { x: 0, y: 70 },
-        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6, labelText: 'node3', labelPlacement: 'bottom', labelOffsetY: 6, labelColor: 0x334155, labelFontSize: 12 },
+        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6, labelText: 'node3', labelPlacement: 'bottom', labelOffsetY: 6, labelColor: 0x334155, labelFontSize: 12 }
       },
     ];
 
@@ -170,17 +170,17 @@ export const AllOptionsStory: Story = {
       // Skip dragging the expanded frame here — `NodeResize` and drag
       // would race for the same pointer-down otherwise. Toggle the
       // resize behaviour off in the GUI and you can drag the frame.
-      filter: (id) => graph.getGroupRole(id) !== 'expanded',
+      filter: (id) => graph.getGroupRole(id) !== 'expanded'
     });
     canvas.behaviours.register(dragBehaviour);
     const collapseBehaviour = new CollapseExpandBehaviour({
       id: 'collapse-expand',
-      targetLayerId: 'graph',
+      targetLayerId: 'graph'
     });
     canvas.behaviours.register(collapseBehaviour);
     const resizeBehaviour = new NodeResizeBehaviour({
       id: 'resize',
-      targetLayerId: 'graph',
+      targetLayerId: 'graph'
     });
     canvas.behaviours.register(resizeBehaviour);
 
@@ -192,8 +192,8 @@ export const AllOptionsStory: Story = {
         zoom: { enabled: true },
         drag: { enabled: settings.dragEnabled },
         'collapse-expand': { enabled: settings.collapseEnabled },
-        resize: { enabled: settings.resizeEnabled },
-      },
+        resize: { enabled: settings.resizeEnabled }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -214,7 +214,7 @@ export const AllOptionsStory: Story = {
         togglePlacement,
         ...(settings.shapeKind === 'rect'
           ? { width: settings.width, height: settings.height }
-          : { radius: settings.radius }),
+          : { radius: settings.radius })
       };
       const shape =
         settings.shapeKind === 'rect'
@@ -237,7 +237,7 @@ export const AllOptionsStory: Story = {
         labelFontWeight: settings.labelFontWeight,
         labelPlacement: settings.labelPlacement,
         labelOffsetX: settings.labelOffsetX,
-        labelOffsetY: settings.labelOffsetY,
+        labelOffsetY: settings.labelOffsetY
       };
     };
 
@@ -300,5 +300,5 @@ export const AllOptionsStory: Story = {
     // Apply once on load so any settings defaults that diverged from the
     // initial GraphNode declaration take effect immediately.
     apply();
-  },
+  }
 };

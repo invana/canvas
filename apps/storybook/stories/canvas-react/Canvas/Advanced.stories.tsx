@@ -8,7 +8,7 @@ import {
   HoverActivateBehaviour,
   ClickSelectBehaviour,
   DragNodeBehaviour,
-  type GraphLayerProps,
+  type GraphLayerProps
 } from '@invana/canvas-react';
 import type { GraphData } from '@invana/graph';
 import type { Meta, StoryObj } from '@storybook/react-vite';
@@ -56,7 +56,7 @@ const DATA: GraphData = {
     { id: 'e-2g', source: 'hub-2', target: 'g', type: 'LINK' },
     { id: 'e-2h', source: 'hub-2', target: 'h', type: 'LINK' },
     { id: 'e-bridge', source: 'hub-1', target: 'hub-2', type: 'NEXT' },
-  ],
+  ]
 };
 
 const NODE: GraphLayerProps['node'] = {
@@ -69,8 +69,8 @@ const NODE: GraphLayerProps['node'] = {
     labelColor: 0x1e293b,
     labelFontSize: 11,
     labelPlacement: 'bottom',
-    labelOffsetY: 6,
-  },
+    labelOffsetY: 6
+  }
 };
 const EDGE: GraphLayerProps['edge'] = { style: { strokeColor: 0x94a3b8, strokeWidth: 1.5 } };
 
@@ -98,5 +98,5 @@ export const Advanced: Story = {
         />
       </Canvas>
     </div>
-  ),
+  )
 };

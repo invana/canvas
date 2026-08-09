@@ -36,7 +36,7 @@ import {
   type CanvasStore,
   type CollectedSpan,
   type History,
-  type LayerFlush,
+  type LayerFlush
 } from '@invana/canvas-store';
 import { getCanvasTracer, telemetryInfo } from './otel';
 
@@ -332,7 +332,7 @@ function Playground(): ReactNode {
             kind: store.theme.current()?.kind === 'dark' ? 'light' : 'dark',
             name: 'forest',
             palette: { surface: 0x0b0f0a, foreground: 0xe6f0e6, accent: 0x66bb6a },
-            categorical: [0x2e7d32, 0x66bb6a],
+            categorical: [0x2e7d32, 0x66bb6a]
           })}>theme.set → theme:change</Btn>
         </Section>
       </div>
@@ -358,7 +358,7 @@ function Playground(): ReactNode {
                 nodes: graph.nodes(),
                 edges: graph.edges(),
                 groups: graph.groups(),
-                annotations: graph.annotations(),
+                annotations: graph.annotations()
               }}
             />
           </div>

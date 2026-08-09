@@ -28,10 +28,10 @@ export interface SpecProjectionTarget {
   readonly shapeKinds: ReadonlySet<string>;
   getShapeKind(id: string): string | undefined;
   hasConnector(id: string): boolean;
-  addShape(id: string, spec: BaseShapeSpec): void;
+  addShape<TSpec extends BaseShapeSpec>(id: string, spec: TSpec): void;
   updateShape<TSpec extends BaseShapeSpec>(id: string, patch: Partial<TSpec>): void;
   removeShape(id: string): void;
-  addConnector(id: string, spec: BaseConnectorSpec): void;
+  addConnector<TSpec extends BaseConnectorSpec>(id: string, spec: TSpec): void;
   updateConnector<TSpec extends BaseConnectorSpec>(id: string, patch: Partial<TSpec>): void;
   removeConnector(id: string): void;
 }

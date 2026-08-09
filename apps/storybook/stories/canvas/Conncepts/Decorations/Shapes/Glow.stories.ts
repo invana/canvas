@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, PrimitivesRenderer } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
+import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer,
+  type IElementRenderer
+} from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -20,10 +21,10 @@ export const Glow: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -72,7 +73,7 @@ export const Glow: Story = {
       innerAlpha: 0.55,
       pulseEnabled: true,
       periodMs: 1200,
-      amplitude: 0.5,
+      amplitude: 0.5
     };
 
     const applyFill = () => {
@@ -89,7 +90,7 @@ export const Glow: Story = {
         innerAlpha: settings.innerAlpha,
         ...(settings.pulseEnabled
           ? { pulse: { periodMs: settings.periodMs, amplitude: settings.amplitude } }
-          : {}),
+          : {})
       };
       for (const id of hostIds) {
         layer.renderer.setDecoration(id, 'glow', { kind: 'glow', style });
@@ -110,5 +111,5 @@ export const Glow: Story = {
     pulse.add(settings, 'amplitude', 0, 1, 0.05).onChange(apply);
 
     canvas.camera.fitContent(layer.getBounds(), 150);
-  },
+  }
 };

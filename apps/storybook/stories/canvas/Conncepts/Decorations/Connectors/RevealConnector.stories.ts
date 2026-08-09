@@ -4,10 +4,9 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
   arrowMarkerSpec,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -38,10 +37,10 @@ export const RevealConnectorStory: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -70,7 +69,7 @@ export const RevealConnectorStory: Story = {
     for (const n of nodes) {
       layer.renderer.addShape(n.id, {
         kind: 'circle', x: n.x, y: n.y, radius: 22,
-        fill: { kind: 'solid', color: n.color },
+        fill: { kind: 'solid', color: n.color }
       });
     }
 
@@ -85,7 +84,7 @@ export const RevealConnectorStory: Story = {
       source: { kind: 'shape', shapeId: 'a', anchor: 'boundary' },
       target: { kind: 'shape', shapeId: 'b', anchor: 'boundary' },
       stroke,
-      targetMarker: marker,
+      targetMarker: marker
     });
 
     layer.renderer.addConnector('c-d', {
@@ -96,7 +95,7 @@ export const RevealConnectorStory: Story = {
       source: { kind: 'shape', shapeId: 'c', anchor: 'boundary' },
       target: { kind: 'shape', shapeId: 'd', anchor: 'boundary' },
       stroke,
-      targetMarker: marker,
+      targetMarker: marker
     });
 
     // Orthogonal router needs a non-straight pair to demonstrate the L-shape;
@@ -109,7 +108,7 @@ export const RevealConnectorStory: Story = {
       source: { kind: 'shape', shapeId: 'e', anchor: 'boundary' },
       target: { kind: 'shape', shapeId: 'f', anchor: 'boundary' },
       stroke,
-      targetMarker: marker,
+      targetMarker: marker
     });
 
     // Smooth pathStyle interpolates a Catmull-Rom-style spline through
@@ -123,7 +122,7 @@ export const RevealConnectorStory: Story = {
       source: { kind: 'shape', shapeId: 'g', anchor: 'boundary' },
       target: { kind: 'shape', shapeId: 'h', anchor: 'boundary' },
       stroke,
-      targetMarker: marker,
+      targetMarker: marker
     });
 
     const connectorIds = ['a-b', 'c-d', 'e-f', 'g-h'];
@@ -137,7 +136,7 @@ export const RevealConnectorStory: Story = {
       hostStroke: 'hide' as 'hide' | 'overlay',
       holdAtFull: true,
       delayMs: 0,
-      replay: () => apply(),
+      replay: () => apply()
     };
 
     const apply = () => {
@@ -156,8 +155,8 @@ export const RevealConnectorStory: Story = {
           direction: settings.direction,
           hostStroke: settings.hostStroke,
           holdAtFull: settings.holdAtFull,
-          delayMs: settings.delayMs,
-        },
+          delayMs: settings.delayMs
+        }
       };
       // Detach + re-attach so the tween restarts from 0 on every change /
       // Replay click.
@@ -179,5 +178,5 @@ export const RevealConnectorStory: Story = {
     gui.add(settings, 'replay').name('▶ Replay');
 
     canvas.camera.fitContent(layer.getBounds(), 100);
-  },
+  }
 };

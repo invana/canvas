@@ -5,7 +5,7 @@ import {
   GraphCanvas,
   GraphLayer,
   type GraphEdge,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -42,8 +42,8 @@ export const OrthogonalLineStory: Story = {
         target: 'b',
         style: {
           shape: { pathType: 'orth' },
-          labelText: 'orth',
-        },
+          labelText: 'orth'
+        }
       },
     ];
 
@@ -53,7 +53,7 @@ export const OrthogonalLineStory: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes, edges } },
+      options: { initData: { nodes, edges } }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -69,8 +69,8 @@ export const OrthogonalLineStory: Story = {
               bgStrokeWidth: 1.5,
               labelFontSize: 12,
               labelFontWeight: 600,
-              labelColor: 0x0f172a,
-            },
+              labelColor: 0x0f172a
+            }
           },
           edge: {
             style: {
@@ -86,19 +86,19 @@ export const OrthogonalLineStory: Story = {
               labelBackgroundStrokeColor: 0xe2e8f0,
               labelBackgroundStrokeWidth: 1,
               labelBackgroundCornerRadius: 4,
-              labelBackgroundPadding: 4,
-            },
-          },
-        },
+              labelBackgroundPadding: 4
+            }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'drag-node': { enabled: true },
-      },
+        'drag-node': { enabled: true }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 100);
-  },
+  }
 };

@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas, DragPanBehaviour, DragShapeBehaviour, WheelZoomBehaviour,
-  WorldLayer, PrimitivesRenderer, arrowMarkerSpec,
+  WorldLayer, arrowMarkerSpec,
   LOOP_CURVE_PRESETS,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext, LoopCurvePresetName } from '@invana/canvas';
+import type { LoopCurvePresetName } from '@invana/canvas';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
 const meta: Meta = { title: 'canvas/concepts/Connectors/PathStyles/LoopCurve/Overview' };
@@ -47,10 +48,10 @@ export const Overview: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -68,7 +69,7 @@ export const Overview: Story = {
     canvas.behaviours.register(new DragShapeBehaviour({
       id: 'drag-shape',
       enabled: true,
-      renderer: layer.renderer,
+      renderer: layer.renderer
     }));
 
     const LOOP_STROKE = 0x94a3b8;
@@ -137,7 +138,7 @@ export const Overview: Story = {
         width: NODE_W,
         height: NODE_H,
         fill: { kind: 'solid', color: 0x4f7ff5 },
-        stroke: { color: 0x2563eb, width: 0 },
+        stroke: { color: 0x2563eb, width: 0 }
       });
 
       const preset = LOOP_CURVE_PRESETS[node.preset];
@@ -149,7 +150,7 @@ export const Overview: Story = {
           pathStyleOpts: {
             ...preset,
             angle: placement.angle,
-            pivotOffset: { dx: placement.dx, dy: placement.dy },
+            pivotOffset: { dx: placement.dx, dy: placement.dy }
           },
           source: { kind: 'shape', shapeId: node.id, anchor: 'center' },
           target: { kind: 'shape', shapeId: node.id, anchor: 'center' },
@@ -157,12 +158,12 @@ export const Overview: Story = {
           targetMarker: arrowMarkerSpec({
             lengthScale: 5,
             widthScale: 4,
-            fill: LOOP_STROKE,
-          }),
+            fill: LOOP_STROKE
+          })
         });
       }
     }
 
     canvas.camera.fitContent(layer.getBounds(), 80);
-  },
+  }
 };

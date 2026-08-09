@@ -34,9 +34,9 @@ export const Alignment: Story = {
             wrap: { maxWidth: 160, maxLines: 3, wordWrap: true, overflow: 'ellipsis' },
             background: { fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [6, 10] },
             placement: 'bottom',
-            offset: { y: 8 },
-          },
-        },
+            offset: { y: 8 }
+          }
+        }
       },
       { type: 'node',
         id: 'rect',
@@ -48,9 +48,9 @@ export const Alignment: Story = {
             wrap: { maxWidth: 160, maxLines: 3, wordWrap: true, overflow: 'ellipsis' },
             background: { fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [6, 10] },
             placement: 'bottom',
-            offset: { y: 8 },
-          },
-        },
+            offset: { y: 8 }
+          }
+        }
       },
       { type: 'node',
         id: 'arc',
@@ -62,9 +62,9 @@ export const Alignment: Story = {
             wrap: { maxWidth: 160, maxLines: 3, wordWrap: true, overflow: 'ellipsis' },
             background: { fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [6, 10] },
             placement: 'bottom',
-            offset: { y: 8 },
-          },
-        },
+            offset: { y: 8 }
+          }
+        }
       },
       { type: 'node',
         id: 'regular-polygon',
@@ -76,9 +76,9 @@ export const Alignment: Story = {
             wrap: { maxWidth: 160, maxLines: 3, wordWrap: true, overflow: 'ellipsis' },
             background: { fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [6, 10] },
             placement: 'bottom',
-            offset: { y: 8 },
-          },
-        },
+            offset: { y: 8 }
+          }
+        }
       },
       { type: 'node',
         id: 'star',
@@ -90,9 +90,9 @@ export const Alignment: Story = {
             wrap: { maxWidth: 160, maxLines: 3, wordWrap: true, overflow: 'ellipsis' },
             background: { fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [6, 10] },
             placement: 'bottom',
-            offset: { y: 8 },
-          },
-        },
+            offset: { y: 8 }
+          }
+        }
       },
       { type: 'node',
         id: 'polygon',
@@ -104,9 +104,9 @@ export const Alignment: Story = {
             wrap: { maxWidth: 160, maxLines: 3, wordWrap: true, overflow: 'ellipsis' },
             background: { fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [6, 10] },
             placement: 'bottom',
-            offset: { y: 8 },
-          },
-        },
+            offset: { y: 8 }
+          }
+        }
       },
     ];
 
@@ -121,9 +121,9 @@ export const Alignment: Story = {
 
     const canvasOptions = {
       layers: {
-        graph: { node: { style: { bgFill: 0xfb923c, bgStrokeColor: 0xea580c } } },
+        graph: { node: { style: { bgFill: 0xfb923c, bgStrokeColor: 0xea580c } } }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
@@ -138,13 +138,13 @@ export const Alignment: Story = {
         graph.store.updateNode(id, {
           style: {
             ...prev,
-            labelStyle: { ...prevLs, content: { ...prevLs.content, align: settings.align } },
-          },
+            labelStyle: { ...prevLs, content: { ...prevLs.content, align: settings.align } }
+          }
         });
       }
     };
     const gui = new GUI({ title: 'labelAlign' });
     onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'align', ['left', 'center', 'right']).onChange(apply);
-  },
+  }
 };

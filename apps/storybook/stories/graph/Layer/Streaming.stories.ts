@@ -58,10 +58,10 @@ export const Streaming: Story = {
             bgFill: (n: GraphNode) => {
               const group = (n.data as { group?: number } | undefined)?.group ?? 0;
               return palette[group % palette.length]!;
-            },
-          },
-        },
-      },
+            }
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -71,13 +71,13 @@ export const Streaming: Story = {
       layers: {
         graph: {
           node: { style: { shape: { kind: 'circle', radius: 7 }, bgStrokeColor: 0xffffff, bgStrokeWidth: 1 } },
-          edge: { style: { strokeColor: 0x9ca3af, strokeWidth: 1, arrowTargetShape: 'none' } },
-        },
+          edge: { style: { strokeColor: 0x9ca3af, strokeWidth: 1, arrowTargetShape: 'none' } }
+        }
       },
       behaviours: {
         pan: { enabled: true },
-        zoom: { enabled: true },
-      },
+        zoom: { enabled: true }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -89,7 +89,7 @@ export const Streaming: Story = {
     const randInt = (n: number): number => Math.floor(Math.random() * n);
     const randomPos = (): { x: number; y: number } => ({
       x: rand(-W / 2, W / 2),
-      y: rand(-H / 2, H / 2),
+      y: rand(-H / 2, H / 2)
     });
 
     // Monotonic id allocator — easier than UUIDs and reads cleanly in
@@ -107,7 +107,7 @@ export const Streaming: Story = {
         nodes.push({ type: 'node',
           id: nextNodeId(),
           position: randomPos(),
-          data: { group: randInt(palette.length) },
+          data: { group: randInt(palette.length) }
         });
       }
       const edges: GraphEdge[] = [];
@@ -117,7 +117,7 @@ export const Streaming: Story = {
         edges.push({ type: 'edge',
           id: nextEdgeId(),
           source: nodes[i]!.id,
-          target: nodes[randInt(i)]!.id,
+          target: nodes[randInt(i)]!.id
         });
       }
       // Destructive load is the layer-level convenience; everything else
@@ -158,7 +158,7 @@ export const Streaming: Story = {
           data: { group: randInt(palette.length) },
           ...(settings.includeState
             ? { states: [pick(canonicalStates)] }
-            : {}),
+            : {})
         });
       }
       const addedEdges: GraphEdge[] = [];
@@ -183,10 +183,10 @@ export const Streaming: Story = {
           patch: {
             position: {
               x: Math.max(-W / 2, Math.min(W / 2, cur.x + rand(-25, 25))),
-              y: Math.max(-H / 2, Math.min(H / 2, cur.y + rand(-25, 25))),
+              y: Math.max(-H / 2, Math.min(H / 2, cur.y + rand(-25, 25)))
             },
-            data: { group: randInt(palette.length) },
-          },
+            data: { group: randInt(palette.length) }
+          }
         });
       }
 
@@ -206,7 +206,7 @@ export const Streaming: Story = {
       graph.store.applyDelta({
         added: { nodes: addedNodes, edges: addedEdges },
         updated: { nodes: updatedNodes },
-        removed: { nodeIds: removedNodeIds, edgeIds: removedEdgeIds },
+        removed: { nodeIds: removedNodeIds, edgeIds: removedEdgeIds }
       });
 
       // Update live counters on the GUI (cheap — just text fields).
@@ -227,12 +227,12 @@ export const Streaming: Story = {
       running: true,
       // When on, each added node carries `state: [name]` — the renderer
       // paints the state automatically (no imperative setNodeState).
-      includeState: false,
+      includeState: false
     };
     const stats = {
       nodeCount: graph.store.nodeCount(),
       edgeCount: graph.store.edgeCount(),
-      storeVersion: graph.store.version,
+      storeVersion: graph.store.version
     };
 
     let timer: ReturnType<typeof setInterval> | null = null;
@@ -304,10 +304,10 @@ export const Streaming: Story = {
                 const group = (n.data as { group?: number } | undefined)?.group ?? 0;
                 const existing = (n.style as Record<string, unknown> | undefined) ?? {};
                 graph.store.updateNode(n.id, {
-                  style: { ...existing, bgFill: palette[group % palette.length]! },
+                  style: { ...existing, bgFill: palette[group % palette.length]! }
                 });
               }
-            }),
+            })
         },
         'byGroup',
       )
@@ -324,5 +324,5 @@ export const Streaming: Story = {
         'smallerNodes',
       )
       .name('size: 14');
-  },
+  }
 };

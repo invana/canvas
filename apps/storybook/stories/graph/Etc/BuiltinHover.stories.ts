@@ -46,8 +46,8 @@ export const BuiltinHoverStory: Story = {
           labelPlacement: 'bottom',
           labelFontSize: 12,
           labelFontWeight: 600,
-          labelOffsetY: 8,
-        },
+          labelOffsetY: 8
+        }
       },
       { type: 'node',
         id: 'hovered',
@@ -62,11 +62,11 @@ export const BuiltinHoverStory: Story = {
           labelPlacement: 'bottom',
           labelFontSize: 12,
           labelFontWeight: 600,
-          labelOffsetY: 8,
+          labelOffsetY: 8
         },
         // Activated via data-driven states (plural). The built-in `hovered`
         // config (strokeWidth: 3, stroke: 0xffffff) applies on top of `style`.
-        states: ['hovered'],
+        states: ['hovered']
       },
     ];
 
@@ -79,11 +79,11 @@ export const BuiltinHoverStory: Story = {
     const canvasOptions = {
       behaviours: {
         pan: { enabled: true },
-        zoom: { enabled: true },
-      },
+        zoom: { enabled: true }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

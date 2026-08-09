@@ -5,9 +5,8 @@ import {
   WheelZoomBehaviour,
   DragShapeBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
@@ -31,10 +30,10 @@ export const HtmlContentStory: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -52,7 +51,7 @@ export const HtmlContentStory: Story = {
 
     layer.renderer.addShape('host', {
       kind: 'circle', x: 0, y: 0, radius: 32,
-      fill: { kind: 'solid', color: 0x10b981 }, stroke: { color: 0x047857, width: 1 },
+      fill: { kind: 'solid', color: 0x10b981 }, stroke: { color: 0x047857, width: 1 }
     });
 
     const PRESETS = {
@@ -61,7 +60,7 @@ export const HtmlContentStory: Story = {
       'highlight phrase':
         'Status: <hl>Healthy</hl> — last seen 2s ago',
       'multi-line':
-        '<title>Server A</title><br/><meta>region: us-east-1</meta><br/><meta>uptime: 13d 4h</meta>',
+        '<title>Server A</title><br/><meta>region: us-east-1</meta><br/><meta>uptime: 13d 4h</meta>'
     } as const;
 
     type PresetKey = keyof typeof PRESETS;
@@ -72,7 +71,7 @@ export const HtmlContentStory: Story = {
       ver:   { fontSize: 10, fill: '#64748b', fontWeight: 400 },
       hl:    { fontSize: 12, fill: '#0f172a', fontWeight: 700 },
       title: { fontSize: 14, fill: '#0f172a', fontWeight: 700 },
-      meta:  { fontSize: 11, fill: '#64748b', fontWeight: 400 },
+      meta:  { fontSize: 11, fill: '#64748b', fontWeight: 400 }
     };
 
     const settings: {
@@ -92,7 +91,7 @@ export const HtmlContentStory: Story = {
       defaultFill: '#0f172a',
       defaultFontWeight: 400,
       width: 280,
-      background: true,
+      background: true
     };
 
     const apply = (): void => {
@@ -107,14 +106,14 @@ export const HtmlContentStory: Story = {
             defaultFill: settings.defaultFill,
             defaultFontWeight: settings.defaultFontWeight,
             width: settings.width,
-            tagStyles: TAG_STYLES,
+            tagStyles: TAG_STYLES
           },
           background: settings.background ? {
-            fill: 0xecfdf5, stroke: 0x10b981, strokeWidth: 1, radius: 6, padding: [6, 10],
+            fill: 0xecfdf5, stroke: 0x10b981, strokeWidth: 1, radius: 6, padding: [6, 10]
           } : undefined,
           placement: 'bottom',
-          offset: { y: 12 },
-        },
+          offset: { y: 12 }
+        }
       });
     };
     apply();
@@ -135,5 +134,5 @@ export const HtmlContentStory: Story = {
     gui.add(settings, 'defaultFontWeight', { regular: 400, semibold: 600, bold: 700 }).onChange(apply);
     gui.add(settings, 'width', 80, 480, 10).name('width (for wrap)').onChange(apply);
     gui.add(settings, 'background').onChange(apply);
-  },
+  }
 };

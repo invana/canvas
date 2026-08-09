@@ -5,9 +5,8 @@ import {
   WheelZoomBehaviour,
   DragShapeBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
@@ -29,10 +28,10 @@ export const Typography: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -50,7 +49,7 @@ export const Typography: Story = {
 
     layer.renderer.addShape('host', {
       kind: 'circle', x: 0, y: 0, radius: 28,
-      fill: { kind: 'solid', color: 0x4f9cf9 }, stroke: { color: 0x1d4ed8, width: 1 },
+      fill: { kind: 'solid', color: 0x4f9cf9 }, stroke: { color: 0x1d4ed8, width: 1 }
     });
 
     const settings = {
@@ -74,7 +73,7 @@ export const Typography: Story = {
       shadowBlur: 3,
       shadowOffsetX: 0,
       shadowOffsetY: 2,
-      shadowAlpha: 0.4,
+      shadowAlpha: 0.4
     };
 
     const apply = (): void => {
@@ -103,15 +102,15 @@ export const Typography: Story = {
                     blur: settings.shadowBlur,
                     offsetX: settings.shadowOffsetX,
                     offsetY: settings.shadowOffsetY,
-                    alpha: settings.shadowAlpha,
-                  },
+                    alpha: settings.shadowAlpha
+                  }
                 }
-              : {}),
+              : {})
           },
           wrap: { wordWrap: true, maxWidth: 280 },
           placement: 'bottom',
-          offset: { y: 12 },
-        },
+          offset: { y: 12 }
+        }
       });
     };
     apply();
@@ -141,5 +140,5 @@ export const Typography: Story = {
     sh.add(settings, 'shadowOffsetX', -10, 10, 1).name('offsetX').onChange(apply);
     sh.add(settings, 'shadowOffsetY', -10, 10, 1).name('offsetY').onChange(apply);
     sh.add(settings, 'shadowAlpha', 0, 1, 0.05).name('alpha').onChange(apply);
-  },
+  }
 };

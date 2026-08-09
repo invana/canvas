@@ -54,7 +54,7 @@ export const MaxCategoriesStory: Story = {
       enabled: true,
       nodeValueKey: 'data.group',
       colorEdges: false,
-      maxCategories: 4,
+      maxCategories: 4
     });
     canvas.behaviours.register(colorBy);
 
@@ -69,25 +69,25 @@ export const MaxCategoriesStory: Story = {
                 shape: { kind: 'circle', radius: 7 },
                 bgStrokeColor: 0xffffff,
                 bgStrokeWidth: 1.5,
-                showLabel: false,
-              },
+                showLabel: false
+              }
             },
             edge: {
               style: {
                 strokeColor: 0xcbd5e1,
                 strokeWidth: 1,
                 strokeAlpha: 0.5,
-                arrowTargetShape: 'none',
-              },
-            },
-          },
+                arrowTargetShape: 'none'
+              }
+            }
+          }
         },
         layouts: {
-          force: { charge: { strength: -220 }, link: { distance: 40 }, collide: { radius: 11 } },
+          force: { charge: { strength: -220 }, link: { distance: 40 }, collide: { radius: 11 } }
         },
         activeLayout: 'force',
-        fitOnLoad: true,
-      },
+        fitOnLoad: true
+      }
     });
 
     const o = colorBy.getResolvedOptions();
@@ -116,5 +116,5 @@ export const MaxCategoriesStory: Story = {
     const out = gui.addFolder('derived (read-only)');
     out.add(derived, 'assigned').name('categories assigned').listen().disable();
     out.add(derived, 'other').name('other (overflow)').listen().disable();
-  },
+  }
 };

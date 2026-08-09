@@ -34,11 +34,11 @@
 
 import { Behaviour, type BehaviourOptions } from './Behaviour';
 import type { CanvasContext } from '../context/CanvasContext';
-import type { PrimitivesRenderer } from '../primitives/PrimitivesRenderer';
+import type { IElementRenderer } from '../renderer/IElementRenderer';
 
 export interface DragShapeBehaviourOptions extends BehaviourOptions {
   /** The renderer whose shapes this behaviour can drag. */
-  readonly renderer: PrimitivesRenderer;
+  readonly renderer: IElementRenderer;
   /**
    * Optional predicate to restrict which shape ids are draggable. Returning
    * `false` ignores the pointerdown. Default = every shape is draggable.
@@ -68,7 +68,7 @@ export class DragShapeBehaviour extends Behaviour<DragShapeBehaviourOptions> {
 
   // The renderer is fixed at construction; the tuning knobs live-read from
   // `_options` (all consumed at event-time) so `setOptions` takes effect.
-  private get renderer(): PrimitivesRenderer { return this._options.renderer; }
+  private get renderer(): IElementRenderer { return this._options.renderer; }
   private get filter(): ((id: string) => boolean) | undefined { return this._options.filter; }
   private get reRouteConnectors(): boolean { return this._options.reRouteConnectors ?? true; }
   private get dragCursor(): string { return this._options.dragCursor ?? 'grabbing'; }

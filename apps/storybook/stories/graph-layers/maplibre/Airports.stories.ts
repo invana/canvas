@@ -24,13 +24,13 @@ import {
   GraphLayer,
   HoverActivateBehaviour,
   NodeScaleLODBehaviour,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { MapLayer } from '@invana/graph-layer-maplibre';
 import {
   DENSITY_CONTOUR_PALETTE_NAMES,
   DensityContourFillLayer,
-  type DensityContourPaletteName,
+  type DensityContourPaletteName
 } from '@invana/graph-layer-d3-contour';
 import { airports } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
@@ -50,7 +50,7 @@ export const Airports_Story: Story = {
       fill: 0xff6b35,
       stroke: 0xffffff,
       strokeWidth: 0.5,
-      alpha: 0.95,
+      alpha: 0.95
     } as const;
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-maplibre-airports')!;
@@ -65,8 +65,8 @@ export const Airports_Story: Story = {
       options: {
         styleUrl: 'https://tiles.openfreemap.org/styles/liberty',
         center: [0, 25],
-        zoom: 1.6,
-      },
+        zoom: 1.6
+      }
     });
     canvas.layers.add(map);
 
@@ -77,7 +77,7 @@ export const Airports_Story: Story = {
       return { type: 'node',
         id: `ap-${i}`,
         position: { x, y },
-        data: { name: a.name, lng: a.lng, lat: a.lat },
+        data: { name: a.name, lng: a.lng, lat: a.lat }
       };
     });
 
@@ -90,7 +90,7 @@ export const Airports_Story: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       zIndex: 10,
-      options: { initData: { nodes, edges: [] } },
+      options: { initData: { nodes, edges: [] } }
     });
     canvas.layers.add(graph);
 
@@ -103,7 +103,7 @@ export const Airports_Story: Story = {
       id: 'density',
       zIndex: 5,
       visible: false,
-      options: { graphLayerId: 'graph' },
+      options: { graphLayerId: 'graph' }
     });
     canvas.layers.add(contour);
 
@@ -123,9 +123,9 @@ export const Airports_Story: Story = {
         {
           targetLayerId: 'graph',
           sizePx: () => settings.targetNodePx,
-          strokeWidthPx: () => settings.targetStrokePx,
+          strokeWidthPx: () => settings.targetStrokePx
         },
-      ],
+      ]
     });
     canvas.behaviours.register(nodeScaleLOD);
 
@@ -144,7 +144,7 @@ export const Airports_Story: Story = {
               bgFill: NODE_DEFAULTS.fill,
               bgStrokeColor: NODE_DEFAULTS.stroke,
               bgStrokeWidth: NODE_DEFAULTS.strokeWidth,
-              bgAlpha: NODE_DEFAULTS.alpha,
+              bgAlpha: NODE_DEFAULTS.alpha
             },
             state: {
               // Hovered state palette — bright fill + ring on the hovered
@@ -153,11 +153,11 @@ export const Airports_Story: Story = {
                 bgFill: 0xfacc15,
                 bgStrokeColor: 0xfacc15,
                 bgStrokeWidth: 1.5,
-                shape: { kind: 'circle', radius: 3 },
+                shape: { kind: 'circle', radius: 3 }
               },
-              dimmed: { bgAlpha: 0.25 },
-            },
-          },
+              dimmed: { bgAlpha: 0.25 }
+            }
+          }
         },
         density: {
           // World coords are mercator pixels at zoom 0 — the whole world is
@@ -168,13 +168,13 @@ export const Airports_Story: Story = {
           cellSize: 2,
           padding: 40,
           fillOpacity: 0.55,
-          palette: 'inferno',
-        },
+          palette: 'inferno'
+        }
       },
       behaviours: {
         'node-scale-lod': { enabled: true },
-        hover: { enabled: true, state: 'hovered', inactiveState: 'dimmed' },
-      },
+        hover: { enabled: true, state: 'hovered', inactiveState: 'dimmed' }
+      }
     };
 
     await canvas.init({ container, autoResize: true, config: canvasOptions });
@@ -188,7 +188,7 @@ export const Airports_Story: Story = {
       'North America': { center: [-95, 40], zoom: 3 },
       Asia: { center: [105, 25], zoom: 3 },
       Africa: { center: [20, 0], zoom: 2.8 },
-      Australia: { center: [135, -25], zoom: 3.3 },
+      Australia: { center: [135, -25], zoom: 3.3 }
     };
 
     const settings = {
@@ -203,7 +203,7 @@ export const Airports_Story: Story = {
       densityBandwidth: 10,
       densityThresholds: 8,
       densityOpacity: 0.55,
-      densityPalette: 'inferno' as DensityContourPaletteName,
+      densityPalette: 'inferno' as DensityContourPaletteName
     };
 
     const gui = new GUI({ title: 'World Airports' });
@@ -221,7 +221,7 @@ export const Airports_Story: Story = {
         ...canvasOptions.layers.graph.node.style,
         shape: { kind: 'circle', radius: settings.nodeSize / 2 },
         bgFill: settings.nodeFill,
-        bgAlpha: settings.nodeAlpha,
+        bgAlpha: settings.nodeAlpha
       };
       canvas.update({ layers: { graph: { node: { style: canvasOptions.layers.graph.node.style } } } });
     };
@@ -295,5 +295,5 @@ export const Airports_Story: Story = {
       .onChange(rebuildContour);
 
     gui.add({ count: nodes.length }, 'count').name('Airports').disable();
-  },
+  }
 };

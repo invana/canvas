@@ -39,7 +39,7 @@ function ScrollableDemo() {
   const pages: CanvasPage[] = items.map((x) => ({
     id: x.id,
     title: x.title,
-    content: <DemoBoard title={x.title} hue={hueFor(Number(x.id))} />,
+    content: <DemoBoard title={x.title} hue={hueFor(Number(x.id))} />
   }));
 
   return (
@@ -62,5 +62,5 @@ function ScrollableDemo() {
 
 export const ScrollableWithPager: Story = {
   name: 'ScrollableWithPager',
-  render: () => <ScrollableDemo />,
+  render: () => <ScrollableDemo />
 };

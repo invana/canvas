@@ -3,7 +3,7 @@ import {
   BackgroundLayer,
   DevInfoLayer,
   DragPanBehaviour,
-  WheelZoomBehaviour,
+  WheelZoomBehaviour
 } from '@invana/canvas';
 import { GraphCanvas, GraphLayer, TextResolutionLODBehaviour, ThemeBehaviour } from '@invana/graph';
 import type { LayoutOptions, ShapeLabelStyle } from '@invana/canvas';
@@ -55,7 +55,7 @@ export const Sunburst: Story = {
       showLabels: true,
       labelMinArcPx: 14,
       labelFontSize: 10,
-      sharpLabelsOnZoom: true,
+      sharpLabelsOnZoom: true
     };
 
     // d3.schemeCategory10-ish palette. Top-level Flare branches get a stable
@@ -126,7 +126,7 @@ export const Sunburst: Story = {
         nodeMeta.set(n.id, {
           name: n.data.name,
           group: n.data.group,
-          depth: n.data.depth,
+          depth: n.data.depth
         });
       }
       return {
@@ -136,7 +136,7 @@ export const Sunburst: Story = {
           data: {
             // The layout reads `data.value` via its default value accessor —
             // only leaves carry one, inner nodes get summed by d3.hierarchy.
-            ...(n.data.value !== undefined ? { value: n.data.value } : {}),
+            ...(n.data.value !== undefined ? { value: n.data.value } : {})
           },
           style: {
             // Placeholder zero-size arc — D3HierarchyLayout('sunburst')
@@ -147,19 +147,19 @@ export const Sunburst: Story = {
               innerR: 0,
               outerR: 0,
               startAngle: 0,
-              endAngle: 0,
+              endAngle: 0
             },
             bgFill: fillFor(n.data.group, n.data.depth, maxDepth),
             bgStrokeColor: settings.strokeColor,
-            bgStrokeWidth: settings.strokeWidth,
-          },
+            bgStrokeWidth: settings.strokeWidth
+          }
         })),
         edges: data.edges.map((e) => ({
           id: e.id,
           type: 'edge',
           source: e.source,
-          target: e.target,
-        })),
+          target: e.target
+        }))
       };
     };
 
@@ -182,7 +182,7 @@ export const Sunburst: Story = {
       graph.store.batch(() => {
         for (const node of graph.store.nodes()) {
           const baseStyle = {
-            ...((node.style as Record<string, unknown> | undefined) ?? {}),
+            ...((node.style as Record<string, unknown> | undefined) ?? {})
           };
           delete (baseStyle as { labelStyle?: ShapeLabelStyle }).labelStyle;
 
@@ -212,11 +212,11 @@ export const Sunburst: Story = {
                   text: meta.name,
                   fontSize: settings.labelFontSize,
                   fontWeight: 500,
-                  fill: 0x0f172a,
+                  fill: 0x0f172a
                 },
                 placement: 'inside-center',
                 rotation,
-                minFontSize: 6,
+                minFontSize: 6
               };
               (baseStyle as { labelStyle?: ShapeLabelStyle }).labelStyle = labelStyle;
             }
@@ -239,7 +239,7 @@ export const Sunburst: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData },
+      options: { initData }
     });
 
     canvas.layers.add(
@@ -254,7 +254,7 @@ export const Sunburst: Story = {
 
     const labelResolutionLOD = new TextResolutionLODBehaviour({
       id: 'label-resolution',
-      targetLayerId: 'graph',
+      targetLayerId: 'graph'
     });
     canvas.behaviours.register(labelResolutionLOD);
 
@@ -275,8 +275,8 @@ export const Sunburst: Story = {
             style: {
               bgFill: 0xcccccc,
               bgStrokeColor: settings.strokeColor,
-              bgStrokeWidth: settings.strokeWidth,
-            },
+              bgStrokeWidth: settings.strokeWidth
+            }
           },
           // Hierarchy is conveyed by ring enclosure, not links. Edges are
           // required so the layout can derive the tree topology but stay
@@ -286,10 +286,10 @@ export const Sunburst: Story = {
               strokeColor: 0x000000,
               strokeWidth: 0,
               strokeAlpha: 0,
-              arrowTargetShape: 'none',
-            },
-          },
-        },
+              arrowTargetShape: 'none'
+            }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
@@ -298,9 +298,9 @@ export const Sunburst: Story = {
           enabled: true,
           mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#0f172a' },
-          dark: { backgroundColor: '#0b1220', color: '#e5e7eb' },
+          dark: { backgroundColor: '#0b1220', color: '#e5e7eb' }
         },
-        'label-resolution': { enabled: settings.sharpLabelsOnZoom },
+        'label-resolution': { enabled: settings.sharpLabelsOnZoom }
       },
       layouts: {
         sunburst: {
@@ -308,9 +308,9 @@ export const Sunburst: Story = {
           radius: settings.radius,
           // Default value accessor reads `data.value`; default sort is
           // descending by value. Both match d3's example.
-        },
+        }
       },
-      activeLayout: 'sunburst',
+      activeLayout: 'sunburst'
     };
 
     // Once the active layout resolves the arc geometry, attach labels and
@@ -353,5 +353,5 @@ export const Sunburst: Story = {
       .onChange((on: boolean) => (on ? labelResolutionLOD.enable() : labelResolutionLOD.disable()));
 
     gui.add({ refit: () => canvas.camera.fitContent(graph.getBounds(), 40) }, 'refit').name('Re-fit camera');
-  },
+  }
 };

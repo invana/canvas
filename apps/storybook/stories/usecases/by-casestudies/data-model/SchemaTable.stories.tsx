@@ -44,7 +44,7 @@ import {
   SchemaEditorPanel,
   ToolbarItems,
   useSidePanels,
-  type NodeSchema,
+  type NodeSchema
 } from '@invana/canvas-ui';
 import type { CanvasConfig, CompositePart } from '@invana/canvas';
 import type {
@@ -52,7 +52,7 @@ import type {
   GraphCanvas,
   GraphData,
   GraphLayer,
-  GraphNode,
+  GraphNode
 } from '@invana/graph';
 import type { ElkDirection } from '@invana/graph-layout-elkjs';
 import { starSchema } from '@invana/graph-datasets/usecase-demos';
@@ -104,7 +104,7 @@ export const SchemaTableStory: Story = {
           label: 'Settings',
           render: (c) => (
             <CanvasSettingsEditorPanel canvas={c} className="border-0 bg-transparent shadow-none" />
-          ),
+          )
         },
       ],
       { section: { defaultSize: '360px', maxSize: '460px' } },
@@ -118,9 +118,9 @@ export const SchemaTableStory: Story = {
       () => ({
         nodes: starSchema.nodes.map((n) => ({
           ...n,
-          data: { ...n.data, fields: n.data.fields.map((f) => ({ ...f })) } satisfies TableData,
+          data: { ...n.data, fields: n.data.fields.map((f) => ({ ...f })) } satisfies TableData
         })),
-        edges: starSchema.edges,
+        edges: starSchema.edges
       }),
       [],
     );
@@ -193,7 +193,7 @@ export const SchemaTableStory: Story = {
         integer: { char: '123', color: 0x22c55e },
         number: { char: '#', color: 0x22c55e },
         date: { char: '◷', color: 0xf59e0b },
-        boolean: { char: '01', color: 0xa855f7 },
+        boolean: { char: '01', color: 0xa855f7 }
       };
       const chipFor = (t: string) => TYPE_CHIP[t.toLowerCase()] ?? { char: '•', color: 0x64748b };
 
@@ -225,7 +225,7 @@ export const SchemaTableStory: Story = {
           x: PAD,
           y: (HEADER_H - iconBox) / 2,
           size: iconBox,
-          icon: { kind: 'svg-url', url: `https://api.iconify.design/${d.icon}.svg`, color: 0xffffff, strokeWidth: 2 },
+          icon: { kind: 'svg-url', url: `https://api.iconify.design/${d.icon}.svg`, color: 0xffffff, strokeWidth: 2 }
         });
 
         // Header title.
@@ -240,7 +240,7 @@ export const SchemaTableStory: Story = {
           fill: 0xffffff,
           maxWidth: WIDTH - titleX - PAD,
           maxLines: 1,
-          overflow: 'ellipsis',
+          overflow: 'ellipsis'
         });
 
         // One row per field: a full-width `rect` with a `hitId` (the addressable
@@ -258,7 +258,7 @@ export const SchemaTableStory: Story = {
             cornerRadius: 4,
             fill: 0xffffff,
             fillAlpha: i === activeRow ? 0.13 : 0,
-            hitId: String(i),
+            hitId: String(i)
           });
 
           const chipBox = 16;
@@ -273,7 +273,7 @@ export const SchemaTableStory: Story = {
             anchor: 'center',
             fontSize: 8,
             fontWeight: 700,
-            fill: 0xffffff,
+            fill: 0xffffff
           });
 
           const nameX = PAD + chipBox + 8;
@@ -286,7 +286,7 @@ export const SchemaTableStory: Story = {
             fill: NAME_COLOR,
             maxWidth: WIDTH - nameX - PAD - TYPE_W,
             maxLines: 1,
-            overflow: 'ellipsis',
+            overflow: 'ellipsis'
           });
 
           // Data type on the right (e.g. `integer`, `string`).
@@ -300,7 +300,7 @@ export const SchemaTableStory: Story = {
             fill: TYPE_COLOR,
             maxWidth: TYPE_W,
             maxLines: 1,
-            overflow: 'ellipsis',
+            overflow: 'ellipsis'
           });
         });
 
@@ -311,7 +311,7 @@ export const SchemaTableStory: Story = {
           cornerRadius: RADIUS,
           fill: BODY_BG,
           stroke: { color: 0x334155, width: 1 },
-          parts,
+          parts
         };
       };
 
@@ -323,7 +323,7 @@ export const SchemaTableStory: Story = {
           color: { enabled: false },
           hover: { enabled: true },
           'drag-node': { enabled: true },
-          'label-lod': { enabled: true },
+          'label-lod': { enabled: true }
         },
         layers: {
           background: { type: 'pattern', patternType: 'dots', size: 1.5, spacing: 24, alpha: 0.85 },
@@ -331,7 +331,7 @@ export const SchemaTableStory: Story = {
             node: {
               // `bgStrokeWidth: 0` stops the base node border from framing the
               // card — the composite carries its own stroke.
-              style: { shape: buildTable, bgStrokeWidth: 0 },
+              style: { shape: buildTable, bgStrokeWidth: 0 }
             },
             edge: {
               style: {
@@ -339,14 +339,14 @@ export const SchemaTableStory: Story = {
                 strokeWidth: 1.4,
                 strokeDashArray: [5, 4],
                 arrowTargetShape: 'none',
-                shape: { pathType: 'orth' },
-              },
-            },
-          },
+                shape: { pathType: 'orth' }
+              }
+            }
+          }
         },
         layouts: {
-          layout: { algorithm: 'layered', direction, nodeSpacing: 60, layerSpacing: 140, padding: 40 },
-        },
+          layout: { algorithm: 'layered', direction, nodeSpacing: 60, layerSpacing: 140, padding: 40 }
+        }
       };
       // `hoverRow` is a stable ref the resolver reads at draw time.
     }, [direction]);
@@ -369,7 +369,7 @@ export const SchemaTableStory: Story = {
                   return {
                     label: d.name,
                     headerColor: d.headerColor,
-                    fields: d.fields.map((f) => ({ name: f.name, type: f.type })),
+                    fields: d.fields.map((f) => ({ name: f.name, type: f.type }))
                   };
                 })()}
                 onSubmit={(s) => {
@@ -378,7 +378,7 @@ export const SchemaTableStory: Story = {
                   patchData(editing, {
                     name: s.label || cur.name,
                     headerColor: s.headerColor ?? cur.headerColor,
-                    fields: s.fields.length ? s.fields : cur.fields,
+                    fields: s.fields.length ? s.fields : cur.fields
                   });
                   setEditing(null);
                 }}
@@ -386,7 +386,7 @@ export const SchemaTableStory: Story = {
             </PanelContent>
           ),
           defaultSize: '340px',
-          maxSize: '460px',
+          maxSize: '460px'
         }
       : dock.region;
 
@@ -409,7 +409,7 @@ export const SchemaTableStory: Story = {
                     label: 'Direction',
                     value: direction,
                     options: { RIGHT: 'Right', DOWN: 'Down', LEFT: 'Left', UP: 'Up' },
-                    onChange: (v) => setDirection(v as ElkDirection),
+                    onChange: (v) => setDirection(v as ElkDirection)
                   },
                   ...dock.items,
                   {
@@ -420,11 +420,11 @@ export const SchemaTableStory: Story = {
                     label: 'Switch to dark theme',
                     activeLabel: 'Switch to light theme',
                     active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme,
+                    onToggle: ctx.toggleTheme
                   },
                 ]}
               />
-            ),
+            )
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
           right={rightRegion}
@@ -446,7 +446,7 @@ export const SchemaTableStory: Story = {
                   setFieldMenu(null);
                   setEditing(id);
                   close();
-                },
+                }
               },
               {
                 id: 'add-field',
@@ -454,7 +454,7 @@ export const SchemaTableStory: Story = {
                 onClick: () => {
                   patchData(id, { fields: [...fieldsOf(id), { name: 'new_field', type: 'string' }] });
                   close();
-                },
+                }
               },
             ]}
           />
@@ -492,7 +492,7 @@ export const SchemaTableStory: Story = {
                   className="text-destructive w-full justify-start"
                   onClick={() => {
                     patchData(fieldMenu.nodeId, {
-                      fields: fieldsOf(fieldMenu.nodeId).filter((_, j) => j !== fieldMenu.field),
+                      fields: fieldsOf(fieldMenu.nodeId).filter((_, j) => j !== fieldMenu.field)
                     });
                     setFieldMenu(null);
                   }}
@@ -516,5 +516,5 @@ export const SchemaTableStory: Story = {
         </GraphCanvasApp>
       </ThemeProvider>
     );
-  },
+  }
 };

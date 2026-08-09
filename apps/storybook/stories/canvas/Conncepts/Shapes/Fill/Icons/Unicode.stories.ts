@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas,
   DragPanBehaviour,
-  PrimitivesRenderer,
   WheelZoomBehaviour,
   WorldLayer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext, ShapeFillLayer } from '@invana/canvas';
+import type { ShapeFillLayer } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
@@ -39,13 +39,10 @@ export const Unicode: Story = {
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({
-          container: this.container,
-          camera: ctx.camera,
-        });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -63,7 +60,7 @@ export const Unicode: Story = {
         char: settings.char,
         fontFamily: 'sans-serif',
         color: 0xfbbf24,
-        sizeRatio: 0.55,
+        sizeRatio: 0.55
       },
     ];
 
@@ -75,7 +72,7 @@ export const Unicode: Story = {
       height: 80,
       cornerRadius: 12,
       fill: buildFill(),
-      stroke: { color: 0x111827, width: 1 },
+      stroke: { color: 0x111827, width: 1 }
     });
 
     canvas.camera.fitContent(layer.getBounds(), 100);
@@ -86,5 +83,5 @@ export const Unicode: Story = {
     gui.add(settings, 'char', chars).onChange(() => {
       layer.renderer.updateShape('unicode', { fill: buildFill() });
     });
-  },
+  }
 };

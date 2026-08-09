@@ -18,7 +18,7 @@ import {
   TextResolutionLODBehaviour,
   userCard,
   type GraphNode,
-  type UserCardData,
+  type UserCardData
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -53,5 +53,5 @@ export const UserCard: Story = {
     await canvas.init({ container, autoResize: true });
     const graph = canvas.layers.get('graph') as GraphLayer;
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

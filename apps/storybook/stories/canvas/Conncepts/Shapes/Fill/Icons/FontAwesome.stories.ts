@@ -3,11 +3,11 @@ import {
   Canvas,
   DragPanBehaviour,
   loadIconFont,
-  PrimitivesRenderer,
   WheelZoomBehaviour,
   WorldLayer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext, ShapeFillLayer } from '@invana/canvas';
+import type { ShapeFillLayer } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
@@ -43,7 +43,7 @@ export const FontAwesomeStory: Story = {
       'fa-star':     '\uf005',
       'fa-bell':     '\uf0f3',
       'fa-gear':     '\uf013',
-      'fa-bolt':     '\uf0e7',
+      'fa-bolt':     '\uf0e7'
     };
     const FONT_FAMILY = 'Font Awesome 6 Free';
     const FONT_WEIGHT = 900;
@@ -67,13 +67,10 @@ export const FontAwesomeStory: Story = {
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({
-          container: this.container,
-          camera: ctx.camera,
-        });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -92,7 +89,7 @@ export const FontAwesomeStory: Story = {
         fontFamily: FONT_FAMILY,
         fontWeight: FONT_WEIGHT,
         color: 0xffffff,
-        sizeRatio: 0.55,
+        sizeRatio: 0.55
       },
     ];
 
@@ -102,7 +99,7 @@ export const FontAwesomeStory: Story = {
       y: 0,
       radius: 40,
       fill: buildFill(),
-      stroke: { color: 0x111827, width: 1 },
+      stroke: { color: 0x111827, width: 1 }
     });
 
     canvas.camera.fitContent(layer.getBounds(), 100);
@@ -113,5 +110,5 @@ export const FontAwesomeStory: Story = {
     gui.add(settings, 'icon', Object.keys(fa)).onChange(() => {
       layer.renderer.updateShape('fa', { fill: buildFill() });
     });
-  },
+  }
 };

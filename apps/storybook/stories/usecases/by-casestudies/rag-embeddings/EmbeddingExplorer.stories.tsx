@@ -27,12 +27,12 @@ import {
   GraphControlsToolbar,
   GraphStatusBar,
   ToolbarItems,
-  useSidePanels,
+  useSidePanels
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData, GraphNode } from '@invana/graph';
 import {
-  ragEmbeddings,
+  ragEmbeddings
 } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider } from '@invana/themes';
 import { Map, Moon, Settings, Sun } from 'lucide-react';
@@ -75,7 +75,7 @@ export const EmbeddingExplorerStory: Story = {
           label: 'Settings',
           render: (canvas) => (
             <CanvasSettingsEditorPanel canvas={canvas} className="border-0 bg-transparent shadow-none" />
-          ),
+          )
         },
       ],
       { section: { defaultSize: '360px', maxSize: '460px' } },
@@ -90,9 +90,9 @@ export const EmbeddingExplorerStory: Story = {
           id: p.id,
           type: p.data.cluster,
           position: p.position,
-          data: p.data,
+          data: p.data
         })),
-        edges: [],
+        edges: []
       }),
       [],
     );
@@ -109,7 +109,7 @@ export const EmbeddingExplorerStory: Story = {
           'click-select': { enabled: true, multiple: true, trigger: ['shift'], clearOnBackground: true },
           // Armed from the header's select-mode picker; hands its picked ids to
           // the click-select behaviour by sharing the `selected` state name.
-          'lasso-select': { enabled: false, clickSelectId: 'click-select', immediately: false },
+          'lasso-select': { enabled: false, clickSelectId: 'click-select', immediately: false }
         },
         layers: {
           graph: {
@@ -129,7 +129,7 @@ export const EmbeddingExplorerStory: Story = {
                 labelBackgroundCornerRadius: 3,
                 // Labels stay hidden until the viewer zooms in; the hover /
                 // selected states force them on regardless.
-                labelMinZoom: 1.5,
+                labelMinZoom: 1.5
               },
               state: {
                 hovered: {
@@ -139,20 +139,20 @@ export const EmbeddingExplorerStory: Story = {
                   // Hover swaps the clipped snippet for the whole chunk.
                   labelText: (n: GraphNode) => (n.data as RagEmbeddingsNodeData).text,
                   labelFontSize: 11,
-                  labelForceShow: true,
+                  labelForceShow: true
                 },
                 selected: {
                   shape: { kind: 'circle', radius: 5 },
                   bgStrokeColor: 0xffffff,
                   bgStrokeWidth: 1.5,
-                  labelForceShow: true,
+                  labelForceShow: true
                 },
-                dimmed: { bgAlpha: 0.15 },
-              },
-            },
+                dimmed: { bgAlpha: 0.15 }
+              }
+            }
           },
-          minimap: { position: 'bottom-right', width: 220, height: 160 },
-        },
+          minimap: { position: 'bottom-right', width: 220, height: 160 }
+        }
       }),
       // CLUSTER_FILL / truncate are render-local; the config closes over them once.
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -189,7 +189,7 @@ export const EmbeddingExplorerStory: Story = {
                     label: 'Minimap: off',
                     activeLabel: 'Minimap: on',
                     active: minimapOn,
-                    onToggle: () => setMinimapOn((v) => !v),
+                    onToggle: () => setMinimapOn((v) => !v)
                   },
                   ...dock.items,
                   {
@@ -200,11 +200,11 @@ export const EmbeddingExplorerStory: Story = {
                     label: 'Switch to dark theme',
                     activeLabel: 'Switch to light theme',
                     active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme,
+                    onToggle: ctx.toggleTheme
                   },
                 ]}
               />
-            ),
+            )
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
           right={dock.region}
@@ -226,5 +226,5 @@ export const EmbeddingExplorerStory: Story = {
         </GraphCanvasApp>
       </ThemeProvider>
     );
-  },
+  }
 };

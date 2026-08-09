@@ -5,7 +5,7 @@ import {
   GraphCanvas,
   GraphLayer,
   type GraphEdge,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
@@ -46,14 +46,14 @@ export const PathOffsetStory: Story = {
           labelColor: 0x0f172a,
           labelFontSize: 11,
           labelPlacement: 'left',
-          labelOffsetX: -10,
-        },
+          labelOffsetX: -10
+        }
       },
       {
         id: `tgt-${i}`,
         type: 'node',
         position: { x: 260, y: (i - 1) * 110 },
-        style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x34d399 },
+        style: { shape: { kind: 'circle', radius: 14 }, bgFill: 0x34d399 }
       },
     ]);
 
@@ -74,10 +74,10 @@ export const PathOffsetStory: Story = {
             strokeWidth: 1.5,
             labelText: `${offset > 0 ? '+' : ''}${offset}`,
             labelColor: 0xffffff,
-            labelFontSize: 11,
+            labelFontSize: 11
           },
-        ],
-      },
+        ]
+      }
     }));
 
     // Fourth edge driven live by the GUI for a sweep demo.
@@ -100,10 +100,10 @@ export const PathOffsetStory: Story = {
             shape: { kind: 'circle', radius: 10 },
             fill: 0xfacc15,
             strokeColor: 0x0f172a,
-            strokeWidth: 1.5,
+            strokeWidth: 1.5
           },
-        ],
-      },
+        ]
+      }
     });
 
     const container = canvasElement.querySelector<HTMLDivElement>(
@@ -122,14 +122,14 @@ export const PathOffsetStory: Story = {
     const canvasOptions = {
       layers: {
         graph: {
-          edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 1.5, arrowTargetShape: 'none' } },
-        },
+          edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 1.5, arrowTargetShape: 'none' } }
+        }
       },
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'drag-node': { enabled: true },
-      },
+        'drag-node': { enabled: true }
+      }
     };
 
     await canvas.init({ container, autoResize: true, config: canvasOptions });
@@ -147,15 +147,15 @@ export const PathOffsetStory: Story = {
               shape: { kind: 'circle', radius: 10 },
               fill: 0xfacc15,
               strokeColor: 0x0f172a,
-              strokeWidth: 1.5,
+              strokeWidth: 1.5
             },
-          ],
-        },
+          ]
+        }
       });
     };
 
     const gui = new GUI({ title: 'pathOffset live sweep' });
     onStoryTeardown(() => gui.destroy());
     gui.add(liveOffset, 'value', -200, 200, 1).name('pathOffset (px)').onChange(apply);
-  },
+  }
 };

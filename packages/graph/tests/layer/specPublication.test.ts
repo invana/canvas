@@ -6,14 +6,13 @@
  * and project rather than being pushed at. These tests pin the contract that
  * makes that possible — specs land, deltas report, and removals clean up.
  *
- * Headless: `Canvas.initWithStage` skips the pixi `Application`, so this runs
+ * Headless: `Canvas.initWithRenderer` with the shipped `HeadlessRenderer`, so this runs
  * with no GPU and no DOM beyond the text-metrics stub below.
  *
  * See `docs/renderer-split-design.md` §2 and §4.2b.
  */
 import { beforeAll, describe, expect, it } from 'vitest';
-import { Container } from 'pixi.js';
-import { Canvas } from '@invana/canvas';
+import { Canvas , HeadlessRenderer } from '@invana/canvas';
 import { GraphLayer } from '../../src/layer/GraphLayer';
 
 /**
@@ -46,7 +45,7 @@ beforeAll(() => {
 
 function mountGraph(): { canvas: Canvas; layer: GraphLayer } {
   const canvas = new Canvas();
-  canvas.initWithStage(new Container(), 800, 600);
+  canvas.initWithRenderer(new HeadlessRenderer(), 800, 600);
   const layer = new GraphLayer({ id: 'graph', options: {} });
   canvas.layers.add(layer);
   canvas.layers.mountAll();

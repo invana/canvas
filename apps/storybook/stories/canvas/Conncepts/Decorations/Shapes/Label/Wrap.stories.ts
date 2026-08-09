@@ -5,9 +5,8 @@ import {
   WheelZoomBehaviour,
   DragShapeBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
@@ -36,10 +35,10 @@ export const Wrap: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -59,7 +58,7 @@ export const Wrap: Story = {
     // grow vertically without being clipped by the host edges.
     layer.renderer.addShape('host', {
       kind: 'circle', x: 0, y: 0, radius: 36,
-      fill: { kind: 'solid', color: 0x4f9cf9 }, stroke: { color: 0x1d4ed8, width: 1 },
+      fill: { kind: 'solid', color: 0x4f9cf9 }, stroke: { color: 0x1d4ed8, width: 1 }
     });
 
     const settings = {
@@ -70,7 +69,7 @@ export const Wrap: Story = {
       wordWrap: true,
       overflow: 'ellipsis' as 'clip' | 'ellipsis',
       fontSize: 13,
-      lineHeight: 0,
+      lineHeight: 0
     };
 
     const apply = (): void => {
@@ -83,21 +82,21 @@ export const Wrap: Story = {
             fontSize: settings.fontSize,
             fontWeight: 500,
             fill: 0x0f172a,
-            ...(settings.lineHeight > 0 ? { lineHeight: settings.lineHeight } : {}),
+            ...(settings.lineHeight > 0 ? { lineHeight: settings.lineHeight } : {})
           },
           background: {
-            fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 6, padding: [6, 10],
+            fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 6, padding: [6, 10]
           },
           wrap: {
             ...(settings.maxWidth  > 0 ? { maxWidth:  settings.maxWidth  } : {}),
             ...(settings.maxHeight > 0 ? { maxHeight: settings.maxHeight } : {}),
             ...(settings.maxLines  > 0 ? { maxLines:  settings.maxLines  } : {}),
             wordWrap: settings.wordWrap,
-            overflow: settings.overflow,
+            overflow: settings.overflow
           },
           placement: 'bottom',
-          offset: { y: 12 },
-        },
+          offset: { y: 12 }
+        }
       });
     };
     apply();
@@ -115,5 +114,5 @@ export const Wrap: Story = {
     wr.add(settings, 'maxLines',  1,   6,  1).onChange(apply);
     wr.add(settings, 'wordWrap').onChange(apply);
     wr.add(settings, 'overflow', ['clip', 'ellipsis']).onChange(apply);
-  },
+  }
 };

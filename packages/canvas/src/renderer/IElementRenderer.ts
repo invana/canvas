@@ -24,7 +24,7 @@
 
 import type { Point, Rect } from '../specs/geometry';
 import type { BaseConnectorSpec, BaseShapeSpec } from '../specs';
-import type { DecorationSpec } from '../specs/decoration';
+import type { DecorationSpec, EffectSpec } from '../specs/decoration';
 import type { LabelContent, LabelWrap } from '../specs/label';
 import type { BadgeOptions } from '../specs/badge';
 import type { HitResult } from '../specs/hit';
@@ -97,6 +97,16 @@ export interface IElementRenderer extends SpecProjectionTarget {
   setDecorationVisible(targetId: string, slot: string, visible: boolean): void;
   getDecorationWorldBounds(targetId: string, slot: string): Rect | null;
   setBadge(hostId: string, slot: string, options: BadgeOptions): void;
+  /**
+   * Attach / replace / clear an effect. Sibling of {@link setDecoration}: a
+   * decoration adds geometry beside the host, an effect modulates the host
+   * itself (transform delta or style override).
+   */
+  setEffect<TStyle = unknown>(
+    targetId: string,
+    slot: string,
+    effect: EffectSpec<TStyle> | null,
+  ): void;
   removeBadge(hostId: string, slot: string): void;
 
   // ─── Geometry answers ──────────────────────────────────────────────────

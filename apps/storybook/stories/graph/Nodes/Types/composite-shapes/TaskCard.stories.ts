@@ -17,7 +17,7 @@ import {
   TextResolutionLODBehaviour,
   taskCard,
   type GraphNode,
-  type TaskCardData,
+  type TaskCardData
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -52,5 +52,5 @@ export const TaskCard: Story = {
     await canvas.init({ container, autoResize: true });
     const graph = canvas.layers.get('graph') as GraphLayer;
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

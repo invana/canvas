@@ -55,7 +55,7 @@ export const PerKindDomainsStory: Story = {
     const nodes = lesMiserables.nodes.map((n) => ({
       id: n.id,
       type: `group-${n.data.group}`,
-      data: { group: n.data.group, scenes: scenes.get(n.id) ?? 0 },
+      data: { group: n.data.group, scenes: scenes.get(n.id) ?? 0 }
     }));
 
     const canvas = new GraphCanvas();
@@ -79,7 +79,7 @@ export const PerKindDomainsStory: Story = {
       nodeValueKey: 'data.scenes',
       nodeDomain: [1, 158],
       edgeValueKey: 'data.value',
-      edgeDomain: [1, 12],
+      edgeDomain: [1, 12]
     });
     canvas.behaviours.register(colorBy);
 
@@ -94,20 +94,20 @@ export const PerKindDomainsStory: Story = {
                 shape: { kind: 'circle', radius: 7 },
                 bgStrokeColor: 0xffffff,
                 bgStrokeWidth: 1.5,
-                showLabel: false,
-              },
+                showLabel: false
+              }
             },
             // Thicker and fully opaque here — the edges carry data in this story
             // rather than just joining dots, so they have to be readable.
-            edge: { style: { strokeWidth: 1.6, strokeAlpha: 1, arrowTargetShape: 'none' } },
-          },
+            edge: { style: { strokeWidth: 1.6, strokeAlpha: 1, arrowTargetShape: 'none' } }
+          }
         },
         layouts: {
-          force: { charge: { strength: -220 }, link: { distance: 40 }, collide: { radius: 11 } },
+          force: { charge: { strength: -220 }, link: { distance: 40 }, collide: { radius: 11 } }
         },
         activeLayout: 'force',
-        fitOnLoad: true,
-      },
+        fitOnLoad: true
+      }
     });
 
     const o = colorBy.getResolvedOptions();
@@ -116,7 +116,7 @@ export const PerKindDomainsStory: Story = {
       nodeDomainMax: o.nodeDomain?.[1] ?? 158,
       edgeValueKey: o.edgeValueKey,
       edgeDomainMax: o.edgeDomain?.[1] ?? 12,
-      colorEdges: o.colorEdges,
+      colorEdges: o.colorEdges
     };
     const derived = { node: '', edge: '' };
     const refresh = (): void => {
@@ -130,7 +130,7 @@ export const PerKindDomainsStory: Story = {
         nodeDomain: [1, settings.nodeDomainMax],
         edgeValueKey: settings.edgeValueKey,
         edgeDomain: [1, settings.edgeDomainMax],
-        colorEdges: settings.colorEdges,
+        colorEdges: settings.colorEdges
       });
       refresh();
     };
@@ -148,5 +148,5 @@ export const PerKindDomainsStory: Story = {
     const out = gui.addFolder('derived (read-only)');
     out.add(derived, 'node').name('node domain in use').listen().disable();
     out.add(derived, 'edge').name('edge domain in use').listen().disable();
-  },
+  }
 };

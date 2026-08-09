@@ -82,7 +82,7 @@ export const AllShapesStory: Story = {
       size: 32,
       bgFill: 0x4f9cf9,
       bgStrokeColor: 0x1d4ed8,
-      bgStrokeWidth: 1,
+      bgStrokeWidth: 1
     };
 
     // Build the shape geometry for a given type tag at the current size.
@@ -111,7 +111,7 @@ export const AllShapesStory: Story = {
               { x: -r,       y: 0 },
               { x: -r * 0.5, y: r * 0.866 },
               { x: r * 0.5,  y: r * 0.866 },
-            ],
+            ]
           };
         default:
           throw new Error(`unknown node type "${type}"`);
@@ -136,10 +136,10 @@ export const AllShapesStory: Story = {
             bgFill:        () => settings.bgFill,
             bgStrokeColor: () => settings.bgStrokeColor,
             bgStrokeWidth: () => settings.bgStrokeWidth,
-            labelText:     (n) => n.states?.[0] ?? 'default',
-          },
-        },
-      },
+            labelText:     (n) => n.states?.[0] ?? 'default'
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
 
@@ -160,12 +160,12 @@ export const AllShapesStory: Story = {
               labelBackgroundStrokeColor: 0xcbd5e1,
               labelBackgroundStrokeWidth: 1,
               labelBackgroundCornerRadius: 4,
-              labelBackgroundPadding: 3,
-            },
-          },
-        },
+              labelBackgroundPadding: 3
+            }
+          }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
@@ -185,5 +185,5 @@ export const AllShapesStory: Story = {
     gui.addColor(settings, 'bgFill').name('bg fill').onChange(rerenderAll);
     gui.addColor(settings, 'bgStrokeColor').name('stroke color').onChange(rerenderAll);
     gui.add(settings, 'bgStrokeWidth', 0, 8, 0.5).name('stroke width').onChange(rerenderAll);
-  },
+  }
 };

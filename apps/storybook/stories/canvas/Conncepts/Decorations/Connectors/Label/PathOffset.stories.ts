@@ -5,10 +5,10 @@ import {
   WheelZoomBehaviour,
   DragShapeBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
   arrowMarkerSpec,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext, ConnectorLabelPlacement } from '@invana/canvas';
+import type { ConnectorLabelPlacement } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
@@ -31,10 +31,10 @@ export const PathOffsetStory: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -62,13 +62,13 @@ export const PathOffsetStory: Story = {
       source: { kind: 'shape', shapeId: 'src', anchor: 'boundary' },
       target: { kind: 'shape', shapeId: 'tgt', anchor: 'boundary' },
       stroke: { color: 0xcbd5e1, width: 1.5 },
-      targetMarker: arrowMarkerSpec({ lengthScale: 6, widthScale: 4, fill: 0xcbd5e1 }),
+      targetMarker: arrowMarkerSpec({ lengthScale: 6, widthScale: 4, fill: 0xcbd5e1 })
     });
 
     const settings = {
       text: 'pad-from-source',
       placement: 'start' as ConnectorLabelPlacement,
-      pathOffset: 24,
+      pathOffset: 24
     };
 
     const apply = (): void => {
@@ -78,8 +78,8 @@ export const PathOffsetStory: Story = {
           content: { kind: 'text', text: settings.text, fontSize: 12, fontWeight: 600, fill: 0x0f172a },
           background: { fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [2, 6] },
           placement: settings.placement,
-          pathOffset: settings.pathOffset,
-        },
+          pathOffset: settings.pathOffset
+        }
       });
     };
     apply();
@@ -91,5 +91,5 @@ export const PathOffsetStory: Story = {
     gui.add(settings, 'text').onChange(apply);
     gui.add(settings, 'placement', { start: 'start', center: 'center', end: 'end' }).onChange(apply);
     gui.add(settings, 'pathOffset', -120, 120, 2).name('pathOffset (px along tangent)').onChange(apply);
-  },
+  }
 };

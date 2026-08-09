@@ -1,7 +1,7 @@
 /**
  * `Camera` with **no renderer behind it** — the P6 seam proof.
  *
- * Every test here runs against {@link FakeCameraBinding}: no pixi, no GPU, no
+ * Every test here runs against {@link HeadlessCameraBinding}: no pixi, no GPU, no
  * DOM. If any of these start needing a real `Viewport`, a backend type has
  * leaked back into `Camera` and the P6 extraction has regressed.
  */
@@ -9,10 +9,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Camera, type CameraOptions } from '../../src/camera/Camera';
 import { CanvasEventBus } from '@invana/canvas-store';
-import { FakeCameraBinding } from '../_helpers/FakeCameraBinding';
+import { HeadlessCameraBinding } from '../../src/camera/HeadlessCameraBinding';
 
 function makeCamera(opts: Partial<CameraOptions> = {}) {
-  const binding = new FakeCameraBinding();
+  const binding = new HeadlessCameraBinding();
   const bus = new CanvasEventBus();
   const camera = new Camera({ binding, screenWidth: 800, screenHeight: 600, bus, ...opts });
   return { camera, binding, bus };

@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas,
   DragPanBehaviour,
-  PrimitivesRenderer,
   WheelZoomBehaviour,
   WorldLayer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext, ShapeFillLayer } from '@invana/canvas';
+import type { ShapeFillLayer } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -31,13 +31,10 @@ export const Solid: Story = {
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({
-          container: this.container,
-          camera: ctx.camera,
-        });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -48,13 +45,13 @@ export const Solid: Story = {
       color: 0x4f9cf9,
       alpha: 1,
       strokeColor: 0x111827,
-      strokeWidth: 2,
+      strokeWidth: 2
     };
 
     const buildFill = (): ShapeFillLayer => ({
       kind: 'solid',
       color: settings.color,
-      alpha: settings.alpha,
+      alpha: settings.alpha
     });
 
     layer.renderer.addShape('s', {
@@ -63,7 +60,7 @@ export const Solid: Story = {
       y: 0,
       radius: 64,
       fill: buildFill(),
-      stroke: { color: settings.strokeColor, width: settings.strokeWidth },
+      stroke: { color: settings.strokeColor, width: settings.strokeWidth }
     });
 
     canvas.camera.fitContent(layer.getBounds(), 100);
@@ -73,11 +70,11 @@ export const Solid: Story = {
     const repaint = () =>
       layer.renderer.updateShape('s', {
         fill: buildFill(),
-        stroke: { color: settings.strokeColor, width: settings.strokeWidth },
+        stroke: { color: settings.strokeColor, width: settings.strokeWidth }
       });
     gui.addColor(settings, 'color').onChange(repaint);
     gui.add(settings, 'alpha', 0, 1, 0.01).onChange(repaint);
     gui.addColor(settings, 'strokeColor').onChange(repaint);
     gui.add(settings, 'strokeWidth', 0, 8, 0.5).onChange(repaint);
-  },
+  }
 };

@@ -4,9 +4,8 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import type { SelectionFramePlacement } from '@invana/canvas/specs';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
@@ -39,10 +38,10 @@ export const SelectionFrameStory: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -64,8 +63,8 @@ export const SelectionFrameStory: Story = {
           kind: 'rect' as const,
           x: -200, y: -90, width: 160, height: 180, cornerRadius: 8,
           fill: { kind: 'solid' as const, color: 0xffffff },
-          stroke: { color: 0x111827, width: 2 },
-        },
+          stroke: { color: 0x111827, width: 2 }
+        }
       },
       {
         id: 'circle',
@@ -73,8 +72,8 @@ export const SelectionFrameStory: Story = {
           kind: 'circle' as const,
           x: 80, y: 0, radius: 90,
           fill: { kind: 'solid' as const, color: 0xffffff },
-          stroke: { color: 0x111827, width: 2 },
-        },
+          stroke: { color: 0x111827, width: 2 }
+        }
       },
     ];
     for (const h of hosts) layer.renderer.addShape(h.id, h.spec);
@@ -100,7 +99,7 @@ export const SelectionFrameStory: Story = {
       handleFillAlpha: 1,
       handleStrokeColor: 0x6b7fff,
       handleStrokeWidth: 1.5,
-      handleStrokeAlpha: 1,
+      handleStrokeAlpha: 1
     };
 
     const handlesFor = (which: typeof settings.handleSet): SelectionFramePlacement[] => {
@@ -135,8 +134,8 @@ export const SelectionFrameStory: Story = {
             handleStrokeColor: settings.handleStrokeColor,
             handleStrokeWidth: settings.handleStrokeWidth,
             handleStrokeAlpha: settings.handleStrokeAlpha,
-            handles,
-          },
+            handles
+          }
         });
       }
     };
@@ -175,5 +174,5 @@ export const SelectionFrameStory: Story = {
     handles.add(settings, 'handleStrokeAlpha', 0, 1, 0.05).onChange(apply);
 
     canvas.camera.fitContent(layer.getBounds(), 80);
-  },
+  }
 };

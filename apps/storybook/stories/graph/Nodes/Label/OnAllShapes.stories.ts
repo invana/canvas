@@ -32,27 +32,27 @@ export const OnAllShapesStory: Story = {
       { type: 'node',
         id: 'circle',
         position: { x: -260, y: -160 },
-        style: { shape: { kind: 'circle', radius: 28 }, labelText: 'circle', labelPlacement: 'bottom', labelOffsetY: 8 },
+        style: { shape: { kind: 'circle', radius: 28 }, labelText: 'circle', labelPlacement: 'bottom', labelOffsetY: 8 }
       },
       { type: 'node',
         id: 'rect',
         position: { x: 0, y: -160 },
-        style: { shape: { kind: 'rect', width: 70, height: 50, cornerRadius: 8 }, labelText: 'rect', labelPlacement: 'bottom', labelOffsetY: 8 },
+        style: { shape: { kind: 'rect', width: 70, height: 50, cornerRadius: 8 }, labelText: 'rect', labelPlacement: 'bottom', labelOffsetY: 8 }
       },
       { type: 'node',
         id: 'arc',
         position: { x: 260, y: -160 },
-        style: { shape: { kind: 'arc', innerR: 14, outerR: 32, startAngle: -Math.PI / 2, endAngle: Math.PI / 2 }, labelText: 'arc', labelPlacement: 'bottom', labelOffsetY: 8 },
+        style: { shape: { kind: 'arc', innerR: 14, outerR: 32, startAngle: -Math.PI / 2, endAngle: Math.PI / 2 }, labelText: 'arc', labelPlacement: 'bottom', labelOffsetY: 8 }
       },
       { type: 'node',
         id: 'regular-polygon',
         position: { x: -260, y: 160 },
-        style: { shape: { kind: 'regular-polygon', sides: 5, radius: 32 }, labelText: 'regular-polygon', labelPlacement: 'bottom', labelOffsetY: 8 },
+        style: { shape: { kind: 'regular-polygon', sides: 5, radius: 32 }, labelText: 'regular-polygon', labelPlacement: 'bottom', labelOffsetY: 8 }
       },
       { type: 'node',
         id: 'star',
         position: { x: 0, y: 160 },
-        style: { shape: { kind: 'star', points: 5, outerRadius: 34, innerRadius: 14 }, labelText: 'star', labelPlacement: 'bottom', labelOffsetY: 8 },
+        style: { shape: { kind: 'star', points: 5, outerRadius: 34, innerRadius: 14 }, labelText: 'star', labelPlacement: 'bottom', labelOffsetY: 8 }
       },
       { type: 'node',
         id: 'polygon',
@@ -67,12 +67,12 @@ export const OnAllShapesStory: Story = {
               { x: -30, y: 0 },
               { x: -15, y: 26 },
               { x: 15, y: 26 },
-            ],
+            ]
           },
           labelText: 'polygon',
           labelPlacement: 'bottom',
-          labelOffsetY: 8,
-        },
+          labelOffsetY: 8
+        }
       },
     ];
 
@@ -100,12 +100,12 @@ export const OnAllShapesStory: Story = {
               labelBackgroundStrokeColor: 0xcbd5e1,
               labelBackgroundStrokeWidth: 1,
               labelBackgroundCornerRadius: 4,
-              labelBackgroundPadding: 4,
-            },
-          },
-        },
+              labelBackgroundPadding: 4
+            }
+          }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
@@ -127,8 +127,8 @@ export const OnAllShapesStory: Story = {
           style: {
             ...prev,
             labelText: settings.longLabel ? `${id} — a longer caption` : id,
-            labelPlacement: settings.placement,
-          },
+            labelPlacement: settings.placement
+          }
         });
       }
     };
@@ -136,5 +136,5 @@ export const OnAllShapesStory: Story = {
     onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'placement', ALL_PLACEMENTS).onChange(apply);
     gui.add(settings, 'longLabel').name('long label').onChange(apply);
-  },
+  }
 };

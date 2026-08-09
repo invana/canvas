@@ -54,8 +54,8 @@ export const Multiple: Story = {
                 fontFamily: 'serif',
                 fontWeight: 700,
                 color: 0xffffff,
-                sizeRatio: 0.7,
-              },
+                sizeRatio: 0.7
+              }
             },
             // Top-right — count chip.
             {
@@ -68,7 +68,7 @@ export const Multiple: Story = {
               strokeWidth: 1.5,
               labelText: '7',
               labelColor: 0xffffff,
-              labelFontSize: 12,
+              labelFontSize: 12
             },
             // Bottom-right — glow decoration on a notification dot.
             {
@@ -85,9 +85,9 @@ export const Multiple: Story = {
                   color: 0xf97316,
                   strokeWidth: 12,
                   layers: 6,
-                  innerAlpha: 0.6,
+                  innerAlpha: 0.6
                 },
-              ],
+              ]
             },
             // Bottom-left — breathing effect on a star plate.
             {
@@ -99,11 +99,11 @@ export const Multiple: Story = {
               strokeColor: 0xffffff,
               strokeWidth: 1,
               effects: {
-                breathing: { amplitude: 0.3, frequencyHz: 1.2 },
-              },
+                breathing: { amplitude: 0.3, frequencyHz: 1.2 }
+              }
             },
-          ],
-        },
+          ]
+        }
       },
     ];
 
@@ -120,9 +120,9 @@ export const Multiple: Story = {
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
 
     const canvasOptions = {
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 120);
-  },
+  }
 };

@@ -4,9 +4,8 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -27,10 +26,10 @@ export const MarchingAntsConnectorStory: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -47,19 +46,19 @@ export const MarchingAntsConnectorStory: Story = {
 
     layer.renderer.addShape('a', {
       kind: 'circle', x: -160, y: -60, radius: 24,
-      fill: { kind: 'solid', color: 0x4f9cf9 },
+      fill: { kind: 'solid', color: 0x4f9cf9 }
     });
     layer.renderer.addShape('b', {
       kind: 'circle', x: 160, y: -60, radius: 24,
-      fill: { kind: 'solid', color: 0x10b981 },
+      fill: { kind: 'solid', color: 0x10b981 }
     });
     layer.renderer.addShape('c', {
       kind: 'circle', x: -160, y: 60, radius: 24,
-      fill: { kind: 'solid', color: 0xfb923c },
+      fill: { kind: 'solid', color: 0xfb923c }
     });
     layer.renderer.addShape('d', {
       kind: 'circle', x: 160, y: 60, radius: 24,
-      fill: { kind: 'solid', color: 0xa78bfa },
+      fill: { kind: 'solid', color: 0xa78bfa }
     });
 
     layer.renderer.addConnector('a-to-b', {
@@ -68,7 +67,7 @@ export const MarchingAntsConnectorStory: Story = {
       pathStyle: 'normal',
       source: { kind: 'shape', shapeId: 'a', anchor: 'boundary' },
       target: { kind: 'shape', shapeId: 'b', anchor: 'boundary' },
-      stroke: { color: 0xd1d5db, width: 1.5 },
+      stroke: { color: 0xd1d5db, width: 1.5 }
     });
     layer.renderer.addConnector('c-to-d', {
       kind: 'connector',
@@ -77,7 +76,7 @@ export const MarchingAntsConnectorStory: Story = {
       pathStyleOpts: { axis: 'auto', tension: 0.6 },
       source: { kind: 'shape', shapeId: 'c', anchor: 'boundary' },
       target: { kind: 'shape', shapeId: 'd', anchor: 'boundary' },
-      stroke: { color: 0xd1d5db, width: 1.5 },
+      stroke: { color: 0xd1d5db, width: 1.5 }
     });
 
     const settings = {
@@ -86,18 +85,18 @@ export const MarchingAntsConnectorStory: Story = {
       dashLength: 6,
       gapLength: 4,
       speedPxPerSec: 36,
-      alpha: 1,
+      alpha: 1
     };
 
     const apply = () => {
       const style = { ...settings };
       layer.renderer.setDecoration('a-to-b', 'marching-ants-connector', {
         kind: 'marching-ants-connector',
-        style,
+        style
       });
       layer.renderer.setDecoration('c-to-d', 'marching-ants-connector', {
         kind: 'marching-ants-connector',
-        style,
+        style
       });
     };
     apply();
@@ -112,5 +111,5 @@ export const MarchingAntsConnectorStory: Story = {
     gui.add(settings, 'alpha', 0, 1, 0.05).onChange(apply);
 
     canvas.camera.fitContent(layer.getBounds(), 100);
-  },
+  }
 };

@@ -51,7 +51,7 @@ export const Stacked: Story = {
       glyphEnabled: true,
       glyphChar: '★',
       glyphColor: 0xffffff,
-      glyphSizeRatio: 0.5,
+      glyphSizeRatio: 0.5
     };
 
     const buildLayers = (): ShapeFillLayer[] => {
@@ -70,7 +70,7 @@ export const Stacked: Story = {
           strokeWidth: 2,
           color: settings.svgColor,
           sizeRatio: settings.svgSizeRatio,
-          anchor: settings.svgAnchor,
+          anchor: settings.svgAnchor
         });
       }
       if (settings.glyphEnabled) {
@@ -78,7 +78,7 @@ export const Stacked: Story = {
           kind: 'glyph',
           char: settings.glyphChar,
           color: settings.glyphColor,
-          sizeRatio: settings.glyphSizeRatio,
+          sizeRatio: settings.glyphSizeRatio
         });
       }
       return layers;
@@ -102,7 +102,7 @@ export const Stacked: Story = {
               { x: -r,       y: 0 },
               { x: -r * 0.5, y: r * 0.866 },
               { x: r * 0.5,  y: r * 0.866 },
-            ],
+            ]
           };
         default:
           throw new Error(`unknown node type "${type}"`);
@@ -123,10 +123,10 @@ export const Stacked: Story = {
           style: {
             shape:  (n) => shapeForType(n.type),
             bgFill: () => buildLayers(),
-            labelText: (n) => n.type ?? '?',
-          },
-        },
-      },
+            labelText: (n) => n.type ?? '?'
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -148,12 +148,12 @@ export const Stacked: Story = {
               labelBackgroundStrokeColor: 0xcbd5e1,
               labelBackgroundStrokeWidth: 1,
               labelBackgroundCornerRadius: 4,
-              labelBackgroundPadding: 3,
-            },
-          },
-        },
+              labelBackgroundPadding: 3
+            }
+          }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
@@ -187,5 +187,5 @@ export const Stacked: Story = {
     glyph.add(settings, 'glyphChar').name('char').onChange(rerenderAll);
     glyph.addColor(settings, 'glyphColor').name('color').onChange(rerenderAll);
     glyph.add(settings, 'glyphSizeRatio', 0.1, 1, 0.05).name('sizeRatio').onChange(rerenderAll);
-  },
+  }
 };

@@ -67,7 +67,7 @@ export const CollisionDetectionStory: Story = {
       // Pointer follower
       pointerEnabled: true,
       pointerRadius: 60,
-      pointerVisible: false,
+      pointerVisible: false
     };
 
     // ── Data ─────────────────────────────────────────────────────────────
@@ -94,7 +94,7 @@ export const CollisionDetectionStory: Story = {
           // a small radius. `forceCollide` then explodes them out to the
           // natural packing density, with `forceX`/`forceY` holding the
           // cluster centred. This matches the Observable original.
-          data: { radius: r, kind: 'circle' },
+          data: { radius: r, kind: 'circle' }
         });
       }
 
@@ -104,7 +104,7 @@ export const CollisionDetectionStory: Story = {
         id: POINTER_ID,
         position: { x: 1e6, y: 1e6 },
         pinned: true,
-        data: { radius: settings.pointerRadius, kind: 'pointer' },
+        data: { radius: settings.pointerRadius, kind: 'pointer' }
       });
 
       return { nodes, edges: [] };
@@ -137,7 +137,7 @@ export const CollisionDetectionStory: Story = {
               const d = n.data as NodeData;
               return {
                 kind: 'circle',
-                radius: d.kind === 'pointer' ? settings.pointerRadius : d.radius,
+                radius: d.kind === 'pointer' ? settings.pointerRadius : d.radius
               };
             },
             // Pointer is white; circles map their radius to a warm→cool hue
@@ -158,10 +158,10 @@ export const CollisionDetectionStory: Story = {
               const d = n.data as NodeData;
               if (d.kind === 'pointer') return settings.pointerVisible ? 0.15 : 0;
               return 1;
-            },
-          },
-        },
-      },
+            }
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
 
@@ -185,11 +185,11 @@ export const CollisionDetectionStory: Story = {
           color: '#475569',
           size: 1.5,
           spacing: 24,
-          alpha: 0.85,
+          alpha: 0.85
         },
         graph: {
-          edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 0.8, arrowTargetShape: 'none' } },
-        },
+          edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 0.8, arrowTargetShape: 'none' } }
+        }
       },
       behaviours: {
         pan: { enabled: true },
@@ -199,8 +199,8 @@ export const CollisionDetectionStory: Story = {
           enabled: true,
           mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
-          dark: { backgroundColor: '#0f172a', color: '#475569' },
-        },
+          dark: { backgroundColor: '#0f172a', color: '#475569' }
+        }
       },
       layouts: {
         force: {
@@ -221,11 +221,11 @@ export const CollisionDetectionStory: Story = {
             },
             padding: settings.collidePadding,
             strength: settings.collideStrength,
-            iterations: settings.collideIterations,
-          },
-        },
+            iterations: settings.collideIterations
+          }
+        }
       },
-      activeLayout: 'force',
+      activeLayout: 'force'
     };
 
     await canvas.init({ container, autoResize: true, config: canvasOptions });
@@ -312,5 +312,5 @@ export const CollisionDetectionStory: Story = {
     gui
       .add({ fit: () => canvas.camera.fitContent(graph.getBounds(), 80) }, 'fit')
       .name('Fit to content');
-  },
+  }
 };

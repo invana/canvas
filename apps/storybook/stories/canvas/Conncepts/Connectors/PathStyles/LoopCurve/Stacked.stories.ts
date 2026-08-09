@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas, DragPanBehaviour, DragShapeBehaviour, WheelZoomBehaviour,
-  WorldLayer, PrimitivesRenderer, arrowMarkerSpec,
+  WorldLayer, arrowMarkerSpec,
   LOOP_CURVE_PRESETS,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext, LoopCurvePresetName } from '@invana/canvas';
+import type { LoopCurvePresetName } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
@@ -37,10 +38,10 @@ export const Stacked: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -58,7 +59,7 @@ export const Stacked: Story = {
     canvas.behaviours.register(new DragShapeBehaviour({
       id: 'drag-shape',
       enabled: true,
-      renderer: layer.renderer,
+      renderer: layer.renderer
     }));
 
     const LOOP_WIDTH = 1.5;
@@ -70,7 +71,7 @@ export const Stacked: Story = {
     layer.renderer.addShape('node', {
       kind: 'rect', x: -halfW, y: -halfH, width: NODE_W, height: NODE_H,
       fill: { kind: 'solid', color: 0x4f7ff5 },
-      stroke: { color: 0x2563eb, width: 0 },
+      stroke: { color: 0x2563eb, width: 0 }
     });
 
     // Placement table — angle + silhouette pivot on the rect's edge /
@@ -86,7 +87,7 @@ export const Stacked: Story = {
       'top-right':    { angle: -Math.PI / 4, dx:  halfW, dy: -halfH },
       'bottom-right': { angle:  Math.PI / 4, dx:  halfW, dy:  halfH },
       'bottom-left':  { angle:  3 * Math.PI / 4, dx: -halfW, dy:  halfH },
-      'top-left':     { angle: -3 * Math.PI / 4, dx: -halfW, dy: -halfH },
+      'top-left':     { angle: -3 * Math.PI / 4, dx: -halfW, dy: -halfH }
     };
 
     // Per-loop stroke colours so successive rings read as distinct
@@ -101,7 +102,7 @@ export const Stacked: Story = {
       placement: 'top' as Placement,
       count: 5,
       radiusStep: 22,
-      bulgeStep: 14,
+      bulgeStep: 14
     };
 
     const drawStack = (): void => {
@@ -132,15 +133,15 @@ export const Stacked: Story = {
             // Only `radius` (length) and `bulge` (belly) grow per ring.
             // The result: same start/end, each loop arches further out.
             radius: base.radius + i * settings.radiusStep,
-            bulge:  base.bulge  + i * settings.bulgeStep,
+            bulge:  base.bulge  + i * settings.bulgeStep
           },
           source: { kind: 'shape', shapeId: 'node', anchor: 'center' },
           target: { kind: 'shape', shapeId: 'node', anchor: 'center' },
           stroke: { color: STACK_COLORS[i % STACK_COLORS.length]!, width: LOOP_WIDTH },
           targetMarker: arrowMarkerSpec({
             lengthScale: 5, widthScale: 4,
-            fill: STACK_COLORS[i % STACK_COLORS.length]!,
-          }),
+            fill: STACK_COLORS[i % STACK_COLORS.length]!
+          })
         });
       }
     };
@@ -155,5 +156,5 @@ export const Stacked: Story = {
     gui.add(settings, 'count', 1, 10, 1).onChange(drawStack);
     gui.add(settings, 'radiusStep', 0, 60, 1).name('radiusStep (taller)').onChange(drawStack);
     gui.add(settings, 'bulgeStep',  0, 60, 1).name('bulgeStep (wider)').onChange(drawStack);
-  },
+  }
 };

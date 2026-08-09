@@ -4,7 +4,7 @@ import {
   GraphCanvas,
   GraphLayer,
   type CanonicalStateName,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -49,10 +49,10 @@ export const Medium: Story = {
         initData: { nodes, edges: [] },
         node: {
           style: {
-            labelText: (n: GraphNode) => (n.data as TileData | undefined)?.state ?? '',
-          },
-        },
-      },
+            labelText: (n: GraphNode) => (n.data as TileData | undefined)?.state ?? ''
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
 
@@ -72,14 +72,14 @@ export const Medium: Story = {
               labelColor: 0xffffff,
               labelFontSize: 13,
               labelFontWeight: 600,
-              labelPlacement: 'center',
-            },
-          },
-        },
+              labelPlacement: 'center'
+            }
+          }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

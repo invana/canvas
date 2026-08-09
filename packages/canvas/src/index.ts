@@ -63,6 +63,14 @@ export type { ShapeSpec } from './specs';
 // vocabulary. `PixiRenderer` is its first implementation and the class P6 moves
 // into `@invana/renderer-pixijs`.
 export { PixiRenderer, type PixiRendererOptions } from './renderer/PixiRenderer';
+// The headless backend (§7) — draws nothing, implements everything. Lets a
+// consumer test layouts, picking and projection with no GPU and no DOM.
+export {
+  HeadlessRenderer,
+  HeadlessSurface,
+  HeadlessElementRenderer,
+} from './renderer/HeadlessRenderer';
+export { HeadlessCameraBinding } from './camera/HeadlessCameraBinding';
 export type {
   IRenderer,
   RendererCapabilities,

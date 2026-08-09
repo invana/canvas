@@ -14,13 +14,13 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
   DragPanBehaviour,
-  WheelZoomBehaviour,
+  WheelZoomBehaviour
 } from '@invana/canvas';
 import { DragNodeBehaviour, GraphCanvas, GraphLayer, type GraphEdge, type GraphNode, ThemeBehaviour } from '@invana/graph';
 import {
   ElkLayout,
   type ElkAlgorithmName,
-  type ElkDirection,
+  type ElkDirection
 } from '@invana/graph-layout-elkjs';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../div-util';
@@ -71,7 +71,7 @@ export const Layered: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes, edges } },
+      options: { initData: { nodes, edges } }
     });
     canvas.layers.add(graph);
 
@@ -95,7 +95,7 @@ export const Layered: Story = {
           color: '#475569',
           size: 1.5,
           spacing: 24,
-          alpha: 0.85,
+          alpha: 0.85
         },
         graph: {
           node: {
@@ -106,17 +106,17 @@ export const Layered: Story = {
               labelColor: 0xffffff,
               labelFontSize: 12,
               labelFontWeight: 600,
-              labelPlacement: 'center',
-            },
+              labelPlacement: 'center'
+            }
           },
           edge: {
             style: {
               strokeColor: 0x64748b,
               strokeWidth: 1.4,
-              arrowTargetShape: 'triangle',
-            },
-          },
-        },
+              arrowTargetShape: 'triangle'
+            }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
@@ -126,8 +126,8 @@ export const Layered: Story = {
           enabled: true,
           mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
-          dark: { backgroundColor: '#0f172a', color: '#475569' },
-        },
+          dark: { backgroundColor: '#0f172a', color: '#475569' }
+        }
       },
       layouts: {
         layout: {
@@ -137,10 +137,10 @@ export const Layered: Story = {
           layerSpacing: 80,
           edgeNodeSpacing: 20,
           edgeSpacing: 15,
-          padding: 30,
-        },
+          padding: 30
+        }
       },
-      activeLayout: 'layout',
+      activeLayout: 'layout'
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     // initData loads on mount and the active 'elk' layout auto-runs against it.
@@ -192,5 +192,5 @@ export const Layered: Story = {
     gui
       .add({ fit: () => canvas.camera.fitContent(graph.getBounds(), 80) }, 'fit')
       .name('Fit to content');
-  },
+  }
 };

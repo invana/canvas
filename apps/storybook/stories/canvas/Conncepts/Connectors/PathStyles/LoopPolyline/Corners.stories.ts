@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas, DragPanBehaviour, DragShapeBehaviour, WheelZoomBehaviour,
-  WorldLayer, PrimitivesRenderer, arrowMarkerSpec,
+  WorldLayer, arrowMarkerSpec,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
@@ -48,10 +48,10 @@ export const Corners: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -70,7 +70,7 @@ export const Corners: Story = {
     canvas.behaviours.register(new DragShapeBehaviour({
       id: 'drag-shape',
       enabled: true,
-      renderer: layer.renderer,
+      renderer: layer.renderer
     }));
 
     const FILL = 0x4f7ff5;
@@ -109,18 +109,18 @@ export const Corners: Story = {
           // foot_B lands on the vertical right edge at x = r·√3/2;
           // foot_A on the top-right slanted edge then fixes baseOffsetY.
           x: HEX_R * Math.sqrt(3) / 2,
-          y: HEX_R / 2 + gap / Math.sqrt(3),
+          y: HEX_R / 2 + gap / Math.sqrt(3)
         }) },
     ];
 
     layer.renderer.addShape('host-rect', {
       kind: 'rect', x: HOSTS[0]!.cx - RECT_W / 2, y: -RECT_H / 2,
       width: RECT_W, height: RECT_H,
-      fill: { kind: 'solid', color: FILL }, stroke: { color: 0x2563eb, width: 0 },
+      fill: { kind: 'solid', color: FILL }, stroke: { color: 0x2563eb, width: 0 }
     });
     layer.renderer.addShape('host-circle', {
       kind: 'circle', x: HOSTS[1]!.cx, y: 0, radius: CIRC_R,
-      fill: { kind: 'solid', color: FILL }, stroke: { color: 0x2563eb, width: 0 },
+      fill: { kind: 'solid', color: FILL }, stroke: { color: 0x2563eb, width: 0 }
     });
     layer.renderer.addShape('host-ellipse', {
       kind: 'polygon',
@@ -129,12 +129,12 @@ export const Corners: Story = {
         const t = (i / 48) * Math.PI * 2;
         return { x: Math.cos(t) * ELL_RX, y: Math.sin(t) * ELL_RY };
       }),
-      fill: { kind: 'solid', color: FILL }, stroke: { color: 0x2563eb, width: 0 },
+      fill: { kind: 'solid', color: FILL }, stroke: { color: 0x2563eb, width: 0 }
     });
     layer.renderer.addShape('host-hex', {
       kind: 'regular-polygon',
       x: HOSTS[3]!.cx, y: 0, sides: 6, radius: HEX_R,
-      fill: { kind: 'solid', color: FILL }, stroke: { color: 0x2563eb, width: 0 },
+      fill: { kind: 'solid', color: FILL }, stroke: { color: 0x2563eb, width: 0 }
     });
 
     const CORNERS = ['top-right', 'bottom-right', 'bottom-left', 'top-left'] as const;
@@ -156,12 +156,12 @@ export const Corners: Story = {
               baseOffsetX: offX,
               baseOffsetY: offY,
               stubLength: settings.stubLength,
-              gap: settings.gap,
+              gap: settings.gap
             },
             source: { kind: 'shape', shapeId: host.id, anchor: 'center' },
             target: { kind: 'shape', shapeId: host.id, anchor: 'center' },
             stroke: { color: LOOP_STROKE, width: LOOP_WIDTH },
-            targetMarker: arrowMarkerSpec({ lengthScale: 5, widthScale: 4, fill: LOOP_STROKE }),
+            targetMarker: arrowMarkerSpec({ lengthScale: 5, widthScale: 4, fill: LOOP_STROKE })
           });
         }
       }
@@ -174,5 +174,5 @@ export const Corners: Story = {
     onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'stubLength', 0, 60, 1).onChange(drawLoops);
     gui.add(settings, 'gap', 0, 60, 1).onChange(drawLoops);
-  },
+  }
 };

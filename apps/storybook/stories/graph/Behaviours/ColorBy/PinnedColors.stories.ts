@@ -50,7 +50,7 @@ export const PinnedColorsStory: Story = {
       enabled: true,
       nodeValueKey: 'data.group',
       colorEdges: false,
-      valueColors: { 1: 0x22c55e, 2: 0xef4444, 8: 0x8b5cf6 },
+      valueColors: { 1: 0x22c55e, 2: 0xef4444, 8: 0x8b5cf6 }
     });
     canvas.behaviours.register(colorBy);
 
@@ -65,25 +65,25 @@ export const PinnedColorsStory: Story = {
                 shape: { kind: 'circle', radius: 7 },
                 bgStrokeColor: 0xffffff,
                 bgStrokeWidth: 1.5,
-                showLabel: false,
-              },
+                showLabel: false
+              }
             },
             edge: {
               style: {
                 strokeColor: 0xcbd5e1,
                 strokeWidth: 1,
                 strokeAlpha: 0.5,
-                arrowTargetShape: 'none',
-              },
-            },
-          },
+                arrowTargetShape: 'none'
+              }
+            }
+          }
         },
         layouts: {
-          force: { charge: { strength: -220 }, link: { distance: 40 }, collide: { radius: 11 } },
+          force: { charge: { strength: -220 }, link: { distance: 40 }, collide: { radius: 11 } }
         },
         activeLayout: 'force',
-        fitOnLoad: true,
-      },
+        fitOnLoad: true
+      }
     });
 
     const o = colorBy.getResolvedOptions();
@@ -91,7 +91,7 @@ export const PinnedColorsStory: Story = {
       group1: `#${(o.valueColors['1'] ?? 0x22c55e).toString(16).padStart(6, '0')}`,
       group2: `#${(o.valueColors['2'] ?? 0xef4444).toString(16).padStart(6, '0')}`,
       group8: `#${(o.valueColors['8'] ?? 0x8b5cf6).toString(16).padStart(6, '0')}`,
-      maxCategories: o.maxCategories,
+      maxCategories: o.maxCategories
     };
     const derived = { assigned: '', pinned: '' };
     const refresh = (): void => {
@@ -104,7 +104,7 @@ export const PinnedColorsStory: Story = {
     const apply = (): void => {
       colorBy.setOptions({
         valueColors: { 1: hex(settings.group1), 2: hex(settings.group2), 8: hex(settings.group8) },
-        maxCategories: settings.maxCategories,
+        maxCategories: settings.maxCategories
       });
       refresh();
     };
@@ -120,5 +120,5 @@ export const PinnedColorsStory: Story = {
     const out = gui.addFolder('derived (read-only)');
     out.add(derived, 'assigned').name('palette-assigned').listen().disable();
     out.add(derived, 'pinned').name('pinned values').listen().disable();
-  },
+  }
 };

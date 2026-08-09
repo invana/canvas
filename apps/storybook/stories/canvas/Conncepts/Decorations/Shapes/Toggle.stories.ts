@@ -4,9 +4,8 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import type { TogglePlacement } from '@invana/canvas/specs';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
@@ -26,10 +25,10 @@ export const Toggle: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -51,8 +50,8 @@ export const Toggle: Story = {
           kind: 'rect' as const,
           x: -160, y: -60, width: 120, height: 120, cornerRadius: 8,
           fill: { kind: 'solid' as const, color: 0xeef2ff },
-          stroke: { color: 0x6b7fff, width: 1 },
-        },
+          stroke: { color: 0x6b7fff, width: 1 }
+        }
       },
       {
         id: 'circle',
@@ -60,8 +59,8 @@ export const Toggle: Story = {
           kind: 'circle' as const,
           x: 100, y: 0, radius: 60,
           fill: { kind: 'solid' as const, color: 0xeef2ff },
-          stroke: { color: 0x6b7fff, width: 1 },
-        },
+          stroke: { color: 0x6b7fff, width: 1 }
+        }
       },
     ];
     for (const h of hosts) layer.renderer.addShape(h.id, h.spec);
@@ -73,7 +72,7 @@ export const Toggle: Story = {
       radius: 10,
       bgFill: 0xffffff,
       strokeColor: 0x6b7fff,
-      glyphColor: 0x6b7fff,
+      glyphColor: 0x6b7fff
     };
 
     const apply = () => {
@@ -86,8 +85,8 @@ export const Toggle: Story = {
             radius: settings.radius,
             bgFill: settings.bgFill,
             strokeColor: settings.strokeColor,
-            glyphColor: settings.glyphColor,
-          },
+            glyphColor: settings.glyphColor
+          }
         });
       }
     };
@@ -107,5 +106,5 @@ export const Toggle: Story = {
     gui.addColor(settings, 'glyphColor').onChange(apply);
 
     canvas.camera.fitContent(layer.getBounds(), 80);
-  },
+  }
 };

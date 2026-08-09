@@ -41,35 +41,35 @@ export const CustomStateConfigsStory: Story = {
       type: 'node',
       position: { x: -300, y: -90 },
       data: { title: 'hover (canonical)', note: 'shipped default' },
-      states: ['hovered'],
+      states: ['hovered']
     };
     const overriddenTile: GraphNode<TileData> = {
       id: 'overridden-hover',
       type: 'node',
       position: { x: 0, y: -90 },
       data: { title: 'hover (overridden)', note: 'options.node.state' },
-      states: ['hovered'],
+      states: ['hovered']
     };
     const mentionTile: GraphNode<TileData> = {
       id: 'mention',
       type: 'node',
       position: { x: 300, y: -90 },
       data: { title: 'mention (new)', note: 'declared in this layer' },
-      states: ['mention'],
+      states: ['mention']
     };
     const escalatedTile: GraphNode<TileData> = {
       id: 'escalated',
       type: 'node',
       position: { x: -150, y: 110 },
       data: { title: 'escalated (new)', note: 'declared in this layer' },
-      states: ['escalated'],
+      states: ['escalated']
     };
     const stackedTile: GraphNode<TileData> = {
       id: 'mention+escalated',
       type: 'node',
       position: { x: 150, y: 110 },
       data: { title: 'mention + escalated', note: 'stacked — last-set wins per field' },
-      states: ['mention', 'escalated'],
+      states: ['mention', 'escalated']
     };
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-custom-state-configs')!;
@@ -88,10 +88,10 @@ export const CustomStateConfigsStory: Story = {
           fontWeight: 600,
           fill: 0xefefef,
           align: 'center' as const,
-          lineHeight: 16,
+          lineHeight: 16
         },
         placement: 'bottom' as const,
-        offset: { y: 8 },
+        offset: { y: 8 }
       };
     };
     const sharedNodeStyle = {
@@ -99,7 +99,7 @@ export const CustomStateConfigsStory: Story = {
       bgFill: 0x3b82f6,
       bgStrokeColor: 0xffffff,
       bgStrokeWidth: 1,
-      labelStyle: labelResolver,
+      labelStyle: labelResolver
     };
 
     // Layer A — canonical bundle, no overrides. The first tile renders
@@ -110,8 +110,8 @@ export const CustomStateConfigsStory: Story = {
       id: 'canonical',
       options: {
         node: { style: sharedNodeStyle },
-        initData: { nodes: [canonicalTile], edges: [] },
-      },
+        initData: { nodes: [canonicalTile], edges: [] }
+      }
     });
     canvas.layers.add(canonicalLayer);
 
@@ -127,19 +127,19 @@ export const CustomStateConfigsStory: Story = {
             hovered:   { bgStrokeColor: 0xef4444, bgStrokeWidth: 5 },                       // overrides canonical
             mention:   { bgStrokeColor: 0xfacc15, bgStrokeWidth: 3 },                       // NEW state
             escalated: { bgStrokeColor: 0xef4444, bgStrokeWidth: 5, bgFill: 0x7f1d1d },     // NEW state
-          },
+          }
         },
-        initData: { nodes: [overriddenTile, mentionTile, escalatedTile, stackedTile], edges: [] },
-      },
+        initData: { nodes: [overriddenTile, mentionTile, escalatedTile, stackedTile], edges: [] }
+      }
     });
     canvas.layers.add(customLayer);
 
     await canvas.init({
       container,
       autoResize: true,
-      config: { behaviours: { pan: { enabled: true }, zoom: { enabled: true } } },
+      config: { behaviours: { pan: { enabled: true }, zoom: { enabled: true } } }
     });
 
     canvas.camera.fitContent(canonicalLayer.getBounds(), 80);
-  },
+  }
 };

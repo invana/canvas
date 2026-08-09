@@ -5,7 +5,7 @@ import {
   GraphCanvas,
   GraphLayer,
   type GraphEdge,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
@@ -67,14 +67,14 @@ export const EdgeLabelsStory: Story = {
     const edges: GraphEdge[] = [
       { type: 'edge',
         id: 'straight',    source: 'straight-src',    target: 'straight-tgt',
-        style: { shape: { pathType: 'straight' }, labelText: 'straight' },
+        style: { shape: { pathType: 'straight' }, labelText: 'straight' }
       },
       { type: 'edge',
         id: 'bezier',      source: 'bezier-src',      target: 'bezier-tgt',
         style: {
           shape: { pathType: 'bezier', pathStyleOpts: { axis: 'h', tension: 0.6 } },
-          labelText: "bezier · { axis: 'h', tension: 0.6 }",
-        },
+          labelText: "bezier · { axis: 'h', tension: 0.6 }"
+        }
       },
       { type: 'edge',
         id: 'bump-radial', source: 'bump-radial-src', target: 'bump-radial-tgt',
@@ -86,24 +86,24 @@ export const EdgeLabelsStory: Story = {
         // straight line.
         style: {
           shape: { pathType: 'bump-radial', pathStyleOpts: { origin: { x: -600, y: 0 } } },
-          labelText: 'bump-radial · { origin: { x: -600, y: 0 } }',
-        },
+          labelText: 'bump-radial · { origin: { x: -600, y: 0 } }'
+        }
       },
       { type: 'edge',
         id: 'smooth',      source: 'smooth-src',      target: 'smooth-tgt',
-        style: { shape: { pathType: 'smooth' }, labelText: 'smooth' },
+        style: { shape: { pathType: 'smooth' }, labelText: 'smooth' }
       },
       { type: 'edge',
         id: 'rounded',     source: 'rounded-src',     target: 'rounded-tgt',
-        style: { shape: { pathType: 'rounded' }, labelText: 'rounded' },
+        style: { shape: { pathType: 'rounded' }, labelText: 'rounded' }
       },
       { type: 'edge',
         id: 'orth',        source: 'orth-src',        target: 'orth-tgt',
-        style: { shape: { pathType: 'orth' }, labelText: 'orth' },
+        style: { shape: { pathType: 'orth' }, labelText: 'orth' }
       },
       { type: 'edge',
         id: 'manhattan',   source: 'manhattan-src',   target: 'manhattan-tgt',
-        style: { shape: { pathType: 'manhattan' }, labelText: 'manhattan' },
+        style: { shape: { pathType: 'manhattan' }, labelText: 'manhattan' }
       },
     ];
 
@@ -114,7 +114,7 @@ export const EdgeLabelsStory: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes, edges } },
+      options: { initData: { nodes, edges } }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -131,8 +131,8 @@ export const EdgeLabelsStory: Story = {
               labelFontWeight: 600,
               labelColor: 0x475569,
               labelPlacement: 'left',
-              labelOffsetX: -4,
-            },
+              labelOffsetX: -4
+            }
           },
           edge: {
             style: {
@@ -151,15 +151,15 @@ export const EdgeLabelsStory: Story = {
               labelBackgroundStrokeColor: 0xe2e8f0,
               labelBackgroundStrokeWidth: 1,
               labelBackgroundCornerRadius: 4,
-              labelBackgroundPadding: 4,
-            },
-          },
-        },
+              labelBackgroundPadding: 4
+            }
+          }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true }, 'drag-node': { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true }, 'drag-node': { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

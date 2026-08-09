@@ -5,9 +5,9 @@ import {
   WheelZoomBehaviour,
   DragShapeBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext, ShapeLabelPlacement } from '@invana/canvas';
+import type { ShapeLabelPlacement } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
@@ -30,10 +30,10 @@ export const Placement: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -87,7 +87,7 @@ export const Placement: Story = {
         y: TOP_Y + (cell.row - 1) * CELL,
         radius: 32,
         fill: { kind: 'solid', color: 0x4f9cf9 },
-        stroke: { color: 0x1d4ed8, width: 1 },
+        stroke: { color: 0x1d4ed8, width: 1 }
       });
     }
     for (const cell of BOTTOM_GROUP) {
@@ -100,7 +100,7 @@ export const Placement: Story = {
         height: 80,
         cornerRadius: 8,
         fill: { kind: 'solid', color: 0xf1f5f9 },
-        stroke: { color: 0x475569, width: 1 },
+        stroke: { color: 0x475569, width: 1 }
       });
     }
 
@@ -109,7 +109,7 @@ export const Placement: Story = {
       fontSize: 13,
       fontWeight: 600,
       background: true,
-      offset: 4,
+      offset: 4
     };
 
     const apply = (): void => {
@@ -128,10 +128,10 @@ export const Placement: Story = {
               text: placement,
               fontSize: settings.fontSize,
               fontWeight: settings.fontWeight,
-              fill: 0x0f172a,
+              fill: 0x0f172a
             },
             background: settings.background ? {
-              fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [3, 6],
+              fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [3, 6]
             } : undefined,
             placement,
             // Push outside-top labels up a touch, outside-bottom down, so they
@@ -141,8 +141,8 @@ export const Placement: Story = {
               ? { y: -settings.offset }
               : isOutsideBottom
                 ? { y: settings.offset }
-                : undefined,
-          },
+                : undefined
+          }
         });
       }
     };
@@ -167,8 +167,8 @@ export const Placement: Story = {
           style: {
             content: { kind: 'text', text: override, fontSize: settings.fontSize, fontWeight: settings.fontWeight, fill: 0x0f172a },
             background: settings.background ? { fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [3, 6] } : undefined,
-            placement,
-          },
+            placement
+          }
         });
       }
     });
@@ -176,5 +176,5 @@ export const Placement: Story = {
     gui.add(settings, 'fontWeight', { regular: 400, semibold: 600, bold: 700 }).onChange(apply);
     gui.add(settings, 'background').onChange(apply);
     gui.add(settings, 'offset', 0, 20, 1).name('outside offset').onChange(apply);
-  },
+  }
 };

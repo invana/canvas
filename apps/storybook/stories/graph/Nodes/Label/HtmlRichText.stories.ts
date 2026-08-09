@@ -37,12 +37,12 @@ export const HtmlRichTextStory: Story = {
         tagStyles: {
           role: { fontSize: 10, fill: '#10b981', fontWeight: 700 },
           name: { fontSize: 13, fill: '#454545', fontWeight: 600 },
-          ver:  { fontSize: 10, fill: '#64748b', fontWeight: 400 },
-        },
+          ver:  { fontSize: 10, fill: '#64748b', fontWeight: 400 }
+        }
       },
       background: { fill: 0xecfdf5, stroke: 0x10b981, strokeWidth: 1, radius: 6, padding: [6, 10] },
       placement: 'bottom',
-      offset: { y: 10 },
+      offset: { y: 10 }
     };
 
     const nodes: GraphNode[] = [
@@ -61,7 +61,7 @@ export const HtmlRichTextStory: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes, edges: [] } },
+      options: { initData: { nodes, edges: [] } }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -69,9 +69,9 @@ export const HtmlRichTextStory: Story = {
 
     const canvasOptions = {
       layers: {
-        graph: { node: { style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } } },
+        graph: { node: { style: { bgFill: 0x10b981, bgStrokeColor: 0x047857 } } }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
@@ -83,7 +83,7 @@ export const HtmlRichTextStory: Story = {
       ver: 'v2.4.1',
       roleColor: '#10b981',
       nameColor: '#454545',
-      verColor: '#64748b',
+      verColor: '#64748b'
     };
     const apply = (): void => {
       for (const id of ALL_IDS) {
@@ -98,9 +98,9 @@ export const HtmlRichTextStory: Story = {
             tagStyles: {
               role: { fontSize: 10, fill: settings.roleColor, fontWeight: 700 },
               name: { fontSize: 13, fill: settings.nameColor, fontWeight: 600 },
-              ver:  { fontSize: 10, fill: settings.verColor,  fontWeight: 400 },
-            },
-          },
+              ver:  { fontSize: 10, fill: settings.verColor,  fontWeight: 400 }
+            }
+          }
         };
         graph.store.updateNode(id, { style: { ...prev, labelStyle: nextLs } });
       }
@@ -113,5 +113,5 @@ export const HtmlRichTextStory: Story = {
     gui.addColor(settings, 'roleColor').onChange(apply);
     gui.addColor(settings, 'nameColor').onChange(apply);
     gui.addColor(settings, 'verColor').onChange(apply);
-  },
+  }
 };

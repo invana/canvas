@@ -88,7 +88,7 @@ export const Interactive: Story = {
       dashOff: 0,
       dashOffset: 0,
       strokeCap: 'butt' as 'butt' | 'round' | 'square',
-      strokeJoin: 'miter' as 'miter' | 'round' | 'bevel',
+      strokeJoin: 'miter' as 'miter' | 'round' | 'bevel'
     };
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-edges-stroke-interactive')!;
@@ -113,10 +113,10 @@ export const Interactive: Story = {
             strokeDashArray:    () => [settings.dashOn, settings.dashOff] as const,
             strokeDashOffset:   () => settings.dashOffset,
             strokeCap:          () => settings.strokeCap,
-            strokeJoin:         () => settings.strokeJoin,
-          },
-        },
-      },
+            strokeJoin:         () => settings.strokeJoin
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -135,13 +135,13 @@ export const Interactive: Story = {
               labelFontWeight: 600,
               labelColor: 0x475569,
               labelPlacement: 'left',
-              labelOffsetX: -6,
-            },
+              labelOffsetX: -6
+            }
           },
-          edge: { style: { arrowTargetShape: 'triangle' } },
-        },
+          edge: { style: { arrowTargetShape: 'triangle' } }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
@@ -171,5 +171,5 @@ export const Interactive: Story = {
     d.add(settings, 'dashOn', 0, 40, 1).name('on (0 = solid)').onChange(rerenderAll);
     d.add(settings, 'dashOff', 0, 40, 1).name('off (0 = solid)').onChange(rerenderAll);
     d.add(settings, 'dashOffset', 0, 40, 1).name('offset').onChange(rerenderAll);
-  },
+  }
 };

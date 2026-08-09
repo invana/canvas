@@ -46,5 +46,5 @@ export const NoChromeStory: Story = {
         />
       </GraphCanvasApp>
     </ThemeProvider>
-  ),
+  )
 };

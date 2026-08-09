@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas, DragPanBehaviour, DragShapeBehaviour, WheelZoomBehaviour,
-  WorldLayer, PrimitivesRenderer, arrowMarkerSpec,
+  WorldLayer, arrowMarkerSpec,
   LOOP_CURVE_PRESETS,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
@@ -30,10 +30,10 @@ export const Hairpin: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -51,7 +51,7 @@ export const Hairpin: Story = {
     canvas.behaviours.register(new DragShapeBehaviour({
       id: 'drag-shape',
       enabled: true,
-      renderer: layer.renderer,
+      renderer: layer.renderer
     }));
 
     const LOOP_STROKE = 0x94a3b8;
@@ -94,7 +94,7 @@ export const Hairpin: Story = {
     };
     const circleSilhouette = (r: number) => (theta: number) => ({
       dx: r * Math.cos(theta),
-      dy: r * Math.sin(theta),
+      dy: r * Math.sin(theta)
     });
     const ellipseSilhouette = (rx: number, ry: number) => (theta: number) => {
       const ux = Math.cos(theta);
@@ -140,11 +140,11 @@ export const Hairpin: Story = {
     layer.renderer.addShape('host-rect', {
       kind: 'rect', x: HOSTS[0]!.cx - RECT_W / 2, y: -RECT_H / 2,
       width: RECT_W, height: RECT_H,
-      fill: { kind: 'solid', color: FILL }, stroke: { color: 0x2563eb, width: 0 },
+      fill: { kind: 'solid', color: FILL }, stroke: { color: 0x2563eb, width: 0 }
     });
     layer.renderer.addShape('host-circle', {
       kind: 'circle', x: HOSTS[1]!.cx, y: 0, radius: CIRC_R,
-      fill: { kind: 'solid', color: FILL }, stroke: { color: 0x2563eb, width: 0 },
+      fill: { kind: 'solid', color: FILL }, stroke: { color: 0x2563eb, width: 0 }
     });
     layer.renderer.addShape('host-ellipse', {
       // Engine has no built-in ellipse primitive — fake via polygon
@@ -156,12 +156,12 @@ export const Hairpin: Story = {
         const t = (i / 48) * Math.PI * 2;
         return { x: Math.cos(t) * ELL_RX, y: Math.sin(t) * ELL_RY };
       }),
-      fill: { kind: 'solid', color: FILL }, stroke: { color: 0x2563eb, width: 0 },
+      fill: { kind: 'solid', color: FILL }, stroke: { color: 0x2563eb, width: 0 }
     });
     layer.renderer.addShape('host-hex', {
       kind: 'regular-polygon',
       x: HOSTS[3]!.cx, y: 0, sides: 6, radius: HEX_R,
-      fill: { kind: 'solid', color: FILL }, stroke: { color: 0x2563eb, width: 0 },
+      fill: { kind: 'solid', color: FILL }, stroke: { color: 0x2563eb, width: 0 }
     });
 
     const settings = { ...LOOP_CURVE_PRESETS.hairpin };
@@ -182,12 +182,12 @@ export const Hairpin: Story = {
               radius: settings.radius,
               width: settings.width,
               bulge: settings.bulge,
-              pivotOffset: { dx: pivot.dx, dy: pivot.dy },
+              pivotOffset: { dx: pivot.dx, dy: pivot.dy }
             },
             source: { kind: 'shape', shapeId: host.id, anchor: 'center' },
             target: { kind: 'shape', shapeId: host.id, anchor: 'center' },
             stroke: { color: LOOP_STROKE, width: LOOP_WIDTH },
-            targetMarker: arrowMarkerSpec({ lengthScale: 5, widthScale: 4, fill: LOOP_STROKE }),
+            targetMarker: arrowMarkerSpec({ lengthScale: 5, widthScale: 4, fill: LOOP_STROKE })
           });
         }
       }
@@ -202,5 +202,5 @@ export const Hairpin: Story = {
     gui.add(settings, 'radius', 0, 80, 1).name('radius (length)').onChange(drawLoops);
     gui.add(settings, 'width', 0, 60, 1).name('width (neck)').onChange(drawLoops);
     gui.add(settings, 'bulge', 0, 80, 1).name('bulge (belly)').onChange(drawLoops);
-  },
+  }
 };

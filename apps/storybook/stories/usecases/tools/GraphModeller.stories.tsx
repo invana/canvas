@@ -55,7 +55,7 @@ import type {
   GraphData,
   GraphEdge,
   GraphHistory,
-  NodeShapeOptions,
+  NodeShapeOptions
 } from '@invana/graph';
 import type * as graph from '@invana/graph';
 import { modellerSeed } from '@invana/graph-datasets/usecase-demos';
@@ -73,7 +73,7 @@ const SEED: GraphData = modellerSeed;
 const SHAPES: Record<string, NodeShapeOptions> = {
   circle: { kind: 'circle', radius: 22 },
   rect: { kind: 'rect', width: 52, height: 36, cornerRadius: 6 },
-  diamond: { kind: 'regular-polygon', sides: 4, radius: 26 },
+  diamond: { kind: 'regular-polygon', sides: 4, radius: 26 }
 };
 
 // Human labels + icons per shape key — shared by the header's Add-tool shape
@@ -97,7 +97,7 @@ const HINTS: Record<string, string> = {
     'Drag a node to move it · click a node or edge to edit it · click empty canvas to clear',
   add: 'Click empty canvas to add a node · pick its shape in the toolbar · Esc to exit',
   connect: 'Drag node→node to connect · release on the same node for a self-loop · Esc to exit',
-  delete: 'Click a node (removes its edges) or an edge to erase it · Esc to exit',
+  delete: 'Click a node (removes its edges) or an edge to erase it · Esc to exit'
 };
 
 // Serialisable settings by id (same shape as the imperative `canvasOptions`).
@@ -119,26 +119,26 @@ const MODELLER_OPTIONS: CanvasConfig = {
           bgStrokeWidth: 2,
           labelColor: 0xf8fafc,
           labelFontSize: 13,
-          labelPlacement: 'center',
-        },
+          labelPlacement: 'center'
+        }
       },
-      edge: { style: { strokeWidth: 2 } },
-    },
+      edge: { style: { strokeWidth: 2 } }
+    }
   },
-  behaviours: { pan: { enabled: true }, wheel: { enabled: true } },
+  behaviours: { pan: { enabled: true }, wheel: { enabled: true } }
 };
 
 const M_LIGHT: CanvasConfig = {
   layers: {
     background: { backgroundColor: '#f8fafc', color: '#94a3b8' },
-    graph: { node: { style: { bgStrokeColor: 0xffffff } }, edge: { style: { strokeColor: 0xcbd5e1 } } },
-  },
+    graph: { node: { style: { bgStrokeColor: 0xffffff } }, edge: { style: { strokeColor: 0xcbd5e1 } } }
+  }
 };
 const M_DARK: CanvasConfig = {
   layers: {
     background: { backgroundColor: '#0f172a', color: '#334155' },
-    graph: { node: { style: { bgStrokeColor: 0x0f172a } }, edge: { style: { strokeColor: 0x475569 } } },
-  },
+    graph: { node: { style: { bgStrokeColor: 0x0f172a } }, edge: { style: { strokeColor: 0x475569 } } }
+  }
 };
 
 /**
@@ -202,7 +202,7 @@ function HeaderThemeToggle({ ctx }: { ctx: GraphCanvasAppControlContext }) {
       label: 'Switch to dark theme',
       activeLabel: 'Switch to light theme',
       active: ctx.themeKind === 'dark',
-      onToggle: ctx.toggleTheme,
+      onToggle: ctx.toggleTheme
     },
   ];
   return <ToolbarItems items={items} orientation="horizontal" />;
@@ -266,7 +266,7 @@ function DrawingTools() {
         rec.addNode({ type: 'node',
           id: newId,
           position: pos,
-          style: { labelText: `N${n}`, ...(shape ? { shape } : {}) },
+          style: { labelText: `N${n}`, ...(shape ? { shape } : {}) }
         });
         if (fromId) rec.addEdge({ type: 'edge', id: `cm-e-${n}-${stamp}`, source: fromId, target: newId });
       });
@@ -288,12 +288,12 @@ function DrawingTools() {
           onClick: () => {
             setTool('select');
             inspect?.setTarget({ kind: 'node', id });
-          },
+          }
         },
         {
           id: 'pin',
           label: store.isPinned(id) ? 'Unpin' : 'Pin',
-          onClick: () => store.setPinned(id, !store.isPinned(id)),
+          onClick: () => store.setPinned(id, !store.isPinned(id))
         },
         {
           id: 'add-connected',
@@ -301,13 +301,13 @@ function DrawingTools() {
           onClick: () => {
             const origin = store.getNode(id)?.position ?? { x: 0, y: 0 };
             addNodeAt({ x: origin.x + 90, y: origin.y + 70 }, { fromId: id });
-          },
+          }
         },
         {
           id: 'delete',
           label: 'Delete node',
           shortcut: '⌫',
-          onClick: () => history?.transaction('delete node', (rec) => rec.removeNode(id)),
+          onClick: () => history?.transaction('delete node', (rec) => rec.removeNode(id))
         },
       ];
     },
@@ -328,14 +328,14 @@ function DrawingTools() {
           onClick: () => {
             setTool('select');
             inspect?.setTarget({ kind: 'edge', id });
-          },
+          }
         },
         { id: 'reverse', label: 'Reverse direction', onClick: () => store.reverseEdge(id) },
         {
           id: 'delete',
           label: 'Delete edge',
           shortcut: '⌫',
-          onClick: () => history?.transaction('delete edge', (rec) => rec.removeEdge(id)),
+          onClick: () => history?.transaction('delete edge', (rec) => rec.removeEdge(id))
         },
       ];
     },
@@ -357,7 +357,7 @@ function DrawingTools() {
           type: 'node',
           label: `Add ${SHAPE_LABELS[key]?.toLowerCase() ?? key}`,
           icon: SHAPE_ICONS[key as keyof typeof SHAPE_ICONS],
-          onClick: () => addNodeAt({ x: world.x, y: world.y }, { shapeKey: key }),
+          onClick: () => addNodeAt({ x: world.x, y: world.y }, { shapeKey: key })
         })),
         { id: 'fit', label: 'Fit to content', onClick: () => fitContent() },
         { id: 'clear', label: 'Clear all', onClick: () => clear() },
@@ -383,7 +383,7 @@ function DrawingTools() {
           return { type: 'node',
             id: `n-${n}-${Date.now().toString(36)}`,
             position: world,
-            style: { shape: SHAPES[nodeKindRef.current] ?? SHAPES.circle, labelText: String(n) },
+            style: { shape: SHAPES[nodeKindRef.current] ?? SHAPES.circle, labelText: String(n) }
           };
         }}
         onNodeCreate={draw.onNodeCreate}
@@ -450,13 +450,13 @@ function ModellerApp() {
         header={{
           title: 'Graph Modeller',
           center: <HeaderToolbar />,
-          right: (ctx) => <HeaderThemeToggle ctx={ctx} />,
+          right: (ctx) => <HeaderThemeToggle ctx={ctx} />
         }}
         footer={{
           left: <GraphStatusBar />,
           // Shows the active tool's hint (pushed via Canvas.showMessage from
           // <DrawingTools>); updates as the tool changes.
-          right: <CanvasMessageBar />,
+          right: <CanvasMessageBar />
         }}
       >
         {/* Minimal children register the classes by id; MODELLER_OPTIONS holds all
@@ -484,5 +484,5 @@ function ModellerApp() {
 
 export const GraphModellerStory: Story = {
   name: 'GraphModeller',
-  render: () => <ModellerApp />,
+  render: () => <ModellerApp />
 };

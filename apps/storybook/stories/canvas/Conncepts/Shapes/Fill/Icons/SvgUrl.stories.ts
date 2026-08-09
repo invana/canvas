@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas,
   DragPanBehaviour,
-  PrimitivesRenderer,
   WheelZoomBehaviour,
   WorldLayer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext, ShapeFillLayer } from '@invana/canvas';
+import type { ShapeFillLayer } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
@@ -41,7 +41,7 @@ export const SvgUrlStory: Story = {
       smiley:   'https://upload.wikimedia.org/wikipedia/commons/8/85/Smiley.svg',
       sun:      'https://upload.wikimedia.org/wikipedia/commons/0/02/Sun01.svg',
       svgLogo:  'https://upload.wikimedia.org/wikipedia/commons/0/02/SVG_logo.svg',
-      flagJp:   'https://upload.wikimedia.org/wikipedia/commons/9/9e/Flag_of_Japan.svg',
+      flagJp:   'https://upload.wikimedia.org/wikipedia/commons/9/9e/Flag_of_Japan.svg'
     };
 
     // ─── Canvas setup ──────────────────────────────────────────────────────
@@ -53,13 +53,10 @@ export const SvgUrlStory: Story = {
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({
-          container: this.container,
-          camera: ctx.camera,
-        });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -77,7 +74,7 @@ export const SvgUrlStory: Story = {
         url: samples[settings.sample]!,
         strokeWidth: 2,
         color: 0xffffff,
-        sizeRatio: 0.6,
+        sizeRatio: 0.6
       },
     ];
 
@@ -87,7 +84,7 @@ export const SvgUrlStory: Story = {
       y: 0,
       radius: 48,
       fill: buildFill(),
-      stroke: { color: 0x111827, width: 1 },
+      stroke: { color: 0x111827, width: 1 }
     });
 
     canvas.camera.fitContent(layer.getBounds(), 100);
@@ -98,5 +95,5 @@ export const SvgUrlStory: Story = {
     gui.add(settings, 'sample', Object.keys(samples)).onChange(() => {
       layer.renderer.updateShape('svg', { fill: buildFill() });
     });
-  },
+  }
 };

@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas,
   DragPanBehaviour,
-  PrimitivesRenderer,
   WheelZoomBehaviour,
   WorldLayer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext, ShapeStroke } from '@invana/canvas';
+import type { ShapeStroke } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -37,13 +37,10 @@ export const Stroke: Story = {
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({
-          container: this.container,
-          camera: ctx.camera,
-        });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -60,7 +57,7 @@ export const Stroke: Story = {
       gap: 0,
       dashOffset: 0,
       cap: 'butt' as 'butt' | 'round' | 'square',
-      join: 'miter' as 'miter' | 'round' | 'bevel',
+      join: 'miter' as 'miter' | 'round' | 'bevel'
     };
 
     const buildStroke = (): ShapeStroke => ({
@@ -72,7 +69,7 @@ export const Stroke: Story = {
         settings.dash > 0 || settings.gap > 0 ? [settings.dash, settings.gap] : undefined,
       dashOffset: settings.dashOffset,
       cap: settings.cap,
-      join: settings.join,
+      join: settings.join
     });
 
     const drawShape = () => {
@@ -81,11 +78,11 @@ export const Stroke: Story = {
       const fill = { kind: 'solid' as const, color: 0x1f2937, alpha: 1 };
       if (settings.shape === 'circle') {
         layer.renderer.addShape('s', {
-          kind: 'circle', x: 0, y: 0, radius: 64, fill, stroke,
+          kind: 'circle', x: 0, y: 0, radius: 64, fill, stroke
         });
       } else {
         layer.renderer.addShape('s', {
-          kind: 'rect', x: 0, y: 0, width: 140, height: 100, cornerRadius: 8, fill, stroke,
+          kind: 'rect', x: 0, y: 0, width: 140, height: 100, cornerRadius: 8, fill, stroke
         });
       }
     };
@@ -105,5 +102,5 @@ export const Stroke: Story = {
     gui.add(settings, 'dashOffset', 0, 40, 1).onChange(drawShape);
     gui.add(settings, 'cap', ['butt', 'round', 'square']).onChange(drawShape);
     gui.add(settings, 'join', ['miter', 'round', 'bevel']).onChange(drawShape);
-  },
+  }
 };

@@ -24,7 +24,7 @@ import {
   GraphStatusBar,
   SchemaViewPanel,
   ToolbarItems,
-  useSidePanels,
+  useSidePanels
 } from '@invana/canvas-ui';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
@@ -52,8 +52,8 @@ export const CanvasDerivedStory: Story = {
           source: e.source,
           target: e.target,
           type: e.data.kind,
-          data: e.data,
-        })),
+          data: e.data
+        }))
       }),
       [],
     );
@@ -64,7 +64,7 @@ export const CanvasDerivedStory: Story = {
       () => ({
         elk: () => new ElkLayout({ algorithm: 'layered', direction: 'DOWN', nodeSpacing: 60, layerSpacing: 90 }),
         force: () =>
-          new D3ForceLayout({ charge: { strength: -280 }, link: { distance: 140 }, collide: {}, animate: false }),
+          new D3ForceLayout({ charge: { strength: -280 }, link: { distance: 140 }, collide: {}, animate: false })
       }),
       [],
     );
@@ -82,7 +82,7 @@ export const CanvasDerivedStory: Story = {
           label: 'Schema',
           render: (c) => (
             <SchemaViewPanel canvas={c} layouts={layouts} layoutLabels={layoutLabels} defaultLayout="elk" />
-          ),
+          )
         },
       ],
       { defaultOpenId: 'schema', section: { defaultSize: '420px', maxSize: '560px' } },
@@ -121,7 +121,7 @@ export const CanvasDerivedStory: Story = {
                     label: 'Minimap: off',
                     activeLabel: 'Minimap: on',
                     active: minimapOn,
-                    onToggle: () => setMinimapOn((v) => !v),
+                    onToggle: () => setMinimapOn((v) => !v)
                   },
                   {
                     type: 'toggle',
@@ -130,7 +130,7 @@ export const CanvasDerivedStory: Story = {
                     label: 'Dev overlay: off',
                     activeLabel: 'Dev overlay: on',
                     active: devOn,
-                    onToggle: () => setDevOn((v) => !v),
+                    onToggle: () => setDevOn((v) => !v)
                   },
                   {
                     type: 'toggle',
@@ -140,11 +140,11 @@ export const CanvasDerivedStory: Story = {
                     label: 'Switch to dark theme',
                     activeLabel: 'Switch to light theme',
                     active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme,
+                    onToggle: ctx.toggleTheme
                   },
                 ]}
               />
-            ),
+            )
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
           right={dock.region}
@@ -155,5 +155,5 @@ export const CanvasDerivedStory: Story = {
         </GraphCanvasApp>
       </ThemeProvider>
     );
-  },
+  }
 };

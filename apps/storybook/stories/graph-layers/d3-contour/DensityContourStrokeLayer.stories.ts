@@ -15,14 +15,14 @@ import {
   DevInfoLayer,
   DragPanBehaviour,
   LayersPanelLayer,
-  WheelZoomBehaviour,
+  WheelZoomBehaviour
 } from '@invana/canvas';
 import { DragNodeBehaviour, GraphCanvas, GraphLayer, type GraphNode, ThemeBehaviour } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import {
   DENSITY_CONTOUR_PALETTE_NAMES,
   DensityContourStrokeLayer,
-  type DensityContourPaletteName,
+  type DensityContourPaletteName
 } from '@invana/graph-layer-d3-contour';
 import { lesMiserables } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
@@ -45,7 +45,7 @@ export const DensityContourStrokeLayer_Story: Story = {
     type LesMisNodeData = { group: number };
     const nodes: GraphNode<LesMisNodeData>[] = lesMiserables.nodes.map((n) => ({ type: `group-${n.data.group}`,
       id: n.id,
-      data: { group: n.data.group },
+      data: { group: n.data.group }
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-density-stroke-lesmis')!;
@@ -66,10 +66,10 @@ export const DensityContourStrokeLayer_Story: Story = {
         node: {
           style: {
             bgFill: (n: GraphNode) =>
-              groupColors[(n.data as LesMisNodeData).group % groupColors.length]!,
-          },
-        },
-      },
+              groupColors[(n.data as LesMisNodeData).group % groupColors.length]!
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
 
@@ -83,7 +83,7 @@ export const DensityContourStrokeLayer_Story: Story = {
     const contour = new DensityContourStrokeLayer({
       id: 'density',
       zIndex: -1,
-      options: { graphLayerId: 'graph' },
+      options: { graphLayerId: 'graph' }
     });
     canvas.layers.add(contour);
 
@@ -106,11 +106,11 @@ export const DensityContourStrokeLayer_Story: Story = {
           color: '#475569',
           size: 1.5,
           spacing: 24,
-          alpha: 0.85,
+          alpha: 0.85
         },
         graph: {
           node: { style: { shape: { kind: 'circle', radius: 5 } } },
-          edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 0.5 } },
+          edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 0.5 } }
         },
         density: {
           bandwidth: 30,
@@ -120,7 +120,7 @@ export const DensityContourStrokeLayer_Story: Story = {
           strokeColor: 0x4682b4,
           indexEvery: 5,
           indexMajorWidth: 1,
-          indexMinorWidth: 0.25,
+          indexMinorWidth: 0.25
         },
         'layers-panel': {
           corner: 'top-left',
@@ -129,8 +129,8 @@ export const DensityContourStrokeLayer_Story: Story = {
           opacity: 0.92,
           backgroundColor: 'rgba(10,10,10,0.82)',
           textColor: '#c8d3e0',
-          accentColor: '#4fc3f7',
-        },
+          accentColor: '#4fc3f7'
+        }
       },
       behaviours: {
         pan: { enabled: true },
@@ -140,11 +140,11 @@ export const DensityContourStrokeLayer_Story: Story = {
           enabled: true,
           mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
-          dark: { backgroundColor: '#0f172a', color: '#475569' },
-        },
+          dark: { backgroundColor: '#0f172a', color: '#475569' }
+        }
       },
       layouts: { force: { link: {}, charge: {}, center: { x: 0, y: 0 } } },
-      activeLayout: 'force',
+      activeLayout: 'force'
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -173,7 +173,7 @@ export const DensityContourStrokeLayer_Story: Story = {
       indexMinorWidth: 0.25,
       bandwidth: 30,
       thresholds: 20,
-      cellSize: 4,
+      cellSize: 4
     };
 
     const gui = new GUI({ title: 'DensityContourStrokeLayer' });
@@ -247,5 +247,5 @@ export const DensityContourStrokeLayer_Story: Story = {
       { fit: () => canvas.camera.fitContent(graph.getBounds(), 100) },
       'fit',
     ).name('Fit to content');
-  },
+  }
 };

@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   DragPanBehaviour, WheelZoomBehaviour,
-  LOOP_CURVE_PRESETS,
+  LOOP_CURVE_PRESETS
 } from '@invana/canvas';
 import {
   GraphCanvas, DragNodeBehaviour, GraphLayer,
-  type GraphEdge, type GraphNode,
+  type GraphEdge, type GraphNode
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
@@ -59,7 +59,7 @@ export const Ring: Story = {
       return { dx: ux * t, dy: uy * t };
     };
     const circleSilhouette = (r: number) => (theta: number) => ({
-      dx: r * Math.cos(theta), dy: r * Math.sin(theta),
+      dx: r * Math.cos(theta), dy: r * Math.sin(theta)
     });
     const ellipseSilhouette = (rx: number, ry: number) => (theta: number) => {
       const ux = Math.cos(theta);
@@ -106,7 +106,7 @@ export const Ring: Story = {
     ];
 
     const nodes: GraphNode[] = HOSTS.map(h => ({ type: 'node',
-      id: h.id, position: { x: h.cx, y: 0 }, style: h.nodeStyle,
+      id: h.id, position: { x: h.cx, y: 0 }, style: h.nodeStyle
     }));
 
     // The pivot is constant per (host, angle), so pre-compute and stash
@@ -120,7 +120,7 @@ export const Ring: Story = {
         edges.push({ type: 'edge',
           id: `${h.id}-${a.id}`,
           source: h.id, target: h.id,
-          data: { angle: a.angle, pivotDx: pivot.dx, pivotDy: pivot.dy },
+          data: { angle: a.angle, pivotDx: pivot.dx, pivotDy: pivot.dy }
         });
       }
     }
@@ -151,13 +151,13 @@ export const Ring: Story = {
                   radius: settings.radius,
                   width: settings.width,
                   bulge: settings.bulge,
-                  pivotOffset: { dx: m.pivotDx, dy: m.pivotDy },
-                },
+                  pivotOffset: { dx: m.pivotDx, dy: m.pivotDy }
+                }
               };
-            },
-          },
-        },
-      },
+            }
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -168,22 +168,22 @@ export const Ring: Story = {
       layers: {
         graph: {
           node: {
-            style: { bgFill: 0x4f7ff5, bgStrokeColor: 0x2563eb, bgStrokeWidth: 0 },
+            style: { bgFill: 0x4f7ff5, bgStrokeColor: 0x2563eb, bgStrokeWidth: 0 }
           },
           edge: {
             style: {
               strokeColor: 0x94a3b8,
               strokeWidth: 1.5,
-              arrowTargetShape: 'triangle',
-            },
-          },
-        },
+              arrowTargetShape: 'triangle'
+            }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'drag-node': { enabled: true },
-      },
+        'drag-node': { enabled: true }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -201,5 +201,5 @@ export const Ring: Story = {
     gui.add(settings, 'radius', 0, 80, 1).name('radius (length)').onChange(rerenderAll);
     gui.add(settings, 'width', 0, 60, 1).name('width (neck)').onChange(rerenderAll);
     gui.add(settings, 'bulge', 0, 80, 1).name('bulge (belly)').onChange(rerenderAll);
-  },
+  }
 };

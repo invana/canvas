@@ -5,7 +5,7 @@ import {
   DragNodeBehaviour,
   GraphCanvas,
   GraphLayer,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import GUI from 'lil-gui';
@@ -73,10 +73,10 @@ export const NodeCentralityStory: Story = {
         initData: { nodes, edges },
         node: {
           style: {
-            labelText: (n) => n.id,
-          },
-        },
-      },
+            labelText: (n) => n.id
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
 
@@ -106,13 +106,13 @@ export const NodeCentralityStory: Story = {
               labelColor: 0x1f2937,
               labelFontSize: 11,
               labelPlacement: 'bottom',
-              labelOffsetY: 4,
-            },
+              labelOffsetY: 4
+            }
           },
           edge: {
-            style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' },
-          },
-        },
+            style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
@@ -123,8 +123,8 @@ export const NodeCentralityStory: Story = {
           direction: 'both',
           minSize: 6,
           maxSize: 36,
-          scale: 'sqrt',
-        },
+          scale: 'sqrt'
+        }
       },
       layouts: {
         force: {
@@ -140,12 +140,12 @@ export const NodeCentralityStory: Story = {
                 return shape.radius + 4;
               }
               return 14;
-            },
+            }
           },
-          center: { x: 0, y: 0 },
-        },
+          center: { x: 0, y: 0 }
+        }
       },
-      activeLayout: 'force',
+      activeLayout: 'force'
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -155,7 +155,7 @@ export const NodeCentralityStory: Story = {
       minSize: 6,
       maxSize: 36,
       scale: 'sqrt' as 'linear' | 'sqrt' | 'log',
-      reRunLayout: () => void canvas.runLayout('force'),
+      reRunLayout: () => void canvas.runLayout('force')
     };
     const apply = (): void => {
       if (settings.enabled) nodeCentrality.enable();
@@ -166,9 +166,9 @@ export const NodeCentralityStory: Story = {
             direction: settings.direction,
             minSize: settings.minSize,
             maxSize: settings.maxSize,
-            scale: settings.scale,
-          },
-        },
+            scale: settings.scale
+          }
+        }
       });
       // Sizes changed → re-run the layout so collision radii catch up.
       void canvas.runLayout('force');
@@ -182,5 +182,5 @@ export const NodeCentralityStory: Story = {
     gui.add(settings, 'maxSize', 8, 80, 1).onChange(apply);
     gui.add(settings, 'scale', ['linear', 'sqrt', 'log']).onChange(apply);
     gui.add(settings, 'reRunLayout').name('re-run layout');
-  },
+  }
 };

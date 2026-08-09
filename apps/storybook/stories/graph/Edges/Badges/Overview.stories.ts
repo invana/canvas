@@ -8,7 +8,7 @@ import {
   type GraphEdge,
   type GraphNode,
 
-  type EdgeStyle,} from '@invana/graph';
+  type EdgeStyle} from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -73,10 +73,10 @@ export const Overview: Story = {
               shape: { kind: 'circle', radius: 9 },
               fill: 0xf59e0b,
               strokeColor: 0xffffff,
-              strokeWidth: 2,
+              strokeWidth: 2
             },
-          ],
-        },
+          ]
+        }
       },
       { type: 'edge',
         id: 'r1',
@@ -94,10 +94,10 @@ export const Overview: Story = {
               strokeWidth: 1.5,
               labelText: '12',
               labelColor: 0xffffff,
-              labelFontSize: 12,
+              labelFontSize: 12
             },
-          ],
-        },
+          ]
+        }
       },
       { type: 'edge',
         id: 'r2',
@@ -119,11 +119,11 @@ export const Overview: Story = {
                 fontFamily: 'sans-serif',
                 fontWeight: 700,
                 color: 0xffffff,
-                sizeRatio: 0.7,
-              },
+                sizeRatio: 0.7
+              }
             },
-          ],
-        },
+          ]
+        }
       },
       { type: 'edge',
         id: 'r3',
@@ -145,12 +145,12 @@ export const Overview: Story = {
                   color: 0xf97316,
                   strokeWidth: 12,
                   layers: 6,
-                  innerAlpha: 0.6,
+                  innerAlpha: 0.6
                 },
-              ],
+              ]
             },
-          ],
-        },
+          ]
+        }
       },
       { type: 'edge',
         id: 'r4',
@@ -171,10 +171,10 @@ export const Overview: Story = {
               labelColor: 0xffffff,
               labelFontSize: 11,
               autoRotate: true,
-              keepUpright: true,
+              keepUpright: true
             },
-          ],
-        },
+          ]
+        }
       },
     ];
 
@@ -197,23 +197,23 @@ export const Overview: Story = {
               labelColor: 0x0f172a,
               labelFontSize: 12,
               labelFontWeight: 500,
-              labelAlign: 'right',
-            },
+              labelAlign: 'right'
+            }
           },
           edge: {
             style: {
               strokeColor: 0x94a3b8,
               strokeWidth: 1.5,
-              arrowTargetShape: 'triangle',
-            },
-          },
-        },
+              arrowTargetShape: 'triangle'
+            }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'drag-node': { enabled: true },
-      },
+        'drag-node': { enabled: true }
+      }
     };
 
     await canvas.init({ container, autoResize: true, config: canvasOptions });
@@ -222,7 +222,7 @@ export const Overview: Story = {
     const placements: EdgeBadgePlacement[] = ['start', 'middle', 'end', 0.25, 0.75];
 
     const settings = {
-      placement: 'middle' as EdgeBadgePlacement,
+      placement: 'middle' as EdgeBadgePlacement
     };
 
     const apply = (): void => {
@@ -237,8 +237,8 @@ export const Overview: Story = {
         graph.store.updateEdge(edge.id, {
           style: {
             ...edge.style!,
-            badges: [{ ...badge, placement: settings.placement }],
-          },
+            badges: [{ ...badge, placement: settings.placement }]
+          }
         });
       }
     };
@@ -250,5 +250,5 @@ export const Overview: Story = {
       .name('placement (rows 0, 1, 3, 4)')
       .onChange(apply);
     gui.add({ fit: () => canvas.camera.fitContent(graph.getBounds(), 80) }, 'fit').name('Fit to content');
-  },
+  }
 };

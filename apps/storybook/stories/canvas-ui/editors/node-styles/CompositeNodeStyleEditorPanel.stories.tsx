@@ -10,7 +10,7 @@ import {
   CompositeNodeStyleEditorPanel,
   compositeToForm,
   formToComposite,
-  type CompositeFormState,
+  type CompositeFormState
 } from '@invana/canvas-ui';
 
 import { COMPOSITE_DATA, LiveStyleEditorApp, SelectPrompt, useSelectedNode } from './_shared';
@@ -46,5 +46,5 @@ export const CompositeNodeStyleEditorPanelStory: Story = {
       data={COMPOSITE_DATA}
       panel={<Panel />}
     />
-  ),
+  )
 };

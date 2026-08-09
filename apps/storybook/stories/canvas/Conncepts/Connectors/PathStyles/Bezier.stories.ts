@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas, DragPanBehaviour, DragShapeBehaviour, WheelZoomBehaviour,
-  WorldLayer, PrimitivesRenderer, arrowMarkerSpec,
+  WorldLayer, arrowMarkerSpec,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -22,10 +22,10 @@ export const Bezier: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -43,7 +43,7 @@ export const Bezier: Story = {
     canvas.behaviours.register(new DragShapeBehaviour({
       id: 'drag-shape',
       enabled: true,
-      renderer: layer.renderer,
+      renderer: layer.renderer
     }));
 
     const settings = {
@@ -64,18 +64,18 @@ export const Bezier: Story = {
       showSourceMarker: false,
       showTargetMarker: true,
       markerLengthScale: 4,
-      markerWidthScale: 3,
+      markerWidthScale: 3
     };
 
     layer.renderer.addShape('a', {
       kind: 'circle', x: -150, y: -60, radius: 22,
       fill: { kind: 'solid', color: 0x4f9cf9 },
-      stroke: { color: 0x1e40af, width: 2 },
+      stroke: { color: 0x1e40af, width: 2 }
     });
     layer.renderer.addShape('b', {
       kind: 'circle', x: 150, y: 60, radius: 22,
       fill: { kind: 'solid', color: 0x10b981 },
-      stroke: { color: 0x047857, width: 2 },
+      stroke: { color: 0x047857, width: 2 }
     });
 
     const draw = (): void => {
@@ -93,7 +93,7 @@ export const Bezier: Story = {
           : undefined,
         targetMarker: settings.showTargetMarker
           ? arrowMarkerSpec({ lengthScale: settings.markerLengthScale, widthScale: settings.markerWidthScale, fill: settings.strokeColor })
-          : undefined,
+          : undefined
       });
     };
 
@@ -125,5 +125,5 @@ export const Bezier: Story = {
     markerFolder.add(settings, 'showTargetMarker').onChange(draw);
     markerFolder.add(settings, 'markerLengthScale', 0, 12, 0.5).onChange(draw);
     markerFolder.add(settings, 'markerWidthScale', 0, 10, 0.5).onChange(draw);
-  },
+  }
 };

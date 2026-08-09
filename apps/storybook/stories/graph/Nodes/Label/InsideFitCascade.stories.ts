@@ -42,9 +42,9 @@ export const InsideFitCascadeStory: Story = {
           labelStyle: {
             content: { kind: 'text', text: LONG, fontSize: 16, fontWeight: 600, fill: 0x454545 },
             placement: 'inside-center',
-            minFontSize: 9,
-          },
-        },
+            minFontSize: 9
+          }
+        }
       },
       { type: 'node',
         id: 'rect',
@@ -54,9 +54,9 @@ export const InsideFitCascadeStory: Story = {
           labelStyle: {
             content: { kind: 'text', text: LONG, fontSize: 16, fontWeight: 600, fill: 0x454545 },
             placement: 'inside-center',
-            minFontSize: 9,
-          },
-        },
+            minFontSize: 9
+          }
+        }
       },
       { type: 'node',
         id: 'arc',
@@ -66,9 +66,9 @@ export const InsideFitCascadeStory: Story = {
           labelStyle: {
             content: { kind: 'text', text: LONG, fontSize: 16, fontWeight: 600, fill: 0x454545 },
             placement: 'inside-center',
-            minFontSize: 9,
-          },
-        },
+            minFontSize: 9
+          }
+        }
       },
       { type: 'node',
         id: 'regular-polygon',
@@ -78,9 +78,9 @@ export const InsideFitCascadeStory: Story = {
           labelStyle: {
             content: { kind: 'text', text: LONG, fontSize: 16, fontWeight: 600, fill: 0x454545 },
             placement: 'inside-center',
-            minFontSize: 9,
-          },
-        },
+            minFontSize: 9
+          }
+        }
       },
       { type: 'node',
         id: 'star',
@@ -90,9 +90,9 @@ export const InsideFitCascadeStory: Story = {
           labelStyle: {
             content: { kind: 'text', text: LONG, fontSize: 16, fontWeight: 600, fill: 0x454545 },
             placement: 'inside-center',
-            minFontSize: 9,
-          },
-        },
+            minFontSize: 9
+          }
+        }
       },
       { type: 'node',
         id: 'polygon',
@@ -102,9 +102,9 @@ export const InsideFitCascadeStory: Story = {
           labelStyle: {
             content: { kind: 'text', text: LONG, fontSize: 16, fontWeight: 600, fill: 0x454545 },
             placement: 'inside-center',
-            minFontSize: 9,
-          },
-        },
+            minFontSize: 9
+          }
+        }
       },
     ];
 
@@ -114,7 +114,7 @@ export const InsideFitCascadeStory: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes, edges: [] } },
+      options: { initData: { nodes, edges: [] } }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -122,9 +122,9 @@ export const InsideFitCascadeStory: Story = {
 
     const canvasOptions = {
       layers: {
-        graph: { node: { style: { bgFill: 0xf1f5f9, bgStrokeColor: 0x475569, bgStrokeWidth: 1 } } },
+        graph: { node: { style: { bgFill: 0xf1f5f9, bgStrokeColor: 0x475569, bgStrokeWidth: 1 } } }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 100);
@@ -153,7 +153,7 @@ export const InsideFitCascadeStory: Story = {
               { x: -60 * scale, y: 0 },
               { x: -30 * scale, y: 52 * scale },
               { x: 30 * scale, y: 52 * scale },
-            ],
+            ]
           };
         default:
           throw new Error(`unknown id ${id}`);
@@ -170,10 +170,10 @@ export const InsideFitCascadeStory: Story = {
         const nextLs: ShapeLabelStyle = {
           ...prevLs,
           content: { ...prevLs.content, text: settings.text, fontSize: settings.fontSize },
-          minFontSize: settings.minFontSize,
+          minFontSize: settings.minFontSize
         };
         graph.store.updateNode(id, {
-          style: { ...prev, shape: scaledShape(id, settings.sizeScale), labelStyle: nextLs },
+          style: { ...prev, shape: scaledShape(id, settings.sizeScale), labelStyle: nextLs }
         });
       }
     };
@@ -183,5 +183,5 @@ export const InsideFitCascadeStory: Story = {
     gui.add(settings, 'sizeScale', 0.2, 1.5, 0.05).onChange(apply);
     gui.add(settings, 'fontSize', 9, 28, 1).onChange(apply);
     gui.add(settings, 'minFontSize', 6, 24, 1).onChange(apply);
-  },
+  }
 };

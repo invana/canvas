@@ -2,14 +2,14 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
   DragPanBehaviour,
-  WheelZoomBehaviour,
+  WheelZoomBehaviour
 } from '@invana/canvas';
 import { GraphCanvas, GraphLayer, TextResolutionLODBehaviour, ThemeBehaviour } from '@invana/graph';
 import {
   D3HierarchyLayout,
   type CartesianOrientation,
   type D3HierarchyLayoutMode,
-  type D3HierarchyLayoutOptions,
+  type D3HierarchyLayoutOptions
 } from '@invana/graph-layout-d3-hierarchy';
 import type { LayoutOptions } from '@invana/canvas';
 import { flareAsGraph } from '@invana/graph-datasets';
@@ -41,7 +41,7 @@ export const Cluster: Story = {
       // camera zooms past a threshold so glyph textures don't sample-blur.
       // Tier-based to avoid frame stutter on every zoom step — see
       // `TextResolutionLODBehaviour`.
-      sharpLabelsOnZoom: true,
+      sharpLabelsOnZoom: true
     };
 
     // Depth-based color ramp (warm root → cool leaves).
@@ -98,17 +98,17 @@ export const Cluster: Story = {
                   labelPlacement: (n.data.isLeaf ? 'right' : 'left') as
                     | 'left'
                     | 'right',
-                  labelOffsetX: n.data.isLeaf ? 4 : -4,
+                  labelOffsetX: n.data.isLeaf ? 4 : -4
                 }
-              : {}),
-          },
+              : {})
+          }
         })),
         edges: data.edges.map((e) => ({
           id: e.id,
           type: 'edge',
           source: e.source,
-          target: e.target,
-        })),
+          target: e.target
+        }))
       };
     };
 
@@ -119,7 +119,7 @@ export const Cluster: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: buildGraphData() },
+      options: { initData: buildGraphData() }
     });
 
     canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
@@ -132,14 +132,14 @@ export const Cluster: Story = {
     // first. Enabled via config (`sharpLabelsOnZoom`), not the constructor.
     const labelResolutionLOD = new TextResolutionLODBehaviour({
       id: 'label-resolution',
-      targetLayerId: 'graph',
+      targetLayerId: 'graph'
     });
     canvas.behaviours.register(labelResolutionLOD);
 
     const layout = new D3HierarchyLayout({
       id: 'hierarchy',
       type: 'node',
-      targetLayerId: 'graph',
+      targetLayerId: 'graph'
     } as D3HierarchyLayoutOptions & LayoutOptions);
     canvas.layouts.add(layout);
 
@@ -167,11 +167,11 @@ export const Cluster: Story = {
                 // centre rather than the trimmed boundary cut. Same trick the
                 // RadialTree story uses; nodes draw on top of the curve.
                 sourceAnchor: 'center',
-                targetAnchor: 'center',
-              },
-            },
-          },
-        },
+                targetAnchor: 'center'
+              }
+            }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
@@ -180,9 +180,9 @@ export const Cluster: Story = {
           enabled: true,
           mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
-          dark: { backgroundColor: '#0b1220', color: '#475569' },
+          dark: { backgroundColor: '#0b1220', color: '#475569' }
         },
-        'label-resolution': { enabled: settings.sharpLabelsOnZoom },
+        'label-resolution': { enabled: settings.sharpLabelsOnZoom }
       },
       layouts: {
         hierarchy: {
@@ -191,10 +191,10 @@ export const Cluster: Story = {
           // Per-node spacing (`nodeSize`) keeps siblings consistently-spaced
           // regardless of subtree imbalance — preferred over `size` for
           // dendrograms with many leaves.
-          nodeSize: [settings.siblingSpacing, settings.depthSpacing] as [number, number],
-        },
+          nodeSize: [settings.siblingSpacing, settings.depthSpacing] as [number, number]
+        }
       },
-      activeLayout: 'hierarchy',
+      activeLayout: 'hierarchy'
     };
 
     // Fit the camera once the layout settles — fires on the initial auto-run
@@ -243,7 +243,7 @@ export const Cluster: Story = {
       .add(settings, 'nodeRadius', 1, 8, 0.5)
       .onChange((v: number) =>
         canvas.update({
-          layers: { graph: { node: { style: { shape: { kind: 'circle', radius: v } } } } },
+          layers: { graph: { node: { style: { shape: { kind: 'circle', radius: v } } } } }
         }),
       );
     style.add(settings, 'colorByDepth').onChange(rebuildData);
@@ -267,5 +267,5 @@ export const Cluster: Story = {
       .onChange((on: boolean) => (on ? labelResolutionLOD.enable() : labelResolutionLOD.disable()));
 
     gui.add({ refit: () => canvas.camera.fitContent(graph.getBounds(), 80) }, 'refit').name('Re-fit camera');
-  },
+  }
 };

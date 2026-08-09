@@ -31,13 +31,13 @@ import {
   GraphControlsToolbar,
   GraphStatusBar,
   ToolbarItems,
-  useSidePanels,
+  useSidePanels
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData, GraphNode, NodeShapeOptions } from '@invana/graph';
 import type { ElkDirection } from '@invana/graph-layout-elkjs';
 import {
-  invanaCodeKg,
+  invanaCodeKg
 } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider } from '@invana/themes';
 import { Map, Moon, Settings, Sun } from 'lucide-react';
@@ -84,7 +84,7 @@ export const CompositeCardsStory: Story = {
           label: 'Settings',
           render: (canvas) => (
             <CanvasSettingsEditorPanel canvas={canvas} className="border-0 bg-transparent shadow-none" />
-          ),
+          )
         },
       ],
       { section: { defaultSize: '360px', maxSize: '460px' } },
@@ -99,7 +99,7 @@ export const CompositeCardsStory: Story = {
         nodes: keep,
         edges: invanaCodeKg.edges
           .filter((e) => idSet.has(e.source) && idSet.has(e.target))
-          .map((e) => e),
+          .map((e) => e)
       };
     }, [labels]);
 
@@ -139,7 +139,7 @@ export const CompositeCardsStory: Story = {
           // The card carries its own colour — nothing else may repaint it.
           color: { enabled: false },
           hover: { enabled: true, state: 'highlighted', degree: 1, direction: 'both' },
-          'click-select': { enabled: true, multiple: true, trigger: ['shift'] },
+          'click-select': { enabled: true, multiple: true, trigger: ['shift'] }
         },
         layers: {
           background: { type: 'pattern', patternType: 'dots', size: 1.2, spacing: 26, alpha: 0.7 },
@@ -173,17 +173,17 @@ export const CompositeCardsStory: Story = {
                       // footer: file path (left) + line range (right)
                       { part: 'label', x: CARD.pad, y: CARD.h - 28, text: p.filePath, fontSize: 11, fontWeight: 500, fill: 0x64748b, maxWidth: inner - 64, maxLines: 1, overflow: 'ellipsis' },
                       { part: 'label', x: CARD.w - CARD.pad, y: CARD.h - 28, text: p.lineRange ? `L${p.lineRange[0]}–${p.lineRange[1]}` : '', anchor: 'right', fontSize: 11, fontWeight: 500, fill: 0x64748b },
-                    ],
+                    ]
                   } as unknown as NodeShapeOptions;
-                },
+                }
               },
               state: {
                 // `bgStrokeColor` overrides the card's own border for the hover
                 // / select ring; `dimmed` fades off-focus cards.
                 highlighted: { bgStrokeColor: 0xfbbf24, bgStrokeWidth: 3 },
                 selected: { bgStrokeColor: 0xffffff, bgStrokeWidth: 3 },
-                dimmed: { bgAlpha: 0.25 },
-              },
+                dimmed: { bgAlpha: 0.25 }
+              }
             },
             edge: {
               style: {
@@ -193,20 +193,20 @@ export const CompositeCardsStory: Story = {
                 strokeAlpha: 0.22,
                 arrowTargetShape: 'triangle',
                 arrowTargetSize: 5,
-                arrowTargetColor: 0x94a3b8,
+                arrowTargetColor: 0x94a3b8
               },
               state: {
                 highlighted: {
                   strokeColor: 0xfbbf24,
                   strokeWidth: 1.6,
                   strokeAlpha: 0.95,
-                  arrowTargetColor: 0xfbbf24,
+                  arrowTargetColor: 0xfbbf24
                 },
-                dimmed: { strokeAlpha: 0.03 },
-              },
-            },
+                dimmed: { strokeAlpha: 0.03 }
+              }
+            }
           },
-          minimap: { position: 'bottom-right', width: 220, height: 160 },
+          minimap: { position: 'bottom-right', width: 220, height: 160 }
         },
         layouts: {
           elk: {
@@ -216,9 +216,9 @@ export const CompositeCardsStory: Story = {
             layerSpacing: 90,
             // Reserve a lane between nodes and edges so the manhattan router
             // has clear channels — fewer edges forced over cards.
-            edgeNodeSpacing: 24,
-          },
-        },
+            edgeNodeSpacing: 24
+          }
+        }
       };
       // CARD is a render-local literal the resolvers close over.
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -249,7 +249,7 @@ export const CompositeCardsStory: Story = {
                     label: 'Colour by',
                     value: colorMode,
                     options: { type: 'Entity type', cluster: 'Cluster' },
-                    onChange: (v) => setColorMode(v as 'type' | 'cluster'),
+                    onChange: (v) => setColorMode(v as 'type' | 'cluster')
                   },
                   {
                     type: 'select',
@@ -257,7 +257,7 @@ export const CompositeCardsStory: Story = {
                     label: 'Direction',
                     value: direction,
                     options: { RIGHT: 'Right', DOWN: 'Down', LEFT: 'Left', UP: 'Up' },
-                    onChange: (v) => setDirection(v as ElkDirection),
+                    onChange: (v) => setDirection(v as ElkDirection)
                   },
                   {
                     type: 'select',
@@ -276,7 +276,7 @@ export const CompositeCardsStory: Story = {
                         if (next.has(l as InvanaCodeNodeLabel)) next.delete(l as InvanaCodeNodeLabel);
                         else next.add(l as InvanaCodeNodeLabel);
                         return next;
-                      }),
+                      })
                   },
                   {
                     type: 'toggle',
@@ -285,7 +285,7 @@ export const CompositeCardsStory: Story = {
                     label: 'Minimap: off',
                     activeLabel: 'Minimap: on',
                     active: minimapOn,
-                    onToggle: () => setMinimapOn((v) => !v),
+                    onToggle: () => setMinimapOn((v) => !v)
                   },
                   ...dock.items,
                   {
@@ -296,11 +296,11 @@ export const CompositeCardsStory: Story = {
                     label: 'Switch to dark theme',
                     activeLabel: 'Switch to light theme',
                     active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme,
+                    onToggle: ctx.toggleTheme
                   },
                 ]}
               />
-            ),
+            )
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
           right={dock.region}
@@ -318,5 +318,5 @@ export const CompositeCardsStory: Story = {
         </GraphCanvasApp>
       </ThemeProvider>
     );
-  },
+  }
 };

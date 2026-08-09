@@ -5,10 +5,9 @@ import {
   WheelZoomBehaviour,
   DragShapeBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
   arrowMarkerSpec,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
@@ -32,10 +31,10 @@ export const HtmlContentStory: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -61,7 +60,7 @@ export const HtmlContentStory: Story = {
       source: { kind: 'shape', shapeId: 'src', anchor: 'boundary' },
       target: { kind: 'shape', shapeId: 'tgt', anchor: 'boundary' },
       stroke: { color: 0xcbd5e1, width: 1.5 },
-      targetMarker: arrowMarkerSpec({ lengthScale: 6, widthScale: 4, fill: 0xcbd5e1 }),
+      targetMarker: arrowMarkerSpec({ lengthScale: 6, widthScale: 4, fill: 0xcbd5e1 })
     });
 
     const PRESETS = {
@@ -70,7 +69,7 @@ export const HtmlContentStory: Story = {
       'weighted relation':
         '<verb>flows</verb> <weight>×3.4</weight>',
       'state badge':
-        '<state>RUNNING</state> for <dur>13d 4h</dur>',
+        '<state>RUNNING</state> for <dur>13d 4h</dur>'
     } as const;
 
     type PresetKey = keyof typeof PRESETS;
@@ -80,7 +79,7 @@ export const HtmlContentStory: Story = {
       entity: { fontSize: 12, fill: '#4f9cf9', fontWeight: 700 },
       weight: { fontSize: 11, fill: '#64748b', fontWeight: 500 },
       state:  { fontSize: 11, fill: '#10b981', fontWeight: 700 },
-      dur:    { fontSize: 11, fill: '#475569', fontWeight: 400 },
+      dur:    { fontSize: 11, fill: '#475569', fontWeight: 400 }
     };
 
     const settings: {
@@ -100,7 +99,7 @@ export const HtmlContentStory: Story = {
       defaultFill: '#0f172a',
       width: 240,
       autoRotate: false,
-      background: true,
+      background: true
     };
 
     const apply = (): void => {
@@ -114,15 +113,15 @@ export const HtmlContentStory: Story = {
             defaultFontSize: settings.defaultFontSize,
             defaultFill: settings.defaultFill,
             width: settings.width,
-            tagStyles: TAG_STYLES,
+            tagStyles: TAG_STYLES
           },
           background: settings.background ? {
-            fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [4, 8],
+            fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [4, 8]
           } : undefined,
           placement: 'center',
           autoRotate: settings.autoRotate,
-          offset: { y: -12 },
-        },
+          offset: { y: -12 }
+        }
       });
     };
     apply();
@@ -143,5 +142,5 @@ export const HtmlContentStory: Story = {
     gui.add(settings, 'width', 80, 480, 10).name('width (for wrap)').onChange(apply);
     gui.add(settings, 'autoRotate').name('autoRotate (HTMLText, experimental)').onChange(apply);
     gui.add(settings, 'background').onChange(apply);
-  },
+  }
 };

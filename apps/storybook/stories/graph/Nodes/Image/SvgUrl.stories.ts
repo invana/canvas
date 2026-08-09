@@ -50,7 +50,7 @@ export const SvgUrlStory: Story = {
       database: 'https://api.iconify.design/lucide/database.svg',
       bell:     'https://api.iconify.design/lucide/bell.svg',
       rocket:   'https://api.iconify.design/lucide/rocket.svg',
-      bolt:     'https://api.iconify.design/lucide/zap.svg',
+      bolt:     'https://api.iconify.design/lucide/zap.svg'
     };
 
     const settings = {
@@ -60,7 +60,7 @@ export const SvgUrlStory: Story = {
       sizeRatio: 0.55,
       anchor: 'center' as InsetAnchor,
       alpha: 1,
-      bgFill: 0x6366f1,
+      bgFill: 0x6366f1
     };
 
     const shapeForType = (type: string | undefined): NodeShapeOptions => {
@@ -81,7 +81,7 @@ export const SvgUrlStory: Story = {
               { x: -r,       y: 0 },
               { x: -r * 0.5, y: r * 0.866 },
               { x: r * 0.5,  y: r * 0.866 },
-            ],
+            ]
           };
         default:
           throw new Error(`unknown node type "${type}"`);
@@ -110,12 +110,12 @@ export const SvgUrlStory: Story = {
               strokeWidth: settings.strokeWidth,
               sizeRatio: settings.sizeRatio,
               anchor: settings.anchor,
-              alpha: settings.alpha,
+              alpha: settings.alpha
             }),
-            labelText: (n) => n.type ?? '?',
-          },
-        },
-      },
+            labelText: (n) => n.type ?? '?'
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -137,12 +137,12 @@ export const SvgUrlStory: Story = {
               labelBackgroundStrokeColor: 0xcbd5e1,
               labelBackgroundStrokeWidth: 1,
               labelBackgroundCornerRadius: 4,
-              labelBackgroundPadding: 3,
-            },
-          },
-        },
+              labelBackgroundPadding: 3
+            }
+          }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
@@ -162,5 +162,5 @@ export const SvgUrlStory: Story = {
     gui.add(settings, 'anchor', ['center', 'top-left', 'top-right', 'bottom-left', 'bottom-right']).onChange(rerenderAll);
     gui.add(settings, 'alpha', 0, 1, 0.05).onChange(rerenderAll);
     gui.addColor(settings, 'bgFill').name('bg fill').onChange(rerenderAll);
-  },
+  }
 };

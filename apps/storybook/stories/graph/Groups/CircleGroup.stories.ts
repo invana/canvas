@@ -8,7 +8,7 @@ import {
   GraphLayer,
   type GraphEdge,
   type GraphNode,
-  type NodeStyle,
+  type NodeStyle
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
@@ -40,8 +40,8 @@ export const CircleGroupStory: Story = {
           bgFill: 0xf5f7ff,
           bgStrokeColor: 0x6b7fff,
           bgStrokeWidth: 1,
-          group: { autoFit: settings.autoFit, padding: settings.padding },
-        },
+          group: { autoFit: settings.autoFit, padding: settings.padding }
+        }
       },
       { type: 'node',
         id: 'node1',
@@ -54,8 +54,8 @@ export const CircleGroupStory: Story = {
           labelColor: 0x334155,
           labelFontSize: 12,
           labelPlacement: 'bottom',
-          labelOffsetY: 6,
-        },
+          labelOffsetY: 6
+        }
       },
       { type: 'node',
         id: 'node2',
@@ -68,8 +68,8 @@ export const CircleGroupStory: Story = {
           labelColor: 0x334155,
           labelFontSize: 12,
           labelPlacement: 'bottom',
-          labelOffsetY: 6,
-        },
+          labelOffsetY: 6
+        }
       },
       { type: 'node',
         id: 'node3',
@@ -82,8 +82,8 @@ export const CircleGroupStory: Story = {
           labelColor: 0x334155,
           labelFontSize: 12,
           labelPlacement: 'bottom',
-          labelOffsetY: 6,
-        },
+          labelOffsetY: 6
+        }
       },
     ];
 
@@ -108,8 +108,8 @@ export const CircleGroupStory: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         drag: { enabled: true },
-        'collapse-expand': { enabled: true },
-      },
+        'collapse-expand': { enabled: true }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -125,11 +125,11 @@ export const CircleGroupStory: Story = {
       graph.store.updateNode('group-c', {
         style: {
           ...priorStyle,
-          group: { ...priorGroup, autoFit: settings.autoFit, padding: settings.padding },
-        },
+          group: { ...priorGroup, autoFit: settings.autoFit, padding: settings.padding }
+        }
       });
     };
     gui.add(settings, 'autoFit').onChange(apply);
     gui.add(settings, 'padding', 0, 60, 1).onChange(apply);
-  },
+  }
 };

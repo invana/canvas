@@ -28,7 +28,7 @@ import {
   type GraphNodeMenuContext,
   GraphStatusBar,
   ToolbarItems,
-  useSidePanels,
+  useSidePanels
 } from '@invana/canvas-ui';
 import type { GraphCanvas } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
@@ -49,7 +49,7 @@ type Story = StoryObj;
 const LAYOUTS: Record<string, LayoutFactory> = {
   'd3-force': () =>
     new D3ForceLayout({ charge: { strength: -240 }, link: { distance: 70 }, animate: true }),
-  'elk-layered': () => new ElkLayout({ algorithm: 'layered', direction: 'RIGHT' }),
+  'elk-layered': () => new ElkLayout({ algorithm: 'layered', direction: 'RIGHT' })
 };
 const LAYOUT_LABEL: Record<string, string> = { 'd3-force': 'Force', 'elk-layered': 'Layered' };
 
@@ -86,7 +86,7 @@ export const CanvasSettingsEditorPanelStory: Story = {
           label: 'Settings',
           render: (canvas) => (
             <CanvasSettingsEditorPanel canvas={canvas} className="border-0 bg-transparent shadow-none" />
-          ),
+          )
         },
       ],
       { defaultOpenId: 'settings', section: { defaultSize: '360px', maxSize: '460px' } },
@@ -119,9 +119,9 @@ export const CanvasSettingsEditorPanelStory: Story = {
             collide: {},
             // Live, animated settle by default — the settings panel's "Animate"
             // toggle starts on and the Run button flips to Stop.
-            animate: true,
-          },
-        },
+            animate: true
+          }
+        }
       }),
       [],
     );
@@ -155,7 +155,7 @@ export const CanvasSettingsEditorPanelStory: Story = {
                     label: 'Minimap: off',
                     activeLabel: 'Minimap: on',
                     active: minimapOn,
-                    onToggle: () => setMinimapOn((v) => !v),
+                    onToggle: () => setMinimapOn((v) => !v)
                   },
                   {
                     type: 'toggle',
@@ -164,7 +164,7 @@ export const CanvasSettingsEditorPanelStory: Story = {
                     label: 'Dev overlay: off',
                     activeLabel: 'Dev overlay: on',
                     active: devOn,
-                    onToggle: () => setDevOn((v) => !v),
+                    onToggle: () => setDevOn((v) => !v)
                   },
                   {
                     type: 'toggle',
@@ -174,11 +174,11 @@ export const CanvasSettingsEditorPanelStory: Story = {
                     label: 'Switch to dark theme',
                     activeLabel: 'Switch to light theme',
                     active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme,
+                    onToggle: ctx.toggleTheme
                   },
                 ]}
               />
-            ),
+            )
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
           // The active panel docks into the app's resizable `right` region (or none).
@@ -194,5 +194,5 @@ export const CanvasSettingsEditorPanelStory: Story = {
         </GraphCanvasApp>
       </ThemeProvider>
     );
-  },
+  }
 };

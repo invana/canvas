@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
   DragPanBehaviour,
-  WheelZoomBehaviour,
+  WheelZoomBehaviour
 } from '@invana/canvas';
 import { DragNodeBehaviour, GraphCanvas, GraphLayer, type GraphEdge, type GraphNode, ThemeBehaviour } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
@@ -26,7 +26,7 @@ export const RandomTreeStory: Story = {
       chargeDistanceMax: 120,
       linkDistance: 18,
       collideRadius: 5,
-      xyAnchorStrength: 0.04,
+      xyAnchorStrength: 0.04
     };
 
     // HSL→hex for depth-based colouring (warm root → cool leaves).
@@ -64,7 +64,7 @@ export const RandomTreeStory: Story = {
 
       const nodes: GraphNode<TreeNodeData>[] = tree.nodes.map((n) => ({ type: 'node',
         id: n.id,
-        data: { depth: depths.get(n.id)! },
+        data: { depth: depths.get(n.id)! }
       }));
       return { nodes, edges: tree.edges };
     };
@@ -87,10 +87,10 @@ export const RandomTreeStory: Story = {
               const depth = (n.data as TreeNodeData).depth;
               const t = maxDepth === 0 ? 0 : depth / maxDepth;
               return hslToHex(30 + t * 190, 0.65, 0.55);
-            },
-          },
-        },
-      },
+            }
+          }
+        }
+      }
     });
 
     canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
@@ -108,8 +108,8 @@ export const RandomTreeStory: Story = {
         bg: { type: 'solid', backgroundColor: '#0b1220' },
         graph: {
           node: { style: { shape: { kind: 'circle', radius: 4 } } },
-          edge: { style: { strokeColor: 0x64748b, strokeWidth: 0.8, arrowTargetShape: 'none' } },
-        },
+          edge: { style: { strokeColor: 0x64748b, strokeWidth: 0.8, arrowTargetShape: 'none' } }
+        }
       },
       behaviours: {
         pan: { enabled: true },
@@ -119,14 +119,14 @@ export const RandomTreeStory: Story = {
           enabled: true,
           mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
-          dark: { backgroundColor: '#0b1220', color: '#475569' },
-        },
+          dark: { backgroundColor: '#0b1220', color: '#475569' }
+        }
       },
       layouts: {
         force: {
           charge: {
             strength: settings.chargeStrength,
-            distanceMax: settings.chargeDistanceMax,
+            distanceMax: settings.chargeDistanceMax
           },
           link: { distance: settings.linkDistance },
           collide: { radius: settings.collideRadius },
@@ -134,10 +134,10 @@ export const RandomTreeStory: Story = {
           // Gentle XY anchor keeps the cluster from drifting off-frame
           // without compressing branch spread.
           x: { strength: settings.xyAnchorStrength },
-          y: { strength: settings.xyAnchorStrength },
-        },
+          y: { strength: settings.xyAnchorStrength }
+        }
       },
-      activeLayout: 'force',
+      activeLayout: 'force'
     };
 
     // initData loads on mount; `activeLayout` runs itself once data is present.
@@ -184,5 +184,5 @@ export const RandomTreeStory: Story = {
       });
 
     gui.add({ rebuild }, 'rebuild').name('Rebuild & re-apply');
-  },
+  }
 };

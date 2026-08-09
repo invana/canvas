@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas, DragPanBehaviour, DragShapeBehaviour, WheelZoomBehaviour,
-  WorldLayer, PrimitivesRenderer, arrowMarkerSpec,
+  WorldLayer, arrowMarkerSpec,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
@@ -48,10 +48,10 @@ export const Stacked: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -70,7 +70,7 @@ export const Stacked: Story = {
     canvas.behaviours.register(new DragShapeBehaviour({
       id: 'drag-shape',
       enabled: true,
-      renderer: layer.renderer,
+      renderer: layer.renderer
     }));
 
     const LOOP_WIDTH = 1.5;
@@ -82,7 +82,7 @@ export const Stacked: Story = {
     layer.renderer.addShape('node', {
       kind: 'rect', x: -halfW, y: -halfH, width: NODE_W, height: NODE_H,
       fill: { kind: 'solid', color: 0x4f7ff5 },
-      stroke: { color: 0x2563eb, width: 0 },
+      stroke: { color: 0x2563eb, width: 0 }
     });
 
     type Placement =
@@ -114,7 +114,7 @@ export const Stacked: Story = {
       innerStubLength: 14,
       innerGap: 22,
       stubStep: 14,
-      gapStep: 22,
+      gapStep: 22
     };
 
     const drawStack = (): void => {
@@ -144,18 +144,18 @@ export const Stacked: Story = {
                 baseOffsetX: halfW,
                 baseOffsetY: halfH,
                 stubLength,
-                gap,
+                gap
               }
             : {
                 side: settings.placement,
                 baseOffset: cardinalBaseOffset(settings.placement),
                 stubLength,
-                gap,
+                gap
               },
           source: { kind: 'shape', shapeId: 'node', anchor: 'center' },
           target: { kind: 'shape', shapeId: 'node', anchor: 'center' },
           stroke: { color, width: LOOP_WIDTH },
-          targetMarker: arrowMarkerSpec({ lengthScale: 5, widthScale: 4, fill: color }),
+          targetMarker: arrowMarkerSpec({ lengthScale: 5, widthScale: 4, fill: color })
         });
       }
     };
@@ -171,5 +171,5 @@ export const Stacked: Story = {
     gui.add(settings, 'innerGap', 0, 80, 1).name('innerGap').onChange(drawStack);
     gui.add(settings, 'stubStep', 0, 60, 1).name('stubStep (taller)').onChange(drawStack);
     gui.add(settings, 'gapStep', 0, 60, 1).name('gapStep (wider)').onChange(drawStack);
-  },
+  }
 };

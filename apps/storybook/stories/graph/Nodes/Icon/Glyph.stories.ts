@@ -50,7 +50,7 @@ export const Glyph: Story = {
       color: 0xffffff,
       sizeRatio: 0.5,
       anchor: 'center' as InsetAnchor,
-      bgFill: 0x6366f1,
+      bgFill: 0x6366f1
     };
 
     const shapeForType = (type: string | undefined): NodeShapeOptions => {
@@ -71,7 +71,7 @@ export const Glyph: Story = {
               { x: -r,       y: 0 },
               { x: -r * 0.5, y: r * 0.866 },
               { x: r * 0.5,  y: r * 0.866 },
-            ],
+            ]
           };
         default:
           throw new Error(`unknown node type "${type}"`);
@@ -97,12 +97,12 @@ export const Glyph: Story = {
               char: GLYPHS[settings.glyph]!,
               color: settings.color,
               sizeRatio: settings.sizeRatio,
-              anchor: settings.anchor,
+              anchor: settings.anchor
             }),
-            labelText: (n) => n.type ?? '?',
-          },
-        },
-      },
+            labelText: (n) => n.type ?? '?'
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -124,12 +124,12 @@ export const Glyph: Story = {
               labelBackgroundStrokeColor: 0xcbd5e1,
               labelBackgroundStrokeWidth: 1,
               labelBackgroundCornerRadius: 4,
-              labelBackgroundPadding: 3,
-            },
-          },
-        },
+              labelBackgroundPadding: 3
+            }
+          }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
@@ -147,5 +147,5 @@ export const Glyph: Story = {
     gui.add(settings, 'sizeRatio', 0.1, 1, 0.05).onChange(rerenderAll);
     gui.add(settings, 'anchor', ['center', 'top-left', 'top-right', 'bottom-left', 'bottom-right']).onChange(rerenderAll);
     gui.addColor(settings, 'bgFill').name('bg fill').onChange(rerenderAll);
-  },
+  }
 };

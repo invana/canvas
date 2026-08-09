@@ -6,7 +6,7 @@ import {
   GraphCanvas,
   GraphLayer,
   type GraphEdge,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
@@ -55,16 +55,16 @@ export const HackerStyleStory: Story = {
           labelFontSize: 11,
           labelFontFamily: 'ui-monospace, SFMono-Regular, monospace',
           labelFontWeight: 600,
-          labelPlacement: 'inside-top-left',
-        },
+          labelPlacement: 'inside-top-left'
+        }
       },
       { type: 'node',
         id: 'web', parentId: 'group-front', position: { x: -40, y: -30 },
-        style: { shape: { kind: 'circle', radius: 14 }, bgFill: NEON_GREEN, bgAlpha: 0.95, labelText: 'web', labelColor: NEON_GREEN, labelFontFamily: 'ui-monospace, monospace', labelFontSize: 11, labelPlacement: 'bottom', labelOffsetY: 6 },
+        style: { shape: { kind: 'circle', radius: 14 }, bgFill: NEON_GREEN, bgAlpha: 0.95, labelText: 'web', labelColor: NEON_GREEN, labelFontFamily: 'ui-monospace, monospace', labelFontSize: 11, labelPlacement: 'bottom', labelOffsetY: 6 }
       },
       { type: 'node',
         id: 'cdn', parentId: 'group-front', position: { x: 60, y: -30 },
-        style: { shape: { kind: 'circle', radius: 14 }, bgFill: NEON_GREEN, bgAlpha: 0.95, labelText: 'cdn', labelColor: NEON_GREEN, labelFontFamily: 'ui-monospace, monospace', labelFontSize: 11, labelPlacement: 'bottom', labelOffsetY: 6 },
+        style: { shape: { kind: 'circle', radius: 14 }, bgFill: NEON_GREEN, bgAlpha: 0.95, labelText: 'cdn', labelColor: NEON_GREEN, labelFontFamily: 'ui-monospace, monospace', labelFontSize: 11, labelPlacement: 'bottom', labelOffsetY: 6 }
       },
       { type: 'node',
         id: 'group-svc',
@@ -83,16 +83,16 @@ export const HackerStyleStory: Story = {
           labelFontSize: 11,
           labelFontFamily: 'ui-monospace, SFMono-Regular, monospace',
           labelFontWeight: 600,
-          labelPlacement: 'inside-top-left',
-        },
+          labelPlacement: 'inside-top-left'
+        }
       },
       { type: 'node',
         id: 'api', parentId: 'group-svc', position: { x: 310, y: -30 },
-        style: { shape: { kind: 'circle', radius: 14 }, bgFill: NEON_CYAN, bgAlpha: 0.95, labelText: 'api', labelColor: NEON_CYAN, labelFontFamily: 'ui-monospace, monospace', labelFontSize: 11, labelPlacement: 'bottom', labelOffsetY: 6 },
+        style: { shape: { kind: 'circle', radius: 14 }, bgFill: NEON_CYAN, bgAlpha: 0.95, labelText: 'api', labelColor: NEON_CYAN, labelFontFamily: 'ui-monospace, monospace', labelFontSize: 11, labelPlacement: 'bottom', labelOffsetY: 6 }
       },
       { type: 'node',
         id: 'auth', parentId: 'group-svc', position: { x: 410, y: -30 },
-        style: { shape: { kind: 'circle', radius: 14 }, bgFill: NEON_CYAN, bgAlpha: 0.95, labelText: 'auth', labelColor: NEON_CYAN, labelFontFamily: 'ui-monospace, monospace', labelFontSize: 11, labelPlacement: 'bottom', labelOffsetY: 6 },
+        style: { shape: { kind: 'circle', radius: 14 }, bgFill: NEON_CYAN, bgAlpha: 0.95, labelText: 'auth', labelColor: NEON_CYAN, labelFontFamily: 'ui-monospace, monospace', labelFontSize: 11, labelPlacement: 'bottom', labelOffsetY: 6 }
       },
       { type: 'node',
         id: 'group-data',
@@ -111,16 +111,16 @@ export const HackerStyleStory: Story = {
           labelFontSize: 11,
           labelFontFamily: 'ui-monospace, SFMono-Regular, monospace',
           labelFontWeight: 600,
-          labelPlacement: 'inside-top-left',
-        },
+          labelPlacement: 'inside-top-left'
+        }
       },
       { type: 'node',
         id: 'pg', parentId: 'group-data', position: { x: 680, y: -30 },
-        style: { shape: { kind: 'circle', radius: 14 }, bgFill: NEON_MAGENTA, bgAlpha: 0.95, labelText: 'pg', labelColor: NEON_MAGENTA, labelFontFamily: 'ui-monospace, monospace', labelFontSize: 11, labelPlacement: 'bottom', labelOffsetY: 6 },
+        style: { shape: { kind: 'circle', radius: 14 }, bgFill: NEON_MAGENTA, bgAlpha: 0.95, labelText: 'pg', labelColor: NEON_MAGENTA, labelFontFamily: 'ui-monospace, monospace', labelFontSize: 11, labelPlacement: 'bottom', labelOffsetY: 6 }
       },
       { type: 'node',
         id: 'redis', parentId: 'group-data', position: { x: 770, y: -30 },
-        style: { shape: { kind: 'circle', radius: 14 }, bgFill: NEON_MAGENTA, bgAlpha: 0.95, labelText: 'redis', labelColor: NEON_MAGENTA, labelFontFamily: 'ui-monospace, monospace', labelFontSize: 11, labelPlacement: 'bottom', labelOffsetY: 6 },
+        style: { shape: { kind: 'circle', radius: 14 }, bgFill: NEON_MAGENTA, bgAlpha: 0.95, labelText: 'redis', labelColor: NEON_MAGENTA, labelFontFamily: 'ui-monospace, monospace', labelFontSize: 11, labelPlacement: 'bottom', labelOffsetY: 6 }
       },
     ];
 
@@ -153,18 +153,18 @@ export const HackerStyleStory: Story = {
 
     const canvasOptions = {
       layers: {
-        bg: { type: 'pattern', patternType: 'dots', backgroundColor: BG, color: 0x1f2937, spacing: 24, size: 1, alpha: 1 },
+        bg: { type: 'pattern', patternType: 'dots', backgroundColor: BG, color: 0x1f2937, spacing: 24, size: 1, alpha: 1 }
       },
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
         drag: { enabled: true },
-        'collapse-expand': { enabled: true },
-      },
+        'collapse-expand': { enabled: true }
+      }
     };
 
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 120);
-  },
+  }
 };

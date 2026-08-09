@@ -11,7 +11,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   CanvasPagesViewPanel,
   type CanvasHeaderAction,
-  type CanvasPage,
+  type CanvasPage
 } from '@invana/canvas-ui';
 import { Info, Settings } from 'lucide-react';
 import { ThemeProvider } from '@invana/themes';
@@ -44,7 +44,7 @@ function HeaderActionsDemo() {
   const pages: CanvasPage[] = items.map((x) => ({
     id: x.id,
     title: x.title,
-    content: <DemoBoard title={x.title} hue={hueFor(Number(x.id))} />,
+    content: <DemoBoard title={x.title} hue={hueFor(Number(x.id))} />
   }));
 
   const headerActions: CanvasHeaderAction[] = [

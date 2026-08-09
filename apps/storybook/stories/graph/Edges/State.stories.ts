@@ -5,7 +5,7 @@ import {
   GraphLayer,
   type CanonicalStateName,
   type GraphEdge,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
@@ -67,42 +67,42 @@ export const State: Story = {
         id: 'e-default',
         source: 'a-default', target: 'b-default',
         data: { state: 'default', note: 'resting appearance — no state active' },
-        style: { labelText: 'default\nresting appearance — no state active' },
+        style: { labelText: 'default\nresting appearance — no state active' }
       },
       { type: 'edge',
         id: 'e-hover',
         source: 'a-hover', target: 'b-hover',
         data: { state: 'hovered', note: 'pointer is over the edge' },
         style: { labelText: 'hovered\npointer is over the edge' },
-        states: ['hovered'],
+        states: ['hovered']
       },
       { type: 'edge',
         id: 'e-selected',
         source: 'a-selected', target: 'b-selected',
         data: { state: 'selected', note: 'click-selected (sticky)' },
         style: { labelText: 'selected\nclick-selected (sticky)' },
-        states: ['selected'],
+        states: ['selected']
       },
       { type: 'edge',
         id: 'e-highlighted',
         source: 'a-highlighted', target: 'b-highlighted',
         data: { state: 'highlighted', note: 'incident to a focal node' },
         style: { labelText: 'highlighted\nincident to a focal node' },
-        states: ['highlighted'],
+        states: ['highlighted']
       },
       { type: 'edge',
         id: 'e-dimmed',
         source: 'a-dimmed', target: 'b-dimmed',
         data: { state: 'dimmed', note: 'de-emphasised by another active set' },
         style: { labelText: 'dimmed\nde-emphasised by another active set' },
-        states: ['dimmed'],
+        states: ['dimmed']
       },
       { type: 'edge',
         id: 'e-disabled',
         source: 'a-disabled', target: 'b-disabled',
         data: { state: 'disabled', note: 'not interactive' },
         style: { labelText: 'disabled\nnot interactive' },
-        states: ['disabled'],
+        states: ['disabled']
       },
     ];
 
@@ -122,8 +122,8 @@ export const State: Story = {
               shape: { kind: 'circle', radius: 10 },
               bgFill: 0xe5e7eb,
               bgStrokeColor: 0x9ca3af,
-              bgStrokeWidth: 1,
-            },
+              bgStrokeWidth: 1
+            }
           },
           edge: {
             style: {
@@ -138,17 +138,17 @@ export const State: Story = {
               labelLineHeight: 16,
               labelPlacement: 'center',
               labelOffsetY: 22,
-              labelAutoRotate: false,
-            },
+              labelAutoRotate: false
+            }
           },
           // Canonical state configs are auto-registered. Pass
           // `useDefaultStateConfigs: false` to opt out.
-        },
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 60);
-  },
+  }
 };

@@ -29,12 +29,12 @@ import {
   HoverActivateBehaviour,
   NodeScaleLODBehaviour,
   type GraphEdge,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import {
   DENSITY_CONTOUR_PALETTE_NAMES,
   DensityContourFillLayer,
-  type DensityContourPaletteName,
+  type DensityContourPaletteName
 } from '@invana/graph-layer-d3-contour';
 import { MapLayer } from '@invana/graph-layer-maplibre';
 import { airports } from '@invana/graph-datasets';
@@ -56,12 +56,12 @@ export const Routes_Story: Story = {
       fill: 0xff6b35,
       stroke: 0xffffff,
       strokeWidth: 0.4,
-      alpha: 0.9,
+      alpha: 0.9
     };
     const EDGE_DEFAULTS = {
       stroke: 0x676767,
       strokeWidth: 2,
-      // alpha: 0.18,
+      // alpha: 0.18
     };
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-maplibre-routes')!;
@@ -73,8 +73,8 @@ export const Routes_Story: Story = {
       options: {
         styleUrl: 'https://tiles.openfreemap.org/styles/liberty',
         center: [0, 25],
-        zoom: 1.6,
-      },
+        zoom: 1.6
+      }
     });
     canvas.layers.add(map);
 
@@ -87,7 +87,7 @@ export const Routes_Story: Story = {
       return { type: 'node',
         id: `ap-${i}`,
         position: { x, y },
-        data: { name: a.name, lng: a.lng, lat: a.lat },
+        data: { name: a.name, lng: a.lng, lat: a.lat }
       };
     });
 
@@ -117,7 +117,7 @@ export const Routes_Story: Story = {
       edges.push({ type: 'edge',
         id: `e-${edges.length}`,
         source: `ap-${lo}`,
-        target: `ap-${hi}`,
+        target: `ap-${hi}`
       });
     };
     for (let i = 0; i < tris.length; i += 3) {
@@ -134,7 +134,7 @@ export const Routes_Story: Story = {
     const graph = new GraphLayer({
       id: 'graph',
       zIndex: 10,
-      options: { initData: { nodes, edges } },
+      options: { initData: { nodes, edges } }
     });
     canvas.layers.add(graph);
 
@@ -147,7 +147,7 @@ export const Routes_Story: Story = {
       id: 'density',
       zIndex: 5,
       visible: false,
-      options: { graphLayerId: 'graph' },
+      options: { graphLayerId: 'graph' }
     });
     canvas.layers.add(contour);
 
@@ -160,7 +160,7 @@ export const Routes_Story: Story = {
       'Trans-Pacific': { center: [180, 35], zoom: 2.2 },
       Europe: { center: [10, 50], zoom: 3.4 },
       'North America': { center: [-95, 40], zoom: 3 },
-      Asia: { center: [110, 25], zoom: 3 },
+      Asia: { center: [110, 25], zoom: 3 }
     };
 
     const settings = {
@@ -184,7 +184,7 @@ export const Routes_Story: Story = {
       hoverDegree: 1,
       hoverZoomThreshold: 4,
       hoverFarSize: 18,
-      hoverFarStrokeWidth: 4,
+      hoverFarStrokeWidth: 4
     };
 
     // Pixel-constant nodes + edges. Routes are the bigger problem here:
@@ -203,13 +203,13 @@ export const Routes_Story: Story = {
         {
           targetLayerId: 'graph',
           sizePx: () => settings.targetNodePx,
-          strokeWidthPx: () => settings.targetNodeStrokePx,
+          strokeWidthPx: () => settings.targetNodeStrokePx
         },
-      ],
+      ]
     });
     const edgeScaleLOD = new EdgeScaleLODBehaviour({
       id: 'edge-scale-lod',
-      layers: [{ targetLayerId: 'graph', strokeWidthPx: () => settings.targetEdgePx }],
+      layers: [{ targetLayerId: 'graph', strokeWidthPx: () => settings.targetEdgePx }]
     });
     canvas.behaviours.register(nodeScaleLOD);
     canvas.behaviours.register(edgeScaleLOD);
@@ -234,7 +234,7 @@ export const Routes_Story: Story = {
               bgFill: NODE_DEFAULTS.fill,
               bgStrokeColor: NODE_DEFAULTS.stroke,
               bgStrokeWidth: NODE_DEFAULTS.strokeWidth,
-              bgAlpha: NODE_DEFAULTS.alpha,
+              bgAlpha: NODE_DEFAULTS.alpha
             },
             state: {
               // Hover / dimmed palettes — hovered lights up the airport and
@@ -247,16 +247,16 @@ export const Routes_Story: Story = {
                 bgFill: 0xfacc15,
                 bgStrokeColor: 0xfacc15,
                 bgStrokeWidth: 1.5,
-                shape: { kind: 'circle', radius: 2.5 },
+                shape: { kind: 'circle', radius: 2.5 }
               },
               dimmed: { bgAlpha: 0.15 },
               'hover-far': {
                 bgFill: 0xfacc15,
                 bgStrokeColor: 0xffffff,
                 bgStrokeWidth: 2,
-                shape: { kind: 'circle', radius: 9 },
-              },
-            },
+                shape: { kind: 'circle', radius: 9 }
+              }
+            }
           },
           edge: {
             style: {
@@ -264,14 +264,14 @@ export const Routes_Story: Story = {
               arrowTargetShape: 'none',
               strokeColor: EDGE_DEFAULTS.stroke,
               strokeWidth: EDGE_DEFAULTS.strokeWidth,
-              strokeAlpha: 1,
+              strokeAlpha: 1
             },
             state: {
               hovered: { strokeColor: 0xfacc15, strokeWidth: 1.2, strokeAlpha: 0.95 },
               dimmed: { strokeAlpha: 0.05 },
-              'hover-far': { strokeColor: 0xfacc15, strokeWidth: 4, strokeAlpha: 1 },
-            },
-          },
+              'hover-far': { strokeColor: 0xfacc15, strokeWidth: 4, strokeAlpha: 1 }
+            }
+          }
         },
         density: {
           bandwidth: 10,
@@ -279,8 +279,8 @@ export const Routes_Story: Story = {
           cellSize: 2,
           padding: 40,
           fillOpacity: 0.55,
-          palette: 'inferno',
-        },
+          palette: 'inferno'
+        }
       },
       behaviours: {
         'node-scale-lod': { enabled: true },
@@ -293,9 +293,9 @@ export const Routes_Story: Story = {
           direction: 'both',
           zoomThreshold: settings.hoverZoomThreshold,
           zoomedOutState: 'hover-far',
-          zoomedOutEdgeState: 'hover-far',
-        },
-      },
+          zoomedOutEdgeState: 'hover-far'
+        }
+      }
     };
 
     await canvas.init({ container, autoResize: true, config: canvasOptions });
@@ -316,7 +316,7 @@ export const Routes_Story: Story = {
         ...canvasOptions.layers.graph.node.style,
         shape: { kind: 'circle', radius: settings.nodeSize / 2 },
         bgFill: settings.nodeFill,
-        bgAlpha: settings.nodeAlpha,
+        bgAlpha: settings.nodeAlpha
       };
       canvas.update({ layers: { graph: { node: { style: canvasOptions.layers.graph.node.style } } } });
     };
@@ -326,7 +326,7 @@ export const Routes_Story: Story = {
         ...canvasOptions.layers.graph.edge.style,
         strokeColor: settings.edgeColor,
         strokeWidth: settings.edgeWidth,
-        strokeAlpha: settings.edgeAlpha,
+        strokeAlpha: settings.edgeAlpha
       };
       canvas.update({ layers: { graph: { edge: { style: canvasOptions.layers.graph.edge.style } } } });
     };
@@ -425,5 +425,5 @@ export const Routes_Story: Story = {
 
     gui.add({ airports: nodes.length }, 'airports').name('Airport count').disable();
     gui.add({ routes: edges.length }, 'routes').name('Route count').disable();
-  },
+  }
 };

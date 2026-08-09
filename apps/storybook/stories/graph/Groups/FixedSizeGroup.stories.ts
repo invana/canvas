@@ -6,7 +6,7 @@ import {
   GraphCanvas,
   GraphLayer,
   type GraphEdge,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
@@ -43,26 +43,26 @@ export const FixedSizeGroupStory: Story = {
           labelColor: 0xa16207,
           labelFontSize: 11,
           labelFontWeight: 600,
-          labelPlacement: 'inside-top-left',
-        },
+          labelPlacement: 'inside-top-left'
+        }
       },
       { type: 'node',
         id: 'node1',
         parentId: 'group-a',
         position: { x: -60, y: -50 },
-        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0xeab308 },
+        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0xeab308 }
       },
       { type: 'node',
         id: 'node2',
         parentId: 'group-a',
         position: { x: 0, y: -20 },
-        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0xeab308 },
+        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0xeab308 }
       },
       { type: 'node',
         id: 'node3',
         parentId: 'group-a',
         position: { x: 60, y: 10 },
-        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0xeab308 },
+        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0xeab308 }
       },
     ];
 
@@ -88,12 +88,12 @@ export const FixedSizeGroupStory: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         drag: { enabled: true },
-        'collapse-expand': { enabled: true },
-      },
+        'collapse-expand': { enabled: true }
+      }
     };
 
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 120);
-  },
+  }
 };

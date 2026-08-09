@@ -5,7 +5,7 @@ import {
   GraphCanvas,
   GraphLayer,
   type GraphEdge,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -53,7 +53,7 @@ export const Multiple: Story = {
               shape: { kind: 'circle', radius: 8 },
               fill: 0xf97316,
               strokeColor: 0xffffff,
-              strokeWidth: 1.5,
+              strokeWidth: 1.5
             },
             {
               id: 'q1',
@@ -61,7 +61,7 @@ export const Multiple: Story = {
               shape: { kind: 'rect', width: 14, height: 14, cornerRadius: 2 },
               fill: 0xfacc15,
               strokeColor: 0xffffff,
-              strokeWidth: 1,
+              strokeWidth: 1
             },
             {
               id: 'middle',
@@ -72,7 +72,7 @@ export const Multiple: Story = {
               strokeWidth: 1.5,
               labelText: '12',
               labelColor: 0xffffff,
-              labelFontSize: 12,
+              labelFontSize: 12
             },
             {
               id: 'q3',
@@ -80,7 +80,7 @@ export const Multiple: Story = {
               shape: { kind: 'rect', width: 14, height: 14, cornerRadius: 2 },
               fill: 0xfacc15,
               strokeColor: 0xffffff,
-              strokeWidth: 1,
+              strokeWidth: 1
             },
             {
               id: 'end',
@@ -95,11 +95,11 @@ export const Multiple: Story = {
                 fontFamily: 'sans-serif',
                 fontWeight: 700,
                 color: 0xffffff,
-                sizeRatio: 0.7,
-              },
+                sizeRatio: 0.7
+              }
             },
-          ],
-        },
+          ]
+        }
       },
     ];
 
@@ -111,7 +111,7 @@ export const Multiple: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes, edges } },
+      options: { initData: { nodes, edges } }
     });
     canvas.layers.add(graph);
 
@@ -121,11 +121,11 @@ export const Multiple: Story = {
 
     const canvasOptions = {
       layers: {
-        graph: { edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 1.5, arrowTargetShape: 'triangle' } } },
+        graph: { edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 1.5, arrowTargetShape: 'triangle' } } }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true }, 'drag-node': { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true }, 'drag-node': { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 100);
-  },
+  }
 };

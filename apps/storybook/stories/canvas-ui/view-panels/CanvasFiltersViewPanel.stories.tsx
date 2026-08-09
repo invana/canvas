@@ -29,7 +29,7 @@ import {
   GraphStatusBar,
   ToolbarItems,
   CanvasFiltersViewPanel,
-  useSidePanels,
+  useSidePanels
 } from '@invana/canvas-ui';
 import { topicCartography } from '@invana/graph-datasets/topic-cartography';
 import { ThemeProvider } from '@invana/themes';
@@ -66,9 +66,9 @@ export const CanvasFiltersViewPanelStory: Story = {
         nodes: topicCartography.nodes.map((n) => ({
           ...n,
           position: { x: n.data.x, y: n.data.y },
-          hidden: hiddenPages.has(n.id),
+          hidden: hiddenPages.has(n.id)
         })),
-        edges: topicCartography.edges.map((e) => ({ ...e, hidden: hiddenLinks.has(e.id) })),
+        edges: topicCartography.edges.map((e) => ({ ...e, hidden: hiddenLinks.has(e.id) }))
       };
     }, []);
 
@@ -109,7 +109,7 @@ export const CanvasFiltersViewPanelStory: Story = {
                     label: 'Minimap: off',
                     activeLabel: 'Minimap: on',
                     active: minimapOn,
-                    onToggle: () => setMinimapOn((v) => !v),
+                    onToggle: () => setMinimapOn((v) => !v)
                   },
                   {
                     type: 'toggle',
@@ -118,7 +118,7 @@ export const CanvasFiltersViewPanelStory: Story = {
                     label: 'Dev overlay: off',
                     activeLabel: 'Dev overlay: on',
                     active: devOn,
-                    onToggle: () => setDevOn((v) => !v),
+                    onToggle: () => setDevOn((v) => !v)
                   },
                   {
                     type: 'toggle',
@@ -128,11 +128,11 @@ export const CanvasFiltersViewPanelStory: Story = {
                     label: 'Switch to dark theme',
                     activeLabel: 'Switch to light theme',
                     active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme,
+                    onToggle: ctx.toggleTheme
                   },
                 ]}
               />
-            ),
+            )
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
           right={dock.region}
@@ -150,7 +150,7 @@ export const CanvasFiltersViewPanelStory: Story = {
               {
                 id: 'inspect',
                 label: `Inspect ${ctx.id}`,
-                onClick: () => window.alert(`Node ${ctx.id}\n${JSON.stringify(ctx.data)}`),
+                onClick: () => window.alert(`Node ${ctx.id}\n${JSON.stringify(ctx.data)}`)
               },
             ]}
             edgeItems={(ctx, defaults) => [
@@ -161,5 +161,5 @@ export const CanvasFiltersViewPanelStory: Story = {
         </GraphCanvasApp>
       </ThemeProvider>
     );
-  },
+  }
 };

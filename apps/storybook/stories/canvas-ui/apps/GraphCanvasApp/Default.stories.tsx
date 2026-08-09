@@ -31,5 +31,5 @@ export const Default: Story = {
     <ThemeProvider>
       <GraphCanvasApp data={DATA} />
     </ThemeProvider>
-  ),
+  )
 };

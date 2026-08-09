@@ -2,11 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas,
   DragPanBehaviour,
-  PrimitivesRenderer,
   WheelZoomBehaviour,
   WorldLayer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -19,15 +18,12 @@ export const Arc: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState(): object {
         return {};
       }
-      protected onMount(ctx: CanvasContext): void {
-        this.renderer = new PrimitivesRenderer({
-          container: this.container,
-          camera: ctx.camera,
-        });
+      protected onMount(): void {
+        this.renderer = this.surface.primitives;
       }
       hitTest(): null {
         return null;
@@ -55,7 +51,7 @@ export const Arc: Story = {
       endAngle: Math.PI / 4,       // ~1:30 — ~135° sweep
       fill: 0x3b82f6,
       stroke: 0xffffff,
-      strokeWidth: 2,
+      strokeWidth: 2
     };
 
     const redraw = (): void => {
@@ -69,7 +65,7 @@ export const Arc: Story = {
         startAngle: settings.startAngle,
         endAngle: settings.endAngle,
         fill: settings.fill,
-        stroke: { color: settings.stroke, width: settings.strokeWidth },
+        stroke: { color: settings.stroke, width: settings.strokeWidth }
       });
       // Pie slice on the right (innerR forced to 0) — same other params so
       // you can see the contribution of the inner-radius cutout.
@@ -82,7 +78,7 @@ export const Arc: Story = {
         startAngle: settings.startAngle,
         endAngle: settings.endAngle,
         fill: 0x10b981,
-        stroke: { color: settings.stroke, width: settings.strokeWidth },
+        stroke: { color: settings.stroke, width: settings.strokeWidth }
       });
       canvas.camera.fitContent(layer.getBounds(), 60);
     };
@@ -96,7 +92,7 @@ export const Arc: Story = {
       startAngle: settings.startAngle,
       endAngle: settings.endAngle,
       fill: settings.fill,
-      stroke: { color: settings.stroke, width: settings.strokeWidth },
+      stroke: { color: settings.stroke, width: settings.strokeWidth }
     });
     layer.renderer.addShape('slice', {
       kind: 'arc',
@@ -107,7 +103,7 @@ export const Arc: Story = {
       startAngle: settings.startAngle,
       endAngle: settings.endAngle,
       fill: 0x10b981,
-      stroke: { color: settings.stroke, width: settings.strokeWidth },
+      stroke: { color: settings.stroke, width: settings.strokeWidth }
     });
     canvas.camera.fitContent(layer.getBounds(), 60);
 
@@ -162,5 +158,5 @@ export const Arc: Story = {
       layer.renderer.removeShape('slice');
       redraw();
     });
-  },
+  }
 };

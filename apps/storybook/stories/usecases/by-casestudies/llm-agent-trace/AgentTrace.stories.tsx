@@ -28,12 +28,12 @@ import {
   GraphControlsToolbar,
   GraphStatusBar,
   ToolbarItems,
-  useSidePanels,
+  useSidePanels
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
 import type { EdgeDecorationSpec, EdgeStyle, GraphCanvas, GraphData, NodeShapeOptions } from '@invana/graph';
 import {
-  agentTrace,
+  agentTrace
 } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider } from '@invana/themes';
 import { Moon, Settings, Sun } from 'lucide-react';
@@ -59,7 +59,7 @@ export const AgentTraceStory: Story = {
           label: 'Settings',
           render: (canvas) => (
             <CanvasSettingsEditorPanel canvas={canvas} className="border-0 bg-transparent shadow-none" />
-          ),
+          )
         },
       ],
       { section: { defaultSize: '360px', maxSize: '460px' } },
@@ -74,7 +74,7 @@ export const AgentTraceStory: Story = {
         llm: { kind: 'circle', radius: 30 },
         tool: { kind: 'rect', width: 150, height: 44, cornerRadius: 6 },
         decision: { kind: 'regular-polygon', sides: 4, radius: 32, rotation: Math.PI / 4 },
-        output: { kind: 'rect', width: 170, height: 40, cornerRadius: 20 },
+        output: { kind: 'rect', width: 170, height: 40, cornerRadius: 20 }
       };
       const FILL_BY_KIND: Record<AgentTraceNodeKind, number> = {
         llm: 0x8b5cf6, // violet
@@ -85,7 +85,7 @@ export const AgentTraceStory: Story = {
       const STATUS_TINT: Record<AgentTraceStatus, number> = {
         success: 0x16a34a,
         error: 0xdc2626,
-        pending: 0x94a3b8,
+        pending: 0x94a3b8
       };
 
       const trace = agentTrace.find((t) => t.id === presetId) ?? agentTrace[0]!;
@@ -107,14 +107,14 @@ export const AgentTraceStory: Story = {
             labelColor: 0xffffff,
             labelFontSize: n.data.kind === 'tool' ? 10 : 11,
             labelFontWeight: 600,
-            labelPlacement: 'center',
+            labelPlacement: 'center'
           },
           states:
             n.data.status === 'error'
               ? ['error']
               : n.data.status === 'pending'
                 ? ['pending']
-                : undefined,
+                : undefined
         })),
         edges: trace.edges.map((e) => {
           const sStatus = statusById.get(e.source);
@@ -130,7 +130,7 @@ export const AgentTraceStory: Story = {
               kind: 'marching-ants-connector',
               color: STATUS_TINT.error,
               strokeWidth: 1.5,
-              dashLength: 6,
+              dashLength: 6
             });
           } else if (onActivePath) {
             decorations.push({
@@ -139,7 +139,7 @@ export const AgentTraceStory: Story = {
               color: 0x14b8a6,
               count: 4,
               size: 4,
-              speedPxPerSec: 90,
+              speedPxPerSec: 90
             });
           }
 
@@ -158,15 +158,15 @@ export const AgentTraceStory: Story = {
                     strokeColor: STATUS_TINT.pending,
                     strokeAlpha: 0.35,
                     strokeDashArray: [4, 4] as const,
-                    arrowTargetColor: STATUS_TINT.pending,
+                    arrowTargetColor: STATUS_TINT.pending
                   }
                 : {}),
             ...(decorations.length > 0 ? { decorations } : {}),
-            ...(tokens !== undefined ? { labelText: `${tokens}t` } : {}),
+            ...(tokens !== undefined ? { labelText: `${tokens}t` } : {})
           };
 
           return { id: e.id, source: e.source, target: e.target, type: e.data.kind, data: e.data, style };
-        }),
+        })
       };
     }, [presetId]);
 
@@ -178,7 +178,7 @@ export const AgentTraceStory: Story = {
           // Kind colours are stamped per node above.
           color: { enabled: false },
           hover: { enabled: true, state: 'highlighted', degree: 1, direction: 'both' },
-          'click-select': { enabled: true, clearOnBackground: true },
+          'click-select': { enabled: true, clearOnBackground: true }
         },
         layers: {
           background: { type: 'pattern', patternType: 'dots', size: 1.2, spacing: 26, alpha: 0.7 },
@@ -191,7 +191,7 @@ export const AgentTraceStory: Story = {
                 error: {
                   bgStrokeColor: 0xdc2626,
                   bgStrokeWidth: 3,
-                  effects: { breathing: { amplitude: 0.18, frequencyHz: 1.5 } },
+                  effects: { breathing: { amplitude: 0.18, frequencyHz: 1.5 } }
                 },
                 pending: {
                   bgStrokeColor: 0x94a3b8,
@@ -199,11 +199,11 @@ export const AgentTraceStory: Story = {
                   bgAlpha: 0.55,
                   decorations: [
                     { id: 'pending-pulse', kind: 'pulse-ring', color: 0x94a3b8, periodMs: 1600, maxRadius: 18 },
-                  ],
+                  ]
                 },
                 highlighted: { bgStrokeColor: 0xfbbf24, bgStrokeWidth: 3 },
-                selected: { bgStrokeColor: 0xffffff, bgStrokeWidth: 4 },
-              },
+                selected: { bgStrokeColor: 0xffffff, bgStrokeWidth: 4 }
+              }
             },
             edge: {
               style: {
@@ -218,18 +218,18 @@ export const AgentTraceStory: Story = {
                 labelFontSize: 10,
                 labelBackgroundAlpha: 0.85,
                 labelBackgroundPadding: 3,
-                labelBackgroundCornerRadius: 3,
+                labelBackgroundCornerRadius: 3
               },
               state: {
                 highlighted: {
                   strokeColor: 0xfbbf24,
                   strokeWidth: 2.2,
                   strokeAlpha: 1,
-                  arrowTargetColor: 0xfbbf24,
-                },
-              },
-            },
-          },
+                  arrowTargetColor: 0xfbbf24
+                }
+              }
+            }
+          }
         },
         layouts: {
           elk: {
@@ -238,9 +238,9 @@ export const AgentTraceStory: Story = {
             nodeSpacing: 36,
             layerSpacing: 80,
             edgeNodeSpacing: 28,
-            edgeSpacing: 18,
-          },
-        },
+            edgeSpacing: 18
+          }
+        }
       }),
       [],
     );
@@ -268,7 +268,7 @@ export const AgentTraceStory: Story = {
                     label: 'Trace',
                     value: presetId,
                     options: Object.fromEntries(agentTrace.map((t) => [t.id, t.id])),
-                    onChange: setPresetId,
+                    onChange: setPresetId
                   },
                   ...dock.items,
                   {
@@ -279,11 +279,11 @@ export const AgentTraceStory: Story = {
                     label: 'Switch to dark theme',
                     activeLabel: 'Switch to light theme',
                     active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme,
+                    onToggle: ctx.toggleTheme
                   },
                 ]}
               />
-            ),
+            )
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
           right={dock.region}
@@ -294,5 +294,5 @@ export const AgentTraceStory: Story = {
         </GraphCanvasApp>
       </ThemeProvider>
     );
-  },
+  }
 };

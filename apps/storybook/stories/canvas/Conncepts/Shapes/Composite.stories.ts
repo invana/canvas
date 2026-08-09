@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
-  Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, PrimitivesRenderer,
+  Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import type { CompositeSpec } from '@invana/canvas/specs';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
@@ -24,10 +24,10 @@ export const Composite: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -65,7 +65,7 @@ export const Composite: Story = {
         // footer
         { part: 'label', x: CARD.pad, y: CARD.h - 28, text: f.bottomLeft, fontSize: 11, fontWeight: 500, fill: 0x64748b },
         { part: 'label', x: CARD.w - CARD.pad, y: CARD.h - 28, text: f.bottomRight, anchor: 'right', fontSize: 11, fontWeight: 500, fill: 0x64748b },
-      ],
+      ]
     });
 
     const container = canvasElement.querySelector<HTMLDivElement>('#cvs-prim-shape-composite')!;
@@ -85,7 +85,7 @@ export const Composite: Story = {
       description: 'Terraform modules for provisioning GCP infrastructure including GKE clusters, networking and IAM policies across staging and production.',
       bottomLeft: '6 files',
       bottomRight: '',
-      borderColor: 0xf59e0b,
+      borderColor: 0xf59e0b
     };
 
     const ID = 'card';
@@ -102,5 +102,5 @@ export const Composite: Story = {
     (['topLeft', 'topRight', 'heading', 'description', 'bottomLeft', 'bottomRight'] as const)
       .forEach((k) => gui.add(fields, k).onChange(draw));
     gui.addColor(fields, 'borderColor').onChange(draw);
-  },
+  }
 };

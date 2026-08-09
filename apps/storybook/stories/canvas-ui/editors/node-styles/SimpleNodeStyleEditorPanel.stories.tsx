@@ -37,5 +37,5 @@ export const SimpleNodeStyleEditorPanelStory: Story = {
       data={SIMPLE_DATA}
       panel={<Panel />}
     />
-  ),
+  )
 };

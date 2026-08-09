@@ -37,7 +37,7 @@ export const Jpeg: Story = {
     const IMAGES: Record<string, string> = {
       'square': 'https://picsum.photos/seed/canvas-square/200/200',
       'wide':   'https://picsum.photos/seed/canvas-wide/300/120',
-      'tall':   'https://picsum.photos/seed/canvas-tall/120/300',
+      'tall':   'https://picsum.photos/seed/canvas-tall/120/300'
     };
 
     const settings = {
@@ -45,7 +45,7 @@ export const Jpeg: Story = {
       alpha: 1,
       fit: 'cover' as 'cover' | 'contain',
       padding: 0,
-      bgFill: 0x6366f1,
+      bgFill: 0x6366f1
     };
 
     const shapeForType = (type: string | undefined): NodeShapeOptions => {
@@ -66,7 +66,7 @@ export const Jpeg: Story = {
               { x: -r,       y: 0 },
               { x: -r * 0.5, y: r * 0.866 },
               { x: r * 0.5,  y: r * 0.866 },
-            ],
+            ]
           };
         default:
           throw new Error(`unknown node type "${type}"`);
@@ -92,12 +92,12 @@ export const Jpeg: Story = {
               url: IMAGES[settings.image]!,
               alpha: settings.alpha,
               fit: settings.fit,
-              padding: settings.padding,
+              padding: settings.padding
             }),
-            labelText: (n) => n.type ?? '?',
-          },
-        },
-      },
+            labelText: (n) => n.type ?? '?'
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -119,12 +119,12 @@ export const Jpeg: Story = {
               labelBackgroundStrokeColor: 0xcbd5e1,
               labelBackgroundStrokeWidth: 1,
               labelBackgroundCornerRadius: 4,
-              labelBackgroundPadding: 3,
-            },
-          },
-        },
+              labelBackgroundPadding: 3
+            }
+          }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
@@ -142,5 +142,5 @@ export const Jpeg: Story = {
     gui.add(settings, 'padding', 0, 30, 1).onChange(rerenderAll);
     gui.add(settings, 'alpha', 0, 1, 0.05).onChange(rerenderAll);
     gui.addColor(settings, 'bgFill').name('bg fill').onChange(rerenderAll);
-  },
+  }
 };

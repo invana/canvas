@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas, DragPanBehaviour, DragShapeBehaviour, WheelZoomBehaviour,
-  WorldLayer, PrimitivesRenderer, arrowMarkerSpec,
+  WorldLayer, arrowMarkerSpec,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -29,10 +29,10 @@ export const EdgePortStory: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -50,7 +50,7 @@ export const EdgePortStory: Story = {
     canvas.behaviours.register(new DragShapeBehaviour({
       id: 'drag-shape',
       enabled: true,
-      renderer: layer.renderer,
+      renderer: layer.renderer
     }));
 
     const settings = {
@@ -60,16 +60,16 @@ export const EdgePortStory: Story = {
       offsetBot: 40,
       strokeColor: 0x6366f1,
       strokeWidth: 14,
-      strokeAlpha: 0.55,
+      strokeAlpha: 0.55
     };
 
     layer.renderer.addShape('source', {
       kind: 'rect', x: -240, y: -60, width: 30, height: 120,
-      fill: { kind: 'solid', color: 0x1f2937 },
+      fill: { kind: 'solid', color: 0x1f2937 }
     });
     layer.renderer.addShape('target', {
       kind: 'rect', x: 210, y: -60, width: 30, height: 120,
-      fill: { kind: 'solid', color: 0x1f2937 },
+      fill: { kind: 'solid', color: 0x1f2937 }
     });
 
     const draw = (): void => {
@@ -84,16 +84,16 @@ export const EdgePortStory: Story = {
           source: {
             kind: 'shape',
             shapeId: 'source',
-            anchor: { name: 'edge-port', opts: { side: 'right', offset } },
+            anchor: { name: 'edge-port', opts: { side: 'right', offset } }
           },
           target: {
             kind: 'shape',
             shapeId: 'target',
-            anchor: { name: 'edge-port', opts: { side: 'left', offset } },
+            anchor: { name: 'edge-port', opts: { side: 'left', offset } }
           },
           stroke: { color: settings.strokeColor, width: settings.strokeWidth },
           alpha: settings.strokeAlpha,
-          targetMarker: arrowMarkerSpec({ lengthScale: 4, widthScale: 3, fill: settings.strokeColor }),
+          targetMarker: arrowMarkerSpec({ lengthScale: 4, widthScale: 3, fill: settings.strokeColor })
         });
       };
       make('l-top', settings.offsetTop);
@@ -116,5 +116,5 @@ export const EdgePortStory: Story = {
     strokeFolder.addColor(settings, 'strokeColor').onChange(draw);
     strokeFolder.add(settings, 'strokeAlpha', 0, 1, 0.01).onChange(draw);
     strokeFolder.add(settings, 'strokeWidth', 1, 40, 1).onChange(draw);
-  },
+  }
 };

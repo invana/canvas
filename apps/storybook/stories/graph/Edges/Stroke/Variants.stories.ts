@@ -5,7 +5,7 @@ import {
   GraphLayer,
   type GraphEdge,
   type EdgeShapeOptions,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -81,7 +81,7 @@ export const Variants: Story = {
         // ratio ~1.2 gives visible curvature without dominating the cell.
         shapeFor: (srcX, srcY) => ({
           pathType: 'bump-radial',
-          pathStyleOpts: { origin: { x: srcX - 800, y: srcY } },
+          pathStyleOpts: { origin: { x: srcX - 800, y: srcY } }
         }) },
       { name: 'smooth',
         shapeFor: () => ({ pathType: 'smooth' }) },
@@ -113,8 +113,8 @@ export const Variants: Story = {
           labelFontSize: 12,
           labelFontWeight: 700,
           labelColor: 0x0f172a,
-          labelOffsetY: 0,
-        },
+          labelOffsetY: 0
+        }
       });
     }
 
@@ -135,11 +135,11 @@ export const Variants: Story = {
         nodes.push({ type: 'node',
           id: `src-${cell}`,
           position: { x: srcX, y: srcY },
-          style: c === 0 ? { labelText: row.name } : {},
+          style: c === 0 ? { labelText: row.name } : {}
         });
         nodes.push({ type: 'node',
           id: `tgt-${cell}`,
-          position: { x: tgtX, y: tgtY },
+          position: { x: tgtX, y: tgtY }
         });
 
         edges.push({ type: 'edge',
@@ -149,8 +149,8 @@ export const Variants: Story = {
           style: {
             shape: row.shapeFor(srcX, srcY),
             strokeDashArray: variant.dashArray,
-            strokeCap: variant.cap,
-          },
+            strokeCap: variant.cap
+          }
         });
       }
     }
@@ -177,8 +177,8 @@ export const Variants: Story = {
               labelFontWeight: 600,
               labelColor: 0x475569,
               labelPlacement: 'left',
-              labelOffsetX: -6,
-            },
+              labelOffsetX: -6
+            }
           },
           edge: {
             style: {
@@ -187,15 +187,15 @@ export const Variants: Story = {
               strokeWidth: 2,
               strokeAlignment: 'center',
               strokeJoin: 'round',
-              arrowTargetShape: 'triangle',
-            },
-          },
-        },
+              arrowTargetShape: 'triangle'
+            }
+          }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

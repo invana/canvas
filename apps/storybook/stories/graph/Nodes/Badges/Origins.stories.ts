@@ -60,10 +60,10 @@ export const Origins: Story = {
             shape: { kind: 'circle', radius: 11 },
             fill: 0xdc2626,
             strokeColor: 0xffffff,
-            strokeWidth: 2,
+            strokeWidth: 2
           },
-        ],
-      },
+        ]
+      }
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>(
@@ -79,10 +79,10 @@ export const Origins: Story = {
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
 
     const canvasOptions = {
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

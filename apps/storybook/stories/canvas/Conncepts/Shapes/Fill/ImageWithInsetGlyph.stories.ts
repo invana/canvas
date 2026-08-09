@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas,
   DragPanBehaviour,
-  PrimitivesRenderer,
   WheelZoomBehaviour,
   WorldLayer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext, InsetAnchor, ShapeFillLayer } from '@invana/canvas';
+import type { InsetAnchor, ShapeFillLayer } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -39,13 +39,10 @@ export const ImageWithInsetGlyphStory: Story = {
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({
-          container: this.container,
-          camera: ctx.camera,
-        });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -57,7 +54,7 @@ export const ImageWithInsetGlyphStory: Story = {
       anchor: 'top-right' as InsetAnchor,
       badgeChar: '✓',
       badgeColor: 0x10b981,
-      badgeSize: 0.28,
+      badgeSize: 0.28
     };
 
     const buildFill = (): ReadonlyArray<ShapeFillLayer> => [
@@ -68,7 +65,7 @@ export const ImageWithInsetGlyphStory: Story = {
         fontFamily: 'sans-serif',
         color: settings.badgeColor,
         sizeRatio: settings.badgeSize,
-        anchor: settings.anchor,
+        anchor: settings.anchor
       },
     ];
 
@@ -80,7 +77,7 @@ export const ImageWithInsetGlyphStory: Story = {
       height: 128,
       cornerRadius: 16,
       fill: buildFill(),
-      stroke: { color: 0xffffff, width: 2 },
+      stroke: { color: 0xffffff, width: 2 }
     });
 
     canvas.camera.fitContent(layer.getBounds(), 60);
@@ -96,5 +93,5 @@ export const ImageWithInsetGlyphStory: Story = {
       .onChange(repaint);
     gui.addColor(settings, 'badgeColor').onChange(repaint);
     gui.add(settings, 'badgeSize', 0.1, 0.6, 0.01).onChange(repaint);
-  },
+  }
 };

@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas,
   DragPanBehaviour,
-  PrimitivesRenderer,
   WheelZoomBehaviour,
   WorldLayer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext, ShapeFillLayer } from '@invana/canvas';
+import type { ShapeFillLayer } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
@@ -34,13 +34,10 @@ export const Image: Story = {
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({
-          container: this.container,
-          camera: ctx.camera,
-        });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -50,17 +47,17 @@ export const Image: Story = {
     const samples = {
       avatar: 'https://picsum.photos/seed/canvas-fill-image-a/256/256',
       landscape: 'https://picsum.photos/seed/canvas-fill-image-b/512/256',
-      portrait: 'https://picsum.photos/seed/canvas-fill-image-c/256/512',
+      portrait: 'https://picsum.photos/seed/canvas-fill-image-c/256/512'
     };
     const settings = {
       sample: 'avatar' as keyof typeof samples,
-      alpha: 1,
+      alpha: 1
     };
 
     const buildFill = (): ShapeFillLayer => ({
       kind: 'image',
       url: samples[settings.sample],
-      alpha: settings.alpha,
+      alpha: settings.alpha
     });
 
     layer.renderer.addShape('img', {
@@ -71,7 +68,7 @@ export const Image: Story = {
       height: 120,
       cornerRadius: 16,
       fill: buildFill(),
-      stroke: { color: 0xffffff, width: 2 },
+      stroke: { color: 0xffffff, width: 2 }
     });
 
     canvas.camera.fitContent(layer.getBounds(), 60);
@@ -81,5 +78,5 @@ export const Image: Story = {
     const repaint = () => layer.renderer.updateShape('img', { fill: buildFill() });
     gui.add(settings, 'sample', Object.keys(samples)).onChange(repaint);
     gui.add(settings, 'alpha', 0, 1, 0.01).onChange(repaint);
-  },
+  }
 };

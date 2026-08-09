@@ -27,7 +27,7 @@ export const DrawEdgeStory: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes: seed, edges: [] } },
+      options: { initData: { nodes: seed, edges: [] } }
     });
     canvas.layers.add(graph);
 
@@ -45,7 +45,7 @@ export const DrawEdgeStory: Story = {
       onEdgeCreate: () => {
         settings.edges += 1;
         gui.controllersRecursive().forEach((c) => c.updateDisplay());
-      },
+      }
     });
     canvas.behaviours.register(draw);
 
@@ -59,17 +59,17 @@ export const DrawEdgeStory: Story = {
               bgStrokeColor: 0xffffff,
               bgStrokeWidth: 2,
               labelColor: 0xffffff,
-              labelPlacement: 'center',
-            },
+              labelPlacement: 'center'
+            }
           },
-          edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 2 } },
-        },
+          edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 2 } }
+        }
       },
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'draw-edge': { enabled: true },
-      },
+        'draw-edge': { enabled: true }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 120);
@@ -78,5 +78,5 @@ export const DrawEdgeStory: Story = {
     onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'enable').onChange((on: boolean) => (on ? draw.enable() : draw.disable()));
     gui.add(settings, 'edges').disable();
-  },
+  }
 };

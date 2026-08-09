@@ -3,9 +3,9 @@ import {
   Canvas,
   DragPanBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext, DragModifier } from '@invana/canvas';
+import type { DragModifier } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -24,15 +24,12 @@ export const DragPanStory: Story = {
     await canvas.init({ container, autoResize: true });
 
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() {
         return {};
       }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({
-          container: this.container,
-          camera: ctx.camera,
-        });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() {
         return null;
@@ -48,7 +45,7 @@ export const DragPanStory: Story = {
       y: 0,
       radius: 60,
       fill: { kind: 'solid', color: 0x4f9cf9 },
-      stroke: { color: 0x1d4ed8, width: 2 },
+      stroke: { color: 0x1d4ed8, width: 2 }
     });
     layer.renderer.addShape('b', {
       kind: 'rect',
@@ -57,7 +54,7 @@ export const DragPanStory: Story = {
       width: 140,
       height: 90,
       fill: { kind: 'solid', color: 0x10b981, alpha: 0.9 },
-      stroke: { color: 0x047857, width: 2 },
+      stroke: { color: 0x047857, width: 2 }
     });
 
     canvas.camera.fitContent(layer.getBounds(), 120);
@@ -66,7 +63,7 @@ export const DragPanStory: Story = {
       enabled: true,
       modifier: 'none' as DragModifier,
       mouseButtons: 'left' as 'all' | 'left' | 'right' | 'middle',
-      decelerate: true,
+      decelerate: true
     };
 
     const ID = 'pan';
@@ -76,7 +73,7 @@ export const DragPanStory: Story = {
         enabled: settings.enabled,
         modifier: settings.modifier,
         mouseButtons: settings.mouseButtons,
-        decelerate: settings.decelerate,
+        decelerate: settings.decelerate
       });
 
     canvas.behaviours.register(build());
@@ -96,5 +93,5 @@ export const DragPanStory: Story = {
       .add(settings, 'mouseButtons', ['all', 'left', 'right', 'middle'])
       .onChange(rebuild);
     gui.add(settings, 'decelerate').onChange(rebuild);
-  },
+  }
 };

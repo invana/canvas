@@ -6,7 +6,7 @@ import {
   GraphLayer,
   type GraphEdge,
   type GraphNode,
-  type NodeShapeOptions,
+  type NodeShapeOptions
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -49,8 +49,8 @@ export const Shapes: Story = {
           labelColor: 0x0f172a,
           labelFontSize: 11,
           labelPlacement: 'left',
-          labelOffsetX: -10,
-        },
+          labelOffsetX: -10
+        }
       },
       {
         id: `${v.id}-tgt`,
@@ -58,8 +58,8 @@ export const Shapes: Story = {
         position: { x: 260, y: (i - 2.5) * 80 },
         style: {
           shape: { kind: 'circle', radius: 14 },
-          bgFill: 0x34d399,
-        },
+          bgFill: 0x34d399
+        }
       },
     ]);
 
@@ -76,10 +76,10 @@ export const Shapes: Story = {
             shape: v.shape,
             fill: 0xdc2626,
             strokeColor: 0xffffff,
-            strokeWidth: 1.5,
+            strokeWidth: 1.5
           },
-        ],
-      },
+        ]
+      }
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>(
@@ -91,7 +91,7 @@ export const Shapes: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes, edges } },
+      options: { initData: { nodes, edges } }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -100,11 +100,11 @@ export const Shapes: Story = {
 
     const canvasOptions = {
       layers: {
-        graph: { edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 1.5, arrowTargetShape: 'none' } } },
+        graph: { edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 1.5, arrowTargetShape: 'none' } } }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true }, 'drag-node': { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true }, 'drag-node': { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

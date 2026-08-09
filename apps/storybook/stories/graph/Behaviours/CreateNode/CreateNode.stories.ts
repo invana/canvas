@@ -39,12 +39,12 @@ export const CreateNodeStory: Story = {
       createNode: (world) => ({ type: 'node',
         id: `n${++n}`,
         position: world,
-        style: { labelText: `n${n}` },
+        style: { labelText: `n${n}` }
       }),
       onNodeCreate: () => {
         settings.nodes += 1;
         gui.controllersRecursive().forEach((c) => c.updateDisplay());
-      },
+      }
     });
     canvas.behaviours.register(create);
 
@@ -58,16 +58,16 @@ export const CreateNodeStory: Story = {
               bgStrokeColor: 0xffffff,
               bgStrokeWidth: 2,
               labelColor: 0xffffff,
-              labelPlacement: 'center',
-            },
-          },
-        },
+              labelPlacement: 'center'
+            }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'create-node': { enabled: true },
-      },
+        'create-node': { enabled: true }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -77,5 +77,5 @@ export const CreateNodeStory: Story = {
     onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'enable').onChange((on: boolean) => (on ? create.enable() : create.disable()));
     gui.add(settings, 'nodes').disable();
-  },
+  }
 };

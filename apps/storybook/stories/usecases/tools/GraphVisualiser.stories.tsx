@@ -48,7 +48,7 @@ import {
   twitterActivity,
   twitterActivitySettings,
   ukEnergyFlowAsGraph,
-  ukEnergyFlowSettings,
+  ukEnergyFlowSettings
 } from '@invana/graph-datasets';
 import { D3HierarchyLayout } from '@invana/graph-layout-d3-hierarchy';
 import { D3SankeyLayout } from '@invana/graph-layout-d3-sankey';
@@ -97,24 +97,24 @@ export const GraphVisualiserStory: Story = {
             ...lesMiserablesSettings,
             behaviours: {
               ...lesMiserablesSettings.behaviours,
-              color: { enabled: true, colorEdges: false },
-            },
+              color: { enabled: true, colorEdges: false }
+            }
           },
-          layout: null,
+          layout: null
         },
         {
           id: 'twitter',
           title: 'Twitter activity',
           data: twitterActivity as GraphData,
           settings: twitterActivitySettings,
-          layout: null,
+          layout: null
         },
         {
           id: 'flare',
           title: 'Flare package tree',
           data: flareAsGraph() as GraphData,
           settings: flareSettings,
-          layout: 'hierarchy' as const,
+          layout: 'hierarchy' as const
         },
         {
           id: 'flare-imports',
@@ -124,42 +124,42 @@ export const GraphVisualiserStory: Story = {
           // what its settings are written for.
           data: { nodes: flareImports.nodes, edges: flareImports.importEdges } as GraphData,
           settings: flareImportsSettings,
-          layout: null,
+          layout: null
         },
         {
           id: 'h1b-2019',
           title: 'H-1B 2019',
           data: h1b2019AsGraph() as GraphData,
           settings: h1b2019Settings,
-          layout: 'hierarchy' as const,
+          layout: 'hierarchy' as const
         },
         {
           id: 'life-tree',
           title: 'Tree of life',
           data: lifeTreeAsGraph() as GraphData,
           settings: lifeTreeSettings,
-          layout: 'hierarchy' as const,
+          layout: 'hierarchy' as const
         },
         {
           id: 'uk-energy-flow',
           title: 'UK energy flow',
           data: ukEnergyFlowAsGraph() as GraphData,
           settings: ukEnergyFlowSettings,
-          layout: 'sankey' as const,
+          layout: 'sankey' as const
         },
         {
           id: 'random-tree',
           title: 'Random tree',
           data: randomTree,
           settings: randomTreeSettings,
-          layout: null,
+          layout: null
         },
         {
           id: 'lattice',
           title: 'Lattice 20×20',
           data: generateLattice(20) as GraphData,
           settings: latticeSettings,
-          layout: null,
+          layout: null
         },
       ];
     }, []);
@@ -196,11 +196,11 @@ export const GraphVisualiserStory: Story = {
               style: {
                 ...graph.node?.style,
                 labelText: (n: GraphNode) =>
-                  String((n.data as { name?: string } | undefined)?.name ?? n.id),
-              },
-            },
-          },
-        },
+                  String((n.data as { name?: string } | undefined)?.name ?? n.id)
+              }
+            }
+          }
+        }
       };
     }, [active]);
 
@@ -217,13 +217,13 @@ export const GraphVisualiserStory: Story = {
             ? new D3HierarchyLayout({
                 id: 'layout',
                 targetLayerId: 'graph',
-                ...params,
+                ...params
               } as ConstructorParameters<typeof D3HierarchyLayout>[0])
             : active.layout === 'sankey'
               ? new D3SankeyLayout({
                   id: 'layout',
                   targetLayerId: 'graph',
-                  ...params,
+                  ...params
                 } as ConstructorParameters<typeof D3SankeyLayout>[0])
               : null;
         if (layout) {
@@ -275,7 +275,7 @@ export const GraphVisualiserStory: Story = {
                       value: active.id,
                       options: datasetOptions,
                       onChange: setDatasetId,
-                      tooltip: 'Switch dataset',
+                      tooltip: 'Switch dataset'
                     },
                   ]}
                 />
@@ -294,11 +294,11 @@ export const GraphVisualiserStory: Story = {
                     label: 'Switch to dark theme',
                     activeLabel: 'Switch to light theme',
                     active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme,
+                    onToggle: ctx.toggleTheme
                   },
                 ]}
               />
-            ),
+            )
           }}
           // Footer is just slots too — status bar on the left, message line on the right.
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
@@ -318,5 +318,5 @@ export const GraphVisualiserStory: Story = {
         </GraphCanvasApp>
       </ThemeProvider>
     );
-  },
+  }
 };

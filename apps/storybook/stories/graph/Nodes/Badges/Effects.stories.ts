@@ -64,10 +64,10 @@ export const Effects: Story = {
             fill: 0xdc2626,
             strokeColor: 0xffffff,
             strokeWidth: 2,
-            ...(v.effects ? { effects: v.effects } : {}),
+            ...(v.effects ? { effects: v.effects } : {})
           },
-        ],
-      },
+        ]
+      }
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>(
@@ -83,9 +83,9 @@ export const Effects: Story = {
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
 
     const canvasOptions = {
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

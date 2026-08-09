@@ -26,14 +26,11 @@
  * **Two init paths**
  *   - `init(opts)` — the production path. Creates a pixi `Application`,
  *     mounts its canvas into the DOM container, hooks the ticker.
- *   - `initWithStage(stage, sw, sh)` — the test / headless path. Skips pixi
- *     `Application` entirely. Caller provides a `Container` (which can be
- *     a freshly-constructed pixi `Container()`) and viewport dimensions.
- *     Useful for unit tests that want to exercise the layer pipeline without
- *     standing up a renderer.
+ *   - `initWithRenderer(renderer, sw, sh)` — the headless path. The caller
+ *     supplies an already-mounted backend, so a test can drive the whole layer
+ *     / behaviour / state pipeline against a renderer that draws nothing.
  */
 
-import type { Container } from 'pixi.js';
 import { PixiRenderer } from '../renderer/PixiRenderer';
 import type { IRenderer } from '../renderer/IRenderer';
 import {
@@ -189,7 +186,7 @@ export class Canvas {
   readonly store: CanvasStore;
 
   /**
-   * Public surface — populated by `init()` / `initWithStage()`. Accessing
+   * Public surface — populated by `init()` / `initWithRenderer()`. Accessing
    * before init throws (definite-assignment via `!`). Use `isInitialised`
    * to guard if needed.
    */
@@ -357,24 +354,28 @@ export class Canvas {
   }
 
   /**
-   * Headless / test init. Caller provides a pre-built stage `Container`
-   * and viewport dimensions; we skip pixi's `Application` setup entirely.
+   * Init against a renderer the caller already built and mounted — the seam for
+   * a **headless** backend, and the reason the engine's own test suite needs no
+   * drawing library.
    *
-   * Use case: unit tests of the layer / behaviour / dirty / state pipeline
-   * that don't need an actual GPU renderer.
+   * Synchronous on purpose. {@link init} resolves its default backend with a
+   * lazy `import()` and is therefore async; this path takes the renderer as an
+   * argument instead, so it stays callable from a plain test body.
+   *
+   * The caller owns the renderer's `mount` — this only wires the camera, the
+   * context and the layer/behaviour registries on top of it.
    */
-  initWithStage(stage: Container, screenWidth: number, screenHeight: number): void {
+  initWithRenderer(renderer: IRenderer, screenWidth: number, screenHeight: number): void {
     if (this._isInitialised) {
       throw new Error(`Canvas "${this.id}" already initialised`);
     }
-    const renderer = new PixiRenderer({ events: this.events });
     this._renderer = renderer;
-    renderer.mountStage(stage, screenWidth, screenHeight);
     this._wireScene(screenWidth, screenHeight);
+    this._stopLoop = renderer.startLoop((dtMs) => this.tickOnce(dtMs));
     this._isInitialised = true;
     this.events.emit('canvas:renderer:ready', {
-      backend: 'canvas', // headless == no GPU backend
-      capabilities: { headless: true },
+      backend: renderer.backend,
+      capabilities: { ...renderer.capabilities },
     });
 
     this._activate(this.options.config);

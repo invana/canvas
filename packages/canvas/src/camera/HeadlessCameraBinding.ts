@@ -1,23 +1,25 @@
 /**
- * A pure `ICameraBinding` with no backend behind it — the proof that `Camera`
- * carries no renderer dependency.
+ * `ICameraBinding` with no backend behind it.
  *
  * The projection math mirrors the engine's coordinate model exactly
- * (`screen = world * zoom + offset`), so a test can assert camera semantics
- * without standing up pixi. `emitTransformChange` lets a test simulate a
- * backend-driven gesture (a wheel tick, a momentum glide) — the one path
- * `Camera` cannot trigger itself.
+ * (`screen = world * zoom + offset`), so camera semantics — clamping, anchored
+ * zoom, fit, the bus and store sync — are exercisable with no GPU.
+ * `emitTransformChange` simulates a backend-driven gesture (a wheel tick, a
+ * momentum glide), the one path `Camera` cannot trigger itself.
+ *
+ * Shipped rather than test-only: §7 keeps a headless backend deliberately, so
+ * consumers can test layouts, picking and projection without a renderer.
  */
 
-import type { Point, Rect } from '../../src/specs/geometry';
+import type { Point, Rect } from '../specs/geometry';
 import type {
   CameraChangeKind,
   CameraInputConfig,
   CameraTransformValue,
   ICameraBinding,
-} from '../../src/camera/ICameraBinding';
+} from './ICameraBinding';
 
-export class FakeCameraBinding implements ICameraBinding {
+export class HeadlessCameraBinding implements ICameraBinding {
   private t: CameraTransformValue = { x: 0, y: 0, zoom: 1 };
   private screenWidth: number;
   private screenHeight: number;

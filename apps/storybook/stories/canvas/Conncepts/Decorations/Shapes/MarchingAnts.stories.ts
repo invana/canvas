@@ -4,9 +4,8 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -27,10 +26,10 @@ export const MarchingAntsStory: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -79,7 +78,7 @@ export const MarchingAntsStory: Story = {
       gapLength: 4,
       speedPxPerSec: 24,
       inset: -4,
-      alpha: 1,
+      alpha: 1
     };
 
     const apply = () => {
@@ -87,7 +86,7 @@ export const MarchingAntsStory: Story = {
       for (const id of hostIds) {
         layer.renderer.setDecoration(id, 'marching-ants', {
           kind: 'marching-ants',
-          style,
+          style
         });
       }
     };
@@ -116,5 +115,5 @@ export const MarchingAntsStory: Story = {
     // eslint-disable-next-line no-console
     console.log('[MarchingAnts debug] layer.getBounds()', layer.getBounds(), 'using debug bounds:', debugBounds);
     canvas.camera.fitContent(debugBounds, 200);
-  },
+  }
 };

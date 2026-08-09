@@ -55,7 +55,7 @@ export const MissingFieldStory: Story = {
       targetLayerId: 'graph',
       enabled: true,
       nodeValueKey: 'data.nosuchfield',
-      colorEdges: false,
+      colorEdges: false
     });
     canvas.behaviours.register(colorBy);
 
@@ -70,31 +70,31 @@ export const MissingFieldStory: Story = {
                 shape: { kind: 'circle', radius: 7 },
                 bgStrokeColor: 0xffffff,
                 bgStrokeWidth: 1.5,
-                showLabel: false,
-              },
+                showLabel: false
+              }
             },
             edge: {
               style: {
                 strokeColor: 0xcbd5e1,
                 strokeWidth: 1,
                 strokeAlpha: 0.5,
-                arrowTargetShape: 'none',
-              },
-            },
-          },
+                arrowTargetShape: 'none'
+              }
+            }
+          }
         },
         layouts: {
-          force: { charge: { strength: -220 }, link: { distance: 40 }, collide: { radius: 11 } },
+          force: { charge: { strength: -220 }, link: { distance: 40 }, collide: { radius: 11 } }
         },
         activeLayout: 'force',
-        fitOnLoad: true,
-      },
+        fitOnLoad: true
+      }
     });
 
     const o = colorBy.getResolvedOptions();
     const settings = {
       nodeValueKey: o.nodeValueKey,
-      fallbackColor: `#${o.fallbackColor.toString(16).padStart(6, '0')}`,
+      fallbackColor: `#${o.fallbackColor.toString(16).padStart(6, '0')}`
     };
     const derived = { assigned: '', legend: '' };
     const refresh = (): void => {
@@ -105,7 +105,7 @@ export const MissingFieldStory: Story = {
     const apply = (): void => {
       colorBy.setOptions({
         nodeValueKey: settings.nodeValueKey,
-        fallbackColor: Number.parseInt(settings.fallbackColor.replace('#', ''), 16),
+        fallbackColor: Number.parseInt(settings.fallbackColor.replace('#', ''), 16)
       });
       refresh();
     };
@@ -118,5 +118,5 @@ export const MissingFieldStory: Story = {
     const out = gui.addFolder('derived (read-only)');
     out.add(derived, 'assigned').name('categories assigned').listen().disable();
     out.add(derived, 'legend').name('legend section kind').listen().disable();
-  },
+  }
 };

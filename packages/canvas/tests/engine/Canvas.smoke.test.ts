@@ -5,11 +5,12 @@
  * BehaviourRegistry → WorldLayer subclass + Behaviour subclass through
  * mount / state mutation / dirty mark / flush / events / tick.
  *
- * Uses `Canvas.initWithStage` (headless path) so we don't need a real GPU.
+ * Uses `Canvas.initWithRenderer` with a `HeadlessRenderer`, so the whole engine
+ * pipeline is exercised with no drawing library at all.
  */
 
 import { describe, expect, it, vi } from 'vitest';
-import { Container } from 'pixi.js';
+import { HeadlessRenderer } from '../../src/renderer/HeadlessRenderer';
 import { Canvas } from '../../src/engine/Canvas';
 import { WorldLayer } from '../../src/layers/WorldLayer';
 import { Behaviour } from '../../src/behaviours/Behaviour';
@@ -88,7 +89,7 @@ class TestSelectBehaviour extends Behaviour {
 describe('Canvas — end-to-end smoke', () => {
   it('initWithStage wires the full context surface', () => {
     const canvas = new Canvas({ id: 'main' });
-    canvas.initWithStage(new Container(), 800, 600);
+    canvas.initWithRenderer(new HeadlessRenderer(), 800, 600);
 
     expect(canvas.isInitialised).toBe(true);
     expect(canvas.events).toBeDefined();
@@ -103,20 +104,23 @@ describe('Canvas — end-to-end smoke', () => {
     expect(canvas.context.behaviours).toBe(canvas.behaviours);
   });
 
-  it('renderer:initialised fires on init', () => {
+  it('renderer:initialised reports the backend that actually mounted', () => {
     const canvas = new Canvas();
     const handler = vi.fn();
     canvas.events.on('canvas:renderer:ready', handler);
-    canvas.initWithStage(new Container(), 800, 600);
+    const renderer = new HeadlessRenderer();
+    canvas.initWithRenderer(renderer, 800, 600);
+    // The payload is the renderer's own answer, not a hardcoded literal — which
+    // is what lets a consumer degrade on `capabilities` rather than on a guess.
     expect(handler).toHaveBeenCalledWith({
-      backend: 'canvas',
-      capabilities: { headless: true },
+      backend: renderer.backend,
+      capabilities: { ...renderer.capabilities },
     });
   });
 
   it('add a Layer; mount fires; events flow through tap', () => {
     const canvas = new Canvas({ id: 'main' });
-    canvas.initWithStage(new Container(), 800, 600);
+    canvas.initWithRenderer(new HeadlessRenderer(), 800, 600);
 
     const tapHandler = vi.fn();
     canvas.events.tap(tapHandler);
@@ -144,7 +148,7 @@ describe('Canvas — end-to-end smoke', () => {
 
   it('Behaviour registered + enabled → reacts to layer events', () => {
     const canvas = new Canvas({ id: 'main' });
-    canvas.initWithStage(new Container(), 800, 600);
+    canvas.initWithRenderer(new HeadlessRenderer(), 800, 600);
 
     const graph = new TestGraphLayer({
       id: 'graph-1',
@@ -167,7 +171,7 @@ describe('Canvas — end-to-end smoke', () => {
 
   it('disabled Behaviour ignores events; re-enabling resumes', () => {
     const canvas = new Canvas({ id: 'main' });
-    canvas.initWithStage(new Container(), 800, 600);
+    canvas.initWithRenderer(new HeadlessRenderer(), 800, 600);
 
     const graph = new TestGraphLayer({
       id: 'graph-1',
@@ -192,7 +196,7 @@ describe('Canvas — end-to-end smoke', () => {
 
   it('tickOnce flushes dirty layers via applyDirty()', () => {
     const canvas = new Canvas({ id: 'main' });
-    canvas.initWithStage(new Container(), 800, 600);
+    canvas.initWithRenderer(new HeadlessRenderer(), 800, 600);
 
     const graph = new TestGraphLayer({
       id: 'graph-1',
@@ -213,7 +217,7 @@ describe('Canvas — end-to-end smoke', () => {
 
   it('invisible layers skip flush', () => {
     const canvas = new Canvas();
-    canvas.initWithStage(new Container(), 800, 600);
+    canvas.initWithRenderer(new HeadlessRenderer(), 800, 600);
 
     const graph = new TestGraphLayer({
       id: 'graph-1',
@@ -233,7 +237,7 @@ describe('Canvas — end-to-end smoke', () => {
 
   it('z-order tick walks layers low → high', () => {
     const canvas = new Canvas();
-    canvas.initWithStage(new Container(), 800, 600);
+    canvas.initWithRenderer(new HeadlessRenderer(), 800, 600);
 
     const a = new TestGraphLayer({
       id: 'a',
@@ -260,7 +264,7 @@ describe('Canvas — end-to-end smoke', () => {
 
   it('camera changes emit on the bus + tap', () => {
     const canvas = new Canvas();
-    canvas.initWithStage(new Container(), 800, 600);
+    canvas.initWithRenderer(new HeadlessRenderer(), 800, 600);
 
     const tapHandler = vi.fn();
     canvas.events.tap(tapHandler);
@@ -276,7 +280,7 @@ describe('Canvas — end-to-end smoke', () => {
 
   it('destroy() unmounts layers + tears everything down', () => {
     const canvas = new Canvas();
-    canvas.initWithStage(new Container(), 800, 600);
+    canvas.initWithRenderer(new HeadlessRenderer(), 800, 600);
 
     const graph = new TestGraphLayer({
       id: 'graph-1',
@@ -291,15 +295,15 @@ describe('Canvas — end-to-end smoke', () => {
 
   it('cannot init twice', () => {
     const canvas = new Canvas();
-    canvas.initWithStage(new Container(), 800, 600);
-    expect(() => canvas.initWithStage(new Container(), 100, 100)).toThrow(
+    canvas.initWithRenderer(new HeadlessRenderer(), 800, 600);
+    expect(() => canvas.initWithRenderer(new HeadlessRenderer(), 100, 100)).toThrow(
       /already initialised/,
     );
   });
 
   it('Layer.state mutations work end-to-end (zustand+immer with Set)', () => {
     const canvas = new Canvas();
-    canvas.initWithStage(new Container(), 800, 600);
+    canvas.initWithRenderer(new HeadlessRenderer(), 800, 600);
     const graph = new TestGraphLayer({
       id: 'graph-1',
       options: { initialNodes: [] },

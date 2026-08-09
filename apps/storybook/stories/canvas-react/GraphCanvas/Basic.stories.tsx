@@ -5,7 +5,7 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
   D3ForceLayout,
-  type GraphLayerProps,
+  type GraphLayerProps
 } from '@invana/canvas-react';
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphData } from '@invana/graph';
@@ -51,7 +51,7 @@ const DATA: GraphData = {
     { id: 'ring-3', source: 'c', target: 'd', type: 'NEXT' },
     { id: 'ring-4', source: 'd', target: 'e', type: 'NEXT' },
     { id: 'ring-5', source: 'e', target: 'a', type: 'NEXT' },
-  ],
+  ]
 };
 
 const NODE: GraphLayerProps['node'] = {
@@ -64,8 +64,8 @@ const NODE: GraphLayerProps['node'] = {
     labelColor: 0x1e293b,
     labelFontSize: 11,
     labelPlacement: 'bottom',
-    labelOffsetY: 6,
-  },
+    labelOffsetY: 6
+  }
 };
 const EDGE: GraphLayerProps['edge'] = { style: { strokeColor: 0x94a3b8, strokeWidth: 1.5 } };
 
@@ -78,9 +78,9 @@ const CONFIG: CanvasConfig = {
       charge: { strength: -220 },
       link: { distance: 80 },
       collide: { radius: 22 },
-      animate: false,
-    },
-  },
+      animate: false
+    }
+  }
 };
 
 export const Basic: Story = {
@@ -96,5 +96,5 @@ export const Basic: Story = {
         <WheelZoomBehaviour id="wheel" />
       </GraphCanvas>
     </div>
-  ),
+  )
 };
