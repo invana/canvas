@@ -148,6 +148,9 @@ importers:
       '@invana/forms':
         specifier: ^0.0.19
         version: 0.0.19(@invana/styling@0.0.19(tailwindcss@4.3.2))(@invana/ui@0.0.19(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.81.0(react@18.3.1))(react@18.3.1)
+      '@invana/renderer-pixijs':
+        specifier: workspace:*
+        version: link:../../packages/renderer-pixijs
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
@@ -193,15 +196,12 @@ importers:
       '@invana/canvas-store':
         specifier: workspace:*
         version: link:../canvas-store
+      '@invana/renderer-pixijs':
+        specifier: workspace:*
+        version: link:../renderer-pixijs
       immer:
         specifier: ^11.1.4
         version: 11.1.4
-      pixi-viewport:
-        specifier: ^6.0.3
-        version: 6.0.3(pixi.js@8.18.1)
-      pixi.js:
-        specifier: ^8.18.1
-        version: 8.18.1
       rbush:
         specifier: ^4.0.1
         version: 4.0.1
@@ -306,6 +306,9 @@ importers:
       '@invana/graph-layout-elkjs':
         specifier: workspace:*
         version: link:../graph-layout-elkjs
+      '@invana/renderer-pixijs':
+        specifier: workspace:*
+        version: link:../renderer-pixijs
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
@@ -799,9 +802,6 @@ importers:
       pixi.js:
         specifier: ^8.18.1
         version: 8.18.1
-      rbush:
-        specifier: ^4.0.1
-        version: 4.0.1
     devDependencies:
       '@invana/canvas':
         specifier: workspace:*
@@ -815,9 +815,6 @@ importers:
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
-      '@types/rbush':
-        specifier: ^4.0.0
-        version: 4.0.0
       tsup:
         specifier: ^8.3.5
         version: 8.5.1(jiti@2.7.0)(postcss@8.5.12)(tsx@4.21.0)(typescript@5.9.2)(yaml@2.8.3)

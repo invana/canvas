@@ -48,8 +48,9 @@ import type {
   ShapeLabelStyle,
   ConnectorLabelStyle,
   LabelContent,
-} from '../primitives/types';
-import type { CompositeSpec, CompositePart } from '../specs';
+  CompositeSpec,
+  CompositePart,
+} from '../specs';
 import { tabbedRectOutline, tabbedRectFoldLine } from '../specs/shapeGeometry';
 import { hexToCss, resolveExportBackground, captureRect, type ExportArea } from './shared';
 

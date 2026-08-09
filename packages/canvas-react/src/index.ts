@@ -17,20 +17,20 @@ export { GraphCanvasContext, useGraphCanvas } from './GraphCanvasContext';
 // Re-exported for `<Canvas config={…}>` consumers — the serialisable, id-keyed
 // settings shape (same as the imperative engine's `canvasOptions`).
 export type { CanvasConfig } from '@invana/canvas';
-// Renderer backend capability detection — re-exported from `@invana/canvas` so
-// React consumers can gate a backend toggle / show a "WebGPU unavailable" notice
-// without reaching past the bindings. The engine already auto-resolves the
-// backend (`<Canvas preference>` downgrades off WebGPU when the API is absent);
-// these are for UI that wants to reflect that. See `rendererSupport.ts` in
-// `@invana/canvas`.
+// Renderer backend capability detection. These probe *pixi's* backends, so they
+// moved to `@invana/renderer-pixijs` with the rest of the drawing code — a
+// three.js backend would answer a different question. Still re-exported here so
+// React consumers can gate a backend toggle or show a "WebGPU unavailable"
+// notice without reaching past the bindings; the engine already auto-resolves
+// the backend, and these are for UI that wants to reflect that.
 export {
   hasWebGPUApi,
   hasWebGL,
   canUseWebGPU,
   resolveRenderPreference,
   bestRenderPreference,
-} from '@invana/canvas';
-export type { RenderPreference } from '@invana/canvas';
+} from '@invana/renderer-pixijs';
+export type { RenderPreference } from '@invana/renderer-pixijs';
 export { HistoryContext } from './HistoryContext';
 export { ClipboardContext } from './ClipboardContext';
 export { ToolContext } from './ToolContext';

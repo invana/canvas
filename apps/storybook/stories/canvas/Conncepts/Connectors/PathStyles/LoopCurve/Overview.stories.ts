@@ -1,10 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import {
-  Canvas, DragPanBehaviour, DragShapeBehaviour, WheelZoomBehaviour,
-  WorldLayer, arrowMarkerSpec,
-  LOOP_CURVE_PRESETS,
-  type IElementRenderer
-} from '@invana/canvas';
+import { Canvas, DragPanBehaviour, DragShapeBehaviour, WheelZoomBehaviour, WorldLayer, LOOP_CURVE_PRESETS, type IElementRenderer } from '@invana/canvas';
+import { arrowMarkerSpec } from '@invana/renderer-pixijs';
 import type { LoopCurvePresetName } from '@invana/canvas';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 

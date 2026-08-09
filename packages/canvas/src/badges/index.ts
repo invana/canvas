@@ -7,5 +7,5 @@
  */
 
 export { resolveBadgePosition, originToBadgeLocal } from './placement';
-export { resolveConnectorBadgePosition } from './connectorPlacement';
+export { resolveConnectorBadgePosition, DEFAULT_ENDPOINT_BADGE_GAP_PX } from './connectorPlacement';
 export type * from './types';

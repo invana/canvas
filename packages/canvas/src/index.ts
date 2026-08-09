@@ -43,26 +43,21 @@ export {
 // ─── Spec geometry (P4) ──────────────────────────────────────────────────────
 // Picking and bounds computed from a spec, with no backend involved — which is
 // what makes hit-testing headlessly testable and identical across renderers.
-export {
-  containsSpec,
-  boundsOfSpec,
-  scaleSpec,
-  collapsedSpec,
-  fitSpecToContent,
-  strokeBandOf,
-  tabbedRectOutline,
-  tabbedRectFoldLine,
-} from './specs/shapeGeometry';
+
 // Lives with the fill vocabulary rather than the geometry — a spec with no
 // silhouette fill is hollow, and picking honours that.
 export { hasSilhouetteFill } from './specs/style';
-export type { ShapeSpec } from './specs';
+// The whole spec vocabulary — types *and* the pure geometry over them
+// (`containsSpec`, `boundsOfSpec`, and the per-kind helpers a backend needs to
+// draw each silhouette). Exported wholesale because a hand-picked subset breaks
+// the moment a backend needs one more entry, and this vocabulary is precisely
+// the shared language of engine, domain package and renderer.
+export * from './specs';
 
 // ─── The renderer seam ───────────────────────────────────────────────────────
 // `IRenderer` lives here rather than in the kernel because it is made of spec
-// vocabulary. `PixiRenderer` is its first implementation and the class P6 moves
-// into `@invana/renderer-pixijs`.
-export { PixiRenderer, type PixiRendererOptions } from './renderer/PixiRenderer';
+// vocabulary. The pixi implementation lives in `@invana/renderer-pixijs`; this
+// package holds only the contract and the headless double.
 // The headless backend (§7) — draws nothing, implements everything. Lets a
 // consumer test layouts, picking and projection with no GPU and no DOM.
 export {
@@ -117,7 +112,13 @@ export type { SpecProjectionTarget, SpecProjectorOptions } from './renderer/Spec
 // commands and geometry answers it still calls directly. Pixi-free, so
 // `@invana/graph` targets a backend it never imports.
 export type { IElementRenderer, MountedDecoration, CustomElementCtor } from './renderer/IElementRenderer';
-export type { ISurface, ISurfaceHost, SurfaceOptions, SurfaceSpace } from './renderer/ISurface';
+export type {
+  ISurface,
+  ISurfaceHost,
+  SurfaceBackdrop,
+  SurfaceOptions,
+  SurfaceSpace,
+} from './renderer/ISurface';
 export type { ElementEventMap } from './specs/elementEvents';
 
 // ─── Specs as state (P1) ─────────────────────────────────────────────────────
@@ -169,9 +170,6 @@ export {
 // ─── Camera ─────────────────────────────────────────────────────────────
 export { Camera } from './camera/Camera';
 export type { CameraOptions, CameraTransform, Rect, Point } from './camera/Camera';
-// The renderer's half of the camera. `Camera` holds the semantics and no
-// backend type; a rendering package implements the binding (P6).
-export { PixiViewportBinding } from './camera/PixiViewportBinding';
 export type {
   CameraChangeKind,
   CameraTransformValue,
@@ -290,6 +288,7 @@ export {
   LOOP_CURVE_PRESETS,
   samplePath,
   samplePathAt,
+  tangentAt,
   pathBounds,
   trimPathEnds,
   distanceToPolylineSq,
@@ -297,6 +296,7 @@ export {
 } from './connectors';
 
 export {
+  DEFAULT_ENDPOINT_BADGE_GAP_PX,
   resolveBadgePosition,
   originToBadgeLocal,
   resolveConnectorBadgePosition,
@@ -340,15 +340,6 @@ export type { CanvasConfig } from './engine/CanvasConfig';
 // building config (deep-merging defaults under overrides) merge identically.
 export { deepMerge } from './engine/CanvasConfig';
 
-// Renderer backend capability detection (WebGPU/WebGL support).
-export {
-  hasWebGPUApi,
-  hasWebGL,
-  canUseWebGPU,
-  resolveRenderPreference,
-  bestRenderPreference,
-} from './engine/rendererSupport';
-export type { RenderPreference } from './engine/rendererSupport';
 
 // Raster export (viewport / whole-diagram → PNG / JPEG / WebP). `Canvas.export`
 // / `Canvas.exportDataURL` delegate here; the standalone functions are exported
@@ -396,15 +387,9 @@ export type {
 
 // ─── Primitives (renderer + base classes + built-ins + types) ──────────
 //
-// The full primitives surface is also available via the `@invana/canvas/primitives`
-// subpath export for finer-grained imports / tree-shaking.
-export * from './primitives';
 
-// ─── Infra services (used by primitives) ───────────────────────────────
-export { TextureRegistry } from './textures/TextureRegistry';
 
 // ─── Font helpers ─────────────────────────────────────────────────────
-export { loadIconFont } from './fonts/loadIconFont';
 
 // ─── Pixi re-export for paint callbacks ────────────────────────────────
 //

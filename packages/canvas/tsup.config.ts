@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/index.ts', 'src/primitives/index.ts', 'src/specs/index.ts'],
+  entry: ['src/index.ts', 'src/specs/index.ts'],
   format: ['esm'],
   dts: true,
   clean: true,
@@ -9,5 +9,7 @@ export default defineConfig({
   treeshake: true,
   splitting: false,
   minify: false,
-  external: ['pixi.js'],
+  // The default backend is an *optional peer*, resolved by a lazy import at
+  // runtime — never bundled, and not required to be installed.
+  external: ['@invana/renderer-pixijs'],
 });

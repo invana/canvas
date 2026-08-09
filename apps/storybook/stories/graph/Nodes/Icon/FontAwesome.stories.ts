@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { DragPanBehaviour, loadIconFont, WheelZoomBehaviour } from '@invana/canvas';
+import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { loadIconFont } from '@invana/renderer-pixijs';
 import type { InsetAnchor } from '@invana/canvas';
 import { GraphCanvas, GraphLayer, type GraphNode, type NodeShapeOptions } from '@invana/graph';
 import GUI from 'lil-gui';

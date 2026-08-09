@@ -1,13 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import {
-  Canvas,
-  DragPanBehaviour,
-  WheelZoomBehaviour,
-  DragShapeBehaviour,
-  WorldLayer,
-  arrowMarkerSpec,
-  type IElementRenderer
-} from '@invana/canvas';
+import { Canvas, DragPanBehaviour, WheelZoomBehaviour, DragShapeBehaviour, WorldLayer, type IElementRenderer } from '@invana/canvas';
+import { arrowMarkerSpec } from '@invana/renderer-pixijs';
 import type { ConnectorLabelPlacement } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';

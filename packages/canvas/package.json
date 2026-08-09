@@ -11,11 +11,6 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./primitives": {
-      "types": "./dist/primitives/index.d.ts",
-      "import": "./dist/primitives/index.js",
-      "default": "./dist/primitives/index.js"
-    },
     "./specs": {
       "types": "./dist/specs/index.d.ts",
       "import": "./dist/specs/index.js",
@@ -39,8 +34,6 @@
   "dependencies": {
     "@invana/canvas-store": "workspace:*",
     "immer": "^11.1.4",
-    "pixi-viewport": "^6.0.3",
-    "pixi.js": "^8.18.1",
     "rbush": "^4.0.1",
     "zustand": "^5.0.12"
   },
@@ -54,7 +47,8 @@
     "vitest": "^3.2.6"
   },
   "peerDependencies": {
-    "typescript": ">=5.0.0"
+    "typescript": ">=5.0.0",
+    "@invana/renderer-pixijs": "workspace:*"
   },
   "keywords": [
     "canvas",
@@ -71,5 +65,10 @@
   ],
   "publishConfig": {
     "access": "public"
+  },
+  "peerDependenciesMeta": {
+    "@invana/renderer-pixijs": {
+      "optional": true
+    }
   }
 }

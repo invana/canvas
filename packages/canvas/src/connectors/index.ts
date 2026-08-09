@@ -48,6 +48,7 @@ export {
 export {
   samplePath,
   samplePathAt,
+  tangentAt,
   pathBounds,
   trimPathEnds,
   distanceToPolylineSq,

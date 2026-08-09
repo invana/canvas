@@ -1,7 +1,7 @@
 {
   "name": "@invana/canvas-react",
   "version": "0.0.11",
-  "description": "React bindings for @invana/canvas — declarative <Canvas> with JSX children mapped to layers, behaviours, and layouts.",
+  "description": "React bindings for @invana/canvas \u2014 declarative <Canvas> with JSX children mapped to layers, behaviours, and layouts.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -32,13 +32,22 @@
     "@invana/graph-layout-elkjs": "workspace:*",
     "pixi.js": "^8.18.1",
     "react": "^18.0.0 || ^19.0.0",
-    "react-dom": "^18.0.0 || ^19.0.0"
+    "react-dom": "^18.0.0 || ^19.0.0",
+    "@invana/renderer-pixijs": "workspace:*"
   },
   "peerDependenciesMeta": {
-    "@invana/graph-layer-d3-contour": { "optional": true },
-    "@invana/graph-layer-maplibre": { "optional": true },
-    "@invana/graph-layout-d3-sankey": { "optional": true },
-    "@invana/graph-layout-elkjs": { "optional": true }
+    "@invana/graph-layer-d3-contour": {
+      "optional": true
+    },
+    "@invana/graph-layer-maplibre": {
+      "optional": true
+    },
+    "@invana/graph-layout-d3-sankey": {
+      "optional": true
+    },
+    "@invana/graph-layout-elkjs": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@invana/canvas": "workspace:*",
@@ -58,7 +67,8 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tsup": "^8.3.5",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "@invana/renderer-pixijs": "workspace:*"
   },
   "keywords": [
     "canvas",

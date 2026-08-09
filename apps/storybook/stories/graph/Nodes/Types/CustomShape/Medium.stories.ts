@@ -1,12 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { GraphCanvas } from '@invana/graph';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import {
-  ShapeBase,
-  type BaseShapeSpec,
-  type Rect,
-  type ShapeHostInfo
-} from '@invana/canvas/primitives';
+import { ShapeBase } from '@invana/renderer-pixijs';
+import type { BaseShapeSpec, Rect } from '@invana/canvas';
+import type { ShapeHostInfo } from '@invana/renderer-pixijs';
 import {
   GraphLayer,
   type CanonicalStateName,

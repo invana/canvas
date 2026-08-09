@@ -591,20 +591,35 @@ references, and the decoration bases extend `PrimitiveBase` and write `this.gfx`
 is therefore **"does it reference a live primitive instance"**, not "does it import pixi" — a
 sharper test, and the one to apply to anything added later.
 
-### P6 — extract `@invana/renderer-pixijs` ⚠ *the big one*
-- [x] Scaffold the package — tsup, `peerDependencies` on `canvas` + `canvas-store`, `pixi.js` dep, turbo, matching version *(eslint config added 2026-08-07; it had none, so `pnpm lint` failed there)*
-- [ ] Move `primitives/` (**48 files after the P5.5 split**, 39 with pixi), `textures/`, `fonts/`
-- [x] Split `engine/Canvas.ts` — `Application` + viewport bootstrap out into `PixiRenderer` (P4.5). **Render loop not yet**: pixi's ticker still drives `Canvas.tick`
-- [x] Split `camera/Camera.ts` — pixi-viewport binding out into `PixiViewportBinding` behind `ICameraBinding`; abstract transform stays (P4.5)
-- [ ] Implement `ISurface`; `WorldLayer` / `ScreenLayer` ask `ctx.renderer.createSurface(...)` instead of `new Container(...)`
-- [ ] `CanvasContext`: drop `world` / `stage`; add `renderer`, `measure`, `gestures`
-- [ ] `Canvas.init({ renderer? })` — **optional**, lazy-import default (D1, §4.6); declare `renderer-pixijs` an optional peer
-- [ ] Keep `preference` on `Canvas` and forward it to the renderer as a hint (D7)
-- [ ] Thread an **optional** `renderer` prop through `canvas-react` roots + `GraphCanvasApp` (default unchanged)
-- [ ] Add the storybook dependency; repoint any `@invana/canvas/primitives` imports
-- [ ] Drop the `primitives` subpath export from `canvas`; export `specs`
-- [ ] Enforce zero-pixi in `canvas` by lint
-- [ ] **Gate:** `canvas` imports no pixi; full storybook sweep pixel-identical; no per-frame cost added
+### P6 — extract `@invana/renderer-pixijs` ✅ **landed 2026-08-09**
+- [x] Scaffold the package — tsup, peers on `canvas` + `canvas-store`, `pixi.js` dep, eslint config
+- [x] Move the drawing code — **60 files**: `primitives/` (48 after the P5.5 split), the four
+  `Pixi*` classes, `textures/`, `fonts/`, `instancing/`, `sharedTexturePool`, `rendererSupport`
+- [x] Split `engine/Canvas.ts` — `Application` + viewport bootstrap out (P4.5); the render loop
+  stays inverted behind `startLoop` (G3 open, deliberately)
+- [x] Split `camera/Camera.ts` — pixi-viewport binding out behind `ICameraBinding` (P4.5)
+- [x] `WorldLayer` / `ScreenLayer` take a surface; the `container` getters are gone (P6.3)
+- [x] `CanvasContext` dropped `world` / `stage`; gained `createSurface` / `createOverlay` (P6.2)
+- [x] ⚠ **`Canvas.init({ renderer? })` — optional, lazy-import default (D1, §4.6).** The dynamic
+  import is typed **structurally**, not against the backend's own types: importing them would put
+  `@invana/canvas` back in a build cycle, and the engine must compile with no backend installed.
+  That is the difference between an optional peer and a dependency wearing its name
+- [x] `preference` stays on `Canvas` and is forwarded as a hint (D7)
+- [x] `canvas-react` re-exports the capability probes from the backend — they interrogate *pixi's*
+  backends, so a three.js renderer would answer a different question
+- [x] Storybook depends on the backend; 93 stories repointed
+- [x] Drop the `primitives` subpath from `canvas`; export `specs` — **wholesale**, values and
+  types. The per-kind geometry (`boundsOfCircle`, `containsRect`, …) is what a backend needs to
+  draw a silhouette, and hand-picking that list breaks the moment a second backend needs one more
+- [x] **Gate:** `grep -rl "from 'pixi" packages/*/src apps/storybook/stories` → **only
+  `packages/renderer-pixijs`**
+- [ ] Enforce zero-pixi in `canvas` by lint (the grep passes; the rule is not written yet)
+- [ ] Full storybook sweep pixel-identical — **not yet done for the move itself**
+
+**`rbush` stayed with the engine.** It was stripped alongside the pixi dependencies and had to go
+back: `PickingIndex` is engine-side (D5), so the spatial index is the *engine's* dependency and the
+backend has no use for it. A dependency list is a claim about who owns what, and that one was
+briefly wrong.
 
 ### P7 — `@invana/renderer-threejs` *(later, not scheduled)*
 - [ ] Scaffold; declare `capabilities` incl. `specKinds`

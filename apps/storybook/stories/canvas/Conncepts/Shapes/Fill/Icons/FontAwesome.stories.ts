@@ -1,12 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import {
-  Canvas,
-  DragPanBehaviour,
-  loadIconFont,
-  WheelZoomBehaviour,
-  WorldLayer,
-  type IElementRenderer
-} from '@invana/canvas';
+import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, type IElementRenderer } from '@invana/canvas';
+import { loadIconFont } from '@invana/renderer-pixijs';
 import type { ShapeFillLayer } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
