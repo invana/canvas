@@ -1,4 +1,12 @@
 /**
+ * Lives in `mounted/`, **not** `instancing/`. These are per-element bookkeeping
+ * records — one object per mounted connector, holding its spec, display objects,
+ * decorations and effects. "Instancing" in a renderer means the opposite (one
+ * geometry drawn many times), and that is the direction batching would take
+ * this package; the old folder name pointed at exactly the wrong idea.
+ */
+
+/**
  * `ConnectorInstance` — internal record the renderer keeps per added connector.
  *
  * Holds the spec, the pixi-backed `IConnector`, the cached routed `Path`, and

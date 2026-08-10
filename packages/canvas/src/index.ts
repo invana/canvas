@@ -384,13 +384,3 @@ export type {
   DataSerializableLayer,
   DefinitionSerializable,
 } from './export/stateExport';
-
-// ─── Primitives (renderer + base classes + built-ins + types) ──────────
-//
-
-
-// ─── Font helpers ─────────────────────────────────────────────────────
-
-// ─── Pixi re-export for paint callbacks ────────────────────────────────
-//
-// `Graphics` is re-exported so consumers writing `paint(g => ...)` style
