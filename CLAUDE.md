@@ -35,7 +35,8 @@ All in-repo packages are `0.0.7` (except the `@repo/*` configs and the private `
 | Path | Package | Role | 3rd-party deps |
 |---|---|---|---|
 | `packages/canvas-store` | `@invana/canvas-store` | **renderer-free kernel (foundation).** Owns **one `CanvasStore { view, data, events }` per `Canvas`** — the hub the engine writes to *and* subscribes from: **`view`** (`ReactiveStore<CanvasView>` — config + interaction state, behind the port: zustand now, Yjs later), **`data`** (owned, keyed `DataStore`s — the graph; positions/bulk are an internal typed-array detail, never the reactive path), **`events`** (the `CanvasEventBus` + tap), plus **telemetry** + **history**. **Renderer-free leaf: zero `@invana` deps, imports no drawing library** — pixi is one adapter. See `docs/canvas-state-plan.md`. | `zustand`, `immer` (later `yjs`) |
-| `packages/canvas` | `@invana/canvas` | the **pixi renderer integration** over `@invana/canvas-store` — `Canvas`, `Layer`, `Behaviour`, `Layout`, `ShapesRenderer`, built-in layers/behaviours. Projects kernel state → pixi and feeds pixi input → the store's `events`. **The only package allowed to import `pixi.js`.** `@invana/canvas-store` is its sole `@invana` dep. | `pixi.js`, `pixi-viewport`, `rbush` (dep: `@invana/canvas-store`) |
+| `packages/canvas` | `@invana/canvas` | the **renderer-agnostic orchestrator** over `@invana/canvas-store` — `Canvas`, `Layer`, `Behaviour`, `Layout`, registries, the **spec vocabulary** (`specs/`), **picking** (`hit/`), **connector geometry** (`connectors/` — routers, path styles, anchors, sampling), badge placement, tweens, camera semantics, SVG export, and the **renderer contract** (`renderer/IRenderer.ts`) + its headless double. **Imports no drawing library.** Deps: `@invana/canvas-store`, `rbush`; `@invana/renderer-pixijs` is an *optional peer*, lazily imported as the default backend. | `rbush`, `immer`, `zustand` (dep: `@invana/canvas-store`) |
+| `packages/renderer-pixijs` | `@invana/renderer-pixijs` | **the PixiJS drawing backend — the only package in the repo that imports a drawing library.** Implements `IRenderer` / `ISurface` / `IElementRenderer` / `ICameraBinding`: the pixi `Application`, the viewport binding, all of `primitives/` (shapes, connectors, decorations, effects, markers, paint), textures and fonts. Enforced by `pnpm check-boundaries`. See its `CLAUDE.md`. | `pixi.js`, `pixi-viewport` (peers: `@invana/canvas`, `@invana/canvas-store`) |
 | `packages/graph` | `@invana/graph` | graph domain on top of the engine — `GraphLayer`, `MiniMapLayer`, `GraphCanvas`, hover/click/lasso/brush/drag/select/context-menu/etc. behaviours, `OneShotPositionLayout` base | — (peer: `@invana/canvas`) |
 
 #### Layouts (each wraps one algorithm; peer on `@invana/canvas` + `@invana/graph`)
@@ -89,8 +90,12 @@ All in-repo packages are `0.0.7` (except the `@repo/*` configs and the private `
 @invana/canvas-store  (renderer-free KERNEL — zero @invana deps, no drawing-lib import; store + events + telemetry + history)
    ▲   (consumed by canvas, graph, canvas-react)
    │
-@invana/canvas  (the pixi renderer over the kernel; owns pixi; its sole @invana dep is canvas-store)
-   ▲
+@invana/canvas  (renderer-AGNOSTIC orchestrator: specs, picking, geometry, camera, the IRenderer
+   ▲             contract + headless double. Imports NO drawing library.)
+   │
+   ├── @invana/renderer-pixijs   (the pixi BACKEND — peer: canvas + canvas-store; owns pixi.js
+   │                              + pixi-viewport. canvas declares it an OPTIONAL PEER and
+   │                              resolves it by lazy import() when no `renderer` is supplied.)
    ├── @invana/graph                         (peer: canvas; dep: canvas-store)
    │      ▲
    │      ├── graph-layout-*                 (peer: canvas, graph)   — d3-force/elkjs/d3-hierarchy/d3-sankey/geometric
@@ -107,6 +112,13 @@ All in-repo packages are `0.0.7` (except the `@repo/*` configs and the private `
 ```
 
 > 🚧 The **canvas-react → canvas-ui** re-split (headless vs pixels; UI moving out of canvas-react, dep direction flipping to canvas-ui → canvas-react) is **in progress** — see `docs/ui-consolidation-plan.md`. The graph above shows the **target**; some UI still physically sits in canvas-react until the phased move completes.
+
+**The renderer boundary is the load-bearing rule here.** A drawing library may be imported *only*
+inside a backend package. `pnpm check-boundaries` (`scripts/check-renderer-boundary.mjs`) fails the
+build on a violation and runs as part of the root `pnpm lint`; an ESLint `no-restricted-imports`
+rule surfaces it in the editor too (it can only warn — the shared config loads
+`eslint-plugin-only-warn`). If the engine needs something from a backend, add it to the contract in
+`packages/canvas/src/renderer/IRenderer.ts` and implement it there. See `docs/renderer-split-design.md`.
 
 Rules implied by this graph: cross-package engine deps are **`peerDependencies`** (+ mirrored in `devDependencies` for local builds), never plain `dependencies` — except `canvas-react`→`@invana/themes`, the foundational **`@invana/canvas-store`** dependency (a normal `dependency`, not a peer — the shared kernel below the engine), and app deps. Keep all in-repo packages on the **same version** when bumping. A new layout/layer package peers on `@invana/canvas` (+ `@invana/graph` unless it's canvas-only like maplibre) and lists its single algorithm lib as a 3rd-party `dependency`. After adding a package, also add it to `apps/storybook`'s deps if it gets a story.
 
@@ -170,8 +182,8 @@ Turbo pipeline: `build` depends on `^build`, outputs `dist/**`. All packages use
 1. Don't write code unless we discuss and I give a go ahead.
 2. Ask me questions before coding.
 3. All new code goes in the active packages listed above.
-4. No `pixi.js` imports outside `packages/canvas` internals.
-5. No direct `new Graphics()` / `new Container()` outside `packages/canvas/src`.
+4. **No drawing-library import outside a backend package.** `pixi.js` / `pixi-viewport` belong to `packages/renderer-pixijs` and nowhere else — not in `@invana/canvas`, not in `@invana/graph`, not in a story. Enforced by `pnpm check-boundaries`.
+5. No direct `new Graphics()` / `new Container()` outside `packages/renderer-pixijs/src`. A layer draws by publishing **specs** or through `surface.overlay(...)`; it never constructs a display object.
 6. Events go through `canvas.events` (canvas-wide) or `layer.events` (layer-scoped) per `docs/architecture-proposal.md` §2.5 — never raw PixiJS events from outside the engine.
 7. Behaviours don't auto-enable. Every behaviour (hover, select, drag, etc.) must be explicitly registered AND enabled by the developer.
 8. Cross-layer dependencies are declared as explicit `*LayerId` option fields. Don't infer "the only graph layer".

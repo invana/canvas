@@ -3,26 +3,32 @@
 **The PixiJS drawing backend.** Implements the renderer contract from
 `@invana/canvas` and owns every pixi import in the repo.
 
-**Status:** scaffolded during P6 of the renderer split — see
+**Status:** landed. P6 of the renderer split is complete — see
 `docs/renderer-split-design.md`.
 
 ## The one rule that defines this package
 
 > **Everything that touches `pixi.js` lives here. Nothing else does.**
 
-After P6 completes, `grep -rl "from 'pixi.js'" packages/*/src` returns **only this
-package**, and that invariant is lint-enforced. `@invana/canvas` orchestrates,
-`@invana/graph` describes, this package draws.
+`grep -rl "from 'pixi" packages/*/src apps/storybook/stories` returns **only this
+package**, and that is enforced two ways: `pnpm check-boundaries`
+(`scripts/check-renderer-boundary.mjs`) fails the build, and an ESLint
+`no-restricted-imports` rule surfaces it in the editor. This package's own
+`eslint.config.js` turns that rule off — it is the one place the import is legal.
+
+`@invana/canvas` orchestrates, `@invana/graph` describes, this package draws.
 
 ## What it owns
 
 | Area | Contents |
 |---|---|
-| Bootstrap | pixi `Application`, the `pixi-viewport` `Viewport`, the render surface |
-| Drawing | all of `primitives/` — shapes, connectors, decorations, effects, markers, paint helpers |
-| Assets | `TextureRegistry`, icon-font loading |
-| Camera | the pixi-viewport realisation of the engine's abstract `{ x, y, zoom }` transform |
+| Bootstrap | `PixiRenderer` — the pixi `Application`, WebGPU→WebGL fallback, shared texture-pool ref-count, render-crash guard, drawing surface, resize plumbing, scene root |
+| Surfaces | `PixiSurface` — a layer's slice: spec projection, overlays, visibility, paint order, `setBackdrop` |
+| Drawing | `PrimitivesRenderer` + `shapes/`, `connectors/Connector.ts`, `decorations/`, `effects/`, `markers/`, `paint/`, `base/`, `instancing/` |
+| Assets | `TextureRegistry`, `loadIconFont` |
+| Camera | `PixiViewportBinding` — the `pixi-viewport` realisation of `ICameraBinding` |
 | Overlays | `PixiOverlayDevice` — the 11-op immediate-mode device for transient visuals |
+| Capability probing | `rendererSupport` — `hasWebGPUApi` / `canUseWebGPU` / `resolveRenderPreference`. These interrogate *pixi's* backends, which is why they live here |
 
 ## What it must never own
 
@@ -30,11 +36,19 @@ package**, and that invariant is lint-enforced. `@invana/canvas` orchestrates,
   `@invana/canvas-store`. This package projects them and reports user intent; it
   never decides anything.
 - **The hit index.** Picking is interaction, not drawing (design D5). The engine
-  owns the rbush index and the geometric `contains()` per spec kind.
+  owns the rbush index and the geometric `contains()` per spec kind; this package
+  only answers `HitGeometrySource` — the three facts a spec cannot carry (visual
+  scale, routed polyline, custom-kind silhouette).
+- **Connector geometry.** Routers, path styles, anchors and path sampling are
+  geometry answers, and §5 requires those not to need a backend. They live in
+  `@invana/canvas`; this package consumes them.
 - **Domain concepts.** No `node`, `edge`, `graph`, `table`, `lane`. It draws
   shapes and connectors; what they *mean* is the domain package's business.
-- **Its own clock.** The engine owns the only `requestAnimationFrame` and calls
-  `tick(dt)`. Pixi's `Application` ticker stays disabled.
+- **Its own clock — eventually.** G3 says the engine owns the only
+  `requestAnimationFrame` and calls `tick(dt)`. ⚠ **Not true yet:** pixi's
+  `Application.ticker` still drives the loop via `IRenderer.startLoop`, a
+  transitional seam that keeps the package move behaviour-neutral. Read the ⚠ on
+  `startLoop` before building on it.
 
 ## How it is reached
 
@@ -44,13 +58,18 @@ Consumers inject it; `@invana/canvas` never imports it directly:
 import { Canvas } from '@invana/canvas';
 import { PixiRenderer } from '@invana/renderer-pixijs';
 
-const canvas = await Canvas.init({ container: el, renderer: new PixiRenderer() });
+const canvas = new Canvas();
+await canvas.init({ container: el, renderer: new PixiRenderer({ events: canvas.events }) });
 ```
 
-`renderer` is optional — omitting it lazily imports this package as the default
-backend (design D1), which is why `@invana/canvas` declares it an **optional
-peer** rather than a dependency. That keeps the package graph honest while
-existing call sites keep working.
+`renderer` is optional — omitting it makes `Canvas.init` resolve this package by
+lazy `import()` through `createDefaultRenderer` (design D1, §4.6), which is why
+`@invana/canvas` declares it an **optional peer** rather than a dependency.
+
+⚠ The engine types that dynamic import **structurally**, never against this
+package's types — importing them would put `@invana/canvas` back in a build cycle
+with the package it optionally depends on. The engine must compile with this one
+absent. Don't "fix" that by adding a devDependency.
 
 ## Writing a second backend
 

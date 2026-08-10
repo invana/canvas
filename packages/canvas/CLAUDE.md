@@ -1,95 +1,94 @@
 # CLAUDE.md — packages/canvas (`@invana/canvas`)
 
-The engine. Implements the Layer / Behaviour / Layout / Renderer architecture defined in `docs/architecture-proposal.md`.
+**The engine: a renderer-agnostic orchestrator.** Implements the Layer / Behaviour /
+Layout architecture from `docs/architecture-proposal.md`, over the kernel
+(`@invana/canvas-store`), and defines the contract a drawing backend implements.
 
-**Status:** skeleton. Built fresh during the architecture rewrite.
+## The one rule that defines this package
 
-## Scope (per proposal §5 + §2.7)
+> **This package imports no drawing library.**
 
-- `Canvas`, `CameraAPI`, `CanvasContext`
-- Base classes/interfaces: `Layer`, `WorldLayer`, `ScreenLayer`, `Behaviour`, `Layout`
-- `Store<T>` (zustand+immer alias) for **small, observable interaction state**, `EventEmitter`, `CanvasEventBus`, `CanvasEvent`
-- `ColumnStore` — typed-array column store for **bulk hot data** (node positions, edge attrs). Domain packages extend it. Scales to millions of items at machine-rate mutations. See `architecture-proposal.md` §2.1 for the bifurcated state model rationale.
-- `DirtyBatcher` — pure, RAF-free; Canvas owns the single `requestAnimationFrame`
-- `LayerRegistry`, `BehaviourRegistry`, `SurfaceManager`
-- `PrimitivesRenderer` — primitive renderer with five extensible registries: shapes, connectors, markers, routers, **decorations**. Used by Layers; never added to `canvas.layers`.
-  - Base interfaces: `IShape`, `IConnector`, `IMarker`, `IRouter`, `IShapeDecoration`, `IConnectorDecoration`.
-  - Built-in shapes: `circle`, `ellipse`, `rect`, `tabbed-rect`, `polygon`, `regular-polygon`, `star`, `arc`, `path`, `composite`. (`arrow` is registered here too — markers are shapes.) **There is no `image` or `text` kind**: images arrive via `ShapeFill` layers, text via the `label` decoration and composite `label` parts.
-  - Built-in connectors: `line`, `curve`.
-  - Built-in markers: `arrow`, `circle`, `square`, `diamond`. **Markers are sized off the host connector's stroke width** — specs use `*Scale` multipliers (e.g. `lengthScale`, `widthScale`), not absolute pixel dims, so changing `stroke.width` proportionally rescales the marker. Final base width is clamped to `≥ strokeWidth` so a thick line never feeds into a narrower marker. New marker shapes must follow this rule: take `strokeWidth` in `static paintInto(...)` / `static markerInset(...)` and resolve final geometry from multipliers × strokeWidth (with width-floor clamp where applicable). Connector body trim (`trimPathEnds` / `markerInset`) and marker paint share the same resolved `strokeWidth` so they always agree.
-  - Built-in routers: `straight`, `orthogonal`, `bezier`.
-  - Built-in shape decorations: `ring`, `glow`, `marching-ants`, `pulse-ring`. Built-in connector decorations: `marching-ants-connector`, `pulsating-glow`, `ring-connector`, `pulse-ring-connector`. Animated decorations advance their phase via `tickAnimations(dt)` called by the Canvas tick.
-  - Built-in shape effects: `shake`, `breathing`. Built-in connector effects: none yet.
-  - **Decoration geometry lives in `draw/decorations/`** (split into `shape/` and `connector/` subfolders) as pure-function / pure-class primitives. The renderer-level decoration classes in `renderers/decorations/*` are thin wrappers that own the `IShapeDecoration` / `IConnectorDecoration` lifecycle (Container/Graphics + `mount`/`update`/`destroy`) and delegate **all** geometry + animation to the draw primitives. Never re-implement decoration geometry in the renderer wrapper — extend the draw primitive instead.
-  - **Effects** are a sibling primitive kind to decorations. Decoration = added geometry alongside the host; effect = modulation of the host itself. Two effect targets: `transform` (writes `{dx, dy, dRot, sx, sy}` deltas the renderer composes onto the host gfx each frame — shake, breathing, jiggle) and `style` (writes `{tint, alpha}` overrides — shimmer, color-flash). Effects don't have a `gfx` Container; the renderer aggregates contributions across every effect attached to the same host (transform deltas sum/multiply; style channels are last-writer-wins per channel) and writes the result onto the host's gfx. Effects live in `primitives/effects/{shape,connector}/`. Animated effects opt in via `tick(dt)` just like decorations; static effects only expose `readTransform` / `readStyle`.
-  - **Animation** is the per-frame time engine, not a primitive kind. Both animated decorations and effects opt in via `tick(deltaMs): boolean`. The Tween primitive (`primitives/animation/Tween.ts`) provides duration/easing/repeat/yoyo for interpolation; reach for it instead of rolling per-class easing math. Animation also drives camera easing, viewport transitions, drag inertia, layout simulation — anything time-varying.
-  - Shape decorations accept an optional `outlinePolyline` per `update()` (parallel to `bounds` + `hostKind`) for true shape-following parallel offset on `polygon` / `path` hosts; falls back to AABB rect when not provided.
-- Built-in layers: `BackgroundLayer` (`ScreenLayer`, recolours from the `ctx.theme` signal); `DevInfoLayer` (`ScreenLayer`)
-- Built-in behaviours (all opt-in — never auto-registered): `DragPanBehaviour`, `WheelZoomBehaviour`, `PinchZoomBehaviour`, `KeyboardCameraInputBehaviour`
+Not `pixi.js`, not `pixi-viewport`, not `three`. Drawing lives in
+`@invana/renderer-pixijs`; this package decides *what* should be on screen and
+hands the backend devices to draw it. `pnpm check-boundaries` fails the build on
+a violation. See `docs/renderer-split-design.md`.
 
-### Picking a layer base — `WorldLayer` vs `ScreenLayer`
+If you need something from a backend, **add it to the contract**
+(`src/renderer/IRenderer.ts` and friends) and implement it there. If the thing
+you want cannot be expressed without naming a display object, that is a signal it
+belongs in the backend, not here.
 
-**Default to `WorldLayer` for almost everything.** Diagram content (graph nodes, edges, ER tables, swimlane bodies, decorations on data, custom rendering, etc.) is camera-affected — it pans and zooms with the user's view. That's `WorldLayer`.
+## What lives here
 
-**Reach for `ScreenLayer` only when the content must stay glued to a screen position regardless of camera.** Concrete cases:
+| Area | Contents |
+|---|---|
+| Orchestration | `Canvas`, `CanvasContext`, `Layer` / `WorldLayer` / `ScreenLayer`, `Behaviour`, `Layout`, the three registries |
+| **The renderer contract** | `renderer/` — `IRenderer` (lifecycle, surfaces, camera binding, capabilities), `ISurface` (a layer's slice + `setBackdrop`), `IElementRenderer` (what a domain layer calls), `IOverlayDevice` (11 ops, transient only), `SpecProjector` |
+| **Headless backend** | `renderer/HeadlessRenderer.ts` + `camera/HeadlessCameraBinding.ts` — draws nothing, implements everything. Not a product renderer: a test double (§7) so layouts, picking and projection are testable with no GPU |
+| **Spec vocabulary** | `specs/` — the pixi-free description of a thing to draw, plus pure geometry over it (`boundsOfSpec`, `containsSpec`, per-kind helpers) |
+| **Picking** | `hit/` — `PickingIndex` (rbush + narrow phase) and `HitIndex`. Picking is *interaction*, not drawing (design D5) |
+| **Connector geometry** | `connectors/` — routers, path styles, anchors, `pathSampling`. Spec in, `Path` out; a second backend reuses these verbatim |
+| Placement + time | `badges/` (placement maths), `animation/` (`Tween`, easings) |
+| Camera | `Camera` (clamp, anchored zoom, fit, bus + store sync) over `ICameraBinding` — no backend type |
+| Export | `export/` — **SVG is engine-side and spec-driven** (works headless); raster goes through `IRenderer.extract?()` |
+| Built-in layers | `BackgroundLayer` (paints via `surface.setBackdrop`), `DevInfoLayer`, `LayersPanelLayer` |
+| Built-in behaviours | `DragPanBehaviour`, `WheelZoomBehaviour`, `PinchZoomBehaviour`, `KeyboardCameraInputBehaviour` — all opt-in, never auto-registered |
+| Gesture arbitration | `input/GestureArbiter` — one gesture owns the pointer; camera behaviours yield |
 
-- minimap (sticks to a corner)
-- dev info / FPS overlay
-- floating toolbars and palettes
-- tooltips at cursor offsets
-- selection lasso / rubber-band rectangle
-- loading spinners, status badges, modals
-- scale ruler ("1cm = 100 units")
+## What does *not* live here
 
-The mental test: *if the user pans the camera 100px right, should this thing move with the diagram or stay glued to the screen?* Move with the diagram → `WorldLayer`. Stay glued → `ScreenLayer`.
+Shapes, connectors, decorations, effects, markers, paint helpers, textures, icon
+fonts, the `Application`, the viewport — all in `@invana/renderer-pixijs`. Domain
+concepts (node, edge, table, lane) belong to a domain package.
 
-Most projects only ever subclass `WorldLayer`. `ScreenLayer` is invisible until you start adding UI overlays.
+## Picking a layer base — `WorldLayer` vs `ScreenLayer`
 
-### Why decoration rendering logic lives here, not in domain packages
+**Default to `WorldLayer` for almost everything.** Diagram content (graph nodes,
+edges, ER tables, swimlane bodies, custom rendering) is camera-affected — it pans
+and zooms with the view.
 
-A halo, a border, a marching-ants animation, a pulse ring — none of these are graph-specific. They're generic 2D visuals that ER diagrams, flowcharts, swimlanes, and graph all want, identically. So the rendering logic lives in `@invana/canvas/primitives/decorations/` and ships once. Domain packages add **named sugar methods** (`graphLayer.haloNode(id)`, `erLayer.haloTable(id)`) that mutate state and are projected to the same generic `renderer.setDecoration(id, 'halo', ...)` call. One implementation, many domain wrappers.
+**Reach for `ScreenLayer` only when content must stay glued to a screen position
+regardless of camera:** minimap, dev/FPS overlay, floating toolbars, tooltips at
+cursor offsets, loading spinners, scale rulers.
 
-### Domain-Free Primitives Rule
+The mental test: *if the user pans 100px right, should this move with the diagram
+or stay glued to the screen?*
 
-**`primitives/` is domain-free.** No primitive — shape, connector, decoration, marker, router, fill resolver, icon, text — references a domain concept. Forbidden references include: node, edge, vertex, table, column, row, lane, header, port, pin, link, network, graph (the data structure), entity, relationship, swimlane, ER, flowchart, BPMN. The primitives layer only knows about geometric concepts (circle, rect, polygon, path, polyline, fill, stroke, glyph, decoration slot).
+## How a layer draws
 
-Domain packages (`@invana/graph`, future `@invana/swimlane`, `@invana/er`) compose primitives by extending `WorldLayer` / `ScreenLayer` and calling `primitivesRenderer.addShape` / `addConnector` / `setDecoration`. Domain packages may register **new geometric primitives** via `registerShape` / `registerRouter` / `registerDecoration` (e.g., a `hexagon` shape kind, a `manhattan-routed` router, a `pk-badge` decoration), but the registered class itself must remain geometric — its name and its code must not reference the domain concept that motivated it.
+A layer never constructs a display object. At mount it is handed an `ISurface`
+(`ctx.createSurface(space, id, opts)`), and draws through it:
 
-**Test:** if you can rename the file by stripping the domain word and the file still makes sense (`PrimaryKeyBadgeDecoration` → `BadgeDecoration` works fine; `SwimlaneShape` → `Shape` does not), it belongs in `primitives/`. Otherwise it belongs in the domain package.
+- **Durable content** — publish a spec into the store; `SpecProjector` mounts it
+  via `surface.primitives`. Serialisable, undoable, headlessly testable, and
+  identical across backends.
+- **Transient gesture visuals** (lasso, brush, drag ghost) — `surface.overlay(id)`,
+  the 11-op immediate-mode device. Never enters state (design D3).
+- **A full-surface backdrop** — `surface.setBackdrop(...)`.
 
-This rule is not enforced by tooling. It's a discipline statement — read it before adding code to `packages/canvas`.
-
-## Subpath exports
-
-- `@invana/canvas` — kernel: `Canvas`, base classes (`Layer`/`WorldLayer`/`ScreenLayer`, `Behaviour`), registries, store, events, surfaces, camera, **plus the engine theme signal (`ResolvedTheme` + `ctx.theme` + `'theme:change'`), built-in layers (`DevInfoLayer`, `BackgroundLayer`) and built-in behaviours (`DragPanBehaviour`, `WheelZoomBehaviour`, `PinchZoomBehaviour`, `KeyboardCameraInputBehaviour`)**. Built-ins live in the same folder as their base class (`src/layers/`, `src/behaviours/`) and are re-exported from `src/index.ts` — no separate "toolkit" bucket.
-- `@invana/canvas/primitives` — `PrimitivesRenderer` + base interfaces + built-in primitives + built-in decorations
-
-## Rules (carry-over from old `packages/canvas`)
-
-- PixiJS is internal — never re-exported.
-- `graphics-utils/` (when present) is internal-only.
-- No `new Graphics()` / `new Container()` outside this package's `src/`.
-- All public events go through `EventBus` / layer events; no raw PixiJS events leak.
-- tsup config: ESM, `external: ['pixi.js']`.
+Override `surfaceOptions()` when the layer owns device policy the renderer can't
+know (e.g. a larger `hitFloorPx` for pinpoint nodes).
 
 ## Tests
 
-Tests live in [tests/](tests/) at the package root, mirroring the [src/](src/) tree:
+Tests live in [tests/](tests/) at the package root, mirroring [src/](src/):
 
 ```
 packages/canvas/
-├── src/
-│   ├── events/EventEmitter.ts
-│   └── state/ColumnStore.ts
-└── tests/
-    ├── events/EventEmitter.test.ts        ← imports from '../../src/events/EventEmitter'
-    └── state/ColumnStore.test.ts          ← imports from '../../src/state/ColumnStore'
+├── src/hit/PickingIndex.ts
+└── tests/hit/PickingIndex.test.ts   ← imports from '../../src/hit/PickingIndex'
 ```
 
-- Never co-locate `*.test.ts` files inside `src/`.
-- Test files use relative `../../src/...` imports — no path aliases.
-- A single `tsconfig.json` covers both `src/**` and `tests/**` (so VS Code's TS language server lights up test files automatically).
-- `pnpm check-types` runs `tsc --noEmit` once — covers both.
-- `pnpm test` (vitest) auto-discovers `tests/**/*.test.ts`. Use `pnpm test:watch` for the dev loop.
+- Never co-locate `*.test.ts` inside `src/`.
+- Relative `../../src/...` imports — no path aliases.
+- **Tests import no drawing library.** Use `HeadlessRenderer` / `HeadlessSurface` /
+  `HeadlessCameraBinding`; `Canvas.initWithRenderer(new HeadlessRenderer(), w, h)`
+  drives the whole layer / behaviour / state pipeline with no GPU and no DOM.
+- `pnpm check-types` covers `src/**` and `tests/**`; `pnpm test` (vitest) discovers
+  `tests/**/*.test.ts`.
 
-See repo-root [CLAUDE.md](../../CLAUDE.md) §10 for the global rule.
+> Root rule 10 forbids tests in this package **except** the headless coverage
+> granted for the renderer split (G6): picking geometry, spec projection, layout
+> output, bounds and camera semantics.
+
+See repo-root [CLAUDE.md](../../CLAUDE.md).

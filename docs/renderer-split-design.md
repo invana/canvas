@@ -613,8 +613,19 @@ sharper test, and the one to apply to anything added later.
   draw a silhouette, and hand-picking that list breaks the moment a second backend needs one more
 - [x] **Gate:** `grep -rl "from 'pixi" packages/*/src apps/storybook/stories` → **only
   `packages/renderer-pixijs`**
-- [ ] Enforce zero-pixi in `canvas` by lint (the grep passes; the rule is not written yet)
-- [ ] Full storybook sweep pixel-identical — **not yet done for the move itself**
+- [x] Enforce the boundary — **two mechanisms, deliberately.** `pnpm check-boundaries`
+  (`scripts/check-renderer-boundary.mjs`) exits non-zero and runs inside the root `pnpm lint`;
+  an ESLint `no-restricted-imports` rule gives editor feedback. The rule alone was not enough:
+  the shared config loads `eslint-plugin-only-warn`, which downgrades every rule to a warning,
+  so it can surface a violation but never fail a build. Verified by planting a `pixi.js` import
+  in `packages/canvas` and watching both fire
+- [🚧] Storybook sweep **done 2026-08-10** — background patterns (incl. the new `setBackdrop`),
+  Les Misérables + d3-force, drag-pan, wheel zoom, custom shapes (cross-package `ShapeBase`
+  subclassing), metro router with obstacle avoidance, minimap, composite cards: all render, no
+  console errors, ~15 story navigations clean.
+  ⚠ **Hover and click-select could not be verified.** They do not respond to synthetic CDP input —
+  but a worktree build of the pre-refactor commit `c828b4e` behaves *identically*, so this is not a
+  regression from the split. Picking is **unchanged, not verified**; it wants a human hover/click
 
 **`rbush` stayed with the engine.** It was stripped alongside the pixi dependencies and had to go
 back: `PickingIndex` is engine-side (D5), so the spatial index is the *engine's* dependency and the
@@ -630,10 +641,10 @@ briefly wrong.
 - [ ] **Gate:** the same stories render on both backends
 
 ### Docs + housekeeping (fold into the phase that touches them)
-- [ ] Root `CLAUDE.md` — workspace table + dependency layering for the new package(s)
-- [ ] `packages/canvas/CLAUDE.md` — stale built-in-shapes list (`path` / `image` / `text` are **not** registered kinds); `ShapesRenderer` naming drift (the class is `PrimitivesRenderer`)
-- [ ] New `packages/renderer-pixijs/CLAUDE.md`
-- [ ] Fix `packages/canvas-store/src/renderer/IRenderer.ts:18` — points at a deleted doc; should be `docs/renderer-split-design.md`
+- [x] Root `CLAUDE.md` — workspace table, dependency layering, and global rules 4–5 rewritten around the boundary
+- [x] `packages/canvas/CLAUDE.md` — rewritten: the package no longer owns `primitives/`, so the stale shape list went with it
+- [x] `packages/renderer-pixijs/CLAUDE.md` — de-staled (was still "scaffolded" / future tense)
+- [x] `packages/canvas-store/src/renderer/IRenderer.ts` — moot: the stale `IRenderer` was retired in P4.5 and the file rewritten
 - [ ] Kernel leftovers: supersede `canvas/src/state/Store.ts`; relocate `engine/CanvasConfig.ts` patch helpers
 
 ---

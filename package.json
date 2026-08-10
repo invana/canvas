@@ -5,7 +5,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "lint": "turbo run lint",
+    "lint": "turbo run lint && node scripts/check-renderer-boundary.mjs",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
     "test": "turbo run test",
@@ -14,7 +14,8 @@
     "storybook": "pnpm --filter @canvas/storybook dev",
     "docs": "pnpm --filter @canvas/docs build",
     "docs:dev": "pnpm --filter @canvas/docs dev",
-    "docs:preview": "pnpm --filter @canvas/docs preview"
+    "docs:preview": "pnpm --filter @canvas/docs preview",
+    "check-boundaries": "node scripts/check-renderer-boundary.mjs"
   },
   "devDependencies": {
     "git-cliff": "^2.13.1",
