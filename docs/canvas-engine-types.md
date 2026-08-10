@@ -714,7 +714,11 @@ type Store<T> = Omit<StoreApi<T>, 'setState'|'subscribe'> & {
     <U>(selector: (s: T) => U, listener: (u: U, prev: U) => void, options?: { equalityFn?; fireImmediately? }): () => void;
   };
 };
-function createLayerStore<T extends object>(initial: T | creator, opts?: { name?: string; enableDevtools?: boolean }): Store<T>;
+// SUPERSEDED 2026-08-11 — `createLayerStore` and the `Store<T>` type above are gone.
+// `Layer.state` is a `ReactiveStore<T>` from `@invana/canvas-store`; write with
+// `state.update(recipe, action?)`, read with `state.getState()`.
+//   function createReactiveStore<T extends object>(initial: T): ReactiveStore<T>;
+// See docs/rfcs/fix/2026-08-10-zustand-imported-outside-canvas-store.md
 
 // DirtyBatcher.ts — double-buffered per-bucket dirty set, drained once/frame
 interface DirtySnapshot<TBucket extends string = string> { buckets: ReadonlyMap<TBucket, ReadonlySet<string>>; rebuildAll: ReadonlySet<TBucket> }

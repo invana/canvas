@@ -1,4 +1,4 @@
-import type { Endpoint, IRouter, Obstacle, Point } from '../../specs';
+import type { Endpoint, IRouter, Obstacle, Point } from '@invana/canvas-store';
 import { aStar, simplifyCellPath } from './_aStar';
 import { buildObstacleGrid, cellToWorld, worldToCell } from './_obstacleGrid';
 

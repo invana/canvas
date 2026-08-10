@@ -6,12 +6,18 @@ Layout architecture from `docs/architecture-proposal.md`, over the kernel
 
 ## The one rule that defines this package
 
-> **This package imports no drawing library.**
+> **This package imports no drawing library — and, as of the dependency
+> consolidation, no third-party library at all.**
 
 Not `pixi.js`, not `pixi-viewport`, not `three`. Drawing lives in
 `@invana/renderer-pixijs`; this package decides *what* should be on screen and
 hands the backend devices to draw it. `pnpm check-boundaries` fails the build on
 a violation. See `docs/renderer-split-design.md`.
+
+Its `dependencies` are exactly one entry: `@invana/canvas-store`. State
+(`zustand`/`immer`) and picking (`rbush`) both live in the kernel now — if you
+find yourself adding a third-party dep here, that is a strong signal the thing
+you are building belongs either in the kernel below or the backend above.
 
 If you need something from a backend, **add it to the contract**
 (`src/renderer/IRenderer.ts` and friends) and implement it there. If the thing
@@ -25,8 +31,8 @@ belongs in the backend, not here.
 | Orchestration | `Canvas`, `CanvasContext`, `Layer` / `WorldLayer` / `ScreenLayer`, `Behaviour`, `Layout`, the three registries |
 | **The renderer contract** | `renderer/` — `IRenderer` (lifecycle, surfaces, camera binding, capabilities), `ISurface` (a layer's slice + `setBackdrop`), `IElementRenderer` (what a domain layer calls), `IOverlayDevice` (11 ops, transient only), `SpecProjector` |
 | **Headless backend** | `renderer/HeadlessRenderer.ts` + `camera/HeadlessCameraBinding.ts` — draws nothing, implements everything. Not a product renderer: a test double (§7) so layouts, picking and projection are testable with no GPU |
-| **Spec vocabulary** | `specs/` — the pixi-free description of a thing to draw, plus pure geometry over it (`boundsOfSpec`, `containsSpec`, per-kind helpers) |
-| **Picking** | `hit/` — `PickingIndex` (rbush + narrow phase) and `HitIndex`. Picking is *interaction*, not drawing (design D5) |
+| **Spec vocabulary** (re-export) | Defined in `@invana/canvas-store`; re-exported from this package's root and its `./specs` subpath so every existing consumer keeps working. Edit it there |
+| **Picking** (re-export) | `PickingIndex` / `HitIndex` also live in `@invana/canvas-store`, beside the specs they hit-test. Picking is still *interaction*, not drawing (design D5) — it simply sits below the engine rather than inside it, which is what let this package drop `rbush` |
 | **Connector geometry** | `connectors/` — routers, path styles, anchors, `pathSampling`. Spec in, `Path` out; a second backend reuses these verbatim |
 | Placement + time | `badges/` (placement maths), `animation/` (`Tween`, easings) |
 | Camera | `Camera` (clamp, anchored zoom, fit, bus + store sync) over `ICameraBinding` — no backend type |
@@ -75,8 +81,8 @@ Tests live in [tests/](tests/) at the package root, mirroring [src/](src/):
 
 ```
 packages/canvas/
-├── src/hit/PickingIndex.ts
-└── tests/hit/PickingIndex.test.ts   ← imports from '../../src/hit/PickingIndex'
+├── src/camera/Camera.ts
+└── tests/camera/Camera.test.ts   ← imports from '../../src/camera/Camera'
 ```
 
 - Never co-locate `*.test.ts` inside `src/`.
@@ -88,7 +94,8 @@ packages/canvas/
   `tests/**/*.test.ts`.
 
 > Root rule 10 forbids tests in this package **except** the headless coverage
-> granted for the renderer split (G6): picking geometry, spec projection, layout
-> output, bounds and camera semantics.
+> granted for the renderer split (G6): spec projection, layout output, bounds and
+> camera semantics. Picking and spec-geometry tests moved to
+> `packages/canvas-store/tests/` along with the code they cover.
 
 See repo-root [CLAUDE.md](../../CLAUDE.md).

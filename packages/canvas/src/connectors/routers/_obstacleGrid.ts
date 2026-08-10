@@ -4,7 +4,7 @@
  * is non-empty. Pure data structure — no pixi, no router, no scene access.
  */
 
-import type { Obstacle, Point } from '../../specs';
+import type { Obstacle, Point } from '@invana/canvas-store';
 
 export interface ObstacleGrid {
   /** Cell count along x. */

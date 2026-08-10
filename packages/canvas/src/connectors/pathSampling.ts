@@ -13,7 +13,7 @@
  * `Path` type so additional router kinds drop in without changes.
  */
 
-import type { Path, PathCommand, Point, Rect, Vec2 } from '../specs';
+import type { Path, PathCommand, Point, Rect, Vec2 } from '@invana/canvas-store';
 
 /** Substeps per Q/C segment when densifying. Higher = smoother polyline. */
 const QUAD_STEPS = 12;

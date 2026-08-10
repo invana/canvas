@@ -32,15 +32,11 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@invana/canvas-store": "workspace:*",
-    "immer": "^11.1.4",
-    "rbush": "^4.0.1",
-    "zustand": "^5.0.12"
+    "@invana/canvas-store": "workspace:*"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/rbush": "^4.0.0",
     "happy-dom": "^20.9.0",
     "tsup": "^8.3.5",
     "typescript": "5.9.2",

@@ -1,4 +1,4 @@
-import type { IRouter } from '../../specs';
+import type { IRouter } from '@invana/canvas-store';
 
 /**
  * Direct line from source through any waypoints to target.

@@ -1,4 +1,4 @@
-import type { IPathStyle, PathCommand, Point } from '../../specs';
+import type { IPathStyle, PathCommand, Point } from '@invana/canvas-store';
 
 interface RoundedOpts {
   /** Corner fillet radius in world units. Default `8`. Auto-clamped per corner. */

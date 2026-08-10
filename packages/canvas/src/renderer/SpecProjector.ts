@@ -21,7 +21,7 @@
  */
 
 import type { SpecFlush, SpecStore } from '@invana/canvas-store';
-import type { BaseConnectorSpec, BaseShapeSpec } from '../specs';
+import type { BaseConnectorSpec, BaseShapeSpec } from '@invana/canvas-store';
 
 /** The slice of a renderer this projector drives. */
 export interface SpecProjectionTarget {

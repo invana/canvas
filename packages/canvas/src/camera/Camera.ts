@@ -35,7 +35,7 @@
  */
 
 import { select, type CanvasEventBus, type CanvasStore } from '@invana/canvas-store';
-import type { Point, Rect } from '../specs/geometry';
+import type { Point, Rect } from '@invana/canvas-store';
 import type {
   CameraInputConfig,
   CameraTransformValue,

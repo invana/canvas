@@ -3,4 +3,4 @@
  * domain packages can describe badges without importing a drawing backend.
  * Re-exported here so existing importers keep working.
  */
-export type * from '../specs/badge';
+export type * from '@invana/canvas-store';

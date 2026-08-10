@@ -9,11 +9,11 @@
  * connector badges and connector labels share the same arc-length walk.
  */
 
-import type { Path } from '../specs';
+import type { Path } from '@invana/canvas-store';
 import type { BadgeOptions, ConnectorBadgePlacement } from './types';
 import { samplePathAt } from '../connectors/pathSampling';
 import { originToBadgeLocal } from './placement';
-import type { Rect } from '../specs';
+import type { Rect } from '@invana/canvas-store';
 
 /**
  * Map a {@link ConnectorBadgePlacement} to an arc-length parameter `t ∈

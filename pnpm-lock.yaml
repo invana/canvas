@@ -199,15 +199,6 @@ importers:
       '@invana/renderer-pixijs':
         specifier: workspace:*
         version: link:../renderer-pixijs
-      immer:
-        specifier: ^11.1.4
-        version: 11.1.4
-      rbush:
-        specifier: ^4.0.1
-        version: 4.0.1
-      zustand:
-        specifier: ^5.0.12
-        version: 5.0.12(@types/react@18.3.29)(immer@11.1.4)(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))
     devDependencies:
       '@repo/eslint-config':
         specifier: workspace:*
@@ -215,9 +206,6 @@ importers:
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
-      '@types/rbush':
-        specifier: ^4.0.0
-        version: 4.0.0
       happy-dom:
         specifier: ^20.9.0
         version: 20.9.0
@@ -342,6 +330,9 @@ importers:
       immer:
         specifier: ^11.1.4
         version: 11.1.4
+      rbush:
+        specifier: ^4.0.1
+        version: 4.0.1
       zustand:
         specifier: ^5.0.12
         version: 5.0.12(@types/react@18.3.29)(immer@11.1.4)(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))
@@ -352,6 +343,9 @@ importers:
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
+      '@types/rbush':
+        specifier: ^4.0.0
+        version: 4.0.0
       tsup:
         specifier: ^8.3.5
         version: 8.5.1(jiti@2.7.0)(postcss@8.5.12)(tsx@4.21.0)(typescript@5.9.2)(yaml@2.8.3)

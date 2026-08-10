@@ -1,4 +1,4 @@
-import type { Endpoint, IRouter, Point } from '../../specs';
+import type { Endpoint, IRouter, Point } from '@invana/canvas-store';
 
 /**
  * Orth router — produces a polyline made of horizontal and vertical

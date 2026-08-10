@@ -1,4 +1,4 @@
-import type { IAnchor } from '../../specs';
+import type { IAnchor } from '@invana/canvas-store';
 
 /**
  * Perpendicular anchor — exits at the **midpoint of the face** of the

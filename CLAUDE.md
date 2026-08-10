@@ -34,8 +34,8 @@ All in-repo packages are `0.0.7` (except the `@repo/*` configs and the private `
 
 | Path | Package | Role | 3rd-party deps |
 |---|---|---|---|
-| `packages/canvas-store` | `@invana/canvas-store` | **renderer-free kernel (foundation).** Owns **one `CanvasStore { view, data, events }` per `Canvas`** — the hub the engine writes to *and* subscribes from: **`view`** (`ReactiveStore<CanvasView>` — config + interaction state, behind the port: zustand now, Yjs later), **`data`** (owned, keyed `DataStore`s — the graph; positions/bulk are an internal typed-array detail, never the reactive path), **`events`** (the `CanvasEventBus` + tap), plus **telemetry** + **history**. **Renderer-free leaf: zero `@invana` deps, imports no drawing library** — pixi is one adapter. See `docs/canvas-state-plan.md`. | `zustand`, `immer` (later `yjs`) |
-| `packages/canvas` | `@invana/canvas` | the **renderer-agnostic orchestrator** over `@invana/canvas-store` — `Canvas`, `Layer`, `Behaviour`, `Layout`, registries, the **spec vocabulary** (`specs/`), **picking** (`hit/`), **connector geometry** (`connectors/` — routers, path styles, anchors, sampling), badge placement, tweens, camera semantics, SVG export, and the **renderer contract** (`renderer/IRenderer.ts`) + its headless double. **Imports no drawing library.** Deps: `@invana/canvas-store`, `rbush`; `@invana/renderer-pixijs` is an *optional peer*, lazily imported as the default backend. | `rbush`, `immer`, `zustand` (dep: `@invana/canvas-store`) |
+| `packages/canvas-store` | `@invana/canvas-store` | **renderer-free kernel (foundation).** Owns **one `CanvasStore { view, data, events }` per `Canvas`** — the hub the engine writes to *and* subscribes from: **`view`** (`ReactiveStore<CanvasView>` — config + interaction state, behind the port: zustand now, Yjs later), **`data`** (owned, keyed `DataStore`s — the graph; positions/bulk are an internal typed-array detail, never the reactive path), **`events`** (the `CanvasEventBus` + tap), plus **telemetry** + **history**. Also owns the **spec vocabulary** (`specs/` — the plain-data description of what to draw, plus the pure geometry over it and `SpecStore`) and **picking** (`hit/` — the rbush spatial index + narrow phase). **Renderer-free leaf: zero `@invana` deps, imports no drawing library** — specs *describe* drawing, they never perform it. See `docs/canvas-state-plan.md`. | `zustand`, `immer`, `rbush` (later `yjs`) |
+| `packages/canvas` | `@invana/canvas` | the **renderer-agnostic orchestrator** over `@invana/canvas-store` — `Canvas`, `Layer`, `Behaviour`, `Layout`, registries, **connector geometry** (`connectors/` — routers, path styles, anchors, sampling), badge placement, tweens, camera semantics, SVG export, and the **renderer contract** (`renderer/IRenderer.ts`) + its headless double. Re-exports the kernel's spec vocabulary + picking so consumers keep importing them from here. **Imports no drawing library, and no third-party library at all** — its only dependency is `@invana/canvas-store`; `@invana/renderer-pixijs` is an *optional peer*, lazily imported as the default backend. | — (dep: `@invana/canvas-store`) |
 | `packages/renderer-pixijs` | `@invana/renderer-pixijs` | **the PixiJS drawing backend — the only package in the repo that imports a drawing library.** Implements `IRenderer` / `ISurface` / `IElementRenderer` / `ICameraBinding`: the pixi `Application`, the viewport binding, all of `primitives/` (shapes, connectors, decorations, effects, markers, paint), textures and fonts. Enforced by `pnpm check-boundaries`. See its `CLAUDE.md`. | `pixi.js`, `pixi-viewport` (peers: `@invana/canvas`, `@invana/canvas-store`) |
 | `packages/graph` | `@invana/graph` | graph domain on top of the engine — `GraphLayer`, `MiniMapLayer`, `GraphCanvas`, hover/click/lasso/brush/drag/select/context-menu/etc. behaviours, `OneShotPositionLayout` base | — (peer: `@invana/canvas`) |
 
@@ -87,11 +87,13 @@ All in-repo packages are `0.0.7` (except the `@repo/*` configs and the private `
 ### Dependency layering (use when adding/bumping workspace deps)
 
 ```
-@invana/canvas-store  (renderer-free KERNEL — zero @invana deps, no drawing-lib import; store + events + telemetry + history)
-   ▲   (consumed by canvas, graph, canvas-react)
+@invana/canvas-store  (renderer-free KERNEL — zero @invana deps, no drawing-lib import; store +
+   ▲                   events + telemetry + history + the SPEC VOCABULARY + PICKING)
+   │   (consumed by canvas, graph, canvas-react)
    │
-@invana/canvas  (renderer-AGNOSTIC orchestrator: specs, picking, geometry, camera, the IRenderer
-   ▲             contract + headless double. Imports NO drawing library.)
+@invana/canvas  (renderer-AGNOSTIC orchestrator: layers/behaviours/layouts, connector geometry,
+   ▲             camera, the IRenderer contract + headless double. Re-exports specs + picking.
+   │             Imports NO drawing library — and no third-party library at all.)
    │
    ├── @invana/renderer-pixijs   (the pixi BACKEND — peer: canvas + canvas-store; owns pixi.js
    │                              + pixi-viewport. canvas declares it an OPTIONAL PEER and
@@ -113,12 +115,20 @@ All in-repo packages are `0.0.7` (except the `@repo/*` configs and the private `
 
 > 🚧 The **canvas-react → canvas-ui** re-split (headless vs pixels; UI moving out of canvas-react, dep direction flipping to canvas-ui → canvas-react) is **in progress** — see `docs/ui-consolidation-plan.md`. The graph above shows the **target**; some UI still physically sits in canvas-react until the phased move completes.
 
-**The renderer boundary is the load-bearing rule here.** A drawing library may be imported *only*
-inside a backend package. `pnpm check-boundaries` (`scripts/check-renderer-boundary.mjs`) fails the
-build on a violation and runs as part of the root `pnpm lint`; an ESLint `no-restricted-imports`
-rule surfaces it in the editor too (it can only warn — the shared config loads
-`eslint-plugin-only-warn`). If the engine needs something from a backend, add it to the contract in
-`packages/canvas/src/renderer/IRenderer.ts` and implement it there. See `docs/renderer-split-design.md`.
+**Two boundaries are load-bearing here, and both are gated the same way.**
+
+1. **Renderer** — a drawing library may be imported *only* inside a backend package. If the engine
+   needs something from a backend, add it to the contract in
+   `packages/canvas/src/renderer/IRenderer.ts` and implement it there. See
+   `docs/renderer-split-design.md`.
+2. **State** — a state library (`zustand`, `immer`) may be imported *only* inside
+   `@invana/canvas-store`'s adapter / patch machinery. Everything else, `Layer.state` included,
+   programs against the `ReactiveStore` port. That is what keeps the backend swappable for Yjs.
+
+`pnpm check-boundaries` (`scripts/check-renderer-boundary.mjs`) fails the build on either violation
+and runs as part of the root `pnpm lint`; an ESLint `no-restricted-imports` rule surfaces both in
+the editor too (it can only warn — the shared config loads `eslint-plugin-only-warn`). Add a new
+invariant by appending a row to that script's `BOUNDARIES` table **and** to the ESLint rule.
 
 Rules implied by this graph: cross-package engine deps are **`peerDependencies`** (+ mirrored in `devDependencies` for local builds), never plain `dependencies` — except `canvas-react`→`@invana/themes`, the foundational **`@invana/canvas-store`** dependency (a normal `dependency`, not a peer — the shared kernel below the engine), and app deps. Keep all in-repo packages on the **same version** when bumping. A new layout/layer package peers on `@invana/canvas` (+ `@invana/graph` unless it's canvas-only like maplibre) and lists its single algorithm lib as a 3rd-party `dependency`. After adding a package, also add it to `apps/storybook`'s deps if it gets a story.
 
@@ -182,7 +192,7 @@ Turbo pipeline: `build` depends on `^build`, outputs `dist/**`. All packages use
 1. Don't write code unless we discuss and I give a go ahead.
 2. Ask me questions before coding.
 3. All new code goes in the active packages listed above.
-4. **No drawing-library import outside a backend package.** `pixi.js` / `pixi-viewport` belong to `packages/renderer-pixijs` and nowhere else — not in `@invana/canvas`, not in `@invana/graph`, not in a story. Enforced by `pnpm check-boundaries`.
+4. **No drawing-library import outside a backend package.** `pixi.js` / `pixi-viewport` belong to `packages/renderer-pixijs` and nowhere else — not in `@invana/canvas`, not in `@invana/graph`, not in a story. **Likewise no state-library import outside the kernel's adapter**: `zustand` / `immer` belong to `packages/canvas-store` and nowhere else — build stores with `createReactiveStore`, never `createStore` from zustand. Both enforced by `pnpm check-boundaries`.
 5. No direct `new Graphics()` / `new Container()` outside `packages/renderer-pixijs/src`. A layer draws by publishing **specs** or through `surface.overlay(...)`; it never constructs a display object.
 6. Events go through `canvas.events` (canvas-wide) or `layer.events` (layer-scoped) per `docs/architecture-proposal.md` §2.5 — never raw PixiJS events from outside the engine.
 7. Behaviours don't auto-enable. Every behaviour (hover, select, drag, etc.) must be explicitly registered AND enabled by the developer.
@@ -212,7 +222,7 @@ The renderer-free kernel **`@invana/canvas-store`** owns all canvas state **and*
 
 - **One `CanvasStore { view, data, events }`.** **`view`** (`ReactiveStore<CanvasView>`) = how the visualisation is defined + viewed (layers / behaviours / layouts config, `activeLayout`, templates, theme, selection / hover / camera). **`data`** = a **keyed registry of data sources** (`Record<string, DataStore>` — graph / table / geo …; many view layers may project one source). **`events`** = the `CanvasEventBus` + tap. **Position is a node field inside a data source** (not a top-level compartment), and **groups** (bubble-sets / shaped containers) are a **keyed many-to-many `groups` collection** (`memberIds[]`, not `parentId`) whose encapsulating geometry is *derived* (like a layout, throttled for bubble-sets) — see `docs/canvas-state-plan.md` §3.1.
 - **Storage physics is internal to each member, not a third branch.** Small / human-rate state (all of `view`; `data`'s annotations / query refs / counts) → the **reactive store** (immer-backed, observable, syncable). Machine-rate fields (`data`'s node `x`/`y`, bulk payloads, render flags) → **typed-array `ColumnStore` / `GraphStore`**, delivered to the renderer via a **batched, frame-coalesced flush** with targeted per-node re-render — **never** the reactive/immer/CRDT path (which clones at 5–50 ms vs ~10 ns). So the renderer reacts to `CanvasStore` at every scale; the engine just routes position churn through the typed-array fast path. **Positions are derived locally by the layout and never synced.** Camera is an **abstract `{ x, y, zoom }` transform**, throttled / ephemeral — not a `pixi-viewport` handle (renderer-agnostic; pixi is one adapter).
-- **Program against the `ReactiveStore<T>` port, not zustand directly.** zustand is one adapter (`packages/canvas-store/src/adapters/zustand/createReactiveStore.ts` — the *only* zustand importer) behind the same core (`createStoreFromCell`); `createMemoryStore` is a dep-free reference adapter proving the swap. **No `import … from 'zustand'` outside that adapter** — so the backend stays swappable (valtio / nanostores / Yjs-backed for collaboration). `@invana/canvas-store` imports **no drawing library**.
+- **Program against the `ReactiveStore<T>` port, not zustand directly.** zustand is one adapter (`packages/canvas-store/src/adapters/zustand/createReactiveStore.ts` — the *only* zustand importer) behind the same core (`createStoreFromCell`); `createMemoryStore` is a dep-free reference adapter proving the swap. **No `import … from 'zustand'` outside that adapter** — so the backend stays swappable (valtio / nanostores / Yjs-backed for collaboration). **This includes `Layer.state`**: a layer's store is a `ReactiveStore` like every other, so its writes emit patches and history / telemetry / a future CRDT can observe them. Enforced by `pnpm check-boundaries` (the `state` + `immer` boundaries), not just prose — it was prose-only once, and drifted. `@invana/canvas-store` imports **no drawing library**.
 - **Writes are declarative patches** (`update(patch, action?)` → `setState` now, a Yjs transaction later; the named `action` powers OTel + CRDT history). **Reads** go through `subscribe` / `useStore(store, selector)` (React via `useSyncExternalStore`). **UI components never keep their own copy** of canvas state — only ephemeral widget state and editor edit-drafts are local.
 - **Telemetry is a port decorator** (`withTelemetry`), not a zustand middleware — transfers across the backend swap; scoped to the `view` reactive store, never the bulk data hot path.
 

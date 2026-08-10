@@ -28,15 +28,28 @@ export {
   findSerialisationViolations,
 } from './events/assertSerialisable';
 
-// ─── Store port (kernel reactive-store reads) ────────────────────────────────
+// ─── Store port (kernel reactive-store reads + writes) ───────────────────────
 // Re-exported so layers/behaviours can subscribe to `ctx.store.view` slices
 // without a direct `@invana/canvas-store` dependency (mirrors the events block).
+//
+// `createReactiveStore` is also what backs `Layer.state`: there is **one** state
+// contract in the repo and it is the kernel's port, so a layer's writes emit
+// patches like every other store and history / telemetry / a future CRDT backend
+// can observe them. The former `createLayerStore` — a second, raw-zustand
+// container — is gone; see
+// `docs/rfcs/fix/2026-08-10-zustand-imported-outside-canvas-store.md`.
 export {
   select,
   shallowEqual,
   defaultEqual,
+  createReactiveStore,
+  createMemoryStore,
   type Selected,
   type ReactiveStore,
+  type StoreChange,
+  type Update,
+  type Recipe,
+  type DeepPartial,
   type CanvasView,
 } from '@invana/canvas-store';
 
@@ -44,15 +57,16 @@ export {
 // Picking and bounds computed from a spec, with no backend involved — which is
 // what makes hit-testing headlessly testable and identical across renderers.
 
-// Lives with the fill vocabulary rather than the geometry — a spec with no
-// silhouette fill is hollow, and picking honours that.
-export { hasSilhouetteFill } from './specs/style';
 // The whole spec vocabulary — types *and* the pure geometry over them
-// (`containsSpec`, `boundsOfSpec`, and the per-kind helpers a backend needs to
-// draw each silhouette). Exported wholesale because a hand-picked subset breaks
-// the moment a backend needs one more entry, and this vocabulary is precisely
-// the shared language of engine, domain package and renderer.
-export * from './specs';
+// (`containsSpec`, `boundsOfSpec`, `hasSilhouetteFill`, and the per-kind helpers a
+// backend needs to draw each silhouette). Exported wholesale because a hand-picked
+// subset breaks the moment a backend needs one more entry, and this vocabulary is
+// precisely the shared language of kernel, engine, domain package and renderer.
+//
+// It is *defined* in `@invana/canvas-store` — specs are plain data, so they sit
+// with the store that holds them and the index that picks them. Re-exported here
+// because every existing consumer imports it from the engine.
+export * from '@invana/canvas-store/specs';
 
 // ─── The renderer seam ───────────────────────────────────────────────────────
 // `IRenderer` lives here rather than in the kernel because it is made of spec
@@ -73,11 +87,14 @@ export type {
 } from './renderer/IRenderer';
 
 // ─── Picking (D5) ────────────────────────────────────────────────────────────
-// Picking is interaction, not drawing, so the index and the narrow-phase
-// geometry live here rather than in a backend. A rendering package implements
-// `HitGeometrySource` — the three facts a spec can't carry (visual scale,
-// routed polyline, custom-kind silhouette) — and the engine answers the picks.
-export { PickingIndex, connectorHitBoxes } from './hit/PickingIndex';
+// Picking is interaction, not drawing, so the index and the narrow-phase geometry
+// live outside any backend. They now sit in the kernel beside the spec vocabulary
+// they hit-test — that move is what let this package shed its last third-party
+// dependency. A rendering package implements `HitGeometrySource` — the three facts
+// a spec can't carry (visual scale, routed polyline, custom-kind silhouette) — and
+// the index answers the picks. Re-exported here so `@invana/renderer-pixijs` and
+// domain layers keep importing it from the engine.
+export { PickingIndex, connectorHitBoxes } from '@invana/canvas-store';
 export type {
   ConnectorHitRecord,
   HitGeometrySource,
@@ -85,7 +102,7 @@ export type {
   PickingCamera,
   PickingIndexOptions,
   ShapeHitRecord,
-} from './hit/PickingIndex';
+} from '@invana/canvas-store';
 
 // ─── Gesture arbitration (P5) ────────────────────────────────────────────────
 // One gesture owns the pointer at a time; camera behaviours yield to it. This
@@ -119,16 +136,13 @@ export type {
   SurfaceOptions,
   SurfaceSpace,
 } from './renderer/ISurface';
-export type { ElementEventMap } from './specs/elementEvents';
+export type { ElementEventMap } from '@invana/canvas-store';
 
 // ─── Specs as state (P1) ─────────────────────────────────────────────────────
 // The durable visual description a layer publishes and a renderer projects.
 // Re-exported so domain layers reach it without a direct kernel dependency.
 export { SpecStore, type SpecFlush } from '@invana/canvas-store';
 
-// ─── State ──────────────────────────────────────────────────────────────
-export { createLayerStore } from './state/Store';
-export type { Store, StoreApi, CreateLayerStoreOptions } from './state/Store';
 
 // `ColumnStore` + `DirtyBatcher` are owned by the renderer-free kernel
 // (`@invana/canvas-store`, decision D1). Re-exported here for back-compat so

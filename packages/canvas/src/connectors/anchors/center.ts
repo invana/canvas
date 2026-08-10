@@ -1,4 +1,4 @@
-import type { IAnchor } from '../../specs';
+import type { IAnchor } from '@invana/canvas-store';
 
 /**
  * Default anchor — resolves a shape endpoint to the shape's bounding-box

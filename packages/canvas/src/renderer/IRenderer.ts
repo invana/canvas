@@ -45,7 +45,7 @@
 import type { RendererBackend, RendererInitOptions } from '@invana/canvas-store';
 import type { Camera } from '../camera/Camera';
 import type { ICameraBinding } from '../camera/ICameraBinding';
-import type { Rect } from '../specs/geometry';
+import type { Rect } from '@invana/canvas-store';
 import type { IOverlayDevice, OverlaySpace } from './IOverlayDevice';
 import type { ISurface, SurfaceOptions, SurfaceSpace } from './ISurface';
 

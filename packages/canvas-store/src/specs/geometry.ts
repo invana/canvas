@@ -7,22 +7,13 @@
 
 // ─── Geometry primitives ───────────────────────────────────────────────────
 
-export interface Point {
-  readonly x: number;
-  readonly y: number;
-}
+// Defined once, in the kernel's geometry vocabulary, and re-exported here so the
+// spec surface stays self-describing. Do not redeclare them — `../geom/types` is
+// the single home (see the RFC that merged the two definitions:
+// `docs/rfcs/fix/2026-08-10-zustand-imported-outside-canvas-store.md` §4.4).
+export type { Point, Vec2, Rect, Size } from '../geom/types';
 
-export interface Vec2 {
-  readonly x: number;
-  readonly y: number;
-}
-
-export interface Rect {
-  readonly x: number;
-  readonly y: number;
-  readonly width: number;
-  readonly height: number;
-}
+import type { Point, Vec2, Rect } from '../geom/types';
 
 /** Endpoint anchor a router consumes — point + optional outgoing tangent. */
 

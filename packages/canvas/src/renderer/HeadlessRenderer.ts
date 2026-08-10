@@ -26,8 +26,8 @@ import type {
   RendererCapabilities,
 } from './IRenderer';
 import type { ISurface, SurfaceBackdrop, SurfaceSpace } from './ISurface';
-import type { ElementEventMap } from '../specs/elementEvents';
-import type { Rect } from '../specs/geometry';
+import type { ElementEventMap } from '@invana/canvas-store';
+import type { Rect } from '@invana/canvas-store';
 import { HeadlessCameraBinding } from '../camera/HeadlessCameraBinding';
 
 /** An `IOverlayDevice` that records nothing and draws nothing. */

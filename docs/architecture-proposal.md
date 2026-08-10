@@ -323,7 +323,7 @@ class HoverActivateBehaviour implements Behaviour {
   register(ctx: CanvasContext) {
     const layer = ctx.layers.get<GraphLayer>(this.layerId);
     layer.events.on('shape:pointerover', ({ id }) => {
-      layer.state.set(s => ({ ...s, hoveredId: id }));
+      layer.state.update(s => { s.hoveredId = id; }, 'hover');
     });
   }
 }

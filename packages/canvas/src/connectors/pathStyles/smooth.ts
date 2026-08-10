@@ -1,4 +1,4 @@
-import type { IPathStyle, PathCommand, Point } from '../../specs';
+import type { IPathStyle, PathCommand, Point } from '@invana/canvas-store';
 
 interface SmoothOpts {
   /**

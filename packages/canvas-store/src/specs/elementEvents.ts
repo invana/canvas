@@ -8,7 +8,7 @@
  * kernel bus instead; this is the element-scoped channel.
  */
 
-import type { EventMap } from '@invana/canvas-store';
+import type { EventMap } from '../events/EventEmitter';
 
 export interface ElementEventMap extends EventMap {
   'shape:pointerover':     { id: string; worldX: number; worldY: number };

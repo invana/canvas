@@ -1,4 +1,4 @@
-import type { IAnchor, Point } from '../../specs';
+import type { IAnchor, Point } from '@invana/canvas-store';
 
 /**
  * Boundary anchor — snaps the endpoint onto the shape silhouette where the

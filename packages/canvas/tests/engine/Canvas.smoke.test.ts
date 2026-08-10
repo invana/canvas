@@ -48,16 +48,16 @@ class TestGraphLayer extends WorldLayer<
   }
 
   hoverNode(id: string | null): void {
-    this.state.setState((s) => {
+    this.state.update((s) => {
       s.hoveredId = id;
-    });
+    }, 'test:hover');
     if (id) this.dirty.mark('halo', id);
   }
 
   selectNode(id: string): void {
-    this.state.setState((s) => {
+    this.state.update((s) => {
       s.selectedIds.add(id);
-    });
+    }, 'test:select');
     this.dirty.mark('halo', id);
     this.events.emit('node:click', { id });
   }
@@ -319,7 +319,7 @@ describe('Canvas — end-to-end smoke', () => {
     );
   });
 
-  it('Layer.state mutations work end-to-end (zustand+immer with Set)', () => {
+  it('Layer.state mutations work end-to-end (ReactiveStore port, with Set)', () => {
     const canvas = new Canvas();
     canvas.initWithRenderer(new HeadlessRenderer(), 800, 600);
     const graph = new TestGraphLayer({

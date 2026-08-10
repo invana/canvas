@@ -59,6 +59,31 @@ export const config = [
               name: "three",
               message: "Drawing libraries live in a renderer package, not here.",
             },
+            {
+              name: "zustand",
+              message:
+                "Program against the ReactiveStore port, not zustand. Build stores with " +
+                "createReactiveStore / createMemoryStore from @invana/canvas-store — that is " +
+                "what makes writes emit patches, so history, telemetry and a future Yjs " +
+                "backend can observe them. zustand belongs only to the adapter " +
+                "(packages/canvas-store/src/adapters/zustand).",
+            },
+            {
+              name: "immer",
+              message:
+                "immer is the kernel's patch engine, not a general utility. Mutate through " +
+                "store.update(recipe) and let the port produce the patches.",
+            },
+          ],
+          // Subpath imports (`zustand/vanilla`, `zustand/middleware`) are the same
+          // boundary and were how the last violation was written.
+          patterns: [
+            {
+              group: ["zustand/*", "immer/*"],
+              message:
+                "Same boundary as the bare import: state libraries live behind the " +
+                "ReactiveStore port in @invana/canvas-store.",
+            },
           ],
         },
       ],

@@ -6,7 +6,9 @@
  * **What every Layer owns:**
  *   - `id` — stable identifier; used by registries, events, telemetry envelopes.
  *   - `options` — construction-time, mostly-immutable config.
- *   - `state` — UI / interaction state (`Store<T>` zustand+immer; small, observable).
+ *   - `state` — UI / interaction state (`ReactiveStore<T>` from the kernel; small,
+ *     observable, and — because it goes through the port — patch-emitting, so
+ *     history, telemetry and a future CRDT backend all see it.
  *   - `events` — typed `SourceEmitter` that auto-forwards to the canvas tap.
  *   - `dirty` — `DirtyBatcher` for per-frame batched flush.
  *   - `visible` / `hittable` / `zIndex` / `cullable` — composition flags.
@@ -28,9 +30,8 @@
  */
 
 import type { CanvasContext } from '../context/CanvasContext';
-import type { EventMap } from '@invana/canvas-store';
-import { SourceEmitter } from '@invana/canvas-store';
-import { createLayerStore, type Store } from '../state/Store';
+import type { EventMap, ReactiveStore } from '@invana/canvas-store';
+import { SourceEmitter, createReactiveStore } from '@invana/canvas-store';
 import { DirtyBatcher, type DirtySnapshot } from '@invana/canvas-store';
 
 // ─── Minimal interface that registries see ─────────────────────────────────
@@ -69,8 +70,6 @@ export interface LayerOptions<TOptions = unknown> {
    * always render regardless of camera visibility.
    */
   cullable?: boolean;
-  /** Optional: name shown in devtools. Default `'<ClassName>:<id>'`. */
-  devtoolsName?: string;
 }
 
 // ─── Layer base class ──────────────────────────────────────────────────────
@@ -95,7 +94,7 @@ export abstract class Layer<
    */
   readonly kind?: string;
   readonly options: TOptions;
-  readonly state: Store<TState>;
+  readonly state: ReactiveStore<TState>;
   readonly events: SourceEmitter<TEvents>;
   readonly dirty: DirtyBatcher<TDirtyBucket>;
 
@@ -153,9 +152,10 @@ export abstract class Layer<
 
     // State lives on the layer for its full lifetime. Created via the
     // `createState()` hook so subclass generic types flow through cleanly.
-    this.state = createLayerStore<TState>(this.createState(), {
-      name: opts.devtoolsName ?? `${this.constructor.name}:${opts.id}`,
-    });
+    // Built through the kernel's port rather than a raw store: every write
+    // produces immer patches + inverse patches, which is what lets history,
+    // telemetry and a future Yjs backend observe layer state at all.
+    this.state = createReactiveStore<TState>(this.createState());
 
     // Events emitter without bus initially; `mount()` attaches it to ctx.events.
     this.events = new SourceEmitter<TEvents>({ kind: 'layer', id: this.id });

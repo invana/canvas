@@ -1,4 +1,4 @@
-import type { IPathStyle, PathCommand } from '../../specs';
+import type { IPathStyle, PathCommand } from '@invana/canvas-store';
 
 interface StepRadialOpts {
   /**

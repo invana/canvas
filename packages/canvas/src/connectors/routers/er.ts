@@ -1,4 +1,4 @@
-import type { IRouter, Point, Vec2 } from '../../specs';
+import type { IRouter, Point, Vec2 } from '@invana/canvas-store';
 
 interface ErOpts {
   /**

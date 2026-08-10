@@ -42,7 +42,7 @@ import {
 import { CanvasThemeState } from '../theme/CanvasThemeState';
 import { Camera } from '../camera/Camera';
 import { DefaultGestureArbiter, type GestureArbiter } from '../input/GestureArbiter';
-import type { Rect } from '../specs/geometry';
+import type { Rect } from '@invana/canvas-store';
 import { FrameMeter } from './FrameMeter';
 import { InteractionTracker } from './InteractionTracker';
 import { LayerRegistry } from '../registries/LayerRegistry';

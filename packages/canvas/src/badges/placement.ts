@@ -14,7 +14,7 @@
  *    placement so the badge sits fully outside the host edge.
  */
 
-import type { Rect } from '../specs';
+import type { Rect } from '@invana/canvas-store';
 import type { BadgeOptions, BadgePlacement, NamedBadgePlacement } from './types';
 
 /**

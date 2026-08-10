@@ -1,4 +1,4 @@
-import type { IPathStyle, PathCommand } from '../../specs';
+import type { IPathStyle, PathCommand } from '@invana/canvas-store';
 
 /**
  * Sharp segments. Walks the polyline emitting `M` then `L L L …`.

@@ -10,6 +10,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./specs": {
+      "types": "./dist/specs/index.d.ts",
+      "import": "./dist/specs/index.js",
+      "default": "./dist/specs/index.js"
     }
   },
   "typedocOptions": {
@@ -29,11 +34,13 @@
   },
   "dependencies": {
     "immer": "^11.1.4",
+    "rbush": "^4.0.1",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@types/rbush": "^4.0.0",
     "tsup": "^8.3.5",
     "typescript": "5.9.2",
     "vitest": "^3.2.6"

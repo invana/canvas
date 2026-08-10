@@ -7,30 +7,38 @@
  * `Container`/`Viewport` transforms.
  */
 
+/**
+ * These four are the **single** definition in the repo. The spec vocabulary
+ * (`../specs/geometry`) re-exports them rather than declaring its own — before
+ * `specs/` moved into the kernel there were two `Rect`s with different mutability,
+ * which is exactly the confusion this consolidation removes. Fields are `readonly`:
+ * coordinates are computed and replaced wholesale, never patched in place.
+ */
+
 /** A 2-D point in world space. */
 export interface Point {
-  x: number;
-  y: number;
+  readonly x: number;
+  readonly y: number;
 }
 
 /** A 2-D vector (direction / delta). Structurally identical to {@link Point}. */
 export interface Vec2 {
-  x: number;
-  y: number;
+  readonly x: number;
+  readonly y: number;
 }
 
 /** Width × height extent. */
 export interface Size {
-  width: number;
-  height: number;
+  readonly width: number;
+  readonly height: number;
 }
 
 /** Axis-aligned bounding box. */
 export interface Rect {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
 }
 
 /**

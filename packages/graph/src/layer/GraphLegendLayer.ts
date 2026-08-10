@@ -399,9 +399,9 @@ export class GraphLegendLayer extends ScreenLayer<
     // `createState()` runs inside `super(...)`, before `this.opts` exists, so it
     // can only seed a constant. Reconcile here now that the options are resolved.
     if (!this.opts.enabled) {
-      this.state.setState((s) => {
+      this.state.update((s) => {
         s.enabled = false;
-      });
+      }, 'legend:init');
     }
   }
 
@@ -470,17 +470,17 @@ export class GraphLegendLayer extends ScreenLayer<
 
   enable(): void {
     this.opts = { ...this.opts, enabled: true };
-    this.state.setState((s) => {
+    this.state.update((s) => {
       s.enabled = true;
-    });
+    }, 'legend:enable');
     if (this.mounted && !this.overlay) this.mountOverlay();
   }
 
   disable(): void {
     this.opts = { ...this.opts, enabled: false };
-    this.state.setState((s) => {
+    this.state.update((s) => {
       s.enabled = false;
-    });
+    }, 'legend:disable');
     this.cancelScheduled();
     this.unmountOverlay();
   }
@@ -562,11 +562,11 @@ export class GraphLegendLayer extends ScreenLayer<
       else store.showEdges(ids);
     }
 
-    this.state.setState((s) => {
+    this.state.update((s) => {
       const set = kind === 'node' ? s.hiddenNodeTypes : s.hiddenEdgeTypes;
       if (hidden) set.add(type);
       else set.delete(type);
-    });
+    }, hidden ? 'legend:hideType' : 'legend:showType');
     this.events.emit('type:visibility', { kind, type, hidden });
     // The store's visibility events already scheduled a repaint, but a type with
     // no matching elements emits none — repaint regardless so the row updates.

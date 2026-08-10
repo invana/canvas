@@ -1,4 +1,4 @@
-import type { IPathStyle } from '../../specs';
+import type { IPathStyle } from '@invana/canvas-store';
 
 type LoopPolylineCardinalSide = 'top' | 'right' | 'bottom' | 'left';
 type LoopPolylineCornerSide =

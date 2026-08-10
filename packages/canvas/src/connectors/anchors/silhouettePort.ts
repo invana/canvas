@@ -1,4 +1,4 @@
-import type { IAnchor, Point } from '../../specs';
+import type { IAnchor, Point } from '@invana/canvas-store';
 
 /**
  * Silhouette-port anchor — silhouette-aware sibling of {@link edgePortAnchor}.

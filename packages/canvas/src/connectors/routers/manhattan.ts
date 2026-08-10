@@ -1,4 +1,4 @@
-import type { IRouter, Obstacle, Point } from '../../specs';
+import type { IRouter, Obstacle, Point } from '@invana/canvas-store';
 import { orthRouter } from './orth';
 import { aStar, simplifyCellPath } from './_aStar';
 import {

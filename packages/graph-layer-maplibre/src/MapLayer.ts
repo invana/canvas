@@ -248,9 +248,9 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
 
     this.map.on('move', this.handleMapMove);
     this.map.on('load', () => {
-      this.state.setState((s) => {
+      this.state.update((s) => {
         s.ready = true;
-      });
+      }, 'map:ready');
       this.events.emit('map:ready', {
         center: [this.map!.getCenter().lng, this.map!.getCenter().lat],
         zoom: this.map!.getZoom(),

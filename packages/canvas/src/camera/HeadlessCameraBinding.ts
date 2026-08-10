@@ -11,7 +11,7 @@
  * consumers can test layouts, picking and projection without a renderer.
  */
 
-import type { Point, Rect } from '../specs/geometry';
+import type { Point, Rect } from '@invana/canvas-store';
 import type {
   CameraChangeKind,
   CameraInputConfig,

@@ -11,6 +11,15 @@
 > **Backends in scope: pixi.js now, three.js later.** No three.js work is planned near-term;
 > it is designed here (§5) so the canvas and store are built to accommodate it rather than
 > retrofitted. React Flow, d3/SVG and canvas-2d were considered and dropped (§7).
+>
+> **Amendment, 2026-08-11 — where the spec vocabulary lives.** The phases below (P0, P4)
+> put `specs/` and `hit/` in `packages/canvas/src/`, and that is where they were built. They
+> have since **moved down into `@invana/canvas-store`**, beside the `SpecStore` that holds
+> them, so the engine could shed its last third-party dependency (`rbush` went with picking).
+> Nothing about the *design* changed — specs are still pixi-free plain data, picking is still
+> interaction rather than drawing, and `@invana/canvas` re-exports both so every consumer
+> reads unchanged. Only the owning package differs. See
+> [`rfcs/fix/2026-08-10-zustand-imported-outside-canvas-store.md`](./rfcs/fix/2026-08-10-zustand-imported-outside-canvas-store.md).
 
 ---
 

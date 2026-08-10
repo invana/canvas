@@ -7,10 +7,12 @@
  * point: two backends reading one description cannot disagree about intent, and
  * the description is serialisable, diffable and testable without a GPU.
  *
- * **Deliberately untyped at the kernel boundary.** The spec vocabulary lives in
- * `@invana/canvas` (it carries drawing concepts — shapes, connectors, planes),
- * and the kernel has zero `@invana` dependencies. So this store is generic over
- * `T`; the engine instantiates it as `SpecStore<BaseShapeSpec | BaseConnectorSpec>`.
+ * **Generic over `T`, though it no longer has to be.** The vocabulary now sits
+ * beside this file (`./index`), so this store *could* name its own element types.
+ * It stays generic deliberately: nothing needs the narrowing, and a concrete
+ * signature would ripple through `SpecProjector` and `GraphLayer` for no new
+ * capability. The engine instantiates it as
+ * `SpecStore<BaseShapeSpec | BaseConnectorSpec>`.
  *
  * **What does *not* live here:** positions. Those stay in {@link LayerData}'s
  * typed arrays on the machine-rate path — a drag frame moves nodes without

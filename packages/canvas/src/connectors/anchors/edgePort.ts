@@ -1,4 +1,4 @@
-import type { IAnchor, Point } from '../../specs';
+import type { IAnchor, Point } from '@invana/canvas-store';
 
 /**
  * Edge-port anchor — lands the endpoint on a named face of the host's

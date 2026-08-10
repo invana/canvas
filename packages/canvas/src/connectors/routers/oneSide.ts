@@ -1,4 +1,4 @@
-import type { IRouter, Point } from '../../specs';
+import type { IRouter, Point } from '@invana/canvas-store';
 
 interface OneSideOpts {
   /**

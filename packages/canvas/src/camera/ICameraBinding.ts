@@ -18,7 +18,7 @@
  * camera-input behaviour.
  */
 
-import type { Point, Rect } from '../specs/geometry';
+import type { Point, Rect } from '@invana/canvas-store';
 
 /** An absolute transform: world (0,0) sits at `(x, y)` screen px, uniform `zoom`. */
 export interface CameraTransformValue {
