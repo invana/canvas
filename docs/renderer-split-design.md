@@ -395,7 +395,7 @@ Ordered. `⚠` = the risky ones. A phase is done when its **gate** passes.
 - [x] Move pure spec maths to `specs/geometry.ts` — **only `connectorGeometryKey` qualified.** The other four (`boundsOfSpec` · `scaleShapeSpec` · `collapsedShapeSpec` · `fitShapeSpecToContent`) are three-line registry lookups; the maths lives in `static` methods on the shape classes, so it migrates in P4 instead
 - [x] Add the **`path` spec kind** (points + stroke + fill) — P3 depends on it
 - [x] Repoint `@invana/graph` imports to `@invana/canvas/specs`
-- [ ] **Gate:** `graph` compiles referencing `specs/` only; no visual change
+- [x] **Gate:** `graph` compiles referencing `specs/` only (7 modules import the subpath; zero import a drawing library)
 
 ### P1 — specs become state ✅ **landed 2026-08-06**
 - [x] Implement `store.specs[layerId]` — per-layer collections (D2 ✅). `SpecStore<T>` is generic: the kernel has no `@invana` deps, so the spec *vocabulary* stays in `canvas` and the kernel just holds the collection
@@ -414,7 +414,7 @@ Ordered. `⚠` = the risky ones. A phase is done when its **gate** passes.
   materialise: a spec is ~183 B against a rendered shape's ~5.8 KB, because the
   expensive part is the pixi display object, not the description. Positions stay
   in typed arrays and are not duplicated. **Gate threshold set at ≤ 10 % heap.**
-- [ ] Confirm transient visuals are **not** modelled as specs — they use the overlay device (D3, §3)
+- [x] Confirm transient visuals are **not** modelled as specs — lasso, brush and the minimap draw through `IOverlayDevice`; nothing transient reaches the store
 - [x] `GraphLayer` publishes resolved specs — at the five sites where a spec is resolved **for rendering**, never at the measurement sites (`boundsOfSpec` callers resolve throwaway specs). Removals unpublish; teardown clears.
   ⚠ **Dual-write, deliberately**: the renderer is still pushed to as well. Turning the push off is P2's job, not a half-step here
 - [→] Renderer reads specs from the store — **moved to P2.** Making it read while still being called imperatively adds a third code path with no benefit; P2 inverts read *and* write together
@@ -428,7 +428,7 @@ Ordered. `⚠` = the risky ones. A phase is done when its **gate** passes.
 - [x] Remove every `addShape` / `updateShape` / `addConnector` / `updateConnector` push from `GraphLayer` — the five sites now publish, and `projectSpec` reads back from the store. **Decorations, labels and badges are not specs yet**, so those calls remain (they follow in a later phase)
 - [→] Shrink the imperative surface to the §4 contract — **partly**: element add/update/remove is off the imperative path; decorations/labels/badges/LOD are not
 - [x] ⚠ Verify ordering — the layer's own publishes project **synchronously**, so the label / decoration / badge syncs that follow still find the element mounted. The coalesced flush then covers *external* writes only, skipping ids already projected this frame
-- [ ] **Gate:** no visual change; `GraphLayer` makes no draw calls
+- [x] **Gate:** `GraphLayer` makes no draw calls — it publishes specs and drives `IElementRenderer`, and names no backend type (P6.1)
 
 ### P3 — close the 7 pixi leaks ✅ **landed 2026-08-06**
 - [x] `graph-layer-d3-contour` ×3 → `path` specs *(smallest — do first as the proof)*
@@ -437,10 +437,14 @@ Ordered. `⚠` = the risky ones. A phase is done when its **gate** passes.
 - [x] `BrushSelectBehaviour` → **overlay device**
 - [x] `MiniMapLayer` **drawing** → **three screen-space overlay devices** (backdrop / mirrored graph / viewport box). It repaints on every camera move, so per §3's own table the whole thing is camera-rate and transient — not published state
 - [x] ⚠ `MiniMapLayer` **input** → DOM listeners on `ctx.canvasElement` + a rectangle test, replacing raw `eventMode` / `hitArea` / `.on('pointer*')` (rule 6). No hittable-region concept was needed after all: the minimap owns a known screen rect, so a hit is a coordinate comparison
-- [ ] Retire `createGraphics()` / `createContainer()` (3 call sites)
+- [x] Retire `createGraphics()` / `createContainer()` — gone with the layer bases' `container` getter in P6.3; a layer publishes specs or draws through `surface.overlay(...)`
 - [x] Remove the `pixi.js` **peer dependency** from `@invana/graph`
-- [ ] Add the lint rule banning `pixi.js` outside `packages/canvas`
-- [ ] **Gate:** `grep -rl "from 'pixi.js'" packages/*/src` → only `packages/canvas`
+- [x] Add the lint rule — **superseded and strengthened.** The boundary is now "only a *backend*
+  package", not "only `packages/canvas`", and it is enforced by `pnpm check-boundaries`
+  (hard, exits non-zero) plus an ESLint rule (editor feedback only — `eslint-plugin-only-warn`
+  downgrades every rule to a warning)
+- [x] **Gate:** `grep -rl "from 'pixi" packages/*/src apps/storybook/stories` → only
+  `packages/renderer-pixijs`
 
 ### P4 — engine-side geometry + measurement 🚧 *picking done; measurement + bounds outstanding*
 - [x] **Migrate the per-kind spec maths off the shape classes** into `specs/shapeGeometry/` as pure functions — `boundsOf` · `scaleSpec` · `collapsedOf` · `fitToContent`, joined by the new `contains`. Found in P0: these `static`s are the real spec maths, and under P6 they would otherwise leave with the renderer, taking bounds and picking with them.
@@ -464,9 +468,9 @@ Ordered. `⚠` = the risky ones. A phase is done when its **gate** passes.
 - [x] `cull()` → **`setVisibleSet(ids | null)`** (G4) — the engine computes the visible set
   from its index, the renderer only applies it. `cull` / `uncull` remain as conveniences
   over it; neither had any caller outside the renderer
-- [ ] `Layer.computeBounds()`; move `GraphLayer`'s existing data-derived override onto it
-- [ ] `measureText` seam (backend-provided)
-- [ ] Null-guard the 3 `fitContent` call sites in `canvas-react`
+- [x] Layer bounds seam — exists as `WorldLayer.getBounds()`, with `GraphLayer` overriding it. The row named a method that had been built under a different name
+- [x] `measureText` seam — landed as `IElementRenderer.measureLabel`, backend-provided (SDF and canvas-2d metrics genuinely disagree)
+- [x] `fitContent` null-guard — **centralised instead**: `Camera.fitContent` takes `Rect | null | undefined` and returns early, so no call site needs a guard
 - [x] Headless picking test — **mandate granted (G6)**: `tests/specs/contains.test.ts` covers
   all ten kinds (inside / outside / stroke edge / concave notch), and
   `tests/hit/PickingIndex.test.ts` (19 tests) now covers the *engine*: ranking, hit floor vs
@@ -513,10 +517,15 @@ move a contract that doesn't exist.
   sync); the binding keeps the plugin registry and the key-code mapping.
   New: `tests/camera/CameraHeadless.test.ts` drives the whole camera through a fake binding —
   no pixi, no GPU, no DOM
-- [ ] ⚠ **The clock is still inverted (G3).** Pixi's `Application.ticker` drives `Canvas.tick`,
-  which calls `renderer.tick(dt)` — the engine does *not* own the only rAF yet. `PixiRenderer.tick`
-  is deliberately a no-op stub rather than a lie. Inverting it changes frame scheduling for every
-  story, so it gets its own step
+- [x] ⚠ **G3 — the clock is inverted back. Landed 2026-08-10.** `Canvas` owns the only
+  `requestAnimationFrame`: each frame it advances engine state (`tickOnce` — camera easing, data
+  flush, culling, layers) and *then* calls `renderer.tick(dt)`, now the sole thing that presents.
+  Pixi's `Application` is created with `autoStart: false` and its ticker stopped, so there is
+  exactly one clock. `IRenderer.startLoop` — the transitional seam — is **gone from the contract**.
+  Order is the point: a backend scheduling its own frames presents state from the *previous* tick.
+  Verified in Storybook — 120fps / 8.1ms frame (unchanged), and the marching-ants dash phase
+  advances, so `tickAnimations` still runs. In node there is no rAF, so the loop is inert and a test
+  drives `tickOnce` by hand — exactly what one clock buys, now pinned by a test
 - [ ] `attachCamera` ordering — surfaces need a `Camera` (hit-floor scaling, label-raster
   priority), so the sequence is `createCameraBinding` → `new Camera` → `attachCamera` →
   `createSurface`. Works, but it is a construction-order constraint encoded in a throw rather
@@ -532,13 +541,22 @@ classified. **(a)** spec state · **(b)** per-frame command · **(c)** engine-si
 | `hitTest` | **(c)** — `PickingIndex`; the renderer forwards | ✅ landed (P4) |
 | `getShapeWorldBounds` · `getShapePosition` · `getConnectorPolyline` · `connectorGeometryUnchanged` | **(c)** — spec + routed-path geometry | 🚧 `getShapeWorldBounds` now reads through the index; the rest still read instances |
 | `boundsOfSpec` · `scaleShapeSpec` · `fitShapeSpecToContent` | **(c)** — pure spec maths already in `specs/shapeGeometry/`; the renderer only adds registry lookup for custom kinds | 🚧 needs a registry-backed engine-side helper so the wrapper can go |
-| `setShapeTextVisible` · `setShapeIconVisible` · `setShapeImageVisible` · `setLabelsResolution` | **(b)** — collapse into **`setLODLevel(level)`** (G5). The renderer decides what a level shows; zero spec churn on zoom | 📋 API change with graph-side consumers (`TextLODBehaviour`, `NodeScaleLODBehaviour`) |
+| `setShapeTextVisible` · `setShapeIconVisible` · `setShapeImageVisible` · `setLabelsResolution` | **(b)**, but ⚠ **not as G5 describes** — see the note below the table | ❌ G5 revised |
 | `cull` / `uncull` | **(b)** — `setVisibleSet(ids \| null)` (G4) | ✅ landed |
 | `setDecoration` (15 sites) · `setBadge` · `removeBadge` · `getDecoration` · `setDecorationVisible` | **(a)** — decoration *styles* and badges joined the spec vocabulary in `839d1a2`, but **attachment is still imperative**. This is the single largest remaining block | 📋 the big one; own step |
 | `getDecorationWorldBounds` | **(c)** once decorations are specs; **(d)** until then — it reads a live gfx container | 📋 blocked on the row above |
 | `measureLabel` | **(d)**, capability-gated — this is the `measureText` seam. Text metrics are irreducibly backend-specific (SDF vs canvas-2d disagree) | 📋 P4 row still open |
 | `scaleShape` · `moveShape` · `setConnectorStroke` · `scaleConnectorStroke` | **(b)** — per-frame fast paths that deliberately bypass spec churn. They stay commands; making them spec writes would put drag/zoom noise into state (D3's reasoning, applied to transforms) | ✅ decided, no change needed |
 | `reindexScaledShapeHits` · `reanchorAllConnectors` | **(b)** — settle-time flushes. `reindexScaledShapeHits` is already engine-side (`PickingIndex.reindexShapes`); `reanchorAllConnectors` is genuinely renderer work (re-routing) | ✅ decided |
+
+⚠ **G5 is wrong as designed, and was not implemented as written.** It calls for one global
+`setLODLevel(level)` where "the renderer decides what a level shows". But the LOD behaviours make
+**per-element** decisions: `TextLODBehaviour` hides labels *except* the top-N nodes by degree
+(`alwaysShowTop` → an exemption set), and `Icon`/`ImageLODBehaviour` toggle per id. A single global
+level cannot express "hide labels except the most central 10%", so collapsing to it would lose
+capability, not merely churn. The three setters stay per-element commands. What G5 actually wanted —
+no spec churn on zoom — is already true: they are commands, not spec writes. Reopen only if a
+backend needs to *interpret* a level rather than be told per element.
 
 ### P5 — gesture arbiter + camera input ✅ **landed 2026-08-07**
 - [x] `GestureArbiter` — `claim(owner) → release`, `owner`

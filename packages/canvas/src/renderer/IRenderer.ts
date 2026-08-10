@@ -134,27 +134,15 @@ export interface IRenderer {
   resize(width: number, height: number): void;
 
   /**
-   * Advance backend-owned animation and present. Called once per frame by
-   * whoever drives the loop.
+   * Advance backend-owned animation and **present the frame**.
+   *
+   * The engine owns the only `requestAnimationFrame` (G3) and calls this once
+   * per frame, after advancing the camera, flushing data and updating layers. A
+   * renderer must **not** schedule frames of its own: two clocks disagree about
+   * frame order, and a test can't drive time by hand.
    */
   tick(dtMs: number): void;
 
-  /**
-   * Start driving the frame loop, calling `onFrame(dtMs)` each frame. Returns a
-   * stop function.
-   *
-   * ⚠ **This is a transitional seam, and it is the wrong way round.** G3 says
-   * the *engine* owns the only `requestAnimationFrame` and calls
-   * {@link tick} — a renderer scheduling frames is exactly what that decision
-   * forbids. But pixi's `Application.ticker` drives the loop today, and
-   * inverting it changes frame scheduling for every story. Putting the
-   * inversion inside the package move would have made a regression impossible
-   * to bisect: you could not tell a move bug from a scheduling bug.
-   *
-   * So the seam exists to keep the move behaviour-neutral. When G3 lands, this
-   * method disappears and `tick` is driven from the engine's own rAF.
-   */
-  startLoop(onFrame: (dtMs: number) => void): () => void;
 
   /**
    * Raster capture, capability-gated by {@link RendererCapabilities.rasterExport}

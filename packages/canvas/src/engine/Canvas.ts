@@ -227,8 +227,8 @@ export class Canvas {
    * and the texture pool all live behind this.
    */
   private _renderer?: IRenderer;
-  /** Stops the frame loop the renderer drives. Set while initialised. */
-  private _stopLoop?: () => void;
+  /** Handle for the engine's own rAF loop. Set while initialised (G3). */
+  private _rafHandle: number | null = null;
   private _isInitialised = false;
   /** True once this canvas has acquired the shared TexturePool (real `init` only). */
   /** Last message pushed on the message channel; `null` when idle / cleared. */
@@ -351,7 +351,7 @@ export class Canvas {
     const width = opts.width ?? container.clientWidth;
     const height = opts.height ?? container.clientHeight;
     this._wireScene(width, height);
-    this._stopLoop = renderer.startLoop((dtMs: number) => this.tickOnce(dtMs));
+    this._startFrameLoop();
 
     this._isInitialised = true;
 
@@ -384,7 +384,7 @@ export class Canvas {
     }
     this._renderer = renderer;
     this._wireScene(screenWidth, screenHeight);
-    this._stopLoop = renderer.startLoop((dtMs) => this.tickOnce(dtMs));
+    this._startFrameLoop();
     this._isInitialised = true;
     this.events.emit('canvas:renderer:ready', {
       backend: renderer.backend,
@@ -957,8 +957,7 @@ export class Canvas {
     if (!this._isInitialised) return;
 
     this._interactions.dispose();
-    this._stopLoop?.();
-    this._stopLoop = undefined;
+    this._stopFrameLoop();
     // Registries first: layers unmount and destroy their surfaces while the
     // backend is still alive.
     this.layers?.clear();
@@ -976,6 +975,39 @@ export class Canvas {
   }
 
   // ─── Internals ───────────────────────────────────────────────────────────
+
+  /**
+   * Start the engine's frame loop — **the only `requestAnimationFrame` in the
+   * system** (G3).
+   *
+   * Each frame advances engine state first (`tickOnce`: camera easing, data
+   * flush, culling, layer updates) and *then* asks the backend to present
+   * (`renderer.tick`). That order is the point: a renderer scheduling its own
+   * frames would present state from the previous tick, and two clocks make
+   * frame order — and any timing bug — impossible to reason about.
+   *
+   * No-op where `requestAnimationFrame` doesn't exist (node tests); those drive
+   * `tickOnce` by hand, which is exactly what one clock buys.
+   */
+  private _startFrameLoop(): void {
+    if (typeof requestAnimationFrame !== 'function') return;
+    let last = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const frame = (now: number): void => {
+      this._rafHandle = requestAnimationFrame(frame);
+      const dt = now - last;
+      last = now;
+      this.tickOnce(dt);
+      this._renderer?.tick(dt);
+    };
+    this._rafHandle = requestAnimationFrame(frame);
+  }
+
+  private _stopFrameLoop(): void {
+    if (this._rafHandle !== null && typeof cancelAnimationFrame === 'function') {
+      cancelAnimationFrame(this._rafHandle);
+    }
+    this._rafHandle = null;
+  }
 
   /**
    * Resolve the default drawing backend. Isolated so the dynamic import has one

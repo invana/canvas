@@ -211,8 +211,8 @@ export class HeadlessRenderer implements IRenderer {
   readonly binding = new HeadlessCameraBinding();
   camera?: Camera;
   destroyed = false;
-  /** Frames requested by the engine; drive them with {@link frame}. */
-  private onFrame: ((dtMs: number) => void) | null = null;
+  /** Every `tick(dt)` the engine drove, in order. */
+  readonly frames: number[] = [];
 
   get capabilities(): RendererCapabilities {
     return {
@@ -249,22 +249,13 @@ export class HeadlessRenderer implements IRenderer {
   }
 
   resize(): void {}
-  tick(): void {}
 
-  startLoop(onFrame: (dtMs: number) => void): () => void {
-    this.onFrame = onFrame;
-    return () => {
-      this.onFrame = null;
-    };
-  }
-
-  /** Test-only: advance one frame by hand. */
-  frame(dtMs = 16): void {
-    this.onFrame?.(dtMs);
+  /** Records the frames the engine drove, so a test can assert the clock ran. */
+  tick(dtMs: number): void {
+    this.frames.push(dtMs);
   }
 
   destroy(): void {
     this.destroyed = true;
-    this.onFrame = null;
   }
 }

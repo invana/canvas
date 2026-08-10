@@ -102,6 +102,9 @@ export class PixiRenderer implements IRenderer {
       backgroundColor: opts.background ?? 0,
       powerPreference: opts.powerPreference ?? 'high-performance',
       hello: false,
+      // The engine owns the only rAF (G3). Pixi must not start a render loop of
+      // its own, or there would be two clocks disagreeing about frame order.
+      autoStart: false,
       // With `autoResize`, point pixi's ResizePlugin at the host so its
       // `resize()` reads the element box and handles `autoDensity` / DPR. The
       // plugin only re-runs on the *window* resize event though — it never
@@ -133,6 +136,11 @@ export class PixiRenderer implements IRenderer {
       this._holdsSharedTexturePool = false;
       throw err;
     }
+
+    // Belt and braces: `autoStart: false` prevents the ticker starting, and this
+    // stops it if a pixi version or plugin starts it anyway. Rendering happens
+    // only in `tick`.
+    this.app.ticker.stop();
 
     this.app.canvas.style.display = 'block';
     host.appendChild(this.app.canvas);
@@ -241,28 +249,20 @@ export class PixiRenderer implements IRenderer {
   // ─── Per-frame ───────────────────────────────────────────────────────────
 
   /**
-   * Advance backend animation.
+   * Advance backend animation and **present the frame** (G3).
    *
-   * ⚠ **Not yet the only clock.** G3 wants the engine to own the sole rAF and
-   * drive this; today pixi's `Application.ticker` still drives `Canvas.tick`,
-   * which calls here. Inverting that changes frame scheduling for every story,
-   * so it is its own step (`docs/renderer-split-design.md` §9, P6).
+   * Pixi's `Application.ticker` is stopped at mount, so this call is the only
+   * thing that renders. The engine owns the sole `requestAnimationFrame` and
+   * calls here once per frame, *after* it has advanced the camera, flushed data
+   * and updated layers — which is what makes frame order deterministic and lets
+   * a test drive time by hand.
+   *
+   * No-op after a render-time fallback: `_fellBack` means the host is swapping
+   * backend and another frame would just re-hit the crash.
    */
   tick(_dtMs: number): void {
-    /* pixi presents on its own ticker; nothing extra to advance yet */
-  }
-
-  /**
-   * Drive the frame loop off pixi's `Application.ticker` — see the ⚠ on
-   * `IRenderer.startLoop` for why the renderer still owns this. No-op on the
-   * headless path, which has no ticker and no frames.
-   */
-  startLoop(onFrame: (dtMs: number) => void): () => void {
-    const ticker = this.app?.ticker;
-    if (!ticker) return () => {};
-    const cb = (t: { deltaMS: number }): void => onFrame(t.deltaMS);
-    ticker.add(cb);
-    return () => ticker.remove(cb);
+    if (this._fellBack) return;
+    this.app?.render();
   }
 
   resize(width: number, height: number): void {
@@ -427,9 +427,8 @@ export class PixiRenderer implements IRenderer {
   private handleRenderError(err: unknown): void {
     if (this._fellBack || this.backend !== 'webgpu') throw err;
     this._fellBack = true;
-    // Stop the ticker so pixi's render loop can't re-hit the crash while the
-    // host swaps backend.
-    this.app?.ticker.stop();
+    // `_fellBack` already short-circuits `tick`, so no further frame is
+    // presented while the host swaps backend.
     console.warn(
       '[canvas] WebGPU renderer crashed at render time; ' +
         'falling back to WebGL. Original error:',

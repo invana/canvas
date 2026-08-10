@@ -194,6 +194,24 @@ describe('Canvas — end-to-end smoke', () => {
     expect(select.selectedFromBehaviour).toEqual(['n-2']);
   });
 
+  it('the engine owns the clock: the backend presents only when driven (G3)', () => {
+    const renderer = new HeadlessRenderer();
+    const canvas = new Canvas();
+    canvas.initWithRenderer(renderer, 800, 600);
+
+    // Nothing has driven a frame yet, and a renderer must never schedule its
+    // own — so the backend has presented exactly zero times.
+    expect(renderer.frames).toEqual([]);
+
+    // In node there is no requestAnimationFrame, so the loop is inert and a
+    // test drives time by hand. That is precisely what one clock buys.
+    canvas.tickOnce(16);
+    renderer.tick(16);
+    expect(renderer.frames).toEqual([16]);
+
+    canvas.destroy();
+  });
+
   it('tickOnce flushes dirty layers via applyDirty()', () => {
     const canvas = new Canvas({ id: 'main' });
     canvas.initWithRenderer(new HeadlessRenderer(), 800, 600);
