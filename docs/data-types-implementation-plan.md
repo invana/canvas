@@ -27,9 +27,66 @@ This plan: (a) finalises the type model in §1–§3, then (b) phases the implem
 
 ---
 
+---
+
+## As built (reconciled 2026-08-10)
+
+> **This plan has landed.** It was never updated as the work shipped, so the phasing below
+> reads as outstanding when most of it is not. What follows is the outcome; the phases are
+> kept for the reasoning, not as a to-do list.
+>
+> Reproduce these claims:
+> ```bash
+> grep -n "export interface NodeOption" packages/graph/src/layer/types.ts     # → 1133
+> grep -n "export interface GraphNode"  packages/graph/src/store/types.ts     # → 38
+> git ls-files apps/storybook/stories | grep "/Etc/"                          # → 7 stories
+> grep -rl "style:" packages/graph-datasets/src --include='*.ts' | wc -l      # → 24
+> grep -rn "NodeRenderHints|EdgeRenderHints" packages/graph/src               # → none
+> ```
+
+| Phase | Status | As built |
+|---|---|---|
+| 1 — types | 🚧 **partly** | `NodeOption` + `state` catalogue shipped as specified. The per-instance descriptor shipped as **`GraphNode`**, not `NodeData` (D-A below). **`NodeInput` was never built** — see D-C |
+| 2 — store fields | ✅ | `GraphNode` carries `style`, `states`, `data`; `GraphStore` round-trips them |
+| 3 — resolver eval at insert | ⚠️ **diverged** | Resolvers exist as `ResolvableNodeStyle` / `ResolvableEdgeStyle`, but they fire **at render**, against the stored `GraphNode` — *not* evaluated once at insert. See D-C |
+| 4 — render path | ✅ | `GraphLayer` resolves style + `NodeOption` + state overlays, decorations included |
+| 5 — migrate the six State stories | ✅ | All seven exist under `apps/storybook/stories/graph/Etc/` (incl. `Decorations.stories.ts`), on the new shape |
+| 6 — migrate behaviours | ✅ | Behaviours read `style` / `states`. Remaining `node.data` reads (`HoverActivateBehaviour`, `ClickSelectBehaviour`) are **user payload passed to event consumers** — the intended use of `data`, not a render hint |
+| 7 — datasets + stories | ✅ | 24 dataset files emit the new shape |
+| 8 — remove legacy types | ✅ | `NodeRenderHints` / `EdgeRenderHints` are gone |
+
+**Never written:** `packages/graph/tests/store/NodeData.test.ts` and
+`packages/graph/tests/layer/NodeInput.test.ts`, both listed as NEW in §8. The store and layer
+suites cover the shipped shape instead.
+
+### Decisions ratified after the fact
+
+**D-A — the per-instance type is `GraphNode`, not `NodeData`.** ✅ *Keep `GraphNode`.*
+G6's naming was adopted for the *shape*, which is what mattered; the noun would cost a
+breaking rename through datasets, stories, layouts and `canvas-ui` for familiarity alone.
+§1's `NodeData` blocks describe `GraphNode` — read them that way.
+
+**D-B — `style.decorations` is a discriminated-union array, not a slot dict.** ✅ *Keep the
+array.* §1.5 and the Phase 5 example show `{ halo: {...}, border: {...} }`; the code ships an
+array (see `Decorations.stories.ts`).
+⚠ **Open cross-plan question:** the decorations→spec-state work in
+[`renderer-split-design.md`](./renderer-split-design.md) models *attachment* as
+`Record<slot, DecorationSpec>`. If that lands as a slot dict while style keeps an array, the
+two disagree. **Resolve before either moves.**
+
+**D-C — resolvers fire at render, and `NodeInput` was dropped.** ⚠️ *Recorded, not ratified.*
+Phase 3 specified evaluating resolvers once at insert and storing concrete values; the
+implementation resolves every frame against the stored node instead, and never introduced the
+resolver-aware input type. Render-time resolution is strictly more expressive (a resolver can
+react to state changes without a re-insert) and strictly more expensive (it runs per frame per
+node) — which makes it a **100k-scale question**, not a style one. Revisit with the
+measurement in `renderer-split-design.md` rather than in the abstract.
+
+---
+
 ## 1. Type model (G6-aligned)
 
-### NodeData (per-instance, stored)
+### NodeData (per-instance, stored) — **shipped as `GraphNode`, see D-A**
 
 ```typescript
 interface NodeData<D = unknown> {
@@ -48,7 +105,7 @@ interface NodeData<D = unknown> {
 }
 ```
 
-### NodeInput<D> (what the consumer passes — resolver-aware)
+### NodeInput<D> (what the consumer passes — resolver-aware) — **never built, see D-C**
 
 ```typescript
 interface NodeInput<D = unknown> {
@@ -100,7 +157,7 @@ interface GraphLayerOptions {
 
 Same shape, edge-flavoured. `EdgeData` has `source`/`target` instead of `position`/`parentId`; `EdgeStyle` has stroke/arrow/label fields instead of `bgFill`/`shape`. The original `edge.type: string` (predicate) is preserved as the type tag — same field G6 uses.
 
-### 1.5 Decorations on NodeStyle (replaces G6's `animation`)
+### 1.5 Decorations on NodeStyle (replaces G6's `animation`) — **shipped as an array, see D-B**
 
 Decorations are added geometry attached to a host node (halo, glow, pulse-ring, marching-ants border, dashed border, badges). The engine already ships these primitives (`packages/canvas/src/primitives/decorations/`) and the layer already has imperative sugar (`graphLayer.haloNode`, `glowNode`, `pulseNode`, etc.). This plan adds the *declarative* path: decorations live on `NodeStyle` so they flow through input → store → state-overlay merge → renderer the same way `bgFill` does.
 
@@ -229,7 +286,7 @@ Eight phases, each independently shippable. Every phase has a clear scope, file 
 
 > **No new tests written this phase per direction.** Existing tests guard against regression.
 
-### Phase 3 — Resolver evaluation at insert
+### Phase 3 — Resolver evaluation at insert — ⚠️ **diverged: resolves at render, see D-C**
 
 **Goal:** `GraphLayer.setData(opts: GraphDataOptions)` accepts `NodeInput[]`, resolves per-input fields at insert, stores concrete `NodeData`.
 
@@ -269,16 +326,16 @@ Eight phases, each independently shippable. Every phase has a clear scope, file 
 
 ### Phase 5 — Migrate the six State stories
 
-**Goal:** the six `apps/storybook/stories/Graph/Etc/*` stories (already shipped) move to the new `NodeData` / `NodeOption` shape. Existing State stories under `Graph/Nodes/State.stories.ts` and `Graph/Edges/State.stories.ts` (legacy `node.data` shape) stay until Phase 7.
+**Goal:** the six `apps/storybook/stories/graph/Etc/*` stories (already shipped) move to the new `NodeData` / `NodeOption` shape. Existing State stories under `graph/Nodes/State.stories.ts` and `graph/Edges/State.stories.ts` (legacy `node.data` shape) stay until Phase 7.
 
 **Files:**
-- `apps/storybook/stories/Graph/Etc/BuiltinHover.stories.ts`
-- `apps/storybook/stories/Graph/Etc/PerNodeOverride.stories.ts`
-- `apps/storybook/stories/Graph/Etc/Custom.stories.ts`
-- `apps/storybook/stories/Graph/Etc/Stacking.stories.ts`
-- `apps/storybook/stories/Graph/Etc/LayerResolver.stories.ts`
-- `apps/storybook/stories/Graph/Etc/EdgeTransitions.stories.ts`
-- `apps/storybook/stories/Graph/Etc/Decorations.stories.ts` (NEW — exercises `style.decorations` slot dict via state overlays)
+- `apps/storybook/stories/graph/Etc/BuiltinHover.stories.ts`
+- `apps/storybook/stories/graph/Etc/PerNodeOverride.stories.ts`
+- `apps/storybook/stories/graph/Etc/Custom.stories.ts`
+- `apps/storybook/stories/graph/Etc/Stacking.stories.ts`
+- `apps/storybook/stories/graph/Etc/LayerResolver.stories.ts`
+- `apps/storybook/stories/graph/Etc/EdgeTransitions.stories.ts`
+- `apps/storybook/stories/graph/Etc/Decorations.stories.ts` (NEW — exercises `style.decorations` slot dict via state overlays)
 
 **Pattern (with a decoration on a state):**
 
@@ -365,13 +422,13 @@ const baseSize =
 
 ### Phase 7 — Migrate datasets + remaining stories
 
-**Goal:** `packages/graph-datasets` and the rest of the storybook (Graph/Layer/, Graph/Nodes/, Graph/Edges/, graph-layouts/*) migrate to the new shape.
+**Goal:** `packages/graph-datasets` and the rest of the storybook (graph/Layer/, graph/Nodes/, graph/Edges/, graph-layouts/*) migrate to the new shape.
 
 **Files:**
 - `packages/graph-datasets/src/**/*.ts` — sample data outputs `NodeData` / `EdgeData` instead of legacy `GraphNode` with `data` hint mixing.
-- `apps/storybook/stories/Graph/Nodes/State.stories.ts`, `Graph/Edges/State.stories.ts` — migrate to new shape; merge with the six new State stories if redundancy exists.
-- `apps/storybook/stories/Graph/Nodes/NodeLabels.stories.ts`, `Graph/Edges/EdgeLabels.stories.ts`.
-- `apps/storybook/stories/Graph/Layer/*` — graph-level demos.
+- `apps/storybook/stories/graph/Nodes/State.stories.ts`, `graph/Edges/State.stories.ts` — migrate to new shape; merge with the six new State stories if redundancy exists.
+- `apps/storybook/stories/graph/Nodes/NodeLabels.stories.ts`, `graph/Edges/EdgeLabels.stories.ts`.
+- `apps/storybook/stories/graph/Layer/*` — graph-level demos.
 - `apps/storybook/stories/graph-layouts/**/*.stories.ts` — every layout demo.
 
 **Exit criterion:**
@@ -454,7 +511,7 @@ These are judgment calls; flag any you'd flip before Phase 1 ships.
 | 3 | `packages/graph/src/layer/GraphLayer.ts` | `setData` overload + resolver eval. |
 | 3 | `packages/graph/tests/layer/NodeInput.test.ts` | NEW — resolver semantics. |
 | 4 | `packages/graph/src/layer/GraphLayer.ts` | `resolveNodeHints` reads new path. |
-| 5 | `apps/storybook/stories/Graph/Etc/*.stories.ts` | Six stories migrate. |
+| 5 | `apps/storybook/stories/graph/Etc/*.stories.ts` | Six stories migrate. |
 | 6 | `packages/graph/src/behaviours/*.ts` | Read-path adapter per behaviour. |
 | 7 | `packages/graph-datasets/src/**/*.ts` | Sample data on new shape. |
 | 7 | `apps/storybook/stories/**/*.stories.ts` | Remaining stories migrate. |
