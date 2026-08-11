@@ -24,6 +24,35 @@ working design-of-record documents. Day-to-day API/concept docs live in
     *shapes*, so the edges **between a frame's own members** are painted over. Scopes
     the landing of the `plane` axis from `render-planes-and-emphasis-plan.md` (design
     locked there, not here) + the blast radius across every `style.group` graph.
+  - [feat/2026-08-11-canvas-src-layout-hides-the-backend-seam.md](./rfcs/feat/2026-08-11-canvas-src-layout-hides-the-backend-seam.md)
+    — 📋 proposed. **The `packages/canvas/src` file + folder structure**, before and
+    after: 16 top-level folders / 76 files → **6 / 82**, restructured around the future
+    `@invana/canvas-core` boundary. The backend-facing half (`core/` — contracts,
+    connector geometry, badges, animation, SVG serialisers, the headless reference
+    implementation) becomes one contiguous subtree that lifts out as a package by moving
+    a folder; `export/` becomes `io/` since it holds `importCanvasState` too; the
+    `./specs` subpath is **deleted** — an 18-line re-export of a re-export, and the
+    npm numbers (120 downloads/month on a two-month-old package, with `0.0.x` ranges
+    pinning exactly) say no one is on the other end of the compatibility promise. Full
+    tree, per-folder move table, new-file list, and the 6 rules that produced it.
+  - [feat/2026-08-11-canvas-store-structure.md](./rfcs/feat/2026-08-11-canvas-store-structure.md)
+    — 📋 proposed. **The `packages/canvas-store/src` structure**, 16 folders / 51 files
+    → **14 / 51**. A deliberately light touch — every kernel folder already names a real
+    concern. `actions/` + `history/` fold into `view/` (both are operations on the view
+    store); `renderer/IRenderer.ts` is renamed `backend.ts` because **the filename lies**
+    — it declares only `RendererBackend`, and 33 of its 34 lines are a comment explaining
+    that `IRenderer` deliberately lives elsewhere. Also resolves a genuine duplicate:
+    `theme/` exists in *both* canvas-store and canvas with the same three types, so the
+    kernel's becomes canonical — noting the one behavioural difference (the canvas copy
+    emits `theme:change` without a source descriptor).
+  - [feat/2026-08-11-canvas-core-structure.md](./rfcs/feat/2026-08-11-canvas-core-structure.md)
+    — 📋 proposed. **The new `@invana/canvas-core` package**: 47 files / 5 folders
+    (`contracts/` · `geometry/` · `svg/` · `animation/` · `headless/`), lifted wholesale
+    from `@invana/canvas`'s `src/core/` subtree — nothing written fresh at extraction
+    time. So a rendering backend depends on a small frozen package rather than the whole
+    engine. Carries the file-origin map, the `package.json`, the four-package layering,
+    the three prerequisites, and a **checkable acceptance test**:
+    `grep "@invana/canvas'" packages/renderer-pixijs/src` → 0 hits.
 
 ## Architecture
 
