@@ -7,7 +7,7 @@ import {
   ParallelEdgeBehaviour,
   type GraphEdge,
   type GraphNode,
-  type ParallelEdgeDistribute,
+  type ParallelEdgeDistribute
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
@@ -51,9 +51,9 @@ export const ParallelEdgeCustomPolicyStory: Story = {
         shape: {
           pathType: 'smooth',
           sourceAnchor: 'boundary',
-          targetAnchor: 'boundary',
-        },
-      },
+          targetAnchor: 'boundary'
+        }
+      }
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-behaviour-parallel-edge-custom')!;
@@ -62,7 +62,7 @@ export const ParallelEdgeCustomPolicyStory: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes, edges } },
+      options: { initData: { nodes, edges } }
     });
     canvas.layers.add(graph);
 
@@ -88,7 +88,7 @@ export const ParallelEdgeCustomPolicyStory: Story = {
         const off = i * ctx.spacing;
         return {
           edgeId: edge.id,
-          waypoints: [{ x: mx + nx * off, y: my + ny * off }],
+          waypoints: [{ x: mx + nx * off, y: my + ny * off }]
         };
       });
     };
@@ -96,7 +96,7 @@ export const ParallelEdgeCustomPolicyStory: Story = {
     const parallel = new ParallelEdgeBehaviour({
       id: 'parallel-edges',
       targetLayerId: 'graph',
-      distribute: oneSidedFanout,
+      distribute: oneSidedFanout
     });
     canvas.behaviours.register(parallel);
 
@@ -105,15 +105,15 @@ export const ParallelEdgeCustomPolicyStory: Story = {
     const canvasOptions = {
       layers: {
         graph: {
-          edge: { style: { strokeColor: 0x64748b, strokeWidth: 2, strokeCap: 'round' } },
-        },
+          edge: { style: { strokeColor: 0x64748b, strokeWidth: 2, strokeCap: 'round' } }
+        }
       },
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
         'parallel-edges': { enabled: true, spacing: settings.spacing, anchorOffset: false },
-        'drag-node': { enabled: true },
-      },
+        'drag-node': { enabled: true }
+      }
     };
 
     await canvas.init({ container, autoResize: true, config: canvasOptions });
@@ -126,5 +126,5 @@ export const ParallelEdgeCustomPolicyStory: Story = {
     });
 
     canvas.camera.fitContent(graph.getBounds(), 100);
-  },
+  }
 };

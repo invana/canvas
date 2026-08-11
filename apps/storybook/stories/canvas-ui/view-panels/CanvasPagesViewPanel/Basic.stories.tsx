@@ -28,7 +28,7 @@ function BasicDemo() {
   const pages: CanvasPage[] = titles.map((title, i) => ({
     id: String(i),
     title,
-    content: <DemoBoard title={title} hue={hueFor(i)} />,
+    content: <DemoBoard title={title} hue={hueFor(i)} />
   }));
   const [activeId, setActiveId] = useState('0');
 

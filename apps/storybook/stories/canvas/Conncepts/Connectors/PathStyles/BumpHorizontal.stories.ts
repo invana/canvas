@@ -1,9 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import {
-  Canvas, DragPanBehaviour, DragShapeBehaviour, WheelZoomBehaviour,
-  WorldLayer, PrimitivesRenderer, arrowMarkerSpec,
-} from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
+import { Canvas, DragPanBehaviour, DragShapeBehaviour, WheelZoomBehaviour, WorldLayer, type IElementRenderer } from '@invana/canvas';
+import { arrowMarkerSpec } from '@invana/renderer-pixijs';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -28,10 +25,10 @@ export const BumpHorizontalStory: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -49,7 +46,7 @@ export const BumpHorizontalStory: Story = {
     canvas.behaviours.register(new DragShapeBehaviour({
       id: 'drag-shape',
       enabled: true,
-      renderer: layer.renderer,
+      renderer: layer.renderer
     }));
 
     const settings = {
@@ -61,16 +58,16 @@ export const BumpHorizontalStory: Story = {
       strokeAlpha: 0.6,
       strokeWidth: 24,
       // marker
-      showTargetMarker: false,
+      showTargetMarker: false
     };
 
     layer.renderer.addShape('a', {
       kind: 'rect', x: -240, y: -40, width: 24, height: 80,
-      fill: { kind: 'solid', color: 0x1e293b },
+      fill: { kind: 'solid', color: 0x1e293b }
     });
     layer.renderer.addShape('b', {
       kind: 'rect', x: 220, y: 20, width: 24, height: 80,
-      fill: { kind: 'solid', color: 0x1e293b },
+      fill: { kind: 'solid', color: 0x1e293b }
     });
 
     const draw = (): void => {
@@ -85,7 +82,7 @@ export const BumpHorizontalStory: Story = {
         alpha: settings.strokeAlpha,
         targetMarker: settings.showTargetMarker
           ? arrowMarkerSpec({ lengthScale: 4, widthScale: 3, fill: settings.strokeColor })
-          : undefined,
+          : undefined
       });
     };
 
@@ -106,5 +103,5 @@ export const BumpHorizontalStory: Story = {
 
     const markerFolder = gui.addFolder('marker').close();
     markerFolder.add(settings, 'showTargetMarker').onChange(draw);
-  },
+  }
 };

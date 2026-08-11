@@ -4,7 +4,7 @@ import {
   GraphCanvas,
   GraphLayer,
   type CanonicalStateName,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
@@ -47,37 +47,37 @@ export const State: Story = {
       { type: 'node',
         id: 'n-default',
         position: { x: -220, y: -100 },
-        data: { state: 'default', note: 'resting appearance — no state active' },
+        data: { state: 'default', note: 'resting appearance — no state active' }
       },
       { type: 'node',
         id: 'n-hover',
         position: { x: 0, y: -100 },
         data: { state: 'hovered', note: 'pointer is over the node' },
-        states: ['hovered'],
+        states: ['hovered']
       },
       { type: 'node',
         id: 'n-selected',
         position: { x: 220, y: -100 },
         data: { state: 'selected', note: 'click-selected (sticky)' },
-        states: ['selected'],
+        states: ['selected']
       },
       { type: 'node',
         id: 'n-highlighted',
         position: { x: -220, y: 100 },
         data: { state: 'highlighted', note: '1-hop neighbour of the focal' },
-        states: ['highlighted'],
+        states: ['highlighted']
       },
       { type: 'node',
         id: 'n-dimmed',
         position: { x: 0, y: 100 },
         data: { state: 'dimmed', note: 'de-emphasised by another active set' },
-        states: ['dimmed'],
+        states: ['dimmed']
       },
       { type: 'node',
         id: 'n-disabled',
         position: { x: 220, y: 100 },
         data: { state: 'disabled', note: 'not interactive' },
-        states: ['disabled'],
+        states: ['disabled']
       },
     ];
 
@@ -98,10 +98,10 @@ export const State: Story = {
             labelText: (n: GraphNode) => {
               const tile = n.data as TileData | undefined;
               return tile ? `${tile.state}\n${tile.note}` : '';
-            },
-          },
-        },
-      },
+            }
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -122,15 +122,15 @@ export const State: Story = {
               labelFontSize: 12,
               labelFontWeight: 600,
               labelPlacement: 'bottom',
-              labelOffsetY: 8,
-            },
-          },
-        },
+              labelOffsetY: 8
+            }
+          }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 60);
-  },
+  }
 };

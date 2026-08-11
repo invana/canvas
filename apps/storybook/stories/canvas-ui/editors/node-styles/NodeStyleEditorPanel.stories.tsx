@@ -14,7 +14,7 @@ import {
   formToStyle,
   styleToForm,
   type CompositeFormState,
-  type NodeStyleFields,
+  type NodeStyleFields
 } from '@invana/canvas-ui';
 
 import { LiveStyleEditorApp, MIXED_DATA, SelectPrompt, useSelectedNode } from './_shared';
@@ -61,5 +61,5 @@ export const NodeStyleEditorPanelStory: Story = {
       data={MIXED_DATA}
       panel={<Panel />}
     />
-  ),
+  )
 };

@@ -29,7 +29,7 @@ import {
   ColorByBehaviour,
   GraphLayer,
   type DragNodeBehaviourOptions,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { lesMiserables } from '@invana/graph-datasets';
@@ -52,8 +52,8 @@ export const DragNodeStory: Story = {
       style: {
         shape: { kind: 'circle', radius: 8 },
         bgStrokeColor: 0xffffff,
-        bgStrokeWidth: 1,
-      },
+        bgStrokeWidth: 1
+      }
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-drag-node')!;
@@ -71,11 +71,11 @@ export const DragNodeStory: Story = {
           state: {
             'is-pinned': {
               bgStrokeColor: 0xf97316,
-              bgStrokeWidth: 3,
-            },
-          },
-        },
-      },
+              bgStrokeWidth: 3
+            }
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
 
@@ -88,22 +88,22 @@ export const DragNodeStory: Story = {
     const canvasOptions = {
       layers: {
         graph: {
-          edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 0.8 } },
-        },
+          edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 0.8 } }
+        }
       },
       behaviours: {
         pan: { enabled: true },
-        zoom: { enabled: true },
+        zoom: { enabled: true }
       },
       layouts: {
         force: {
           charge: { strength: -150 },
           link: { distance: 55 },
           collide: { radius: 14 },
-          center: { x: 0, y: 0 },
-        },
+          center: { x: 0, y: 0 }
+        }
       },
-      activeLayout: 'force',
+      activeLayout: 'force'
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -129,7 +129,7 @@ export const DragNodeStory: Story = {
         for (const n of graph.store.nodes()) {
           if (n.pinned) graph.store.setPinned(n.id, false);
         }
-      },
+      }
     };
 
     const buildOptions = (): DragNodeBehaviourOptions => {
@@ -139,7 +139,7 @@ export const DragNodeStory: Story = {
         enabled: settings.enabled,
         pinOnRelease: settings.pinOnRelease,
         dragCursor: settings.dragCursor,
-        groupAware: settings.groupAware,
+        groupAware: settings.groupAware
       };
       if (settings.filterMode === 'even-only') {
         opts.filter = (id: string): boolean => {
@@ -192,5 +192,5 @@ export const DragNodeStory: Story = {
       .onChange(remount);
     gui.add(settings, 'pinnedCount').name('pinned (count)').disable();
     gui.add(settings, 'unpinAll').name('Unpin all');
-  },
+  }
 };

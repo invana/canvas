@@ -1,14 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import {
-  Canvas,
-  DragPanBehaviour,
-  WheelZoomBehaviour,
-  DragShapeBehaviour,
-  WorldLayer,
-  PrimitivesRenderer,
-  arrowMarkerSpec,
-} from '@invana/canvas';
-import type { CanvasContext, ConnectorLabelPlacement } from '@invana/canvas';
+import { Canvas, DragPanBehaviour, WheelZoomBehaviour, DragShapeBehaviour, WorldLayer, type IElementRenderer } from '@invana/canvas';
+import { arrowMarkerSpec } from '@invana/renderer-pixijs';
+import type { ConnectorLabelPlacement } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
@@ -30,10 +23,10 @@ export const Placement: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -67,13 +60,13 @@ export const Placement: Story = {
         target: { kind: 'shape', shapeId: `${v.id}-tgt`, anchor: 'boundary' },
         stroke: { color: 0xcbd5e1, width: 1.5 },
         targetMarker: arrowMarkerSpec({ lengthScale: 6, widthScale: 4, fill: 0xcbd5e1 }),
-        ...(v.pathStyle === 'bezier' ? { pathStyleOpts: { axis: 'h', tension: 0.6 } } : {}),
+        ...(v.pathStyle === 'bezier' ? { pathStyleOpts: { axis: 'h', tension: 0.6 } } : {})
       });
     }
 
     const settings = {
       preset: 'center' as 'start' | 'center' | 'end' | 'numeric',
-      t: 0.5,
+      t: 0.5
     };
 
     const apply = (): void => {
@@ -84,8 +77,8 @@ export const Placement: Story = {
           style: {
             content: { kind: 'text', text: `t=${typeof placement === 'number' ? placement.toFixed(2) : placement}`, fontSize: 12, fontWeight: 600, fill: 0x0f172a },
             background: { fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [2, 6] },
-            placement,
-          },
+            placement
+          }
         });
       }
     };
@@ -101,5 +94,5 @@ export const Placement: Story = {
       apply();
       gui.controllersRecursive().forEach((c) => c.updateDisplay());
     });
-  },
+  }
 };

@@ -3,7 +3,7 @@ import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   GraphCanvas,
   GraphLayer,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
@@ -53,33 +53,33 @@ export const LayerResolverStory: Story = {
         id: 'a',
         position: { x: -240, y: 0 },
         data: { weight: 1.0, group: 0 },
-        style: { shape: { kind: 'circle', radius: 20 }, labelText: 'a' },
+        style: { shape: { kind: 'circle', radius: 20 }, labelText: 'a' }
       },
       { type: 'node',
         id: 'b',
         position: { x: -120, y: 0 },
         data: { weight: 1.5, group: 1 },
         style: { shape: { kind: 'circle', radius: 26 }, labelText: 'b' },
-        states: ['hovered'],
+        states: ['hovered']
       },
       { type: 'node',
         id: 'c',
         position: { x: 0, y: 0 },
         data: { weight: 2.0, group: 2 },
-        style: { shape: { kind: 'circle', radius: 32 }, labelText: 'c' },
+        style: { shape: { kind: 'circle', radius: 32 }, labelText: 'c' }
       },
       { type: 'node',
         id: 'd',
         position: { x: 120, y: 0 },
         data: { weight: 2.5, group: 0 },
         style: { shape: { kind: 'circle', radius: 38 }, labelText: 'd' },
-        states: ['hovered'],
+        states: ['hovered']
       },
       { type: 'node',
         id: 'e',
         position: { x: 240, y: 0 },
         data: { weight: 3.0, group: 1 },
-        style: { shape: { kind: 'circle', radius: 44 }, labelText: 'e' },
+        style: { shape: { kind: 'circle', radius: 44 }, labelText: 'e' }
       },
     ];
 
@@ -94,15 +94,15 @@ export const LayerResolverStory: Story = {
           style: {
             // Resolver: pick fill from data.group per node.
             bgFill: (n: GraphNode) =>
-              groupColors[((n.data as TileData | undefined)?.group ?? 0)],
+              groupColors[((n.data as TileData | undefined)?.group ?? 0)]
           },
           // Override the layer's built-in `hovered` with a v3 overlay — wins
           // over the canonical config for this layer only.
           state: {
-            hovered: { bgStrokeColor: 0xffaa00, bgStrokeWidth: 4 },
-          },
-        },
-      },
+            hovered: { bgStrokeColor: 0xffaa00, bgStrokeWidth: 4 }
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -118,15 +118,15 @@ export const LayerResolverStory: Story = {
               labelColor: 0x1f2937,
               labelPlacement: 'bottom',
               labelFontSize: 12,
-              labelOffsetY: 8,
-            },
-          },
-        },
+              labelOffsetY: 8
+            }
+          }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

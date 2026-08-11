@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, PrimitivesRenderer } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
+import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer,
+  type IElementRenderer
+} from '@invana/canvas';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'canvas/concepts/Shapes/CircleSolid' };
@@ -13,10 +14,10 @@ export const CircleSolidStory: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -33,21 +34,21 @@ export const CircleSolidStory: Story = {
 
     layer.renderer.addShape('hex-shorthand', {
       kind: 'circle', x: -120, y: 0, radius: 40,
-      fill: 0x4f9cf9,
+      fill: 0x4f9cf9
     });
 
     layer.renderer.addShape('solid-object', {
       kind: 'circle', x: 0, y: 0, radius: 40,
       fill: { kind: 'solid', color: 0x10b981, alpha: 0.95 },
-      stroke: { color: 0x047857, width: 2 },
+      stroke: { color: 0x047857, width: 2 }
     });
 
     layer.renderer.addShape('thick-border', {
       kind: 'circle', x: 120, y: 0, radius: 40,
       fill: { kind: 'solid', color: 0xfacc15 },
-      stroke: { color: 0xb45309, width: 6, alignment: 'inside' },
+      stroke: { color: 0xb45309, width: 6, alignment: 'inside' }
     });
 
     canvas.camera.fitContent(layer.getBounds(), 100);
-  },
+  }
 };

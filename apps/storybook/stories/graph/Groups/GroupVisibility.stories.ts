@@ -30,7 +30,7 @@ export const GroupVisibilityStory: Story = {
       bgFill: fill,
       bgStrokeColor: 0x6b7fff,
       bgStrokeWidth: 1,
-      group: { autoFit: true, padding: 22 },
+      group: { autoFit: true, padding: 22 }
     });
     const memberStyle = (fill: number) => ({ shape: { kind: 'circle' as const, radius: 16 }, bgFill: fill });
 
@@ -47,7 +47,7 @@ export const GroupVisibilityStory: Story = {
       id,
       source,
       target,
-      style: { strokeColor: 0x94a3b8, strokeWidth: 1.2, arrowTargetShape: 'none' },
+      style: { strokeColor: 0x94a3b8, strokeWidth: 1.2, arrowTargetShape: 'none' }
     });
     const edges: GraphEdge[] = [edge('a1-a2', 'a1', 'a2'), edge('b1-b2', 'b1', 'b2'), edge('a2-hub', 'a2', 'hub'), edge('b1-hub', 'b1', 'hub')];
 
@@ -63,7 +63,7 @@ export const GroupVisibilityStory: Story = {
     await canvas.init({
       container,
       autoResize: true,
-      config: { behaviours: { pan: { enabled: true }, zoom: { enabled: true } } },
+      config: { behaviours: { pan: { enabled: true }, zoom: { enabled: true } } }
     });
     canvas.camera.fitContent(graph.getBounds(), 60);
 
@@ -74,7 +74,7 @@ export const GroupVisibilityStory: Story = {
       hideGroupA: () => graph.hideGroup('group-a'),
       showGroupA: () => graph.showGroup('group-a'),
       toggleGroupB: () => graph.toggleGroupHidden('group-b'),
-      showAll: () => graph.showAllHidden(),
+      showAll: () => graph.showAllHidden()
     };
 
     const gui = new GUI({ title: 'Group visibility' });
@@ -102,5 +102,5 @@ export const GroupVisibilityStory: Story = {
     );
     // Also refresh counts on the underlying node visibility churn (descendants).
     onStoryTeardown(graph.store.events.on('node:visibility', refresh));
-  },
+  }
 };

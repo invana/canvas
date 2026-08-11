@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas,
   DragPanBehaviour,
-  PrimitivesRenderer,
   WheelZoomBehaviour,
   WorldLayer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext, InsetAnchor, ShapeFillLayer } from '@invana/canvas';
+import type { InsetAnchor, ShapeFillLayer } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
@@ -36,13 +36,10 @@ export const Glyph: Story = {
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({
-          container: this.container,
-          camera: ctx.camera,
-        });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -53,7 +50,7 @@ export const Glyph: Story = {
       char: '★',
       color: 0xfbbf24,
       sizeRatio: 0.6,
-      anchor: 'center' as InsetAnchor,
+      anchor: 'center' as InsetAnchor
     };
 
     const buildFill = (): ReadonlyArray<ShapeFillLayer> => [
@@ -64,7 +61,7 @@ export const Glyph: Story = {
         fontFamily: 'sans-serif',
         color: settings.color,
         sizeRatio: settings.sizeRatio,
-        anchor: settings.anchor,
+        anchor: settings.anchor
       },
     ];
 
@@ -76,7 +73,7 @@ export const Glyph: Story = {
       height: 96,
       cornerRadius: 16,
       fill: buildFill(),
-      stroke: { color: 0xffffff, width: 1 },
+      stroke: { color: 0xffffff, width: 1 }
     });
 
     canvas.camera.fitContent(layer.getBounds(), 80);
@@ -88,5 +85,5 @@ export const Glyph: Story = {
     gui.addColor(settings, 'color').onChange(repaint);
     gui.add(settings, 'sizeRatio', 0.1, 1, 0.01).onChange(repaint);
     gui.add(settings, 'anchor', ['center', 'top-left', 'top-right', 'bottom-left', 'bottom-right']).onChange(repaint);
-  },
+  }
 };

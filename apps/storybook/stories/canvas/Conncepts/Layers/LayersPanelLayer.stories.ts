@@ -4,11 +4,11 @@ import {
   DevInfoLayer,
   DragPanBehaviour,
   LayersPanelLayer,
-  PrimitivesRenderer,
   WheelZoomBehaviour,
   WorldLayer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext, LayersPanelCorner } from '@invana/canvas';
+import type { LayersPanelCorner } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -22,15 +22,12 @@ export const LayersPanelLayerStory: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() {
         return {};
       }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({
-          container: this.container,
-          camera: ctx.camera,
-        });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() {
         return null;
@@ -54,7 +51,7 @@ export const LayersPanelLayerStory: Story = {
       y: 0,
       radius: 60,
       fill: { kind: 'solid', color: 0x4f9cf9 },
-      stroke: { color: 0x1d4ed8, width: 2 },
+      stroke: { color: 0x1d4ed8, width: 2 }
     });
     shapes.renderer.addShape('demo-rect', {
       kind: 'rect',
@@ -63,7 +60,7 @@ export const LayersPanelLayerStory: Story = {
       width: 120,
       height: 80,
       fill: { kind: 'solid', color: 0x10b981, alpha: 0.9 },
-      stroke: { color: 0x047857, width: 2 },
+      stroke: { color: 0x047857, width: 2 }
     });
 
     const accents = new RenderLayer({ id: 'accents', options: {} });
@@ -74,7 +71,7 @@ export const LayersPanelLayerStory: Story = {
       y: 40,
       radius: 45,
       fill: { kind: 'solid', color: 0xf59e0b, alpha: 0.9 },
-      stroke: { color: 0xb45309, width: 2 },
+      stroke: { color: 0xb45309, width: 2 }
     });
 
     const annotations = new RenderLayer({ id: 'annotations', options: {} });
@@ -86,7 +83,7 @@ export const LayersPanelLayerStory: Story = {
       width: 200,
       height: 40,
       fill: { kind: 'solid', color: 0xa855f7, alpha: 0.4 },
-      stroke: { color: 0x7e22ce, width: 1 },
+      stroke: { color: 0x7e22ce, width: 1 }
     });
 
     const devInfo = new DevInfoLayer({ corner: 'bottom-left' });
@@ -100,7 +97,7 @@ export const LayersPanelLayerStory: Story = {
       backgroundColor: 'rgba(10,10,10,0.82)',
       textColor: '#c8d3e0',
       accentColor: '#4fc3f7',
-      hideIds: [],
+      hideIds: []
     });
     canvas.layers.add(panel);
 
@@ -114,7 +111,7 @@ export const LayersPanelLayerStory: Story = {
       opacity: 0.92,
       backgroundColor: '#0a0a0a',
       textColor: '#c8d3e0',
-      accentColor: '#4fc3f7',
+      accentColor: '#4fc3f7'
     };
 
     // hideIds is exposed as a checkbox per pre-known layer id. Flipping a
@@ -123,7 +120,7 @@ export const LayersPanelLayerStory: Story = {
       shapes: false,
       accents: false,
       annotations: false,
-      'dev-info': false,
+      'dev-info': false
     };
     const applyHideIds = () => {
       const ids = Object.keys(hideToggles).filter((k) => hideToggles[k]);
@@ -175,10 +172,10 @@ export const LayersPanelLayerStory: Story = {
       removeDemoLayer: () => {
         const id = demoLayers.pop();
         if (id) canvas.layers.remove(id);
-      },
+      }
     };
     const fDemo = gui.addFolder('Demo layers');
     fDemo.add(actions, 'addDemoLayer').name('+ add demo layer');
     fDemo.add(actions, 'removeDemoLayer').name('− remove demo layer');
-  },
+  }
 };

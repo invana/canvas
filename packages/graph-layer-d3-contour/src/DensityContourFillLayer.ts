@@ -7,8 +7,8 @@
  */
 
 import type { ContourMultiPolygon } from 'd3-contour';
-import type { Graphics } from 'pixi.js';
 
+import type { PathSpec } from '@invana/canvas/specs';
 import { DensityContourLayerBase } from './DensityContourLayerBase';
 import { DENSITY_CONTOUR_PALETTES, lerpColor, sampleStops } from './palettes';
 import type { DensityContourFillLayerOptions } from './types';
@@ -28,38 +28,36 @@ function resolveStops(
 
 export class DensityContourFillLayer extends DensityContourLayerBase<DensityContourFillLayerOptions> {
   override readonly kind = 'density-contour-fill-layer';
-  protected paintDensity(
-    g: Graphics,
+  protected buildBands(
     density: ContourMultiPolygon[],
     offsetX: number,
     offsetY: number,
-  ): void {
+  ): PathSpec[] {
     const opacity = this.options.fillOpacity ?? FILL_DEFAULTS.fillOpacity;
     const total = density.length;
     const colorAt = this.resolveFillColor();
+    const out: PathSpec[] = [];
 
-    // d3 returns bands low-density → high-density; paint in that order so
-    // denser bands sit on top.
+    // d3 returns bands low-density → high-density; emit in that order so denser
+    // bands sit on top.
     density.forEach((band, i) => {
       const fillColor = colorAt(band.value, i, total);
-      // Each band is a MultiPolygon: an array of polygons; each polygon is
-      // an array of rings (outer + holes). For density bands the outer ring
-      // is what we want filled; holes are rare and visually subtle, so we
-      // paint the outer ring only (PixiJS `Graphics` doesn't expose ring
-      // subtraction in v8's path builder).
+      // Each band is a MultiPolygon: polygons of rings (outer + holes). The outer
+      // ring is what we fill; holes are rare and visually subtle here.
       for (const polygon of band.coordinates) {
         const outer = polygon[0];
         if (!outer || outer.length < 3) continue;
-        const flat: number[] = new Array(outer.length * 2);
-        for (let k = 0; k < outer.length; k++) {
-          const pt = outer[k]!;
-          flat[k * 2] = (pt[0] ?? 0) + offsetX;
-          flat[k * 2 + 1] = (pt[1] ?? 0) + offsetY;
-        }
-        g.poly(flat);
+        out.push({
+          kind: 'path',
+          x: 0,
+          y: 0,
+          closed: true,
+          points: outer.map((pt) => ({ x: (pt[0] ?? 0) + offsetX, y: (pt[1] ?? 0) + offsetY })),
+          fill: [{ kind: 'solid', color: fillColor, alpha: opacity }],
+        });
       }
-      g.fill({ color: fillColor, alpha: opacity });
     });
+    return out;
   }
 
   /**

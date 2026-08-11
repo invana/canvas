@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas,
   DragPanBehaviour,
-  PrimitivesRenderer,
   WheelZoomBehaviour,
   WorldLayer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext, InsetAnchor, ShapeFillLayer } from '@invana/canvas';
+import type { InsetAnchor, ShapeFillLayer } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
@@ -33,13 +33,10 @@ export const Svg: Story = {
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({
-          container: this.container,
-          camera: ctx.camera,
-        });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -54,7 +51,7 @@ export const Svg: Story = {
       plus:     'M12 4 V20 M4 12 H20',
       check:    'M4 12 L10 18 L20 6',
       cross:    'M5 5 L19 19 M19 5 L5 19',
-      diamond:  'M12 3 L21 12 L12 21 L3 12 Z',
+      diamond:  'M12 3 L21 12 L12 21 L3 12 Z'
     };
 
     const settings = {
@@ -62,7 +59,7 @@ export const Svg: Story = {
       color: 0xffffff,
       strokeWidth: 2,
       sizeRatio: 0.55,
-      anchor: 'center' as InsetAnchor,
+      anchor: 'center' as InsetAnchor
     };
 
     const buildFill = (): ReadonlyArray<ShapeFillLayer> => [
@@ -74,7 +71,7 @@ export const Svg: Story = {
         strokeWidth: settings.strokeWidth,
         color: settings.color,
         sizeRatio: settings.sizeRatio,
-        anchor: settings.anchor,
+        anchor: settings.anchor
       },
     ];
 
@@ -84,7 +81,7 @@ export const Svg: Story = {
       y: 0,
       radius: 48,
       fill: buildFill(),
-      stroke: { color: 0x111827, width: 1 },
+      stroke: { color: 0x111827, width: 1 }
     });
 
     canvas.camera.fitContent(layer.getBounds(), 80);
@@ -97,5 +94,5 @@ export const Svg: Story = {
     gui.add(settings, 'strokeWidth', 0.5, 6, 0.5).onChange(repaint);
     gui.add(settings, 'sizeRatio', 0.1, 1, 0.01).onChange(repaint);
     gui.add(settings, 'anchor', ['center', 'top-left', 'top-right', 'bottom-left', 'bottom-right']).onChange(repaint);
-  },
+  }
 };

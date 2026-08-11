@@ -23,7 +23,7 @@ function Strip({ position }: { position: 'start' | 'end' }) {
   const pages: CanvasPage[] = titles.map((title, i) => ({
     id: String(i),
     title,
-    content: <DemoBoard title={`${title} — pager at ${position}`} hue={hueFor(i)} />,
+    content: <DemoBoard title={`${title} — pager at ${position}`} hue={hueFor(i)} />
   }));
   const [activeId, setActiveId] = useState('0');
   return (
@@ -61,5 +61,5 @@ function PagerPlacementDemo() {
 
 export const PagerPlacement: Story = {
   name: 'PagerPlacement',
-  render: () => <PagerPlacementDemo />,
+  render: () => <PagerPlacementDemo />
 };

@@ -88,7 +88,7 @@ export const SideRegionsStory: Story = {
           header={{
             title: 'Side Regions',
             center: <GraphControlsToolbar />,
-            right: (ctx) => <ThemeToggle ctx={ctx} />,
+            right: (ctx) => <ThemeToggle ctx={ctx} />
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
           // The new resizable/collapsible side regions. Omitting either hides it.
@@ -98,5 +98,5 @@ export const SideRegionsStory: Story = {
         />
       </ThemeProvider>
     );
-  },
+  }
 };

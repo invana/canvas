@@ -1,6 +1,6 @@
 /**
  * `RendererInitOptions` — the **adapter-local, non-syncable** init bag handed to a
- * renderer at {@link IRenderer.mount}.
+ * renderer at `IRenderer.mount` (the interface lives in `@invana/canvas`).
  *
  * These are deliberately the device/backend knobs that {@link CanvasSceneOptions}
  * (`view/CanvasView.ts`) leaves out on purpose — they belong to the renderer
@@ -18,7 +18,7 @@ export interface RendererInitOptions {
   /**
    * Preferred GPU backend. The renderer may downgrade (e.g. `'webgpu'` → `'webgl'`
    * on browsers whose WebGPU path is unavailable); the resolved value is reported
-   * on {@link IRenderer.backend} after mount.
+   * on `IRenderer.backend` after mount.
    */
   preference?: 'webgpu' | 'webgl' | 'auto';
   /** Enable multisample antialiasing. */

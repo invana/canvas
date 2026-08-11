@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   DragPanBehaviour, WheelZoomBehaviour,
-  LOOP_CURVE_PRESETS,
+  LOOP_CURVE_PRESETS
 } from '@invana/canvas';
 import type { LoopCurvePresetName } from '@invana/canvas';
 import {
   GraphCanvas, DragNodeBehaviour, GraphLayer,
-  type GraphEdge, type GraphNode,
+  type GraphEdge, type GraphNode
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -105,7 +105,7 @@ export const Overview: Story = {
     const nodes: GraphNode[] = NODE_SPECS.map(spec => ({ type: 'node',
       id: spec.id,
       position: { x: spec.cx, y: spec.cy },
-      style: { labelText: spec.preset, labelPlacement: 'bottom' },
+      style: { labelText: spec.preset, labelPlacement: 'bottom' }
     }));
 
     const edges: GraphEdge[] = [];
@@ -124,10 +124,10 @@ export const Overview: Story = {
               pathStyleOpts: {
                 ...preset,
                 angle: p.angle,
-                pivotOffset: { dx: p.dx, dy: p.dy },
-              },
-            },
-          },
+                pivotOffset: { dx: p.dx, dy: p.dy }
+              }
+            }
+          }
         });
       }
     }
@@ -138,7 +138,7 @@ export const Overview: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes, edges } },
+      options: { initData: { nodes, edges } }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -157,26 +157,26 @@ export const Overview: Story = {
               labelFontSize: 11,
               labelFontWeight: 600,
               labelColor: 0x0f172a,
-              labelOffsetY: 6,
-            },
+              labelOffsetY: 6
+            }
           },
           edge: {
             style: {
               strokeColor: 0x94a3b8,
               strokeWidth: 1.5,
-              arrowTargetShape: 'triangle',
-            },
-          },
-        },
+              arrowTargetShape: 'triangle'
+            }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'drag-node': { enabled: true },
-      },
+        'drag-node': { enabled: true }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

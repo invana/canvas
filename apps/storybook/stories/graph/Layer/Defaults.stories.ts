@@ -5,7 +5,7 @@ import {
   GraphLayer,
   type GraphNode,
   type GraphEdge,
-  type EdgePathType,
+  type EdgePathType
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../div-util';
@@ -54,10 +54,10 @@ export const Defaults: Story = {
       layers: {
         graph: {
           node: { style: { shape: { kind: 'circle', radius: 20 }, bgFill: 0x3b82f6 } },
-          edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 2, arrowTargetShape: 'none' } },
-        },
+          edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 2, arrowTargetShape: 'none' } }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 100);
@@ -69,7 +69,7 @@ export const Defaults: Story = {
       'node radius': 20,
       'edge color': '#cbd5e1',
       'edge width': 2,
-      'edge type': 'straight' as EdgePathType,
+      'edge type': 'straight' as EdgePathType
     };
     const hex = (s: string): number => parseInt(s.replace('#', ''), 16);
 
@@ -84,7 +84,7 @@ export const Defaults: Story = {
       .add(settings, 'node radius', 6, 40, 1)
       .onChange((v: number) =>
         canvas.update({
-          layers: { graph: { node: { style: { shape: { kind: 'circle', radius: v } } } } },
+          layers: { graph: { node: { style: { shape: { kind: 'circle', radius: v } } } } }
         }),
       );
     gui
@@ -109,5 +109,5 @@ export const Defaults: Story = {
       .onChange((v: EdgePathType) =>
         canvas.update({ layers: { graph: { edge: { style: { shape: { pathType: v } } } } } }),
       );
-  },
+  }
 };

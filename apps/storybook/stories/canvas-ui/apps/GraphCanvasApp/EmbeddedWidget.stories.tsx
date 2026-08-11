@@ -52,7 +52,7 @@ export const EmbeddedWidgetStory: Story = {
               borderRadius: 12,
               border: '1px solid var(--border, #e2e8f0)',
               boxShadow: '0 10px 30px -12px rgba(15,23,42,0.35)',
-              overflow: 'hidden',
+              overflow: 'hidden'
             }}
             header={{ title: 'Les Misérables' }}
             footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
@@ -70,5 +70,5 @@ export const EmbeddedWidgetStory: Story = {
         </div>
       </div>
     </ThemeProvider>
-  ),
+  )
 };

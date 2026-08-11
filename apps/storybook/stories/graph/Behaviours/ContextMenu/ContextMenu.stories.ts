@@ -7,7 +7,7 @@ import {
   GraphCanvas,
   GraphLayer,
   type GraphNode,
-  type GraphEdge,
+  type GraphEdge
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
@@ -59,7 +59,7 @@ export const ContextMenuStory: Story = {
       edge: true,
       canvas: true,
       target: '—',
-      'last action': '—',
+      'last action': '—'
     };
 
     // ─── Menu overlay (consumer-owned DOM; the behaviour is headless) ───────
@@ -111,7 +111,7 @@ export const ContextMenuStory: Story = {
     const itemsFor: Record<ContextMenuTargetType, string[]> = {
       node: ['Pin node', 'Expand neighbours', 'Delete node'],
       edge: ['Reverse edge', 'Delete edge'],
-      canvas: ['Add node here', 'Fit to content'],
+      canvas: ['Add node here', 'Fit to content']
     };
     const onContextMenu = (e: ContextMenuEvent): void => {
       const label =
@@ -125,7 +125,7 @@ export const ContextMenuStory: Story = {
     const ctxMenu = new ContextMenuBehaviour({
       id: 'context-menu',
       targetLayerId: 'graph',
-      onContextMenu,
+      onContextMenu
     });
     canvas.behaviours.register(ctxMenu);
 
@@ -141,22 +141,22 @@ export const ContextMenuStory: Story = {
               bgStrokeWidth: 2,
               labelColor: 0xf8fafc,
               labelFontSize: 12,
-              labelPlacement: 'center',
+              labelPlacement: 'center'
             },
             // Transient state the behaviour toggles on the right-clicked node.
-            state: { 'context-open': { bgStrokeColor: 0xf97316, bgStrokeWidth: 4 } },
+            state: { 'context-open': { bgStrokeColor: 0xf97316, bgStrokeWidth: 4 } }
           },
           edge: {
             style: { strokeColor: 0xcbd5e1, strokeWidth: 2, arrowTargetShape: 'none' },
-            state: { 'context-open': { strokeColor: 0xf97316, strokeWidth: 4 } },
-          },
-        },
+            state: { 'context-open': { strokeColor: 0xf97316, strokeWidth: 4 } }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'context-menu': { enabled: true, state: 'context-open' },
-      },
+        'context-menu': { enabled: true, state: 'context-open' }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -186,5 +186,5 @@ export const ContextMenuStory: Story = {
     targetsFolder.add(settings, 'canvas').onChange(applyTargets);
     gui.add(settings, 'target').disable();
     gui.add(settings, 'last action').disable();
-  },
+  }
 };

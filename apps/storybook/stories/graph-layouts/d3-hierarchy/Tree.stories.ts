@@ -2,14 +2,14 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
   DragPanBehaviour,
-  WheelZoomBehaviour,
+  WheelZoomBehaviour
 } from '@invana/canvas';
 import { GraphCanvas, GraphLayer, TextResolutionLODBehaviour, ThemeBehaviour } from '@invana/graph';
 import {
   D3HierarchyLayout,
   type CartesianOrientation,
   type D3HierarchyLayoutMode,
-  type D3HierarchyLayoutOptions,
+  type D3HierarchyLayoutOptions
 } from '@invana/graph-layout-d3-hierarchy';
 import type { LayoutOptions } from '@invana/canvas';
 import { flareAsGraph } from '@invana/graph-datasets';
@@ -53,7 +53,7 @@ export const Tree: Story = {
       showLabels: true,
       labelFontSize: 10,
       // Zoom-aware label sharpness — see Cluster.stories.ts for rationale.
-      sharpLabelsOnZoom: true,
+      sharpLabelsOnZoom: true
     };
 
     // Depth-based colour ramp (warm root → cool leaves). Kept identical to
@@ -110,17 +110,17 @@ export const Tree: Story = {
                   labelPlacement: (n.data.isLeaf ? 'right' : 'left') as
                     | 'left'
                     | 'right',
-                  labelOffsetX: n.data.isLeaf ? 4 : -4,
+                  labelOffsetX: n.data.isLeaf ? 4 : -4
                 }
-              : {}),
-          },
+              : {})
+          }
         })),
         edges: data.edges.map((e) => ({
           id: e.id,
           type: 'edge',
           source: e.source,
-          target: e.target,
-        })),
+          target: e.target
+        }))
       };
     };
 
@@ -134,7 +134,7 @@ export const Tree: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: buildGraphData() },
+      options: { initData: buildGraphData() }
     });
 
     canvas.layers.add(
@@ -150,14 +150,14 @@ export const Tree: Story = {
     // its target layer at register-time, so the layer must exist first.
     const labelResolutionLOD = new TextResolutionLODBehaviour({
       id: 'label-resolution',
-      targetLayerId: 'graph',
+      targetLayerId: 'graph'
     });
     canvas.behaviours.register(labelResolutionLOD);
 
     const layout = new D3HierarchyLayout({
       id: 'tree',
       type: 'node',
-      targetLayerId: 'graph',
+      targetLayerId: 'graph'
     } as D3HierarchyLayoutOptions & LayoutOptions);
     canvas.layouts.add(layout);
 
@@ -183,11 +183,11 @@ export const Tree: Story = {
                 // the node centre rather than the trimmed boundary cut. Nodes
                 // overdraw the inner part of the curve.
                 sourceAnchor: 'center',
-                targetAnchor: 'center',
-              },
-            },
-          },
-        },
+                targetAnchor: 'center'
+              }
+            }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
@@ -196,9 +196,9 @@ export const Tree: Story = {
           enabled: true,
           mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#0f172a' },
-          dark: { backgroundColor: '#0b1220', color: '#e5e7eb' },
+          dark: { backgroundColor: '#0b1220', color: '#e5e7eb' }
         },
-        'label-resolution': { enabled: settings.sharpLabelsOnZoom },
+        'label-resolution': { enabled: settings.sharpLabelsOnZoom }
       },
       layouts: {
         tree: {
@@ -208,10 +208,10 @@ export const Tree: Story = {
           // depth spacing. Per-node spacing (vs. a fixed `size` bounding
           // box) keeps siblings consistently spaced no matter how unbalanced
           // a subtree is.
-          nodeSize: [settings.siblingSpacing, settings.depthSpacing],
-        },
+          nodeSize: [settings.siblingSpacing, settings.depthSpacing]
+        }
       },
-      activeLayout: 'tree',
+      activeLayout: 'tree'
     };
 
     // Fit once the active layout settles.
@@ -282,5 +282,5 @@ export const Tree: Story = {
       .onChange((on: boolean) => (on ? labelResolutionLOD.enable() : labelResolutionLOD.disable()));
 
     gui.add({ refit: () => canvas.camera.fitContent(graph.getBounds(), 20) }, 'refit').name('Re-fit camera');
-  },
+  }
 };

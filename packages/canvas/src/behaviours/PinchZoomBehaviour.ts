@@ -36,14 +36,16 @@ export class PinchZoomBehaviour extends Behaviour<PinchZoomBehaviourOptions> {
   protected onRegister(_ctx: CanvasContext): void { /* wired on enable */ }
 
   protected onEnable(): void {
-    this.ctx!.camera.viewport.pinch({ noDrag: this.noDrag, percent: this.percent });
+    this.ctx!.camera.configureInput({ pinch: { noDrag: this.noDrag, percent: this.percent } });
   }
 
   protected onDisable(): void {
-    this.ctx!.camera.viewport.plugins.remove('pinch');
+    // `null` removes the pinch input; the wheel input (`WheelZoomBehaviour`'s
+    // concern, including its own `trackpadPinch`) is left untouched.
+    this.ctx!.camera.configureInput({ pinch: null });
   }
 
-  /** Re-arm the pixi-viewport pinch plugin with the merged options. */
+  /** Re-arm the camera's pinch input with the merged options. */
   protected override onOptionsChanged(): void {
     this.reArm();
   }

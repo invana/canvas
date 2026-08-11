@@ -21,7 +21,7 @@ import {
   GraphStatusBar,
   HoverElementPreviewCard,
   HoverPreviewCardEditorPanel,
-  ThemeToggle,
+  ThemeToggle
 } from '@invana/canvas-ui';
 import type { GraphData, HoverElementPreviewCardSpec } from '@invana/graph';
 import { ThemeProvider } from '@invana/themes';
@@ -39,7 +39,7 @@ const INITIAL_SPEC: HoverElementPreviewCardSpec = {
   rows: [
     { label: 'Role', field: 'data.role' },
     { label: 'Email', field: 'data.email' },
-  ],
+  ]
 };
 
 // A small `Person` graph carrying exactly the fields the spec references
@@ -59,7 +59,7 @@ const DATA: GraphData = {
     { type: 'edge', id: 'ada-edsger', source: 'ada', target: 'edsger' },
     { type: 'edge', id: 'edsger-katherine', source: 'edsger', target: 'katherine' },
     { type: 'edge', id: 'grace-katherine', source: 'grace', target: 'katherine' },
-  ],
+  ]
 };
 
 export const HoverPreviewCardEditorStory: Story = {
@@ -79,7 +79,7 @@ export const HoverPreviewCardEditorStory: Story = {
           header={{
             title: 'Hover Preview Card Editor',
             center: <GraphControlsToolbar />,
-            right: (ctx) => <ThemeToggle ctx={ctx} />,
+            right: (ctx) => <ThemeToggle ctx={ctx} />
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
           // The controlled editor, docked in the resizable right region — a pure
@@ -88,7 +88,7 @@ export const HoverPreviewCardEditorStory: Story = {
             content: <HoverPreviewCardEditorPanel defaults={INITIAL_SPEC} onSubmit={setSpec} />,
             defaultSize: '380px',
             maxSize: '460px',
-            collapsible: true,
+            collapsible: true
           }}
         >
           {/* Headless hover preview: resolves the live `spec` against the hovered
@@ -101,5 +101,5 @@ export const HoverPreviewCardEditorStory: Story = {
         </GraphCanvasApp>
       </ThemeProvider>
     );
-  },
+  }
 };

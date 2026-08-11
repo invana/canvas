@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   DragNodeBehaviour, GraphCanvas, GraphLayer,
-  type GraphEdge, type GraphNode,
+  type GraphEdge, type GraphNode
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -80,10 +80,10 @@ export const Overview: Story = {
             pathStyleOpts: {
               side,
               baseOffset: isVertical ? RECT_HY : RECT_HX,
-              stubLength: 18, gap: 22,
-            },
-          },
-        },
+              stubLength: 18, gap: 22
+            }
+          }
+        }
       });
     }
     // Rect corners — baseOffsetX / baseOffsetY pin the wrap's inner
@@ -98,10 +98,10 @@ export const Overview: Story = {
             targetAnchor: 'center',
             pathStyleOpts: {
               side, baseOffsetX: RECT_HX, baseOffsetY: RECT_HY,
-              stubLength: 14, gap: 14,
-            },
-          },
-        },
+              stubLength: 14, gap: 14
+            }
+          }
+        }
       });
     }
     // Circle cardinals.
@@ -115,10 +115,10 @@ export const Overview: Story = {
             targetAnchor: 'center',
             pathStyleOpts: {
               side, baseOffset: CIRC_CARDINAL_BASE,
-              stubLength: 16, gap: CIRC_GAP,
-            },
-          },
-        },
+              stubLength: 16, gap: CIRC_GAP
+            }
+          }
+        }
       });
     }
     // Circle corners.
@@ -134,10 +134,10 @@ export const Overview: Story = {
               side,
               baseOffsetX: CIRC_CORNER_BASE,
               baseOffsetY: CIRC_CORNER_BASE,
-              stubLength: 14, gap: CORNER_GAP,
-            },
-          },
-        },
+              stubLength: 14, gap: CORNER_GAP
+            }
+          }
+        }
       });
     }
 
@@ -157,12 +157,12 @@ export const Overview: Story = {
       layers: {
         graph: {
           node: { style: { bgFill: 0x4f7ff5, bgStrokeColor: 0x2563eb, bgStrokeWidth: 0 } },
-          edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 1.5, arrowTargetShape: 'triangle' } },
-        },
+          edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 1.5, arrowTargetShape: 'triangle' } }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true }, 'drag-node': { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true }, 'drag-node': { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

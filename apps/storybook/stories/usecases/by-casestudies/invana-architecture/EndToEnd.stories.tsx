@@ -106,7 +106,7 @@ import type {
   GraphLayer,
   GraphNode,
   NodeShapeOptions,
-  ThemeBehaviour,
+  ThemeBehaviour
 } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
@@ -183,9 +183,9 @@ export const EndToEndStory: Story = {
           target: e.target,
           style: {
             ...(e.data.caption !== undefined ? { labelText: e.data.caption } : {}),
-            ...(e.data.dashed ? { strokeDashArray: [5, 4] } : {}),
-          },
-        })) satisfies GraphEdge[],
+            ...(e.data.dashed ? { strokeDashArray: [5, 4] } : {})
+          }
+        })) satisfies GraphEdge[]
       }),
       [],
     );
@@ -205,7 +205,7 @@ export const EndToEndStory: Story = {
         'data-sources': { light: 0xeef2ff, dark: 0x1e2440 },
         reversibility: { light: 0xf4f4f5, dark: 0x27272a },
         ingestion: { light: 0xecfeff, dark: 0x122e33 },
-        action: { light: 0xfef2f2, dark: 0x351f1f },
+        action: { light: 0xfef2f2, dark: 0x351f1f }
       };
 
       return {
@@ -254,7 +254,7 @@ export const EndToEndStory: Story = {
                         headerHeight: 28,
                         tabSkew: 12,
                         behindChildren: true,
-                        togglePlacement: 'top-right',
+                        togglePlacement: 'top-right'
                       }
                     : undefined,
                 bgFill: 0xffffff,
@@ -267,7 +267,7 @@ export const EndToEndStory: Story = {
                 labelAlign: 'center',
                 labelColor: 0x111827,
                 labelFontSize: 11,
-                labelLineHeight: 14,
+                labelLineHeight: 14
               },
               // The stage tint rides on a **state overlay**, not on `style`:
               // publishing a palette rewrites every group node's `style.bgFill` /
@@ -279,14 +279,14 @@ export const EndToEndStory: Story = {
                 stage: {
                   bgFill: (node: GraphNode) => STAGE_TINT[node.id]?.light ?? 0xf4f4f5,
                   bgStrokeColor: 0xa1a1aa,
-                  labelColor: 0x27272a,
+                  labelColor: 0x27272a
                 },
                 stageDark: {
                   bgFill: (node: GraphNode) => STAGE_TINT[node.id]?.dark ?? 0x27272a,
                   bgStrokeColor: 0x52525b,
-                  labelColor: 0xe4e4e7,
-                },
-              },
+                  labelColor: 0xe4e4e7
+                }
+              }
             },
             edge: {
               style: {
@@ -302,10 +302,10 @@ export const EndToEndStory: Story = {
                 // per mode in `onReady` so a flow label never sits in a white
                 // pill on a dark page.
                 labelBackgroundFill: 0xffffff,
-                labelBackgroundPadding: 2,
-              },
-            },
-          },
+                labelBackgroundPadding: 2
+              }
+            }
+          }
         },
         behaviours: {
           // Colour-by-label off — the diagram's own palette is the point.
@@ -323,7 +323,7 @@ export const EndToEndStory: Story = {
           // already publish the `default` palette for whichever mode the header
           // toggle is in. Using the `light`/`dark` *shorthand* here would publish
           // an empty palette instead, and nothing on the page would recolour.
-        },
+        }
       };
     }, []);
 
@@ -366,9 +366,9 @@ export const EndToEndStory: Story = {
               // Shallow-merged over the layer template, so the type resolvers
               // and the theme's own `labelColor` / `bgStrokeColor` survive.
               node: { style: { bgFill: dark ? 0x18181b : 0xffffff } },
-              edge: { style: { labelBackgroundFill: dark ? 0x18181b : 0xffffff } },
-            },
-          },
+              edge: { style: { labelBackgroundFill: dark ? 0x18181b : 0xffffff } }
+            }
+          }
         });
         const want = dark ? 'stageDark' : 'stage';
         for (const node of graph.store.nodes()) {
@@ -417,7 +417,7 @@ export const EndToEndStory: Story = {
         charge: { strength: -1200 },
         link: { distance: 120 },
         collide: {},
-        center: { x: 0, y: 0 },
+        center: { x: 0, y: 0 }
       });
       // ELK is the one engine here with native containment: each stage becomes a
       // real compound node. `includeGroups` defaults on, and the frame insets come
@@ -432,7 +432,7 @@ export const EndToEndStory: Story = {
         algorithm: 'layered',
         direction: 'RIGHT',
         nodeSpacing: 32,
-        layerSpacing: 90,
+        layerSpacing: 90
       });
       for (const layout of [force, elk]) {
         canvas.layouts.add(layout);
@@ -465,7 +465,7 @@ export const EndToEndStory: Story = {
                     display: 'segmented',
                     options: { authored: 'Authored', force: 'Force', elk: 'ELK' },
                     icons: { authored: LayoutDashboard, force: Atom, elk: Network },
-                    onChange: (v) => applyLayout(v as 'authored' | 'force' | 'elk'),
+                    onChange: (v) => applyLayout(v as 'authored' | 'force' | 'elk')
                   },
                   {
                     type: 'toggle',
@@ -475,11 +475,11 @@ export const EndToEndStory: Story = {
                     label: 'Switch to dark theme',
                     activeLabel: 'Switch to light theme',
                     active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme,
+                    onToggle: ctx.toggleTheme
                   },
                 ]}
               />
-            ),
+            )
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
         >
@@ -488,5 +488,5 @@ export const EndToEndStory: Story = {
         </GraphCanvasApp>
       </ThemeProvider>
     );
-  },
+  }
 };

@@ -1,7 +1,7 @@
 {
   "name": "@invana/canvas",
   "version": "0.0.11",
-  "description": "WebGPU-first canvas rendering engine — Layer / Behaviour / Layout architecture (see architecture-proposal.md).",
+  "description": "WebGPU-first canvas rendering engine \u2014 Layer / Behaviour / Layout architecture (see architecture-proposal.md).",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,10 +11,10 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./primitives": {
-      "types": "./dist/primitives/index.d.ts",
-      "import": "./dist/primitives/index.js",
-      "default": "./dist/primitives/index.js"
+    "./specs": {
+      "types": "./dist/specs/index.d.ts",
+      "import": "./dist/specs/index.js",
+      "default": "./dist/specs/index.js"
     }
   },
   "typedocOptions": {
@@ -32,24 +32,19 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@invana/canvas-store": "workspace:*",
-    "immer": "^11.1.4",
-    "pixi-viewport": "^6.0.3",
-    "pixi.js": "^8.18.1",
-    "rbush": "^4.0.1",
-    "zustand": "^5.0.12"
+    "@invana/canvas-store": "workspace:*"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/rbush": "^4.0.0",
     "happy-dom": "^20.9.0",
     "tsup": "^8.3.5",
     "typescript": "5.9.2",
     "vitest": "^3.2.6"
   },
   "peerDependencies": {
-    "typescript": ">=5.0.0"
+    "typescript": ">=5.0.0",
+    "@invana/renderer-pixijs": "workspace:*"
   },
   "keywords": [
     "canvas",
@@ -66,5 +61,10 @@
   ],
   "publishConfig": {
     "access": "public"
+  },
+  "peerDependenciesMeta": {
+    "@invana/renderer-pixijs": {
+      "optional": true
+    }
   }
 }

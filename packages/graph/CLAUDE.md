@@ -6,7 +6,7 @@ Graph-domain layers and behaviours that compose `@invana/canvas`.
 
 ## Scope (per proposal §5)
 
-- `GraphLayer` (extends `WorldLayer`) — wraps a `ShapesRenderer` internally; owns interaction state via `Layer.state` (zustand+immer) and bulk data via `Layer.data` (typed-array `ColumnStore` extensions).
+- `GraphLayer` (extends `WorldLayer`) — wraps a `ShapesRenderer` internally; owns interaction state via `Layer.state` (a `ReactiveStore` from the kernel's port) and bulk data via `Layer.data` (typed-array `ColumnStore` extensions).
 - `GraphNodeStore extends ColumnStore` — typed-array columns: `x:f32, y:f32, color:u32, size:f32, typeId:u16, …`.
 - `GraphEdgeStore extends ColumnStore` — typed-array columns: `sourceSlot:u32, targetSlot:u32, weight:f32, color:u32, typeId:u16, …`.
 - `MiniMapLayer` (extends `ScreenLayer`) — viewport-fixed minimap of a source `GraphLayer`.
@@ -131,7 +131,7 @@ Per `architecture-proposal.md` §2.1:
 - **`Layer.state`** holds UI / interaction / decoration intent: `hoveredId`, `selectedIds`, `haloIds`, `pulsedIds`, drag state. Small, observable, time-travel-able.
 - **`Layer.data`** holds bulk node/edge data in `ColumnStore`s: positions, colors, sizes. Up to millions of items, mutated at machine rate (1000s/sec from feeds). Not immer-managed.
 
-Sugar methods that affect interaction → `state.setState(...)`. Sugar methods that change positions/attrs → `data.nodes.setX(...)` / etc. Both feed the same `DirtyBatcher`; one `flush()` projects to the renderer.
+Sugar methods that affect interaction → `state.update(recipe, 'action-name')`. Sugar methods that change positions/attrs → `data.nodes.setX(...)` / etc. Both feed the same `DirtyBatcher`; one `flush()` projects to the renderer. Name the action — it is what history and telemetry label the change with.
 
 ## Decoration sugar convention
 

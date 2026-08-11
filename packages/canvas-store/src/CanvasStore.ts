@@ -5,6 +5,7 @@ import { createMemoryStore } from './port/createMemoryStore';
 import { changedPaths } from './port/patch';
 import type { ReactiveStore } from './port/types';
 import { LayerData } from './data/LayerData';
+import { SpecStore } from './specs/SpecStore';
 import type { DataSource } from './data/DataSource';
 import { wireTelemetry, type CanvasTelemetryConfig } from './telemetry/config';
 import { CanvasThemeState } from './theme/CanvasThemeState';
@@ -28,6 +29,11 @@ export interface CanvasStore {
   readonly view: ReactiveStore<CanvasView>;
   /** Owned data, keyed by **source** id (D13 — each a {@link DataSource}). */
   readonly data: Record<string, DataSource>;
+  /**
+   * Owned **spec** collections, keyed by layer id — the durable visual
+   * description each renderer projects. Populated via {@link specsFor}.
+   */
+  readonly specs: Record<string, SpecStore>;
   /** Canvas-wide event bus + tap channel (state:change + data:flush). */
   readonly events: CanvasEventBus;
   /** Resolved-theme channel (`theme.current()` / `theme.set(...)` → `theme:change`). */
@@ -46,6 +52,11 @@ export interface CanvasStore {
    * for `id` via {@link setSource} — use {@link source} / {@link data} for those.
    */
   layer(id: string): LayerData;
+  /**
+   * Get (lazily creating) the {@link SpecStore} for layer `id`; its flush is
+   * bridged onto {@link events} as `specs:flush`.
+   */
+  specsFor<T extends object = object>(id: string): SpecStore<T>;
   /** Named, action-typed command API (`actions.layers.setStyle`, `actions.camera.zoom`, …). */
   readonly actions: CanvasActions;
 }
@@ -168,9 +179,36 @@ export function createCanvasStore(opts: CreateCanvasStoreOptions = {}): CanvasSt
     return existing;
   }
 
+  const specs: Record<string, SpecStore> = {};
+
+  // SPEC flush → bus, on its own channel. Kept separate from `data:flush`
+  // because that payload is graph-shaped (nodes / edges / groups) while this one
+  // is deliberately domain-free — the renderer subscribes here and nowhere else.
+  function specsFor<T extends object = object>(id: string): SpecStore<T> {
+    const existing = specs[id];
+    if (existing) return existing as SpecStore<T>;
+    const created = new SpecStore<T>();
+    specs[id] = created as SpecStore;
+    created.onFlush((delta) =>
+      events.emit('specs:flush', { layerId: id, delta }, { kind: 'data', id }),
+    );
+    return created;
+  }
+
   const actions = createActions(view, layer, events);
 
-  const store: CanvasStore = { view, data, events, theme, setSource, source, layer, actions };
+  const store: CanvasStore = {
+    view,
+    data,
+    specs,
+    events,
+    theme,
+    setSource,
+    source,
+    layer,
+    specsFor,
+    actions,
+  };
   // Fire global observers (opt-in) — the one place every store, however its
   // Canvas was constructed, can be instrumented (e.g. Storybook-wide tracing).
   for (const observe of storeObservers) observe(store);

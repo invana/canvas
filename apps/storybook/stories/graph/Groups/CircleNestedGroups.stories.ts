@@ -6,7 +6,7 @@ import {
   GraphCanvas,
   GraphLayer,
   type GraphEdge,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
@@ -38,8 +38,8 @@ export const CircleNestedGroupsStory: Story = {
           bgFill: 0xf5f7ff,
           bgStrokeColor: 0x6b7fff,
           bgStrokeWidth: 1,
-          group: { autoFit: true, padding: 36 },
-        },
+          group: { autoFit: true, padding: 36 }
+        }
       },
       { type: 'node',
         id: 'inner',
@@ -50,8 +50,8 @@ export const CircleNestedGroupsStory: Story = {
           bgFill: 0xeef2ff,
           bgStrokeColor: 0x6b7fff,
           bgStrokeWidth: 1,
-          group: { autoFit: true, padding: 22 },
-        },
+          group: { autoFit: true, padding: 22 }
+        }
       },
       { type: 'node',
         id: 'node1',
@@ -64,8 +64,8 @@ export const CircleNestedGroupsStory: Story = {
           labelColor: 0x334155,
           labelFontSize: 12,
           labelPlacement: 'bottom',
-          labelOffsetY: 6,
-        },
+          labelOffsetY: 6
+        }
       },
       { type: 'node',
         id: 'node2',
@@ -78,8 +78,8 @@ export const CircleNestedGroupsStory: Story = {
           labelColor: 0x334155,
           labelFontSize: 12,
           labelPlacement: 'bottom',
-          labelOffsetY: 6,
-        },
+          labelOffsetY: 6
+        }
       },
       { type: 'node',
         id: 'node3',
@@ -92,8 +92,8 @@ export const CircleNestedGroupsStory: Story = {
           labelColor: 0x334155,
           labelFontSize: 12,
           labelPlacement: 'bottom',
-          labelOffsetY: 6,
-        },
+          labelOffsetY: 6
+        }
       },
     ];
 
@@ -118,11 +118,11 @@ export const CircleNestedGroupsStory: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         drag: { enabled: true },
-        'collapse-expand': { enabled: true },
-      },
+        'collapse-expand': { enabled: true }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 100);
-  },
+  }
 };

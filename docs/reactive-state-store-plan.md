@@ -38,6 +38,9 @@ state-vs-data rationale.
 - zustand is a dependency + `createLayerStore` wrapper (`packages/canvas/src/state/Store.ts`,
   middleware: `devtools → subscribeWithSelector → immer`) — but it's only wired into the base
   `Layer`, and `GraphLayer`'s state is an empty `_placeholder` stub.
+  **Resolved 2026-08-11:** that wrapper is deleted and `Layer.state` now goes through the port;
+  zustand lives only in the kernel's adapter. See
+  `docs/rfcs/fix/2026-08-10-zustand-imported-outside-canvas-store.md`.
 - React `useGraphCanvasOptions()` copies config into `useState` and re-syncs on
   `options:change` — the copy/anti-pattern this plan removes.
 - Interaction state is scattered: selection in `ClickSelectBehaviour` private maps; hover in

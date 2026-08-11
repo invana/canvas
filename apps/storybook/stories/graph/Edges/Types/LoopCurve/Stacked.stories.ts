@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   DragPanBehaviour, WheelZoomBehaviour,
-  LOOP_CURVE_PRESETS,
+  LOOP_CURVE_PRESETS
 } from '@invana/canvas';
 import type { LoopCurvePresetName } from '@invana/canvas';
 import {
   GraphCanvas, DragNodeBehaviour, GraphLayer,
-  type GraphEdge, type GraphNode,
+  type GraphEdge, type GraphNode
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
@@ -59,7 +59,7 @@ export const Stacked: Story = {
       'top-right':    { angle: -Math.PI / 4,    dx:  halfW, dy: -halfH },
       'bottom-right': { angle:  Math.PI / 4,    dx:  halfW, dy:  halfH },
       'bottom-left':  { angle:  3 * Math.PI / 4, dx: -halfW, dy:  halfH },
-      'top-left':     { angle: -3 * Math.PI / 4, dx: -halfW, dy: -halfH },
+      'top-left':     { angle: -3 * Math.PI / 4, dx: -halfW, dy: -halfH }
     };
 
     const STACK_COLORS = [
@@ -72,7 +72,7 @@ export const Stacked: Story = {
       placement: 'top' as Placement,
       count: 5,
       radiusStep: 22,
-      bulgeStep: 14,
+      bulgeStep: 14
     };
 
     interface EdgeMeta { index: number; }
@@ -107,17 +107,17 @@ export const Stacked: Story = {
                   width:      base.width,
                   pivotOffset: { dx: place.dx, dy: place.dy },
                   radius: base.radius + index * settings.radiusStep,
-                  bulge:  base.bulge  + index * settings.bulgeStep,
-                },
+                  bulge:  base.bulge  + index * settings.bulgeStep
+                }
               };
             },
             strokeColor: (edge) => {
               const { index } = edge.data as EdgeMeta;
               return STACK_COLORS[index % STACK_COLORS.length]!;
-            },
-          },
-        },
-      },
+            }
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -130,22 +130,22 @@ export const Stacked: Story = {
           node: {
             style: {
               shape: { kind: 'rect', width: NODE_W, height: NODE_H },
-              bgFill: 0x4f7ff5, bgStrokeColor: 0x2563eb, bgStrokeWidth: 0,
-            },
+              bgFill: 0x4f7ff5, bgStrokeColor: 0x2563eb, bgStrokeWidth: 0
+            }
           },
           edge: {
             style: {
               strokeWidth: 1.5,
-              arrowTargetShape: 'triangle',
-            },
-          },
-        },
+              arrowTargetShape: 'triangle'
+            }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'drag-node': { enabled: true },
-      },
+        'drag-node': { enabled: true }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -158,7 +158,7 @@ export const Stacked: Story = {
           const exists = !!graph.store.getEdge(id);
           if (i < settings.count && !exists) {
             graph.store.addEdge<EdgeMeta>({
-              id, source: NODE_ID, target: NODE_ID, data: { index: i },
+              id, source: NODE_ID, target: NODE_ID, data: { index: i }
             } as GraphEdge<EdgeMeta>);
           } else if (i >= settings.count && exists) {
             graph.store.removeEdge(id);
@@ -183,5 +183,5 @@ export const Stacked: Story = {
     gui.add(settings, 'count', 1, 10, 1).onChange(syncEdgeCount);
     gui.add(settings, 'radiusStep', 0, 60, 1).name('radiusStep (taller)').onChange(rerenderAll);
     gui.add(settings, 'bulgeStep',  0, 60, 1).name('bulgeStep (wider)').onChange(rerenderAll);
-  },
+  }
 };

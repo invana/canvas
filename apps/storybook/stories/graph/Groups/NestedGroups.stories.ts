@@ -6,7 +6,7 @@ import {
   GraphCanvas,
   GraphLayer,
   type GraphEdge,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
@@ -39,8 +39,8 @@ export const NestedGroupsStory: Story = {
           bgFill: 0xf5f7ff,
           bgStrokeColor: 0x6b7fff,
           bgStrokeWidth: 1,
-          group: { autoFit: true, padding: 28 },
-        },
+          group: { autoFit: true, padding: 28 }
+        }
       },
       { type: 'node',
         id: 'inner',
@@ -51,8 +51,8 @@ export const NestedGroupsStory: Story = {
           bgFill: 0xeef2ff,
           bgStrokeColor: 0x6b7fff,
           bgStrokeWidth: 1,
-          group: { autoFit: true, padding: 18 },
-        },
+          group: { autoFit: true, padding: 18 }
+        }
       },
       { type: 'node',
         id: 'node1',
@@ -65,8 +65,8 @@ export const NestedGroupsStory: Story = {
           labelColor: 0x334155,
           labelFontSize: 12,
           labelPlacement: 'bottom',
-          labelOffsetY: 6,
-        },
+          labelOffsetY: 6
+        }
       },
       { type: 'node',
         id: 'node2',
@@ -79,8 +79,8 @@ export const NestedGroupsStory: Story = {
           labelColor: 0x334155,
           labelFontSize: 12,
           labelPlacement: 'bottom',
-          labelOffsetY: 6,
-        },
+          labelOffsetY: 6
+        }
       },
       { type: 'node',
         id: 'node3',
@@ -93,8 +93,8 @@ export const NestedGroupsStory: Story = {
           labelColor: 0x334155,
           labelFontSize: 12,
           labelPlacement: 'bottom',
-          labelOffsetY: 6,
-        },
+          labelOffsetY: 6
+        }
       },
     ];
 
@@ -119,11 +119,11 @@ export const NestedGroupsStory: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         drag: { enabled: true },
-        'collapse-expand': { enabled: true },
-      },
+        'collapse-expand': { enabled: true }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 100);
-  },
+  }
 };

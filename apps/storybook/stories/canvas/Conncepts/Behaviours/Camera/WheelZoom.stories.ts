@@ -4,9 +4,8 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -25,15 +24,12 @@ export const WheelZoomStory: Story = {
     await canvas.init({ container, autoResize: true });
 
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() {
         return {};
       }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({
-          container: this.container,
-          camera: ctx.camera,
-        });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() {
         return null;
@@ -49,7 +45,7 @@ export const WheelZoomStory: Story = {
       y: 0,
       radius: 60,
       fill: { kind: 'solid', color: 0x4f9cf9 },
-      stroke: { color: 0x1d4ed8, width: 2 },
+      stroke: { color: 0x1d4ed8, width: 2 }
     });
     layer.renderer.addShape('b', {
       kind: 'rect',
@@ -58,7 +54,7 @@ export const WheelZoomStory: Story = {
       width: 120,
       height: 80,
       fill: { kind: 'solid', color: 0x10b981, alpha: 0.9 },
-      stroke: { color: 0x047857, width: 2 },
+      stroke: { color: 0x047857, width: 2 }
     });
 
     canvas.camera.fitContent(layer.getBounds(), 120);
@@ -70,7 +66,7 @@ export const WheelZoomStory: Story = {
       requireCtrl: false,
       percent: 0.1,
       smoothEnabled: false,
-      smoothFrames: 8,
+      smoothFrames: 8
     };
 
     const ID = 'zoom';
@@ -80,7 +76,7 @@ export const WheelZoomStory: Story = {
         enabled: settings.enabled,
         requireCtrl: settings.requireCtrl,
         percent: settings.percent,
-        smooth: settings.smoothEnabled ? settings.smoothFrames : false,
+        smooth: settings.smoothEnabled ? settings.smoothFrames : false
       });
 
     canvas.behaviours.register(build());
@@ -97,5 +93,5 @@ export const WheelZoomStory: Story = {
     gui.add(settings, 'percent', 0.01, 0.5, 0.01).onChange(rebuild);
     gui.add(settings, 'smoothEnabled').name('smooth').onChange(rebuild);
     gui.add(settings, 'smoothFrames', 1, 30, 1).name('smooth frames').onChange(rebuild);
-  },
+  }
 };

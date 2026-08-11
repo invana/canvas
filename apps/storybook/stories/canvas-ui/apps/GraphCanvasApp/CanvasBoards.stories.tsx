@@ -38,7 +38,7 @@ import {
   CanvasPagesViewPanel,
   type CanvasHeaderAction,
   type CanvasPage,
-  type CanvasPageMenuItem,
+  type CanvasPageMenuItem
 } from '@invana/canvas-ui';
 import { Copy, Info, Pencil, Settings, Trash2 } from 'lucide-react';
 import type { EdgeStyle, GraphData, GraphNode, NodeStyle } from '@invana/graph';
@@ -73,7 +73,7 @@ const TEAM_GRAPH: GraphData = {
     { id: 'c11', source: 'Ivan', target: 'Grace', type: 'collaborates' },
     { id: 'c12', source: 'Eve', target: 'Judy', type: 'collaborates' },
     { id: 'c13', source: 'Judy', target: 'Alice', type: 'collaborates' },
-  ],
+  ]
 };
 
 /** A CI/CD build pipeline — a directed DAG that reads as clean layers in ELK. */
@@ -93,7 +93,7 @@ const PIPELINE_GRAPH: GraphData = {
     { id: 'p8', source: 'Build', target: 'Bundle', type: 'then' },
     { id: 'p9', source: 'Bundle', target: 'Deploy', type: 'then' },
     { id: 'p10', source: 'Deploy', target: 'Notify', type: 'then' },
-  ],
+  ]
 };
 
 /** A company org chart — a single-root tree (parent → child = "manages"). */
@@ -115,7 +115,7 @@ const ORG_GRAPH: GraphData = {
     { id: 'o9', source: 'CFO', target: 'Payroll', type: 'manages' },
     { id: 'o10', source: 'CMO', target: 'Content', type: 'manages' },
     { id: 'o11', source: 'CMO', target: 'Ads', type: 'manages' },
-  ],
+  ]
 };
 
 // ── Board templates — a pool the tab bar creates new boards from ───────────────
@@ -136,7 +136,7 @@ const TEMPLATES: BoardTemplate[] = [
     factory: () =>
       new D3ForceLayout({ charge: { strength: -400 }, link: { distance: 90 }, animate: false }),
     node: { shape: { kind: 'circle', radius: 10 }, bgFill: 0x60a5fa },
-    edge: { strokeWidth: 1.25, strokeColor: 0x94a3b8, arrowTargetShape: 'none' },
+    edge: { strokeWidth: 1.25, strokeColor: 0x94a3b8, arrowTargetShape: 'none' }
   },
   {
     title: 'Build pipeline',
@@ -152,9 +152,9 @@ const TEMPLATES: BoardTemplate[] = [
       labelAlign: 'center',
       labelOffsetX: 0,
       labelOffsetY: 0,
-      labelFontSize: 10,
+      labelFontSize: 10
     },
-    edge: { strokeWidth: 1.5, strokeColor: 0x64748b, arrowTargetShape: 'triangle' },
+    edge: { strokeWidth: 1.5, strokeColor: 0x64748b, arrowTargetShape: 'triangle' }
   },
   {
     title: 'Org chart',
@@ -164,9 +164,9 @@ const TEMPLATES: BoardTemplate[] = [
       shape: { kind: 'regular-polygon', sides: 6, radius: 11 },
       bgFill: 0xfbbf24,
       bgStrokeColor: 0xb45309,
-      bgStrokeWidth: 1.5,
+      bgStrokeWidth: 1.5
     },
-    edge: { strokeWidth: 1.25, strokeColor: 0xd97706, arrowTargetShape: 'none' },
+    edge: { strokeWidth: 1.25, strokeColor: 0xd97706, arrowTargetShape: 'none' }
   },
 ];
 
@@ -195,9 +195,9 @@ function CanvasBoard({ template }: { template: BoardTemplate }): ReactNode {
         layers: {
           graph: {
             node: { style: { ...template.node, labelText: (n: GraphNode) => n.id } },
-            edge: { style: template.edge },
-          },
-        },
+            edge: { style: template.edge }
+          }
+        }
       }}
     >
       <ApplyLayout factory={template.factory} />
@@ -280,7 +280,7 @@ function CanvasBoards(): ReactNode {
   const pages: CanvasPage[] = boards.map((b) => ({
     id: String(b.id),
     title: titleOf(b),
-    content: <CanvasBoard template={TEMPLATES[b.templateIndex]!} />,
+    content: <CanvasBoard template={TEMPLATES[b.templateIndex]!} />
   }));
 
   // The active tab's dropdown actions. Each `onSelect` gets the active page id;
@@ -295,7 +295,7 @@ function CanvasBoards(): ReactNode {
       destructive: true,
       separatorBefore: true,
       disabled: boards.length <= 1,
-      onSelect: (id) => deleteBoard(Number(id)),
+      onSelect: (id) => deleteBoard(Number(id))
     },
   ];
 
@@ -312,7 +312,7 @@ function CanvasBoards(): ReactNode {
           width: '100%',
           height: '100vh',
           background: 'var(--background, #fff)',
-          color: 'var(--foreground, #0f172a)',
+          color: 'var(--foreground, #0f172a)'
         }}
       >
         <CanvasPagesViewPanel
@@ -331,5 +331,5 @@ function CanvasBoards(): ReactNode {
 
 export const CanvasBoards_: Story = {
   name: 'CanvasBoards',
-  render: () => <CanvasBoards />,
+  render: () => <CanvasBoards />
 };

@@ -26,7 +26,7 @@ export const LayerAddedStory: Story = {
         opacity: 0.92,
         backgroundColor: 'rgba(10,10,10,0.82)',
         textColor: '#c8d3e0',
-        accentColor: '#4fc3f7',
+        accentColor: '#4fc3f7'
       }),
     );
 
@@ -47,5 +47,5 @@ export const LayerAddedStory: Story = {
     setTimeout(fire, 400);
     setTimeout(fire, 1200);
     setTimeout(fire, 2000);
-  },
+  }
 };

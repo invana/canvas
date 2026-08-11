@@ -6,7 +6,7 @@ import {
   GraphLayer,
   type EdgeBadgePlacement,
   type GraphEdge,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -59,8 +59,8 @@ export const Placements: Story = {
           labelFontSize: 11,
           labelPlacement: 'left',
           labelOffsetX: -10,
-          labelAlign: 'right',
-        },
+          labelAlign: 'right'
+        }
       },
       {
         id: `tgt-${i}`,
@@ -70,8 +70,8 @@ export const Placements: Story = {
           shape: { kind: 'circle', radius: 14 },
           bgFill: 0x34d399,
           bgStrokeColor: 0xffffff,
-          bgStrokeWidth: 1,
-        },
+          bgStrokeWidth: 1
+        }
       },
     ]);
 
@@ -88,10 +88,10 @@ export const Placements: Story = {
             shape: { kind: 'circle', radius: 9 },
             fill: 0xdc2626,
             strokeColor: 0xffffff,
-            strokeWidth: 1.5,
+            strokeWidth: 1.5
           },
-        ],
-      },
+        ]
+      }
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>(
@@ -114,19 +114,19 @@ export const Placements: Story = {
             style: {
               strokeColor: 0x94a3b8,
               strokeWidth: 1.5,
-              arrowTargetShape: 'triangle',
-            },
-          },
-        },
+              arrowTargetShape: 'triangle'
+            }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'drag-node': { enabled: true },
-      },
+        'drag-node': { enabled: true }
+      }
     };
 
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

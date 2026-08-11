@@ -47,12 +47,12 @@ export const Typography: Story = {
             style: {
               bgFill: 0x4f9cf9,
               bgStrokeColor: 0x1d4ed8,
-              bgStrokeWidth: 1,
-            },
-          },
-        },
+              bgStrokeWidth: 1
+            }
+          }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
@@ -66,7 +66,7 @@ export const Typography: Story = {
       color: 0x454545,
       alpha: 1,
       letterSpacing: 0,
-      lineHeight: 18,
+      lineHeight: 18
     };
     const apply = (): void => {
       for (const id of ALL_IDS) {
@@ -81,8 +81,8 @@ export const Typography: Story = {
             labelColor: settings.color,
             labelAlpha: settings.alpha,
             labelLetterSpacing: settings.letterSpacing,
-            labelLineHeight: settings.lineHeight,
-          },
+            labelLineHeight: settings.lineHeight
+          }
         });
       }
     };
@@ -96,5 +96,5 @@ export const Typography: Story = {
     gui.add(settings, 'alpha', 0, 1, 0.05).onChange(apply);
     gui.add(settings, 'letterSpacing', -2, 8, 0.5).onChange(apply);
     gui.add(settings, 'lineHeight', 12, 36, 1).onChange(apply);
-  },
+  }
 };

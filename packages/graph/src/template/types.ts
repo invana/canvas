@@ -16,7 +16,7 @@
  * before anything reaches the renderer.
  */
 
-import type { ShapeLabelPlacement } from '@invana/canvas';
+import type { ShapeLabelPlacement } from '@invana/canvas/specs';
 import type { ColorRole } from '../theme/types';
 import type { NodeShapeOptions } from '../layer/types';
 

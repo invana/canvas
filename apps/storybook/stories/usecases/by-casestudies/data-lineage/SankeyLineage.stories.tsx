@@ -32,7 +32,7 @@ import {
   GraphControlsToolbar,
   GraphStatusBar,
   ToolbarItems,
-  useSidePanels,
+  useSidePanels
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData } from '@invana/graph';
@@ -57,7 +57,7 @@ export const SankeyLineageStory: Story = {
           label: 'Settings',
           render: (canvas) => (
             <CanvasSettingsEditorPanel canvas={canvas} className="border-0 bg-transparent shadow-none" />
-          ),
+          )
         },
       ],
       { section: { defaultSize: '360px', maxSize: '460px' } },
@@ -101,8 +101,8 @@ export const SankeyLineageStory: Story = {
             bgFill: colorForCategory(n.data.category),
             labelText: n.data.name,
             labelPlacement: 'right' as const,
-            labelOffsetX: 6,
-          },
+            labelOffsetX: 6
+          }
         })),
         edges: raw.edges.map((e) => ({
           id: e.id,
@@ -113,9 +113,9 @@ export const SankeyLineageStory: Story = {
           style: {
             strokeColor: colorForCategory(categoryById.get(e.source) ?? ''),
             strokeAlpha: 0.42,
-            labelText: formatVolume(e.data.value),
-          },
-        })),
+            labelText: formatVolume(e.data.value)
+          }
+        }))
       };
     }, [volumeFormat]);
 
@@ -133,12 +133,12 @@ export const SankeyLineageStory: Story = {
             // Walk the whole chain both ways — 12 is deeper than any path in
             // the demo dataset, so a hover lights the complete lineage.
             degree: 12,
-            direction: 'both',
+            direction: 'both'
           },
           'click-select': { enabled: true, multiple: true, trigger: ['shift'] },
           // Sankey positions are the picture; dragging a node out of its column
           // would only break the ribbons.
-          'drag-node': { enabled: false },
+          'drag-node': { enabled: false }
         },
         layers: {
           background: { type: 'solid' },
@@ -152,13 +152,13 @@ export const SankeyLineageStory: Story = {
                 bgStrokeColor: 0xffffff,
                 bgStrokeWidth: 1,
                 labelFontSize: 11,
-                labelFontWeight: 500,
+                labelFontWeight: 500
               },
               state: {
                 highlighted: { bgStrokeColor: 0xfbbf24, bgStrokeWidth: 2.5 },
                 dimmed: { bgAlpha: 0.2 },
-                selected: { bgStrokeColor: 0x111827, bgStrokeWidth: 2.5 },
-              },
+                selected: { bgStrokeColor: 0x111827, bgStrokeWidth: 2.5 }
+              }
             },
             edge: {
               style: {
@@ -170,14 +170,14 @@ export const SankeyLineageStory: Story = {
                 labelBackgroundAlpha: 0.85,
                 labelBackgroundPadding: 2,
                 labelBackgroundCornerRadius: 2,
-                labelKeepUpright: true,
+                labelKeepUpright: true
               },
               state: {
                 highlighted: { strokeColor: 0xfbbf24, strokeAlpha: 0.95 },
-                dimmed: { strokeAlpha: 0.05 },
-              },
-            },
-          },
+                dimmed: { strokeAlpha: 0.05 }
+              }
+            }
+          }
         },
         layouts: {
           sankey: {
@@ -185,9 +185,9 @@ export const SankeyLineageStory: Story = {
             nodeWidth: 16,
             nodePadding: 12,
             iterations: 6,
-            nodeAlign: 'justify',
-          },
-        },
+            nodeAlign: 'justify'
+          }
+        }
       }),
       [],
     );
@@ -215,7 +215,7 @@ export const SankeyLineageStory: Story = {
                     label: 'Volume',
                     value: volumeFormat,
                     options: { raw: 'Raw', k: 'TWh', M: 'TWh-K' },
-                    onChange: (v) => setVolumeFormat(v as 'raw' | 'k' | 'M'),
+                    onChange: (v) => setVolumeFormat(v as 'raw' | 'k' | 'M')
                   },
                   ...dock.items,
                   {
@@ -226,11 +226,11 @@ export const SankeyLineageStory: Story = {
                     label: 'Switch to dark theme',
                     activeLabel: 'Switch to light theme',
                     active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme,
+                    onToggle: ctx.toggleTheme
                   },
                 ]}
               />
-            ),
+            )
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
           right={dock.region}
@@ -241,5 +241,5 @@ export const SankeyLineageStory: Story = {
         </GraphCanvasApp>
       </ThemeProvider>
     );
-  },
+  }
 };

@@ -5,7 +5,7 @@ import {
   GraphCanvas,
   GraphLayer,
   type GraphEdge,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
@@ -84,10 +84,10 @@ export const Bundle: Story = {
         node: {
           // `labelText` is a resolver — it stays in the constructor.
           style: {
-            labelText: (n: GraphNode) => n.id,
-          },
-        },
-      },
+            labelText: (n: GraphNode) => n.id
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -111,8 +111,8 @@ export const Bundle: Story = {
               labelColor: 0x1e3a8a,
               labelFontSize: 10,
               labelPlacement: 'right',
-              labelOffsetX: 12,
-            },
+              labelOffsetX: 12
+            }
           },
           edge: {
             style: {
@@ -121,21 +121,21 @@ export const Bundle: Story = {
                 sourceAnchor: 'center',
                 targetAnchor: 'center',
                 pathStyleOpts: { beta: 0.85 },
-                waypoints: [{ x: 0, y: 0 }],
+                waypoints: [{ x: 0, y: 0 }]
               },
               strokeColor: 0x3b82f6,
               strokeWidth: 1.2,
               strokeAlpha: 0.5,
-              arrowTargetShape: 'none',
-            },
-          },
-        },
+              arrowTargetShape: 'none'
+            }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'drag-node': { enabled: true },
-      },
+        'drag-node': { enabled: true }
+      }
     };
 
     await canvas.init({ container, autoResize: true, config: canvasOptions });
@@ -167,5 +167,5 @@ export const Bundle: Story = {
     gui
       .add({ refit: () => canvas.camera.fitContent(graph.getBounds(), 80) }, 'refit')
       .name('Re-fit camera');
-  },
+  }
 };

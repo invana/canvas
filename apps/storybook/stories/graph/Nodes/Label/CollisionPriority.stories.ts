@@ -5,7 +5,7 @@ import {
   GraphLayer,
   LabelCollisionBehaviour,
   type GraphNode,
-  type NodeStyle,
+  type NodeStyle
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
@@ -73,16 +73,16 @@ export const CollisionPriorityStory: Story = {
               labelBackgroundStrokeColor: 0xcbd5e1,
               labelBackgroundStrokeWidth: 1,
               labelBackgroundCornerRadius: 4,
-              labelBackgroundPadding: 4,
-            },
-          },
-        },
+              labelBackgroundPadding: 4
+            }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'label-collision': { enabled: true, prioritise: 'priority-field' },
-      },
+        'label-collision': { enabled: true, prioritise: 'priority-field' }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
@@ -92,7 +92,7 @@ export const CollisionPriorityStory: Story = {
       pinnedSeparateGroup: true,
       forceShowLeft: true,
       lowPriority: 1,
-      highPriority: 10,
+      highPriority: 10
     };
     const apply = (): void => {
       const labelCollision = canvas.behaviours.get('label-collision');
@@ -117,5 +117,5 @@ export const CollisionPriorityStory: Story = {
     gui.add(settings, 'pinnedSeparateGroup').name('pinned in own group').onChange(apply);
     gui.add(settings, 'lowPriority', 0, 20, 1).onChange(apply);
     gui.add(settings, 'highPriority', 0, 20, 1).onChange(apply);
-  },
+  }
 };

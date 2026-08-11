@@ -70,12 +70,12 @@ export const CenterVsInsideCenterStory: Story = {
               bgStrokeWidth: 1,
               labelFontSize: 13,
               labelFontWeight: 600,
-              labelColor: 0x454545,
-            },
-          },
-        },
+              labelColor: 0x454545
+            }
+          }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
@@ -110,7 +110,7 @@ export const CenterVsInsideCenterStory: Story = {
               { x: -28 * s, y: 0 },
               { x: -14 * s, y: 24 * s },
               { x: 14 * s, y: 24 * s },
-            ],
+            ]
           };
         }
         graph.store.updateNode(id, { style: { ...prev, shape: nextShape, labelText: settings.text } });
@@ -120,5 +120,5 @@ export const CenterVsInsideCenterStory: Story = {
     onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'text').onChange(apply);
     gui.add(settings, 'sizeScale', 0.3, 1.6, 0.05).onChange(apply);
-  },
+  }
 };

@@ -5,9 +5,8 @@ import {
   WheelZoomBehaviour,
   PinchZoomBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
 const meta: Meta = { title: 'canvas/concepts/Events/input:camera:zoom' };
@@ -29,15 +28,12 @@ export const CameraZoomStory: Story = {
     canvas.behaviours.register(new PinchZoomBehaviour({ id: 'pinch-zoom', enabled: true }));
 
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() {
         return {};
       }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({
-          container: this.container,
-          camera: ctx.camera,
-        });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() {
         return null;
@@ -53,9 +49,9 @@ export const CameraZoomStory: Story = {
       y: 0,
       radius: 50,
       fill: { kind: 'solid', color: 0x10b981 },
-      stroke: { color: 0x047857, width: 2 },
+      stroke: { color: 0x047857, width: 2 }
     });
 
     canvas.camera.fitContent(layer.getBounds(), 100);
-  },
+  }
 };

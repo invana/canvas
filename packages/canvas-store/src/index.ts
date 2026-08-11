@@ -1,12 +1,17 @@
 /**
  * `@invana/canvas-store` — the renderer-free kernel: **state** (the `ReactiveStore`
  * port + view/data stores), **events** (the canvas-wide bus + tap), **telemetry**,
- * and **history**. The engine (`@invana/canvas`) is a pixi renderer that writes to
- * this kernel and subscribes to it to render.
+ * **history**, the **spec vocabulary** (what to draw, as plain data), and
+ * **picking** (the spatial index over it). The engine (`@invana/canvas`) is a
+ * renderer-agnostic orchestrator that writes to this kernel and subscribes to it
+ * to render.
  *
  * Program against the {@link ReactiveStore} port, not a backend. zustand is one
  * adapter ({@link createReactiveStore}); {@link createMemoryStore} is a dep-free
  * reference. Telemetry + history hang off the one declarative-patch seam.
+ *
+ * **The hard rule this package keeps:** it imports no drawing library. Specs
+ * describe drawing; they do not perform it.
  */
 
 // ── Port ──────────────────────────────────────────────────────────────────────
@@ -62,8 +67,10 @@ export {
 export { DirtyBatcher, type DirtySnapshot } from './data/DirtyBatcher';
 export type { DataSource } from './data/DataSource';
 
-// ── Renderer seam (types only — implemented by a rendering package, e.g. @invana/renderer-pixijs) ──
-export type { IRenderer, RendererBackend } from './renderer/IRenderer';
+// ── Renderer seam: the device-shaped half only ────────────────────────────────
+// `IRenderer` itself lives in `@invana/canvas` — it is made of spec vocabulary,
+// which the kernel does not own. See `renderer/IRenderer.ts` for the full note.
+export type { RendererBackend } from './renderer/IRenderer';
 export type { RendererInitOptions } from './renderer/RendererInitOptions';
 
 // ── Events ────────────────────────────────────────────────────────────────────
@@ -165,3 +172,21 @@ export {
   type CanvasStoreObserver,
   type CreateCanvasStoreOptions,
 } from './CanvasStore';
+
+// Durable visual description — layers publish, renderers project (P1).
+// ── Spec vocabulary + picking ─────────────────────────────────────────────────
+// The pixi-free description of what to draw, the pure geometry over it, and the
+// spatial index that hit-tests it. All three are drawing-library-free by
+// construction, which is what lets picking and bounds be tested headlessly and
+// stay identical across backends. `SpecStore` (specs as state) ships with them.
+export * from './specs';
+export { PickingIndex, connectorHitBoxes } from './hit/PickingIndex';
+export type {
+  ConnectorHitRecord,
+  HitGeometrySource,
+  HitPolyline,
+  PickingCamera,
+  PickingIndexOptions,
+  ShapeHitRecord,
+} from './hit/PickingIndex';
+export { HitIndex, type HitEntry } from './hit/HitIndex';

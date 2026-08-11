@@ -57,7 +57,7 @@ export const LODZoomRangeStory: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes, edges: [] } },
+      options: { initData: { nodes, edges: [] } }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -77,12 +77,12 @@ export const LODZoomRangeStory: Story = {
               labelBackgroundStrokeColor: 0xcbd5e1,
               labelBackgroundStrokeWidth: 1,
               labelBackgroundCornerRadius: 4,
-              labelBackgroundPadding: 4,
-            },
-          },
-        },
+              labelBackgroundPadding: 4
+            }
+          }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
@@ -111,5 +111,5 @@ export const LODZoomRangeStory: Story = {
       liveZoom.updateDisplay();
     });
     onStoryTeardown(() => offZoom());
-  },
+  }
 };

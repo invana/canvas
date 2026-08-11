@@ -39,21 +39,25 @@ export class WheelZoomBehaviour extends Behaviour<WheelZoomBehaviourOptions> {
   protected onRegister(_ctx: CanvasContext): void { /* wired on enable */ }
 
   protected onEnable(): void {
-    this.ctx!.camera.viewport.wheel({
-      percent: this._options.percent ?? 0.1,
-      smooth: this._options.smooth ?? false,
-      keyToPress: (this._options.requireCtrl ?? false) ? ['ControlLeft', 'ControlRight'] : undefined,
-      trackpadPinch: true,
+    this.ctx!.camera.configureInput({
+      wheel: {
+        percent: this._options.percent ?? 0.1,
+        smooth: this._options.smooth ?? false,
+        modifier: (this._options.requireCtrl ?? false) ? 'control' : null,
+        trackpadPinch: true,
+      },
     });
   }
 
   protected onDisable(): void {
-    this.ctx!.camera.viewport.plugins.remove('wheel');
+    // `null` removes the wheel input and leaves pinch (a separate behaviour's
+    // concern) untouched.
+    this.ctx!.camera.configureInput({ wheel: null });
   }
 
   /**
-   * The pixi-viewport `wheel` plugin reads its config only at install time, so a
-   * live edit means remove-then-reinstall. Re-arm picks up the merged
+   * The camera's wheel input reads its config only at install time, so a live
+   * edit means remove-then-reinstall. Re-arm picks up the merged
    * `this._options`. (`setOptions` / `getOptions` come from the base.)
    */
   protected override onOptionsChanged(): void {

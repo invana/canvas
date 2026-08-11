@@ -19,7 +19,7 @@
  */
 
 import { Behaviour, type BehaviourOptions, type CanvasContext } from '@invana/canvas';
-import type { BaseConnectorSpec } from '@invana/canvas';
+import type { BaseConnectorSpec } from '@invana/canvas/specs';
 
 import { GraphLayer } from '../layer/GraphLayer';
 import { UNKNOWN_TYPE } from '../store';
@@ -166,11 +166,14 @@ export class DrawEdgeBehaviour extends Behaviour<DrawEdgeBehaviourOptions> {
   private startDraw(sourceId: string, worldX: number, worldY: number): void {
     const renderer = this.layer?.getRenderer();
     if (!renderer) return;
+
+    // Take the pointer: stops the camera panning while drawing, and refuses if
+    // another behaviour (a node drag, a resize) already owns this press — the
+    // two must not run on the same gesture.
+    if (!this.claimGesture()) return;
+
     this.sourceId = sourceId;
     this.candidateTarget = null;
-
-    // Don't let the camera pan while drawing.
-    this.ctxRef?.camera.viewport.plugins.pause('drag');
 
     const spec: BaseConnectorSpec = {
       kind: 'connector',
@@ -222,7 +225,8 @@ export class DrawEdgeBehaviour extends Behaviour<DrawEdgeBehaviourOptions> {
       }
     }
     this.capturedPointerId = null;
-    this.ctxRef?.camera.viewport.plugins.resume('drag');
+    // Hand the pointer back — camera panning resumes here.
+    this.releaseGesture();
 
     // `candidateTarget` already enforced the self-loop rule, so a non-null
     // target is valid to connect (including target === source when allowed).

@@ -8,7 +8,7 @@ import {
   GraphLayer,
   type GraphEdge,
   type GraphNode,
-  type NodeStyle,
+  type NodeStyle
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
@@ -67,20 +67,20 @@ export const GroupWithEdgesStory: Story = {
           labelColor: 0x6b7fff,
           labelFontSize: 11,
           labelFontWeight: 600,
-          labelPlacement: 'inside-top-left',
-        },
+          labelPlacement: 'inside-top-left'
+        }
       },
       { type: 'node',
         id: 'a1', parentId: 'group-a', position: { x: -50, y: -40 },
-        style: { shape: { kind: 'circle', radius: 16 }, bgFill: 0x3b82f6, labelText: 'a1', labelPlacement: 'bottom', labelOffsetY: 6 },
+        style: { shape: { kind: 'circle', radius: 16 }, bgFill: 0x3b82f6, labelText: 'a1', labelPlacement: 'bottom', labelOffsetY: 6 }
       },
       { type: 'node',
         id: 'a2', parentId: 'group-a', position: { x: 50, y: -40 },
-        style: { shape: { kind: 'circle', radius: 16 }, bgFill: 0x3b82f6, labelText: 'a2', labelPlacement: 'bottom', labelOffsetY: 6 },
+        style: { shape: { kind: 'circle', radius: 16 }, bgFill: 0x3b82f6, labelText: 'a2', labelPlacement: 'bottom', labelOffsetY: 6 }
       },
       { type: 'node',
         id: 'a3', parentId: 'group-a', position: { x: 0, y: 50 },
-        style: { shape: { kind: 'circle', radius: 16 }, bgFill: 0x3b82f6, labelText: 'a3', labelPlacement: 'bottom', labelOffsetY: 6 },
+        style: { shape: { kind: 'circle', radius: 16 }, bgFill: 0x3b82f6, labelText: 'a3', labelPlacement: 'bottom', labelOffsetY: 6 }
       },
       { type: 'node',
         id: 'group-b',
@@ -96,20 +96,20 @@ export const GroupWithEdgesStory: Story = {
           labelColor: 0xc026d3,
           labelFontSize: 11,
           labelFontWeight: 600,
-          labelPlacement: 'inside-top-left',
-        },
+          labelPlacement: 'inside-top-left'
+        }
       },
       { type: 'node',
         id: 'b1', parentId: 'group-b', position: { x: 310, y: -40 },
-        style: { shape: { kind: 'circle', radius: 16 }, bgFill: 0xc026d3, labelText: 'b1', labelPlacement: 'bottom', labelOffsetY: 6 },
+        style: { shape: { kind: 'circle', radius: 16 }, bgFill: 0xc026d3, labelText: 'b1', labelPlacement: 'bottom', labelOffsetY: 6 }
       },
       { type: 'node',
         id: 'b2', parentId: 'group-b', position: { x: 410, y: -40 },
-        style: { shape: { kind: 'circle', radius: 16 }, bgFill: 0xc026d3, labelText: 'b2', labelPlacement: 'bottom', labelOffsetY: 6 },
+        style: { shape: { kind: 'circle', radius: 16 }, bgFill: 0xc026d3, labelText: 'b2', labelPlacement: 'bottom', labelOffsetY: 6 }
       },
       { type: 'node',
         id: 'b3', parentId: 'group-b', position: { x: 360, y: 50 },
-        style: { shape: { kind: 'circle', radius: 16 }, bgFill: 0xc026d3, labelText: 'b3', labelPlacement: 'bottom', labelOffsetY: 6 },
+        style: { shape: { kind: 'circle', radius: 16 }, bgFill: 0xc026d3, labelText: 'b3', labelPlacement: 'bottom', labelOffsetY: 6 }
       },
     ];
 
@@ -142,8 +142,8 @@ export const GroupWithEdgesStory: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         drag: { enabled: true },
-        'collapse-expand': { enabled: true },
-      },
+        'collapse-expand': { enabled: true }
+      }
     };
 
     await canvas.init({ container, autoResize: true, config: canvasOptions });
@@ -166,9 +166,9 @@ export const GroupWithEdgesStory: Story = {
           // Spread variant *after* the prior style so it overrides any
           // leftover `bgFill` / `bgAlpha` when switching to stroke-only.
           graph.store.updateNode(id, {
-            style: { ...priorStyle, ...variantFn(settings.bgVariant) },
+            style: { ...priorStyle, ...variantFn(settings.bgVariant) }
           });
         }
       });
-  },
+  }
 };

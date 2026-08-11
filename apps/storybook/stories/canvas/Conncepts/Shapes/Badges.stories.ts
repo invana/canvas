@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas,
   DragPanBehaviour,
-  PrimitivesRenderer,
   WheelZoomBehaviour,
   WorldLayer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { BadgePlacement, CanvasContext } from '@invana/canvas';
+import type { BadgePlacement } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -44,13 +44,10 @@ export const Badges: Story = {
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({
-          container: this.container,
-          camera: ctx.camera,
-        });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -63,7 +60,7 @@ export const Badges: Story = {
       x: 0,
       y: 0,
       radius: 60,
-      fill: [{ kind: 'solid', color: 0x4a90e2 }],
+      fill: [{ kind: 'solid', color: 0x4a90e2 }]
     });
 
     const settings = {
@@ -74,7 +71,7 @@ export const Badges: Story = {
       flagPlacement: 'bottom-right' as BadgePlacement,
       flagOrigin: 'default' as 'center' | 'default',
       hostX: 0,
-      hostY: 0,
+      hostY: 0
     };
 
     const apply = () => {
@@ -86,10 +83,10 @@ export const Badges: Story = {
           fill: [
             { kind: 'solid', color: 0x9aa0a6 },
             { kind: 'glyph', char: 'A', fontFamily: 'sans-serif', fontWeight: 700, color: 0xffffff, sizeRatio: 0.55 },
-          ],
+          ]
         },
         placement: settings.statusPlacement,
-        origin: settings.statusOrigin === 'center' ? 'center' : undefined,
+        origin: settings.statusOrigin === 'center' ? 'center' : undefined
       });
 
       // Priority: rounded-rect plate with multi-char text label (fully outside).
@@ -101,7 +98,7 @@ export const Badges: Story = {
           width: 100,
           height: 30,
           cornerRadius: 15,
-          fill: { kind: 'solid', color: 0xe5654a },
+          fill: { kind: 'solid', color: 0xe5654a }
         },
         placement: settings.priorityPlacement,
         origin: settings.priorityOrigin === 'center' ? 'center' : undefined,
@@ -111,10 +108,10 @@ export const Badges: Story = {
             kind: 'label',
             style: {
               content: { kind: 'text', text: 'Important', fill: 0xffffff, fontSize: 13, fontWeight: 600 },
-              placement: 'center',
-            },
-          },
-        },
+              placement: 'center'
+            }
+          }
+        }
       });
 
       // Flag: yellow rounded-rect with text + a glow decoration on the badge
@@ -124,7 +121,7 @@ export const Badges: Story = {
           width: 80,
           height: 30,
           cornerRadius: 15,
-          fill: { kind: 'solid', color: 0xf2c14e },
+          fill: { kind: 'solid', color: 0xf2c14e }
         },
         placement: settings.flagPlacement,
         origin: settings.flagOrigin === 'center' ? 'center' : undefined,
@@ -136,10 +133,10 @@ export const Badges: Story = {
             kind: 'label',
             style: {
               content: { kind: 'text', text: 'Notice', fill: 0xffffff, fontSize: 13, fontWeight: 600 },
-              placement: 'center',
-            },
-          },
-        },
+              placement: 'center'
+            }
+          }
+        }
       });
     };
 
@@ -174,5 +171,5 @@ export const Badges: Story = {
     host.add(settings, 'hostY', -200, 200, 1).onChange((v: number) => {
       layer.renderer.updateShape(HOST_ID, { y: v });
     });
-  },
+  }
 };

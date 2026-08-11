@@ -1,11 +1,13 @@
+import { HeadlessCameraBinding } from '../../src/camera/HeadlessCameraBinding';
+import { HeadlessSurface } from '../../src/renderer/HeadlessRenderer';
 import { describe, expect, it } from 'vitest';
 import { Behaviour } from '../../src/behaviours/Behaviour';
 import { CanvasEventBus } from '@invana/canvas-store';
 import { Camera } from '../../src/camera/Camera';
+import { DefaultGestureArbiter } from '../../src/input/GestureArbiter';
 import { LayerRegistry } from '../../src/registries/LayerRegistry';
 import { BehaviourRegistry } from '../../src/registries/BehaviourRegistry';
 import type { CanvasContext } from '../../src/context/CanvasContext';
-import { makeTestScene } from '../_helpers/makeWorld';
 import { createCanvasStore } from '@invana/canvas-store';
 
 class TestBehaviour extends Behaviour {
@@ -29,9 +31,8 @@ class TestBehaviour extends Behaviour {
 
 function makeContext() {
   const bus = new CanvasEventBus();
-  const { stage, world } = makeTestScene();
   const camera = new Camera({
-    viewport: world,
+    binding: new HeadlessCameraBinding(),
     screenWidth: 800,
     screenHeight: 600,
     bus,
@@ -39,7 +40,7 @@ function makeContext() {
   let ctx: CanvasContext;
   const layers = new LayerRegistry({ getContext: () => ctx, bus });
   const behaviours = new BehaviourRegistry({ getContext: () => ctx, bus });
-  ctx = { events: bus, store: createCanvasStore(), world, stage, camera, layers, behaviours, theme: { current: () => null, set: () => {} }, showMessage: () => {}, clearMessage: () => {} };
+  ctx = { events: bus, store: createCanvasStore(), camera, gestures: new DefaultGestureArbiter(), layers, behaviours, theme: { current: () => null, set: () => {} }, showMessage: () => {}, clearMessage: () => {}, createOverlay: () => ({}) as never, createSurface: (space, id) => new HeadlessSurface(id, space) };
   return ctx;
 }
 

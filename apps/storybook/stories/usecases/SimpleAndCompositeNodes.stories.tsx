@@ -28,7 +28,7 @@ import type {
   GraphData,
   HoverElementPreviewCardsByType,
   NodeStructureRegistry,
-  NodeTypeRegistry,
+  NodeTypeRegistry
 } from '@invana/graph';
 import { computingPioneers } from '@invana/graph-datasets/usecase-demos';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
@@ -49,12 +49,12 @@ const LAYOUTS: Record<string, LayoutFactory> = {
     new D3ForceLayout({ charge: { strength: -1400 }, link: { distance: 220 }, collide: { radius: 130 }, animate: false }),
   'elk-layered': () =>
     new ElkLayout({ algorithm: 'layered', direction: 'RIGHT', nodeSpacing: 90, layerSpacing: 160 }),
-  circular: () => new GeometricLayout({ mode: 'circular', radius: 360 }),
+  circular: () => new GeometricLayout({ mode: 'circular', radius: 360 })
 };
 const LAYOUT_LABEL: Record<string, string> = {
   'd3-force': 'Force',
   'elk-layered': 'Layered',
-  circular: 'Circular',
+  circular: 'Circular'
 };
 
 // Per-type hover-preview cards. The headless `HoverElementPreviewBehaviour`
@@ -69,20 +69,20 @@ const HOVER_CARDS: HoverElementPreviewCardsByType = {
       // so the card leans on title / subtitle / rows instead.
       title: { field: 'data.name' },
       subtitle: { field: 'data.role' },
-      rows: [{ label: 'Type', field: 'type' }],
+      rows: [{ label: 'Type', field: 'type' }]
     },
     Organization: {
       title: { field: 'data.name' },
       rows: [
         { label: 'Type', field: 'type' },
         { label: 'Founded', field: 'data.founded' },
-      ],
+      ]
     },
     Concept: {
       title: { field: 'data.name' },
-      rows: [{ label: 'Type', field: 'type' }],
-    },
-  },
+      rows: [{ label: 'Type', field: 'type' }]
+    }
+  }
 };
 
 // The named theme families that have a matching `@invana/graph` palette. The
@@ -124,7 +124,7 @@ export const SimpleAndCompositeNodesStory: Story = {
     // registry below keys off, and each carries a different property subset.
     const data: GraphData = {
       nodes: computingPioneers.nodes,
-      edges: computingPioneers.edges,
+      edges: computingPioneers.edges
     };
 
     // An elliptical composite card. `frame: { kind: 'ellipse' }` makes the card
@@ -142,7 +142,7 @@ export const SimpleAndCompositeNodesStory: Story = {
       elements: [
         { id: 'name', type: 'text', bind: 'data.name', x: 95, y: 46, anchor: 'center', maxWidth: 150, fontSize: 15, fontWeight: 700, colorRole: 'heading' },
         { id: 'founded', type: 'text', bind: 'data.founded', x: 95, y: 70, anchor: 'center', maxWidth: 150, fontSize: 12, colorRole: 'muted' },
-      ],
+      ]
     };
     const nodeStructureTemplates: NodeStructureRegistry = { orgBadge };
 
@@ -152,11 +152,11 @@ export const SimpleAndCompositeNodesStory: Story = {
       Person: {
         structure: 'idCard',
         styling: 'idCard',
-        bindings: { type: 'type', avatar: 'data.avatar', title: 'data.name', subtitle: 'data.role' },
+        bindings: { type: 'type', avatar: 'data.avatar', title: 'data.name', subtitle: 'data.role' }
       },
       // Freeform structures are self-contained — styling / bindings are ignored.
       Organization: { structure: 'orgBadge', styling: '', bindings: {} },
-      Concept: { structure: 'circle', styling: 'circle', bindings: { label: 'data.name' } },
+      Concept: { structure: 'circle', styling: 'circle', bindings: { label: 'data.name' } }
     };
 
     const config: CanvasConfig = {
@@ -165,7 +165,7 @@ export const SimpleAndCompositeNodesStory: Story = {
       behaviours: { color: { enabled: false } },
       layers: { graph: { nodeStructureTemplates, nodeTypes } },
       // Cards are wide — space the force layout out so they don't overlap.
-      layouts: { 'graph-force': { charge: { strength: -1400 }, link: { distance: 220 }, collide: { radius: 130 } } },
+      layouts: { 'graph-force': { charge: { strength: -1400 }, link: { distance: 220 }, collide: { radius: 130 } } }
     };
 
     return (
@@ -187,7 +187,7 @@ export const SimpleAndCompositeNodesStory: Story = {
                 <MiniMapToggleButton backgroundLayerId="background" position="bottom-right" />
                 <ThemeControls ctx={ctx} />
               </>
-            ),
+            )
           }}
         >
           {/* Dwell over a node → a per-type preview card (distinct from the
@@ -220,5 +220,5 @@ export const SimpleAndCompositeNodesStory: Story = {
         </GraphCanvasApp>
       </ThemeProvider>
     );
-  },
+  }
 };

@@ -4,7 +4,7 @@ import {
   GraphCanvas,
   GraphLayer,
   type CanonicalStateName,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -47,10 +47,10 @@ export const Callout: Story = {
         initData: { nodes, edges: [] },
         node: {
           style: {
-            labelText: (n: GraphNode) => (n.data as TileData | undefined)?.state ?? '',
-          },
-        },
-      },
+            labelText: (n: GraphNode) => (n.data as TileData | undefined)?.state ?? ''
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -71,7 +71,7 @@ export const Callout: Story = {
                   { x:   0, y:  45 },
                   { x: -10, y:  25 },
                   { x: -55, y:  25 },
-                ],
+                ]
               },
               bgFill: 0x3b82f6,
               bgStrokeColor: 0xffffff,
@@ -81,14 +81,14 @@ export const Callout: Story = {
               labelFontSize: 12,
               labelFontWeight: 600,
               labelPlacement: 'bottom',
-              labelOffsetY: 22,
-            },
-          },
-        },
+              labelOffsetY: 22
+            }
+          }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

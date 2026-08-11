@@ -4,7 +4,7 @@ import {
   GraphCanvas,
   GraphLayer,
   LabelCollisionBehaviour,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { lesMiserables } from '@invana/graph-datasets';
@@ -56,8 +56,8 @@ export const LabelCollisionStory: Story = {
         labelBackgroundStrokeColor: 0xe2e8f0,
         labelBackgroundStrokeWidth: 1,
         labelBackgroundCornerRadius: 3,
-        labelBackgroundPadding: 1,
-      },
+        labelBackgroundPadding: 1
+      }
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-label-collision')!;
@@ -67,7 +67,7 @@ export const LabelCollisionStory: Story = {
     // Data is content — it rides on the layer via `options.initData`.
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes, edges: lesMiserables.edges } },
+      options: { initData: { nodes, edges: lesMiserables.edges } }
     });
     canvas.layers.add(graph);
 
@@ -78,7 +78,7 @@ export const LabelCollisionStory: Story = {
       id: 'label-collision',
       targetLayerId: 'graph',
       prioritise: 'node-degree',
-      flickerGuardMs: 120,
+      flickerGuardMs: 120
     });
     canvas.behaviours.register(collision);
 
@@ -88,23 +88,23 @@ export const LabelCollisionStory: Story = {
     const canvasOptions = {
       layers: {
         graph: {
-          edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' } },
-        },
+          edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' } }
+        }
       },
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'label-collision': { enabled: true },
+        'label-collision': { enabled: true }
       },
       layouts: {
         force: {
           charge: { strength: -160 },
           link: { distance: 70 },
           collide: { radius: 22 },
-          center: { x: 0, y: 0 },
-        },
+          center: { x: 0, y: 0 }
+        }
       },
-      activeLayout: 'force',
+      activeLayout: 'force'
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -118,5 +118,5 @@ export const LabelCollisionStory: Story = {
     onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'enable').onChange(apply);
     gui.add({ help: 'pan / zoom to see hide-on-overlap update' }, 'help').disable();
-  },
+  }
 };

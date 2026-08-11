@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   GraphCanvas, DragNodeBehaviour, GraphLayer,
-  type GraphEdge, type GraphNode,
+  type GraphEdge, type GraphNode
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
@@ -69,7 +69,7 @@ export const Stacked: Story = {
       innerStubLength: 14,
       innerGap: 22,
       stubStep: 14,
-      gapStep: 22,
+      gapStep: 22
     };
 
     interface EdgeMeta { index: number; }
@@ -102,13 +102,13 @@ export const Stacked: Story = {
                   ? {
                       side: settings.placement,
                       baseOffsetX: halfW, baseOffsetY: halfH,
-                      stubLength, gap,
+                      stubLength, gap
                     }
                   : {
                       side: settings.placement,
                       baseOffset: cardinalBaseOffset(settings.placement),
-                      stubLength, gap,
-                    },
+                      stubLength, gap
+                    }
               };
             },
             strokeColor: (edge) => {
@@ -116,10 +116,10 @@ export const Stacked: Story = {
               return STACK_COLORS[index % STACK_COLORS.length]!;
             },
             strokeWidth: 1.5,
-            arrowTargetShape: 'triangle',
-          },
-        },
-      },
+            arrowTargetShape: 'triangle'
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -132,16 +132,16 @@ export const Stacked: Story = {
           node: {
             style: {
               shape: { kind: 'rect', width: NODE_W, height: NODE_H },
-              bgFill: 0x4f7ff5, bgStrokeColor: 0x2563eb, bgStrokeWidth: 0,
-            },
-          },
-        },
+              bgFill: 0x4f7ff5, bgStrokeColor: 0x2563eb, bgStrokeWidth: 0
+            }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'drag-node': { enabled: true },
-      },
+        'drag-node': { enabled: true }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -154,7 +154,7 @@ export const Stacked: Story = {
           const exists = !!graph.store.getEdge(id);
           if (i < settings.count && !exists) {
             const e: GraphEdge<EdgeMeta> = {
-              id, type: 'loop', source: NODE_ID, target: NODE_ID, data: { index: i },
+              id, type: 'loop', source: NODE_ID, target: NODE_ID, data: { index: i }
             };
             graph.store.addEdge(e);
           } else if (i >= settings.count && exists) {
@@ -181,5 +181,5 @@ export const Stacked: Story = {
     gui.add(settings, 'innerGap', 0, 80, 1).name('innerGap').onChange(rerenderAll);
     gui.add(settings, 'stubStep', 0, 60, 1).name('stubStep (taller)').onChange(rerenderAll);
     gui.add(settings, 'gapStep', 0, 60, 1).name('gapStep (wider)').onChange(rerenderAll);
-  },
+  }
 };

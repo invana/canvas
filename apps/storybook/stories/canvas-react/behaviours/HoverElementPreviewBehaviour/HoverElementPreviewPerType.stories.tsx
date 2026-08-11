@@ -20,7 +20,7 @@ import {
   DragPanBehaviour,
   GraphLayer,
   HoverElementPreviewBehaviour,
-  WheelZoomBehaviour,
+  WheelZoomBehaviour
 } from '@invana/canvas-react';
 import type { GraphData, GraphEdge, GraphNode } from '@invana/graph';
 
@@ -56,7 +56,7 @@ const data: GraphData = {
     { id: 'ada-acme', source: 'ada', target: 'acme', type: 'WORKS_AT', data: { since: 1842 } },
     { id: 'grace-globex', source: 'grace', target: 'globex', type: 'WORKS_AT', data: { since: 1959 } },
     { id: 'alan-acme', source: 'alan', target: 'acme', type: 'WORKS_AT', data: { since: 1936 } },
-  ],
+  ]
 };
 
 // ─── Per-type card content — a distinct card built for each element type ──────
@@ -120,8 +120,8 @@ export const HoverElementPreviewPerTypeStory: Story = {
               labelText: (n: GraphNode) => (n.data as { name: string }).name.split(' ')[0]!,
               labelColor: 0xf8fafc,
               labelFontSize: 12,
-              labelPlacement: 'center',
-            },
+              labelPlacement: 'center'
+            }
           }}
           edge={{ style: { strokeColor: 0x64748b, strokeWidth: 2 } }}
         />
@@ -135,5 +135,5 @@ export const HoverElementPreviewPerTypeStory: Story = {
         <HoverElementPreviewBehaviour targetLayerId="graph" renderNode={renderNode} renderEdge={renderEdge} />
       </Canvas>
     </div>
-  ),
+  )
 };

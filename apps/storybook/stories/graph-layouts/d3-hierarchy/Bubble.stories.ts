@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
   DragPanBehaviour,
-  WheelZoomBehaviour,
+  WheelZoomBehaviour
 } from '@invana/canvas';
 import { GraphCanvas, GraphLayer, ThemeBehaviour } from '@invana/graph';
 import type { ShapeLabelStyle } from '@invana/canvas';
 import {
   D3HierarchyLayout,
-  type D3HierarchyLayoutOptions,
+  type D3HierarchyLayoutOptions
 } from '@invana/graph-layout-d3-hierarchy';
 import { flareAsGraph } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
@@ -53,7 +53,7 @@ export const Bubble: Story = {
       // readable text. The fit cascade also hides labels that can't make
       // it down to `minFontSize: 6`, but the diameter cutoff keeps the
       // d3-bubble-chart look (only "real" bubbles get labels at all).
-      minLabelDiameter: 16,
+      minLabelDiameter: 16
     };
 
     // ── Categorical palette (d3.schemeTableau10) ─────────────────────────
@@ -101,7 +101,7 @@ export const Bubble: Story = {
               isLeaf,
               depth: n.data.depth,
               group: n.data.group,
-              ...(n.data.value !== undefined ? { value: n.data.value } : {}),
+              ...(n.data.value !== undefined ? { value: n.data.value } : {})
             },
             style: {
               // Internal nodes (including the root) stay transparent so
@@ -110,16 +110,16 @@ export const Bubble: Story = {
               bgFill: isLeaf ? colorFor(n.data.group) : 0xffffff,
               bgStrokeColor: 0xffffff,
               bgStrokeWidth: isLeaf ? settings.leafStrokeWidth : 0,
-              bgAlpha: isLeaf ? 1 : 0,
-            },
+              bgAlpha: isLeaf ? 1 : 0
+            }
           };
         }),
         edges: data.edges.map((e) => ({
           id: e.id,
           type: 'edge',
           source: e.source,
-          target: e.target,
-        })),
+          target: e.target
+        }))
       };
     };
 
@@ -140,10 +140,10 @@ export const Bubble: Story = {
             shape: (n) => {
               const size = (n.data as { size?: number } | undefined)?.size ?? 0.1;
               return { type: 'edge', kind: 'circle', radius: size / 2 };
-            },
-          },
-        },
-      },
+            }
+          }
+        }
+      }
     });
 
     canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
@@ -155,7 +155,7 @@ export const Bubble: Story = {
     const layout = new D3HierarchyLayout({
       id: 'hierarchy',
       type: 'node',
-      targetLayerId: 'graph',
+      targetLayerId: 'graph'
     } as D3HierarchyLayoutOptions);
     canvas.layouts.add(layout);
 
@@ -171,10 +171,10 @@ export const Bubble: Story = {
               strokeColor: 0x000000,
               strokeWidth: 0,
               strokeAlpha: 0,
-              arrowTargetShape: 'none',
-            },
-          },
-        },
+              arrowTargetShape: 'none'
+            }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
@@ -183,8 +183,8 @@ export const Bubble: Story = {
           enabled: true,
           mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
-          dark: { backgroundColor: '#0b1220', color: '#475569' },
-        },
+          dark: { backgroundColor: '#0b1220', color: '#475569' }
+        }
       },
       layouts: {
         hierarchy: {
@@ -193,9 +193,9 @@ export const Bubble: Story = {
           padding: 3,
           // Default value accessor reads `data.value`; default sort is
           // descending by value. Both match d3's example, so no overrides.
-        },
+        }
       },
-      activeLayout: 'hierarchy',
+      activeLayout: 'hierarchy'
     };
 
     /**
@@ -225,7 +225,7 @@ export const Bubble: Story = {
             depth?: number;
           };
           const baseStyle = {
-            ...((node.style as Record<string, unknown> | undefined) ?? {}),
+            ...((node.style as Record<string, unknown> | undefined) ?? {})
           };
           // Always clear stale labels so re-runs (font size, settings
           // toggles) don't accumulate.
@@ -246,10 +246,10 @@ export const Bubble: Story = {
                 text: data.name,
                 fontSize: settings.maxLabelFontSize,
                 fontWeight: 500,
-                fill: 0x0f172a,
+                fill: 0x0f172a
               },
               placement: 'inside-center',
-              minFontSize: 6,
+              minFontSize: 6
             };
             (baseStyle as { labelStyle?: ShapeLabelStyle }).labelStyle = labelStyle;
           }
@@ -310,5 +310,5 @@ export const Bubble: Story = {
         'refit',
       )
       .name('Re-fit camera');
-  },
+  }
 };

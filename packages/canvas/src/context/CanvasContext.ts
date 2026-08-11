@@ -13,10 +13,12 @@
  * passes it down. Tests can construct a stub by satisfying these fields.
  */
 
-import type { Container } from 'pixi.js';
+import type { IOverlayDevice, OverlaySpace } from '../renderer/IOverlayDevice';
+import type { ISurface, SurfaceOptions, SurfaceSpace } from '../renderer/ISurface';
 import type { CanvasStore } from '@invana/canvas-store';
 import type { CanvasEventBus } from '@invana/canvas-store';
 import type { Camera } from '../camera/Camera';
+import type { GestureArbiter } from '../input/GestureArbiter';
 import type { LayerRegistry } from '../registries/LayerRegistry';
 import type { BehaviourRegistry } from '../registries/BehaviourRegistry';
 import type { ThemeState } from '../theme/types';
@@ -34,6 +36,19 @@ export interface CanvasContext {
 
   /** Camera — pan/zoom/projection. Wraps a `pixi-viewport` `Viewport`. */
   readonly camera: Camera;
+
+  /**
+   * Pointer-gesture arbitration — at most one owner at a time. A behaviour that
+   * needs the pointer to itself (drag, lasso, brush, resize, edge draw) claims
+   * it here rather than suspending the camera's pan plugin behind its back;
+   * `DragPanBehaviour` yields whenever `gestures.owner` names somebody else.
+   *
+   * Behaviours should reach for `Behaviour.claimGesture` /
+   * `Behaviour.releaseGesture` instead of calling this directly — the base class
+   * releases on `disable()` / `destroy()`, and a stranded claim would freeze
+   * both the camera and every other gesture.
+   */
+  readonly gestures: GestureArbiter;
 
   /** Canvas-wide event bus + telemetry tap channel. */
   readonly events: CanvasEventBus;
@@ -56,22 +71,7 @@ export interface CanvasContext {
    */
   readonly theme: ThemeState;
 
-  /**
-   * The world container — a `pixi-viewport` `Viewport` instance. Camera-
-   * transformed; `WorldLayer.mount` attaches its root sub-layer container
-   * here. Typed as `Container` so domain code doesn't depend on
-   * `pixi-viewport`; reach for the `Viewport`-specific API via
-   * `camera.viewport`.
-   */
-  readonly world: Container;
 
-  /**
-   * The pixi `app.stage` (or test stage) — the renderer root. `ScreenLayer.mount`
-   * attaches its root container here, as a sibling of `world`. Pixi's child
-   * order = draw order: `world` is added first (bottom), each `ScreenLayer`'s
-   * root is added after (above). No screen-wrapper container exists.
-   */
-  readonly stage: Container;
 
   /**
    * The underlying HTMLCanvasElement when running in DOM mode (`Canvas.init`).
@@ -80,6 +80,24 @@ export interface CanvasContext {
    * read this to find a parent element and to attach native DOM listeners.
    */
   readonly canvasElement?: HTMLCanvasElement;
+
+  /**
+   * A drawing device for a **transient** visual — a lasso, a brush rectangle, a
+   * drag ghost. Not for layer content: anything durable is a spec in the store
+   * (`docs/renderer-split-design.md` §3).
+   *
+   * Available to behaviours as well as layers, because a gesture overlay belongs
+   * to the gesture, not to any one layer.
+   */
+  createOverlay(label: string, space?: OverlaySpace): IOverlayDevice;
+
+  /**
+   * A layer's slice of the renderer — its drawing device, overlays, visibility
+   * and paint order. Replaces the layer bases constructing a pixi `Container`
+   * themselves, and is the seam a second backend implements
+   * (`docs/renderer-split-design.md` §4).
+   */
+  createSurface(space: SurfaceSpace, id: string, opts?: SurfaceOptions): ISurface;
 
   /**
    * Show a transient message on the shared canvas message channel — the same

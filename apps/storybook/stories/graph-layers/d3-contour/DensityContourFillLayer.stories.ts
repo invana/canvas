@@ -14,14 +14,14 @@ import {
   DevInfoLayer,
   DragPanBehaviour,
   LayersPanelLayer,
-  WheelZoomBehaviour,
+  WheelZoomBehaviour
 } from '@invana/canvas';
 import { DragNodeBehaviour, GraphCanvas, GraphLayer, type GraphNode, ThemeBehaviour } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import {
   DENSITY_CONTOUR_PALETTE_NAMES,
   DensityContourFillLayer,
-  type DensityContourPaletteName,
+  type DensityContourPaletteName
 } from '@invana/graph-layer-d3-contour';
 import { lesMiserables } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
@@ -44,7 +44,7 @@ export const DensityContourFillLayer_Story: Story = {
     type LesMisNodeData = { group: number };
     const nodes: GraphNode<LesMisNodeData>[] = lesMiserables.nodes.map((n) => ({ type: `group-${n.data.group}`,
       id: n.id,
-      data: { group: n.data.group },
+      data: { group: n.data.group }
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-density-fill-lesmis')!;
@@ -65,10 +65,10 @@ export const DensityContourFillLayer_Story: Story = {
         node: {
           style: {
             bgFill: (n: GraphNode) =>
-              groupColors[(n.data as LesMisNodeData).group % groupColors.length]!,
-          },
-        },
-      },
+              groupColors[(n.data as LesMisNodeData).group % groupColors.length]!
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
 
@@ -80,7 +80,7 @@ export const DensityContourFillLayer_Story: Story = {
     const contour = new DensityContourFillLayer({
       id: 'density',
       zIndex: -1,
-      options: { graphLayerId: 'graph' },
+      options: { graphLayerId: 'graph' }
     });
     canvas.layers.add(contour);
 
@@ -103,11 +103,11 @@ export const DensityContourFillLayer_Story: Story = {
           color: '#475569',
           size: 1.5,
           spacing: 24,
-          alpha: 0.85,
+          alpha: 0.85
         },
         graph: {
           node: { style: { shape: { kind: 'circle', radius: 5 } } },
-          edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 0.5 } },
+          edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 0.5 } }
         },
         density: {
           bandwidth: 30,
@@ -115,7 +115,7 @@ export const DensityContourFillLayer_Story: Story = {
           cellSize: 4,
           fillOpacity: 0.45,
           padding: 80,
-          palette: 'viridis',
+          palette: 'viridis'
         },
         'layers-panel': {
           corner: 'top-left',
@@ -124,8 +124,8 @@ export const DensityContourFillLayer_Story: Story = {
           opacity: 0.92,
           backgroundColor: 'rgba(10,10,10,0.82)',
           textColor: '#c8d3e0',
-          accentColor: '#4fc3f7',
-        },
+          accentColor: '#4fc3f7'
+        }
       },
       behaviours: {
         pan: { enabled: true },
@@ -135,11 +135,11 @@ export const DensityContourFillLayer_Story: Story = {
           enabled: true,
           mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
-          dark: { backgroundColor: '#0f172a', color: '#475569' },
-        },
+          dark: { backgroundColor: '#0f172a', color: '#475569' }
+        }
       },
       layouts: { force: { link: {}, charge: {}, center: { x: 0, y: 0 } } },
-      activeLayout: 'force',
+      activeLayout: 'force'
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -166,7 +166,7 @@ export const DensityContourFillLayer_Story: Story = {
       grayscale: (t) => {
         const v = Math.round(240 * (1 - t)) + 8;
         return (v << 16) | (v << 8) | v;
-      },
+      }
     };
 
     const settings = {
@@ -179,7 +179,7 @@ export const DensityContourFillLayer_Story: Story = {
       bandwidth: 30,
       thresholds: 10,
       cellSize: 4,
-      fillOpacity: 0.45,
+      fillOpacity: 0.45
     };
 
     const gui = new GUI({ title: 'DensityContourFillLayer' });
@@ -282,5 +282,5 @@ export const DensityContourFillLayer_Story: Story = {
       const b = Math.round((b1 + m) * 255);
       return (r << 16) | (g << 8) | b;
     }
-  },
+  }
 };

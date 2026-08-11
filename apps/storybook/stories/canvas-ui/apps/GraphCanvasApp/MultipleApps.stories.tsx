@@ -59,7 +59,7 @@ function AppGrid({ children }: { children: ReactNode }): ReactNode {
           boxSizing: 'border-box',
           width: '100%',
           height: '100vh',
-          background: 'var(--border, #e2e8f0)',
+          background: 'var(--border, #e2e8f0)'
         }}
       >
         {Children.map(children, (child) => (
@@ -107,7 +107,7 @@ const TEAM_GRAPH: GraphData = {
     { id: 'c11', source: 'Ivan', target: 'Grace', type: 'collaborates' },
     { id: 'c12', source: 'Eve', target: 'Judy', type: 'collaborates' },
     { id: 'c13', source: 'Judy', target: 'Alice', type: 'collaborates' },
-  ],
+  ]
 };
 
 /** A CI/CD build pipeline — a directed DAG that reads as clean layers in ELK. */
@@ -127,7 +127,7 @@ const PIPELINE_GRAPH: GraphData = {
     { id: 'p8', source: 'Build', target: 'Bundle', type: 'then' },
     { id: 'p9', source: 'Bundle', target: 'Deploy', type: 'then' },
     { id: 'p10', source: 'Deploy', target: 'Notify', type: 'then' },
-  ],
+  ]
 };
 
 /** A company org chart — a single-root tree (parent → child = "reports to"). */
@@ -149,7 +149,7 @@ const ORG_GRAPH: GraphData = {
     { id: 'o9', source: 'CFO', target: 'Payroll', type: 'manages' },
     { id: 'o10', source: 'CMO', target: 'Content', type: 'manages' },
     { id: 'o11', source: 'CMO', target: 'Ads', type: 'manages' },
-  ],
+  ]
 };
 
 /** A 12-city round-the-world tour — a ring + two long-haul shortcuts (chords). */
@@ -174,7 +174,7 @@ const TOUR_GRAPH: GraphData = {
     { id: 'f12', source: 'Reykjavik', target: 'London', type: 'flight' },
     { id: 'x1', source: 'London', target: 'Tokyo', type: 'long-haul' },
     { id: 'x2', source: 'Rome', target: 'Sydney', type: 'long-haul' },
-  ],
+  ]
 };
 
 // Module-scoped so the factory / style references stay stable across renders.
@@ -191,7 +191,7 @@ const PANELS: {
     factory: () =>
       new D3ForceLayout({ charge: { strength: -400 }, link: { distance: 90 }, animate: false }),
     node: { shape: { kind: 'circle', radius: 10 }, bgFill: 0x60a5fa },
-    edge: { strokeWidth: 1.25, strokeColor: 0x94a3b8, arrowTargetShape: 'none' },
+    edge: { strokeWidth: 1.25, strokeColor: 0x94a3b8, arrowTargetShape: 'none' }
   },
   {
     title: 'Build pipeline · ELK layered · rects',
@@ -202,7 +202,7 @@ const PANELS: {
         algorithm: 'layered',
         direction: 'RIGHT',
         nodeSpacing: 40,
-        layerSpacing: 90,
+        layerSpacing: 90
       }),
     node: {
       shape: { kind: 'rect', width: 72, height: 26, cornerRadius: 5 },
@@ -216,9 +216,9 @@ const PANELS: {
       labelAlign: 'center',
       labelOffsetX: 0,
       labelOffsetY: 0,
-      labelFontSize: 10,
+      labelFontSize: 10
     },
-    edge: { strokeWidth: 1.5, strokeColor: 0x64748b, arrowTargetShape: 'triangle' },
+    edge: { strokeWidth: 1.5, strokeColor: 0x64748b, arrowTargetShape: 'triangle' }
   },
   {
     title: 'Org chart · radial tree · hexagons',
@@ -228,9 +228,9 @@ const PANELS: {
       shape: { kind: 'regular-polygon', sides: 6, radius: 11 },
       bgFill: 0xfbbf24,
       bgStrokeColor: 0xb45309,
-      bgStrokeWidth: 1.5,
+      bgStrokeWidth: 1.5
     },
-    edge: { strokeWidth: 1.25, strokeColor: 0xd97706, arrowTargetShape: 'none' },
+    edge: { strokeWidth: 1.25, strokeColor: 0xd97706, arrowTargetShape: 'none' }
   },
   {
     title: 'City tour · geometric circular · stars',
@@ -240,9 +240,9 @@ const PANELS: {
       shape: { kind: 'star', points: 5, innerRadius: 5, outerRadius: 12 },
       bgFill: 0xa78bfa,
       bgStrokeColor: 0x6d28d9,
-      bgStrokeWidth: 1,
+      bgStrokeWidth: 1
     },
-    edge: { strokeWidth: 1.25, strokeColor: 0x8b5cf6, arrowTargetShape: 'diamond' },
+    edge: { strokeWidth: 1.25, strokeColor: 0x8b5cf6, arrowTargetShape: 'diamond' }
   },
 ];
 
@@ -265,9 +265,9 @@ export const MultipleAppsStory: Story = {
             layers: {
               graph: {
                 node: { style: { ...p.node, labelText: (n: GraphNode) => n.id } },
-                edge: { style: p.edge },
-              },
-            },
+                edge: { style: p.edge }
+              }
+            }
           }}
         >
           <ApplyLayout factory={p.factory} />
@@ -277,5 +277,5 @@ export const MultipleAppsStory: Story = {
         </GraphCanvasApp>
       ))}
     </AppGrid>
-  ),
+  )
 };

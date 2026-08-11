@@ -29,12 +29,12 @@ import {
   GraphControlsToolbar,
   GraphStatusBar,
   ToolbarItems,
-  useSidePanels,
+  useSidePanels
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
 import type { EdgeDecorationSpec, EdgeStyle, GraphCanvas, GraphData, GraphLayer } from '@invana/graph';
 import {
-  microservices,
+  microservices
 } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider } from '@invana/themes';
 import { Activity, Map, Moon, Settings, Sun } from 'lucide-react';
@@ -69,7 +69,7 @@ export const ServiceTopologyStory: Story = {
           label: 'Settings',
           render: (c) => (
             <CanvasSettingsEditorPanel canvas={c} className="border-0 bg-transparent shadow-none" />
-          ),
+          )
         },
       ],
       { section: { defaultSize: '360px', maxSize: '460px' } },
@@ -81,7 +81,7 @@ export const ServiceTopologyStory: Story = {
         api: 'A',
         logic: 'L',
         data: 'D',
-        external: 'E',
+        external: 'E'
       };
       const TIER_FILL: Record<MicroservicesTier, number> = {
         gateway: 0x0ea5e9, // sky
@@ -114,7 +114,7 @@ export const ServiceTopologyStory: Story = {
             kind: 'marching-ants-connector',
             color: colour,
             strokeWidth: width + 0.5,
-            dashLength: 6,
+            dashLength: 6
           });
         }
         return {
@@ -133,9 +133,9 @@ export const ServiceTopologyStory: Story = {
                 labelFontSize: 9,
                 labelBackgroundAlpha: 0.85,
                 labelBackgroundPadding: 2,
-                labelBackgroundCornerRadius: 3,
+                labelBackgroundCornerRadius: 3
               }
-            : {}),
+            : {})
         };
       };
 
@@ -159,7 +159,7 @@ export const ServiceTopologyStory: Story = {
               sizeRatio: 0.6,
               anchor: 'top-left',
               offsetX: 8,
-              offsetY: 8,
+              offsetY: 8
             },
             labelText: n.id,
             labelColor: 0xffffff,
@@ -179,12 +179,12 @@ export const ServiceTopologyStory: Story = {
                       strokeWidth: 1.2,
                       labelText: formatRps(n.data.rps),
                       labelColor: 0xffffff,
-                      labelFontSize: 10,
+                      labelFontSize: 10
                     },
                   ]
-                : [],
+                : []
           },
-          states: toStates(n.data.health),
+          states: toStates(n.data.health)
         })),
         edges: microservices.edges.map((e) => ({
           id: e.id,
@@ -192,8 +192,8 @@ export const ServiceTopologyStory: Story = {
           target: e.target,
           type: 'CALLS',
           data: e.data,
-          style: buildEdgeStyle(e.data),
-        })),
+          style: buildEdgeStyle(e.data)
+        }))
       };
 
       return { data: graph, healthStates: toStates };
@@ -207,7 +207,7 @@ export const ServiceTopologyStory: Story = {
           // Tier colours are stamped per node above.
           color: { enabled: false },
           hover: { enabled: true, state: 'highlighted', inactiveState: 'dimmed', degree: 1, direction: 'both' },
-          'click-select': { enabled: true, multiple: true, trigger: ['shift'] },
+          'click-select': { enabled: true, multiple: true, trigger: ['shift'] }
         },
         layers: {
           background: { type: 'pattern', patternType: 'dots', size: 1.2, spacing: 26, alpha: 0.7 },
@@ -220,7 +220,7 @@ export const ServiceTopologyStory: Story = {
                 degraded: {
                   bgStrokeColor: 0xf59e0b,
                   bgStrokeWidth: 3,
-                  effects: { breathing: { amplitude: 0.18, frequencyHz: 1.4 } },
+                  effects: { breathing: { amplitude: 0.18, frequencyHz: 1.4 } }
                 },
                 down: {
                   bgStrokeColor: 0xdc2626,
@@ -228,11 +228,11 @@ export const ServiceTopologyStory: Story = {
                   bgAlpha: 0.55,
                   decorations: [
                     { id: 'down-pulse', kind: 'pulse-ring', color: 0xdc2626, periodMs: 1200, maxRadius: 20 },
-                  ],
+                  ]
                 },
                 highlighted: { bgStrokeColor: 0xfbbf24, bgStrokeWidth: 3 },
-                selected: { bgStrokeColor: 0xffffff, bgStrokeWidth: 4 },
-              },
+                selected: { bgStrokeColor: 0xffffff, bgStrokeWidth: 4 }
+              }
             },
             edge: {
               state: {
@@ -240,12 +240,12 @@ export const ServiceTopologyStory: Story = {
                   strokeColor: 0xfbbf24,
                   strokeWidth: 2.4,
                   strokeAlpha: 1,
-                  arrowTargetColor: 0xfbbf24,
-                },
-              },
-            },
+                  arrowTargetColor: 0xfbbf24
+                }
+              }
+            }
           },
-          minimap: { position: 'bottom-right', width: 220, height: 160 },
+          minimap: { position: 'bottom-right', width: 220, height: 160 }
         },
         layouts: {
           elk: {
@@ -253,9 +253,9 @@ export const ServiceTopologyStory: Story = {
             direction: 'RIGHT',
             nodeSpacing: 32,
             layerSpacing: 110,
-            edgeSpacing: 16,
-          },
-        },
+            edgeSpacing: 16
+          }
+        }
       }),
       [],
     );
@@ -319,7 +319,7 @@ export const ServiceTopologyStory: Story = {
                     label: 'Simulate degradation: off',
                     activeLabel: 'Simulate degradation: on',
                     active: simulateOn,
-                    onToggle: () => setSimulateOn((v) => !v),
+                    onToggle: () => setSimulateOn((v) => !v)
                   },
                   {
                     type: 'toggle',
@@ -328,7 +328,7 @@ export const ServiceTopologyStory: Story = {
                     label: 'Minimap: off',
                     activeLabel: 'Minimap: on',
                     active: minimapOn,
-                    onToggle: () => setMinimapOn((v) => !v),
+                    onToggle: () => setMinimapOn((v) => !v)
                   },
                   ...dock.items,
                   {
@@ -339,11 +339,11 @@ export const ServiceTopologyStory: Story = {
                     label: 'Switch to dark theme',
                     activeLabel: 'Switch to light theme',
                     active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme,
+                    onToggle: ctx.toggleTheme
                   },
                 ]}
               />
-            ),
+            )
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
           right={dock.region}
@@ -358,5 +358,5 @@ export const ServiceTopologyStory: Story = {
         </GraphCanvasApp>
       </ThemeProvider>
     );
-  },
+  }
 };

@@ -58,7 +58,7 @@ import {
   GraphStatusBar,
   NodeStructureEditorPanel,
   NodeStylingEditorPanel,
-  ToolbarItems,
+  ToolbarItems
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
 import {
@@ -67,7 +67,7 @@ import {
   type GraphCanvas,
   type GraphData,
   type NodeStylingTemplate,
-  type NodeTypeBinding,
+  type NodeTypeBinding
 } from '@invana/graph';
 import { invanaCodeKg } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider } from '@invana/themes';
@@ -95,7 +95,7 @@ export const CanvasDesignerStory: Story = {
       'layer:engine-platform': 'Engine · platform (32)',
       'layer:studio-data': 'Studio · data (21)',
       'layer:modeller': 'Modeller (20)',
-      'layer:config': 'Config (13)',
+      'layer:config': 'Config (13)'
     };
 
     /**
@@ -105,7 +105,7 @@ export const CanvasDesignerStory: Story = {
      */
     const PRESETS = {
       cards: { structure: 'idCard', styling: 'idCard', collide: 130, distance: 190, charge: -700 },
-      dots: { structure: 'circle', styling: 'circle', collide: 26, distance: 70, charge: -180 },
+      dots: { structure: 'circle', styling: 'circle', collide: 26, distance: 70, charge: -180 }
     };
 
     const [cluster, setCluster] = useState('layer:engine-domain');
@@ -129,8 +129,8 @@ export const CanvasDesignerStory: Story = {
             type: 'type',
             title: 'data.name',
             subtitle: 'data.summary',
-            label: 'data.name',
-          },
+            label: 'data.name'
+          }
         };
       }
       return seed;
@@ -158,7 +158,7 @@ export const CanvasDesignerStory: Story = {
         nodes: keep,
         edges: invanaCodeKg.edges
           .filter((e) => idSet.has(e.source) && idSet.has(e.target))
-          .map((e) => e),
+          .map((e) => e)
       };
     }, [cluster]);
 
@@ -170,24 +170,24 @@ export const CanvasDesignerStory: Story = {
           // The templates carry the node's colour; nothing else may repaint it.
           color: { enabled: false },
           hover: { enabled: true, state: 'highlighted', degree: 1, direction: 'both' },
-          'click-select': { enabled: true, multiple: true, trigger: ['shift'] },
+          'click-select': { enabled: true, multiple: true, trigger: ['shift'] }
         },
         layers: {
           background: { type: 'pattern', patternType: 'dots', size: 1.2, spacing: 26, alpha: 0.7 },
           graph: {
             nodeTypes: SEED_BINDINGS,
             nodeStylingTemplates: BUILT_IN_STYLINGS,
-            edge: { style: { strokeWidth: 1.1, strokeAlpha: 0.35, arrowTargetShape: 'triangle', arrowTargetSize: 5 } },
-          },
+            edge: { style: { strokeWidth: 1.1, strokeAlpha: 0.35, arrowTargetShape: 'triangle', arrowTargetSize: 5 } }
+          }
         },
         layouts: {
           'graph-force': {
             charge: { strength: PRESETS.cards.charge },
             link: { distance: PRESETS.cards.distance },
             collide: { radius: PRESETS.cards.collide },
-            animate: false,
-          },
-        },
+            animate: false
+          }
+        }
       }),
       // Seed literals are render-local and identical on every render.
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -223,7 +223,7 @@ export const CanvasDesignerStory: Story = {
           nextBindings[t] = {
             structure: p.structure,
             styling: p.styling,
-            bindings: bindings[t]?.bindings ?? {},
+            bindings: bindings[t]?.bindings ?? {}
           };
         }
         setPreset(next);
@@ -235,9 +235,9 @@ export const CanvasDesignerStory: Story = {
             'graph-force': {
               charge: { strength: p.charge },
               link: { distance: p.distance },
-              collide: { radius: p.collide },
-            },
-          },
+              collide: { radius: p.collide }
+            }
+          }
         });
         // A preset changes the node's *size* by an order of magnitude (220×96
         // card ⇄ small circle), so the old camera framing is meaningless. `refresh()`
@@ -277,7 +277,7 @@ export const CanvasDesignerStory: Story = {
                     label: 'Preset',
                     value: preset,
                     options: { cards: 'Cards (idCard)', dots: 'Dots (circle)' },
-                    onChange: (v) => applyPreset(v as 'cards' | 'dots'),
+                    onChange: (v) => applyPreset(v as 'cards' | 'dots')
                   },
                   {
                     type: 'select',
@@ -285,7 +285,7 @@ export const CanvasDesignerStory: Story = {
                     label: 'Sample',
                     value: cluster,
                     options: CLUSTERS,
-                    onChange: setCluster,
+                    onChange: setCluster
                   },
                   {
                     type: 'toggle',
@@ -295,11 +295,11 @@ export const CanvasDesignerStory: Story = {
                     label: 'Switch to dark theme',
                     activeLabel: 'Switch to light theme',
                     active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme,
+                    onToggle: ctx.toggleTheme
                   },
                 ]}
               />
-            ),
+            )
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
           // The three-layer designer fills the resizable right region. `ctx.canvas`
@@ -330,7 +330,7 @@ export const CanvasDesignerStory: Story = {
                               label: 'Entity type',
                               value: editingType,
                               options: Object.fromEntries(TYPES.map((t) => [t, t])),
-                              onChange: (v) => setEditingType(v as InvanaCodeNodeLabel),
+                              onChange: (v) => setEditingType(v as InvanaCodeNodeLabel)
                             },
                           ]}
                         />
@@ -346,7 +346,7 @@ export const CanvasDesignerStory: Story = {
                           submitLabel={`Apply to ${editingType}`}
                         />
                       </div>
-                    ),
+                    )
                   },
                   {
                     value: 'styling',
@@ -362,7 +362,7 @@ export const CanvasDesignerStory: Story = {
                               label: 'Styling template',
                               value: editingStyling,
                               options: { idCard: 'idCard (card)', circle: 'circle (simple)' },
-                              onChange: (v) => setEditingStyling(v as 'idCard' | 'circle'),
+                              onChange: (v) => setEditingStyling(v as 'idCard' | 'circle')
                             },
                           ]}
                         />
@@ -375,7 +375,7 @@ export const CanvasDesignerStory: Story = {
                           onSubmit={applyStyling}
                         />
                       </div>
-                    ),
+                    )
                   },
                   {
                     value: 'canvas',
@@ -385,14 +385,14 @@ export const CanvasDesignerStory: Story = {
                         canvas={ctx.canvas}
                         className="border-0 bg-transparent shadow-none"
                       />
-                    ),
+                    )
                   },
                 ]}
               />
-            ),
+            )
           }}
         />
       </ThemeProvider>
     );
-  },
+  }
 };

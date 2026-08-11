@@ -455,7 +455,7 @@ notification flowing, migrate consumers one at a time, then delete the old path.
 | Area | Today |
 |---|---|
 | Config | `Canvas.config` is a **plain object** (`Canvas.ts:120`); `update()` deep-merges + fans to `setOptions` (`:384`); `get()` (`:404`); emits coarse **`options:change`** (`:397`); `_activate` applies init config (`:365`); late-layer catch-up (`:184`). |
-| zustand | `createLayerStore` (`state/Store.ts`, devtools→subscribeWithSelector→immer) — wired only into base `Layer`; `GraphLayer` state is a stub. |
+| zustand | ~~`createLayerStore` (`state/Store.ts`, devtools→subscribeWithSelector→immer) — wired only into base `Layer`; `GraphLayer` state is a stub.~~ **Landed 2026-08-11 (D2):** deleted. `Layer.state` is a `ReactiveStore` from the port; `@invana/canvas` no longer depends on zustand or immer. See `docs/rfcs/fix/2026-08-10-zustand-imported-outside-canvas-store.md`. |
 | Bulk data | `ColumnStore` + `DirtyBatcher` in `packages/canvas/src/state/`; `GraphStore` (graph) with `flush` → layer dirty-drain. |
 | Interaction | selection in `ClickSelectBehaviour` maps; hover in `GraphStore` presence; `node:state`/`edge:state` partly built (`store-owns-state-plan` §2.1/2.2 done). |
 | React | `useGraphCanvasOptions` copies config into `useState`, re-syncs on `options:change` (the copy anti-pattern). |
@@ -485,7 +485,7 @@ notification flowing, migrate consumers one at a time, then delete the old path.
 |---|---|---|---|
 | `packages/canvas/src/engine/Canvas.ts` (`config`/`update`/`get`/`options:change`) | back with `state.view`; re-emit event | **load-bearing edit** | **High** — no-test pkg (rule 10); must stay behaviour-identical |
 | `packages/canvas/src/state/ColumnStore.ts`, `DirtyBatcher.ts` | relocate → canvas-state; re-export shim | relocate | Low — re-export keeps imports valid |
-| `packages/canvas/src/state/Store.ts` (`createLayerStore`) | superseded by port + zustand adapter | replace | Low — one zustand wrapper, not two |
+| `packages/canvas/src/state/Store.ts` (`createLayerStore`) | superseded by port + zustand adapter | replace | Low — one zustand wrapper, not two — **✅ landed 2026-08-11**, `src/state/` deleted outright |
 | `packages/canvas/src/engine/CanvasConfig.ts` (`deepMerge`/`configurable`) | move/share patch helpers to canvas-state | relocate | Low |
 | `packages/graph` `GraphStore` | `DataStore` subclass **owned by `CanvasStore.data[id]`** (D7), not by the layer; `flush` unchanged | **ownership move** | **Med** — data lifecycle shifts to CanvasStore |
 | `packages/graph` `GraphLayer` + `<GraphLayer data>` | reads/subscribes `CanvasStore.data[dataLayerId]` instead of owning a store; `setData`/`data` prop routes to the owned store | refactor | Med — data-flow change; targeted render preserved |
@@ -533,6 +533,11 @@ in the loop.**
 - **D1 — relocate `ColumnStore`/`DirtyBatcher`** into `@invana/canvas-store` (leaf can't depend back
   on canvas; this is the clean way for it to own the data hot path). `@invana/canvas` re-exports.
 - **D2 — supersede `Store.ts`/`createLayerStore`** with the port + zustand adapter (one wrapper).
+  **✅ Landed 2026-08-11** via `docs/rfcs/fix/2026-08-10-zustand-imported-outside-canvas-store.md`.
+  Scope grew in the landing: the same RFC also moved `specs/` + `hit/` into the kernel, so
+  `@invana/canvas` now has **no third-party dependency at all** (`rbush` went with picking), and the
+  rule is enforced by `pnpm check-boundaries` rather than prose. Devtools per layer was dropped —
+  nothing subscribed to those stores.
 - **D3 — `view.interaction` *owns* selection/hover/states** (M2 migrates `ClickSelectBehaviour`
   maps + `GraphStore` presence). Single source, collab-replicable.
 - **D4 — telemetry emits structured *events*** (`{action, changedPaths, patch, ts, actor?}`); the

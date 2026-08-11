@@ -9,7 +9,7 @@ import {
   ClickSelectBehaviour,
   DragNodeBehaviour,
   D3ForceLayout,
-  type GraphLayerProps,
+  type GraphLayerProps
 } from '@invana/canvas-react';
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphData } from '@invana/graph';
@@ -64,7 +64,7 @@ const DATA: GraphData = {
     { id: 'ring-1', source: 'hub-1', target: 'hub-2', type: 'NEXT' },
     { id: 'ring-2', source: 'hub-2', target: 'hub-3', type: 'NEXT' },
     { id: 'ring-3', source: 'hub-3', target: 'hub-1', type: 'NEXT' },
-  ],
+  ]
 };
 
 const NODE: GraphLayerProps['node'] = {
@@ -77,8 +77,8 @@ const NODE: GraphLayerProps['node'] = {
     labelColor: 0x1e293b,
     labelFontSize: 11,
     labelPlacement: 'bottom',
-    labelOffsetY: 6,
-  },
+    labelOffsetY: 6
+  }
 };
 const EDGE: GraphLayerProps['edge'] = { style: { strokeColor: 0x94a3b8, strokeWidth: 1.5 } };
 
@@ -91,9 +91,9 @@ const CONFIG: CanvasConfig = {
       charge: { strength: -320 },
       link: { distance: 90 },
       collide: { radius: 24 },
-      animate: true,
-    },
-  },
+      animate: true
+    }
+  }
 };
 
 export const Advanced: Story = {
@@ -122,5 +122,5 @@ export const Advanced: Story = {
         />
       </GraphCanvas>
     </div>
-  ),
+  )
 };

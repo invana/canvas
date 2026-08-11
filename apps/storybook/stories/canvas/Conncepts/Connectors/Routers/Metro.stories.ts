@@ -1,9 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import {
-  Canvas, DragPanBehaviour, DragShapeBehaviour, WheelZoomBehaviour,
-  WorldLayer, PrimitivesRenderer, arrowMarkerSpec,
-} from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
+import { Canvas, DragPanBehaviour, DragShapeBehaviour, WheelZoomBehaviour, WorldLayer, type IElementRenderer } from '@invana/canvas';
+import { arrowMarkerSpec } from '@invana/renderer-pixijs';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -22,10 +19,10 @@ export const Metro: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -45,7 +42,7 @@ export const Metro: Story = {
       enabled: true,
       renderer: layer.renderer,
       filter: (id) => id.startsWith('obstacle-'),
-      reRouteConnectors: true,
+      reRouteConnectors: true
     }));
 
     const settings = {
@@ -72,18 +69,18 @@ export const Metro: Story = {
       showSourceMarker: false,
       showTargetMarker: true,
       markerLengthScale: 5,
-      markerWidthScale: 4,
+      markerWidthScale: 4
     };
 
     layer.renderer.addShape('a', {
       kind: 'circle', x: -280, y: -150, radius: 24,
       fill: { kind: 'solid', color: 0x4f9cf9 },
-      stroke: { color: 0x1e40af, width: 2 },
+      stroke: { color: 0x1e40af, width: 2 }
     });
     layer.renderer.addShape('b', {
       kind: 'circle', x: 280, y: 150, radius: 24,
       fill: { kind: 'solid', color: 0x10b981 },
-      stroke: { color: 0x047857, width: 2 },
+      stroke: { color: 0x047857, width: 2 }
     });
 
     const obstacles = [
@@ -121,7 +118,7 @@ export const Metro: Story = {
           obstacles: settings.avoidance,
           gridStep: settings.gridStep,
           margin: settings.margin,
-          inflate: settings.inflate,
+          inflate: settings.inflate
         },
         pathStyle: settings.pathStyle,
         pathStyleOpts,
@@ -133,7 +130,7 @@ export const Metro: Story = {
           : undefined,
         targetMarker: settings.showTargetMarker
           ? arrowMarkerSpec({ lengthScale: settings.markerLengthScale, widthScale: settings.markerWidthScale, fill: settings.strokeColor })
-          : undefined,
+          : undefined
       });
     };
 
@@ -171,5 +168,5 @@ export const Metro: Story = {
     markerFolder.add(settings, 'showTargetMarker').onChange(drawEdge);
     markerFolder.add(settings, 'markerLengthScale', 0, 12, 0.5).onChange(drawEdge);
     markerFolder.add(settings, 'markerWidthScale', 0, 10, 0.5).onChange(drawEdge);
-  },
+  }
 };

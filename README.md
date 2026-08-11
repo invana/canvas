@@ -28,7 +28,8 @@ pnpm --filter @invana/canvas build
 
 | Package | Responsibility |
 |---|---|
-| [`@invana/canvas`](./packages/canvas) | The engine — `Canvas`, `Layer` / `Behaviour` / `Layout` base classes, `ShapesRenderer`, built-in background / dev-info / layers-panel layers + camera-input behaviours. The **only** package that touches `pixi.js`. |
+| [`@invana/canvas`](./packages/canvas) | The engine — `Canvas`, `Layer` / `Behaviour` / `Layout` base classes, the spec vocabulary, picking, connector geometry, camera, and the renderer contract. **Renderer-agnostic: imports no drawing library.** |
+| [`@invana/renderer-pixijs`](./packages/renderer-pixijs) | The PixiJS drawing backend — implements the renderer contract. The **only** package that touches `pixi.js`. Swappable: `@invana/canvas` declares it an optional peer and resolves it lazily. |
 | [`@invana/graph`](./packages/graph) | Graph domain on the engine — `GraphCanvas`, `GraphLayer`, `MiniMapLayer`, the graph store, and hover / select / lasso / brush / drag / context-menu behaviours. |
 | [`@invana/graph-layout-*`](./packages) | One layout algorithm each — `d3-force`, `elkjs`, `d3-hierarchy`, `d3-sankey`, `geometric`. |
 | [`@invana/graph-layer-*`](./packages) | Overlay layers — `d3-contour` (density), `bubble-sets` (group annotation), `maplibre` (basemap). |

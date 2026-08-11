@@ -64,8 +64,10 @@ export function resolveExportBackground(canvas: Canvas, bg: ExportBackground): s
 export function captureRect(canvas: Canvas, area: ExportArea, padding = 24, aspectRatio?: number): Rect {
   let rect: Rect;
   if (area === 'content') {
-    const b = canvas.world.getLocalBounds();
-    rect = { x: b.minX - padding, y: b.minY - padding, width: b.width + padding * 2, height: b.height + padding * 2 };
+    const b = canvas.renderer?.worldContentBounds();
+    rect = b
+      ? { x: b.x - padding, y: b.y - padding, width: b.width + padding * 2, height: b.height + padding * 2 }
+      : { x: 0, y: 0, width: 0, height: 0 };
   } else {
     rect = canvas.camera.getVisibleBounds();
   }

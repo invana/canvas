@@ -43,9 +43,9 @@ export const Stacking: Story = {
           labelColor: 0x1f2937,
           labelPlacement: 'bottom',
           labelFontSize: 12,
-          labelOffsetY: 8,
+          labelOffsetY: 8
         },
-        states: ['selected'],
+        states: ['selected']
       },
       { type: 'node',
         id: 'sel-dim',
@@ -59,9 +59,9 @@ export const Stacking: Story = {
           labelColor: 0x1f2937,
           labelPlacement: 'bottom',
           labelFontSize: 12,
-          labelOffsetY: 8,
+          labelOffsetY: 8
         },
-        states: ['selected', 'dimmed'],
+        states: ['selected', 'dimmed']
       },
       { type: 'node',
         id: 'sel-dim-pulse',
@@ -75,12 +75,12 @@ export const Stacking: Story = {
           labelColor: 0x1f2937,
           labelPlacement: 'bottom',
           labelFontSize: 12,
-          labelOffsetY: 8,
+          labelOffsetY: 8
         },
         state: {
-          pulse: { bgStrokeWidth: 8, bgStrokeColor: 0xfacc15 },
+          pulse: { bgStrokeWidth: 8, bgStrokeColor: 0xfacc15 }
         },
-        states: ['selected', 'dimmed', 'pulse'],
+        states: ['selected', 'dimmed', 'pulse']
       },
     ];
 
@@ -89,17 +89,17 @@ export const Stacking: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes, edges: [] } },
+      options: { initData: { nodes, edges: [] } }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
 
     const canvasOptions = {
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

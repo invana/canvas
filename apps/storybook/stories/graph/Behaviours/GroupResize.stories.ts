@@ -8,7 +8,7 @@ import {
   NodeResizeBehaviour,
   type GraphEdge,
   type GraphNode,
-  type NodeStyle,
+  type NodeStyle
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../div-util';
 
@@ -48,7 +48,7 @@ export const GroupResizeStory: Story = {
       dashLength: 5,
       gapLength: 4,
       framePadding: 4,
-      minSize: 20,
+      minSize: 20
     };
 
     const nodes: GraphNode[] = [
@@ -65,20 +65,20 @@ export const GroupResizeStory: Story = {
           labelColor: 0x6b7fff,
           labelFontSize: 11,
           labelFontWeight: 600,
-          labelPlacement: 'inside-top-left',
-        },
+          labelPlacement: 'inside-top-left'
+        }
       },
       { type: 'node',
         id: 'node1',
         parentId: 'group-a',
         position: { x: 60, y: 60 },
-        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6 },
+        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6 }
       },
       { type: 'node',
         id: 'node2',
         parentId: 'group-a',
         position: { x: 200, y: 60 },
-        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6 },
+        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6 }
       },
       { type: 'node',
         id: 'plain-rect',
@@ -93,8 +93,8 @@ export const GroupResizeStory: Story = {
           labelColor: 0xa16207,
           labelFontSize: 11,
           labelFontWeight: 600,
-          labelPlacement: 'inside-top-left',
-        },
+          labelPlacement: 'inside-top-left'
+        }
       },
     ];
 
@@ -118,7 +118,7 @@ export const GroupResizeStory: Story = {
       new DragNodeBehaviour({
         id: 'drag',
         targetLayerId: 'graph',
-        filter: (id) => graph.getGroupRole(id) !== 'expanded',
+        filter: (id) => graph.getGroupRole(id) !== 'expanded'
       }),
     );
 
@@ -138,7 +138,7 @@ export const GroupResizeStory: Story = {
         frameColor: settings.frameColor,
         dashArray: [settings.dashLength, settings.gapLength],
         framePadding: settings.framePadding,
-        minSize: settings.minSize,
+        minSize: settings.minSize
       });
     canvas.behaviours.register(buildResize());
 
@@ -147,8 +147,8 @@ export const GroupResizeStory: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         drag: { enabled: true },
-        resize: { enabled: true },
-      },
+        resize: { enabled: true }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -165,7 +165,7 @@ export const GroupResizeStory: Story = {
       const priorStyle = (node.style ?? {}) as NodeStyle;
       const priorGroup = priorStyle.group ?? {};
       graph.store.updateNode('group-a', {
-        style: { ...priorStyle, group: { ...priorGroup, [key]: value } },
+        style: { ...priorStyle, group: { ...priorGroup, [key]: value } }
       });
     };
 
@@ -174,7 +174,7 @@ export const GroupResizeStory: Story = {
       if (!node) return;
       const priorStyle = (node.style ?? {}) as NodeStyle;
       graph.store.updateNode('plain-rect', {
-        style: { ...priorStyle, resizable: value },
+        style: { ...priorStyle, resizable: value }
       });
     };
 
@@ -208,5 +208,5 @@ export const GroupResizeStory: Story = {
       .add(settings, 'shapeResizable')
       .name('plain rect: style.resizable')
       .onChange(setShapeResizable);
-  },
+  }
 };

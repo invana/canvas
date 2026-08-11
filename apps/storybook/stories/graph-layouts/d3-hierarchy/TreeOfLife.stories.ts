@@ -2,14 +2,14 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
   DragPanBehaviour,
-  WheelZoomBehaviour,
+  WheelZoomBehaviour
 } from '@invana/canvas';
 import { GraphCanvas, GraphLayer, TextResolutionLODBehaviour, ThemeBehaviour } from '@invana/graph';
 import type { ShapeLabelStyle } from '@invana/canvas';
 import {
   D3HierarchyLayout,
   type D3HierarchyLayoutMode,
-  type D3HierarchyLayoutOptions,
+  type D3HierarchyLayoutOptions
 } from '@invana/graph-layout-d3-hierarchy';
 import type { LayoutOptions } from '@invana/canvas';
 import { lifeTreeAsGraph } from '@invana/graph-datasets';
@@ -58,7 +58,7 @@ export const TreeOfLifeStory: Story = {
       // Sharp glyph textures past a zoom threshold — same trick the other
       // hierarchy stories use; relevant here because the dataset has 145
       // 8-12 char labels that go soft when over-magnified.
-      sharpLabelsOnZoom: true,
+      sharpLabelsOnZoom: true
     };
 
     // ── Build graph data from the parsed Newick tree ──────────────────────
@@ -94,10 +94,10 @@ export const TreeOfLifeStory: Story = {
             // near-invisible pip so the radial "lines" dominate the read.
             shape: {
               kind: 'circle' as const,
-              radius: (n.data.isLeaf ? settings.leafNodeSize : settings.internalNodeSize) / 2,
+              radius: (n.data.isLeaf ? settings.leafNodeSize : settings.internalNodeSize) / 2
             },
-            bgFill: colorFor(n.data.kingdom),
-          },
+            bgFill: colorFor(n.data.kingdom)
+          }
         })),
         edges: data.edges.map((e) => ({
           id: e.id,
@@ -106,8 +106,8 @@ export const TreeOfLifeStory: Story = {
           target: e.target,
           // Per-edge stroke override — wins over the layer template's
           // `edge.style.strokeColor`.
-          style: { strokeColor: colorFor(kingdomOf.get(e.target)) },
-        })),
+          style: { strokeColor: colorFor(kingdomOf.get(e.target)) }
+        }))
       };
     };
 
@@ -153,14 +153,14 @@ export const TreeOfLifeStory: Story = {
               text: displayName,
               fontSize: settings.labelFontSize,
               fontWeight: 400,
-              fill: 0x0f172a,
+              fill: 0x0f172a
             },
             placement: 'center',
             offset: {
               x: radialDist * Math.cos(theta),
-              y: radialDist * Math.sin(theta),
+              y: radialDist * Math.sin(theta)
             },
-            rotation: isLeftHalf ? theta + Math.PI : theta,
+            rotation: isLeftHalf ? theta + Math.PI : theta
           };
 
           graph.store.updateNode(node.id, { style: { ...baseStyle, labelStyle } });
@@ -178,7 +178,7 @@ export const TreeOfLifeStory: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: buildGraphData() },
+      options: { initData: buildGraphData() }
     });
 
     canvas.layers.add(
@@ -192,14 +192,14 @@ export const TreeOfLifeStory: Story = {
 
     const labelResolutionLOD = new TextResolutionLODBehaviour({
       id: 'label-resolution',
-      targetLayerId: 'graph',
+      targetLayerId: 'graph'
     });
     canvas.behaviours.register(labelResolutionLOD);
 
     const layout = new D3HierarchyLayout({
       id: 'radial',
       type: 'node',
-      targetLayerId: 'graph',
+      targetLayerId: 'graph'
     } as D3HierarchyLayoutOptions & LayoutOptions);
     canvas.layouts.add(layout);
 
@@ -217,11 +217,11 @@ export const TreeOfLifeStory: Story = {
                 // `step-radial` matches d3's `linkStep` helper.
                 pathType: 'step-radial',
                 sourceAnchor: 'center',
-                targetAnchor: 'center',
-              },
-            },
-          },
-        },
+                targetAnchor: 'center'
+              }
+            }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
@@ -230,17 +230,17 @@ export const TreeOfLifeStory: Story = {
           enabled: true,
           mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#0f172a' },
-          dark: { backgroundColor: '#0b1220', color: '#e5e7eb' },
+          dark: { backgroundColor: '#0b1220', color: '#e5e7eb' }
         },
-        'label-resolution': { enabled: settings.sharpLabelsOnZoom },
+        'label-resolution': { enabled: settings.sharpLabelsOnZoom }
       },
       layouts: {
         radial: {
           mode: settings.mode,
-          radius: settings.radius,
-        },
+          radius: settings.radius
+        }
       },
-      activeLayout: 'radial',
+      activeLayout: 'radial'
     };
 
     // Once the active layout settles, attach the rim labels (their rotation
@@ -301,5 +301,5 @@ export const TreeOfLifeStory: Story = {
       .onChange((on: boolean) => (on ? labelResolutionLOD.enable() : labelResolutionLOD.disable()));
 
     gui.add({ refit: () => canvas.camera.fitContent(graph.getBounds(), 80) }, 'refit').name('Re-fit camera');
-  },
+  }
 };

@@ -16,7 +16,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
   DragPanBehaviour,
-  WheelZoomBehaviour,
+  WheelZoomBehaviour
 } from '@invana/canvas';
 import { GraphCanvas, DragNodeBehaviour, GraphLayer, ThemeBehaviour } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
@@ -68,12 +68,12 @@ export const Lattice: Story = {
             color: '#475569',
             size: 1.5,
             spacing: 24,
-            alpha: 0.85,
+            alpha: 0.85
           },
           graph: {
             node: { style: { shape: { kind: 'circle', radius: 3 }, bgFill: 0x60a5fa } },
-            edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 0.8, arrowTargetShape: 'none' } },
-          },
+            edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 0.8, arrowTargetShape: 'none' } }
+          }
         },
         behaviours: {
           pan: { enabled: true },
@@ -83,8 +83,8 @@ export const Lattice: Story = {
             enabled: true,
             mode: 'system',
             light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
-            dark: { backgroundColor: '#0f172a', color: '#475569' },
-          },
+            dark: { backgroundColor: '#0f172a', color: '#475569' }
+          }
         },
         layouts: { 
           force: {
@@ -94,17 +94,17 @@ export const Lattice: Story = {
             velocityDecay: 0.4,
             link: { distance: 30, strength: 1, iterations: 1 },
             charge: { strength: -30, theta: 0.9, distanceMax: Infinity },
-            center: { x: 0, y: 0, strength: 1 },
-          },
+            center: { x: 0, y: 0, strength: 1 }
+          }
         },
         // Which layout runs — GraphCanvas auto-applies it to its target layer
         // when data arrives (below) and on any later topology change.
-        activeLayout: 'force',
+        activeLayout: 'force'
       };
     await canvas.init({
       container,
       autoResize: true,
-      config: canvasOptions,
+      config: canvasOptions
     });
     // Data was set on the graph layer (options.data); on mount it loads, and the
     // active 'force' layout auto-runs against it. Nothing else to call.
@@ -163,5 +163,5 @@ export const Lattice: Story = {
     gui
       .add({ fit: () => canvas.camera.fitContent(graph.getBounds(), 80) }, 'fit')
       .name('Fit to content');
-  },
+  }
 };

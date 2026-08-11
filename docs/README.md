@@ -24,6 +24,35 @@ working design-of-record documents. Day-to-day API/concept docs live in
     *shapes*, so the edges **between a frame's own members** are painted over. Scopes
     the landing of the `plane` axis from `render-planes-and-emphasis-plan.md` (design
     locked there, not here) + the blast radius across every `style.group` graph.
+  - [feat/2026-08-11-canvas-src-layout-hides-the-backend-seam.md](./rfcs/feat/2026-08-11-canvas-src-layout-hides-the-backend-seam.md)
+    — 📋 proposed. **The `packages/canvas/src` file + folder structure**, before and
+    after: 16 top-level folders / 76 files → **6 / 82**, restructured around the future
+    `@invana/canvas-core` boundary. The backend-facing half (`core/` — contracts,
+    connector geometry, badges, animation, SVG serialisers, the headless reference
+    implementation) becomes one contiguous subtree that lifts out as a package by moving
+    a folder; `export/` becomes `io/` since it holds `importCanvasState` too; the
+    `./specs` subpath is **deleted** — an 18-line re-export of a re-export, and the
+    npm numbers (120 downloads/month on a two-month-old package, with `0.0.x` ranges
+    pinning exactly) say no one is on the other end of the compatibility promise. Full
+    tree, per-folder move table, new-file list, and the 6 rules that produced it.
+  - [feat/2026-08-11-canvas-store-structure.md](./rfcs/feat/2026-08-11-canvas-store-structure.md)
+    — 📋 proposed. **The `packages/canvas-store/src` structure**, 16 folders / 51 files
+    → **14 / 51**. A deliberately light touch — every kernel folder already names a real
+    concern. `actions/` + `history/` fold into `view/` (both are operations on the view
+    store); `renderer/IRenderer.ts` is renamed `backend.ts` because **the filename lies**
+    — it declares only `RendererBackend`, and 33 of its 34 lines are a comment explaining
+    that `IRenderer` deliberately lives elsewhere. Also resolves a genuine duplicate:
+    `theme/` exists in *both* canvas-store and canvas with the same three types, so the
+    kernel's becomes canonical — noting the one behavioural difference (the canvas copy
+    emits `theme:change` without a source descriptor).
+  - [feat/2026-08-11-canvas-core-structure.md](./rfcs/feat/2026-08-11-canvas-core-structure.md)
+    — 📋 proposed. **The new `@invana/canvas-core` package**: 47 files / 5 folders
+    (`contracts/` · `geometry/` · `svg/` · `animation/` · `headless/`), lifted wholesale
+    from `@invana/canvas`'s `src/core/` subtree — nothing written fresh at extraction
+    time. So a rendering backend depends on a small frozen package rather than the whole
+    engine. Carries the file-origin map, the `package.json`, the four-package layering,
+    the three prerequisites, and a **checkable acceptance test**:
+    `grep "@invana/canvas'" packages/renderer-pixijs/src` → 0 hits.
 
 ## Architecture
 
@@ -64,8 +93,8 @@ working design-of-record documents. Day-to-day API/concept docs live in
 
 - [event-taxonomy.md](./event-taxonomy.md) — canonical event catalogue + the `<domain>:<subject>:<action>` bus naming scheme (telemetry / realtime / query), and the **state-ownership migration map** that moves all state + events out of the engine into `canvas-store`.
 - [canvas-3-package-architecture.md](./canvas-3-package-architecture.md) — **draft**: target split into `canvas-store` (state + events) / `canvas` (orchestrator) / `canvas-pixijs` (renderer), with one end-to-end example (state + events + telemetry + history + rendering + layout updates) and the phased path (`IRenderer` abstraction gated to Phase 3).
-- [canvas-renderer-split-plan.md](./canvas-renderer-split-plan.md) — **the concrete split plan**: a file census of `packages/canvas/src` (49/117 import pixi) classifying every subsystem as → `canvas-pixijs` (renderer) / stays in `canvas` (orchestrator) / deleted-or-relocated (state machinery) / straddler-split across the `IRenderer` seam, plus the hard parts and phasing (P0–P4). Anchored on the built `DataStore`.
-- [renderer-pixijs-extraction-plan.md](./renderer-pixijs-extraction-plan.md) — **the P2 execution plan** (post kernel+seam): move drawing out of `canvas` into a new `@invana/renderer-pixijs`. Key finding — drawing already sits behind one imperative seam (`PrimitivesRenderer`; `graph` has zero pixi), so it's an interface-extraction, not a rewrite. Two interfaces (`IRenderer` lifecycle + `IPrimitivesRenderer` drawing), the 45-file census, the three hard parts (spec-type split · `ISurface` handle · camera/viewport rewire), and phasing P2.0–P2.4. Chooses the imperative model (store-projection = later north star).
+- [current-architecture.md](./current-architecture.md) — **as-built**: the packages, the vocabulary (six things are called "layer"), the concept/ownership diagram, today's data flow, and the full census of where pixi is bound — 53 files inside `@invana/canvas` plus **7 rule-breaking leaks** outside it. Read first.
+- [renderer-split-design.md](./renderer-split-design.md) — **target + refactor**: `canvas` orchestrates, renderers **subscribe to the store and draw**. Specs become durable state, custom paint collapses into a `path` spec kind, and the renderer contract shrinks to subscribe + a small lifecycle surface. Includes the three.js second-backend design (orthographic, engine-owned camera/picking, SDF text) and the P0–P7 refactor path.
 
 ## Operations / domain API
 

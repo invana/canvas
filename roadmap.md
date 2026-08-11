@@ -50,8 +50,13 @@ Package layering — engine at the base, domain on top, React/UI and apps above
                    @invana/graph        GraphCanvas · GraphLayer · GraphStore · behaviours
                           │ peer
                           ▼
-                   @invana/canvas       Canvas · Layer/Behaviour/Layout · Renderer · ColumnStore
-                                        (the only package that touches pixi.js / WebGPU)
+                   @invana/canvas       Canvas · Layer/Behaviour/Layout · specs · picking ·
+                          │              connector geometry · camera · IRenderer contract
+                          │              (renderer-AGNOSTIC — imports no drawing library)
+                          ▼ optional peer, resolved by lazy import()
+            @invana/renderer-pixijs      the pixi backend: Application, viewport, shapes,
+                                         connectors, decorations, textures, fonts
+                                         (the only package that touches pixi.js / WebGPU)
 ```
 
 Runtime model — one serialisable config is the source of truth; the renderer reads a
@@ -83,6 +88,13 @@ Legend: ✅ shipped · 🚧 in progress · 📋 planned
 | Serialisable config as single source of truth (`get()` / `update()` / `options:change`) | ✅ |
 | Typed-array `ColumnStore` + streaming feeds (frame-flush, batched events) | ✅ |
 | Light / dark theming via external config patches | ✅ |
+| **Pluggable renderer backend** — `@invana/canvas` is renderer-agnostic; the pixi backend lives in `@invana/renderer-pixijs` behind `IRenderer` / `ISurface` / `IElementRenderer` / `ICameraBinding`, resolved by lazy import as an optional peer. Enforced by `pnpm check-boundaries` | ✅ |
+| **Headless backend** — `HeadlessRenderer` draws nothing and implements everything, so layouts, picking, bounds and projection are testable with no GPU or DOM | ✅ |
+| Engine owns the only `requestAnimationFrame`; the backend presents when driven | ✅ |
+| Picking engine-side from specs (rbush + per-kind `contains`), identical across backends | ✅ |
+| Decorations & badges as spec state (still imperative commands today) | 🚧 |
+| Geometry batching — one geometry per (kind, style) rather than one display object per element; the ceiling for 100k+ elements | 📋 |
+| Second backend — `@invana/renderer-threejs` | 📋 |
 
 ### Layouts
 | Layout | Package | Status |

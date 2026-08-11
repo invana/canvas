@@ -69,12 +69,12 @@ export const OffsetAndRotationStory: Story = {
               labelBackgroundStrokeColor: 0xcbd5e1,
               labelBackgroundStrokeWidth: 1,
               labelBackgroundCornerRadius: 4,
-              labelBackgroundPadding: 4,
-            },
-          },
-        },
+              labelBackgroundPadding: 4
+            }
+          }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
@@ -89,8 +89,8 @@ export const OffsetAndRotationStory: Story = {
             ...prev,
             labelOffsetX: settings.offsetX,
             labelOffsetY: settings.offsetY,
-            labelRotation: (settings.rotationDeg * Math.PI) / 180,
-          },
+            labelRotation: (settings.rotationDeg * Math.PI) / 180
+          }
         });
       }
     };
@@ -99,5 +99,5 @@ export const OffsetAndRotationStory: Story = {
     gui.add(settings, 'offsetX', -80, 80, 1).onChange(apply);
     gui.add(settings, 'offsetY', -80, 80, 1).onChange(apply);
     gui.add(settings, 'rotationDeg', -180, 180, 1).name('rotation (deg)').onChange(apply);
-  },
+  }
 };

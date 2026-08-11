@@ -8,7 +8,7 @@ import {
   type EdgeAnchor,
   type GraphEdge,
   type GraphNode,
-  type NodeShapeOptions,
+  type NodeShapeOptions
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
@@ -41,9 +41,9 @@ export const Bundle: Story = {
         kind: 'polygon',
         vertices: Array.from({ length: 32 }, (_, i) => ({
           x: Math.cos((i / 32) * Math.PI * 2) * 50,
-          y: Math.sin((i / 32) * Math.PI * 2) * 30,
-        })),
-      },
+          y: Math.sin((i / 32) * Math.PI * 2) * 30
+        }))
+      }
     };
     const ANCHORS: readonly EdgeAnchor[] = [
       'boundary',
@@ -57,7 +57,7 @@ export const Bundle: Story = {
       anchor: 'boundary' as EdgeAnchor,
       count: 7,
       spacing: 22,
-      beta: 0.85,
+      beta: 0.85
     };
 
     const nodeStyle = () => ({ bgFill: 0x64748b, bgStrokeColor: 0x334155, shape: SHAPES[settings.nodeKind]! });
@@ -71,12 +71,12 @@ export const Bundle: Story = {
         pathType: 'bundle',
         sourceAnchor: settings.anchor,
         targetAnchor: settings.anchor,
-        pathStyleOpts: { beta: settings.beta },
-      },
+        pathStyleOpts: { beta: settings.beta }
+      }
     });
 
     const edges: GraphEdge[] = Array.from({ length: settings.count }, (_, i) => ({ type: 'edge',
-      id: `e${i}`, source: 'a', target: 'b', style: edgeStyle(),
+      id: `e${i}`, source: 'a', target: 'b', style: edgeStyle()
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-parallel-bundle')!;
@@ -100,8 +100,8 @@ export const Bundle: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         'parallel-edges': { enabled: true, spacing: settings.spacing },
-        'drag-node': { enabled: true },
-      },
+        'drag-node': { enabled: true }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -136,5 +136,5 @@ export const Bundle: Story = {
     gui.add(settings, 'beta', 0, 1, 0.01).onChange(applyEdgeStyle);
 
     canvas.camera.fitContent(graph.getBounds(), 100);
-  },
+  }
 };

@@ -70,7 +70,7 @@ export const BottomTableStory: Story = {
         header={{
           title: 'Bottom Table',
           center: <GraphControlsToolbar />,
-          right: (ctx) => <ThemeToggle ctx={ctx} />,
+          right: (ctx) => <ThemeToggle ctx={ctx} />
         }}
         footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
         // The bottom region spans the full width (no right region to share with).
@@ -78,5 +78,5 @@ export const BottomTableStory: Story = {
         bottomSpan="full"
       />
     </ThemeProvider>
-  ),
+  )
 };

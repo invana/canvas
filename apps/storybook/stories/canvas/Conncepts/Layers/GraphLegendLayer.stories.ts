@@ -7,7 +7,7 @@ import {
   GraphLayer,
   GraphLegendLayer,
   type GraphEdge,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import GUI from 'lil-gui';
@@ -100,10 +100,10 @@ export const GraphLegendLayerStory: Story = {
               labelColor: 0xe2e8f0,
               labelFontSize: 10,
               labelPlacement: 'bottom',
-              labelOffsetY: 4,
-            },
+              labelOffsetY: 4
+            }
           },
-          edge: { style: { strokeWidth: 1.5, arrowTargetShape: 'triangle', arrowTargetSize: 7 } },
+          edge: { style: { strokeWidth: 1.5, arrowTargetShape: 'triangle', arrowTargetSize: 7 } }
         },
         // Every option from GraphLegendLayerOptions exposed here.
         legend: {
@@ -127,19 +127,19 @@ export const GraphLegendLayerStory: Story = {
           opacity: 0.95,
           swatchSize: 10,
           borderRadius: 6,
-          mode: 'dark',
-        },
+          mode: 'dark'
+        }
       },
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
         'drag-node': { enabled: true },
-        color: { enabled: true },
+        color: { enabled: true }
       },
       layouts: {
-        force: { charge: { strength: -240 }, link: { distance: 70 }, collide: { radius: 22 } },
+        force: { charge: { strength: -240 }, link: { distance: 70 }, collide: { radius: 22 } }
       },
-      activeLayout: 'force',
+      activeLayout: 'force'
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -203,5 +203,5 @@ export const GraphLegendLayerStory: Story = {
         controllers[type]?.updateDisplay();
       }),
     );
-  },
+  }
 };

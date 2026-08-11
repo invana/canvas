@@ -30,12 +30,12 @@ import {
   GraphControlsToolbar,
   GraphStatusBar,
   ToolbarItems,
-  useSidePanels,
+  useSidePanels
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData, GraphNode, NodeShapeOptions } from '@invana/graph';
 import {
-  invanaCodeKg,
+  invanaCodeKg
 } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider } from '@invana/themes';
 import { Map, Moon, Settings, Sun } from 'lucide-react';
@@ -75,7 +75,7 @@ export const DotsForceStory: Story = {
           label: 'Settings',
           render: (canvas) => (
             <CanvasSettingsEditorPanel canvas={canvas} className="border-0 bg-transparent shadow-none" />
-          ),
+          )
         },
       ],
       { section: { defaultSize: '360px', maxSize: '460px' } },
@@ -91,7 +91,7 @@ export const DotsForceStory: Story = {
         nodes: keep,
         edges: invanaCodeKg.edges
           .filter((e) => idSet.has(e.source) && idSet.has(e.target))
-          .map((e) => e),
+          .map((e) => e)
       };
     }, [labels]);
 
@@ -120,7 +120,7 @@ export const DotsForceStory: Story = {
       const COMPLEXITY_RADIUS: Record<InvanaCodeComplexity, number> = {
         simple: 4,
         moderate: 5.5,
-        complex: 8,
+        complex: 8
       };
       const props = (n: GraphNode): InvanaCodeNodeProperties => n.data as InvanaCodeNodeProperties;
 
@@ -130,7 +130,7 @@ export const DotsForceStory: Story = {
           color: { enabled: false },
           hover: { enabled: true, state: 'highlighted', degree: 1, direction: 'both' },
           'click-select': { enabled: true, multiple: true, trigger: ['shift'] },
-          'label-lod': { enabled: true },
+          'label-lod': { enabled: true }
         },
         layers: {
           background: { type: 'pattern', patternType: 'dots', size: 1.2, spacing: 26, alpha: 0.7 },
@@ -139,7 +139,7 @@ export const DotsForceStory: Story = {
               style: {
                 shape: (n: GraphNode): NodeShapeOptions => ({
                   kind: 'circle',
-                  radius: COMPLEXITY_RADIUS[props(n).complexity],
+                  radius: COMPLEXITY_RADIUS[props(n).complexity]
                 }),
                 bgFill: (n: GraphNode) =>
                   colorMode === 'type'
@@ -156,18 +156,18 @@ export const DotsForceStory: Story = {
                 // 602 labels would smother the cloud at the fitted overview, so
                 // they only switch on past 0.6× — a small zoom-in from the
                 // fitted view.
-                labelMinZoom: 0.6,
+                labelMinZoom: 0.6
               },
               state: {
                 highlighted: {
                   bgStrokeColor: 0xfbbf24,
                   bgStrokeWidth: 2.5,
                   // A hovered node is readable at any zoom.
-                  labelForceShow: true,
+                  labelForceShow: true
                 },
                 selected: { bgStrokeColor: 0xffffff, bgStrokeWidth: 3 },
-                dimmed: { bgAlpha: 0.12 },
-              },
+                dimmed: { bgAlpha: 0.12 }
+              }
             },
             edge: {
               style: {
@@ -177,26 +177,26 @@ export const DotsForceStory: Story = {
                 strokeAlpha: 0.22,
                 arrowTargetShape: 'triangle',
                 arrowTargetSize: 5,
-                arrowTargetColor: 0x94a3b8,
+                arrowTargetColor: 0x94a3b8
               },
               state: {
                 highlighted: {
                   strokeColor: 0xfbbf24,
                   strokeWidth: 1.6,
                   strokeAlpha: 0.95,
-                  arrowTargetColor: 0xfbbf24,
+                  arrowTargetColor: 0xfbbf24
                 },
-                dimmed: { strokeAlpha: 0.03 },
-              },
-            },
+                dimmed: { strokeAlpha: 0.03 }
+              }
+            }
           },
           minimap: { position: 'bottom-right', width: 220, height: 160 },
           'label-lod': {
             levels: [
               { minZoom: 0, multiplier: 1 },
               { minZoom: 1.6, multiplier: 4 },
-            ],
-          },
+            ]
+          }
         },
         layouts: {
           'graph-force': {
@@ -207,9 +207,9 @@ export const DotsForceStory: Story = {
             link: { distance: 36 },
             charge: { strength: -90 },
             collide: { radius: 9 },
-            center: { x: 0, y: 0 },
-          },
-        },
+            center: { x: 0, y: 0 }
+          }
+        }
       };
     }, [colorMode]);
 
@@ -238,7 +238,7 @@ export const DotsForceStory: Story = {
                     label: 'Colour by',
                     value: colorMode,
                     options: { type: 'Entity type', cluster: 'Cluster' },
-                    onChange: (v) => setColorMode(v as 'type' | 'cluster'),
+                    onChange: (v) => setColorMode(v as 'type' | 'cluster')
                   },
                   {
                     type: 'select',
@@ -257,7 +257,7 @@ export const DotsForceStory: Story = {
                         if (next.has(l as InvanaCodeNodeLabel)) next.delete(l as InvanaCodeNodeLabel);
                         else next.add(l as InvanaCodeNodeLabel);
                         return next;
-                      }),
+                      })
                   },
                   {
                     type: 'toggle',
@@ -266,7 +266,7 @@ export const DotsForceStory: Story = {
                     label: 'Minimap: off',
                     activeLabel: 'Minimap: on',
                     active: minimapOn,
-                    onToggle: () => setMinimapOn((v) => !v),
+                    onToggle: () => setMinimapOn((v) => !v)
                   },
                   ...dock.items,
                   {
@@ -277,11 +277,11 @@ export const DotsForceStory: Story = {
                     label: 'Switch to dark theme',
                     activeLabel: 'Switch to light theme',
                     active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme,
+                    onToggle: ctx.toggleTheme
                   },
                 ]}
               />
-            ),
+            )
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
           right={dock.region}
@@ -295,5 +295,5 @@ export const DotsForceStory: Story = {
         </GraphCanvasApp>
       </ThemeProvider>
     );
-  },
+  }
 };

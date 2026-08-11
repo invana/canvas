@@ -15,7 +15,7 @@ import {
   DevInfoLayer,
   DragPanBehaviour,
   LayersPanelLayer,
-  WheelZoomBehaviour,
+  WheelZoomBehaviour
 } from '@invana/canvas';
 import { DragNodeBehaviour, GraphCanvas, GraphLayer, type GraphEdge, type GraphNode, ThemeBehaviour } from '@invana/graph';
 import { BubbleSetsLayer, type BubbleSet } from '@invana/graph-layer-bubble-sets';
@@ -66,20 +66,20 @@ export const BubbleSetsLayer_Story: Story = {
         members: ['n0', 'n1', 'n2', 'n3'],
         edges: ['e0-2', 'e1-2', 'e2-3'],
         style: { fill: PURPLE.fill, fillOpacity: 0.35, stroke: PURPLE.stroke, strokeWidth: 1.5 },
-        label: { text: 'cluster-a' },
+        label: { text: 'cluster-a' }
       },
       {
         id: 'cluster-b',
         members: ['n4', 'n5', 'n6'],
         style: { fill: TEAL.fill, fillOpacity: 0.35, stroke: TEAL.stroke, strokeWidth: 1.5 },
-        label: { text: 'cluster-b' },
+        label: { text: 'cluster-b' }
       },
       {
         id: 'cluster-c',
         members: ['n1', 'n7'],
         edges: ['e1-7'],
         style: { fill: PINK.fill, fillOpacity: 0.35, stroke: PINK.stroke, strokeWidth: 1.5 },
-        label: { text: 'cluster-c' },
+        label: { text: 'cluster-c' }
       },
     ];
 
@@ -94,7 +94,7 @@ export const BubbleSetsLayer_Story: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes, edges } },
+      options: { initData: { nodes, edges } }
     });
     canvas.layers.add(graph);
 
@@ -108,8 +108,8 @@ export const BubbleSetsLayer_Story: Story = {
       zIndex: -1,
       options: {
         graphLayerId: 'graph',
-        sets: initialSets,
-      },
+        sets: initialSets
+      }
     });
     canvas.layers.add(bubbles);
 
@@ -129,7 +129,7 @@ export const BubbleSetsLayer_Story: Story = {
           color: '#475569',
           size: 1.5,
           spacing: 24,
-          alpha: 0.85,
+          alpha: 0.85
         },
         graph: {
           node: {
@@ -140,10 +140,10 @@ export const BubbleSetsLayer_Story: Story = {
               labelColor: 0x334155,
               labelFontSize: 11,
               labelPlacement: 'bottom',
-              labelOffsetY: 6,
-            },
+              labelOffsetY: 6
+            }
           },
-          edge: { style: { strokeColor: 0xb0bec5, strokeWidth: 1 } },
+          edge: { style: { strokeColor: 0xb0bec5, strokeWidth: 1 } }
         },
         'layers-panel': {
           corner: 'top-left',
@@ -152,8 +152,8 @@ export const BubbleSetsLayer_Story: Story = {
           opacity: 0.92,
           backgroundColor: 'rgba(10,10,10,0.82)',
           textColor: '#c8d3e0',
-          accentColor: '#4fc3f7',
-        },
+          accentColor: '#4fc3f7'
+        }
       },
       behaviours: {
         pan: { enabled: true },
@@ -163,9 +163,9 @@ export const BubbleSetsLayer_Story: Story = {
           enabled: true,
           mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
-          dark: { backgroundColor: '#0f172a', color: '#475569' },
-        },
-      },
+          dark: { backgroundColor: '#0f172a', color: '#475569' }
+        }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -188,7 +188,7 @@ export const BubbleSetsLayer_Story: Story = {
       morphBuffer: 10,
       'cluster-a': true,
       'cluster-b': true,
-      'cluster-c': true,
+      'cluster-c': true
     };
 
     const gui = new GUI({ title: 'BubbleSetsLayer' });
@@ -236,5 +236,5 @@ export const BubbleSetsLayer_Story: Story = {
       { fit: () => canvas.camera.fitContent(graph.getBounds(), 120) },
       'fit',
     ).name('Fit to content');
-  },
+  }
 };

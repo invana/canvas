@@ -28,21 +28,121 @@ export {
   findSerialisationViolations,
 } from './events/assertSerialisable';
 
-// ─── Store port (kernel reactive-store reads) ────────────────────────────────
+// ─── Store port (kernel reactive-store reads + writes) ───────────────────────
 // Re-exported so layers/behaviours can subscribe to `ctx.store.view` slices
 // without a direct `@invana/canvas-store` dependency (mirrors the events block).
+//
+// `createReactiveStore` is also what backs `Layer.state`: there is **one** state
+// contract in the repo and it is the kernel's port, so a layer's writes emit
+// patches like every other store and history / telemetry / a future CRDT backend
+// can observe them. The former `createLayerStore` — a second, raw-zustand
+// container — is gone; see
+// `docs/rfcs/fix/2026-08-10-zustand-imported-outside-canvas-store.md`.
 export {
   select,
   shallowEqual,
   defaultEqual,
+  createReactiveStore,
+  createMemoryStore,
   type Selected,
   type ReactiveStore,
+  type StoreChange,
+  type Update,
+  type Recipe,
+  type DeepPartial,
   type CanvasView,
 } from '@invana/canvas-store';
 
-// ─── State ──────────────────────────────────────────────────────────────
-export { createLayerStore } from './state/Store';
-export type { Store, StoreApi, CreateLayerStoreOptions } from './state/Store';
+// ─── Spec geometry (P4) ──────────────────────────────────────────────────────
+// Picking and bounds computed from a spec, with no backend involved — which is
+// what makes hit-testing headlessly testable and identical across renderers.
+
+// The whole spec vocabulary — types *and* the pure geometry over them
+// (`containsSpec`, `boundsOfSpec`, `hasSilhouetteFill`, and the per-kind helpers a
+// backend needs to draw each silhouette). Exported wholesale because a hand-picked
+// subset breaks the moment a backend needs one more entry, and this vocabulary is
+// precisely the shared language of kernel, engine, domain package and renderer.
+//
+// It is *defined* in `@invana/canvas-store` — specs are plain data, so they sit
+// with the store that holds them and the index that picks them. Re-exported here
+// because every existing consumer imports it from the engine.
+export * from '@invana/canvas-store/specs';
+
+// ─── The renderer seam ───────────────────────────────────────────────────────
+// `IRenderer` lives here rather than in the kernel because it is made of spec
+// vocabulary. The pixi implementation lives in `@invana/renderer-pixijs`; this
+// package holds only the contract and the headless double.
+// The headless backend (§7) — draws nothing, implements everything. Lets a
+// consumer test layouts, picking and projection with no GPU and no DOM.
+export {
+  HeadlessRenderer,
+  HeadlessSurface,
+  HeadlessElementRenderer,
+} from './renderer/HeadlessRenderer';
+export { HeadlessCameraBinding } from './camera/HeadlessCameraBinding';
+export type {
+  IRenderer,
+  RendererCapabilities,
+  RendererMountOptions,
+} from './renderer/IRenderer';
+
+// ─── Picking (D5) ────────────────────────────────────────────────────────────
+// Picking is interaction, not drawing, so the index and the narrow-phase geometry
+// live outside any backend. They now sit in the kernel beside the spec vocabulary
+// they hit-test — that move is what let this package shed its last third-party
+// dependency. A rendering package implements `HitGeometrySource` — the three facts
+// a spec can't carry (visual scale, routed polyline, custom-kind silhouette) — and
+// the index answers the picks. Re-exported here so `@invana/renderer-pixijs` and
+// domain layers keep importing it from the engine.
+export { PickingIndex, connectorHitBoxes } from '@invana/canvas-store';
+export type {
+  ConnectorHitRecord,
+  HitGeometrySource,
+  HitPolyline,
+  PickingCamera,
+  PickingIndexOptions,
+  ShapeHitRecord,
+} from '@invana/canvas-store';
+
+// ─── Gesture arbitration (P5) ────────────────────────────────────────────────
+// One gesture owns the pointer at a time; camera behaviours yield to it. This
+// replaces behaviours reaching into pixi-viewport's plugin registry to pause it.
+export { DefaultGestureArbiter } from './input/GestureArbiter';
+export type { GestureArbiter, GestureClaimOptions } from './input/GestureArbiter';
+export type {
+  CameraInputConfig,
+  CameraInputModifier,
+  WheelInputOptions,
+  PinchInputOptions,
+} from './camera/Camera';
+
+// ─── Transient overlays (P3) ─────────────────────────────────────────────────
+// Immediate-mode drawing for gesture visuals that must never become state.
+export type { IOverlayDevice, OverlayFill, OverlayFillLike, OverlayStroke, OverlaySpace } from './renderer/IOverlayDevice';
+
+// ─── Spec projection (P2) ────────────────────────────────────────────────────
+// Drives a renderer from a SpecStore. Every drawing layer uses this, so
+// "the renderer is a projection of state" holds engine-wide.
+export { SpecProjector } from './renderer/SpecProjector';
+export type { SpecProjectionTarget, SpecProjectorOptions } from './renderer/SpecProjector';
+// The full device a domain layer drives: spec projection plus the per-frame
+// commands and geometry answers it still calls directly. Pixi-free, so
+// `@invana/graph` targets a backend it never imports.
+export type { IElementRenderer, MountedDecoration, CustomElementCtor } from './renderer/IElementRenderer';
+export type {
+  ISurface,
+  ISurfaceHost,
+  SurfaceBackdrop,
+  SurfaceOptions,
+  SurfaceSpace,
+} from './renderer/ISurface';
+export type { ElementEventMap } from '@invana/canvas-store';
+
+// ─── Specs as state (P1) ─────────────────────────────────────────────────────
+// The durable visual description a layer publishes and a renderer projects.
+// Re-exported so domain layers reach it without a direct kernel dependency.
+export { SpecStore, type SpecFlush } from '@invana/canvas-store';
+
 
 // `ColumnStore` + `DirtyBatcher` are owned by the renderer-free kernel
 // (`@invana/canvas-store`, decision D1). Re-exported here for back-compat so
@@ -83,7 +183,12 @@ export {
 
 // ─── Camera ─────────────────────────────────────────────────────────────
 export { Camera } from './camera/Camera';
-export type { CameraOptions, Rect, Point } from './camera/Camera';
+export type { CameraOptions, CameraTransform, Rect, Point } from './camera/Camera';
+export type {
+  CameraChangeKind,
+  CameraTransformValue,
+  ICameraBinding,
+} from './camera/ICameraBinding';
 
 // ─── Context ────────────────────────────────────────────────────────────
 export type { CanvasContext } from './context/CanvasContext';
@@ -164,6 +269,57 @@ export type { LayoutEvents, LayoutEndReason, LayoutOptions } from './layouts/Lay
 export { animatePositions, DEFAULT_POSITION_TRANSITION_MS } from './layouts/animatePositions';
 export type { PositionTransition, PositionTransitionOptions } from './layouts/animatePositions';
 
+// ─── Engine-side geometry + time (P6 split) ──────────────────────────────
+// Routers, path styles, anchors, path sampling, badge placement and tweens
+// answer *geometry* and *timing* questions — a spec goes in, a path or a number
+// comes out, with no display object anywhere. §5 requires that such answers not
+// need a backend (the same rule that put picking and bounds engine-side), so
+// these stay in `@invana/canvas` when `primitives/` leaves for the pixi package
+// and a second backend reuses them unchanged.
+export {
+  centerAnchor,
+  boundaryAnchor,
+  perpendicularAnchor,
+  edgePortAnchor,
+  silhouettePortAnchor,
+  straightRouter,
+  orthRouter,
+  manhattanRouter,
+  metroRouter,
+  erRouter,
+  oneSideRouter,
+  normalPathStyle,
+  roundedPathStyle,
+  bezierPathStyle,
+  quadraticPathStyle,
+  bumpRadialPathStyle,
+  bumpHorizontalPathStyle,
+  smoothPathStyle,
+  stepRadialPathStyle,
+  bundlePathStyle,
+  loopPolylinePathStyle,
+  loopCurvePathStyle,
+  LOOP_CURVE_PRESETS,
+  samplePath,
+  samplePathAt,
+  tangentAt,
+  pathBounds,
+  trimPathEnds,
+  distanceToPolylineSq,
+  type LoopCurvePresetName,
+} from './connectors';
+
+export {
+  DEFAULT_ENDPOINT_BADGE_GAP_PX,
+  resolveBadgePosition,
+  originToBadgeLocal,
+  resolveConnectorBadgePosition,
+} from './badges';
+export type { BadgeOptions, BadgePlacement, NamedBadgePlacement, ConnectorBadgePlacement } from './badges';
+
+export { Tween } from './animation';
+export type { TweenOptions } from './animation';
+
 // ─── Animation easings (reusable by layouts / effects / consumers) ────────
 export {
   linear,
@@ -173,8 +329,8 @@ export {
   easeOutQuad,
   resolveEasing,
   EASING_NAMES,
-} from './primitives/animation/easings';
-export type { Easing, EasingName } from './primitives/animation/easings';
+} from './animation/easings';
+export type { Easing, EasingName } from './animation/easings';
 
 // ─── Registries ─────────────────────────────────────────────────────────
 export { LayerRegistry } from './registries/LayerRegistry';
@@ -198,15 +354,6 @@ export type { CanvasConfig } from './engine/CanvasConfig';
 // building config (deep-merging defaults under overrides) merge identically.
 export { deepMerge } from './engine/CanvasConfig';
 
-// Renderer backend capability detection (WebGPU/WebGL support).
-export {
-  hasWebGPUApi,
-  hasWebGL,
-  canUseWebGPU,
-  resolveRenderPreference,
-  bestRenderPreference,
-} from './engine/rendererSupport';
-export type { RenderPreference } from './engine/rendererSupport';
 
 // Raster export (viewport / whole-diagram → PNG / JPEG / WebP). `Canvas.export`
 // / `Canvas.exportDataURL` delegate here; the standalone functions are exported
@@ -251,21 +398,3 @@ export type {
   DataSerializableLayer,
   DefinitionSerializable,
 } from './export/stateExport';
-
-// ─── Primitives (renderer + base classes + built-ins + types) ──────────
-//
-// The full primitives surface is also available via the `@invana/canvas/primitives`
-// subpath export for finer-grained imports / tree-shaking.
-export * from './primitives';
-
-// ─── Infra services (used by primitives) ───────────────────────────────
-export { TextureRegistry } from './textures/TextureRegistry';
-
-// ─── Font helpers ─────────────────────────────────────────────────────
-export { loadIconFont } from './fonts/loadIconFont';
-
-// ─── Pixi re-export for paint callbacks ────────────────────────────────
-//
-// `Graphics` is re-exported so consumers writing `paint(g => ...)` style
-// callbacks can type the parameter without a raw `pixi.js` import.
-export type { Graphics } from 'pixi.js';

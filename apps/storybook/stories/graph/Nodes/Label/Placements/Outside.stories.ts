@@ -73,13 +73,13 @@ export const Outside: Story = {
               bgStrokeColor: 0x1d4ed8,
               labelFontSize: 12,
               labelFontWeight: 600,
-              labelColor: 0x454545,
-            },
-          },
+              labelColor: 0x454545
+            }
+          }
         },
-        edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' } },
+        edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' } }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 120);
@@ -90,12 +90,12 @@ export const Outside: Story = {
       // the patch behaves like a per-field merge for the GUI tweak.
       const prev = (graph.store.getNode(settings.pickedNode)?.style as NodeStyle | undefined) ?? {};
       graph.store.updateNode(settings.pickedNode, {
-        style: { ...prev, labelPlacement: settings.placement },
+        style: { ...prev, labelPlacement: settings.placement }
       });
     };
     const gui = new GUI({ title: 'Outside placement' });
     onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'pickedNode', nodes.filter((n) => n.id !== 'hub').map((n) => n.id)).onChange(apply);
     gui.add(settings, 'placement', OUTSIDE_PLACEMENTS).onChange(apply);
-  },
+  }
 };

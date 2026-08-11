@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   DragNodeBehaviour, GraphCanvas, GraphLayer,
-  type GraphEdge, type GraphNode,
+  type GraphEdge, type GraphNode
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
@@ -50,14 +50,14 @@ export const Playground: Story = {
       gap: 18,
       strokeColor: 0x111827,
       strokeWidth: 2,
-      showArrow: true,
+      showArrow: true
     };
 
     const nodes: GraphNode[] = [
       { type: 'node', id: NODE_ID, position: { x: 0, y: 0 },
         style: {
           shape: { kind: 'rect', width: 80, height: 50 },
-          bgFill: 0x4f9cf9, bgStrokeColor: 0x1e40af, bgStrokeWidth: 2,
+          bgFill: 0x4f9cf9, bgStrokeColor: 0x1e40af, bgStrokeWidth: 2
         } },
     ];
 
@@ -91,20 +91,20 @@ export const Playground: Story = {
                   baseOffset: settings.baseOffset,
                   ...(isCorner ? {
                     baseOffsetX: settings.baseOffsetX,
-                    baseOffsetY: settings.baseOffsetY,
+                    baseOffsetY: settings.baseOffsetY
                   } : {}),
                   stubLength: settings.stubLength,
-                  gap: settings.gap,
-                },
+                  gap: settings.gap
+                }
               };
             },
             strokeColor: () => settings.strokeColor,
             strokeWidth: () => settings.strokeWidth,
             strokeJoin: 'miter',
-            arrowTargetShape: () => settings.showArrow ? 'triangle' : 'none',
-          },
-        },
-      },
+            arrowTargetShape: () => settings.showArrow ? 'triangle' : 'none'
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -112,7 +112,7 @@ export const Playground: Story = {
     canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
 
     const canvasOptions = {
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true }, 'drag-node': { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true }, 'drag-node': { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 120);
@@ -143,5 +143,5 @@ export const Playground: Story = {
 
     const markerFolder = gui.addFolder('marker').close();
     markerFolder.add(settings, 'showArrow').onChange(rerenderAll);
-  },
+  }
 };

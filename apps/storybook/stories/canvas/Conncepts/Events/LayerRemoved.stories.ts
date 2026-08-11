@@ -26,7 +26,7 @@ export const LayerRemovedStory: Story = {
         opacity: 0.92,
         backgroundColor: 'rgba(10,10,10,0.82)',
         textColor: '#c8d3e0',
-        accentColor: '#4fc3f7',
+        accentColor: '#4fc3f7'
       }),
     );
 
@@ -45,5 +45,5 @@ export const LayerRemovedStory: Story = {
     ids.forEach((id, i) => {
       setTimeout(() => canvas.layers.remove(id), 800 * (i + 1));
     });
-  },
+  }
 };

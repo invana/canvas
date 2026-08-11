@@ -23,5 +23,5 @@ export const BehaviourDisabledStory: Story = {
     setTimeout(() => canvas.behaviours.setEnabled('pan', false), 500);
     setTimeout(() => canvas.behaviours.setEnabled('pan', true), 1200);
     setTimeout(() => canvas.behaviours.setEnabled('pan', false), 1900);
-  },
+  }
 };

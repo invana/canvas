@@ -4,9 +4,8 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -31,10 +30,10 @@ export const ComposedEffectsStory: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -80,7 +79,7 @@ export const ComposedEffectsStory: Story = {
       shake: true,
       breathing: true,
       animatedGlow: true,
-      pulseRing: true,
+      pulseRing: true
     };
 
     const applyShake = () => {
@@ -99,8 +98,8 @@ export const ComposedEffectsStory: Story = {
             kind: 'glow' as const,
             style: {
               color: 0xfb923c, strokeWidth: 20, layers: 8, innerAlpha: 0.6,
-              pulse: { periodMs: 1200, amplitude: 0.5 },
-            },
+              pulse: { periodMs: 1200, amplitude: 0.5 }
+            }
           }
         : null;
       for (const id of hostIds) layer.renderer.setDecoration(id, 'glow', spec);
@@ -109,7 +108,7 @@ export const ComposedEffectsStory: Story = {
       const spec = settings.pulseRing
         ? {
             kind: 'pulse-ring' as const,
-            style: { color: 0xfb923c, maxRadius: 36, periodMs: 1600, rings: 2 },
+            style: { color: 0xfb923c, maxRadius: 36, periodMs: 1600, rings: 2 }
           }
         : null;
       for (const id of hostIds) layer.renderer.setDecoration(id, 'pulse-ring', spec);
@@ -134,5 +133,5 @@ export const ComposedEffectsStory: Story = {
     gui.add(settings, 'pulseRing').onChange(applyPulseRing);
 
     canvas.camera.fitContent(layer.getBounds(), 200);
-  },
+  }
 };

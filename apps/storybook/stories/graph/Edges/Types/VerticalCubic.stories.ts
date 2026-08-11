@@ -5,7 +5,7 @@ import {
   GraphCanvas,
   GraphLayer,
   type GraphEdge,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -82,8 +82,8 @@ export const VerticalCubicStory: Story = {
               shape: { kind: 'circle', radius: 14 },
               bgFill: 0x4f9cf9,
               bgStrokeColor: 0x1d4ed8,
-              bgStrokeWidth: 1.5,
-            },
+              bgStrokeWidth: 1.5
+            }
           },
           edge: {
             style: {
@@ -100,19 +100,19 @@ export const VerticalCubicStory: Story = {
               labelBackgroundStrokeColor: 0xe2e8f0,
               labelBackgroundStrokeWidth: 1,
               labelBackgroundCornerRadius: 3,
-              labelBackgroundPadding: 3,
-            },
-          },
-        },
+              labelBackgroundPadding: 3
+            }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'drag-node': { enabled: true },
-      },
+        'drag-node': { enabled: true }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

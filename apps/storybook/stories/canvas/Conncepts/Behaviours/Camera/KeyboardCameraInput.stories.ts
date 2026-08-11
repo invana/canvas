@@ -3,9 +3,8 @@ import {
   Canvas,
   KeyboardCameraInputBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -24,15 +23,12 @@ export const KeyboardCameraInputStory: Story = {
     await canvas.init({ container, autoResize: true });
 
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() {
         return {};
       }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({
-          container: this.container,
-          camera: ctx.camera,
-        });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() {
         return null;
@@ -48,7 +44,7 @@ export const KeyboardCameraInputStory: Story = {
       y: 0,
       radius: 50,
       fill: { kind: 'solid', color: 0x4f9cf9 },
-      stroke: { color: 0x1d4ed8, width: 2 },
+      stroke: { color: 0x1d4ed8, width: 2 }
     });
     layer.renderer.addShape('b', {
       kind: 'rect',
@@ -57,7 +53,7 @@ export const KeyboardCameraInputStory: Story = {
       width: 120,
       height: 80,
       fill: { kind: 'solid', color: 0x10b981, alpha: 0.9 },
-      stroke: { color: 0x047857, width: 2 },
+      stroke: { color: 0x047857, width: 2 }
     });
 
     canvas.camera.fitContent(layer.getBounds(), 120);
@@ -65,7 +61,7 @@ export const KeyboardCameraInputStory: Story = {
     const settings = {
       enabled: true,
       panStep: 40,
-      zoomFactor: 1.1,
+      zoomFactor: 1.1
     };
 
     const ID = 'keys';
@@ -74,7 +70,7 @@ export const KeyboardCameraInputStory: Story = {
         id: ID,
         enabled: settings.enabled,
         panStep: settings.panStep,
-        zoomFactor: settings.zoomFactor,
+        zoomFactor: settings.zoomFactor
       });
 
     canvas.behaviours.register(build());
@@ -89,5 +85,5 @@ export const KeyboardCameraInputStory: Story = {
     gui.add(settings, 'enabled').onChange((v: boolean) => canvas.behaviours.setEnabled(ID, v));
     gui.add(settings, 'panStep', 1, 200, 1).onChange(rebuild);
     gui.add(settings, 'zoomFactor', 1.01, 2, 0.01).onChange(rebuild);
-  },
+  }
 };

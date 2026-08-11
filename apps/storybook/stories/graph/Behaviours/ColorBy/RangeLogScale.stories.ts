@@ -46,7 +46,7 @@ export const RangeLogScaleStory: Story = {
     const nodes = lesMiserables.nodes.map((n) => ({
       id: n.id,
       type: `group-${n.data.group}`,
-      data: { group: n.data.group, scenes: scenes.get(n.id) ?? 0 },
+      data: { group: n.data.group, scenes: scenes.get(n.id) ?? 0 }
     }));
 
     const canvas = new GraphCanvas();
@@ -70,7 +70,7 @@ export const RangeLogScaleStory: Story = {
       scale: 'log',
       nodeValueKey: 'data.scenes',
       nodeDomain: [1, 158],
-      colorEdges: false,
+      colorEdges: false
     });
     canvas.behaviours.register(colorBy);
 
@@ -85,25 +85,25 @@ export const RangeLogScaleStory: Story = {
                 shape: { kind: 'circle', radius: 7 },
                 bgStrokeColor: 0xffffff,
                 bgStrokeWidth: 1.5,
-                showLabel: false,
-              },
+                showLabel: false
+              }
             },
             edge: {
               style: {
                 strokeColor: 0xcbd5e1,
                 strokeWidth: 1,
                 strokeAlpha: 0.5,
-                arrowTargetShape: 'none',
-              },
-            },
-          },
+                arrowTargetShape: 'none'
+              }
+            }
+          }
         },
         layouts: {
-          force: { charge: { strength: -220 }, link: { distance: 40 }, collide: { radius: 11 } },
+          force: { charge: { strength: -220 }, link: { distance: 40 }, collide: { radius: 11 } }
         },
         activeLayout: 'force',
-        fitOnLoad: true,
-      },
+        fitOnLoad: true
+      }
     });
 
     const o = colorBy.getResolvedOptions();
@@ -131,5 +131,5 @@ export const RangeLogScaleStory: Story = {
     const out = gui.addFolder('derived (read-only)');
     out.add(derived, 'domain').name('node domain in use').listen().disable();
     out.add(derived, 'median').name('median sits at').listen().disable();
-  },
+  }
 };

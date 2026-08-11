@@ -8,7 +8,7 @@ import {
   type EdgeAnchor,
   type GraphEdge,
   type GraphNode,
-  type NodeShapeOptions,
+  type NodeShapeOptions
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
@@ -38,9 +38,9 @@ export const Orth: Story = {
         kind: 'polygon',
         vertices: Array.from({ length: 32 }, (_, i) => ({
           x: Math.cos((i / 32) * Math.PI * 2) * 50,
-          y: Math.sin((i / 32) * Math.PI * 2) * 30,
-        })),
-      },
+          y: Math.sin((i / 32) * Math.PI * 2) * 30
+        }))
+      }
     };
     const ANCHORS: readonly EdgeAnchor[] = [
       'silhouette-port',
@@ -53,7 +53,7 @@ export const Orth: Story = {
       nodeKind: 'rect',
       anchor: 'silhouette-port' as EdgeAnchor,
       count: 7,
-      spacing: 12,
+      spacing: 12
     };
 
     const nodeStyle = () => ({ bgFill: 0x64748b, bgStrokeColor: 0x334155, shape: SHAPES[settings.nodeKind]! });
@@ -66,12 +66,12 @@ export const Orth: Story = {
       shape: {
         pathType: 'orth',
         sourceAnchor: settings.anchor,
-        targetAnchor: settings.anchor,
-      },
+        targetAnchor: settings.anchor
+      }
     });
 
     const edges: GraphEdge[] = Array.from({ length: settings.count }, (_, i) => ({ type: 'edge',
-      id: `e${i}`, source: 'a', target: 'b', style: edgeStyle(),
+      id: `e${i}`, source: 'a', target: 'b', style: edgeStyle()
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-parallel-orth')!;
@@ -95,8 +95,8 @@ export const Orth: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         'parallel-edges': { enabled: true, spacing: settings.spacing },
-        'drag-node': { enabled: true },
-      },
+        'drag-node': { enabled: true }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -130,5 +130,5 @@ export const Orth: Story = {
     gui.add(settings, 'spacing', 0, 30, 1).onChange((v: number) => canvas.update({ behaviours: { 'parallel-edges': { spacing: v } } }));
 
     canvas.camera.fitContent(graph.getBounds(), 100);
-  },
+  }
 };

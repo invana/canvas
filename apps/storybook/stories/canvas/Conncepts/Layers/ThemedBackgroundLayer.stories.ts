@@ -3,11 +3,10 @@ import {
   Canvas,
   BackgroundLayer,
   DragPanBehaviour,
-  PrimitivesRenderer,
   WheelZoomBehaviour,
   WorldLayer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import { ThemeBehaviour, BUILT_IN_THEMES, type ThemeMode } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
@@ -30,12 +29,12 @@ export const ThemedBackground: Story = {
 
   play: async ({ canvasElement }) => {
     class FixturesLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() {
         return {};
       }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
         this.renderer.addShape('a', { kind: 'circle', x: -120, y: 0, radius: 36, fill: 0x3b82f6 });
         this.renderer.addShape('b', { kind: 'circle', x: 120, y: 0, radius: 36, fill: 0xf59e0b });
         this.renderer.addShape('c', {
@@ -45,7 +44,7 @@ export const ThemedBackground: Story = {
           width: 80,
           height: 50,
           cornerRadius: 6,
-          fill: 0x10b981,
+          fill: 0x10b981
         });
       }
       hitTest() {
@@ -61,7 +60,7 @@ export const ThemedBackground: Story = {
     canvas.layers.add(
       new BackgroundLayer({
         id: 'bg',
-        options: { type: 'pattern', patternType: 'grid', size: 1, spacing: 30, alpha: 0.7 },
+        options: { type: 'pattern', patternType: 'grid', size: 1, spacing: 30, alpha: 0.7 }
       }),
     );
     const fixtures = new FixturesLayer({ id: 'fx', options: {} });
@@ -85,5 +84,5 @@ export const ThemedBackground: Story = {
       .add(settings, 'theme', Object.keys(BUILT_IN_THEMES))
       .onChange((id: string) => theme.setTheme(id));
     gui.add(settings, 'mode', ['system', 'light', 'dark']).onChange((m: ThemeMode) => theme.setMode(m));
-  },
+  }
 };

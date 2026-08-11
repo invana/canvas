@@ -23,7 +23,7 @@ import {
   schemaTableCard,
   type GraphEdge,
   type GraphNode,
-  type SchemaTableData,
+  type SchemaTableData
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -49,8 +49,8 @@ export const SchemaTable: Story = {
             { name: 'CustomerName', type: 'string' },
             { name: 'Phone', type: 'string' },
             { name: 'RegisteredAt', type: 'date' },
-          ],
-        } satisfies SchemaTableData,
+          ]
+        } satisfies SchemaTableData
       },
       { type: 'node',
         id: 'order',
@@ -64,8 +64,8 @@ export const SchemaTable: Story = {
             { name: 'CustomerId', type: 'integer' },
             { name: 'Quantity', type: 'integer' },
             { name: 'Profit', type: 'number' },
-          ],
-        } satisfies SchemaTableData,
+          ]
+        } satisfies SchemaTableData
       },
     ];
     const edges: GraphEdge[] = [{ type: 'edge', id: 'e', source: 'order', target: 'customer' }];
@@ -86,8 +86,8 @@ export const SchemaTable: Story = {
         options: {
           initData: { nodes, edges },
           node: { style: { shape: buildTable, bgStrokeWidth: 0 } },
-          edge: { style: { strokeColor: 0x64748b, strokeWidth: 1.4, strokeDashArray: [5, 4], arrowTargetShape: 'none', shape: { pathType: 'orth' } } },
-        },
+          edge: { style: { strokeColor: 0x64748b, strokeWidth: 1.4, strokeDashArray: [5, 4], arrowTargetShape: 'none', shape: { pathType: 'orth' } } }
+        }
       }),
     );
 
@@ -116,5 +116,5 @@ export const SchemaTable: Story = {
     renderer.events.on('shape:partout', onPartOut);
     onStoryTeardown(() => renderer.events.off('shape:partover', onPartOver));
     onStoryTeardown(() => renderer.events.off('shape:partout', onPartOut));
-  },
+  }
 };

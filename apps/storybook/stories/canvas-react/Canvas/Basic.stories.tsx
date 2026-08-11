@@ -4,7 +4,7 @@ import {
   BackgroundLayer,
   DragPanBehaviour,
   WheelZoomBehaviour,
-  type GraphLayerProps,
+  type GraphLayerProps
 } from '@invana/canvas-react';
 import type { GraphData } from '@invana/graph';
 import type { Meta, StoryObj } from '@storybook/react-vite';
@@ -40,7 +40,7 @@ const DATA: GraphData = {
     { id: 'e-b', source: 'hub', target: 'b', type: 'LINK' },
     { id: 'e-c', source: 'hub', target: 'c', type: 'LINK' },
     { id: 'e-d', source: 'hub', target: 'd', type: 'LINK' },
-  ],
+  ]
 };
 
 // Shared node / edge styling (the layer template — applied to every item).
@@ -54,8 +54,8 @@ const NODE: GraphLayerProps['node'] = {
     labelColor: 0x1e293b,
     labelFontSize: 11,
     labelPlacement: 'bottom',
-    labelOffsetY: 6,
-  },
+    labelOffsetY: 6
+  }
 };
 const EDGE: GraphLayerProps['edge'] = { style: { strokeColor: 0x94a3b8, strokeWidth: 1.5 } };
 
@@ -70,5 +70,5 @@ export const Basic: Story = {
         <WheelZoomBehaviour id="wheel" />
       </Canvas>
     </div>
-  ),
+  )
 };

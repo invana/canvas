@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer, PrimitivesRenderer } from '@invana/canvas';
-import type { BadgePlacement, CanvasContext, ShapeFill, ShapeFillLayer, ShapeStroke } from '@invana/canvas';
+import { Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer,
+  type IElementRenderer
+} from '@invana/canvas';
+import type { BadgePlacement, ShapeFill, ShapeFillLayer, ShapeStroke } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -14,10 +16,10 @@ export const AllShapesStory: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -88,7 +90,7 @@ export const AllShapesStory: Story = {
         layer.renderer.addShape(s.id, {
           ...s.spec,
           x: x - s.spec.width / 2,
-          y: y - s.spec.height / 2,
+          y: y - s.spec.height / 2
         });
       } else {
         layer.renderer.addShape(s.id, { ...s.spec, x, y });
@@ -103,14 +105,14 @@ export const AllShapesStory: Story = {
         x: x - LABEL_W / 2,
         y: y + LABEL_OFFSET_Y,
         width: LABEL_W,
-        height: LABEL_H,
+        height: LABEL_H
       });
       layer.renderer.setDecoration(labelId, 'label', {
         kind: 'label',
         style: {
           content: { kind: 'text', text: s.label, fill: 0x0f172a, fontSize: 13, fontWeight: 600 },
-          placement: 'center',
-        },
+          placement: 'center'
+        }
       });
     }
 
@@ -125,7 +127,7 @@ export const AllShapesStory: Story = {
       mountain: 'https://picsum.photos/seed/invana/200/200',
       forest:   'https://picsum.photos/seed/forest/200/200',
       ocean:    'https://picsum.photos/seed/ocean/200/200',
-      city:     'https://picsum.photos/seed/city/200/200',
+      city:     'https://picsum.photos/seed/city/200/200'
     } as const;
 
     const settings = {
@@ -144,7 +146,7 @@ export const AllShapesStory: Story = {
       strokeAlpha: 1,
       showBadge: false,
       badgePlacement: 'top-right' as BadgePlacement,
-      badgeText: 'NEW',
+      badgeText: 'NEW'
     };
 
     const toHexNumber = (s: string): number => {
@@ -169,7 +171,7 @@ export const AllShapesStory: Story = {
         layers.push({
           kind: 'image',
           url: settings.imageUrl,
-          alpha: settings.imageAlpha,
+          alpha: settings.imageAlpha
         });
       }
       if (settings.showGlyph) {
@@ -179,7 +181,7 @@ export const AllShapesStory: Story = {
           fontFamily: 'sans-serif',
           fontWeight: 700,
           color: toHexNumber(settings.glyphColor),
-          sizeRatio: settings.glyphSize,
+          sizeRatio: settings.glyphSize
         });
       }
       return layers;
@@ -188,7 +190,7 @@ export const AllShapesStory: Story = {
     const buildStroke = (): ShapeStroke => ({
       color: toHexNumber(settings.strokeColor),
       width: settings.strokeWidth,
-      alpha: settings.strokeAlpha,
+      alpha: settings.strokeAlpha
     });
 
     const applyToAllShapes = () => {
@@ -203,7 +205,7 @@ export const AllShapesStory: Story = {
               width: Math.max(46, settings.badgeText.length * 9 + 16),
               height: 22,
               cornerRadius: 11,
-              fill: { kind: 'solid', color: 0xef4444 },
+              fill: { kind: 'solid', color: 0xef4444 }
             },
             placement: settings.badgePlacement,
             decorations: {
@@ -211,10 +213,10 @@ export const AllShapesStory: Story = {
                 kind: 'label',
                 style: {
                   content: { kind: 'text', text: settings.badgeText, fill: 0xffffff, fontSize: 11, fontWeight: 700 },
-                  placement: 'center',
-                },
-              },
-            },
+                  placement: 'center'
+                }
+              }
+            }
           });
         } else {
           layer.renderer.removeBadge(id, 'badge');
@@ -258,5 +260,5 @@ export const AllShapesStory: Story = {
       'top-left', 'top-right', 'bottom-left', 'bottom-right',
     ]).onChange(applyToAllShapes);
     badgeFolder.add(settings, 'badgeText').onChange(applyToAllShapes);
-  },
+  }
 };

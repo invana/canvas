@@ -1005,7 +1005,7 @@ speculative and out of scope, so `Layer` stays untouched.
 `setPlane` / `setEmphasis` are renderer-agnostic concepts and belong on
 `IPrimitivesRenderer`, not the pixi class — so this composes with, rather than fights, the
 `@invana/renderer-pixijs` extraction
-([`renderer-pixijs-extraction-plan.md`](./renderer-pixijs-extraction-plan.md), P2). Pixi's
+([`renderer-split-design.md`](./renderer-split-design.md), P2). Pixi's
 `RenderLayer` stays behind that seam and is never re-exported (D5).
 
 **The kernel contract is intact.** State still lives in `canvas-store` as

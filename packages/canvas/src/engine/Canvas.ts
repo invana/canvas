@@ -26,15 +26,12 @@
  * **Two init paths**
  *   - `init(opts)` — the production path. Creates a pixi `Application`,
  *     mounts its canvas into the DOM container, hooks the ticker.
- *   - `initWithStage(stage, sw, sh)` — the test / headless path. Skips pixi
- *     `Application` entirely. Caller provides a `Container` (which can be
- *     a freshly-constructed pixi `Container()`) and viewport dimensions.
- *     Useful for unit tests that want to exercise the layer pipeline without
- *     standing up a renderer.
+ *   - `initWithRenderer(renderer, sw, sh)` — the headless path. The caller
+ *     supplies an already-mounted backend, so a test can drive the whole layer
+ *     / behaviour / state pipeline against a renderer that draws nothing.
  */
 
-import { Application, Container, type EventSystem, type Ticker } from 'pixi.js';
-import { Viewport } from 'pixi-viewport';
+import type { IRenderer } from '../renderer/IRenderer';
 import {
   CanvasEventBus,
   createCanvasStore,
@@ -44,7 +41,8 @@ import {
 
 import { CanvasThemeState } from '../theme/CanvasThemeState';
 import { Camera } from '../camera/Camera';
-import type { Rect } from '../primitives/types';
+import { DefaultGestureArbiter, type GestureArbiter } from '../input/GestureArbiter';
+import type { Rect } from '@invana/canvas-store';
 import { FrameMeter } from './FrameMeter';
 import { InteractionTracker } from './InteractionTracker';
 import { LayerRegistry } from '../registries/LayerRegistry';
@@ -52,8 +50,6 @@ import { BehaviourRegistry } from '../registries/BehaviourRegistry';
 import { LayoutRegistry } from '../registries/LayoutRegistry';
 import type { CanvasContext } from '../context/CanvasContext';
 import { type CanvasConfig, configurable, deepMerge } from './CanvasConfig';
-import { resolveRenderPreference } from './rendererSupport';
-import { acquireSharedTexturePool, releaseSharedTexturePool } from './sharedTexturePool';
 import {
   exportImage,
   exportImageDataURL,
@@ -107,6 +103,15 @@ export interface CanvasOptions {
    * explicitly to opt out of WebGPU entirely.
    */
   preference?: 'webgpu' | 'webgl' | 'canvas';
+
+  /**
+   * The drawing backend. Omit and `init` lazily resolves
+   * `@invana/renderer-pixijs` (design D1); supply one to bring your own — a
+   * three.js backend, or `HeadlessRenderer` for a test.
+   *
+   * When supplied, `Canvas` calls `mount` on it; you do not mount it yourself.
+   */
+  renderer?: IRenderer;
 
   /** Viewport width in CSS pixels. Default = `container.clientWidth`. */
   width?: number;
@@ -189,27 +194,21 @@ export class Canvas {
   readonly store: CanvasStore;
 
   /**
-   * Public surface — populated by `init()` / `initWithStage()`. Accessing
+   * Public surface — populated by `init()` / `initWithRenderer()`. Accessing
    * before init throws (definite-assignment via `!`). Use `isInitialised`
    * to guard if needed.
    */
   readonly events: CanvasEventBus;
-  /**
-   * The world container — a `pixi-viewport` `Viewport` instance attached to
-   * `app.stage`. Camera-transformed; `WorldLayer`s mount their roots here.
-   * Typed as `Container` so consumers don't depend on `pixi-viewport`; reach
-   * for the `Viewport`-specific API via `camera.viewport`.
-   */
-  world!: Container;
+
+  camera!: Camera;
 
   /**
-   * The pixi `Application.stage` (or, for `initWithStage`, the caller-
-   * provided stage). `ScreenLayer`s mount their roots directly here, as
-   * siblings of `world` — `world` is added first (bottom), each ScreenLayer
-   * after (above). No "screen" wrapper container.
+   * Pointer-gesture arbitration for this canvas — see `input/GestureArbiter.ts`.
+   * Built in the constructor (no dependency on the scene graph) so it is live
+   * before any behaviour registers, and handed to every participant as
+   * `ctx.gestures`.
    */
-  stage!: Container;
-  camera!: Camera;
+  readonly gestures: GestureArbiter;
   readonly layers: LayerRegistry;
   readonly behaviours: BehaviourRegistry;
   readonly layouts: LayoutRegistry;
@@ -222,18 +221,16 @@ export class Canvas {
    */
   private readonly themeState: CanvasThemeState;
 
-  private app?: Application;
+  /**
+   * The drawing backend. `Canvas` drives it through {@link IRenderer} and owns
+   * no pixi object of its own — the `Application`, the viewport, the surfaces
+   * and the texture pool all live behind this.
+   */
+  private _renderer?: IRenderer;
+  /** Handle for the engine's own rAF loop. Set while initialised (G3). */
+  private _rafHandle: number | null = null;
   private _isInitialised = false;
   /** True once this canvas has acquired the shared TexturePool (real `init` only). */
-  private _holdsSharedTexturePool = false;
-  private _onRendererResize?: (w: number, h: number) => void;
-  private _resizeObserver?: ResizeObserver;
-  /**
-   * Set once the WebGPU renderer has crashed at render time and we've halted the
-   * loop + emitted `'canvas:renderer:fallback'`. Guards against repeating the
-   * crash every frame while the host swaps to WebGL.
-   */
-  private _rendererFellBack = false;
   /** Last message pushed on the message channel; `null` when idle / cleared. */
   private _currentMessage: string | null = null;
 
@@ -263,6 +260,7 @@ export class Canvas {
     this.store = createCanvasStore(opts.telemetry ? { telemetry: opts.telemetry } : {});
     this.events = this.store.events;
     this.themeState = new CanvasThemeState(this.events);
+    this.gestures = new DefaultGestureArbiter();
     // Frame attribution reads the same bus; the meter (a field initialiser) is
     // fed per frame in `tickOnce`. Both always-on and near-free.
     this._interactions = new InteractionTracker(this.events);
@@ -291,9 +289,18 @@ export class Canvas {
     return this._isInitialised;
   }
 
-  /** Pixi `Application`, available after `init()` (not `initWithStage`). */
-  get application(): Application | undefined {
-    return this.app;
+  /**
+   * The mounted drawing backend, or `undefined` before `init()`.
+   *
+   * Replaces the old `application` getter, which handed out pixi's
+   * `Application` and could not survive the backend split — a getter typed in
+   * pixi nouns forces every consumer to know which backend is mounted. Reach
+   * for a *capability* (`renderer.capabilities`, `renderer.extract?.()`)
+   * instead; if you genuinely need the pixi object, narrow the backend
+   * yourself with an `instanceof PixiRenderer` at the call site.
+   */
+  get renderer(): IRenderer | undefined {
+    return this._renderer;
   }
 
   // ─── Init paths ──────────────────────────────────────────────────────────
@@ -314,110 +321,43 @@ export class Canvas {
     const container = opts.container;
     if (!container) throw new Error(`Canvas "${this.id}": init() requires a container element`);
 
-    // Take ownership of pixi's shared TexturePool before the renderer spins up,
-    // so that destroying any one canvas can't clear the pool out from under
-    // other live canvases (multi-canvas pages, story/route remounts). Balanced
-    // by `releaseSharedTexturePool()` in `destroy()`. See `sharedTexturePool.ts`.
-    // Done before `app.init` so the WebGPU→WebGL retry's `app.destroy()` below
-    // is already covered.
-    acquireSharedTexturePool();
-    this._holdsSharedTexturePool = true;
+    // Standing the backend up — the drawing surface, its GPU fallback, the
+    // texture pool, the crash guard, the resize plumbing — is entirely the
+    // renderer's job. `Canvas` asks for devices and imports no drawing library.
+    //
+    // The default backend is resolved by **lazy import** (design D1, §4.6):
+    // `@invana/renderer-pixijs` is an *optional peer*, so it is never bundled
+    // with the engine and a consumer bringing their own backend need not
+    // install pixi at all. `init` was already async, so this costs nothing
+    // structurally — and a genuinely missing package fails with a message that
+    // names it rather than a module-resolution error.
+    const renderer = opts.renderer ?? (await this._resolveDefaultRenderer());
+    this._renderer = renderer;
+    await renderer.mount(container, {
+      ...(opts.preference ? { preference: opts.preference === 'canvas' ? 'webgl' : opts.preference } : {}),
+      ...(opts.width !== undefined ? { width: opts.width } : {}),
+      ...(opts.height !== undefined ? { height: opts.height } : {}),
+      ...(opts.resolution !== undefined ? { resolution: opts.resolution } : {}),
+      ...(opts.antialias !== undefined ? { antialias: opts.antialias } : {}),
+      ...(opts.backgroundColor !== undefined ? { background: opts.backgroundColor } : {}),
+      ...(opts.powerPreference !== undefined ? { powerPreference: opts.powerPreference } : {}),
+      ...(opts.opaque !== undefined ? { opaque: opts.opaque } : {}),
+      ...(opts.autoResize !== undefined ? { autoResize: opts.autoResize } : {}),
+      ...(opts.suppressBrowserContextMenu !== undefined
+        ? { suppressBrowserContextMenu: opts.suppressBrowserContextMenu }
+        : {}),
+    });
 
     const width = opts.width ?? container.clientWidth;
     const height = opts.height ?? container.clientHeight;
-    const dpr =
-      opts.resolution ??
-      (typeof window !== 'undefined' ? window.devicePixelRatio : 1);
-
-    // Resolve the backend before handing it to pixi. Default is `'webgpu'`
-    // (WebGPU-first). `resolveRenderPreference` downgrades to `'webgl'` up front
-    // where WebGPU is unusable; and if the WebGPU renderer instead crashes at
-    // *render* time (uncatchable at init), the render-loop guard below halts the
-    // loop and emits `'canvas:renderer:fallback'` so the host degrades to WebGL.
-    // See `rendererSupport.ts`.
-    const preference = resolveRenderPreference(opts.preference ?? 'webgpu');
-    const initOpts = {
-      width,
-      height,
-      resolution: dpr,
-      autoDensity: true,
-      antialias: opts.antialias ?? true,
-      backgroundAlpha: opts.opaque ? 1 : 0,
-      backgroundColor: opts.backgroundColor ?? 0,
-      powerPreference: opts.powerPreference ?? 'high-performance',
-      hello: opts.hello ?? false,
-      // When `autoResize` is on, point pixi's ResizePlugin at `container` so its
-      // `resize()` reads the element's `clientWidth/clientHeight` and handles
-      // `autoDensity` / DPR. The plugin only re-runs on the *window* `resize`
-      // event though — it never observes the element — so element-only size
-      // changes (e.g. a side panel resizing the canvas host without resizing the
-      // window) are picked up by the `ResizeObserver` wired below instead.
-      ...(opts.autoResize ? { resizeTo: container } : {}),
-    };
-
-    try {
-      this.app = new Application();
-      try {
-        await this.app.init({ preference, ...initOpts });
-      } catch (err) {
-        // Defense in depth for the case `resolveRenderPreference` can't predict: a
-        // non-WebKit browser that advertises WebGPU but throws *during* init (e.g.
-        // a blocklisted adapter / driver). Tear the half-built app down and retry
-        // once on WebGL. (WebKit's failure is at render time, not init, so it never
-        // reaches here — that's why the preference must be resolved up front.)
-        if (preference !== 'webgpu') throw err;
-        this.app.destroy(true);
-        this.app = new Application();
-        await this.app.init({ preference: 'webgl', ...initOpts });
-      }
-    } catch (err) {
-      // Renderer init failed outright — the engine never becomes initialised, so
-      // `destroy()` won't run. Balance the shared-pool acquire here before
-      // propagating, or we'd leak the ref-count and leave the pool detached.
-      releaseSharedTexturePool();
-      this._holdsSharedTexturePool = false;
-      throw err;
-    }
-
-    this.app.canvas.style.display = 'block';
-    container.appendChild(this.app.canvas);
-
-    if (opts.suppressBrowserContextMenu ?? true) {
-      this.app.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
-    }
-
-    this._wireScene(this.app.stage, width, height, this.app.renderer.events);
-    this.app.ticker.add(this.tick, this);
-    // Pixi drives the frame render on its own ticker as usual — we don't touch
-    // that path. To catch a WebGPU *render-time* crash (uncatchable at init) we
-    // wrap the renderer's `render` method in place with a try/catch that routes
-    // to `_handleRenderError`. Non-invasive: same render path, same timing, only
-    // a guard added. See `_installRenderGuard`.
-    this._installRenderGuard();
-
-    if (opts.autoResize) {
-      this._onRendererResize = (w, h) => {
-        this.camera.resize(w, h);
-      };
-      this.app.renderer.on('resize', this._onRendererResize);
-
-      // Pixi's ResizePlugin only listens for the window `resize` event, so it
-      // misses element-only size changes (panel drags, flex reflow, programmatic
-      // expand/collapse). Observe the container and queue a pixi resize — which
-      // reads the container's current size and emits the `resize` event the
-      // camera-sync handler above hangs off — on every change. `queueResize`
-      // defers to the next frame and dedupes, so rapid drag ticks coalesce.
-      if (typeof ResizeObserver !== 'undefined') {
-        this._resizeObserver = new ResizeObserver(() => this.app?.queueResize());
-        this._resizeObserver.observe(container);
-      }
-    }
+    this._wireScene(width, height);
+    this._startFrameLoop();
 
     this._isInitialised = true;
 
     this.events.emit('canvas:renderer:ready', {
-      backend: this._detectBackend(),
-      capabilities: this._capabilities(),
+      backend: renderer.backend,
+      capabilities: { ...renderer.capabilities },
     });
 
     // Note: fit-on-load is armed inside `update()` (the universal config-apply
@@ -427,21 +367,28 @@ export class Canvas {
   }
 
   /**
-   * Headless / test init. Caller provides a pre-built stage `Container`
-   * and viewport dimensions; we skip pixi's `Application` setup entirely.
+   * Init against a renderer the caller already built and mounted — the seam for
+   * a **headless** backend, and the reason the engine's own test suite needs no
+   * drawing library.
    *
-   * Use case: unit tests of the layer / behaviour / dirty / state pipeline
-   * that don't need an actual GPU renderer.
+   * Synchronous on purpose. {@link init} resolves its default backend with a
+   * lazy `import()` and is therefore async; this path takes the renderer as an
+   * argument instead, so it stays callable from a plain test body.
+   *
+   * The caller owns the renderer's `mount` — this only wires the camera, the
+   * context and the layer/behaviour registries on top of it.
    */
-  initWithStage(stage: Container, screenWidth: number, screenHeight: number): void {
+  initWithRenderer(renderer: IRenderer, screenWidth: number, screenHeight: number): void {
     if (this._isInitialised) {
       throw new Error(`Canvas "${this.id}" already initialised`);
     }
-    this._wireScene(stage, screenWidth, screenHeight);
+    this._renderer = renderer;
+    this._wireScene(screenWidth, screenHeight);
+    this._startFrameLoop();
     this._isInitialised = true;
     this.events.emit('canvas:renderer:ready', {
-      backend: 'canvas', // headless == no GPU backend
-      capabilities: { headless: true },
+      backend: renderer.backend,
+      capabilities: { ...renderer.capabilities },
     });
 
     this._activate(this.options.config);
@@ -676,57 +623,6 @@ export class Canvas {
    */
   get frames(): FrameMeter {
     return this._frames;
-  }
-
-  /**
-   * Wrap the renderer's `render` method in place with a try/catch so a WebGPU
-   * render-time crash (a null bind-group during pipeline setup, uncatchable at
-   * init) routes to {@link _handleRenderError} instead of throwing uncaught out
-   * of pixi's ticker every frame. Pixi still drives rendering exactly as before —
-   * this only adds a guard, so it can't change what gets drawn.
-   */
-  private _installRenderGuard(): void {
-    const renderer = this.app?.renderer;
-    if (!renderer) return;
-    const original = renderer.render.bind(renderer);
-    renderer.render = ((...args: Parameters<typeof original>) => {
-      if (this._rendererFellBack) return undefined as ReturnType<typeof original>;
-      try {
-        return original(...args);
-      } catch (err) {
-        this._handleRenderError(err);
-        return undefined as ReturnType<typeof original>;
-      }
-    }) as typeof renderer.render;
-  }
-
-  /**
-   * Recover from a render-time crash. On WebGPU: halt the render loop and emit
-   * `'canvas:renderer:fallback'` **once** so the host re-inits on WebGL (the
-   * `@invana/canvas-react` `<Canvas>` does this automatically). Any other backend
-   * has nowhere to fall back to, so the error is re-thrown rather than swallowed.
-   */
-  private _handleRenderError(err: unknown): void {
-    if (this._rendererFellBack || this._detectBackend() !== 'webgpu') throw err;
-    this._rendererFellBack = true;
-    // Stop the ticker so pixi's render loop can't re-hit the crash while the host
-    // swaps backend.
-    this.app?.ticker.stop();
-    console.warn(
-      '[canvas] WebGPU renderer crashed at render time; ' +
-        'falling back to WebGL. Original error:',
-      err,
-    );
-    this.events.emit('canvas:renderer:fallback', {
-      from: 'webgpu',
-      to: 'webgl',
-      reason: 'render-error',
-    });
-  }
-
-  /** Pixi ticker callback. Bound via `add(this.tick, this)`. */
-  private tick(ticker: Ticker): void {
-    this.tickOnce(ticker.deltaMS);
   }
 
   // ─── Serialisable config ────────────────────────────────────────────────
@@ -1060,86 +956,104 @@ export class Canvas {
   destroy(): void {
     if (!this._isInitialised) return;
 
-    if (this._onRendererResize && this.app) {
-      this.app.renderer.off('resize', this._onRendererResize);
-    }
-    this._onRendererResize = undefined;
-    this._resizeObserver?.disconnect();
-    this._resizeObserver = undefined;
     this._interactions.dispose();
-    this.app?.ticker.remove(this.tick, this);
+    this._stopFrameLoop();
+    // Registries first: layers unmount and destroy their surfaces while the
+    // backend is still alive.
     this.layers?.clear();
     this.behaviours?.clear();
     this.layouts?.clear();
     this.camera?.dispose();
-    this.world?.destroy({ children: true });
     this.events.clearTaps();
     this.events.removeAllListeners();
-
-    if (this.app) {
-      // Pixi destroys the renderer + canvas + ticker.
-      this.app.destroy(true, { children: true });
-      this.app = undefined;
-    }
-    // Release our hold on the shared TexturePool *after* the renderer is gone —
-    // the last live canvas clears the pool here (see `sharedTexturePool.ts`).
-    if (this._holdsSharedTexturePool) {
-      releaseSharedTexturePool();
-      this._holdsSharedTexturePool = false;
-    }
+    // The renderer owns the scene root, the `Application`, the drawing surface,
+    // the resize observer and the shared texture-pool ref-count — all released
+    // together, in the right order, by its own teardown.
+    this._renderer?.destroy();
+    this._renderer = undefined;
     this._isInitialised = false;
   }
 
   // ─── Internals ───────────────────────────────────────────────────────────
 
-  private _wireScene(
-    stage: Container,
-    screenWidth: number,
-    screenHeight: number,
-    events?: EventSystem,
-  ): void {
-    // The world container is always a `Viewport` instance — its position /
-    // scale is what `Camera` mutates. In headless tests no real `EventSystem`
-    // is available, so we pass a minimal stub. Viewport stores `events` but
-    // doesn't actively use `events.domElement` unless an input plugin is
-    // enabled (which we don't do in headless).
-    const eventsForViewport: EventSystem =
-      events ??
-      ({
-        domElement:
-          typeof document !== 'undefined'
-            ? document.createElement('canvas')
-            : ({} as HTMLCanvasElement),
-      } as unknown as EventSystem);
+  /**
+   * Start the engine's frame loop — **the only `requestAnimationFrame` in the
+   * system** (G3).
+   *
+   * Each frame advances engine state first (`tickOnce`: camera easing, data
+   * flush, culling, layer updates) and *then* asks the backend to present
+   * (`renderer.tick`). That order is the point: a renderer scheduling its own
+   * frames would present state from the previous tick, and two clocks make
+   * frame order — and any timing bug — impossible to reason about.
+   *
+   * No-op where `requestAnimationFrame` doesn't exist (node tests); those drive
+   * `tickOnce` by hand, which is exactly what one clock buys.
+   */
+  private _startFrameLoop(): void {
+    if (typeof requestAnimationFrame !== 'function') return;
+    let last = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const frame = (now: number): void => {
+      this._rafHandle = requestAnimationFrame(frame);
+      const dt = now - last;
+      last = now;
+      this.tickOnce(dt);
+      this._renderer?.tick(dt);
+    };
+    this._rafHandle = requestAnimationFrame(frame);
+  }
 
-    const viewport = new Viewport({
-      events: eventsForViewport,
-      screenWidth,
-      screenHeight,
-      // Canvas owns the tick loop (`this.tick`); don't auto-register on the
-      // global pixi Ticker. We'll forward `deltaMS` into `viewport.update()`
-      // when camera-input behaviours that animate (decelerate, snap, etc.)
-      // land in a follow-up.
-      noTicker: true,
-    });
-    viewport.label = 'world';
-    this.world = viewport;
-    // Name the root so the pixi devtools scene tree reads `stage` instead of an
-    // anonymous `Container`. `initWithStage` callers may have named it already.
-    if (!stage.label) stage.label = 'stage';
-    this.stage = stage;
+  private _stopFrameLoop(): void {
+    if (this._rafHandle !== null && typeof cancelAnimationFrame === 'function') {
+      cancelAnimationFrame(this._rafHandle);
+    }
+    this._rafHandle = null;
+  }
 
-    // World goes in first → bottom. ScreenLayers attach themselves to `stage`
-    // directly later, so they're added after world and draw on top.
-    stage.addChild(this.world);
+  /**
+   * Resolve the default drawing backend. Isolated so the dynamic import has one
+   * home, and so the failure mode is a sentence rather than a stack trace.
+   */
+  private async _resolveDefaultRenderer(): Promise<IRenderer> {
+    try {
+      // Typed structurally on purpose: importing the backend's types here would
+      // put `@invana/canvas` back in its own dependency cycle — the exact thing
+      // the optional peer avoids. The engine must compile with the backend
+      // absent.
+      // @ts-ignore — an *optional* peer is by definition not resolvable when the
+      // engine is built alone. That is the point: `@invana/canvas` compiles and
+      // ships with no backend installed.
+      const mod = (await import('@invana/renderer-pixijs')) as unknown as {
+        createDefaultRenderer(opts: { events: CanvasEventBus }): IRenderer;
+      };
+      return mod.createDefaultRenderer({ events: this.events });
+    } catch (err) {
+      throw new Error(
+        `Canvas "${this.id}": no renderer was supplied and the default backend ` +
+          '`@invana/renderer-pixijs` could not be loaded. Install it, or pass ' +
+          'your own via `Canvas.init({ renderer })`.\n' +
+          `Original error: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
 
+  /**
+   * Build the camera and the `CanvasContext` on top of the mounted renderer.
+   * No pixi object is constructed here: the scene root came from
+   * `renderer.mount`, the camera rides a renderer-supplied binding, and every
+   * surface / overlay is a renderer factory call.
+   */
+  private _wireScene(screenWidth: number, screenHeight: number): void {
+    const renderer = this._renderer!;
     this.camera = new Camera({
-      viewport,
+      binding: renderer.createCameraBinding(),
       screenWidth,
       screenHeight,
       bus: this.events,
       store: this.store,
     });
+    // Surfaces need the camera (hit-floor scaling, label-rasterisation
+    // priority), so it must be attached before any layer mounts.
+    renderer.attachCamera(this.camera);
 
     // Default the camera so world (0, 0) sits at the centre of the screen.
     // Most diagram / graph content positions itself around the origin
@@ -1155,35 +1069,16 @@ export class Canvas {
       events: this.events,
       store: this.store,
       theme: this.themeState,
-      world: this.world,
-      stage: this.stage,
       camera: this.camera,
+      gestures: this.gestures,
       layers: this.layers,
       behaviours: this.behaviours,
-      canvasElement: this.app?.canvas,
+      ...(renderer.canvasElement ? { canvasElement: renderer.canvasElement } : {}),
+      createSurface: (space, id, opts) => renderer.createSurface(space, id, opts),
+      createOverlay: (label, space) => renderer.createOverlay(label, space),
       showMessage: (text, timeout) => this.showMessage(text, timeout),
       clearMessage: () => this.clearMessage(),
     };
   }
 
-  private _detectBackend(): 'webgpu' | 'webgl' | 'canvas' {
-    if (!this.app) return 'canvas';
-    // Pixi v8 renderers expose a `name` string.
-    const name = (this.app.renderer as { name?: string }).name;
-    if (name === 'webgpu' || name === 'webgl' || name === 'canvas') return name;
-    const ctor = this.app.renderer.constructor.name.toLowerCase();
-    if (ctor.includes('webgpu')) return 'webgpu';
-    if (ctor.includes('webgl')) return 'webgl';
-    return 'canvas';
-  }
-
-  private _capabilities(): Record<string, unknown> {
-    if (!this.app) return { headless: true };
-    return {
-      backend: this._detectBackend(),
-      resolution: this.app.renderer.resolution,
-      width: this.app.renderer.width,
-      height: this.app.renderer.height,
-    };
-  }
 }

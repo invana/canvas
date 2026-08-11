@@ -24,7 +24,6 @@
  * ```
  */
 
-import { Graphics, Texture, TilingSprite } from 'pixi.js';
 
 import type { CanvasContext } from '../context/CanvasContext';
 import type { ResolvedTheme } from '../theme/types';
@@ -148,8 +147,11 @@ export class BackgroundLayer extends ScreenLayer<
   override readonly kind = 'background-layer';
 
   private opts: Required<BackgroundLayerOptions>;
-  private tiling: TilingSprite | null = null;
-  private patternTexture: Texture | null = null;
+  /**
+   * The rasterised pattern tile, kept so a camera-following repaint reuses it —
+   * the surface caches its texture on this object's identity.
+   */
+  private patternTile: HTMLCanvasElement | null = null;
   /** DPR baked into the current pattern texture — used to compensate `tileScale`. */
   private textureDpr = window.devicePixelRatio || 1;
   private resizeObserver: ResizeObserver | null = null;
@@ -201,7 +203,7 @@ export class BackgroundLayer extends ScreenLayer<
     this.offCameraPan = ctx.events.on('input:camera:pan', ({ x, y }) => {
       this.camX = x;
       this.camY = y;
-      this.syncTileTransform();
+      this.paint();
     });
     this.offCameraZoom = ctx.events.on('input:camera:zoom', ({ scale }) => {
       // `centerX/centerY` is the screen-space zoom anchor — *not* the
@@ -209,7 +211,7 @@ export class BackgroundLayer extends ScreenLayer<
       // The accompanying `camera:pan` emission (always paired with zoom)
       // updates `camX/camY` to the post-zoom origin offset.
       this.camScale = scale;
-      this.syncTileTransform();
+      this.paint();
     });
 
     if (typeof ResizeObserver !== 'undefined' && ctx.canvasElement) {
@@ -227,9 +229,7 @@ export class BackgroundLayer extends ScreenLayer<
     this.offCameraZoom = null;
     this.resizeObserver?.disconnect();
     this.resizeObserver = null;
-    this.patternTexture?.destroy(true);
-    this.patternTexture = null;
-    this.tiling = null;
+    this.patternTile = null;
   }
 
   /**
@@ -299,58 +299,72 @@ export class BackgroundLayer extends ScreenLayer<
   }
 
   private render(): void {
-    // Drop previous render contents.
-    this.container.removeChildren();
-    this.tiling = null;
-    this.patternTexture?.destroy(true);
-    this.patternTexture = null;
-
-    const { width, height } = this.viewportSize();
-
-    const bg = new Graphics();
-    bg.label = 'background:solid';
-    bg.rect(0, 0, width, height).fill(this.resolveColor(this.opts.backgroundColor));
-    this.container.addChild(bg);
-
-    if (this.opts.type === 'solid') return;
-
-    const texture = this.createPatternTexture();
-    const tiling = new TilingSprite({ texture, width, height });
-    tiling.label = 'background:pattern';
-    tiling.alpha = this.opts.alpha;
-    this.container.addChild(tiling);
-    this.patternTexture = texture;
-    this.tiling = tiling;
-    this.syncTileTransform();
+    // A full rebuild: the pattern's own appearance changed, so drop the cached
+    // tile and let `paint` rasterise a fresh one.
+    this.patternTile = null;
+    this.paint();
   }
 
-  private syncTileTransform(): void {
-    if (!this.tiling) return;
-    // Low-zoom cutoff: below the threshold the tiles are too dense to read, so
-    // we hide the pattern and leave the solid backdrop. Evaluated here (rather
-    // than in a zoom behaviour) so every camera source — wheel, pinch, keyboard,
-    // programmatic — goes through the same check.
-    this.tiling.visible =
-      this.opts.hidePatternBelowZoom <= 0 || this.camScale >= this.opts.hidePatternBelowZoom;
-    // Texture is rasterised at `textureDpr` device pixels per CSS pixel; we
-    // divide `tileScale` by it so on-screen pattern size stays in CSS-pixel
-    // units regardless of display density.
-    const dpr = this.textureDpr;
-    if (!this.opts.followCamera) {
-      this.tiling.tileScale.set(1 / dpr, 1 / dpr);
-      this.tiling.tilePosition.set(0, 0);
+  /**
+   * Push the current backdrop to the surface. Cheap enough to call on every
+   * camera move: the tile image is reused unless {@link render} dropped it, and
+   * the surface rebuilds its texture only when that identity changes.
+   */
+  private paint(): void {
+    const { width, height } = this.viewportSize();
+    const color = this.resolveColor(this.opts.backgroundColor);
+
+    if (this.opts.type === 'solid') {
+      this.surface.setBackdrop({ color, width, height });
       return;
     }
-    const s = this.camScale;
-    this.tiling.tileScale.set(s / dpr, s / dpr);
-    // Modulo keeps the offset small so we don't accumulate float drift over
-    // long pans. The pattern is periodic at `spacing * scale` px (in screen
-    // pixels — independent of DPR, since the period is texture_size * tileScale).
-    const period = this.opts.spacing * s;
-    this.tiling.tilePosition.set(this.camX % period, this.camY % period);
+
+    this.patternTile ??= this.createPatternTile();
+    this.surface.setBackdrop({
+      color,
+      width,
+      height,
+      tile: { source: this.patternTile, ...this.tileTransform(), alpha: this.opts.alpha },
+    });
   }
 
-  private createPatternTexture(): Texture {
+  /**
+   * Scale, offset and visibility for the pattern tile.
+   *
+   * Low-zoom cutoff: below the threshold the tiles are too dense to read, so we
+   * hide the pattern and leave the solid backdrop. Evaluated here (rather than
+   * in a zoom behaviour) so every camera source — wheel, pinch, keyboard,
+   * programmatic — goes through the same check.
+   */
+  private tileTransform(): {
+    scale: number;
+    offsetX: number;
+    offsetY: number;
+    visible: boolean;
+  } {
+    const visible =
+      this.opts.hidePatternBelowZoom <= 0 || this.camScale >= this.opts.hidePatternBelowZoom;
+    // The tile is rasterised at `textureDpr` device pixels per CSS pixel; we
+    // divide the scale by it so on-screen pattern size stays in CSS-pixel units
+    // regardless of display density.
+    const dpr = this.textureDpr;
+    if (!this.opts.followCamera) {
+      return { scale: 1 / dpr, offsetX: 0, offsetY: 0, visible };
+    }
+    const s = this.camScale;
+    // Modulo keeps the offset small so we don't accumulate float drift over
+    // long pans. The pattern is periodic at `spacing * scale` px (in screen
+    // pixels — independent of DPR, since the period is tile_size * scale).
+    const period = this.opts.spacing * s;
+    return {
+      scale: s / dpr,
+      offsetX: this.camX % period,
+      offsetY: this.camY % period,
+      visible,
+    };
+  }
+
+  private createPatternTile(): HTMLCanvasElement {
     const { patternType, color, size, spacing } = this.opts;
     // Rasterise the tile at device-pixel density so dots / lines stay crisp on
     // retina / scaled displays. `tileScale` compensates so the on-screen size
@@ -383,7 +397,7 @@ export class BackgroundLayer extends ScreenLayer<
         break;
     }
 
-    return Texture.from(off);
+    return off;
   }
 
   private resolveColor(c: BackgroundColor): number | string {

@@ -13,7 +13,7 @@ import {
   BackgroundLayer,
   DevInfoLayer,
   DragPanBehaviour,
-  WheelZoomBehaviour,
+  WheelZoomBehaviour
 } from '@invana/canvas';
 import { GraphCanvas, DragNodeBehaviour, GraphLayer, type GraphNode, ThemeBehaviour } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
@@ -38,7 +38,7 @@ export const LesMiserablesStory: Story = {
     type LesMisNodeData = { group: number };
     const nodes: GraphNode<LesMisNodeData>[] = lesMiserables.nodes.map((n) => ({ type: `group-${n.data.group}`,
       id: n.id,
-      data: { group: n.data.group },
+      data: { group: n.data.group }
     }));
 
     // ── Add everything, then init() last ─────────────────────────────────
@@ -55,10 +55,10 @@ export const LesMiserablesStory: Story = {
         node: {
           style: {
             bgFill: (n: GraphNode) =>
-              groupColors[(n.data as LesMisNodeData).group % groupColors.length]!,
-          },
-        },
-      },
+              groupColors[(n.data as LesMisNodeData).group % groupColors.length]!
+          }
+        }
+      }
     });
     canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
     canvas.layers.add(new DevInfoLayer({ id: 'dev-info' }));
@@ -79,12 +79,12 @@ export const LesMiserablesStory: Story = {
           color: '#475569',
           size: 1.5,
           spacing: 24,
-          alpha: 0.85,
+          alpha: 0.85
         },
         graph: {
           node: { style: { shape: { kind: 'circle', radius: 5 } } },
-          edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 0.5 } },
-        },
+          edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 0.5 } }
+        }
       },
       behaviours: {
         pan: { enabled: true },
@@ -94,8 +94,8 @@ export const LesMiserablesStory: Story = {
           enabled: true,
           mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
-          dark: { backgroundColor: '#0f172a', color: '#475569' },
-        },
+          dark: { backgroundColor: '#0f172a', color: '#475569' }
+        }
       },
       // Matches the Observable example's three forces — `link`, `charge`,
       // `center` — with only `center` exposed in the GUI. A force is only
@@ -104,9 +104,9 @@ export const LesMiserablesStory: Story = {
       // without them the sim runs `forceCenter` alone and the nodes never
       // spread (they collapse into a tight, unreadable ball).
       layouts: {
-        force: { link: {}, charge: {}, center: { x: 0, y: 0 } },
+        force: { link: {}, charge: {}, center: { x: 0, y: 0 } }
       },
-      activeLayout: 'force',
+      activeLayout: 'force'
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     // initData loads on mount and the active 'force' layout auto-runs against it.
@@ -131,5 +131,5 @@ export const LesMiserablesStory: Story = {
     gui
       .add({ fit: () => canvas.camera.fitContent(graph.getBounds(), 80) }, 'fit')
       .name('Fit to content');
-  },
+  }
 };

@@ -1,14 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import {
-  Canvas,
-  DragPanBehaviour,
-  WheelZoomBehaviour,
-  DragShapeBehaviour,
-  WorldLayer,
-  PrimitivesRenderer,
-  arrowMarkerSpec,
-} from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
+import { Canvas, DragPanBehaviour, WheelZoomBehaviour, DragShapeBehaviour, WorldLayer, type IElementRenderer } from '@invana/canvas';
+import { arrowMarkerSpec } from '@invana/renderer-pixijs';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
@@ -31,10 +23,10 @@ export const Background: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -61,7 +53,7 @@ export const Background: Story = {
       source: { kind: 'shape', shapeId: 'src', anchor: 'boundary' },
       target: { kind: 'shape', shapeId: 'tgt', anchor: 'boundary' },
       stroke: { color: 0xcbd5e1, width: 2 },
-      targetMarker: arrowMarkerSpec({ lengthScale: 6, widthScale: 4, fill: 0xcbd5e1 }),
+      targetMarker: arrowMarkerSpec({ lengthScale: 6, widthScale: 4, fill: 0xcbd5e1 })
     });
 
     const settings = {
@@ -81,7 +73,7 @@ export const Background: Story = {
       shadowBlur: 3,
       shadowOffsetX: 0,
       shadowOffsetY: 1,
-      shadowAlpha: 0.25,
+      shadowAlpha: 0.25
     };
 
     const apply = (): void => {
@@ -103,12 +95,12 @@ export const Background: Story = {
                 blur: settings.shadowBlur,
                 offsetX: settings.shadowOffsetX,
                 offsetY: settings.shadowOffsetY,
-                alpha: settings.shadowAlpha,
-              },
-            } : {}),
+                alpha: settings.shadowAlpha
+              }
+            } : {})
           },
-          placement: 'center',
-        },
+          placement: 'center'
+        }
       });
     };
     apply();
@@ -136,5 +128,5 @@ export const Background: Story = {
     sh.add(settings, 'shadowOffsetX', -10, 10, 1).name('offsetX').onChange(apply);
     sh.add(settings, 'shadowOffsetY', -10, 10, 1).name('offsetY').onChange(apply);
     sh.add(settings, 'shadowAlpha', 0, 1, 0.05).name('alpha').onChange(apply);
-  },
+  }
 };

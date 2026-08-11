@@ -6,7 +6,7 @@ import {
   GraphCanvas,
   GraphLayer,
   LassoSelectBehaviour,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { lesMiserables } from '@invana/graph-datasets';
@@ -33,8 +33,8 @@ export const LassoSelectStory: Story = {
         shape: { kind: 'circle', radius: 9 },
         bgFill: groupColors[n.data.group % groupColors.length],
         bgStrokeColor: 0xffffff,
-        bgStrokeWidth: 1,
-      },
+        bgStrokeWidth: 1
+      }
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-lasso-select')!;
@@ -43,7 +43,7 @@ export const LassoSelectStory: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes, edges: lesMiserables.edges } },
+      options: { initData: { nodes, edges: lesMiserables.edges } }
     });
     canvas.layers.add(graph);
 
@@ -66,9 +66,9 @@ export const LassoSelectStory: Story = {
           node: { state: { selected: { bgStrokeColor: 0xf97316, bgStrokeWidth: 4 } } },
           edge: {
             style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' },
-            state: { selected: { strokeColor: 0xf97316, strokeWidth: 2.5 } },
-          },
-        },
+            state: { selected: { strokeColor: 0xf97316, strokeWidth: 2.5 } }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
@@ -84,18 +84,18 @@ export const LassoSelectStory: Story = {
             fillAlpha: 0.12,
             stroke: 0x14b8a6,
             strokeWidth: 1.5,
-            strokeDash: [6, 4],
-          },
-        },
+            strokeDash: [6, 4]
+          }
+        }
       },
       layouts: {
         force: {
           charge: { strength: -120 },
           link: { distance: 50 },
-          collide: { radius: 14 },
-        },
+          collide: { radius: 14 }
+        }
       },
-      activeLayout: 'force',
+      activeLayout: 'force'
     };
 
     await canvas.init({ container, autoResize: true, config: canvasOptions });
@@ -121,7 +121,7 @@ export const LassoSelectStory: Story = {
       'style.strokeAlpha': 0.8,
       'style.strokeWidth': 1.5,
       'style.dashLen': 6,
-      'style.gapLen': 4,
+      'style.gapLen': 4
     };
     const apply = (): void => {
       if (settings.enable) lasso.enable();
@@ -147,10 +147,10 @@ export const LassoSelectStory: Story = {
               stroke: parseColor(settings['style.stroke']),
               strokeAlpha: settings['style.strokeAlpha'],
               strokeWidth: settings['style.strokeWidth'],
-              strokeDash: [settings['style.dashLen'], settings['style.gapLen']],
-            },
-          },
-        },
+              strokeDash: [settings['style.dashLen'], settings['style.gapLen']]
+            }
+          }
+        }
       });
     };
 
@@ -180,5 +180,5 @@ export const LassoSelectStory: Story = {
       'position:absolute; top:10px; left:10px; padding:6px 10px; background:rgba(15,23,42,.85); color:#f8fafc; font:12px/1.2 ui-monospace, monospace; border-radius:4px; z-index:100;';
     hint.textContent = 'Hold shift + drag a freeform loop on empty space';
     container.appendChild(hint);
-  },
+  }
 };

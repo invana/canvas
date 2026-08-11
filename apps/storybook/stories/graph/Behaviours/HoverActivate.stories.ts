@@ -5,7 +5,7 @@ import {
   GraphCanvas,
   GraphLayer,
   HoverActivateBehaviour,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { lesMiserables } from '@invana/graph-datasets';
@@ -32,8 +32,8 @@ export const HoverActivateStory: Story = {
         shape: { kind: 'circle', radius: 9 },
         bgFill: groupColors[n.data.group % groupColors.length],
         bgStrokeColor: 0xffffff,
-        bgStrokeWidth: 1,
-      },
+        bgStrokeWidth: 1
+      }
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-hover-activate')!;
@@ -43,7 +43,7 @@ export const HoverActivateStory: Story = {
     // Data is content — it rides on the layer via `options.initData`.
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes, edges: lesMiserables.edges } },
+      options: { initData: { nodes, edges: lesMiserables.edges } }
     });
     canvas.layers.add(graph);
 
@@ -65,16 +65,16 @@ export const HoverActivateStory: Story = {
             // override just bumps `highlighted` to a sharper orange so the
             // N-hop neighbour ring is unmistakable in the demo.
             state: {
-              highlighted: { bgStrokeColor: 0xf97316, bgStrokeWidth: 4 },
-            },
+              highlighted: { bgStrokeColor: 0xf97316, bgStrokeWidth: 4 }
+            }
           },
           edge: {
             style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' },
             state: {
-              highlighted: { strokeColor: 0xf97316, strokeWidth: 2.5 },
-            },
-          },
-        },
+              highlighted: { strokeColor: 0xf97316, strokeWidth: 2.5 }
+            }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
@@ -89,18 +89,18 @@ export const HoverActivateStory: Story = {
           // At low zoom, multiply each hovered node's gfx.scale so the same
           // node — original colour, stroke, label — just grows visually.
           zoomThreshold: 0.4,
-          zoomedOutScale: 3,
-        },
+          zoomedOutScale: 3
+        }
       },
       layouts: {
         force: {
           charge: { strength: -120 },
           link: { distance: 50 },
           collide: { radius: 14 },
-          center: { x: 0, y: 0 },
-        },
+          center: { x: 0, y: 0 }
+        }
       },
-      activeLayout: 'force',
+      activeLayout: 'force'
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -116,7 +116,7 @@ export const HoverActivateStory: Story = {
       // multiplier. The trigger is `camera.scale <= zoomThreshold`.
       zoomedOutScale: 3,
       zoomThreshold: 0.4,
-      hoveredId: '—',
+      hoveredId: '—'
     };
     const apply = (): void => {
       if (settings.enable) hover.enable();
@@ -133,9 +133,9 @@ export const HoverActivateStory: Story = {
             degree: settings['degree (neighbor hops)'],
             direction: settings.direction,
             zoomThreshold: settings.zoomThreshold,
-            zoomedOutScale: settings.zoomedOutScale,
-          },
-        },
+            zoomedOutScale: settings.zoomedOutScale
+          }
+        }
       });
     };
     hover.setOptions({
@@ -146,7 +146,7 @@ export const HoverActivateStory: Story = {
       onHoverEnd: () => {
         settings.hoveredId = '—';
         gui.controllersRecursive().forEach((c) => c.updateDisplay());
-      },
+      }
     });
 
     const gui = new GUI({ title: 'Hover Activate' });
@@ -161,5 +161,5 @@ export const HoverActivateStory: Story = {
     gui.add(settings, 'zoomedOutScale', 1, 8, 0.25).onChange(apply);
     gui.add(settings, 'zoomThreshold', 0.05, 2, 0.05).onChange(apply);
     gui.add(settings, 'hoveredId').disable();
-  },
+  }
 };

@@ -5,9 +5,8 @@ import {
   WheelZoomBehaviour,
   DragShapeBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
@@ -33,10 +32,10 @@ export const Visibility: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -60,14 +59,14 @@ export const Visibility: Story = {
     for (const h of HOSTS) {
       layer.renderer.addShape(h.id, {
         kind: 'circle', x: h.x, y: 0, radius: 40,
-        fill: { kind: 'solid', color: h.fill }, stroke: { color: h.stroke, width: 1 },
+        fill: { kind: 'solid', color: h.fill }, stroke: { color: h.stroke, width: 1 }
       });
     }
 
     const settings = {
       minZoomNear: 0.8,
       maxZoomFar: 1.2,
-      fontSize: 14,
+      fontSize: 14
     };
 
     const apply = (): void => {
@@ -78,8 +77,8 @@ export const Visibility: Story = {
           content: { kind: 'text', text: 'always (no band)', fontSize: settings.fontSize, fontWeight: 600, fill: 0x0f172a },
           background: { fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [3, 6] },
           placement: 'bottom',
-          offset: { y: 10 },
-        },
+          offset: { y: 10 }
+        }
       });
       // Far-zoom only — hides as you zoom in.
       layer.renderer.setDecoration('far', 'label', {
@@ -89,8 +88,8 @@ export const Visibility: Story = {
           background: { fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [3, 6] },
           placement: 'bottom',
           offset: { y: 10 },
-          visibility: { maxZoom: settings.maxZoomFar },
-        },
+          visibility: { maxZoom: settings.maxZoomFar }
+        }
       });
       // Near-zoom only — hides as you zoom out.
       layer.renderer.setDecoration('near', 'label', {
@@ -100,8 +99,8 @@ export const Visibility: Story = {
           background: { fill: 0xffffff, stroke: 0xcbd5e1, strokeWidth: 1, radius: 4, padding: [3, 6] },
           placement: 'bottom',
           offset: { y: 10 },
-          visibility: { minZoom: settings.minZoomNear },
-        },
+          visibility: { minZoom: settings.minZoomNear }
+        }
       });
     };
     apply();
@@ -113,5 +112,5 @@ export const Visibility: Story = {
     gui.add(settings, 'fontSize', 8, 24, 1).onChange(apply);
     gui.add(settings, 'maxZoomFar',  0.2, 4, 0.05).name('far: maxZoom').onChange(apply);
     gui.add(settings, 'minZoomNear', 0.2, 4, 0.05).name('near: minZoom').onChange(apply);
-  },
+  }
 };

@@ -6,7 +6,7 @@ import {
   GraphCanvas,
   GraphLayer,
   type GraphNode,
-  type SelectModifierKey,
+  type SelectModifierKey
 } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { lesMiserables } from '@invana/graph-datasets';
@@ -33,8 +33,8 @@ export const ClickSelectStory: Story = {
         shape: { kind: 'circle', radius: 9 },
         bgFill: groupColors[n.data.group % groupColors.length],
         bgStrokeColor: 0xffffff,
-        bgStrokeWidth: 1,
-      },
+        bgStrokeWidth: 1
+      }
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-click-select')!;
@@ -43,7 +43,7 @@ export const ClickSelectStory: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes, edges: lesMiserables.edges } },
+      options: { initData: { nodes, edges: lesMiserables.edges } }
     });
     canvas.layers.add(graph);
 
@@ -65,8 +65,8 @@ export const ClickSelectStory: Story = {
               selected: { bgStrokeColor: 0xf97316, bgStrokeWidth: 4 },
               highlighted: { bgStrokeColor: 0xfacc15, bgStrokeWidth: 4 },
               muted: { bgAlpha: 0.2 },
-              dimmed: { bgAlpha: 0.45 },
-            },
+              dimmed: { bgAlpha: 0.45 }
+            }
           },
           edge: {
             style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' },
@@ -74,10 +74,10 @@ export const ClickSelectStory: Story = {
               selected: { strokeColor: 0xf97316, strokeWidth: 2.5 },
               highlighted: { strokeColor: 0xfacc15, strokeWidth: 2.5 },
               muted: { strokeAlpha: 0.15 },
-              dimmed: { strokeAlpha: 0.4 },
-            },
-          },
-        },
+              dimmed: { strokeAlpha: 0.4 }
+            }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
@@ -89,17 +89,17 @@ export const ClickSelectStory: Story = {
           trigger: ['shift'] as SelectModifierKey[],
           degree: 1,
           state: 'selected',
-          clearOnBackground: true,
-        },
+          clearOnBackground: true
+        }
       },
       layouts: {
         force: {
           charge: { strength: -120 },
           link: { distance: 50 },
-          collide: { radius: 14 },
-        },
+          collide: { radius: 14 }
+        }
       },
-      activeLayout: 'force',
+      activeLayout: 'force'
     };
 
     await canvas.init({ container, autoResize: true, config: canvasOptions });
@@ -120,7 +120,7 @@ export const ClickSelectStory: Story = {
       'unselectedState (dim non-selected)': 'muted' as 'muted' | 'dimmed' | 'none',
       clearOnBackground: true,
       selectedNodes: 0,
-      selectedEdges: 0,
+      selectedEdges: 0
     };
 
     const apply = (): void => {
@@ -143,9 +143,9 @@ export const ClickSelectStory: Story = {
             direction: settings.direction,
             state: settings.state,
             unselectedState: unsel,
-            clearOnBackground: settings.clearOnBackground,
-          },
-        },
+            clearOnBackground: settings.clearOnBackground
+          }
+        }
       });
     };
 
@@ -155,7 +155,7 @@ export const ClickSelectStory: Story = {
         settings.selectedNodes = shapeIds.length;
         settings.selectedEdges = connectorIds.length;
         gui.controllersRecursive().forEach((c) => c.updateDisplay());
-      },
+      }
     });
 
     const gui = new GUI({ title: 'Click Select' });
@@ -175,5 +175,5 @@ export const ClickSelectStory: Story = {
     gui.add(settings, 'selectedNodes').disable();
     gui.add(settings, 'selectedEdges').disable();
     gui.add({ clear: () => click.clearSelection() }, 'clear');
-  },
+  }
 };

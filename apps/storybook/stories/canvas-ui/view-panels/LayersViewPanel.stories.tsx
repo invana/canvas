@@ -11,7 +11,7 @@ import {
   GraphStatusBar,
   LayersViewPanel,
   ToolbarItems,
-  useSidePanels,
+  useSidePanels
 } from '@invana/canvas-ui';
 import { epicSaga } from '@invana/graph-datasets/epic-saga';
 import { topicCartography } from '@invana/graph-datasets/topic-cartography';
@@ -49,7 +49,7 @@ const LAYOUTS: Record<string, LayoutFactory> = {
   grid: () => new GeometricLayout({ mode: 'grid', columnGap: 70, rowGap: 70 }),
   circular: () => new GeometricLayout({ mode: 'circular' }),
   'd3-force': () =>
-    new D3ForceLayout({ charge: { strength: -80 }, link: { distance: 40 }, animate: false }),
+    new D3ForceLayout({ charge: { strength: -80 }, link: { distance: 40 }, animate: false })
 };
 const LAYOUT_LABEL: Record<string, string> = { grid: 'Grid', circular: 'Circular', 'd3-force': 'Force' };
 
@@ -76,27 +76,27 @@ const DATASETS: Record<DatasetId, DatasetDef> = {
     build: () => ({
       nodes: topicCartography.nodes.map((n) => ({
         ...n,
-        position: { x: n.data.x, y: n.data.y },
+        position: { x: n.data.x, y: n.data.y }
       })),
-      edges: topicCartography.edges,
+      edges: topicCartography.edges
     }),
     // Precomputed ForceAtlas2 positions ship with the data — `'none'` matches no
     // registered layout, so the engine's layout step no-ops on load.
     config: { activeLayout: 'none' },
     applyInitialLayout: false,
-    fitOnReady: true,
+    fitOnReady: true
   },
   got: {
     label: 'Epic Saga',
     meta: epicSaga.meta,
     build: () => ({
       nodes: epicSaga.nodes,
-      edges: epicSaga.edges,
+      edges: epicSaga.edges
     }),
     // No positions — grid places ~5k nodes instantly on mount.
     applyInitialLayout: true,
-    fitOnReady: false,
-  },
+    fitOnReady: false
+  }
 };
 
 export const LayersViewPanelStory: Story = {
@@ -161,7 +161,7 @@ export const LayersViewPanelStory: Story = {
                       label: 'Dataset',
                       value: datasetId,
                       options: { wikipedia: DATASETS.wikipedia.label, got: DATASETS.got.label },
-                      onChange: (v) => setDatasetId(v as DatasetId),
+                      onChange: (v) => setDatasetId(v as DatasetId)
                     },
                   ]}
                 />
@@ -188,7 +188,7 @@ export const LayersViewPanelStory: Story = {
                     label: 'Minimap: off',
                     activeLabel: 'Minimap: on',
                     active: minimapOn,
-                    onToggle: () => setMinimapOn((v) => !v),
+                    onToggle: () => setMinimapOn((v) => !v)
                   },
                   {
                     type: 'toggle',
@@ -197,7 +197,7 @@ export const LayersViewPanelStory: Story = {
                     label: 'Dev overlay: off',
                     activeLabel: 'Dev overlay: on',
                     active: devOn,
-                    onToggle: () => setDevOn((v) => !v),
+                    onToggle: () => setDevOn((v) => !v)
                   },
                   {
                     type: 'toggle',
@@ -207,11 +207,11 @@ export const LayersViewPanelStory: Story = {
                     label: 'Switch to dark theme',
                     activeLabel: 'Switch to light theme',
                     active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme,
+                    onToggle: ctx.toggleTheme
                   },
                 ]}
               />
-            ),
+            )
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
           // The star: the LayersViewPanel, docked into the app's resizable `right`
@@ -239,12 +239,12 @@ export const LayersViewPanelStory: Story = {
               {
                 id: 'about',
                 label: `${ds.label} — full graph`,
-                onClick: () => window.alert(`${ds.label}: ${ds.meta.nodeCount} nodes / ${ds.meta.edgeCount} edges`),
+                onClick: () => window.alert(`${ds.label}: ${ds.meta.nodeCount} nodes / ${ds.meta.edgeCount} edges`)
               },
             ]}
           />
         </GraphCanvasApp>
       </ThemeProvider>
     );
-  },
+  }
 };

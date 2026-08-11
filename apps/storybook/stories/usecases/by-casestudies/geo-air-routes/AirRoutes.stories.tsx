@@ -31,7 +31,7 @@ import {
   HoverActivateBehaviour,
   MapLayer,
   MiniMapLayer,
-  NodeScaleLODBehaviour,
+  NodeScaleLODBehaviour
 } from '@invana/canvas-react';
 import {
   CanvasMessageBar,
@@ -39,7 +39,7 @@ import {
   GraphCanvasApp,
   GraphStatusBar,
   ToolbarItems,
-  useSidePanels,
+  useSidePanels
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData, GraphNode } from '@invana/graph';
@@ -61,7 +61,7 @@ export const AirRoutesStory: Story = {
     const STYLES = {
       liberty: 'https://tiles.openfreemap.org/styles/liberty',
       bright: 'https://tiles.openfreemap.org/styles/bright',
-      positron: 'https://tiles.openfreemap.org/styles/positron',
+      positron: 'https://tiles.openfreemap.org/styles/positron'
     };
 
     const [basemap, setBasemap] = useState<keyof typeof STYLES>('positron');
@@ -75,7 +75,7 @@ export const AirRoutesStory: Story = {
           label: 'Settings',
           render: (canvas) => (
             <CanvasSettingsEditorPanel canvas={canvas} className="border-0 bg-transparent shadow-none" />
-          ),
+          )
         },
       ],
       { section: { defaultSize: '360px', maxSize: '460px' } },
@@ -97,7 +97,7 @@ export const AirRoutesStory: Story = {
       const points = hubs.map((a, i) => ({
         id: `ap-${i}`,
         name: a.name,
-        ...projectLngLat([a.lng, a.lat]),
+        ...projectLngLat([a.lng, a.lat])
       }));
 
       // Delaunay edges over the projected coords — a plausible route web
@@ -140,9 +140,9 @@ export const AirRoutesStory: Story = {
           id: p.id,
           type: 'Airport',
           position: { x: p.x, y: p.y },
-          data: { name: p.name, degree: degree.get(p.id) ?? 0 },
+          data: { name: p.name, degree: degree.get(p.id) ?? 0 }
         })),
-        edges: rawEdges.map((e) => ({ id: e.id, source: e.source, target: e.target, type: 'ROUTE' })),
+        edges: rawEdges.map((e) => ({ id: e.id, source: e.source, target: e.target, type: 'ROUTE' }))
       };
     }, []);
 
@@ -162,7 +162,7 @@ export const AirRoutesStory: Story = {
                   kind: 'circle' as const,
                   // sqrt scales 1 → 12 routes into ~3 → 7 px radius; the long
                   // tail stays readable.
-                  radius: 2 + Math.sqrt((n.data as { degree: number }).degree) * 1.4,
+                  radius: 2 + Math.sqrt((n.data as { degree: number }).degree) * 1.4
                 }),
                 labelText: (n: GraphNode) => (n.data as { name: string }).name,
                 bgFill: 0xff6b35,
@@ -179,17 +179,17 @@ export const AirRoutesStory: Story = {
                 labelBackgroundCornerRadius: 2,
                 // Everything stays unlabelled until past world view; the label
                 // set is small enough that overlap is rare beyond zoom 3.
-                labelMinZoom: 3,
+                labelMinZoom: 3
               },
               state: {
                 hovered: {
                   bgFill: 0xfacc15,
                   bgStrokeColor: 0xfacc15,
                   bgStrokeWidth: 1.8,
-                  labelForceShow: true,
+                  labelForceShow: true
                 },
-                dimmed: { bgAlpha: 0.15 },
-              },
+                dimmed: { bgAlpha: 0.15 }
+              }
             },
             edge: {
               style: {
@@ -197,7 +197,7 @@ export const AirRoutesStory: Story = {
                 strokeColor: 0x475569,
                 strokeWidth: 0.6,
                 strokeAlpha: 0.45,
-                arrowTargetShape: 'none',
+                arrowTargetShape: 'none'
               },
               state: {
                 hovered: {
@@ -211,21 +211,21 @@ export const AirRoutesStory: Story = {
                       color: 0xfacc15,
                       count: 3,
                       size: 3,
-                      speedPxPerSec: 120,
+                      speedPxPerSec: 120
                     },
-                  ],
+                  ]
                 },
-                dimmed: { strokeAlpha: 0.05 },
-              },
-            },
+                dimmed: { strokeAlpha: 0.05 }
+              }
+            }
           },
-          minimap: { position: 'top-right', width: 200, height: 140 },
+          minimap: { position: 'top-right', width: 200, height: 140 }
         },
         behaviours: {
           hover: { enabled: true, state: 'hovered', inactiveState: 'dimmed', degree: 1, direction: 'both' },
           'node-scale-lod': { enabled: true },
-          'edge-scale-lod': { enabled: true },
-        },
+          'edge-scale-lod': { enabled: true }
+        }
       }),
       // STYLES is a render-local literal; only the picked basemap matters.
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -258,7 +258,7 @@ export const AirRoutesStory: Story = {
                     label: 'Basemap',
                     value: basemap,
                     options: { liberty: 'Liberty', bright: 'Bright', positron: 'Positron' },
-                    onChange: (v) => setBasemap(v as keyof typeof STYLES),
+                    onChange: (v) => setBasemap(v as keyof typeof STYLES)
                   },
                   {
                     type: 'toggle',
@@ -267,7 +267,7 @@ export const AirRoutesStory: Story = {
                     label: 'Minimap: off',
                     activeLabel: 'Minimap: on',
                     active: minimapOn,
-                    onToggle: () => setMinimapOn((v) => !v),
+                    onToggle: () => setMinimapOn((v) => !v)
                   },
                   ...dock.items,
                   {
@@ -278,11 +278,11 @@ export const AirRoutesStory: Story = {
                     label: 'Switch to dark theme',
                     activeLabel: 'Switch to light theme',
                     active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme,
+                    onToggle: ctx.toggleTheme
                   },
                 ]}
               />
-            ),
+            )
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
           right={dock.region}
@@ -311,5 +311,5 @@ export const AirRoutesStory: Story = {
         </GraphCanvasApp>
       </ThemeProvider>
     );
-  },
+  }
 };

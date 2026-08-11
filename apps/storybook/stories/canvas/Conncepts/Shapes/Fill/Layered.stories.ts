@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Canvas,
   DragPanBehaviour,
-  PrimitivesRenderer,
   WheelZoomBehaviour,
   WorldLayer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext, ShapeFillLayer } from '@invana/canvas';
+import type { ShapeFillLayer } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -41,13 +41,10 @@ export const Layered: Story = {
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({
-          container: this.container,
-          camera: ctx.camera,
-        });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -71,7 +68,7 @@ export const Layered: Story = {
           viewBox: { width: 24, height: 24 },
           strokeWidth: 2,
           color: 0xfbbf24,
-          sizeRatio: 0.55,
+          sizeRatio: 0.55
         },
         { kind: 'glyph', char: '⚡', fontFamily: 'sans-serif', color: 0xfbbf24, sizeRatio: 0.25, anchor: 'top-right' },
       ],
@@ -87,9 +84,9 @@ export const Layered: Story = {
           viewBox: { width: 24, height: 24 },
           strokeWidth: 2,
           color: 0xffffff,
-          sizeRatio: 0.55,
+          sizeRatio: 0.55
         },
-      ],
+      ]
     };
 
     const settings = { preset: 'plateAndGlyph' as keyof typeof presets };
@@ -102,7 +99,7 @@ export const Layered: Story = {
       height: 128,
       cornerRadius: 16,
       fill: presets[settings.preset],
-      stroke: { color: 0xffffff, width: 2 },
+      stroke: { color: 0xffffff, width: 2 }
     });
 
     canvas.camera.fitContent(layer.getBounds(), 60);
@@ -112,5 +109,5 @@ export const Layered: Story = {
     gui.add(settings, 'preset', Object.keys(presets)).onChange(() => {
       layer.renderer.updateShape('l', { fill: presets[settings.preset] });
     });
-  },
+  }
 };

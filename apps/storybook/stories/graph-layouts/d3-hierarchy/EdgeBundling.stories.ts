@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
   DragPanBehaviour,
-  WheelZoomBehaviour,
+  WheelZoomBehaviour
 } from '@invana/canvas';
 import { GraphCanvas, GraphLayer, HoverActivateBehaviour, TextResolutionLODBehaviour, ThemeBehaviour } from '@invana/graph';
 import type { ShapeLabelStyle } from '@invana/canvas';
@@ -34,7 +34,7 @@ export const EdgeBundlingStory: Story = {
       showLabels: true,
       labelFontSize: 9,
       hoverDegree: 1,
-      sharpLabelsOnZoom: true,
+      sharpLabelsOnZoom: true
     };
 
     // ── Build flare graph + synthetic imports ───────────────────────────
@@ -63,12 +63,12 @@ export const EdgeBundlingStory: Story = {
       style: n.data.isLeaf
         ? {
             shape: { kind: 'circle' as const, radius: settings.leafSize / 2 },
-            bgFill: 0x1f2937,
+            bgFill: 0x1f2937
           }
         : {
             shape: { kind: 'circle' as const, radius: 0 },
-            bgAlpha: 0,
-          },
+            bgAlpha: 0
+          }
     }));
 
     // Parent map for the LCA walk — built once from the tree edges so the
@@ -87,7 +87,7 @@ export const EdgeBundlingStory: Story = {
       id: 'graph',
       // Initial content rides on the layer: leaves start as the tree (the
       // import edges are swapped in after layout — see applyLabelsAndBundles).
-      options: { initData: { nodes, edges: treeEdges } },
+      options: { initData: { nodes, edges: treeEdges } }
     });
     canvas.layers.add(graph);
 
@@ -97,7 +97,7 @@ export const EdgeBundlingStory: Story = {
 
     const labelResolutionLOD = new TextResolutionLODBehaviour({
       id: 'label-resolution',
-      targetLayerId: 'graph',
+      targetLayerId: 'graph'
     });
     canvas.behaviours.register(labelResolutionLOD);
 
@@ -105,7 +105,7 @@ export const EdgeBundlingStory: Story = {
     // already exists above.
     const hover = new HoverActivateBehaviour({
       id: 'hover',
-      targetLayerId: 'graph',
+      targetLayerId: 'graph'
     });
     canvas.behaviours.register(hover);
 
@@ -123,8 +123,8 @@ export const EdgeBundlingStory: Story = {
           node: {
             state: {
               hovered: { bgFill: 0xf97316, bgStrokeColor: 0xf97316, bgStrokeWidth: 1 },
-              dimmed: { bgAlpha: 0.18 },
-            },
+              dimmed: { bgAlpha: 0.18 }
+            }
           },
           edge: {
             style: {
@@ -136,15 +136,15 @@ export const EdgeBundlingStory: Story = {
                 pathType: 'bundle',
                 // `center` (vs `boundary`) so endpoints sit on the leaf centre.
                 sourceAnchor: 'center',
-                targetAnchor: 'center',
-              },
+                targetAnchor: 'center'
+              }
             },
             state: {
               hovered: { strokeColor: 0xf97316, strokeWidth: 1.5, strokeAlpha: 0.95 },
-              dimmed: { strokeAlpha: 0.08 },
-            },
-          },
-        },
+              dimmed: { strokeAlpha: 0.08 }
+            }
+          }
+        }
       },
       behaviours: {
         pan: { enabled: true },
@@ -154,16 +154,16 @@ export const EdgeBundlingStory: Story = {
           state: 'hovered',
           // inactiveState: 'dimmed',
           degree: settings.hoverDegree,
-          direction: 'both',
+          direction: 'both'
         },
         'label-resolution': { enabled: settings.sharpLabelsOnZoom },
         theme: {
           enabled: true,
           mode: 'system',
           light: { backgroundColor: '#f8fafc' },
-          dark: { backgroundColor: '#0b1220' },
-        },
-      },
+          dark: { backgroundColor: '#0b1220' }
+        }
+      }
     };
 
     await canvas.init({ container, autoResize: true, config: canvasOptions });
@@ -271,14 +271,14 @@ export const EdgeBundlingStory: Story = {
               text: name,
               fontSize: settings.labelFontSize,
               fontWeight: 500,
-              fill: 0x0f172a,
+              fill: 0x0f172a
             },
             placement: 'center',
             offset: {
               x: radialDist * Math.cos(theta),
-              y: radialDist * Math.sin(theta),
+              y: radialDist * Math.sin(theta)
             },
-            rotation: isLeftHalf ? theta + Math.PI : theta,
+            rotation: isLeftHalf ? theta + Math.PI : theta
           };
           graph.store.updateNode(node.id, { style: { ...baseStyle, labelStyle } });
         }
@@ -309,9 +309,9 @@ export const EdgeBundlingStory: Story = {
                 pathStyleOpts: bundleOpts,
                 waypoints,
                 sourceAnchor: 'center',
-                targetAnchor: 'center',
-              },
-            },
+                targetAnchor: 'center'
+              }
+            }
           });
         }
       });
@@ -333,8 +333,8 @@ export const EdgeBundlingStory: Story = {
               ...baseStyle,
               strokeAlpha: settings.edgeAlpha,
               strokeWidth: settings.edgeStrokeWidth,
-              shape: { ...baseShape, pathStyleOpts: bundleOpts },
-            },
+              shape: { ...baseShape, pathStyleOpts: bundleOpts }
+            }
           });
         }
       });
@@ -387,5 +387,5 @@ export const EdgeBundlingStory: Story = {
     gui
       .add({ refit: () => canvas.camera.fitContent(graph.getBounds(), 80) }, 'refit')
       .name('Re-fit camera');
-  },
+  }
 };

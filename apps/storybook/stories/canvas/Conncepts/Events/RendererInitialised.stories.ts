@@ -17,5 +17,5 @@ export const RendererInitialisedStory: Story = {
     onStoryTeardown(() => canvas.destroy());
     canvas.events.on('canvas:renderer:ready', action('canvas:renderer:ready'));
     await canvas.init({ container, autoResize: true });
-  },
+  }
 };

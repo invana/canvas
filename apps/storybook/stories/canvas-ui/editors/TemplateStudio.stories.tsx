@@ -32,14 +32,14 @@ import {
   GraphStatusBar,
   NodeStylingEditorPanel,
   NodeStructureEditorPanel,
-  ThemeToggle,
+  ThemeToggle
 } from '@invana/canvas-ui';
 import {
   BUILT_IN_STRUCTURES,
   BUILT_IN_STYLINGS,
   type GraphData,
   type NodeStylingTemplate,
-  type NodeTypeBinding,
+  type NodeTypeBinding
 } from '@invana/graph';
 import { ThemeProvider } from '@invana/themes';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@invana/ui';
@@ -68,7 +68,7 @@ const DATA: GraphData = {
     { id: 'e3', source: 'grace', target: 'compiler', type: 'INVENTED' },
     { id: 'e4', source: 'ada', target: 'alan', type: 'INFLUENCED' },
     { id: 'e5', source: 'alan', target: 'grace', type: 'INFLUENCED' },
-  ],
+  ]
 };
 
 // Per-type bindings: card for people, simple circle for concepts. Both reference
@@ -76,12 +76,12 @@ const DATA: GraphData = {
 const PERSON_BINDING: NodeTypeBinding = {
   structure: 'idCard',
   styling: 'idCard',
-  bindings: { type: 'type', avatar: 'data.avatar', title: 'data.name', subtitle: 'data.role' },
+  bindings: { type: 'type', avatar: 'data.avatar', title: 'data.name', subtitle: 'data.role' }
 };
 const CONCEPT_BINDING: NodeTypeBinding = {
   structure: 'circle',
   styling: 'circle',
-  bindings: { label: 'data.name' },
+  bindings: { label: 'data.name' }
 };
 
 const THEMES = ['default', 'forest', 'ocean', 'gold', 'rose', 'minimal'];
@@ -94,18 +94,18 @@ const CONFIG: CanvasConfig = {
   layers: {
     graph: {
       nodeTypes: { person: PERSON_BINDING, Concept: CONCEPT_BINDING },
-      edge: { style: { strokeWidth: 1.2, arrowTargetShape: 'none' } },
-    },
+      edge: { style: { strokeWidth: 1.2, arrowTargetShape: 'none' } }
+    }
   },
   layouts: {
     'graph-force': {
       charge: { strength: -700 },
       link: { distance: 150 },
       collide: { radius: 120 },
-      animate: false,
-    },
+      animate: false
+    }
   },
-  behaviours: { color: { enabled: false } },
+  behaviours: { color: { enabled: false } }
 };
 
 /**
@@ -197,12 +197,12 @@ export const TemplateStudioStory: Story = {
         header={{
           title: 'Template Studio',
           center: <GraphControlsToolbar />,
-          right: (ctx) => <ThemeToggle ctx={ctx} />,
+          right: (ctx) => <ThemeToggle ctx={ctx} />
         }}
         footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
         // The three-layer editors, docked into the resizable right region.
         right={{ content: <StudioEditorsGate />, defaultSize: '360px', maxSize: '460px', collapsible: true }}
       />
     </ThemeProvider>
-  ),
+  )
 };

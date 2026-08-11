@@ -3,7 +3,7 @@ import {
   BackgroundLayer,
   DevInfoLayer,
   DragPanBehaviour,
-  WheelZoomBehaviour,
+  WheelZoomBehaviour
 } from '@invana/canvas';
 import { GraphCanvas, GraphLayer, TextResolutionLODBehaviour, ThemeBehaviour } from '@invana/graph';
 import type { ShapeLabelStyle } from '@invana/canvas';
@@ -62,7 +62,7 @@ export const Pack: Story = {
       // Cap so the largest employer bubble doesn't blast its label across
       // the screen. d3 uses a fixed 10px; we let the label scale up to a
       // bubble-sized font and then clamp here.
-      maxLabelFontSize: 14,
+      maxLabelFontSize: 14
     };
 
     // ── Build node/edge data from the rollup dataset ─────────────────────
@@ -137,18 +137,18 @@ export const Pack: Story = {
                 ...(n.data.value !== undefined ? { value: n.data.value } : {}),
                 name: n.data.name,
                 isLeaf,
-                depth: n.data.depth,
+                depth: n.data.depth
               },
               style: {
                 bgFill: isLeaf ? settings.leafFill : settings.innerFill,
                 bgStrokeColor: isLeaf ? 0xffffff : settings.innerStroke,
-                bgStrokeWidth: isLeaf ? 0 : settings.innerStrokeWidth,
-              },
+                bgStrokeWidth: isLeaf ? 0 : settings.innerStrokeWidth
+              }
             };
           }),
         edges: data.edges
           .filter((e) => keep.has(e.source) && keep.has(e.target))
-          .map((e) => ({ id: e.id, type: 'edge', source: e.source, target: e.target })),
+          .map((e) => ({ id: e.id, type: 'edge', source: e.source, target: e.target }))
       };
     };
 
@@ -170,10 +170,10 @@ export const Pack: Story = {
             shape: (n) => {
               const size = (n.data as { size?: number } | undefined)?.size ?? 0.1;
               return { type: 'edge', kind: 'circle', radius: size / 2 };
-            },
-          },
-        },
-      },
+            }
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
 
@@ -197,7 +197,7 @@ export const Pack: Story = {
     let layout = new D3HierarchyLayout({
       mode: 'pack',
       size: [settings.size, settings.size],
-      padding: settings.padding,
+      padding: settings.padding
     });
 
     const canvasOptions = {
@@ -212,11 +212,11 @@ export const Pack: Story = {
               strokeColor: 0x000000,
               strokeWidth: 0,
               strokeAlpha: 0,
-              arrowTargetShape: 'none',
-            },
-          },
+              arrowTargetShape: 'none'
+            }
+          }
         },
-        dev: { corner: 'top-left' },
+        dev: { corner: 'top-left' }
       },
       behaviours: {
         pan: { enabled: true },
@@ -226,9 +226,9 @@ export const Pack: Story = {
           enabled: true,
           mode: 'system',
           light: { backgroundColor: '#f8fafc' },
-          dark: { backgroundColor: '#0b1220' },
-        },
-      },
+          dark: { backgroundColor: '#0b1220' }
+        }
+      }
     };
 
     await canvas.init({ container, autoResize: true, config: canvasOptions });
@@ -261,7 +261,7 @@ export const Pack: Story = {
             depth?: number;
           };
           const baseStyle = {
-            ...((node.style as Record<string, unknown> | undefined) ?? {}),
+            ...((node.style as Record<string, unknown> | undefined) ?? {})
           };
           delete (baseStyle as { labelStyle?: ShapeLabelStyle }).labelStyle;
           const radius =
@@ -279,10 +279,10 @@ export const Pack: Story = {
                 text: data.name,
                 fontSize: settings.maxLabelFontSize,
                 fontWeight: 500,
-                fill: 0x0f172a,
+                fill: 0x0f172a
               },
               placement: 'inside-center',
-              minFontSize: 6,
+              minFontSize: 6
             };
             (baseStyle as { labelStyle?: ShapeLabelStyle }).labelStyle = labelStyle;
           }
@@ -341,5 +341,5 @@ export const Pack: Story = {
     labels.add(settings, 'maxLabelFontSize', 6, 32, 1).onChange(() => applyLeafLabels());
 
     gui.add({ refit: () => canvas.camera.fitContent(graph.getBounds(), 40) }, 'refit').name('Re-fit camera');
-  },
+  }
 };

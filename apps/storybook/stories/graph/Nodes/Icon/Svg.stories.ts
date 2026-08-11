@@ -42,7 +42,7 @@ export const Svg: Story = {
       triangle:    'M 50 10 L 90 88 L 10 88 Z',
       diamond:     'M 50 8 L 92 50 L 50 92 L 8 50 Z',
       'arrow-right': 'M 10 40 H 56 V 20 L 92 50 L 56 80 V 60 H 10 Z',
-      bolt:        'M 56 8 L 22 56 H 44 L 36 92 L 76 40 H 52 L 58 8 Z',
+      bolt:        'M 56 8 L 22 56 H 44 L 36 92 L 76 40 H 52 L 58 8 Z'
     };
 
     const settings = {
@@ -51,7 +51,7 @@ export const Svg: Story = {
       strokeWidth: 6,
       sizeRatio: 0.55,
       anchor: 'center' as InsetAnchor,
-      bgFill: 0x6366f1,
+      bgFill: 0x6366f1
     };
 
     const shapeForType = (type: string | undefined): NodeShapeOptions => {
@@ -72,7 +72,7 @@ export const Svg: Story = {
               { x: -r,       y: 0 },
               { x: -r * 0.5, y: r * 0.866 },
               { x: r * 0.5,  y: r * 0.866 },
-            ],
+            ]
           };
         default:
           throw new Error(`unknown node type "${type}"`);
@@ -100,12 +100,12 @@ export const Svg: Story = {
               color: settings.color,
               strokeWidth: settings.strokeWidth,
               sizeRatio: settings.sizeRatio,
-              anchor: settings.anchor,
+              anchor: settings.anchor
             }),
-            labelText: (n) => n.type ?? '?',
-          },
-        },
-      },
+            labelText: (n) => n.type ?? '?'
+          }
+        }
+      }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -127,12 +127,12 @@ export const Svg: Story = {
               labelBackgroundStrokeColor: 0xcbd5e1,
               labelBackgroundStrokeWidth: 1,
               labelBackgroundCornerRadius: 4,
-              labelBackgroundPadding: 3,
-            },
-          },
-        },
+              labelBackgroundPadding: 3
+            }
+          }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
@@ -151,5 +151,5 @@ export const Svg: Story = {
     gui.add(settings, 'sizeRatio', 0.1, 1, 0.05).onChange(rerenderAll);
     gui.add(settings, 'anchor', ['center', 'top-left', 'top-right', 'bottom-left', 'bottom-right']).onChange(rerenderAll);
     gui.addColor(settings, 'bgFill').name('bg fill').onChange(rerenderAll);
-  },
+  }
 };

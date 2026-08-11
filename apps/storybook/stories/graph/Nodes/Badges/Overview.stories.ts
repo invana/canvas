@@ -49,10 +49,10 @@ export const Overview: Story = {
               shape: { kind: 'circle', radius: 7 },
               fill: 0xef4444,
               strokeColor: 0xffffff,
-              strokeWidth: 2,
+              strokeWidth: 2
             },
-          ],
-        },
+          ]
+        }
       },
       { type: 'node',
         id: 'count',
@@ -75,10 +75,10 @@ export const Overview: Story = {
               strokeWidth: 1.5,
               labelText: '3',
               labelColor: 0xffffff,
-              labelFontSize: 12,
+              labelFontSize: 12
             },
-          ],
-        },
+          ]
+        }
       },
       { type: 'node',
         id: 'icon',
@@ -105,11 +105,11 @@ export const Overview: Story = {
                 fontFamily: 'sans-serif',
                 fontWeight: 700,
                 color: 0xffffff,
-                sizeRatio: 0.7,
-              },
+                sizeRatio: 0.7
+              }
             },
-          ],
-        },
+          ]
+        }
       },
       { type: 'node',
         id: 'decorated',
@@ -136,12 +136,12 @@ export const Overview: Story = {
                   color: 0xf97316,
                   strokeWidth: 12,
                   layers: 6,
-                  innerAlpha: 0.6,
+                  innerAlpha: 0.6
                 },
-              ],
+              ]
             },
-          ],
-        },
+          ]
+        }
       },
       { type: 'node',
         id: 'animated',
@@ -163,11 +163,11 @@ export const Overview: Story = {
               strokeColor: 0xffffff,
               strokeWidth: 1.5,
               effects: {
-                breathing: { amplitude: 0.35, frequencyHz: 1.2 },
-              },
+                breathing: { amplitude: 0.35, frequencyHz: 1.2 }
+              }
             },
-          ],
-        },
+          ]
+        }
       },
     ];
 
@@ -188,12 +188,12 @@ export const Overview: Story = {
             style: {
               labelColor: 0x0f172a,
               labelFontSize: 12,
-              labelFontWeight: 500,
-            },
-          },
-        },
+              labelFontWeight: 500
+            }
+          }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -207,7 +207,7 @@ export const Overview: Story = {
 
     const settings = {
       placement: 'top-right' as typeof placements[number],
-      origin: 'center' as typeof origins[number],
+      origin: 'center' as typeof origins[number]
     };
 
     const apply = (): void => {
@@ -223,10 +223,10 @@ export const Overview: Story = {
               {
                 ...badge,
                 placement: settings.placement,
-                origin: settings.origin === 'center' ? 'center' : undefined,
+                origin: settings.origin === 'center' ? 'center' : undefined
               },
-            ],
-          },
+            ]
+          }
         });
       }
     };
@@ -244,5 +244,5 @@ export const Overview: Story = {
         'fit',
       )
       .name('Fit to content');
-  },
+  }
 };

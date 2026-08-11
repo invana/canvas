@@ -49,7 +49,7 @@ export const Placements: Story = {
         id: placement,
         position: {
           x: (col - 1) * colGap,
-          y: (row - 1) * rowGap,
+          y: (row - 1) * rowGap
         },
         style: {
           shape: { kind: 'rect', width: 110, height: 70, cornerRadius: 10 },
@@ -70,10 +70,10 @@ export const Placements: Story = {
               shape: { kind: 'circle', radius: 10 },
               fill: 0xdc2626,
               strokeColor: 0xffffff,
-              strokeWidth: 2,
+              strokeWidth: 2
             },
-          ],
-        },
+          ]
+        }
       };
     });
 
@@ -90,10 +90,10 @@ export const Placements: Story = {
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
 
     const canvasOptions = {
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

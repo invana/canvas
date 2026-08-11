@@ -198,7 +198,7 @@ core done** (camera bidirectional; selection/hover mirrored into `view.interacti
 per-node presence stays in `GraphStore`'s typed lane) — its `focus`/`transientPins`
 wiring + ownership-inversion are optional follow-ups. **Phase 8 (Yjs) deferred** by
 decision. **Phase 9 (scale)** remains optional/benchmark-gated. Next renderer step is
-**P2** — extract `@invana/renderer-pixijs` (see `renderer-pixijs-extraction-plan.md`).
+**P2** — extract `@invana/renderer-pixijs` (see `renderer-split-design.md`).
 
 ## Cross-cutting decisions — where each is resolved
 

@@ -63,7 +63,7 @@ const data: GraphData = {
     { type: 'edge', id: 'core-cache', source: 'core', target: 'cache' },
     { type: 'edge', id: 'worker-core', source: 'worker', target: 'core' },
     { type: 'edge', id: 'core-gauge', source: 'core', target: 'gauge' },
-  ],
+  ]
 };
 
 export const ExportImageStory: Story = {
@@ -87,7 +87,7 @@ export const ExportImageStory: Story = {
               defaultValue={{ area: 'content', scale: 2 }}
               canvas={ctx.canvas}
             />
-          ),
+          )
         }}
       >
         <BackgroundLayer id="background" type="pattern" patternType="dots" backgroundColor="#0b1220" color="#1e293b" />
@@ -103,8 +103,8 @@ export const ExportImageStory: Story = {
               labelText: (n: GraphNode) => (n.data as { name: string }).name,
               labelColor: 0xf8fafc,
               labelFontSize: 12,
-              labelPlacement: 'center',
-            },
+              labelPlacement: 'center'
+            }
           }}
           edge={{ style: { strokeColor: 0x64748b, strokeWidth: 2 } }}
         />
@@ -113,5 +113,5 @@ export const ExportImageStory: Story = {
         <WheelZoomBehaviour id="zoom" enabled />
       </GraphCanvasApp>
     </ThemeProvider>
-  ),
+  )
 };

@@ -5,7 +5,7 @@ import {
   DragNodeBehaviour,
   GraphLayer,
   MiniMapLayer,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { lesMiserables } from '@invana/graph-datasets';
@@ -28,14 +28,14 @@ export const MiniMapStory: Story = {
     const nodes: GraphNode[] = lesMiserables.nodes.map((n) => ({ type: `group-${n.data.group}`,
       id: n.id,
       data: {
-        group: n.data.group,
+        group: n.data.group
       },
       style: {
         shape: { kind: 'circle', radius: 9 },
         bgFill: groupColors[n.data.group % groupColors.length],
         bgStrokeColor: 0xffffff,
-        bgStrokeWidth: 1,
-      },
+        bgStrokeWidth: 1
+      }
     }));
 
     // ── Add everything, then init() last ─────────────────────────────────
@@ -45,7 +45,7 @@ export const MiniMapStory: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes, edges: lesMiserables.edges } },
+      options: { initData: { nodes, edges: lesMiserables.edges } }
     });
     // `graphLayerId` is cross-layer wiring → constructor; the minimap's visual
     // options live in the serialisable config below.
@@ -61,7 +61,7 @@ export const MiniMapStory: Story = {
     const canvasOptions = {
       layers: {
         graph: {
-          edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' } },
+          edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' } }
         },
         // Every option from MiniMapLayerOptions exposed here.
         minimap: {
@@ -77,18 +77,18 @@ export const MiniMapStory: Story = {
           viewportFillAlpha: 0.25,
           viewportStrokeWidth: 2,
           padding: 20,
-          margin: 10,
-        },
+          margin: 10
+        }
       },
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'drag-node': { enabled: true },
+        'drag-node': { enabled: true }
       },
       layouts: {
-        force: { charge: { strength: -120 }, link: { distance: 50 }, collide: { radius: 14 } },
+        force: { charge: { strength: -120 }, link: { distance: 50 }, collide: { radius: 14 } }
       },
-      activeLayout: 'force',
+      activeLayout: 'force'
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -129,5 +129,5 @@ export const MiniMapStory: Story = {
       'position:absolute; top:10px; left:10px; padding:6px 10px; background:rgba(15,23,42,.85); color:#f8fafc; font:12px/1.2 ui-monospace, monospace; border-radius:4px; z-index:100;';
     hint.textContent = 'Click or drag the minimap to pan the main camera';
     container.appendChild(hint);
-  },
+  }
 };

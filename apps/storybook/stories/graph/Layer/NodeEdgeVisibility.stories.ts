@@ -48,7 +48,7 @@ export const NodeEdgeVisibilityStory: Story = {
       targetLayerId: 'graph',
       charge: { strength: -240 },
       link: { distance: 70 },
-      animate: false,
+      animate: false
     });
     canvas.layouts.add(force);
     onStoryTeardown(() => force.stop());
@@ -61,11 +61,11 @@ export const NodeEdgeVisibilityStory: Story = {
         layers: {
           graph: {
             node: { style: { shape: { kind: 'circle', radius: 7 }, bgFill: 0x60a5fa } },
-            edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 1 } },
-          },
+            edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 1 } }
+          }
         },
-        activeLayout: 'force',
-      },
+        activeLayout: 'force'
+      }
     });
 
     const select = canvas.behaviours.get<ClickSelectBehaviour>('click-select')!;
@@ -82,7 +82,7 @@ export const NodeEdgeVisibilityStory: Story = {
         select.clearSelection();
       },
       hideGroup0: () => graph.store.hideNodesByPredicate((n) => (n.data as { group?: number })?.group === 0),
-      showAll: () => graph.store.showAllHidden(),
+      showAll: () => graph.store.showAllHidden()
     };
 
     const gui = new GUI({ title: 'Visibility' });
@@ -104,5 +104,5 @@ export const NodeEdgeVisibilityStory: Story = {
     // edges from the picture without flooding the log.
     onStoryTeardown(graph.store.events.on('node:visibility', ({ nodeId, hidden }) => refresh(`node ${nodeId} → ${hidden ? 'hidden' : 'shown'}`)));
     onStoryTeardown(graph.store.events.on('edge:visibility', ({ edgeId, hidden }) => refresh(`edge ${edgeId} → ${hidden ? 'hidden' : 'shown'}`)));
-  },
+  }
 };

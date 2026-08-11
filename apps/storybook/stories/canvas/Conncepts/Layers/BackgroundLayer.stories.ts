@@ -3,11 +3,10 @@ import {
   BackgroundLayer,
   Canvas,
   DragPanBehaviour,
-  PrimitivesRenderer,
   WheelZoomBehaviour,
   WorldLayer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -23,28 +22,25 @@ export const BackgroundLayerStory: Story = {
     // A trivial world layer so users see *something* to pan / zoom against
     // the background.
     class FixturesLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() {
         return {};
       }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({
-          container: this.container,
-          camera: ctx.camera,
-        });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
         this.renderer.addShape('a', {
           kind: 'circle',
           x: -120,
           y: 0,
           radius: 36,
-          fill: 0x3b82f6,
+          fill: 0x3b82f6
         });
         this.renderer.addShape('b', {
           kind: 'circle',
           x: 120,
           y: 0,
           radius: 36,
-          fill: 0xf59e0b,
+          fill: 0xf59e0b
         });
         this.renderer.addShape('c', {
           kind: 'rect',
@@ -53,7 +49,7 @@ export const BackgroundLayerStory: Story = {
           width: 80,
           height: 50,
           cornerRadius: 6,
-          fill: 0x10b981,
+          fill: 0x10b981
         });
       }
       hitTest() {
@@ -79,8 +75,8 @@ export const BackgroundLayerStory: Story = {
         size: 1.5,
         spacing: 30,
         alpha: 0.8,
-        followCamera: true,
-      },
+        followCamera: true
+      }
     });
     canvas.layers.add(bg);
 
@@ -95,7 +91,7 @@ export const BackgroundLayerStory: Story = {
       size: 1.5,
       spacing: 30,
       alpha: 0.8,
-      followCamera: true,
+      followCamera: true
     };
 
     const apply = () => {
@@ -107,7 +103,7 @@ export const BackgroundLayerStory: Story = {
         size: settings.size,
         spacing: settings.spacing,
         alpha: settings.alpha,
-        followCamera: settings.followCamera,
+        followCamera: settings.followCamera
       });
     };
 
@@ -123,5 +119,5 @@ export const BackgroundLayerStory: Story = {
     gui.add(settings, 'followCamera').onChange(apply);
 
     canvas.camera.fitContent(fixtures.getBounds(), 80);
-  },
+  }
 };

@@ -6,7 +6,7 @@ import {
   type BadgeOrigin,
   type NodeBadge,
   type GraphNode,
-  type NodeDecorationSpec,
+  type NodeDecorationSpec
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
@@ -75,7 +75,7 @@ export const Playground: Story = {
       offsetY: 0,
       zIndex: 0,
       decoration: 'none' as DecorationChoice,
-      effect: 'none' as EffectChoice,
+      effect: 'none' as EffectChoice
     };
 
     const buildDecoration = (kind: DecorationChoice): readonly NodeDecorationSpec[] | undefined => {
@@ -112,8 +112,8 @@ export const Playground: Story = {
               fontFamily: 'sans-serif',
               fontWeight: 700,
               color: 0xffffff,
-              sizeRatio: 0.7,
-            },
+              sizeRatio: 0.7
+            }
           }
         : {}),
       ...(s.labelText !== ''
@@ -123,7 +123,7 @@ export const Playground: Story = {
       offsetY: s.offsetY,
       zIndex: s.zIndex,
       ...(buildDecoration(s.decoration) ? { decorations: buildDecoration(s.decoration)! } : {}),
-      ...(buildEffects(s.effect) ? { effects: buildEffects(s.effect)! } : {}),
+      ...(buildEffects(s.effect) ? { effects: buildEffects(s.effect)! } : {})
     });
 
     const baseStyle = (label: string) => ({
@@ -134,7 +134,7 @@ export const Playground: Story = {
       labelText: label,
       labelColor: 0xffffff,
       labelFontSize: 11,
-      labelPlacement: 'center' as const,
+      labelPlacement: 'center' as const
     });
 
     const nodes: GraphNode[] = [
@@ -154,7 +154,7 @@ export const Playground: Story = {
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
 
     const canvasOptions = {
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -193,5 +193,5 @@ export const Playground: Story = {
     const composition = gui.addFolder('Composition');
     composition.add(s, 'decoration', decorations as unknown as string[]).onChange(apply);
     composition.add(s, 'effect', effects as unknown as string[]).onChange(apply);
-  },
+  }
 };

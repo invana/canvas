@@ -50,12 +50,12 @@ export const Background: Story = {
               bgStrokeColor: 0x6d28d9,
               labelFontSize: 13,
               labelFontWeight: 600,
-              labelColor: 0x454545,
-            },
-          },
-        },
+              labelColor: 0x454545
+            }
+          }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
@@ -68,7 +68,7 @@ export const Background: Story = {
       strokeColor: 0xcbd5e1,
       strokeWidth: 1,
       padding: 6,
-      cornerRadius: 6,
+      cornerRadius: 6
     };
     const apply = (): void => {
       for (const id of ALL_IDS) {
@@ -81,8 +81,8 @@ export const Background: Story = {
             labelBackgroundStrokeColor: settings.enabled ? settings.strokeColor : undefined,
             labelBackgroundStrokeWidth: settings.strokeWidth,
             labelBackgroundPadding: settings.padding,
-            labelBackgroundCornerRadius: settings.cornerRadius,
-          },
+            labelBackgroundCornerRadius: settings.cornerRadius
+          }
         });
       }
     };
@@ -96,5 +96,5 @@ export const Background: Story = {
     gui.add(settings, 'strokeWidth', 0, 6, 0.5).onChange(apply);
     gui.add(settings, 'padding', 0, 20, 1).onChange(apply);
     gui.add(settings, 'cornerRadius', 0, 16, 1).onChange(apply);
-  },
+  }
 };

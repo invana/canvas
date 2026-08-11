@@ -56,7 +56,7 @@ export const Inside: Story = {
               { x: -55, y: 0 },
               { x: -27, y: 48 },
               { x: 27, y: 48 },
-            ],
+            ]
           };
       }
     };
@@ -92,12 +92,12 @@ export const Inside: Story = {
               bgStrokeWidth: 1,
               labelFontSize: 13,
               labelFontWeight: 600,
-              labelColor: 0x454545,
-            },
-          },
-        },
+              labelColor: 0x454545
+            }
+          }
+        }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
@@ -106,7 +106,7 @@ export const Inside: Story = {
     const settings = {
       shape: 'rect' as ShapeKind,
       pickedNode: 'inside-center',
-      placement: 'inside-center' as ShapeLabelPlacement,
+      placement: 'inside-center' as ShapeLabelPlacement
     };
     const applyShape = (): void => {
       const nextShape = shapeForKind(settings.shape);
@@ -118,7 +118,7 @@ export const Inside: Story = {
     const applyPlacement = (): void => {
       const prev = (graph.store.getNode(settings.pickedNode)?.style as NodeStyle | undefined) ?? {};
       graph.store.updateNode(settings.pickedNode, {
-        style: { ...prev, labelPlacement: settings.placement },
+        style: { ...prev, labelPlacement: settings.placement }
       });
     };
     const gui = new GUI({ title: 'Inside placement' });
@@ -126,5 +126,5 @@ export const Inside: Story = {
     gui.add(settings, 'shape', SHAPE_KINDS as unknown as string[]).name('shape (all cells)').onChange(applyShape);
     gui.add(settings, 'pickedNode', ALL_IDS).onChange(applyPlacement);
     gui.add(settings, 'placement', INSIDE_PLACEMENTS).onChange(applyPlacement);
-  },
+  }
 };

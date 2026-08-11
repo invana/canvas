@@ -23,7 +23,7 @@ import {
   DragPanBehaviour,
   GraphLayer,
   HoverElementPreviewBehaviour,
-  WheelZoomBehaviour,
+  WheelZoomBehaviour
 } from '@invana/canvas-react';
 import type { GraphData, GraphEdge, GraphNode } from '@invana/graph';
 
@@ -60,7 +60,7 @@ const data: GraphData = {
     { id: 'ada-edsger', source: 'ada', target: 'edsger', type: 'INFLUENCED', data: { description: 'Algorithmic rigour and structured thinking.', weight: 0.8 } },
     { id: 'edsger-katherine', source: 'edsger', target: 'katherine', type: 'COLLABORATED_WITH', data: { description: 'Numerical methods for real-world problems.', weight: 0.5 } },
     { id: 'grace-katherine', source: 'grace', target: 'katherine', type: 'COLLABORATED_WITH', data: { description: 'Applied computation at scale.', weight: 0.65 } },
-  ],
+  ]
 };
 
 // ─── target → card-props mappers (the only consumer-side glue) ───────────────
@@ -118,8 +118,8 @@ export const HoverElementPreviewStory: Story = {
               labelText: (n: GraphNode) => (n.data as PersonData).name.split(' ')[0]!,
               labelColor: 0xf8fafc,
               labelFontSize: 12,
-              labelPlacement: 'center',
-            },
+              labelPlacement: 'center'
+            }
           }}
           edge={{ style: { strokeColor: 0x64748b, strokeWidth: 2 } }}
         />
@@ -134,5 +134,5 @@ export const HoverElementPreviewStory: Story = {
         <HoverElementPreviewBehaviour targetLayerId="graph" renderNode={renderNode} renderEdge={renderEdge} />
       </Canvas>
     </div>
-  ),
+  )
 };

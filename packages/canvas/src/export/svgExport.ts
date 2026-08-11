@@ -48,9 +48,10 @@ import type {
   ShapeLabelStyle,
   ConnectorLabelStyle,
   LabelContent,
-} from '../primitives/types';
-import type { CompositeSpec, CompositePart } from '../primitives/shapes/CompositeShape';
-import { tabbedRectOutline, tabbedRectFoldLine } from '../primitives/shapes/TabbedRectShape';
+  CompositeSpec,
+  CompositePart,
+} from '@invana/canvas-store';
+import { tabbedRectOutline, tabbedRectFoldLine } from '@invana/canvas-store';
 import { hexToCss, resolveExportBackground, captureRect, type ExportArea } from './shared';
 
 /** Options for {@link Canvas.exportSVG} (a subset of the raster options). */

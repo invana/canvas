@@ -23,7 +23,6 @@
  * projection of the store (Phase 2), not something `extract` can produce.
  */
 
-import { Rectangle } from 'pixi.js';
 import type { Canvas } from '../engine/Canvas';
 import {
   captureRect,
@@ -93,7 +92,7 @@ function renderToCanvas(canvas: Canvas, opts: ExportImageOptions): HTMLCanvasEle
   const userScale =
     opts.scale ?? (typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1);
 
-  const renderer = canvas.application?.renderer;
+  const renderer = canvas.renderer;
   if (!renderer?.extract) {
     throw new Error('Canvas.export: a GPU renderer is required (unavailable in headless mode).');
   }
@@ -102,8 +101,7 @@ function renderToCanvas(canvas: Canvas, opts: ExportImageOptions): HTMLCanvasEle
   // (the world container's own space, pre-camera-transform), which is what
   // `captureRect` returns. `viewport` renders at the on-screen zoom; `content`
   // renders at native 1:1 (× userScale).
-  const r = captureRect(canvas, area, opts.padding ?? 24, opts.aspectRatio);
-  const frame = new Rectangle(r.x, r.y, r.width, r.height);
+  const frame = captureRect(canvas, area, opts.padding ?? 24, opts.aspectRatio);
   let resolution = area === 'content' ? userScale : canvas.camera.scale * userScale;
 
   if (!(frame.width > 0) || !(frame.height > 0)) {
@@ -117,12 +115,7 @@ function renderToCanvas(canvas: Canvas, opts: ExportImageOptions): HTMLCanvasEle
 
   // Extract onto a fully-transparent clear so we control the background
   // ourselves below (keeps 'transparent' honest and the composite uniform).
-  const extracted = renderer.extract.canvas({
-    target: canvas.world,
-    frame,
-    resolution,
-    clearColor: [0, 0, 0, 0],
-  }) as HTMLCanvasElement;
+  const extracted = renderer.extract({ region: frame, resolution });
 
   const bg = resolveExportBackground(canvas, opts.background ?? 'canvas');
   // JPEG cannot store alpha; a transparent request would render black, so fall

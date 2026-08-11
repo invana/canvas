@@ -5,9 +5,8 @@ import {
   DragShapeBehaviour,
   WheelZoomBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 
@@ -26,15 +25,12 @@ export const DragShapeStory: Story = {
     await canvas.init({ container, autoResize: true });
 
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() {
         return {};
       }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({
-          container: this.container,
-          camera: ctx.camera,
-        });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() {
         return null;
@@ -50,7 +46,7 @@ export const DragShapeStory: Story = {
       y: 0,
       radius: 50,
       fill: { kind: 'solid', color: 0x4f9cf9 },
-      stroke: { color: 0x1d4ed8, width: 2 },
+      stroke: { color: 0x1d4ed8, width: 2 }
     });
     layer.renderer.addShape('b', {
       kind: 'rect',
@@ -59,13 +55,13 @@ export const DragShapeStory: Story = {
       width: 120,
       height: 80,
       fill: { kind: 'solid', color: 0x10b981, alpha: 0.9 },
-      stroke: { color: 0x047857, width: 2 },
+      stroke: { color: 0x047857, width: 2 }
     });
     layer.renderer.addConnector('a-b', {
       kind: 'line',
       source: { kind: 'shape', shapeId: 'a' },
       target: { kind: 'shape', shapeId: 'b' },
-      stroke: { color: 0x334155, width: 2 },
+      stroke: { color: 0x334155, width: 2 }
     });
 
     canvas.camera.fitContent(layer.getBounds(), 120);
@@ -76,7 +72,7 @@ export const DragShapeStory: Story = {
     const settings = {
       enabled: true,
       reRouteConnectors: true,
-      dragCursor: 'grabbing',
+      dragCursor: 'grabbing'
     };
 
     const ID = 'drag-shape';
@@ -86,7 +82,7 @@ export const DragShapeStory: Story = {
         enabled: settings.enabled,
         renderer: layer.renderer,
         reRouteConnectors: settings.reRouteConnectors,
-        dragCursor: settings.dragCursor,
+        dragCursor: settings.dragCursor
       });
 
     canvas.behaviours.register(build());
@@ -103,5 +99,5 @@ export const DragShapeStory: Story = {
     gui
       .add(settings, 'dragCursor', ['grabbing', 'grab', 'move', 'crosshair', 'pointer', 'default'])
       .onChange(rebuild);
-  },
+  }
 };

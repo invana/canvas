@@ -5,9 +5,9 @@ import {
   WheelZoomBehaviour,
   DragShapeBehaviour,
   WorldLayer,
-  PrimitivesRenderer,
+  type IElementRenderer
 } from '@invana/canvas';
-import type { CanvasContext, RectSpec, ShapeLabelPlacement } from '@invana/canvas';
+import type { RectSpec, ShapeLabelPlacement } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../../div-util';
 
@@ -35,10 +35,10 @@ export const Containment: Story = {
 
   play: async ({ canvasElement }) => {
     class RenderLayer extends WorldLayer {
-      renderer!: PrimitivesRenderer;
+      renderer!: IElementRenderer;
       protected createState() { return {}; }
-      protected onMount(ctx: CanvasContext) {
-        this.renderer = new PrimitivesRenderer({ container: this.container, camera: ctx.camera });
+      protected onMount() {
+        this.renderer = this.surface.primitives;
       }
       hitTest() { return null; }
     }
@@ -61,41 +61,41 @@ export const Containment: Story = {
     const HOST_H = 100;
     layer.renderer.addShape('constrained', {
       kind: 'rect', x: -260, y: -HOST_H / 2, width: HOST_W, height: HOST_H, cornerRadius: 10,
-      fill: { kind: 'solid', color: 0xf1f5f9 }, stroke: { color: 0x475569, width: 1 },
+      fill: { kind: 'solid', color: 0xf1f5f9 }, stroke: { color: 0x475569, width: 1 }
     });
     layer.renderer.addShape('free', {
       kind: 'rect', x:  60, y: -HOST_H / 2, width: HOST_W, height: HOST_H, cornerRadius: 10,
-      fill: { kind: 'solid', color: 0xfef3c7 }, stroke: { color: 0xb45309, width: 1 },
+      fill: { kind: 'solid', color: 0xfef3c7 }, stroke: { color: 0xb45309, width: 1 }
     });
 
     // Caption labels above each host to make the contract obvious at a glance.
     layer.renderer.addShape('cap-constrained', {
       kind: 'rect', x: -260, y: -HOST_H / 2 - 32, width: HOST_W, height: 20,
-      fill: { kind: 'solid', color: 0xffffff, alpha: 0 }, stroke: { color: 0xffffff, width: 0 },
+      fill: { kind: 'solid', color: 0xffffff, alpha: 0 }, stroke: { color: 0xffffff, width: 0 }
     });
     layer.renderer.setDecoration('cap-constrained', 'label', {
       kind: 'label',
       style: {
         content: { kind: 'text', text: 'placement: inside-center  (constrained)', fontSize: 11, fontWeight: 600, fill: 0x475569 },
-        placement: 'center',
-      },
+        placement: 'center'
+      }
     });
     layer.renderer.addShape('cap-free', {
       kind: 'rect', x: 60, y: -HOST_H / 2 - 32, width: HOST_W, height: 20,
-      fill: { kind: 'solid', color: 0xffffff, alpha: 0 }, stroke: { color: 0xffffff, width: 0 },
+      fill: { kind: 'solid', color: 0xffffff, alpha: 0 }, stroke: { color: 0xffffff, width: 0 }
     });
     layer.renderer.setDecoration('cap-free', 'label', {
       kind: 'label',
       style: {
         content: { kind: 'text', text: 'placement: center  (anchor-only, may overflow)', fontSize: 11, fontWeight: 600, fill: 0xb45309 },
-        placement: 'center',
-      },
+        placement: 'center'
+      }
     });
 
     const PRESETS = {
       short: 'Hi',
       medium: 'Server A',
-      long: 'A very long descriptive label that will not fit naturally inside the shape',
+      long: 'A very long descriptive label that will not fit naturally inside the shape'
     } as const;
 
     const settings: {
@@ -113,7 +113,7 @@ export const Containment: Story = {
       fontWeight: 600,
       minFontSize: 9,
       shapeWidth: HOST_W,
-      shapeHeight: HOST_H,
+      shapeHeight: HOST_H
     };
 
     const apply = (): void => {
@@ -126,19 +126,19 @@ export const Containment: Story = {
         text: settings.text,
         fontSize: settings.fontSize,
         fontWeight: settings.fontWeight,
-        fill: 0x0f172a,
+        fill: 0x0f172a
       };
       layer.renderer.setDecoration('constrained', 'label', {
         kind: 'label',
         style: {
           content,
           placement: 'inside-center' satisfies ShapeLabelPlacement,
-          minFontSize: settings.minFontSize,
-        },
+          minFontSize: settings.minFontSize
+        }
       });
       layer.renderer.setDecoration('free', 'label', {
         kind: 'label',
-        style: { content, placement: 'center' satisfies ShapeLabelPlacement },
+        style: { content, placement: 'center' satisfies ShapeLabelPlacement }
       });
     };
     apply();
@@ -159,5 +159,5 @@ export const Containment: Story = {
     const shape = gui.addFolder('host size');
     shape.add(settings, 'shapeWidth', 40, 320, 5).name('width').onChange(apply);
     shape.add(settings, 'shapeHeight', 20, 220, 5).name('height').onChange(apply);
-  },
+  }
 };

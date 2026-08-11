@@ -65,10 +65,10 @@ export const Shapes: Story = {
               shape: v.shape,
               fill: 0xdc2626,
               strokeColor: 0xffffff,
-              strokeWidth: 1.5,
+              strokeWidth: 1.5
             },
-          ],
-        },
+          ]
+        }
       };
     });
 
@@ -84,10 +84,10 @@ export const Shapes: Story = {
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
 
     const canvasOptions = {
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

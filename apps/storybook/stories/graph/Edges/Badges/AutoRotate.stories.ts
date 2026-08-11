@@ -5,7 +5,7 @@ import {
   GraphCanvas,
   GraphLayer,
   type GraphEdge,
-  type GraphNode,
+  type GraphNode
 } from '@invana/graph';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -53,8 +53,8 @@ export const AutoRotateStory: Story = {
           labelColor: 0x0f172a,
           labelFontSize: 11,
           labelPlacement: 'left',
-          labelOffsetX: -10,
-        },
+          labelOffsetX: -10
+        }
       },
       {
         id: `${v.id}-tgt`,
@@ -63,8 +63,8 @@ export const AutoRotateStory: Story = {
         position: { x: 260, y: (i - 1) * 160 + 60 },
         style: {
           shape: { kind: 'circle', radius: 14 },
-          bgFill: 0x34d399,
-        },
+          bgFill: 0x34d399
+        }
       },
     ]);
 
@@ -87,10 +87,10 @@ export const AutoRotateStory: Story = {
             labelColor: 0xffffff,
             labelFontSize: 11,
             autoRotate: v.autoRotate,
-            keepUpright: v.keepUpright,
+            keepUpright: v.keepUpright
           },
-        ],
-      },
+        ]
+      }
     }));
 
     const container = canvasElement.querySelector<HTMLDivElement>(
@@ -109,17 +109,17 @@ export const AutoRotateStory: Story = {
     const canvasOptions = {
       layers: {
         graph: {
-          edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 1.5, arrowTargetShape: 'triangle' } },
-        },
+          edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 1.5, arrowTargetShape: 'triangle' } }
+        }
       },
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'drag-node': { enabled: true },
-      },
+        'drag-node': { enabled: true }
+      }
     };
 
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

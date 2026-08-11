@@ -7,7 +7,7 @@ import {
   ThemeBehaviour,
   BUILT_IN_THEMES,
   type GraphNode,
-  type ThemeMode,
+  type ThemeMode
 } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import GUI from 'lil-gui';
@@ -40,8 +40,8 @@ export const WithThemedBackgroundStory: Story = {
         style: {
           shape: { kind: 'circle', radius: 9 },
           bgFill: groupColors[n.data.group % groupColors.length],
-          bgStrokeWidth: 1,
-        },
+          bgStrokeWidth: 1
+        }
       };
     });
 
@@ -57,7 +57,7 @@ export const WithThemedBackgroundStory: Story = {
     canvas.layers.add(
       new BackgroundLayer({
         id: 'bg',
-        options: { type: 'pattern', patternType: 'grid', size: 1, spacing: 30, alpha: 0.8 },
+        options: { type: 'pattern', patternType: 'grid', size: 1, spacing: 30, alpha: 0.8 }
       }),
     );
 
@@ -72,13 +72,13 @@ export const WithThemedBackgroundStory: Story = {
 
     const canvasOptions = {
       layers: {
-        graph: { edge: { style: { strokeWidth: 1, arrowTargetShape: 'none' } } },
+        graph: { edge: { style: { strokeWidth: 1, arrowTargetShape: 'none' } } }
       },
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'drag-node': { enabled: true },
-      },
+        'drag-node': { enabled: true }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
@@ -91,5 +91,5 @@ export const WithThemedBackgroundStory: Story = {
       .add(settings, 'theme', Object.keys(BUILT_IN_THEMES))
       .onChange((id: string) => theme.setTheme(id));
     gui.add(settings, 'mode', ['system', 'light', 'dark']).onChange((m: ThemeMode) => theme.setMode(m));
-  },
+  }
 };

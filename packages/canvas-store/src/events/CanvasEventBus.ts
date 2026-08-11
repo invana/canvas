@@ -1,3 +1,4 @@
+import type { SpecFlush } from '../specs/SpecStore';
 import type { LayerFlush } from '../data/LayerData';
 import type { FrameTick } from '../perf/frame';
 import type { ResolvedTheme } from '../theme/types';
@@ -20,6 +21,12 @@ export interface CanvasGlobalEvents {
   'state:change': { action?: string; changedPaths: string[]; durationMs?: number };
   /** A `layer` data flush (nodes/edges/groups/annotations delta), bridged onto the bus. */
   'data:flush': { layerId: string; delta: LayerFlush };
+  /**
+   * One layer's coalesced **spec** changes — the visual description, ids only.
+   * Domain-free by construction: a renderer subscribes to this and never learns
+   * what a node or an edge is. See `docs/renderer-split-design.md` §4.2b.
+   */
+  'specs:flush': { layerId: string; delta: SpecFlush };
   /** A named data **intent** — one per data action (audit / collab), distinct from the per-frame flush. */
   'data:intent': { action: string; layerId: string; ids: readonly string[] };
 

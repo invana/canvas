@@ -21,7 +21,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  RichSelect,
+  RichSelect
 } from '@invana/ui';
 import { ThemeProvider } from '@invana/themes';
 import { NodeCardDesigner, NodeTemplateList } from '@invana/canvas-designer';
@@ -32,7 +32,7 @@ import {
   type GraphCanvas,
   type GraphData,
   type NodeStructureRegistry,
-  type NodeTypeRegistry,
+  type NodeTypeRegistry
 } from '@invana/graph';
 
 const meta: Meta = { title: 'canvas-designer/Card Designer Studio' };
@@ -42,7 +42,7 @@ type Story = StoryObj;
 // ─── Data — map the property-graph dataset onto GraphData (label→type) ──────
 const DATA: GraphData = {
   nodes: twitterActivity.nodes,
-  edges: twitterActivity.edges,
+  edges: twitterActivity.edges
 };
 
 // Fields offered for binding, per node type.
@@ -84,7 +84,7 @@ const FIELDS: Record<string, { key: string; label: string }[]> = {
     { key: 'data.label', label: 'Label' },
     { key: 'data.time', label: 'Time' },
     { key: 'type', label: 'Type' },
-  ],
+  ]
 };
 
 // ─── Card templates — one per node type ─────────────────────────────────────
@@ -103,7 +103,7 @@ const TWEET_CARD: FreeformStructure = {
     { id: 'text', type: 'text', x: 16, y: 68, bind: 'data.text', fontSize: 14, colorRole: 'foreground', maxWidth: 248, maxLines: 3 },
     { id: 'div', type: 'line', x: 16, y: 132, x2: 264, y2: 132, colorRole: 'divider', strokeWidth: 1 },
     { id: 'stats', type: 'text', x: 16, y: 140, bind: 'data.stats', fontSize: 13, fontWeight: 600, colorRole: 'accent' },
-  ],
+  ]
 };
 const USER_CARD: FreeformStructure = {
   name: 'userCard',
@@ -117,7 +117,7 @@ const USER_CARD: FreeformStructure = {
     { id: 'name', type: 'text', x: 62, y: 14, bind: 'data.name', fontSize: 15, fontWeight: 700, colorRole: 'heading', maxWidth: 134 },
     { id: 'handle', type: 'text', x: 62, y: 36, bind: 'data.handle', fontSize: 12, colorRole: 'accent' },
     { id: 'bio', type: 'text', x: 14, y: 62, bind: 'data.bio', fontSize: 11, colorRole: 'muted', maxWidth: 182 },
-  ],
+  ]
 };
 const COMMENT_CARD: FreeformStructure = {
   name: 'commentCard',
@@ -131,7 +131,7 @@ const COMMENT_CARD: FreeformStructure = {
     { id: 'author', type: 'text', x: 14, y: 12, bind: 'data.author', fontSize: 13, fontWeight: 700, colorRole: 'heading', maxWidth: 130 },
     { id: 'time', type: 'text', x: 206, y: 13, bind: 'data.time', anchor: 'right', fontSize: 10, colorRole: 'muted' },
     { id: 'text', type: 'text', x: 14, y: 36, bind: 'data.text', fontSize: 12, colorRole: 'foreground', maxWidth: 192, maxLines: 2 },
-  ],
+  ]
 };
 const HASHTAG_CARD: FreeformStructure = {
   name: 'hashtagCard',
@@ -143,7 +143,7 @@ const HASHTAG_CARD: FreeformStructure = {
   elements: [
     { id: 'tag', type: 'text', x: 18, y: 11, bind: 'data.label', fontSize: 17, fontWeight: 700, colorRole: 'accent', maxWidth: 124 },
     { id: 'uses', type: 'text', x: 18, y: 34, bind: 'data.uses', fontSize: 10, colorRole: 'muted' },
-  ],
+  ]
 };
 const RETWEET_CARD: FreeformStructure = {
   name: 'retweetCard',
@@ -155,7 +155,7 @@ const RETWEET_CARD: FreeformStructure = {
   elements: [
     { id: 'label', type: 'text', x: 14, y: 12, bind: 'data.label', fontSize: 13, fontWeight: 600, colorRole: 'muted', maxWidth: 172 },
     { id: 'time', type: 'text', x: 14, y: 34, bind: 'data.time', fontSize: 10, colorRole: 'muted' },
-  ],
+  ]
 };
 
 const TYPE_ORDER = ['Tweet', 'User', 'Comment', 'Hashtag', 'Retweet'];
@@ -164,14 +164,14 @@ const STRUCT_NAME: Record<string, string> = {
   User: 'userCard',
   Comment: 'commentCard',
   Hashtag: 'hashtagCard',
-  Retweet: 'retweetCard',
+  Retweet: 'retweetCard'
 };
 const INITIAL_TEMPLATES: Record<string, FreeformStructure> = {
   Tweet: TWEET_CARD,
   User: USER_CARD,
   Comment: COMMENT_CARD,
   Hashtag: HASHTAG_CARD,
-  Retweet: RETWEET_CARD,
+  Retweet: RETWEET_CARD
 };
 // A representative node per type, for the template thumbnails (read by dotted
 // path, so the concrete node shape is widened to a record).
@@ -184,7 +184,7 @@ const STRUCTURES: NodeStructureRegistry = {
   userCard: USER_CARD,
   commentCard: COMMENT_CARD,
   hashtagCard: HASHTAG_CARD,
-  retweetCard: RETWEET_CARD,
+  retweetCard: RETWEET_CARD
 };
 const NODE_TYPES: NodeTypeRegistry = Object.fromEntries(
   TYPE_ORDER.map((t) => [t, { structure: STRUCT_NAME[t]!, styling: '', bindings: {} }]),
@@ -198,12 +198,12 @@ const CONFIG = {
   behaviours: {
     // Card backgrounds come from the template; hover's dim hides card text.
     color: { enabled: false },
-    hover: { enabled: false },
+    hover: { enabled: false }
   },
   layers: { graph: { nodeStructureTemplates: STRUCTURES, nodeTypes: NODE_TYPES } },
   layouts: {
-    'graph-force': { charge: { strength: -3200 }, link: { distance: 260 }, collide: { radius: 150 }, animate: false },
-  },
+    'graph-force': { charge: { strength: -3200 }, link: { distance: 260 }, collide: { radius: 150 }, animate: false }
+  }
 };
 
 function CardDesignerStudio() {
@@ -245,9 +245,9 @@ function CardDesignerStudio() {
         layers: {
           graph: {
             nodeStructureTemplates: { [name]: pinned },
-            nodeTypes: { [type]: { structure: name, styling: '', bindings: {} } },
-          },
-        },
+            nodeTypes: { [type]: { structure: name, styling: '', bindings: {} } }
+          }
+        }
       });
     },
     [canvas],
@@ -291,7 +291,7 @@ function CardDesignerStudio() {
                 {themeControls}
                 <Button onClick={openTemplates}>Templates</Button>
               </div>
-            ),
+            )
           }}
         />
 
@@ -336,7 +336,7 @@ function CardDesignerStudio() {
 
 export const CardDesignerStudioStory: Story = {
   name: 'Card Designer Studio',
-  render: () => <CardDesignerStudio />,
+  render: () => <CardDesignerStudio />
 };
 
 // ─── Layout ──────────────────────────────────────────────────────────────────
@@ -345,13 +345,13 @@ const pageStyle: CSSProperties = {
   height: '100vh',
   fontFamily: 'system-ui, -apple-system, sans-serif',
   background: 'var(--background, #fff)',
-  color: 'var(--foreground, #111)',
+  color: 'var(--foreground, #111)'
 };
 const dialogContentStyle: CSSProperties = {
   width: '96vw',
   maxWidth: '96vw',
   height: '90vh',
   display: 'flex',
-  flexDirection: 'column',
+  flexDirection: 'column'
 };
 const editorWrapStyle: CSSProperties = { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 };

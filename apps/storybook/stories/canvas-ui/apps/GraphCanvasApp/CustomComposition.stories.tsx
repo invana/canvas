@@ -67,8 +67,8 @@ export const CustomCompositionStory: Story = {
               labelColor: 0xe2e8f0,
               labelFontSize: 10,
               labelPlacement: 'bottom',
-              labelOffsetY: 5,
-            },
+              labelOffsetY: 5
+            }
           }}
           edge={{ style: { strokeColor: 0x475569, strokeWidth: 1, arrowTargetShape: 'diamond' } }}
         />
@@ -79,7 +79,7 @@ export const CustomCompositionStory: Story = {
             charge: { strength: -220 },
             link: { distance: 60 },
             collide: { radius: 16 },
-            animate: false,
+            animate: false
           }}
         />
         {/* Camera + interaction, wired up by hand. */}
@@ -90,5 +90,5 @@ export const CustomCompositionStory: Story = {
         <TextResolutionLODBehaviour id="label-lod" targetLayerId="graph" />
       </GraphCanvasApp>
     </ThemeProvider>
-  ),
+  )
 };

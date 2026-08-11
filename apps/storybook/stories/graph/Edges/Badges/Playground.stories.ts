@@ -9,7 +9,7 @@ import {
   type GraphEdge,
   type NodeBadge,
   type GraphNode,
-  type NodeDecorationSpec,
+  type NodeDecorationSpec
 } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
@@ -81,7 +81,7 @@ export const Playground: Story = {
       keepUpright: true,
       decoration: 'none' as DecorationChoice,
       effect: 'none' as EffectChoice,
-      pathType: 'straight' as PathTypeChoice,
+      pathType: 'straight' as PathTypeChoice
     };
 
     const buildDecoration = (kind: DecorationChoice): readonly NodeDecorationSpec[] | undefined => {
@@ -118,8 +118,8 @@ export const Playground: Story = {
               fontFamily: 'sans-serif',
               fontWeight: 700,
               color: 0xffffff,
-              sizeRatio: 0.7,
-            },
+              sizeRatio: 0.7
+            }
           }
         : {}),
       ...(s.labelText !== ''
@@ -132,7 +132,7 @@ export const Playground: Story = {
       autoRotate: s.autoRotate,
       keepUpright: s.keepUpright,
       ...(buildDecoration(s.decoration) ? { decorations: buildDecoration(s.decoration)! } : {}),
-      ...(buildEffects(s.effect) ? { effects: buildEffects(s.effect)! } : {}),
+      ...(buildEffects(s.effect) ? { effects: buildEffects(s.effect)! } : {})
     });
 
     const buildEdge = (): GraphEdge => ({ type: 'edge',
@@ -141,8 +141,8 @@ export const Playground: Story = {
       target: 'tgt',
       style: {
         shape: { pathType: s.pathType },
-        badges: [buildBadge()],
-      },
+        badges: [buildBadge()]
+      }
     });
 
     const nodes: GraphNode[] = [
@@ -158,8 +158,8 @@ export const Playground: Story = {
           labelColor: 0x0f172a,
           labelFontSize: 11,
           labelPlacement: 'left',
-          labelOffsetX: -10,
-        },
+          labelOffsetX: -10
+        }
       },
       { type: 'node',
         id: 'tgt',
@@ -173,8 +173,8 @@ export const Playground: Story = {
           labelColor: 0x0f172a,
           labelFontSize: 11,
           labelPlacement: 'right',
-          labelOffsetX: 10,
-        },
+          labelOffsetX: 10
+        }
       },
     ];
 
@@ -187,7 +187,7 @@ export const Playground: Story = {
 
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes, edges: [buildEdge()] } },
+      options: { initData: { nodes, edges: [buildEdge()] } }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -196,9 +196,9 @@ export const Playground: Story = {
 
     const canvasOptions = {
       layers: {
-        graph: { edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 1.5, arrowTargetShape: 'triangle' } } },
+        graph: { edge: { style: { strokeColor: 0x94a3b8, strokeWidth: 1.5, arrowTargetShape: 'triangle' } } }
       },
-      behaviours: { pan: { enabled: true }, zoom: { enabled: true }, 'drag-node': { enabled: true } },
+      behaviours: { pan: { enabled: true }, zoom: { enabled: true }, 'drag-node': { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
     canvas.camera.fitContent(graph.getBounds(), 100);
@@ -240,5 +240,5 @@ export const Playground: Story = {
     const composition = gui.addFolder('Composition');
     composition.add(s, 'decoration', decorations as unknown as string[]).onChange(apply);
     composition.add(s, 'effect', effects as unknown as string[]).onChange(apply);
-  },
+  }
 };

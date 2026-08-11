@@ -69,7 +69,12 @@ const LEVEL_BY_TYPE: Record<string, LogLevel> = {
  * they are the metrics/trace domain, not an audit log. Always excluded regardless
  * of level.
  */
-const NEVER_LOG = new Set<string>(['render:loop:tick', 'data:flush', 'layout:run:tick']);
+const NEVER_LOG = new Set<string>([
+  'render:loop:tick',
+  'data:flush',
+  'specs:flush',
+  'layout:run:tick',
+]);
 
 /** Derive bounded log attributes from an event envelope (source + a few payload ids). */
 function logAttributes(ev: CanvasEvent): LogAttributes {

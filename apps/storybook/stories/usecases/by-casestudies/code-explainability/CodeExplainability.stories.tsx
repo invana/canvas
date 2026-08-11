@@ -70,7 +70,7 @@ import {
   HoverActivateBehaviour,
   LassoSelectBehaviour,
   ThemeBehaviour,
-  WheelZoomBehaviour,
+  WheelZoomBehaviour
 } from '@invana/canvas-react';
 import {
   CanvasMessageBar,
@@ -80,7 +80,7 @@ import {
   GraphControlsToolbar,
   GraphStatusBar,
   ToolbarItems,
-  useSidePanels,
+  useSidePanels
 } from '@invana/canvas-ui';
 import { canvasDataflow } from '@invana/graph-datasets';
 import type { CanvasConfig } from '@invana/canvas';
@@ -89,7 +89,7 @@ import type {
   GraphNode,
   NodeStructureRegistry,
   NodeStylingRegistry,
-  NodeTypeRegistry,
+  NodeTypeRegistry
 } from '@invana/graph';
 import { ThemeProvider } from '@invana/themes';
 import { Moon, Settings, Sun } from 'lucide-react';
@@ -121,8 +121,8 @@ const structures: NodeStructureRegistry = {
       { divider: true },
       { slots: [{ slot: 'name', kind: 'text' }] },
       { slots: [{ slot: 'purpose', kind: 'text' }] },
-    ],
-  },
+    ]
+  }
 };
 
 /**
@@ -145,8 +145,8 @@ const card = (accent: number) => ({
     package: { colorRole: 'muted' as const, fontSize: 10 },
     name: { colorRole: 'heading' as const, fontSize: 15, fontWeight: 700 },
     purpose: { colorRole: 'foreground' as const, fontSize: 11 },
-    divider: { colorRole: 'divider' as const },
-  },
+    divider: { colorRole: 'divider' as const }
+  }
 });
 
 /**
@@ -170,8 +170,8 @@ const bind = (styling: string) => ({
     symbol: 'data.symbol',
     package: 'data.package',
     name: 'data.name',
-    purpose: 'data.purpose',
-  },
+    purpose: 'data.purpose'
+  }
 });
 
 /** Every stack layer binds to the same structure, styled by its side. */
@@ -187,7 +187,7 @@ const nodeTypes: NodeTypeRegistry = {
   style: bind('dataCard'),
   spec: bind('renderCard'),
   instance: bind('renderCard'),
-  renderer: bind('renderCard'),
+  renderer: bind('renderCard')
 };
 
 /**
@@ -275,8 +275,8 @@ const CARD_CONFIG: CanvasConfig = {
           bgStrokeColor: (node: GraphNode) => (node.type === 'package' ? 0x94a3b8 : undefined),
           bgStrokeAlpha: (node: GraphNode) => (node.type === 'package' ? 0.75 : undefined),
           bgStrokeWidth: (node: GraphNode) => (node.type === 'package' ? 1.5 : undefined),
-          labelText: (node: GraphNode) => (node.type === 'package' ? node.id : undefined),
-        },
+          labelText: (node: GraphNode) => (node.type === 'package' ? node.id : undefined)
+        }
       },
       edge: {
         style: {
@@ -288,10 +288,10 @@ const CARD_CONFIG: CanvasConfig = {
           strokeWidth: 1.6,
           strokeAlpha: 0.7,
           arrowTargetShape: 'triangle',
-          arrowTargetSize: 5,
-        },
-      },
-    },
+          arrowTargetSize: 5
+        }
+      }
+    }
   },
   layouts: {
     // LEFT-TO-RIGHT: the stack reads app → data → engine → render, which is a
@@ -313,8 +313,8 @@ const CARD_CONFIG: CanvasConfig = {
       layerSpacing: 140,
       edgeNodeSpacing: 24,
       edgeSpacing: 14,
-      padding: 40,
-    },
+      padding: 40
+    }
   },
   behaviours: {
     // Colour-by-type is off: the card styling owns the fill, and a `bgFill`
@@ -332,8 +332,8 @@ const CARD_CONFIG: CanvasConfig = {
     'collapse-expand': { enabled: true },
     // The sole theme publisher; `<CanvasThemeSync>` pins its mode + family to
     // the host `<ThemeProvider>`, so the header toggle repaints the canvas.
-    theme: { enabled: true, mode: 'system', active: 'default', accent: 'css-var' },
-  },
+    theme: { enabled: true, mode: 'system', active: 'default', accent: 'css-var' }
+  }
 };
 
 /**
@@ -373,16 +373,16 @@ const DOT_CONFIG: CanvasConfig = {
           bgStrokeWidth: 1.5,
           labelFontSize: 10,
           labelPlacement: 'bottom',
-          labelOffsetY: 4,
-        },
+          labelOffsetY: 4
+        }
       },
       edge: {
-        style: { strokeColor: 0x94a3b8, strokeWidth: 1.6, strokeAlpha: 0.7, arrowTargetShape: 'none' },
-      },
-    },
+        style: { strokeColor: 0x94a3b8, strokeWidth: 1.6, strokeAlpha: 0.7, arrowTargetShape: 'none' }
+      }
+    }
   },
   layouts: {
-    elk: { algorithm: 'layered', direction: 'RIGHT', nodeSpacing: 18, layerSpacing: 90, padding: 30 },
+    elk: { algorithm: 'layered', direction: 'RIGHT', nodeSpacing: 18, layerSpacing: 90, padding: 30 }
   },
   // Same hand-rolled bundle as CARD_CONFIG (see the note there) — except
   // colour-by-type, which is on here because nothing competes for the fill.
@@ -396,8 +396,8 @@ const DOT_CONFIG: CanvasConfig = {
     'brush-select': { enabled: false },
     'lasso-select': { enabled: false },
     'collapse-expand': { enabled: true },
-    theme: { enabled: true, mode: 'system', active: 'default', accent: 'css-var' },
-  },
+    theme: { enabled: true, mode: 'system', active: 'default', accent: 'css-var' }
+  }
 };
 
 const meta: Meta = { title: 'usecases/by-casestudies/code-explainability/CodeExplainability' };
@@ -421,7 +421,7 @@ export const CodeExplainabilityStory: Story = {
           label: 'Settings',
           render: (c) => (
             <CanvasSettingsEditorPanel canvas={c} className="border-0 bg-transparent shadow-none" />
-          ),
+          )
         },
       ],
       { section: { defaultSize: '380px', maxSize: '520px' } },
@@ -485,7 +485,7 @@ export const CodeExplainabilityStory: Story = {
                     label: 'Look',
                     value: look,
                     options: { cards: 'Cards — what is this symbol', dots: 'Dots — what is the shape' },
-                    onChange: (v) => setLook(v as 'cards' | 'dots'),
+                    onChange: (v) => setLook(v as 'cards' | 'dots')
                   },
                   ...dock.items,
                   {
@@ -496,11 +496,11 @@ export const CodeExplainabilityStory: Story = {
                     label: 'Switch to dark theme',
                     activeLabel: 'Switch to light theme',
                     active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme,
+                    onToggle: ctx.toggleTheme
                   },
                 ]}
               />
-            ),
+            )
           }}
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
           right={dock.region}
@@ -543,7 +543,7 @@ export const CodeExplainabilityStory: Story = {
                   ? { width: 0, height: 0 }
                   : look === 'cards'
                     ? { width: CARD.width, height: CARD.height }
-                    : { width: 20, height: 20 },
+                    : { width: 20, height: 20 }
             }}
           />
           {/* A package frame's +/- toggle has no listener until this is mounted —
@@ -553,5 +553,5 @@ export const CodeExplainabilityStory: Story = {
         </GraphCanvasApp>
       </ThemeProvider>
     );
-  },
+  }
 };

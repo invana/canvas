@@ -61,12 +61,12 @@ export const Grid: Story = {
           color: '#475569',
           size: 1.5,
           spacing: 24,
-          alpha: 0.85,
+          alpha: 0.85
         },
         graph: {
           node: { style: { shape: { kind: 'circle', radius: 5 } } },
-          edge: { style: { strokeColor: 0x475569, strokeWidth: 0.6, arrowTargetShape: 'none' } },
-        },
+          edge: { style: { strokeColor: 0x475569, strokeWidth: 0.6, arrowTargetShape: 'none' } }
+        }
       },
       behaviours: {
         pan: { enabled: true },
@@ -76,8 +76,8 @@ export const Grid: Story = {
           enabled: true,
           mode: 'system',
           light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
-          dark: { backgroundColor: '#0f172a', color: '#475569' },
-        },
+          dark: { backgroundColor: '#0f172a', color: '#475569' }
+        }
       },
       layouts: {
         geo: {
@@ -86,10 +86,10 @@ export const Grid: Story = {
           columnGap: 60,
           rowGap: 60,
           transition: true as boolean,
-          transitionEase: 'easeInOutCubic' as EasingName,
-        },
+          transitionEase: 'easeInOutCubic' as EasingName
+        }
       },
-      activeLayout: 'geo',
+      activeLayout: 'geo'
     };
 
     // Fit once the layout (and its glide) settles.
@@ -123,5 +123,5 @@ export const Grid: Story = {
     };
     gui.add({ shuffle }, 'shuffle').name('Shuffle → re-layout');
     gui.add({ fit: () => canvas.camera.fitContent(graph.getBounds(), 60) }, 'fit').name('Fit to content');
-  },
+  }
 };

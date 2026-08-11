@@ -31,12 +31,12 @@ export const Basic: Story = {
         id: n.id,
         position: { x: Math.cos(theta) * R, y: Math.sin(theta) * R },
         data: {
-          group: n.data.group,
+          group: n.data.group
         },
         style: {
           shape: { kind: 'circle', radius: 9 },
-          bgFill: groupColors[n.data.group % groupColors.length],
-        },
+          bgFill: groupColors[n.data.group % groupColors.length]
+        }
       };
     });
 
@@ -48,7 +48,7 @@ export const Basic: Story = {
     // Wiring only — ids + initial content. All settings live in the config below.
     const graph = new GraphLayer({
       id: 'graph',
-      options: { initData: { nodes, edges: lesMiserables.edges } },
+      options: { initData: { nodes, edges: lesMiserables.edges } }
     });
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
@@ -60,17 +60,17 @@ export const Basic: Story = {
     const canvasOptions = {
       layers: {
         graph: {
-          edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' } },
-        },
+          edge: { style: { strokeColor: 0xcbd5e1, strokeWidth: 1, arrowTargetShape: 'none' } }
+        }
       },
       behaviours: {
         pan: { enabled: true },
         zoom: { enabled: true },
-        'drag-node': { enabled: true },
-      },
+        'drag-node': { enabled: true }
+      }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 80);
-  },
+  }
 };

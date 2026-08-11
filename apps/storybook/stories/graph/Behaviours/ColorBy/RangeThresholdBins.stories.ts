@@ -45,7 +45,7 @@ export const RangeThresholdBinsStory: Story = {
     const nodes = lesMiserables.nodes.map((n) => ({
       id: n.id,
       type: `group-${n.data.group}`,
-      data: { group: n.data.group, degree: degree.get(n.id) ?? 0 },
+      data: { group: n.data.group, degree: degree.get(n.id) ?? 0 }
     }));
 
     const canvas = new GraphCanvas();
@@ -69,7 +69,7 @@ export const RangeThresholdBinsStory: Story = {
       scale: 'threshold',
       nodeValueKey: 'data.degree',
       nodeThresholds: [3, 10, 20],
-      colorEdges: false,
+      colorEdges: false
     });
     canvas.behaviours.register(colorBy);
 
@@ -84,32 +84,32 @@ export const RangeThresholdBinsStory: Story = {
                 shape: { kind: 'circle', radius: 7 },
                 bgStrokeColor: 0xffffff,
                 bgStrokeWidth: 1.5,
-                showLabel: false,
-              },
+                showLabel: false
+              }
             },
             edge: {
               style: {
                 strokeColor: 0xcbd5e1,
                 strokeWidth: 1,
                 strokeAlpha: 0.5,
-                arrowTargetShape: 'none',
-              },
-            },
-          },
+                arrowTargetShape: 'none'
+              }
+            }
+          }
         },
         layouts: {
-          force: { charge: { strength: -220 }, link: { distance: 40 }, collide: { radius: 11 } },
+          force: { charge: { strength: -220 }, link: { distance: 40 }, collide: { radius: 11 } }
         },
         activeLayout: 'force',
-        fitOnLoad: true,
-      },
+        fitOnLoad: true
+      }
     });
 
     const o = colorBy.getResolvedOptions();
     const settings = {
       scale: o.scale,
       thresholds: (o.nodeThresholds ?? []).join(', '),
-      bins: o.bins,
+      bins: o.bins
     };
     const derived = { bands: '', count: '' };
     const refresh = (): void => {
@@ -131,7 +131,7 @@ export const RangeThresholdBinsStory: Story = {
           .split(',')
           .map((t) => Number(t.trim()))
           .filter((n) => Number.isFinite(n)),
-        bins: settings.bins,
+        bins: settings.bins
       });
       refresh();
     };
@@ -145,5 +145,5 @@ export const RangeThresholdBinsStory: Story = {
     const out = gui.addFolder('derived (read-only)');
     out.add(derived, 'count').name('buckets').listen().disable();
     out.add(derived, 'bands').name('bands').listen().disable();
-  },
+  }
 };
