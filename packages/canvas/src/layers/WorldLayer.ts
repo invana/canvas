@@ -16,10 +16,10 @@
  * consumers passing screen coords to a world layer or vice versa.
  */
 
-import type { ISurface, SurfaceOptions } from '../renderer/ISurface';
-import type { CanvasContext } from '../context/CanvasContext';
+import type { ISurface, SurfaceOptions } from '@invana/canvas-core';
+import type { CanvasContext } from '@invana/canvas-core';
 import type { EventMap } from '@invana/canvas-store';
-import { Layer, type LayerOptions } from './Layer';
+import { Layer, type LayerOptions } from '@invana/canvas-core';
 
 export interface WorldLayerHit {
   /** Whatever the subclass chooses to return — a node id, a sub-region, etc. */

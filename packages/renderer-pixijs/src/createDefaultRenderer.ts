@@ -8,8 +8,8 @@
  */
 
 import type { CanvasEventBus } from '@invana/canvas-store';
-import { PixiRenderer } from './PixiRenderer';
-import type { PixiRendererOptions } from './PixiRenderer';
+import { PixiRenderer } from './renderer/PixiRenderer';
+import type { PixiRendererOptions } from './renderer/PixiRenderer';
 
 /** Build the default pixi backend. `events` is the canvas-wide bus. */
 export function createDefaultRenderer(opts: { events: CanvasEventBus } & Partial<PixiRendererOptions>): PixiRenderer {

@@ -1,13 +1,13 @@
-import { HeadlessCameraBinding } from '../../src/camera/HeadlessCameraBinding';
-import { HeadlessSurface } from '../../src/renderer/HeadlessRenderer';
+import { HeadlessCameraBinding } from '@invana/canvas-core';
+import { HeadlessSurface } from '@invana/canvas-core';
 import { describe, expect, it } from 'vitest';
 import { WorldLayer } from '../../src/layers/WorldLayer';
 import { CanvasEventBus } from '@invana/canvas-store';
-import { Camera } from '../../src/camera/Camera';
-import { DefaultGestureArbiter } from '../../src/input/GestureArbiter';
-import { LayerRegistry } from '../../src/registries/LayerRegistry';
-import { BehaviourRegistry } from '../../src/registries/BehaviourRegistry';
-import type { CanvasContext } from '../../src/context/CanvasContext';
+import { Camera } from '@invana/canvas-core';
+import { DefaultGestureArbiter } from '@invana/canvas-core';
+import { LayerRegistry } from '@invana/canvas-core';
+import { BehaviourRegistry } from '@invana/canvas-core';
+import type { CanvasContext } from '@invana/canvas-core';
 import { createCanvasStore } from '@invana/canvas-store';
 
 class TestWorldLayer extends WorldLayer<{ readonly hits: { x: number; y: number; id: string }[] }> {

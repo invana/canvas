@@ -31,7 +31,7 @@
  *     / behaviour / state pipeline against a renderer that draws nothing.
  */
 
-import type { IRenderer } from '../renderer/IRenderer';
+import type { IRenderer } from '@invana/canvas-core';
 import {
   CanvasEventBus,
   createCanvasStore,
@@ -39,23 +39,23 @@ import {
   type CanvasTelemetryConfig,
 } from '@invana/canvas-store';
 
-import { CanvasThemeState } from '../theme/CanvasThemeState';
-import { Camera } from '../camera/Camera';
-import { DefaultGestureArbiter, type GestureArbiter } from '../input/GestureArbiter';
+import { CanvasThemeState } from '@invana/canvas-store';
+import { Camera } from '@invana/canvas-core';
+import { DefaultGestureArbiter, type GestureArbiter } from '@invana/canvas-core';
 import type { Rect } from '@invana/canvas-store';
 import { FrameMeter } from './FrameMeter';
 import { InteractionTracker } from './InteractionTracker';
-import { LayerRegistry } from '../registries/LayerRegistry';
-import { BehaviourRegistry } from '../registries/BehaviourRegistry';
-import { LayoutRegistry } from '../registries/LayoutRegistry';
-import type { CanvasContext } from '../context/CanvasContext';
+import { LayerRegistry } from '@invana/canvas-core';
+import { BehaviourRegistry } from '@invana/canvas-core';
+import { LayoutRegistry } from '@invana/canvas-core';
+import type { CanvasContext } from '@invana/canvas-core';
 import { type CanvasConfig, configurable, deepMerge } from './CanvasConfig';
 import {
   exportImage,
   exportImageDataURL,
   type ExportImageOptions,
-} from '../export/imageExport';
-import { exportSVG, type ExportSvgOptions } from '../export/svgExport';
+} from '../io/imageExport';
+import { exportSVG, type ExportSvgOptions } from '../io/svgExport';
 import {
   exportCanvasState,
   importCanvasState,
@@ -65,7 +65,7 @@ import {
   type CanvasStateSnapshot,
   type CanvasStateSource,
   type ImportCanvasStateOptions,
-} from '../export/stateExport';
+} from '../io/stateExport';
 
 /** High-resolution clock for per-frame timing; falls back to `Date.now` off-DOM. */
 const perfNow = (): number =>

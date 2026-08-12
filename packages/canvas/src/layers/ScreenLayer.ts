@@ -15,10 +15,10 @@
  * consumers passing world coords to a screen layer or vice versa.
  */
 
-import type { ISurface, SurfaceOptions } from '../renderer/ISurface';
-import type { CanvasContext } from '../context/CanvasContext';
+import type { ISurface, SurfaceOptions } from '@invana/canvas-core';
+import type { CanvasContext } from '@invana/canvas-core';
 import type { EventMap } from '@invana/canvas-store';
-import { Layer, type LayerOptions } from './Layer';
+import { Layer, type LayerOptions } from '@invana/canvas-core';
 
 export interface ScreenLayerHit {
   readonly id: string;

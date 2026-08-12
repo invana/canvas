@@ -3,8 +3,8 @@
  * hints that map domain data to primitive specs.
  */
 import type { CompositePart, CompositeRootSpec } from '@invana/canvas';
-import type { ShapeLabelStyle, ConnectorLabelStyle, ShapeFill, ShapeLabelPlacement, ConnectorLabelPlacement, InsetAnchor } from '@invana/canvas/specs';
-import type { Point } from '@invana/canvas/specs';
+import type { ShapeLabelStyle, ConnectorLabelStyle, ShapeFill, ShapeLabelPlacement, ConnectorLabelPlacement, InsetAnchor } from '@invana/canvas';
+import type { Point } from '@invana/canvas';
 // Type-only (no runtime cycle): the template module declares its shapes in
 // terms of this file's `NodeShapeOptions`; we reference its registries here.
 import type {
@@ -12,7 +12,7 @@ import type {
   NodeStylingRegistry,
   NodeTypeRegistry,
 } from '../template/types';
-import type { RingDecorationStyle, GlowDecorationStyle, PulseRingDecorationStyle, MarchingAntsDecorationStyle, LiquidFillDecorationStyle, RingConnectorDecorationStyle, GlowConnectorDecorationStyle, MarchingAntsConnectorDecorationStyle, RippleConnectorDecorationStyle, FlyMarkerConnectorDecorationStyle, FlowParticlesConnectorDecorationStyle, RevealConnectorDecorationStyle, ToggleDecorationStyle, TogglePlacement, ResizeHandleDecorationStyle, SelectionFrameDecorationStyle } from '@invana/canvas/specs';
+import type { RingDecorationStyle, GlowDecorationStyle, PulseRingDecorationStyle, MarchingAntsDecorationStyle, LiquidFillDecorationStyle, RingConnectorDecorationStyle, GlowConnectorDecorationStyle, MarchingAntsConnectorDecorationStyle, RippleConnectorDecorationStyle, FlyMarkerConnectorDecorationStyle, FlowParticlesConnectorDecorationStyle, RevealConnectorDecorationStyle, ToggleDecorationStyle, TogglePlacement, ResizeHandleDecorationStyle, SelectionFrameDecorationStyle } from '@invana/canvas';
 import type {
   GraphEdge,
   GraphNode,
@@ -761,7 +761,7 @@ export interface DecorationSpecCommon {
  * Discriminated union of decoration specs attachable to a node via
  * {@link NodeStyle.decorations}. Each variant pairs `kind` (the registered
  * canvas decoration name) with the matching style payload from
- * `@invana/canvas/specs`.
+ * `@invana/canvas`.
  *
  * Multiples are allowed — the same kind can appear several times (e.g. an
  * inner + outer ring on a single node), as long as their `id`s differ.

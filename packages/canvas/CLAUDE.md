@@ -1,51 +1,58 @@
 # CLAUDE.md — packages/canvas (`@invana/canvas`)
 
-**The engine: a renderer-agnostic orchestrator.** Implements the Layer / Behaviour /
-Layout architecture from `docs/architecture-proposal.md`, over the kernel
-(`@invana/canvas-store`), and defines the contract a drawing backend implements.
+**The engine: a renderer-agnostic orchestrator.** `Canvas` wires the kernel
+(`@invana/canvas-store`), the contracts + abstracts (`@invana/canvas-core`) and
+a rendering backend (`@invana/renderer-pixijs` by default) together, and ships
+the built-in layers / behaviours and the io (export/import) paths.
 
 ## The one rule that defines this package
 
-> **This package imports no drawing library — and, as of the dependency
-> consolidation, no third-party library at all.**
+> **This package imports no drawing library — and no third-party library at
+> all.**
 
 Not `pixi.js`, not `pixi-viewport`, not `three`. Drawing lives in
 `@invana/renderer-pixijs`; this package decides *what* should be on screen and
 hands the backend devices to draw it. `pnpm check-boundaries` fails the build on
 a violation. See `docs/renderer-split-design.md`.
 
-Its `dependencies` are exactly one entry: `@invana/canvas-store`. State
-(`zustand`/`immer`) and picking (`rbush`) both live in the kernel now — if you
-find yourself adding a third-party dep here, that is a strong signal the thing
-you are building belongs either in the kernel below or the backend above.
+Its `dependencies` are exactly two entries: `@invana/canvas-core` (contracts +
+abstracts) and `@invana/canvas-store` (the kernel). If you find yourself adding
+a third-party dep here, the thing you are building belongs in the kernel below,
+in `canvas-core`, or in the backend above.
 
 If you need something from a backend, **add it to the contract**
-(`src/renderer/IRenderer.ts` and friends) and implement it there. If the thing
-you want cannot be expressed without naming a display object, that is a signal it
-belongs in the backend, not here.
+(`packages/canvas-core/src/contracts/IRenderer.ts` and friends) and implement it
+there. If the thing you want cannot be expressed without naming a display
+object, that is a signal it belongs in the backend, not here.
+
+## The split with `@invana/canvas-core`
+
+Everything a backend **implements** or an extension package **extends** lives in
+`@invana/canvas-core` — the renderer contract, the headless double, the
+`Layer` / `Behaviour` / `Layout` bases, `CanvasContext`, `Camera` semantics,
+gesture arbitration, the registries, connector geometry, badge placement,
+tweens and the SVG serialisers. This package **re-exports that entire surface**
+from its root, so consumers never need to know which package a symbol lives in
+— keep it that way when adding exports. See `packages/canvas-core/CLAUDE.md`.
 
 ## What lives here
 
 | Area | Contents |
 |---|---|
-| Orchestration | `Canvas`, `CanvasContext`, `Layer` / `WorldLayer` / `ScreenLayer`, `Behaviour`, `Layout`, the three registries |
-| **The renderer contract** | `renderer/` — `IRenderer` (lifecycle, surfaces, camera binding, capabilities), `ISurface` (a layer's slice + `setBackdrop`), `IElementRenderer` (what a domain layer calls), `IOverlayDevice` (11 ops, transient only), `SpecProjector` |
-| **Headless backend** | `renderer/HeadlessRenderer.ts` + `camera/HeadlessCameraBinding.ts` — draws nothing, implements everything. Not a product renderer: a test double (§7) so layouts, picking and projection are testable with no GPU |
-| **Spec vocabulary** (re-export) | Defined in `@invana/canvas-store`; re-exported from this package's root and its `./specs` subpath so every existing consumer keeps working. Edit it there |
-| **Picking** (re-export) | `PickingIndex` / `HitIndex` also live in `@invana/canvas-store`, beside the specs they hit-test. Picking is still *interaction*, not drawing (design D5) — it simply sits below the engine rather than inside it, which is what let this package drop `rbush` |
-| **Connector geometry** | `connectors/` — routers, path styles, anchors, `pathSampling`. Spec in, `Path` out; a second backend reuses these verbatim |
-| Placement + time | `badges/` (placement maths), `animation/` (`Tween`, easings) |
-| Camera | `Camera` (clamp, anchored zoom, fit, bus + store sync) over `ICameraBinding` — no backend type |
-| Export | `export/` — **SVG is engine-side and spec-driven** (works headless); raster goes through `IRenderer.extract?()` |
-| Built-in layers | `BackgroundLayer` (paints via `surface.setBackdrop`), `DevInfoLayer`, `LayersPanelLayer` |
-| Built-in behaviours | `DragPanBehaviour`, `WheelZoomBehaviour`, `PinchZoomBehaviour`, `KeyboardCameraInputBehaviour` — all opt-in, never auto-registered |
-| Gesture arbitration | `input/GestureArbiter` — one gesture owns the pointer; camera behaviours yield |
+| Orchestration | `Canvas` (builds the concrete `CanvasContext`, owns the tick, registry instances, renderer lifecycle), `CanvasConfig` (+`deepMerge`), `FrameMeter`, `InteractionTracker`, `assertSerialisable` — all in `engine/` |
+| Built-in layers | `WorldLayer` / `ScreenLayer` (the two bases with surfaces), `BackgroundLayer` (paints via `surface.setBackdrop`), `DevInfoLayer`, `LayersPanelLayer` |
+| Built-in behaviours | `DragPanBehaviour`, `DragShapeBehaviour`, `WheelZoomBehaviour`, `PinchZoomBehaviour`, `KeyboardCameraInputBehaviour`, `ElementScaleLODBehaviour` — all opt-in, never auto-registered |
+| io | `io/` — raster export (through `IRenderer.extract?()`), `exportSVG` document assembly (the pure serialisers live in `canvas-core/svg/`), full-state JSON export/import |
+| Re-exports | the whole `@invana/canvas-core` surface, the kernel's spec vocabulary + picking + events + store port + theme (kernel-canonical) |
 
 ## What does *not* live here
 
-Shapes, connectors, decorations, effects, markers, paint helpers, textures, icon
-fonts, the `Application`, the viewport — all in `@invana/renderer-pixijs`. Domain
-concepts (node, edge, table, lane) belong to a domain package.
+Contracts, abstracts, camera semantics, registries, connector geometry, badges,
+animation, svg serialisers, the headless double → `@invana/canvas-core`. Shapes,
+connectors, decorations, effects, markers, paint helpers, textures, the
+`Application`, the viewport → `@invana/renderer-pixijs`. Domain concepts (node,
+edge, table, lane) → a domain package. Specs, picking, state, events, theme →
+`@invana/canvas-store`.
 
 ## Picking a layer base — `WorldLayer` vs `ScreenLayer`
 
@@ -81,21 +88,25 @@ Tests live in [tests/](tests/) at the package root, mirroring [src/](src/):
 
 ```
 packages/canvas/
-├── src/camera/Camera.ts
-└── tests/camera/Camera.test.ts   ← imports from '../../src/camera/Camera'
+├── src/engine/assertSerialisable.ts
+└── tests/engine/assertSerialisable.test.ts   ← imports from '../../src/engine/…'
 ```
 
 - Never co-locate `*.test.ts` inside `src/`.
-- Relative `../../src/...` imports — no path aliases.
+- Relative `../../src/...` imports — no path aliases. Symbols that moved to
+  `@invana/canvas-core` (Camera, the bases, registries, headless) are imported
+  from that package; their tests moved to `packages/canvas-core/tests/`.
 - **Tests import no drawing library.** Use `HeadlessRenderer` / `HeadlessSurface` /
-  `HeadlessCameraBinding`; `Canvas.initWithRenderer(new HeadlessRenderer(), w, h)`
-  drives the whole layer / behaviour / state pipeline with no GPU and no DOM.
+  `HeadlessCameraBinding` from `@invana/canvas-core`;
+  `Canvas.initWithRenderer(new HeadlessRenderer(), w, h)` drives the whole
+  layer / behaviour / state pipeline with no GPU and no DOM.
 - `pnpm check-types` covers `src/**` and `tests/**`; `pnpm test` (vitest) discovers
   `tests/**/*.test.ts`.
 
 > Root rule 10 forbids tests in this package **except** the headless coverage
 > granted for the renderer split (G6): spec projection, layout output, bounds and
-> camera semantics. Picking and spec-geometry tests moved to
-> `packages/canvas-store/tests/` along with the code they cover.
+> camera semantics. Picking and spec-geometry tests live in
+> `packages/canvas-store/tests/`; base-class/registry/camera tests live in
+> `packages/canvas-core/tests/`.
 
 See repo-root [CLAUDE.md](../../CLAUDE.md).

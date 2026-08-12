@@ -10,11 +10,6 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
-    },
-    "./specs": {
-      "types": "./dist/specs/index.d.ts",
-      "import": "./dist/specs/index.js",
-      "default": "./dist/specs/index.js"
     }
   },
   "typedocOptions": {
@@ -32,6 +27,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@invana/canvas-core": "workspace:*",
     "@invana/canvas-store": "workspace:*"
   },
   "devDependencies": {

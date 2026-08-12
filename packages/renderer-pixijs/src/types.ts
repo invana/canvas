@@ -14,7 +14,7 @@
 
 import type { Container, Graphics, IHitArea } from 'pixi.js';
 
-import type { TextureRegistry } from './textures/TextureRegistry';
+import type { TextureRegistry } from './assets/TextureRegistry';
 import type {
   BaseConnectorSpec,
   BaseShapeSpec,
@@ -33,7 +33,7 @@ import type {
 //
 // The pixi-free half of this file now lives in `../specs`. It is re-exported
 // here so existing importers keep working; new code should import from
-// `@invana/canvas/specs` directly. See `docs/renderer-split-design.md` P0.
+// `@invana/canvas` directly. See `docs/renderer-split-design.md` P0.
 export type * from '@invana/canvas';
 
 /**

@@ -193,6 +193,9 @@ importers:
 
   packages/canvas:
     dependencies:
+      '@invana/canvas-core':
+        specifier: workspace:*
+        version: link:../canvas-core
       '@invana/canvas-store':
         specifier: workspace:*
         version: link:../canvas-store
@@ -209,6 +212,28 @@ importers:
       happy-dom:
         specifier: ^20.9.0
         version: 20.9.0
+      tsup:
+        specifier: ^8.3.5
+        version: 8.5.1(jiti@2.7.0)(postcss@8.5.12)(tsx@4.21.0)(typescript@5.9.2)(yaml@2.8.3)
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
+      vitest:
+        specifier: ^3.2.6
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@22.15.3)(happy-dom@20.9.0)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3)
+
+  packages/canvas-core:
+    dependencies:
+      '@invana/canvas-store':
+        specifier: workspace:*
+        version: link:../canvas-store
+    devDependencies:
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
       tsup:
         specifier: ^8.3.5
         version: 8.5.1(jiti@2.7.0)(postcss@8.5.12)(tsx@4.21.0)(typescript@5.9.2)(yaml@2.8.3)

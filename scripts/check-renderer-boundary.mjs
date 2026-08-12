@@ -60,7 +60,7 @@ const BOUNDARIES = [
     name: 'state',
     libs: ['zustand'],
     // Only the adapter. The rest of the kernel programs against its own port.
-    allowed: ['packages/canvas-store/src/adapters/zustand'],
+    allowed: ['packages/canvas-store/src/adapters/zustand.ts'],
     remedy:
       'Program against the `ReactiveStore` port, not a state library. Build stores with ' +
       '`createReactiveStore` (or `createMemoryStore`) from `@invana/canvas-store`; that is ' +

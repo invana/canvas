@@ -9,8 +9,8 @@
  * instead of scroll. Pair with `PinchZoomBehaviour` for touch devices.
  */
 
-import { Behaviour, type BehaviourOptions } from './Behaviour';
-import type { CanvasContext } from '../context/CanvasContext';
+import { Behaviour, type BehaviourOptions } from '@invana/canvas-core';
+import type { CanvasContext } from '@invana/canvas-core';
 
 export interface WheelZoomBehaviourOptions extends BehaviourOptions {
   /**

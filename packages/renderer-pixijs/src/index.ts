@@ -23,10 +23,10 @@
  */
 
 // ─── The renderer contract, realised ─────────────────────────────────────────
-export { PixiRenderer, type PixiRendererOptions } from './PixiRenderer';
-export { PixiSurface, type PixiSurfaceOptions } from './PixiSurface';
-export { PixiOverlayDevice } from './PixiOverlayDevice';
-export { PixiViewportBinding } from './PixiViewportBinding';
+export { PixiRenderer, type PixiRendererOptions } from './renderer/PixiRenderer';
+export { PixiSurface, type PixiSurfaceOptions } from './renderer/PixiSurface';
+export { PixiOverlayDevice } from './renderer/PixiOverlayDevice';
+export { PixiViewportBinding } from './renderer/PixiViewportBinding';
 
 /**
  * Convenience factory used by `Canvas.init`'s lazy default-backend resolution.
@@ -39,100 +39,100 @@ export { createDefaultRenderer } from './createDefaultRenderer';
 // are backend types by nature: a custom shape subclasses `ShapeBase` and paints
 // into a `Graphics`, which is exactly why they live here and not in the engine.
 
-export { PrimitivesRenderer } from './PrimitivesRenderer';
-export type { PrimitivesRendererOptions } from './PrimitivesRenderer';
+export { PrimitivesRenderer } from './renderer/PrimitivesRenderer';
+export type { PrimitivesRendererOptions } from './renderer/PrimitivesRenderer';
 
 // ─── Base classes (for custom shape / connector / decoration authors) ──────
-export { PrimitiveBase } from './base/PrimitiveBase';
-export { ShapeBase } from './base/ShapeBase';
-export { ConnectorBase } from './base/ConnectorBase';
-export { ShapeDecorationBase } from './base/ShapeDecorationBase';
-export { ConnectorDecorationBase } from './base/ConnectorDecorationBase';
-export { EffectBase } from './base/EffectBase';
-export { ConnectorEffectBase } from './base/ConnectorEffectBase';
+export { PrimitiveBase } from './primitives/base/PrimitiveBase';
+export { ShapeBase } from './primitives/base/ShapeBase';
+export { ConnectorBase } from './primitives/base/ConnectorBase';
+export { ShapeDecorationBase } from './primitives/base/ShapeDecorationBase';
+export { ConnectorDecorationBase } from './primitives/base/ConnectorDecorationBase';
+export { EffectBase } from './primitives/base/EffectBase';
+export { ConnectorEffectBase } from './primitives/base/ConnectorEffectBase';
 
 // ─── Built-in primitives ──────────────────────────────────────────────────
-export { CircleShape } from './shapes/CircleShape';
-export { EllipseShape } from './shapes/EllipseShape';
-export { RectShape } from './shapes/RectShape';
-export { TabbedRectShape } from './shapes/TabbedRectShape';
-export { PathShape } from './shapes/PathShape';
-export { PolygonShape } from './shapes/PolygonShape';
-export { RegularPolygonShape } from './shapes/RegularPolygonShape';
-export { StarShape } from './shapes/StarShape';
-export { ArcShape } from './shapes/ArcShape';
-export { CompositeShape } from './shapes/CompositeShape';
-export type { CompositeSpec, CompositePart, CompositeRootSpec } from './shapes/CompositeShape';
-export { Connector } from './connectors/Connector';
-export { ArrowMarker, arrowMarkerSpec } from './markers/ArrowMarker';
-export type { ArrowMarkerSpec } from './markers/ArrowMarker';
+export { CircleShape } from './primitives/shapes/CircleShape';
+export { EllipseShape } from './primitives/shapes/EllipseShape';
+export { RectShape } from './primitives/shapes/RectShape';
+export { TabbedRectShape } from './primitives/shapes/TabbedRectShape';
+export { PathShape } from './primitives/shapes/PathShape';
+export { PolygonShape } from './primitives/shapes/PolygonShape';
+export { RegularPolygonShape } from './primitives/shapes/RegularPolygonShape';
+export { StarShape } from './primitives/shapes/StarShape';
+export { ArcShape } from './primitives/shapes/ArcShape';
+export { CompositeShape } from './primitives/shapes/CompositeShape';
+export type { CompositeSpec, CompositePart, CompositeRootSpec } from './primitives/shapes/CompositeShape';
+export { Connector } from './primitives/connectors/Connector';
+export { ArrowMarker, arrowMarkerSpec } from './primitives/connectors/ArrowMarker';
+export type { ArrowMarkerSpec } from './primitives/connectors/ArrowMarker';
 
 // ─── Built-in decorations ──────────────────────────────────────────────────
-export { GlowDecoration } from './decorations/shape/GlowDecoration';
-export type { GlowDecorationStyle } from './decorations/shape/GlowDecoration';
-export { PulseRingDecoration } from './decorations/shape/PulseRingDecoration';
-export type { PulseRingDecorationStyle } from './decorations/shape/PulseRingDecoration';
-export { LiquidFillDecoration } from './decorations/shape/LiquidFillDecoration';
-export type { LiquidFillDecorationStyle } from './decorations/shape/LiquidFillDecoration';
-export { MarchingAntsDecoration } from './decorations/shape/MarchingAntsDecoration';
-export type { MarchingAntsDecorationStyle } from './decorations/shape/MarchingAntsDecoration';
-export { RingDecoration } from './decorations/shape/RingDecoration';
-export type { RingDecorationStyle } from './decorations/shape/RingDecoration';
-export { MarchingAntsConnectorDecoration } from './decorations/connector/MarchingAntsConnectorDecoration';
-export type { MarchingAntsConnectorDecorationStyle } from './decorations/connector/MarchingAntsConnectorDecoration';
-export { RingConnectorDecoration } from './decorations/connector/RingConnectorDecoration';
-export type { RingConnectorDecorationStyle } from './decorations/connector/RingConnectorDecoration';
-export { FlyMarkerConnectorDecoration } from './decorations/connector/FlyMarkerConnectorDecoration';
-export type { FlyMarkerConnectorDecorationStyle } from './decorations/connector/FlyMarkerConnectorDecoration';
-export { FlowParticlesConnectorDecoration } from './decorations/connector/FlowParticlesConnectorDecoration';
-export type { FlowParticlesConnectorDecorationStyle } from './decorations/connector/FlowParticlesConnectorDecoration';
-export { GlowConnectorDecoration } from './decorations/connector/GlowConnectorDecoration';
-export type { GlowConnectorDecorationStyle } from './decorations/connector/GlowConnectorDecoration';
-export { RippleConnectorDecoration } from './decorations/connector/RippleConnectorDecoration';
-export type { RippleConnectorDecorationStyle } from './decorations/connector/RippleConnectorDecoration';
-export { RevealConnectorDecoration } from './decorations/connector/RevealConnectorDecoration';
+export { GlowDecoration } from './primitives/decorations/shape/GlowDecoration';
+export type { GlowDecorationStyle } from './primitives/decorations/shape/GlowDecoration';
+export { PulseRingDecoration } from './primitives/decorations/shape/PulseRingDecoration';
+export type { PulseRingDecorationStyle } from './primitives/decorations/shape/PulseRingDecoration';
+export { LiquidFillDecoration } from './primitives/decorations/shape/LiquidFillDecoration';
+export type { LiquidFillDecorationStyle } from './primitives/decorations/shape/LiquidFillDecoration';
+export { MarchingAntsDecoration } from './primitives/decorations/shape/MarchingAntsDecoration';
+export type { MarchingAntsDecorationStyle } from './primitives/decorations/shape/MarchingAntsDecoration';
+export { RingDecoration } from './primitives/decorations/shape/RingDecoration';
+export type { RingDecorationStyle } from './primitives/decorations/shape/RingDecoration';
+export { MarchingAntsConnectorDecoration } from './primitives/decorations/connector/MarchingAntsConnectorDecoration';
+export type { MarchingAntsConnectorDecorationStyle } from './primitives/decorations/connector/MarchingAntsConnectorDecoration';
+export { RingConnectorDecoration } from './primitives/decorations/connector/RingConnectorDecoration';
+export type { RingConnectorDecorationStyle } from './primitives/decorations/connector/RingConnectorDecoration';
+export { FlyMarkerConnectorDecoration } from './primitives/decorations/connector/FlyMarkerConnectorDecoration';
+export type { FlyMarkerConnectorDecorationStyle } from './primitives/decorations/connector/FlyMarkerConnectorDecoration';
+export { FlowParticlesConnectorDecoration } from './primitives/decorations/connector/FlowParticlesConnectorDecoration';
+export type { FlowParticlesConnectorDecorationStyle } from './primitives/decorations/connector/FlowParticlesConnectorDecoration';
+export { GlowConnectorDecoration } from './primitives/decorations/connector/GlowConnectorDecoration';
+export type { GlowConnectorDecorationStyle } from './primitives/decorations/connector/GlowConnectorDecoration';
+export { RippleConnectorDecoration } from './primitives/decorations/connector/RippleConnectorDecoration';
+export type { RippleConnectorDecorationStyle } from './primitives/decorations/connector/RippleConnectorDecoration';
+export { RevealConnectorDecoration } from './primitives/decorations/connector/RevealConnectorDecoration';
 export type {
   RevealConnectorDecorationStyle,
   RevealDirection,
   RevealEasingName,
   RevealHostStroke,
   RevealRepeat,
-} from './decorations/connector/RevealConnectorDecoration';
-export { LabelDecoration } from './decorations/shape/LabelDecoration';
-export { LabelConnectorDecoration } from './decorations/connector/LabelConnectorDecoration';
-export { ToggleDecoration } from './decorations/shape/ToggleDecoration';
+} from './primitives/decorations/connector/RevealConnectorDecoration';
+export { LabelDecoration } from './primitives/decorations/shape/LabelDecoration';
+export { LabelConnectorDecoration } from './primitives/decorations/connector/LabelConnectorDecoration';
+export { ToggleDecoration } from './primitives/decorations/shape/ToggleDecoration';
 export type {
   ToggleDecorationStyle,
   TogglePlacement,
   ToggleHitGeometry,
-} from './decorations/shape/ToggleDecoration';
-export { ResizeHandleDecoration } from './decorations/shape/ResizeHandleDecoration';
+} from './primitives/decorations/shape/ToggleDecoration';
+export { ResizeHandleDecoration } from './primitives/decorations/shape/ResizeHandleDecoration';
 export type {
   ResizeHandleDecorationStyle,
   ResizeHandlePlacement,
   ResizeHandleHitGeometry,
-} from './decorations/shape/ResizeHandleDecoration';
-export { SelectionFrameDecoration } from './decorations/shape/SelectionFrameDecoration';
+} from './primitives/decorations/shape/ResizeHandleDecoration';
+export { SelectionFrameDecoration } from './primitives/decorations/shape/SelectionFrameDecoration';
 export type {
   SelectionFrameDecorationStyle,
   SelectionFramePlacement,
   SelectionFrameHandleHit,
   SelectionFrameBorderStyle,
   SelectionFrameHandleShape,
-} from './decorations/shape/SelectionFrameDecoration';
+} from './primitives/decorations/shape/SelectionFrameDecoration';
 
 // ─── Built-in effects ──────────────────────────────────────────────────────
-export { ShakeEffect } from './effects/shape/ShakeEffect';
-export type { ShakeEffectStyle } from './effects/shape/ShakeEffect';
-export { BreathingEffect } from './effects/shape/BreathingEffect';
-export type { BreathingEffectStyle } from './effects/shape/BreathingEffect';
-export { BreathingConnectorEffect } from './effects/connector/BreathingConnectorEffect';
-export type { BreathingConnectorEffectStyle } from './effects/connector/BreathingConnectorEffect';
-export { FadeInConnectorEffect } from './effects/connector/FadeInConnectorEffect';
+export { ShakeEffect } from './primitives/effects/ShakeEffect';
+export type { ShakeEffectStyle } from './primitives/effects/ShakeEffect';
+export { BreathingEffect } from './primitives/effects/BreathingEffect';
+export type { BreathingEffectStyle } from './primitives/effects/BreathingEffect';
+export { BreathingConnectorEffect } from './primitives/effects/BreathingConnectorEffect';
+export type { BreathingConnectorEffectStyle } from './primitives/effects/BreathingConnectorEffect';
+export { FadeInConnectorEffect } from './primitives/effects/FadeInConnectorEffect';
 export type {
   FadeInConnectorEffectStyle,
   FadeInEasingName,
-} from './effects/connector/FadeInConnectorEffect';
+} from './primitives/effects/FadeInConnectorEffect';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 export type {
@@ -222,8 +222,8 @@ export type {
 } from './types';
 
 // ─── Assets ──────────────────────────────────────────────────────────────────
-export { TextureRegistry } from './textures/TextureRegistry';
-export { loadIconFont } from './fonts/loadIconFont';
+export { TextureRegistry } from './assets/TextureRegistry';
+export { loadIconFont } from './assets/loadIconFont';
 
 // ─── Backend capability probing ──────────────────────────────────────────────
 export {
@@ -233,4 +233,4 @@ export {
   resolveRenderPreference,
   bestRenderPreference,
   type RenderPreference,
-} from './rendererSupport';
+} from './renderer/rendererSupport';

@@ -6,7 +6,7 @@ import {
   WorldLayer,
   type IElementRenderer
 } from '@invana/canvas';
-import type { TogglePlacement } from '@invana/canvas/specs';
+import type { TogglePlacement } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../../div-util';
 

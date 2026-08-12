@@ -29,7 +29,7 @@
  */
 
 import { Behaviour, type BehaviourOptions, type CanvasContext } from '@invana/canvas';
-import type { ToggleHitGeometry } from '@invana/canvas/specs';
+import type { ToggleHitGeometry } from '@invana/canvas';
 
 import { GraphLayer } from '../layer/GraphLayer';
 import { COLLAPSED_STATE } from '../layer/types';

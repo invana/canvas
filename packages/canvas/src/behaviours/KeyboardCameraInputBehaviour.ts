@@ -17,8 +17,8 @@
  * viewport so you see content *above* the current view.
  */
 
-import { Behaviour, type BehaviourOptions } from './Behaviour';
-import type { CanvasContext } from '../context/CanvasContext';
+import { Behaviour, type BehaviourOptions } from '@invana/canvas-core';
+import type { CanvasContext } from '@invana/canvas-core';
 
 export interface KeyboardCameraKeymap {
   panUp: string[];

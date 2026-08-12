@@ -1,4 +1,26 @@
+---
+id: feat-2026-08-11-canvas-store-structure
+type: feat
+title: The packages/canvas-store/src structure keeps one-file folders
+status: superseded
+opened: 2026-08-11
+decided: 2026-08-12
+landed: null
+packages: [pkg:@invana/canvas-store]
+design_of_record: null
+relations:
+  - { predicate: superseded-by, object: rfc:feat-2026-08-12-engine-package-structure }
+---
+
 # `packages/canvas-store/src` — file and folder structure
+
+> **Superseded** (2026-08-12) by
+> [`2026-08-12-engine-package-structure.md`](./2026-08-12-engine-package-structure.md).
+> What survives: the `view/` absorption of `actions/` + `history/`, the `backend.ts`
+> rename, and canonical `theme/`. What changed: the successor also flattens the three
+> one-file folders this doc kept — `geom/` → `src/geom.ts`, `perf/` → `src/frame.ts`,
+> `adapters/zustand/createReactiveStore.ts` → `adapters/zustand.ts` (boundary pin
+> tightened to the exact file).
 
 16 folders / 51 files → **14 folders / 51 files**.
 

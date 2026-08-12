@@ -27,7 +27,7 @@
 import { BackgroundLayer, ScreenLayer, select, type CanvasContext, type ScreenLayerHit } from '@invana/canvas';
 import type { IOverlayDevice } from '@invana/canvas';
 import type { LayerOptions } from '@invana/canvas';
-import type { Rect } from '@invana/canvas/specs';
+import type { Rect } from '@invana/canvas';
 
 import { GraphLayer } from './GraphLayer';
 import type { GraphNode } from '../store/types';

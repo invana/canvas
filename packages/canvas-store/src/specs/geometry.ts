@@ -8,12 +8,12 @@
 // ─── Geometry primitives ───────────────────────────────────────────────────
 
 // Defined once, in the kernel's geometry vocabulary, and re-exported here so the
-// spec surface stays self-describing. Do not redeclare them — `../geom/types` is
+// spec surface stays self-describing. Do not redeclare them — `../geom` is
 // the single home (see the RFC that merged the two definitions:
 // `docs/rfcs/fix/2026-08-10-zustand-imported-outside-canvas-store.md` §4.4).
-export type { Point, Vec2, Rect, Size } from '../geom/types';
+export type { Point, Vec2, Rect, Size } from '../geom';
 
-import type { Point, Vec2, Rect } from '../geom/types';
+import type { Point, Vec2, Rect } from '../geom';
 
 /** Endpoint anchor a router consumes — point + optional outgoing tangent. */
 

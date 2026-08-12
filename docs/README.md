@@ -24,8 +24,30 @@ working design-of-record documents. Day-to-day API/concept docs live in
     *shapes*, so the edges **between a frame's own members** are painted over. Scopes
     the landing of the `plane` axis from `render-planes-and-emphasis-plan.md` (design
     locked there, not here) + the blast radius across every `style.group` graph.
+  - [feat/2026-08-12-engine-package-structure.md](./rfcs/feat/2026-08-12-engine-package-structure.md)
+    — ✅ **landed 2026-08-12** (all 33 change rows; verified: build 20/20 · types 19/19 ·
+    boundaries · 256 tests · live Storybook smoke incl. GraphVisualiser).
+    **The combined file-tree restructure of all three engine packages**
+    (canvas · canvas-store · renderer-pixijs), superseding the two per-package structure
+    RFCs below. Side-by-side now/target trees, move tables and blast radius for:
+    `canvas` 16 top-level folders → **5** with a widened `core/` charter — not just the
+    renderer contracts but **the `Layer`/`Behaviour`/`Layout` abstracts** (+ `ICanvasContext`,
+    gesture types) move into `core/` so extension packages and future backends
+    (pixi now, **three.js later**) depend on a small frozen `@invana/canvas-core`, and
+    `@invana/canvas` becomes the pure orchestrator; `canvas-store` 16 folders → **11**
+    (zero one-file folders — `geom.ts`/`frame.ts` flatten to root, `adapters/zustand.ts`);
+    `renderer-pixijs` 14 folders + 10 loose root files → **3 groups + 3 files**
+    (`renderer/` · `primitives/` · `assets/`), doubling as the `renderer-threejs` layout
+    template. Deletes the `./specs` subpath (19 importer files repoint to the root).
+    §2.1 records a **trial implementation** of the canvas-core extraction + canvas
+    restructure that passed every check end-to-end (build 20/20 · types 19/19 ·
+    boundaries · 88 tests) and was then discarded to stay in planning — so the canvas
+    half is measured fact: `CanvasContext` is already an interface, `Camera` and the
+    registries move whole, `SpecProjector` is contract-side, and canvas lands at
+    4 folders + index.
   - [feat/2026-08-11-canvas-src-layout-hides-the-backend-seam.md](./rfcs/feat/2026-08-11-canvas-src-layout-hides-the-backend-seam.md)
-    — 📋 proposed. **The `packages/canvas/src` file + folder structure**, before and
+    — ❌ superseded by `2026-08-12-engine-package-structure.md` (rule 2 reversed:
+    abstracts move into `core/abstracts/`). **The `packages/canvas/src` file + folder structure**, before and
     after: 16 top-level folders / 76 files → **6 / 82**, restructured around the future
     `@invana/canvas-core` boundary. The backend-facing half (`core/` — contracts,
     connector geometry, badges, animation, SVG serialisers, the headless reference
@@ -36,7 +58,8 @@ working design-of-record documents. Day-to-day API/concept docs live in
     pinning exactly) say no one is on the other end of the compatibility promise. Full
     tree, per-folder move table, new-file list, and the 6 rules that produced it.
   - [feat/2026-08-11-canvas-store-structure.md](./rfcs/feat/2026-08-11-canvas-store-structure.md)
-    — 📋 proposed. **The `packages/canvas-store/src` structure**, 16 folders / 51 files
+    — ❌ superseded by `2026-08-12-engine-package-structure.md` (successor also flattens
+    the three one-file folders this one kept). **The `packages/canvas-store/src` structure**, 16 folders / 51 files
     → **14 / 51**. A deliberately light touch — every kernel folder already names a real
     concern. `actions/` + `history/` fold into `view/` (both are operations on the view
     store); `renderer/IRenderer.ts` is renamed `backend.ts` because **the filename lies**

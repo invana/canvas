@@ -44,8 +44,8 @@
  * these behaviours would silently no-op under MapLibre.
  */
 
-import type { CanvasContext } from '../context/CanvasContext';
-import { Behaviour, type BehaviourOptions } from './Behaviour';
+import type { CanvasContext } from '@invana/canvas-core';
+import { Behaviour, type BehaviourOptions } from '@invana/canvas-core';
 
 /** A static value or a getter — getters are re-read on every `apply`. */
 export type NumberOrGetter = number | (() => number);

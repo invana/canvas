@@ -25,10 +25,10 @@
  */
 
 
-import type { CanvasContext } from '../context/CanvasContext';
-import type { ResolvedTheme } from '../theme/types';
+import type { CanvasContext } from '@invana/canvas-core';
+import type { ResolvedTheme } from '@invana/canvas-store';
 import { ScreenLayer, type ScreenLayerHit } from './ScreenLayer';
-import type { LayerOptions } from './Layer';
+import type { LayerOptions } from '@invana/canvas-core';
 
 /** Top-level background style. `'solid'` skips the pattern texture entirely. */
 export type BackgroundType = 'solid' | 'pattern';

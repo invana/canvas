@@ -3,7 +3,7 @@ import {
   Canvas, DragPanBehaviour, WheelZoomBehaviour, WorldLayer,
   type IElementRenderer
 } from '@invana/canvas';
-import type { CompositeSpec } from '@invana/canvas/specs';
+import type { CompositeSpec } from '@invana/canvas';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 

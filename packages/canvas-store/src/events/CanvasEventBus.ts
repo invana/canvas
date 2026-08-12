@@ -1,6 +1,6 @@
 import type { SpecFlush } from '../specs/SpecStore';
 import type { LayerFlush } from '../data/LayerData';
-import type { FrameTick } from '../perf/frame';
+import type { FrameTick } from '../frame';
 import type { ResolvedTheme } from '../theme/types';
 import { CANVAS_SOURCE, type CanvasEvent, type EventSource } from './CanvasEvent';
 import { EventEmitter, type Listener } from './EventEmitter';

@@ -1,5 +1,5 @@
-import { createActions, type CanvasActions } from './actions/createActions';
-import { createReactiveStore } from './adapters/zustand/createReactiveStore';
+import { createActions, type CanvasActions } from './view/createActions';
+import { createReactiveStore } from './adapters/zustand';
 import { CanvasEventBus } from './events/CanvasEventBus';
 import { createMemoryStore } from './port/createMemoryStore';
 import { changedPaths } from './port/patch';

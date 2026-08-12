@@ -35,9 +35,9 @@
  * cursor.
  */
 
-import { Behaviour, type BehaviourOptions } from './Behaviour';
-import type { CanvasContext } from '../context/CanvasContext';
-import type { CameraInputModifier } from '../camera/Camera';
+import { Behaviour, type BehaviourOptions } from '@invana/canvas-core';
+import type { CanvasContext } from '@invana/canvas-core';
+import type { CameraInputModifier } from '@invana/canvas-core';
 
 export type DragModifier = 'none' | 'space' | 'shift' | 'alt';
 

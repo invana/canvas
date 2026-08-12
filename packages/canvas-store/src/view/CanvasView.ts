@@ -1,4 +1,4 @@
-import type { CameraTransform, Rect } from '../geom/types';
+import type { CameraTransform, Rect } from '../geom';
 
 /**
  * `CanvasView` — the reactive, observable, syncable half of `CanvasStore`: how a

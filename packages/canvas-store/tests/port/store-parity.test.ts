@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { createMemoryStore } from '../../src/port/createMemoryStore';
-import { createReactiveStore } from '../../src/adapters/zustand/createReactiveStore';
+import { createReactiveStore } from '../../src/adapters/zustand';
 import type { ReactiveStore } from '../../src/port/types';
 
 interface S {

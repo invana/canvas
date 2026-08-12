@@ -1,10 +1,18 @@
 // @invana/canvas — public API surface
 //
-// Architecture: see `architecture-proposal.md` (long-term vision),
-// `primitives-redesign-plan.md` (macro renderer redesign), and
-// `primitives-v0-plan.md` (this v0 slice) at the repo root.
+// The engine is the **orchestrator**: `Canvas` wires the kernel
+// (`@invana/canvas-store`), the contracts + abstracts (`@invana/canvas-core`)
+// and a rendering backend (`@invana/renderer-pixijs` by default) together, and
+// ships the built-in layers / behaviours and the io (export/import) paths.
+//
+// Everything a backend implements or an extension package extends lives in
+// `@invana/canvas-core` and is **re-exported here wholesale**, so consumers
+// keep importing the whole vocabulary from `@invana/canvas` — the package
+// split is invisible at the import site.
+//
+// Architecture: see `architecture-proposal.md` and `docs/renderer-split-design.md`.
 
-// ─── Events (the bus + emitters now live in the kernel — @invana/canvas-store) ──
+// ─── Events (the bus + emitters live in the kernel — @invana/canvas-store) ──
 // The engine converged onto the single kernel bus (`store.events`); its own
 // duplicate event module was deleted. These re-exports keep the public surface
 // (`@invana/canvas`'s `EventEmitter` / `CanvasEventBus` / `CanvasGlobalEvents` …)
@@ -26,7 +34,7 @@ export {
 export {
   assertSerialisableInDev,
   findSerialisationViolations,
-} from './events/assertSerialisable';
+} from './engine/assertSerialisable';
 
 // ─── Store port (kernel reactive-store reads + writes) ───────────────────────
 // Re-exported so layers/behaviours can subscribe to `ctx.store.view` slices
@@ -35,8 +43,7 @@ export {
 // `createReactiveStore` is also what backs `Layer.state`: there is **one** state
 // contract in the repo and it is the kernel's port, so a layer's writes emit
 // patches like every other store and history / telemetry / a future CRDT backend
-// can observe them. The former `createLayerStore` — a second, raw-zustand
-// container — is gone; see
+// can observe them. See
 // `docs/rfcs/fix/2026-08-10-zustand-imported-outside-canvas-store.md`.
 export {
   select,
@@ -53,47 +60,147 @@ export {
   type CanvasView,
 } from '@invana/canvas-store';
 
-// ─── Spec geometry (P4) ──────────────────────────────────────────────────────
-// Picking and bounds computed from a spec, with no backend involved — which is
-// what makes hit-testing headlessly testable and identical across renderers.
-
-// The whole spec vocabulary — types *and* the pure geometry over them
-// (`containsSpec`, `boundsOfSpec`, `hasSilhouetteFill`, and the per-kind helpers a
-// backend needs to draw each silhouette). Exported wholesale because a hand-picked
-// subset breaks the moment a backend needs one more entry, and this vocabulary is
-// precisely the shared language of kernel, engine, domain package and renderer.
-//
-// It is *defined* in `@invana/canvas-store` — specs are plain data, so they sit
-// with the store that holds them and the index that picks them. Re-exported here
-// because every existing consumer imports it from the engine.
+// ─── Spec vocabulary ─────────────────────────────────────────────────────────
+// The whole spec vocabulary — types *and* the pure geometry over them. Defined
+// in `@invana/canvas-store` (specs are plain data, so they sit with the store
+// that holds them and the index that picks them); re-exported here because
+// every existing consumer imports it from the engine.
 export * from '@invana/canvas-store/specs';
 
-// ─── The renderer seam ───────────────────────────────────────────────────────
-// `IRenderer` lives here rather than in the kernel because it is made of spec
-// vocabulary. The pixi implementation lives in `@invana/renderer-pixijs`; this
-// package holds only the contract and the headless double.
-// The headless backend (§7) — draws nothing, implements everything. Lets a
-// consumer test layouts, picking and projection with no GPU and no DOM.
+// ─── Contracts + abstracts (@invana/canvas-core) ─────────────────────────────
+// The renderer contract (`IRenderer` / `ISurface` / `IElementRenderer` /
+// `IOverlayDevice` / `ICameraBinding`), the headless double, the `Layer` /
+// `Behaviour` / `Layout` base classes, `CanvasContext`, gesture arbitration,
+// `Camera` semantics, the registries, connector geometry, badge placement,
+// tweens/easings and the SVG serialisers — all re-exported wholesale so a
+// consumer never needs to know which of the two packages a symbol lives in.
 export {
+  // Headless reference implementation (test double, not a product renderer)
   HeadlessRenderer,
   HeadlessSurface,
   HeadlessElementRenderer,
-} from './renderer/HeadlessRenderer';
-export { HeadlessCameraBinding } from './camera/HeadlessCameraBinding';
+  HeadlessCameraBinding,
+  // Spec projection — drives a renderer from a SpecStore
+  SpecProjector,
+  // Gesture arbitration (P5)
+  DefaultGestureArbiter,
+  // Camera — pan/zoom/projection semantics over ICameraBinding
+  Camera,
+  // Abstracts
+  Layer,
+  Behaviour,
+  Layout,
+  animatePositions,
+  DEFAULT_POSITION_TRANSITION_MS,
+  // Registries
+  LayerRegistry,
+  BehaviourRegistry,
+  LayoutRegistry,
+  // Connector geometry — anchors, routers, path styles, sampling
+  centerAnchor,
+  boundaryAnchor,
+  perpendicularAnchor,
+  edgePortAnchor,
+  silhouettePortAnchor,
+  straightRouter,
+  orthRouter,
+  manhattanRouter,
+  metroRouter,
+  erRouter,
+  oneSideRouter,
+  normalPathStyle,
+  roundedPathStyle,
+  bezierPathStyle,
+  quadraticPathStyle,
+  bumpRadialPathStyle,
+  bumpHorizontalPathStyle,
+  smoothPathStyle,
+  stepRadialPathStyle,
+  bundlePathStyle,
+  loopPolylinePathStyle,
+  loopCurvePathStyle,
+  LOOP_CURVE_PRESETS,
+  samplePath,
+  samplePathAt,
+  tangentAt,
+  pathBounds,
+  trimPathEnds,
+  distanceToPolylineSq,
+  // Badge placement
+  DEFAULT_ENDPOINT_BADGE_GAP_PX,
+  resolveBadgePosition,
+  originToBadgeLocal,
+  resolveConnectorBadgePosition,
+  // Animation
+  Tween,
+  linear,
+  easeInOutSine,
+  easeOutCubic,
+  easeInOutCubic,
+  easeOutQuad,
+  resolveEasing,
+  EASING_NAMES,
+} from '@invana/canvas-core';
 export type {
   IRenderer,
   RendererCapabilities,
   RendererMountOptions,
-} from './renderer/IRenderer';
+  ISurface,
+  ISurfaceHost,
+  SurfaceBackdrop,
+  SurfaceOptions,
+  SurfaceSpace,
+  IElementRenderer,
+  MountedDecoration,
+  CustomElementCtor,
+  IOverlayDevice,
+  OverlayFill,
+  OverlayFillLike,
+  OverlayStroke,
+  OverlaySpace,
+  SpecProjectionTarget,
+  SpecProjectorOptions,
+  ICameraBinding,
+  CameraChangeKind,
+  CameraTransformValue,
+  GestureArbiter,
+  GestureClaimOptions,
+  CameraOptions,
+  CameraTransform,
+  CameraInputConfig,
+  CameraInputModifier,
+  WheelInputOptions,
+  PinchInputOptions,
+  Rect,
+  Point,
+  CanvasContext,
+  ILayer,
+  LayerOptions,
+  IBehaviour,
+  BehaviourOptions,
+  LayoutEvents,
+  LayoutEndReason,
+  LayoutOptions,
+  PositionTransition,
+  PositionTransitionOptions,
+  LayerRegistryOptions,
+  BehaviourRegistryOptions,
+  LayoutRegistryOptions,
+  LoopCurvePresetName,
+  BadgeOptions,
+  BadgePlacement,
+  NamedBadgePlacement,
+  ConnectorBadgePlacement,
+  TweenOptions,
+  Easing,
+  EasingName,
+} from '@invana/canvas-core';
 
 // ─── Picking (D5) ────────────────────────────────────────────────────────────
-// Picking is interaction, not drawing, so the index and the narrow-phase geometry
-// live outside any backend. They now sit in the kernel beside the spec vocabulary
-// they hit-test — that move is what let this package shed its last third-party
-// dependency. A rendering package implements `HitGeometrySource` — the three facts
-// a spec can't carry (visual scale, routed polyline, custom-kind silhouette) — and
-// the index answers the picks. Re-exported here so `@invana/renderer-pixijs` and
-// domain layers keep importing it from the engine.
+// Picking is interaction, not drawing, so the index and the narrow-phase
+// geometry live in the kernel beside the spec vocabulary they hit-test.
+// Re-exported here so `@invana/renderer-pixijs` and domain layers keep
+// importing it from the engine.
 export { PickingIndex, connectorHitBoxes } from '@invana/canvas-store';
 export type {
   ConnectorHitRecord,
@@ -104,45 +211,9 @@ export type {
   ShapeHitRecord,
 } from '@invana/canvas-store';
 
-// ─── Gesture arbitration (P5) ────────────────────────────────────────────────
-// One gesture owns the pointer at a time; camera behaviours yield to it. This
-// replaces behaviours reaching into pixi-viewport's plugin registry to pause it.
-export { DefaultGestureArbiter } from './input/GestureArbiter';
-export type { GestureArbiter, GestureClaimOptions } from './input/GestureArbiter';
-export type {
-  CameraInputConfig,
-  CameraInputModifier,
-  WheelInputOptions,
-  PinchInputOptions,
-} from './camera/Camera';
-
-// ─── Transient overlays (P3) ─────────────────────────────────────────────────
-// Immediate-mode drawing for gesture visuals that must never become state.
-export type { IOverlayDevice, OverlayFill, OverlayFillLike, OverlayStroke, OverlaySpace } from './renderer/IOverlayDevice';
-
-// ─── Spec projection (P2) ────────────────────────────────────────────────────
-// Drives a renderer from a SpecStore. Every drawing layer uses this, so
-// "the renderer is a projection of state" holds engine-wide.
-export { SpecProjector } from './renderer/SpecProjector';
-export type { SpecProjectionTarget, SpecProjectorOptions } from './renderer/SpecProjector';
-// The full device a domain layer drives: spec projection plus the per-frame
-// commands and geometry answers it still calls directly. Pixi-free, so
-// `@invana/graph` targets a backend it never imports.
-export type { IElementRenderer, MountedDecoration, CustomElementCtor } from './renderer/IElementRenderer';
-export type {
-  ISurface,
-  ISurfaceHost,
-  SurfaceBackdrop,
-  SurfaceOptions,
-  SurfaceSpace,
-} from './renderer/ISurface';
-export type { ElementEventMap } from '@invana/canvas-store';
-
 // ─── Specs as state (P1) ─────────────────────────────────────────────────────
-// The durable visual description a layer publishes and a renderer projects.
-// Re-exported so domain layers reach it without a direct kernel dependency.
 export { SpecStore, type SpecFlush } from '@invana/canvas-store';
-
+export type { ElementEventMap } from '@invana/canvas-store';
 
 // `ColumnStore` + `DirtyBatcher` are owned by the renderer-free kernel
 // (`@invana/canvas-store`, decision D1). Re-exported here for back-compat so
@@ -168,10 +239,8 @@ export {
 } from '@invana/canvas-store';
 
 // Telemetry config + dep-free reference meters (kernel-owned). Re-exported so
-// `new Canvas({ telemetry })` consumers can pick a sink (console for a quick
-// debug view, HTTP for a local collector) without a direct
-// `@invana/canvas-store` dependency. A real OTLP meter comes from the opt-in
-// `@invana/canvas-telemetry-otel` package.
+// `new Canvas({ telemetry })` consumers can pick a sink without a direct
+// `@invana/canvas-store` dependency.
 export {
   createConsoleMeter,
   createHttpMeter,
@@ -181,26 +250,13 @@ export {
   type HttpMetricRecord,
 } from '@invana/canvas-store';
 
-// ─── Camera ─────────────────────────────────────────────────────────────
-export { Camera } from './camera/Camera';
-export type { CameraOptions, CameraTransform, Rect, Point } from './camera/Camera';
-export type {
-  CameraChangeKind,
-  CameraTransformValue,
-  ICameraBinding,
-} from './camera/ICameraBinding';
+// ─── Theme signal (kernel-canonical) ────────────────────────────────────────
+// The engine's duplicate `theme/` module was deleted — the kernel's is the one
+// definition (it also carries `ThemeKind` / `ThemeMode`).
+export type { ResolvedTheme, ThemeState, ThemeKind, ThemeMode } from '@invana/canvas-store';
+export { CanvasThemeState } from '@invana/canvas-store';
 
-// ─── Context ────────────────────────────────────────────────────────────
-export type { CanvasContext } from './context/CanvasContext';
-
-// ─── Theme signal ───────────────────────────────────────────────────────
-export type { ResolvedTheme, ThemeState } from './theme/types';
-export { CanvasThemeState } from './theme/CanvasThemeState';
-
-// ─── Layers ─────────────────────────────────────────────────────────────
-export { Layer } from './layers/Layer';
-export type { ILayer, LayerOptions } from './layers/Layer';
-
+// ─── Built-in layers ─────────────────────────────────────────────────────────
 export { WorldLayer } from './layers/WorldLayer';
 export type { WorldLayerHit } from './layers/WorldLayer';
 
@@ -231,10 +287,7 @@ export type {
   LayersPanelCorner,
 } from './layers/LayersPanelLayer';
 
-// ─── Behaviours ─────────────────────────────────────────────────────────
-export { Behaviour } from './behaviours/Behaviour';
-export type { IBehaviour, BehaviourOptions } from './behaviours/Behaviour';
-
+// ─── Built-in behaviours ─────────────────────────────────────────────────────
 export { DragPanBehaviour } from './behaviours/DragPanBehaviour';
 export type { DragPanBehaviourOptions, DragModifier } from './behaviours/DragPanBehaviour';
 
@@ -262,86 +315,6 @@ export type {
   NumberOrGetter,
 } from './behaviours/ElementScaleLODBehaviour';
 
-// ─── Layouts ────────────────────────────────────────────────────────────
-export { Layout } from './layouts/Layout';
-export type { LayoutEvents, LayoutEndReason, LayoutOptions } from './layouts/Layout';
-
-export { animatePositions, DEFAULT_POSITION_TRANSITION_MS } from './layouts/animatePositions';
-export type { PositionTransition, PositionTransitionOptions } from './layouts/animatePositions';
-
-// ─── Engine-side geometry + time (P6 split) ──────────────────────────────
-// Routers, path styles, anchors, path sampling, badge placement and tweens
-// answer *geometry* and *timing* questions — a spec goes in, a path or a number
-// comes out, with no display object anywhere. §5 requires that such answers not
-// need a backend (the same rule that put picking and bounds engine-side), so
-// these stay in `@invana/canvas` when `primitives/` leaves for the pixi package
-// and a second backend reuses them unchanged.
-export {
-  centerAnchor,
-  boundaryAnchor,
-  perpendicularAnchor,
-  edgePortAnchor,
-  silhouettePortAnchor,
-  straightRouter,
-  orthRouter,
-  manhattanRouter,
-  metroRouter,
-  erRouter,
-  oneSideRouter,
-  normalPathStyle,
-  roundedPathStyle,
-  bezierPathStyle,
-  quadraticPathStyle,
-  bumpRadialPathStyle,
-  bumpHorizontalPathStyle,
-  smoothPathStyle,
-  stepRadialPathStyle,
-  bundlePathStyle,
-  loopPolylinePathStyle,
-  loopCurvePathStyle,
-  LOOP_CURVE_PRESETS,
-  samplePath,
-  samplePathAt,
-  tangentAt,
-  pathBounds,
-  trimPathEnds,
-  distanceToPolylineSq,
-  type LoopCurvePresetName,
-} from './connectors';
-
-export {
-  DEFAULT_ENDPOINT_BADGE_GAP_PX,
-  resolveBadgePosition,
-  originToBadgeLocal,
-  resolveConnectorBadgePosition,
-} from './badges';
-export type { BadgeOptions, BadgePlacement, NamedBadgePlacement, ConnectorBadgePlacement } from './badges';
-
-export { Tween } from './animation';
-export type { TweenOptions } from './animation';
-
-// ─── Animation easings (reusable by layouts / effects / consumers) ────────
-export {
-  linear,
-  easeInOutSine,
-  easeOutCubic,
-  easeInOutCubic,
-  easeOutQuad,
-  resolveEasing,
-  EASING_NAMES,
-} from './animation/easings';
-export type { Easing, EasingName } from './animation/easings';
-
-// ─── Registries ─────────────────────────────────────────────────────────
-export { LayerRegistry } from './registries/LayerRegistry';
-export type { LayerRegistryOptions } from './registries/LayerRegistry';
-
-export { BehaviourRegistry } from './registries/BehaviourRegistry';
-export type { BehaviourRegistryOptions } from './registries/BehaviourRegistry';
-
-export { LayoutRegistry } from './registries/LayoutRegistry';
-export type { LayoutRegistryOptions } from './registries/LayoutRegistry';
-
 // ─── Engine ─────────────────────────────────────────────────────────────
 export { Canvas } from './engine/Canvas';
 export type { CanvasOptions } from './engine/Canvas';
@@ -354,33 +327,31 @@ export type { CanvasConfig } from './engine/CanvasConfig';
 // building config (deep-merging defaults under overrides) merge identically.
 export { deepMerge } from './engine/CanvasConfig';
 
-
+// ─── io: export / import ─────────────────────────────────────────────────────
 // Raster export (viewport / whole-diagram → PNG / JPEG / WebP). `Canvas.export`
 // / `Canvas.exportDataURL` delegate here; the standalone functions are exported
 // for callers holding a bare `Canvas` in a util.
-export { exportImage, exportImageDataURL } from './export/imageExport';
+export { exportImage, exportImageDataURL } from './io/imageExport';
 export type {
   ExportImageOptions,
   ExportRasterFormat,
   ExportArea,
   ExportBackground,
-} from './export/imageExport';
+} from './io/imageExport';
 
-// True vector SVG export — a second projection of the scene into scalable
-// markup. `Canvas.exportSVGString` / `Canvas.export({ format: 'svg' })` delegate
-// to `exportSVG`; the per-spec serialisers are exported for advanced callers.
+// True vector SVG export — `exportSVG` assembles the document; the per-spec
+// serialisers live in `@invana/canvas-core` and are re-exported for advanced
+// callers.
 export {
   exportSVG,
   shapeSpecToSvg,
   connectorToSvg,
   pathToSvgD,
-} from './export/svgExport';
-export type { ExportSvgOptions, SvgExportableLayer } from './export/svgExport';
+} from './io/svgExport';
+export type { ExportSvgOptions, SvgExportableLayer } from './io/svgExport';
 
 // Full-state JSON export/import — serialise the canvas's view definition +
-// interaction + per-layer data to a plain document and restore it. `Canvas.
-// exportState` / `Canvas.importState` delegate here; the standalone functions
-// are exported for callers holding a bare `Canvas` in a util.
+// interaction + per-layer data to a plain document and restore it.
 export {
   exportCanvasState,
   importCanvasState,
@@ -389,7 +360,7 @@ export {
   importCanvasStateFromFile,
   jsonSafe,
   CANVAS_STATE_VERSION,
-} from './export/stateExport';
+} from './io/stateExport';
 export type {
   CanvasStateSnapshot,
   CanvasInteractionSnapshot,
@@ -397,4 +368,4 @@ export type {
   ImportCanvasStateOptions,
   DataSerializableLayer,
   DefinitionSerializable,
-} from './export/stateExport';
+} from './io/stateExport';

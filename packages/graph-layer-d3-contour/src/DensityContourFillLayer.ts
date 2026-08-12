@@ -8,7 +8,7 @@
 
 import type { ContourMultiPolygon } from 'd3-contour';
 
-import type { PathSpec } from '@invana/canvas/specs';
+import type { PathSpec } from '@invana/canvas';
 import { DensityContourLayerBase } from './DensityContourLayerBase';
 import { DENSITY_CONTOUR_PALETTES, lerpColor, sampleStops } from './palettes';
 import type { DensityContourFillLayerOptions } from './types';

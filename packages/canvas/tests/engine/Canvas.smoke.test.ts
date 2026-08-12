@@ -10,11 +10,11 @@
  */
 
 import { describe, expect, it, vi } from 'vitest';
-import { HeadlessRenderer } from '../../src/renderer/HeadlessRenderer';
+import { HeadlessRenderer } from '@invana/canvas-core';
 import { Canvas } from '../../src/engine/Canvas';
 import { WorldLayer } from '../../src/layers/WorldLayer';
-import { Behaviour } from '../../src/behaviours/Behaviour';
-import type { CanvasContext } from '../../src/context/CanvasContext';
+import { Behaviour } from '@invana/canvas-core';
+import type { CanvasContext } from '@invana/canvas-core';
 import type { DirtySnapshot } from '@invana/canvas-store';
 
 // ─── Test types ───────────────────────────────────────────────────────────

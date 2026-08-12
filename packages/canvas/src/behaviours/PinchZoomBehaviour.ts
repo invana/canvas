@@ -9,8 +9,8 @@
  * when you have a separate `DragPanBehaviour` and don't want conflicts).
  */
 
-import { Behaviour, type BehaviourOptions } from './Behaviour';
-import type { CanvasContext } from '../context/CanvasContext';
+import { Behaviour, type BehaviourOptions } from '@invana/canvas-core';
+import type { CanvasContext } from '@invana/canvas-core';
 
 export interface PinchZoomBehaviourOptions extends BehaviourOptions {
   /**

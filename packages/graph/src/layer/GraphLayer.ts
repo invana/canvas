@@ -17,9 +17,9 @@ import { SpecProjector } from '@invana/canvas';
 import type { SpecStore } from '@invana/canvas';
 import { WorldLayer, jsonSafe, type IElementRenderer, type SurfaceOptions } from '@invana/canvas';
 import type { CanvasContext, LayerOptions, WorldLayerHit } from '@invana/canvas';
-import type { BaseConnectorSpec, BaseShapeSpec, ConnectorLabelStyle, ShapeLabelStyle } from '@invana/canvas/specs';
-import type { BadgeOptions } from '@invana/canvas/specs';
-import type { DecorationSpec, EffectSpec, Rect, ShapeFillLayer } from '@invana/canvas/specs';
+import type { BaseConnectorSpec, BaseShapeSpec, ConnectorLabelStyle, ShapeLabelStyle } from '@invana/canvas';
+import type { BadgeOptions } from '@invana/canvas';
+import type { DecorationSpec, EffectSpec, Rect, ShapeFillLayer } from '@invana/canvas';
 
 import { GraphStore } from '../store/GraphStore';
 import type { EdgeDirection, GraphEdge, GraphNode } from '../store/types';

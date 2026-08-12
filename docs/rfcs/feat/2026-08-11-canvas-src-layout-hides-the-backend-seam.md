@@ -1,4 +1,26 @@
+---
+id: feat-2026-08-11-canvas-src-layout-hides-the-backend-seam
+type: feat
+title: The packages/canvas/src layout hides the backend seam
+status: superseded
+opened: 2026-08-11
+decided: 2026-08-12
+landed: null
+packages: [pkg:@invana/canvas]
+design_of_record: null
+relations:
+  - { predicate: superseded-by, object: rfc:feat-2026-08-12-engine-package-structure }
+---
+
 # `packages/canvas/src` — file and folder structure
+
+> **Superseded** (2026-08-12) by
+> [`2026-08-12-engine-package-structure.md`](./2026-08-12-engine-package-structure.md).
+> What survives: the Now-tree, the `core/` staging idea, the `./specs` deletion case,
+> the `theme/` dedup, and the new-file list. What changed: rule 2 is **reversed** — the
+> `Layer`/`Behaviour`/`Layout` abstracts move into `core/abstracts/` (plus `ICanvasContext`
+> and the gesture types), `engine/camera/` + `engine/input/` are flattened into `engine/`,
+> and `layouts/` disappears (`animatePositions` is core material).
 
 16 top-level folders / 76 files → **6 top-level folders / 79 files**.
 

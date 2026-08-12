@@ -1,7 +1,10 @@
 # CLAUDE.md — packages/renderer-pixijs (`@invana/renderer-pixijs`)
 
 **The PixiJS drawing backend.** Implements the renderer contract from
-`@invana/canvas` and owns every pixi import in the repo.
+`@invana/canvas-core` (imported via `@invana/canvas`, which re-exports it) and
+owns every pixi import in the repo. Its `src/` layout — `renderer/` (the
+contract implementation) · `primitives/` (everything that draws) · `assets/`
+(loaded resources) — is the layout template a `renderer-threejs` would follow.
 
 **Status:** landed. P6 of the renderer split is complete — see
 `docs/renderer-split-design.md`.
@@ -22,13 +25,13 @@ package**, and that is enforced two ways: `pnpm check-boundaries`
 
 | Area | Contents |
 |---|---|
-| Bootstrap | `PixiRenderer` — the pixi `Application`, WebGPU→WebGL fallback, shared texture-pool ref-count, render-crash guard, drawing surface, resize plumbing, scene root |
-| Surfaces | `PixiSurface` — a layer's slice: spec projection, overlays, visibility, paint order, `setBackdrop` |
-| Drawing | `PrimitivesRenderer` + `shapes/`, `connectors/Connector.ts`, `decorations/`, `effects/`, `markers/`, `paint/`, `base/`, `instancing/` |
-| Assets | `TextureRegistry`, `loadIconFont` |
-| Camera | `PixiViewportBinding` — the `pixi-viewport` realisation of `ICameraBinding` |
-| Overlays | `PixiOverlayDevice` — the 11-op immediate-mode device for transient visuals |
-| Capability probing | `rendererSupport` — `hasWebGPUApi` / `canUseWebGPU` / `resolveRenderPreference`. These interrogate *pixi's* backends, which is why they live here |
+| Bootstrap | `renderer/PixiRenderer` — the pixi `Application`, WebGPU→WebGL fallback, shared texture-pool ref-count, render-crash guard, drawing surface, resize plumbing, scene root |
+| Surfaces | `renderer/PixiSurface` — a layer's slice: spec projection, overlays, visibility, paint order, `setBackdrop` |
+| Drawing | `renderer/PrimitivesRenderer` (+ `renderer/mounted/`) over `primitives/` — `base/`, `shapes/`, `paint/`, `connectors/` (incl. `ArrowMarker`), `decorations/` (shape + connector), `effects/` (flat) |
+| Assets | `assets/` — `TextureRegistry`, `sharedTexturePool`, `loadIconFont` |
+| Camera | `renderer/PixiViewportBinding` — the `pixi-viewport` realisation of `ICameraBinding` |
+| Overlays | `renderer/PixiOverlayDevice` — the 11-op immediate-mode device for transient visuals |
+| Capability probing | `renderer/rendererSupport` — `hasWebGPUApi` / `canUseWebGPU` / `resolveRenderPreference`. These interrogate *pixi's* backends, which is why they live here |
 
 ## What it must never own
 

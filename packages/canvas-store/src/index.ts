@@ -28,11 +28,11 @@ export { computeChange, applyDeepPartial, changedPaths } from './port/patch';
 export { createStoreFromCell } from './port/store-core';
 
 // ── Adapters ──────────────────────────────────────────────────────────────────
-export { createReactiveStore } from './adapters/zustand/createReactiveStore';
+export { createReactiveStore } from './adapters/zustand';
 export { createMemoryStore } from './port/createMemoryStore';
 
 // ── Geometry vocabulary ─────────────────────────────────────────────────────────
-export type { Point, Vec2, Size, Rect, CameraTransform } from './geom/types';
+export type { Point, Vec2, Size, Rect, CameraTransform } from './geom';
 
 // ── View (state) ──────────────────────────────────────────────────────────────
 export { defaultCanvasView, type CanvasView, type CanvasSceneOptions } from './view/CanvasView';
@@ -68,9 +68,9 @@ export { DirtyBatcher, type DirtySnapshot } from './data/DirtyBatcher';
 export type { DataSource } from './data/DataSource';
 
 // ── Renderer seam: the device-shaped half only ────────────────────────────────
-// `IRenderer` itself lives in `@invana/canvas` — it is made of spec vocabulary,
-// which the kernel does not own. See `renderer/IRenderer.ts` for the full note.
-export type { RendererBackend } from './renderer/IRenderer';
+// `IRenderer` itself lives in `@invana/canvas-core` — it is made of spec vocabulary,
+// which the kernel does not own. See `renderer/backend.ts` for the full note.
+export type { RendererBackend } from './renderer/backend';
 export type { RendererInitOptions } from './renderer/RendererInitOptions';
 
 // ── Events ────────────────────────────────────────────────────────────────────
@@ -156,13 +156,13 @@ export type {
   FramePhaseTimings,
   FrameTick,
   FrameStats,
-} from './perf/frame';
+} from './frame';
 
 // ── History ───────────────────────────────────────────────────────────────────
-export { createHistory, type History } from './history/createHistory';
+export { createHistory, type History } from './view/createHistory';
 
 // ── Actions (named, action-typed command API) ─────────────────────────────────
-export { createActions, type CanvasActions } from './actions/createActions';
+export { createActions, type CanvasActions } from './view/createActions';
 
 // ── Kernel façade ─────────────────────────────────────────────────────────────
 export {

@@ -19,7 +19,7 @@
 
 import { SpecProjector, WorldLayer } from '@invana/canvas';
 import type { SpecStore } from '@invana/canvas';
-import type { BaseShapeSpec, PathSpec } from '@invana/canvas/specs';
+import type { BaseShapeSpec, PathSpec } from '@invana/canvas';
 import type { CanvasContext, LayerOptions, WorldLayerHit } from '@invana/canvas';
 import { GraphLayer } from '@invana/graph';
 import { contourDensity, type ContourMultiPolygon } from 'd3-contour';

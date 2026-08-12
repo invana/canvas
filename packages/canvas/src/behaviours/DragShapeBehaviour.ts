@@ -32,9 +32,9 @@
  * `reRouteAllConnectors`. No private access.
  */
 
-import { Behaviour, type BehaviourOptions } from './Behaviour';
-import type { CanvasContext } from '../context/CanvasContext';
-import type { IElementRenderer } from '../renderer/IElementRenderer';
+import { Behaviour, type BehaviourOptions } from '@invana/canvas-core';
+import type { CanvasContext } from '@invana/canvas-core';
+import type { IElementRenderer } from '@invana/canvas-core';
 
 export interface DragShapeBehaviourOptions extends BehaviourOptions {
   /** The renderer whose shapes this behaviour can drag. */

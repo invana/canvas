@@ -18,7 +18,7 @@
 
 import { SpecProjector, WorldLayer } from '@invana/canvas';
 import type { SpecStore } from '@invana/canvas';
-import type { BaseShapeSpec, PathSpec, ShapeLabelStyle } from '@invana/canvas/specs';
+import type { BaseShapeSpec, PathSpec, ShapeLabelStyle } from '@invana/canvas';
 import type { CanvasContext, LayerOptions, WorldLayerHit } from '@invana/canvas';
 import { GraphLayer } from '@invana/graph';
 import type { GraphNode } from '@invana/graph';
