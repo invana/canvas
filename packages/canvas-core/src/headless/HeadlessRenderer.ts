@@ -16,8 +16,8 @@
  * ```
  */
 
-import { EventEmitter } from '@invana/canvas-store';
-import type { Camera } from '../Camera';
+import { EventEmitter } from '../state/events/EventEmitter';
+import type { Camera } from '../abstracts/Camera';
 import type { ICameraBinding } from '../contracts/ICameraBinding';
 import type { IElementRenderer } from '../contracts/IElementRenderer';
 import type { IOverlayDevice } from '../contracts/IOverlayDevice';
@@ -26,8 +26,8 @@ import type {
   RendererCapabilities,
 } from '../contracts/IRenderer';
 import type { ISurface, SurfaceBackdrop, SurfaceSpace } from '../contracts/ISurface';
-import type { ElementEventMap } from '@invana/canvas-store';
-import type { Rect } from '@invana/canvas-store';
+import type { ElementEventMap } from '../specs';
+import type { Rect } from '../specs/geom';
 import { HeadlessCameraBinding } from './HeadlessCameraBinding';
 
 /** An `IOverlayDevice` that records nothing and draws nothing. */

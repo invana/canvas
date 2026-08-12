@@ -22,9 +22,9 @@
  * reference tracers for debugging / tests / the playground.
  */
 
-import type { LayerFlush } from '../data/LayerData';
-import type { CanvasEvent } from '../events/CanvasEvent';
-import type { CanvasEventBus, TapOptions } from '../events/CanvasEventBus';
+import type { LayerFlush } from '@invana/canvas-core';
+import type { CanvasEvent } from '@invana/canvas-core';
+import type { CanvasEventBus, TapOptions } from '@invana/canvas-core';
 import type { TelemetryEvent, TelemetrySink } from './withTelemetry';
 
 /** Attribute value types a span accepts (the OpenTelemetry-compatible subset). */

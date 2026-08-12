@@ -42,10 +42,11 @@
  *   it, and the renderer only answers `HitGeometrySource`.
  */
 
-import type { RendererBackend, RendererInitOptions } from '@invana/canvas-store';
-import type { Camera } from '../Camera';
+import type { RendererBackend } from './backend';
+import type { RendererInitOptions } from './RendererInitOptions';
+import type { Camera } from '../abstracts/Camera';
 import type { ICameraBinding } from './ICameraBinding';
-import type { Rect } from '@invana/canvas-store';
+import type { Rect } from '../specs/geom';
 import type { IOverlayDevice, OverlaySpace } from './IOverlayDevice';
 import type { ISurface, SurfaceOptions, SurfaceSpace } from './ISurface';
 

@@ -22,14 +22,14 @@
  * interface that lied would not let the package split at all.
  */
 
-import type { Point, Rect } from '@invana/canvas-store';
-import type { BaseConnectorSpec, BaseShapeSpec } from '@invana/canvas-store';
-import type { DecorationSpec, EffectSpec } from '@invana/canvas-store';
-import type { LabelContent, LabelWrap } from '@invana/canvas-store';
-import type { BadgeOptions } from '@invana/canvas-store';
-import type { HitResult } from '@invana/canvas-store';
-import type { ElementEventMap } from '@invana/canvas-store';
-import type { EventEmitter } from '@invana/canvas-store';
+import type { Point, Rect } from '../specs';
+import type { BaseConnectorSpec, BaseShapeSpec } from '../specs';
+import type { DecorationSpec, EffectSpec } from '../specs';
+import type { LabelContent, LabelWrap } from '../specs';
+import type { BadgeOptions } from '../specs';
+import type { HitResult } from '../specs';
+import type { ElementEventMap } from '../specs';
+import type { EventEmitter } from '../state/events/EventEmitter';
 import type { SpecProjectionTarget } from './SpecProjector';
 
 /**

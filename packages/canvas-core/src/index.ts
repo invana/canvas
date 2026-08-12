@@ -9,9 +9,13 @@
 //     geometry, animation and svg helpers;
 //   - `@invana/canvas` — the orchestrator — wires both sides together.
 //
-// Depends only on `@invana/canvas-store` (the renderer-free kernel). No drawing
-// library, no third-party library, no engine import — `@invana/canvas` depends
-// on this package, never the reverse.
+// **Depends on nothing** — no workspace package, no third-party library, not
+// even at the type level. This is the floor of the stack: `@invana/canvas-store`
+// (the state machinery) and `@invana/canvas` (the orchestrator) both build on
+// it, never the reverse. It also owns the whole *vocabulary*: the spec types
+// describing shapes/connectors/decorations/effects, the pure geometry over
+// them, the event bus + emitters, the theme signal, the data primitives, and
+// the `ReactiveStore` port contract the store machinery implements.
 
 // ─── Contracts: what a rendering backend implements ──────────────────────────
 export type {
@@ -69,24 +73,24 @@ export { DefaultGestureArbiter } from './abstracts/GestureArbiter';
 export type { GestureArbiter, GestureClaimOptions } from './abstracts/GestureArbiter';
 
 // ─── Camera semantics (renderer-free; the binding realises them) ─────────────
-export { Camera } from './Camera';
-export type { CameraOptions, CameraTransform, Rect, Point } from './Camera';
+export { Camera } from './abstracts/Camera';
+export type { CameraOptions, CameraTransform, Rect, Point } from './abstracts/Camera';
 export type {
   CameraInputConfig,
   CameraInputModifier,
   WheelInputOptions,
   PinchInputOptions,
-} from './Camera';
+} from './abstracts/Camera';
 
 // ─── Registries (reached as ctx.layers / ctx.behaviours; layouts on Canvas) ──
-export { LayerRegistry } from './registries/LayerRegistry';
-export type { LayerRegistryOptions } from './registries/LayerRegistry';
+export { LayerRegistry } from './abstracts/registries/LayerRegistry';
+export type { LayerRegistryOptions } from './abstracts/registries/LayerRegistry';
 
-export { BehaviourRegistry } from './registries/BehaviourRegistry';
-export type { BehaviourRegistryOptions } from './registries/BehaviourRegistry';
+export { BehaviourRegistry } from './abstracts/registries/BehaviourRegistry';
+export type { BehaviourRegistryOptions } from './abstracts/registries/BehaviourRegistry';
 
-export { LayoutRegistry } from './registries/LayoutRegistry';
-export type { LayoutRegistryOptions } from './registries/LayoutRegistry';
+export { LayoutRegistry } from './abstracts/registries/LayoutRegistry';
+export type { LayoutRegistryOptions } from './abstracts/registries/LayoutRegistry';
 
 // ─── Headless reference implementation (test double, not a product renderer) ─
 export {
@@ -128,7 +132,7 @@ export {
   trimPathEnds,
   distanceToPolylineSq,
   type LoopCurvePresetName,
-} from './geometry/connectors';
+} from './lib/geometry/connectors';
 
 // ─── Geometry: badge placement ───────────────────────────────────────────────
 export {
@@ -136,17 +140,17 @@ export {
   resolveBadgePosition,
   originToBadgeLocal,
   resolveConnectorBadgePosition,
-} from './geometry/badges';
+} from './lib/geometry/badges';
 export type {
   BadgeOptions,
   BadgePlacement,
   NamedBadgePlacement,
   ConnectorBadgePlacement,
-} from './geometry/badges';
+} from './lib/geometry/badges';
 
 // ─── Animation: tweens, easings, position transitions ────────────────────────
-export { Tween } from './animation';
-export type { TweenOptions } from './animation';
+export { Tween } from './lib/animation';
+export type { TweenOptions } from './lib/animation';
 export {
   linear,
   easeInOutSine,
@@ -155,10 +159,10 @@ export {
   easeOutQuad,
   resolveEasing,
   EASING_NAMES,
-} from './animation/easings';
-export type { Easing, EasingName } from './animation/easings';
-export { animatePositions, DEFAULT_POSITION_TRANSITION_MS } from './animation/animatePositions';
-export type { PositionTransition, PositionTransitionOptions } from './animation/animatePositions';
+} from './lib/animation/easings';
+export type { Easing, EasingName } from './lib/animation/easings';
+export { animatePositions, DEFAULT_POSITION_TRANSITION_MS } from './lib/animation/animatePositions';
+export type { PositionTransition, PositionTransitionOptions } from './lib/animation/animatePositions';
 
 // ─── SVG: pure spec → markup serialisers ─────────────────────────────────────
 export {
@@ -173,4 +177,92 @@ export {
   fillPaint,
   strokePaint,
   textContent,
-} from './svg';
+} from './lib/svg';
+
+// ─── Geometry vocabulary ─────────────────────────────────────────────────────
+// (`Point` / `Rect` are exported above via `./Camera`; `CameraTransform` too —
+// the geom alias is the same shape. `Vec2` / `Size` come via the specs star.)
+
+// ─── The spec vocabulary — what to draw, as plain data + pure geometry ───────
+export * from './specs';
+
+// ─── The store contract (implemented by @invana/canvas-store) ────────────────
+export type { CanvasStore } from './state/CanvasStore';
+
+// ─── ReactiveStore port (the contract; the engine lives in canvas-store) ─────
+export type {
+  ReactiveStore,
+  Update,
+  Recipe,
+  DeepPartial,
+  StoreChange,
+  StateCell,
+  Patch,
+} from './state/port/types';
+export { select, shallowEqual, defaultEqual, type Selected } from './state/port/select';
+
+// ─── View: the state shape + the named command API over it ───────────────────
+export { defaultCanvasView, type CanvasView, type CanvasSceneOptions } from './state/view/CanvasView';
+export { createActions, type CanvasActions } from './state/view/createActions';
+
+// ─── Events: the bus + emitters (instantiated by the store) ──────────────────
+export { EventEmitter, type Listener, type EventMap } from './state/events/EventEmitter';
+export {
+  type CanvasEvent,
+  type EventSource,
+  type EventSourceKind,
+  CANVAS_SOURCE,
+} from './state/events/CanvasEvent';
+export {
+  CanvasEventBus,
+  type CanvasGlobalEvents,
+  type Tap,
+  type TapOptions,
+} from './state/events/CanvasEventBus';
+export { SourceEmitter } from './state/events/SourceEmitter';
+
+// ─── Theme signal ────────────────────────────────────────────────────────────
+export type { ResolvedTheme, ThemeState, ThemeMode, ThemeKind } from './state/theme/types';
+export { CanvasThemeState } from './state/theme/CanvasThemeState';
+
+// ─── Data primitives (dep-free; the machine-rate lane's building blocks) ─────
+export { scheduleFlush, type FlushMode } from './state/data/flush';
+export {
+  LayerData,
+  NODE_FLAG,
+  type NodeRecord,
+  type EdgeRecord,
+  type GroupRecord,
+  type AnnotationRecord,
+  type LayerFlush,
+  type NodeDelta,
+  type KindDelta,
+  type GraphInput,
+  type PosSchema,
+  type QueryStatus,
+  type IntentLogEntry,
+} from './state/data/LayerData';
+export {
+  ColumnStore,
+  type ColumnType,
+  type ColumnSchema,
+  type ColumnArray,
+  type ColumnValue,
+  type RowOf,
+  type ColumnStoreOptions,
+} from './state/data/ColumnStore';
+export { DirtyBatcher, type DirtySnapshot } from './state/data/DirtyBatcher';
+export type { DataSource } from './state/data/DataSource';
+
+// ─── Renderer seam: the device-shaped half ───────────────────────────────────
+export type { RendererBackend } from './contracts/backend';
+export type { RendererInitOptions } from './contracts/RendererInitOptions';
+
+// ─── Frame observability contract ────────────────────────────────────────────
+export type {
+  InteractionKind,
+  FramePhase,
+  FramePhaseTimings,
+  FrameTick,
+  FrameStats,
+} from './state/frame';

@@ -2,14 +2,14 @@ import { HeadlessCameraBinding } from '../../src/headless/HeadlessCameraBinding'
 import { HeadlessSurface } from '../../src/headless/HeadlessRenderer';
 import { describe, expect, it, vi } from 'vitest';
 import { Layer } from '../../src/abstracts/Layer';
-import { CanvasEventBus } from '@invana/canvas-store';
-import { Camera } from '../../src/Camera';
+import { CanvasEventBus } from '../../src/state/events/CanvasEventBus';
+import { Camera } from '../../src/abstracts/Camera';
 import { DefaultGestureArbiter } from '../../src/abstracts/GestureArbiter';
-import { LayerRegistry } from '../../src/registries/LayerRegistry';
-import { BehaviourRegistry } from '../../src/registries/BehaviourRegistry';
+import { LayerRegistry } from '../../src/abstracts/registries/LayerRegistry';
+import { BehaviourRegistry } from '../../src/abstracts/registries/BehaviourRegistry';
 import type { CanvasContext } from '../../src/abstracts/CanvasContext';
-import type { DirtySnapshot } from '@invana/canvas-store';
-import { createCanvasStore } from '@invana/canvas-store';
+import type { DirtySnapshot } from '../../src/state/data/DirtyBatcher';
+import { fakeCanvasStore, fakeStateStore } from '../helpers/makeContext';
 
 type TState = { count: number };
 type TEvents = { 'tick:done': { count: number } };
@@ -45,14 +45,31 @@ function makeContext() {
   let ctx: CanvasContext;
   const layers = new LayerRegistry({ getContext: () => ctx, bus });
   const behaviours = new BehaviourRegistry({ getContext: () => ctx, bus });
-  ctx = { events: bus, store: createCanvasStore(), camera, gestures: new DefaultGestureArbiter(), layers, behaviours, theme: { current: () => null, set: () => {} }, showMessage: () => {}, clearMessage: () => {}, createOverlay: () => ({}) as never, createSurface: (space, id) => new HeadlessSurface(id, space) };
+  ctx = { events: bus, store: fakeCanvasStore(bus), createStateStore: (initial) => fakeStateStore(initial), camera, gestures: new DefaultGestureArbiter(), layers, behaviours, theme: { current: () => null, set: () => {} }, showMessage: () => {}, clearMessage: () => {}, createOverlay: () => ({}) as never, createSurface: (space, id) => new HeadlessSurface(id, space) };
   return ctx;
 }
 
 describe('Layer — construction', () => {
-  it('builds state via createState()', () => {
+  it('builds state via createState() at first mount (ctx.createStateStore)', () => {
     const layer = new TestLayer({ id: 'a', options: { initial: 42 } });
+    layer.mount(makeContext());
     expect(layer.state.getState()).toEqual({ count: 42 });
+  });
+
+  it('state access before the first mount throws', () => {
+    const layer = new TestLayer({ id: 'a', options: { initial: 42 } });
+    expect(() => layer.state).toThrow(/before the first mount/);
+  });
+
+  it('state survives an unmount/remount cycle', () => {
+    const layer = new TestLayer({ id: 'a', options: { initial: 1 } });
+    layer.mount(makeContext());
+    layer.state.update((d) => {
+      d.count = 99;
+    });
+    layer.unmount();
+    layer.mount(makeContext());
+    expect(layer.state.getState()).toEqual({ count: 99 });
   });
 
   it('honours visible/hittable/zIndex/cullable defaults', () => {

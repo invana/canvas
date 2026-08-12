@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createMemoryStore } from '../../src/port/createMemoryStore';
 import { createReactiveStore } from '../../src/adapters/zustand';
-import type { ReactiveStore } from '../../src/port/types';
+import type { ReactiveStore } from '@invana/canvas-core';
 
 interface S {
   count: number;

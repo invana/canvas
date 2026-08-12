@@ -8,7 +8,7 @@ import { DefaultGestureArbiter } from '@invana/canvas-core';
 import { LayerRegistry } from '@invana/canvas-core';
 import { BehaviourRegistry } from '@invana/canvas-core';
 import type { CanvasContext } from '@invana/canvas-core';
-import { createCanvasStore } from '@invana/canvas-store';
+import { createCanvasStore, createMemoryStore } from '@invana/canvas-store';
 
 class TestWorldLayer extends WorldLayer<{ readonly hits: { x: number; y: number; id: string }[] }> {
   protected createState(): object {
@@ -33,7 +33,7 @@ function makeContext() {
   let ctx: CanvasContext;
   const layers = new LayerRegistry({ getContext: () => ctx, bus });
   const behaviours = new BehaviourRegistry({ getContext: () => ctx, bus });
-  ctx = { events: bus, store: createCanvasStore(), camera, gestures: new DefaultGestureArbiter(), layers, behaviours, theme: { current: () => null, set: () => {} }, showMessage: () => {}, clearMessage: () => {}, createOverlay: () => ({}) as never, createSurface: (space, id) => new HeadlessSurface(id, space) };
+  ctx = { events: bus, store: createCanvasStore(), createStateStore: (initial) => createMemoryStore(initial), camera, gestures: new DefaultGestureArbiter(), layers, behaviours, theme: { current: () => null, set: () => {} }, showMessage: () => {}, clearMessage: () => {}, createOverlay: () => ({}) as never, createSurface: (space, id) => new HeadlessSurface(id, space) };
   // The surfaces the layer asks for, so a test can assert lifecycle without a
   // scene graph — `ctx` carries no display object any more.
   const surfaces = new Map<string, HeadlessSurface>();

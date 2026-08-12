@@ -34,8 +34,8 @@ All in-repo packages are `0.0.7` (except the `@repo/*` configs and the private `
 
 | Path | Package | Role | 3rd-party deps |
 |---|---|---|---|
-| `packages/canvas-store` | `@invana/canvas-store` | **renderer-free kernel (foundation).** Owns **one `CanvasStore { view, data, events }` per `Canvas`** — the hub the engine writes to *and* subscribes from: **`view`** (`ReactiveStore<CanvasView>` — config + interaction state, behind the port: zustand now, Yjs later), **`data`** (owned, keyed `DataStore`s — the graph; positions/bulk are an internal typed-array detail, never the reactive path), **`events`** (the `CanvasEventBus` + tap), plus **telemetry** + **history**. Also owns the **spec vocabulary** (`specs/` — the plain-data description of what to draw, plus the pure geometry over it and `SpecStore`) and **picking** (`hit/` — the rbush spatial index + narrow phase). **Renderer-free leaf: zero `@invana` deps, imports no drawing library** — specs *describe* drawing, they never perform it. See `docs/canvas-state-plan.md`. | `zustand`, `immer`, `rbush` (later `yjs`) |
-| `packages/canvas-core` | `@invana/canvas-core` | **contracts + abstracts** — what a package that is *not* the engine programs against: the **renderer contract** (`contracts/` — `IRenderer` / `ISurface` / `IElementRenderer` / `IOverlayDevice` / `ICameraBinding`, `SpecProjector`), the **abstracts** (`abstracts/` — `Layer` / `Behaviour` / `Layout` bases, `CanvasContext`, `GestureArbiter`), `Camera` semantics, the registries, **connector geometry** (`geometry/connectors/`), badge placement, tweens, the pure SVG serialisers, and the headless reference implementation. A backend *implements* it; an extension *extends* it; **never imports `@invana/canvas`**. See its `CLAUDE.md`. | — (dep: `@invana/canvas-store`) |
+| `packages/canvas-core` | `@invana/canvas-core` | **the dependency-free FLOOR of the stack** — imports nothing (no workspace package, no third-party lib; enforced by the `core-purity` boundary). Owns the whole **vocabulary**: the **spec types** (`specs/` — shapes/connectors/decorations/effects as plain data + the pure geometry over them + `SpecStore`), `geom`/`frame`, the **event bus + emitters** (`events/` — classes here, instances store-owned), the **theme signal**, the **data primitives** (`data/` — `ColumnStore`, `LayerData`, `DirtyBatcher`, flush scheduling), the **`ReactiveStore` port contract** (types + `select`; structural `Patch`), `CanvasView` + the named command API (`view/createActions`), the **renderer contract** (`contracts/` — `IRenderer` / `ISurface` / `IElementRenderer` / `IOverlayDevice` / `ICameraBinding`, `SpecProjector`, `RendererBackend`), the **abstracts** (`abstracts/` — `Layer` / `Behaviour` / `Layout` bases, `CanvasContext` incl. the `createStateStore` factory seam, `GestureArbiter`), `Camera` semantics, the registries, connector geometry, badges, animation, the SVG serialisers, and the headless double. A backend *implements* it; an extension *extends* it; the store *machinery* implements its port. See its `CLAUDE.md`. | — (no deps at all) |
+| `packages/canvas-store` | `@invana/canvas-store` | **the state MACHINERY** over the core's contracts: the immer patch engine + `ReactiveStore` adapters (`port/` + `adapters/zustand.ts` — zustand now, Yjs later), **history/undo**, **picking** (`hit/` — the rbush spatial index over core's spec geometry), **telemetry**, and `createCanvasStore` — the factory assembling **one `CanvasStore { view, data, events }` per `Canvas`** (the hub the engine writes to *and* subscribes from; the *interface* lives in core). Re-exports the core vocabulary so kernel consumers keep working unchanged. **The only home of the state libraries.** See `docs/canvas-state-plan.md`. | `zustand`, `immer`, `rbush` (later `yjs`) (dep: `@invana/canvas-core`) |
 | `packages/canvas` | `@invana/canvas` | the **renderer-agnostic orchestrator** — `Canvas` (builds the concrete context, owns the tick + renderer lifecycle), `CanvasConfig`, built-in layers (`Background`/`DevInfo`/`LayersPanel` + the `World`/`Screen` bases) and behaviours (drag-pan/zoom/LOD…), and `io/` (raster + SVG-document + state export/import). **Re-exports the whole `@invana/canvas-core` surface and the kernel's spec vocabulary + picking** so consumers keep importing everything from here. **Imports no drawing library, and no third-party library at all** — its dependencies are `@invana/canvas-core` + `@invana/canvas-store`; `@invana/renderer-pixijs` is an *optional peer*, lazily imported as the default backend. | — (deps: `@invana/canvas-core`, `@invana/canvas-store`) |
 | `packages/renderer-pixijs` | `@invana/renderer-pixijs` | **the PixiJS drawing backend — the only package in the repo that imports a drawing library.** Implements `IRenderer` / `ISurface` / `IElementRenderer` / `ICameraBinding`: the pixi `Application`, the viewport binding, all of `primitives/` (shapes, connectors, decorations, effects, markers, paint), textures and fonts. Enforced by `pnpm check-boundaries`. See its `CLAUDE.md`. | `pixi.js`, `pixi-viewport` (peers: `@invana/canvas`, `@invana/canvas-store`) |
 | `packages/graph` | `@invana/graph` | graph domain on top of the engine — `GraphLayer`, `MiniMapLayer`, `GraphCanvas`, hover/click/lasso/brush/drag/select/context-menu/etc. behaviours, `OneShotPositionLayout` base | — (peer: `@invana/canvas`) |
@@ -88,17 +88,21 @@ All in-repo packages are `0.0.7` (except the `@repo/*` configs and the private `
 ### Dependency layering (use when adding/bumping workspace deps)
 
 ```
-@invana/canvas-store  (renderer-free KERNEL — zero @invana deps, no drawing-lib import; store +
-   ▲                   events + telemetry + history + the SPEC VOCABULARY + PICKING)
-   │   (consumed by canvas-core, canvas, graph, canvas-react)
+@invana/canvas-core  (the dependency-free FLOOR — imports NOTHING. The vocabulary: specs +
+   ▲                  geometry + events/theme classes + data primitives + the ReactiveStore
+   │                  port CONTRACT + CanvasView/actions + renderer contracts + the
+   │                  Layer/Behaviour/Layout abstracts + CanvasContext + Camera + registries
+   │                  + connector geometry + badges + tweens + svg + the headless double.
+   │                  A backend IMPLEMENTS it, an extension EXTENDS it, the store machinery
+   │                  realises its port. Enforced by the `core-purity` boundary.)
    │
-@invana/canvas-core  (CONTRACTS + ABSTRACTS — IRenderer/ISurface/… + Layer/Behaviour/Layout
-   ▲                  bases + CanvasContext + Camera + registries + connector geometry + badges
-   │                  + tweens + svg serialisers + the headless double. A backend IMPLEMENTS it,
-   │                  an extension EXTENDS it; never imports @invana/canvas.)
+@invana/canvas-store  (the state MACHINERY — the ONLY home of zustand/immer/rbush: the immer
+   ▲                   patch engine + adapters behind core's port, history, picking, telemetry,
+   │                   and createCanvasStore { view, data, events }. Re-exports the core
+   │                   vocabulary for kernel consumers.)
    │
 @invana/canvas  (renderer-AGNOSTIC orchestrator: Canvas + built-in layers/behaviours + io.
-   ▲             Re-exports the whole canvas-core surface + the kernel's specs/picking, so
+   ▲             Re-exports the whole canvas-core surface + the store machinery, so
    │             consumers import everything from here. Imports NO drawing library — and no
    │             third-party library at all.)
    │
@@ -122,7 +126,9 @@ All in-repo packages are `0.0.7` (except the `@repo/*` configs and the private `
 
 > 🚧 The **canvas-react → canvas-ui** re-split (headless vs pixels; UI moving out of canvas-react, dep direction flipping to canvas-ui → canvas-react) is **in progress** — see `docs/ui-consolidation-plan.md`. The graph above shows the **target**; some UI still physically sits in canvas-react until the phased move completes.
 
-**Two boundaries are load-bearing here, and both are gated the same way.**
+**Three boundaries are load-bearing here, and all are gated the same way** (the third:
+**core-purity** — nothing under `packages/canvas-core/src` may import `@invana/canvas-store`,
+`@invana/canvas`, `zustand`, `immer`, or `rbush`; core is the floor and depends on nothing).
 
 1. **Renderer** — a drawing library may be imported *only* inside a backend package. If the engine
    needs something from a backend, add it to the contract in

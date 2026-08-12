@@ -30,9 +30,10 @@
  */
 
 import type { CanvasContext } from './CanvasContext';
-import type { EventMap, ReactiveStore } from '@invana/canvas-store';
-import { SourceEmitter, createReactiveStore } from '@invana/canvas-store';
-import { DirtyBatcher, type DirtySnapshot } from '@invana/canvas-store';
+import type { EventMap } from '../state/events/EventEmitter';
+import type { ReactiveStore } from '../state/port/types';
+import { SourceEmitter } from '../state/events/SourceEmitter';
+import { DirtyBatcher, type DirtySnapshot } from '../state/data/DirtyBatcher';
 
 // ─── Minimal interface that registries see ─────────────────────────────────
 
@@ -94,9 +95,35 @@ export abstract class Layer<
    */
   readonly kind?: string;
   readonly options: TOptions;
-  readonly state: ReactiveStore<TState>;
   readonly events: SourceEmitter<TEvents>;
   readonly dirty: DirtyBatcher<TDirtyBucket>;
+
+  /**
+   * Backing field for {@link state}. Created on **first mount** via
+   * `ctx.createStateStore` (the engine injects the reactive-store factory — this
+   * package is dependency-free and cannot construct one), then kept for the
+   * layer's lifetime: a remount reuses the same store, preserving state.
+   */
+  private _state?: ReactiveStore<TState>;
+
+  /**
+   * UI / interaction state (`ReactiveStore<TState>`). Because it is built
+   * through the injected kernel factory, every write emits patches and history /
+   * telemetry / a future CRDT backend all observe it.
+   *
+   * **Available from `mount()` onward** — accessing it before the first mount
+   * throws. (`createState()` is also called at first mount, so it may safely
+   * read subclass fields initialised in the subclass constructor.)
+   */
+  get state(): ReactiveStore<TState> {
+    if (!this._state) {
+      throw new Error(
+        `Layer "${this.id}": state is unavailable before the first mount() — ` +
+          'it is created via ctx.createStateStore when the layer mounts.',
+      );
+    }
+    return this._state;
+  }
 
   /** Backing field for the `visible` accessor. */
   private _visible: boolean = true;
@@ -150,12 +177,9 @@ export abstract class Layer<
     this.zIndex = opts.zIndex ?? 0;
     this.cullable = opts.cullable ?? true;
 
-    // State lives on the layer for its full lifetime. Created via the
-    // `createState()` hook so subclass generic types flow through cleanly.
-    // Built through the kernel's port rather than a raw store: every write
-    // produces immer patches + inverse patches, which is what lets history,
-    // telemetry and a future Yjs backend observe layer state at all.
-    this.state = createReactiveStore<TState>(this.createState());
+    // State is NOT created here — this package cannot construct a reactive
+    // store (the factory is immer/zustand-backed and lives in the kernel).
+    // `mount(ctx)` builds it via `ctx.createStateStore` on first mount.
 
     // Events emitter without bus initially; `mount()` attaches it to ctx.events.
     this.events = new SourceEmitter<TEvents>({ kind: 'layer', id: this.id });
@@ -170,6 +194,10 @@ export abstract class Layer<
       throw new Error(`Layer "${this.id}" already mounted`);
     }
     this.ctx = ctx;
+    // First mount builds the state store through the engine-injected factory
+    // (so layer state rides the same patch-emitting port as every other store);
+    // later remounts reuse it, preserving state across unmount/mount cycles.
+    this._state ??= ctx.createStateStore<TState>(this.createState());
     this.events.setBus(ctx.events);
     this.onMount(ctx);
   }

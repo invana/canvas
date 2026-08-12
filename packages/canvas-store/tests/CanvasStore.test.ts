@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { createCanvasStore } from '../src/CanvasStore';
-import type { CanvasEvent } from '../src/events/CanvasEvent';
+import type { CanvasEvent } from '@invana/canvas-core';
 import type { TelemetryEvent } from '../src/telemetry/withTelemetry';
 
 describe('createCanvasStore', () => {

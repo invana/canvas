@@ -1,14 +1,14 @@
 import { HeadlessCameraBinding } from '../../src/headless/HeadlessCameraBinding';
 import { HeadlessSurface } from '../../src/headless/HeadlessRenderer';
 import { describe, expect, it, vi } from 'vitest';
-import { BehaviourRegistry } from '../../src/registries/BehaviourRegistry';
-import { LayerRegistry } from '../../src/registries/LayerRegistry';
-import { CanvasEventBus } from '@invana/canvas-store';
-import { Camera } from '../../src/Camera';
+import { BehaviourRegistry } from '../../src/abstracts/registries/BehaviourRegistry';
+import { LayerRegistry } from '../../src/abstracts/registries/LayerRegistry';
+import { CanvasEventBus } from '../../src/state/events/CanvasEventBus';
+import { Camera } from '../../src/abstracts/Camera';
 import { DefaultGestureArbiter } from '../../src/abstracts/GestureArbiter';
 import type { IBehaviour } from '../../src/abstracts/Behaviour';
 import type { CanvasContext } from '../../src/abstracts/CanvasContext';
-import { createCanvasStore } from '@invana/canvas-store';
+import { fakeCanvasStore, fakeStateStore } from '../helpers/makeContext';
 
 function makeContext() {
   const bus = new CanvasEventBus();
@@ -21,7 +21,7 @@ function makeContext() {
   let ctx: CanvasContext;
   const layers = new LayerRegistry({ getContext: () => ctx, bus });
   const behaviours = new BehaviourRegistry({ getContext: () => ctx, bus });
-  ctx = { events: bus, store: createCanvasStore(), camera, gestures: new DefaultGestureArbiter(), layers, behaviours, theme: { current: () => null, set: () => {} }, showMessage: () => {}, clearMessage: () => {}, createOverlay: () => ({}) as never, createSurface: (space, id) => new HeadlessSurface(id, space) };
+  ctx = { events: bus, store: fakeCanvasStore(bus), createStateStore: (initial) => fakeStateStore(initial), camera, gestures: new DefaultGestureArbiter(), layers, behaviours, theme: { current: () => null, set: () => {} }, showMessage: () => {}, clearMessage: () => {}, createOverlay: () => ({}) as never, createSurface: (space, id) => new HeadlessSurface(id, space) };
   return ctx;
 }
 

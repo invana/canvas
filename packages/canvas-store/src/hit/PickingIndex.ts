@@ -26,11 +26,11 @@
  */
 
 import { HitIndex } from './HitIndex';
-import { boundsOfSpec, containsSpec } from '../specs/shapeGeometry';
-import type { BaseShapeSpec } from '../specs/shape';
-import type { BaseConnectorSpec } from '../specs/connector';
-import type { HitResult } from '../specs/hit';
-import type { Point, Rect } from '../specs/geometry';
+import { boundsOfSpec, containsSpec } from '@invana/canvas-core';
+import type { BaseShapeSpec } from '@invana/canvas-core';
+import type { BaseConnectorSpec } from '@invana/canvas-core';
+import type { HitResult } from '@invana/canvas-core';
+import type { Point, Rect } from '@invana/canvas-core';
 
 /** A sampled polyline — the densified form of a connector's routed path. */
 export type HitPolyline = readonly Point[];

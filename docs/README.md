@@ -24,6 +24,27 @@ working design-of-record documents. Day-to-day API/concept docs live in
     *shapes*, so the edges **between a frame's own members** are painted over. Scopes
     the landing of the `plane` axis from `render-planes-and-emphasis-plan.md` (design
     locked there, not here) + the blast radius across every `style.group` graph.
+  - [feat/2026-08-12-canvas-core-folder-sprawl.md](./rfcs/feat/2026-08-12-canvas-core-folder-sprawl.md)
+    — ✅ **landed 2026-08-12**. Two same-day landings left `canvas-core/src` with 13 top-level
+    folders + 4 loose root files; regrouped into **6 concern folders** (`specs/` incl. `geom.ts` ·
+    `state/` (CanvasStore/frame/port/view/data/events/theme) · `contracts/` · `abstracts/`
+    (+ Camera + registries) · `lib/` (geometry/svg/animation) · `headless/`). Internal-only —
+    both tsup entries and every external import site unchanged; verified 258 tests.
+  - [feat/2026-08-12-canvas-core-depends-on-the-kernel.md](./rfcs/feat/2026-08-12-canvas-core-depends-on-the-kernel.md)
+    — ✅ **landed 2026-08-12** (all rows; verified: build 20/20 · types 19/19 ·
+    boundaries incl. the new `core-purity` row · 258 tests · live Storybook smoke —
+    §8 records the background-tab rAF trap the smoke uncovered).
+    **Invert the bottom of the stack**: `canvas-core` becomes truly
+    dependency-free (the floor — vocabulary, contracts, abstracts, pure utils) and
+    `canvas-store` depends *on it*, keeping only the state machinery (the repo's three
+    third-party libs touch exactly 7 kernel files: immer ×5, zustand ×1, rbush ×1 —
+    measured). Moves the spec vocabulary + shapeGeometry + SpecStore, the event
+    bus/emitters, theme, and the dep-free data primitives (ColumnStore/LayerData/
+    DirtyBatcher) down into core. Three hard problems carried as design rows:
+    H1 `Layer.state` can no longer be built in the constructor (the memory store is
+    immer-backed at runtime — injection via a `ctx.createStateStore` factory),
+    H2 `CanvasContext`/`Camera` need a structural `ICanvasStore`, H3 core redeclares
+    immer's `Patch` structurally so even the type level is dep-free.
   - [feat/2026-08-12-engine-package-structure.md](./rfcs/feat/2026-08-12-engine-package-structure.md)
     — ✅ **landed 2026-08-12** (all 33 change rows; verified: build 20/20 · types 19/19 ·
     boundaries · 256 tests · live Storybook smoke incl. GraphVisualiser).

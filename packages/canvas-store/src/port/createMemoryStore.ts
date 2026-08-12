@@ -1,5 +1,5 @@
 import { createStoreFromCell } from './store-core';
-import type { ReactiveStore, StateCell } from './types';
+import type { ReactiveStore, StateCell } from '@invana/canvas-core';
 
 /**
  * A dependency-free, in-memory {@link ReactiveStore} — the reference adapter.

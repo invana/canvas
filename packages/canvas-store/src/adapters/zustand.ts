@@ -1,7 +1,7 @@
 import { createStore } from 'zustand/vanilla';
 
 import { createStoreFromCell } from '../port/store-core';
-import type { ReactiveStore, StateCell } from '../port/types';
+import type { ReactiveStore, StateCell } from '@invana/canvas-core';
 
 /**
  * The zustand-backed {@link ReactiveStore} adapter — **the only file in the

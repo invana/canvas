@@ -13,8 +13,8 @@
  * log stays a readable audit trail rather than noise. A `level` filter gates it.
  */
 
-import type { CanvasEvent } from '../events/CanvasEvent';
-import type { CanvasEventBus, TapOptions } from '../events/CanvasEventBus';
+import type { CanvasEvent } from '@invana/canvas-core';
+import type { CanvasEventBus, TapOptions } from '@invana/canvas-core';
 
 /** Log severities, low → high. */
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';

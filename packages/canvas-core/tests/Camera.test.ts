@@ -7,8 +7,8 @@
  */
 
 import { describe, expect, it, vi } from 'vitest';
-import { Camera, type CameraOptions } from '../src/Camera';
-import { CanvasEventBus } from '@invana/canvas-store';
+import { Camera, type CameraOptions } from '../src/abstracts/Camera';
+import { CanvasEventBus } from '../src/state/events/CanvasEventBus';
 import { HeadlessCameraBinding } from '../src/headless/HeadlessCameraBinding';
 
 function makeCamera(opts: Partial<CameraOptions> = {}) {

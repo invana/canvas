@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { createCanvasStore, type TelemetryEvent } from '../../src/index';
-import type { CanvasEvent } from '../../src/events/CanvasEvent';
+import type { CanvasEvent } from '@invana/canvas-core';
 
 /** Every kernel update is bridged onto `store.events` — these lock that contract. */
 

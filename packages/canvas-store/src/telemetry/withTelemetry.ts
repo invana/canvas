@@ -1,7 +1,7 @@
 import type { Patch } from 'immer';
 
 import { changedPaths } from '../port/patch';
-import type { ReactiveStore } from '../port/types';
+import type { ReactiveStore } from '@invana/canvas-core';
 
 /** One observable state mutation — OTel-agnostic; the app maps it to spans/metrics. */
 export interface TelemetryEvent {

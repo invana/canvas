@@ -16,9 +16,9 @@
  * disposer that detaches them all.
  */
 
-import type { CanvasEventBus, TapOptions } from '../events/CanvasEventBus';
-import type { ReactiveStore } from '../port/types';
-import type { CanvasView } from '../view/CanvasView';
+import type { CanvasEventBus, TapOptions } from '@invana/canvas-core';
+import type { ReactiveStore } from '@invana/canvas-core';
+import type { CanvasView } from '@invana/canvas-core';
 import {
   createConsoleLogger,
   createLogBridge,

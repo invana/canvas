@@ -107,6 +107,13 @@ measured fact, not conjecture — the plan is de-risked accordingly.
 
 ### 4.0 Target structure — all four packages, one tree
 
+> **Superseded in two places by later same-day RFCs:** the core↔store dependency edge was
+> **inverted** (`rfc:feat-2026-08-12-canvas-core-depends-on-the-kernel` — the vocabulary/state
+> primitives moved from `canvas-store` down into `canvas-core`), and `canvas-core/src` was then
+> regrouped into six concern folders (`specs/` · `state/` · `contracts/` · `abstracts/` · `lib/` ·
+> `headless/` — `rfc:feat-2026-08-12-canvas-core-folder-sprawl`). The `canvas` / `renderer-pixijs`
+> subtrees below remain accurate.
+
 The complete target layout (`★` = file that does not exist today; everything else moves in
 unchanged or with import-path fixes only). The before-state is not reproduced here — git and
 the superseded RFCs carry it; the per-package move tables below give every source path.

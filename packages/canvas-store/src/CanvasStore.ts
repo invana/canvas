@@ -1,65 +1,31 @@
-import { createActions, type CanvasActions } from './view/createActions';
+import {
+  CanvasEventBus,
+  CanvasThemeState,
+  LayerData,
+  SpecStore,
+  createActions,
+  defaultCanvasView,
+  type CanvasStore,
+  type CanvasView,
+  type DataSource,
+} from '@invana/canvas-core';
 import { createReactiveStore } from './adapters/zustand';
-import { CanvasEventBus } from './events/CanvasEventBus';
 import { createMemoryStore } from './port/createMemoryStore';
 import { changedPaths } from './port/patch';
-import type { ReactiveStore } from './port/types';
-import { LayerData } from './data/LayerData';
-import { SpecStore } from './specs/SpecStore';
-import type { DataSource } from './data/DataSource';
 import { wireTelemetry, type CanvasTelemetryConfig } from './telemetry/config';
-import { CanvasThemeState } from './theme/CanvasThemeState';
-import { defaultCanvasView, type CanvasView } from './view/CanvasView';
 
 /**
- * `CanvasStore` — the renderer-free kernel, one per `Canvas`. The single hub the
- * engine writes to *and* subscribes from:
- *
- * - {@link view} — reactive `ReactiveStore<CanvasView>` (config + interaction state).
- * - {@link data} — owned, keyed `LayerData` stores (the bulk graph; typed-array later).
- * - {@link events} — the canvas-wide `CanvasEventBus` (tap channel for telemetry /
- *   collaboration).
+ * The **implementation** of the `CanvasStore` contract, one per `Canvas` — the
+ * interface itself lives in `@invana/canvas-core` (so contracts and abstracts
+ * can type against the store without depending on this machinery). This module
+ * owns what the contract can't: the reactive-store backends, the state↔bus
+ * bridges, and telemetry wiring.
  *
  * **Every** update is bridged onto the bus, so one `events.tap(…)` / `events.on(…)`
  * sees the whole loop: `view` mutations → `state:change`; each layer's data flush →
  * `data:flush`. The engine wires pixi input events onto this same bus.
  */
-export interface CanvasStore {
-  /** Reactive config + interaction store (layers/behaviours/layouts settings, interaction). */
-  readonly view: ReactiveStore<CanvasView>;
-  /** Owned data, keyed by **source** id (D13 — each a {@link DataSource}). */
-  readonly data: Record<string, DataSource>;
-  /**
-   * Owned **spec** collections, keyed by layer id — the durable visual
-   * description each renderer projects. Populated via {@link specsFor}.
-   */
-  readonly specs: Record<string, SpecStore>;
-  /** Canvas-wide event bus + tap channel (state:change + data:flush). */
-  readonly events: CanvasEventBus;
-  /** Resolved-theme channel (`theme.current()` / `theme.set(...)` → `theme:change`). */
-  readonly theme: CanvasThemeState;
-  /**
-   * Register a domain {@link DataSource} under `id` (D13) — e.g. `@invana/graph`'s
-   * `GraphStore`. Its {@link DataSource.onFlush} is bridged onto {@link events} as
-   * `data:flush`. Replaces any source previously registered (or lazily created) for `id`.
-   */
-  setSource(id: string, source: DataSource): void;
-  /** The {@link DataSource} registered for `id`, or `undefined`. */
-  source(id: string): DataSource | undefined;
-  /**
-   * Get (lazily creating) the **default** {@link LayerData} for `id`; its flush is
-   * bridged onto {@link events}. Throws if a non-`LayerData` source was registered
-   * for `id` via {@link setSource} — use {@link source} / {@link data} for those.
-   */
-  layer(id: string): LayerData;
-  /**
-   * Get (lazily creating) the {@link SpecStore} for layer `id`; its flush is
-   * bridged onto {@link events} as `specs:flush`.
-   */
-  specsFor<T extends object = object>(id: string): SpecStore<T>;
-  /** Named, action-typed command API (`actions.layers.setStyle`, `actions.camera.zoom`, …). */
-  readonly actions: CanvasActions;
-}
+export type { CanvasStore } from '@invana/canvas-core';
 
 export interface CreateCanvasStoreOptions {
   /**

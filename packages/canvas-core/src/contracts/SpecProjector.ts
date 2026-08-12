@@ -20,8 +20,8 @@
  * See `docs/renderer-split-design.md` §2 and §4.2b.
  */
 
-import type { SpecFlush, SpecStore } from '@invana/canvas-store';
-import type { BaseConnectorSpec, BaseShapeSpec } from '@invana/canvas-store';
+import type { SpecFlush, SpecStore } from '../specs';
+import type { BaseConnectorSpec, BaseShapeSpec } from '../specs';
 
 /** The slice of a renderer this projector drives. */
 export interface SpecProjectionTarget {

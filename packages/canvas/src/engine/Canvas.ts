@@ -35,6 +35,7 @@ import type { IRenderer } from '@invana/canvas-core';
 import {
   CanvasEventBus,
   createCanvasStore,
+  createReactiveStore,
   type CanvasStore,
   type CanvasTelemetryConfig,
 } from '@invana/canvas-store';
@@ -1074,6 +1075,10 @@ export class Canvas {
       layers: this.layers,
       behaviours: this.behaviours,
       ...(renderer.canvasElement ? { canvasElement: renderer.canvasElement } : {}),
+      // The reactive-store factory behind `Layer.state` — injected here because
+      // `@invana/canvas-core` is dependency-free and cannot construct one. A
+      // collaborative canvas swaps this for a Yjs-backed factory.
+      createStateStore: (initial) => createReactiveStore(initial),
       createSurface: (space, id, opts) => renderer.createSurface(space, id, opts),
       createOverlay: (label, space) => renderer.createOverlay(label, space),
       showMessage: (text, timeout) => this.showMessage(text, timeout),

@@ -65,7 +65,7 @@ export {
 // in `@invana/canvas-store` (specs are plain data, so they sit with the store
 // that holds them and the index that picks them); re-exported here because
 // every existing consumer imports it from the engine.
-export * from '@invana/canvas-store/specs';
+export * from '@invana/canvas-core/specs';
 
 // ─── Contracts + abstracts (@invana/canvas-core) ─────────────────────────────
 // The renderer contract (`IRenderer` / `ISurface` / `IElementRenderer` /

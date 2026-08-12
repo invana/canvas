@@ -43,7 +43,7 @@ from its root, so consumers never need to know which package a symbol lives in
 | Built-in layers | `WorldLayer` / `ScreenLayer` (the two bases with surfaces), `BackgroundLayer` (paints via `surface.setBackdrop`), `DevInfoLayer`, `LayersPanelLayer` |
 | Built-in behaviours | `DragPanBehaviour`, `DragShapeBehaviour`, `WheelZoomBehaviour`, `PinchZoomBehaviour`, `KeyboardCameraInputBehaviour`, `ElementScaleLODBehaviour` — all opt-in, never auto-registered |
 | io | `io/` — raster export (through `IRenderer.extract?()`), `exportSVG` document assembly (the pure serialisers live in `canvas-core/svg/`), full-state JSON export/import |
-| Re-exports | the whole `@invana/canvas-core` surface, the kernel's spec vocabulary + picking + events + store port + theme (kernel-canonical) |
+| Re-exports | the whole `@invana/canvas-core` surface (the vocabulary: specs, events, theme, data primitives, port contract, contracts + abstracts) and the store machinery (`createReactiveStore`/`createMemoryStore`, history, picking, telemetry, `createCanvasStore`) |
 
 ## What does *not* live here
 

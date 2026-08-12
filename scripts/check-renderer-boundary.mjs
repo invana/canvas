@@ -77,6 +77,42 @@ const BOUNDARIES = [
       'immer is the kernel\'s patch engine, not a general utility. Mutate through ' +
       '`store.update(recipe)` and let the port produce the patches.',
   },
+  {
+    name: 'core-purity',
+    // `@invana/canvas-core` is the dependency-free floor of the stack: no
+    // workspace package and no third-party library may be imported under it —
+    // in particular not the state machinery above it. (`rbush` rides along here
+    // even though no other row restricts it: picking's index is store-only.)
+    libs: ['@invana/canvas-store', '@invana/canvas', 'rbush'],
+    // Everything EXCEPT packages/canvas-core is allowed to import these; the
+    // walk model is allowlist-prefix, so enumerate the other roots.
+    allowed: [
+      'packages/canvas-store',
+      'packages/canvas',
+      'packages/canvas-react',
+      'packages/canvas-ui',
+      'packages/canvas-designer',
+      'packages/canvas-telemetry-otel',
+      'packages/renderer-pixijs',
+      'packages/renderer-threejs',
+      'packages/graph',
+      'packages/graph-datasets',
+      'packages/graph-layer-bubble-sets',
+      'packages/graph-layer-d3-contour',
+      'packages/graph-layer-maplibre',
+      'packages/graph-layout-d3-force',
+      'packages/graph-layout-d3-hierarchy',
+      'packages/graph-layout-d3-sankey',
+      'packages/graph-layout-elkjs',
+      'packages/graph-layout-geometric',
+      'apps',
+    ],
+    remedy:
+      '`@invana/canvas-core` is the floor — it depends on nothing. If core needs a type ' +
+      'from above, the type is in the wrong package: move the contract down (the pattern ' +
+      'behind `CanvasStore`, `Patch`, and `ctx.createStateStore`).\n' +
+      'See docs/rfcs/feat/2026-08-12-canvas-core-depends-on-the-kernel.md.',
+  },
 ];
 
 /** Trees to scan. Built output and deps are not source. */

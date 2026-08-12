@@ -1,6 +1,6 @@
 import { enableMapSet, enablePatches, produceWithPatches, type Patch } from 'immer';
 
-import type { DeepPartial, Recipe, Update } from './types';
+import type { DeepPartial, Recipe, Update } from '@invana/canvas-core';
 
 // Opt immer into Map/Set drafting (selection sets, state maps) and patch
 // recording (forward + inverse) — both load-bearing for this store. Idempotent.

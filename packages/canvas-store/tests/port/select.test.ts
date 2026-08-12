@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { createMemoryStore } from '../../src/port/createMemoryStore';
-import { select } from '../../src/port/select';
+import { select } from '@invana/canvas-core';
 
 interface S {
   a: number;

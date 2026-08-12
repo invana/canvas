@@ -27,8 +27,8 @@
  * {@link createConsoleMeter} is a dep-free reference meter for debugging / tests.
  */
 
-import type { CanvasEventBus } from '../events/CanvasEventBus';
-import type { FrameTick, InteractionKind } from '../frame';
+import type { CanvasEventBus } from '@invana/canvas-core';
+import type { FrameTick, InteractionKind } from '@invana/canvas-core';
 import type { Tracer, TraceSpan } from './tracing';
 
 /** Metric attribute values (the OpenTelemetry-compatible subset). */

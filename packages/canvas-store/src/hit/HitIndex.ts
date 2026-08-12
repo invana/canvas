@@ -16,7 +16,7 @@
  */
 
 import RBush from 'rbush';
-import type { Rect } from '../specs/geometry';
+import type { Rect } from '@invana/canvas-core';
 
 export interface HitEntry {
   readonly id: string;

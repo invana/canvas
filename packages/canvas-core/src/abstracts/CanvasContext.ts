@@ -15,13 +15,14 @@
 
 import type { IOverlayDevice, OverlaySpace } from '../contracts/IOverlayDevice';
 import type { ISurface, SurfaceOptions, SurfaceSpace } from '../contracts/ISurface';
-import type { CanvasStore } from '@invana/canvas-store';
-import type { CanvasEventBus } from '@invana/canvas-store';
-import type { Camera } from '../Camera';
+import type { CanvasStore } from '../state/CanvasStore';
+import type { ReactiveStore } from '../state/port/types';
+import type { CanvasEventBus } from '../state/events/CanvasEventBus';
+import type { Camera } from './Camera';
 import type { GestureArbiter } from './GestureArbiter';
-import type { LayerRegistry } from '../registries/LayerRegistry';
-import type { BehaviourRegistry } from '../registries/BehaviourRegistry';
-import type { ThemeState } from '@invana/canvas-store';
+import type { LayerRegistry } from './registries/LayerRegistry';
+import type { BehaviourRegistry } from './registries/BehaviourRegistry';
+import type { ThemeState } from '../state/theme/types';
 
 export interface CanvasContext {
   /** Layer registry — `add / remove / get<T>(id) / list / byZOrder`. */
@@ -80,6 +81,15 @@ export interface CanvasContext {
    * read this to find a parent element and to attach native DOM listeners.
    */
   readonly canvasElement?: HTMLCanvasElement;
+
+  /**
+   * Build a patch-emitting {@link ReactiveStore} — the factory behind
+   * `Layer.state`. Injected by the engine (which implements it with the
+   * kernel's `createReactiveStore`) because this package is dependency-free
+   * and cannot construct a store itself; the seam is also what makes the
+   * backend swappable (a collaborative canvas injects a Yjs-backed factory).
+   */
+  createStateStore<T extends object>(initial: T): ReactiveStore<T>;
 
   /**
    * A drawing device for a **transient** visual — a lasso, a brush rectangle, a

@@ -1,7 +1,7 @@
 import type { Patch } from 'immer';
 
 import { computeChange } from './patch';
-import type { ReactiveStore, StateCell, StoreChange, Update } from './types';
+import type { ReactiveStore, StateCell, StoreChange, Update } from '@invana/canvas-core';
 
 /** High-resolution clock when available (browser/node); falls back to `Date.now`. */
 const clock = (): number => (typeof performance !== 'undefined' ? performance.now() : Date.now());

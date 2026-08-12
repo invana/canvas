@@ -16,8 +16,8 @@ import {
   type HitGeometrySource,
   type ShapeHitRecord,
 } from '../../src/hit/PickingIndex';
-import type { BaseShapeSpec } from '../../src/specs/shape';
-import type { BaseConnectorSpec } from '../../src/specs/connector';
+import type { BaseShapeSpec } from '@invana/canvas-core';
+import type { BaseConnectorSpec } from '@invana/canvas-core';
 
 /** A mutable stand-in for the renderer's half of the picking contract. */
 class FakeSource implements HitGeometrySource {
