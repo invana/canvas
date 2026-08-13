@@ -74,7 +74,8 @@ export type { GestureArbiter, GestureClaimOptions } from './abstracts/GestureArb
 
 // ─── Camera semantics (renderer-free; the binding realises them) ─────────────
 export { Camera } from './abstracts/Camera';
-export type { CameraOptions, CameraTransform, Rect, Point } from './abstracts/Camera';
+// (`Point` / `Rect` arrive via the specs star below — one route per name)
+export type { CameraOptions, CameraTransform } from './abstracts/Camera';
 export type {
   CameraInputConfig,
   CameraInputModifier,

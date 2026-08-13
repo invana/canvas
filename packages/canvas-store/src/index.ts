@@ -27,8 +27,9 @@ export type {
   Patch,
 } from '@invana/canvas-core';
 export { select, shallowEqual, defaultEqual, type Selected } from '@invana/canvas-core';
-// Geometry vocabulary
-export type { Point, Vec2, Size, Rect, CameraTransform } from '@invana/canvas-core';
+// Geometry vocabulary — `Point`/`Vec2`/`Size`/`Rect` arrive via the specs star
+// below (one route per name); `CameraTransform` is not in the vocabulary star.
+export type { CameraTransform } from '@invana/canvas-core';
 // View state shape + named command API
 export {
   defaultCanvasView,

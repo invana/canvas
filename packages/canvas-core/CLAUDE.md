@@ -54,6 +54,15 @@ Yjs-backed factory).
 (dev-dep cycle + purity) — use `tests/helpers/makeContext.ts`: `fakeStateStore`
 (minimal port impl) and `fakeCanvasStore` (assembled from core's own classes).
 
+## Barrels + the pinned surface
+
+The specs vocabulary is the **only** `export *` in any barrel (root rule 16), and a name
+reaches a barrel by exactly one route — the geometry types (`Point`/`Rect`/…) come via the
+specs star, never also explicitly. The public surface of this package (root + `./specs`),
+`canvas-store`, and `canvas` is snapshot-pinned in `api/*.surface.txt` by
+`pnpm check-api-surface` — adding an export (even through the star) fails `lint` until the
+snapshot is regenerated with `--write`.
+
 ## Build
 
 `tsup` → ESM + `.d.ts` + sourcemaps. Entries: `src/index.ts` + `src/specs/index.ts`

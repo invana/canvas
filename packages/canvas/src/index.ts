@@ -171,8 +171,7 @@ export type {
   CameraInputModifier,
   WheelInputOptions,
   PinchInputOptions,
-  Rect,
-  Point,
+  // (`Point` / `Rect` arrive via the specs star below — one route per name)
   CanvasContext,
   ILayer,
   LayerOptions,

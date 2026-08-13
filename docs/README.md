@@ -24,6 +24,14 @@ working design-of-record documents. Day-to-day API/concept docs live in
     *shapes*, so the edges **between a frame's own members** are painted over. Scopes
     the landing of the `plane` axis from `render-planes-and-emphasis-plan.md` (design
     locked there, not here) + the blast radius across every `style.group` graph.
+  - [feat/2026-08-12-star-exports-hide-surface-drift.md](./rfcs/feat/2026-08-12-star-exports-hide-surface-drift.md)
+    — ✅ **landed 2026-08-12** (mutation-tested: a canary export trips all three packages). **Keep the one specs `export *` per barrel; make the surface reviewable
+    instead**: a `check-api-surface.mjs` snapshot check (the `check-boundaries` pattern —
+    diff the built `.d.ts` export list against a checked-in `api/<pkg>.surface.txt`, fail
+    `lint` on drift), de-dup the names reaching barrels by two routes (`Point`/`Rect`
+    explicit *and* starred — explicit silently wins), and a standing rule: at most one
+    `export *` per barrel, only for the specs vocabulary. Explicitly rejects expanding the
+    star into ~150 named exports ×3 barrels (three hand-kept copies = guaranteed drift).
   - [feat/2026-08-12-canvas-core-folder-sprawl.md](./rfcs/feat/2026-08-12-canvas-core-folder-sprawl.md)
     — ✅ **landed 2026-08-12**. Two same-day landings left `canvas-core/src` with 13 top-level
     folders + 4 loose root files; regrouped into **6 concern folders** (`specs/` incl. `geom.ts` ·
