@@ -28,7 +28,7 @@ If I ask for "docs", "documentation", or "data model docs" without further quali
 
 ## Workspace
 
-All in-repo packages are `0.0.7` (except the `@repo/*` configs and the private `@canvas/*` apps). All new work goes in these — new architecture.
+All in-repo packages share **one version** (currently `0.0.11`; keep them in lockstep when bumping — except the `@repo/*` configs and the private `@canvas/*` apps). All new work goes in these — new architecture.
 
 #### Engine core
 
@@ -160,7 +160,7 @@ New behaviour/layer/layout ⇒ still ships a schema editor in `canvas-ui/editors
 
 "Composite node" spans three cleanly-separated layers. When something needs changing, change it at the right layer:
 
-1. **Engine primitive** — `CompositeShape` (the `'composite'` shape kind: a borrowed root silhouette + `parts` + `label` children) in `packages/canvas/src/primitives/shapes/`. **Domain-free** — knows nothing about nodes/graphs; the renderer depends on it, not the reverse. Don't move it or leak graph concepts into it.
+1. **Engine primitive** — `CompositeShape` (the `'composite'` shape kind: a borrowed root silhouette + `parts` + `label` children) — the `CompositeSpec` vocabulary lives in `packages/canvas-core/src/specs/`, the drawing in `packages/renderer-pixijs/src/primitives/shapes/CompositeShape.ts`. **Domain-free** — knows nothing about nodes/graphs; the renderer depends on it, not the reverse. Don't move it or leak graph concepts into it.
 2. **Template model** — `NodeStructureTemplate` (`SimpleStructure` / `CardStructure` / `FreeformStructure`), styling templates, the `compileFreeform` → `CompositeShapeOption` compiler, and runtime fallback defaults (`BUILT_IN_STRUCTURES`) in `packages/graph/src/template/`. `FreeformStructure` is the designer-authored variant; it **compiles down to a `CompositeSpec`** rendered by layer 1.
 3. **Authoring tool** — `@invana/canvas-designer` (above). Headless; emits a `FreeformStructure` JSON. **Ships its own default/starter node templates** (pure `FreeformStructure` JSON — distinct from graph's runtime `BUILT_IN_STRUCTURES`, which are different concerns: authoring presets vs runtime fallbacks). **Node-only today; an edge designer is planned.**
 

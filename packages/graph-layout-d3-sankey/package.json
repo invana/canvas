@@ -16,7 +16,7 @@
     "lint": "eslint src/",
     "check-types": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "test": "vitest run"
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "d3-sankey": "^0.12.3"

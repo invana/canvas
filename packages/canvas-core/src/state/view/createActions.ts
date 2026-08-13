@@ -20,6 +20,15 @@ type CameraInput = Partial<{ x: number; y: number; zoom: number }>;
  * Group by concern: `node / edge / group / annotation / positions` (data) and
  * `layers / behaviours / layouts / camera / selection / hover / templates / theme`
  * (view).
+ *
+ * ⚠ **Data actions target the default {@link LayerData} store only.** The
+ * injected `layer(id)` accessor (see `createCanvasStore`) **throws** for any id
+ * where a *custom* {@link DataSource} was registered via `setSource` — e.g.
+ * `@invana/graph`'s `GraphStore`. For those, mutate through the domain store's
+ * own API (`store.source(id)` / the layer's methods) instead. Unifying the data
+ * actions over the `DataSource` interface is future work — audited and
+ * deliberately deferred 2026-08-13 (the contract would need write methods it
+ * doesn't carry today).
  */
 export function createActions(
   view: ReactiveStore<CanvasView>,

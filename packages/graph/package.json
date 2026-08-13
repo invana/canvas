@@ -1,7 +1,7 @@
 {
   "name": "@invana/graph",
   "version": "0.0.11",
-  "description": "Graph layer + behaviours for @invana/canvas — GraphLayer, MiniMapLayer, hover/select/lasso/brush/pan/drag behaviours.",
+  "description": "Graph layer + behaviours for @invana/canvas \u2014 GraphLayer, MiniMapLayer, hover/select/lasso/brush/pan/drag behaviours.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -23,15 +23,13 @@
     "rbush": "^4.0.1"
   },
   "peerDependencies": {
-    "@invana/canvas": "workspace:*",
-    "pixi.js": "^8.18.1"
+    "@invana/canvas": "workspace:*"
   },
   "devDependencies": {
     "@invana/canvas": "workspace:*",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/rbush": "^4.0.0",
-    "pixi.js": "^8.18.1",
     "tsup": "^8.3.5",
     "tsx": "^4.21.0",
     "typescript": "5.9.2",

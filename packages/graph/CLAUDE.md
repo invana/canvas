@@ -155,7 +155,14 @@ The actual decoration **rendering logic** (HaloDecoration, BorderDecoration, etc
 
 ## Rules
 
-- No `pixi.js` imports — go through `@invana/canvas` API only.
+- No `pixi.js` imports — go through `@invana/canvas` API only. (The stale `pixi.js`
+  peer/dev dependency was removed 2026-08-13; the boundary check proves zero imports.)
+- **`rbush` is deliberately a direct dependency here** (decision 2026-08-13):
+  `LabelCollisionBehaviour` needs a domain-side spatial index over *label boxes*,
+  which is not the kernel's picking index (that one indexes element specs). A
+  domain package declaring its own algorithm lib matches the layout-package
+  pattern (`d3-force` in `graph-layout-d3-force`, …). Revisit only if a second
+  engine-side consumer of label-box indexing appears.
 - Behaviours don't auto-enable; the developer registers + enables them explicitly.
 - Cross-layer deps via explicit `*LayerId` option fields (proposal §2.4).
 - Decoration sugar methods mutate state, never the renderer directly (see above).
