@@ -28,7 +28,7 @@ If I ask for "docs", "documentation", or "data model docs" without further quali
 
 ## Workspace
 
-All in-repo packages share **one version** (currently `0.0.11`; keep them in lockstep when bumping — except the `@repo/*` configs and the private `@canvas/*` apps). All new work goes in these — new architecture.
+All in-repo packages share **one version** (currently `0.0.12`; keep them in lockstep when bumping — except the `@repo/*` configs and the private `@canvas/*` apps). All new work goes in these — new architecture.
 
 #### Engine core
 

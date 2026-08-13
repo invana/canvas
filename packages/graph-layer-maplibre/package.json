@@ -1,7 +1,7 @@
 {
   "name": "@invana/graph-layer-maplibre",
-  "version": "0.0.11",
-  "description": "MapLibre GL JS basemap Layer for @invana/canvas — projects graph nodes onto a real interactive world map.",
+  "version": "0.0.12",
+  "description": "MapLibre GL JS basemap Layer for @invana/canvas \u2014 projects graph nodes onto a real interactive world map.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

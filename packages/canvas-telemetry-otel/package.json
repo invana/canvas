@@ -1,7 +1,7 @@
 {
   "name": "@invana/canvas-telemetry-otel",
-  "version": "0.0.11",
-  "description": "OpenTelemetry (OTLP/HTTP) adapter for @invana/canvas telemetry — traces, metrics (FPS), and logs to HyperDX or any OTel collector.",
+  "version": "0.0.12",
+  "description": "OpenTelemetry (OTLP/HTTP) adapter for @invana/canvas telemetry \u2014 traces, metrics (FPS), and logs to HyperDX or any OTel collector.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

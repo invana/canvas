@@ -1,6 +1,6 @@
 {
   "name": "@invana/canvas-store",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "State machinery of the Invana canvas \u2014 the immer-backed ReactiveStore engine + adapters (zustand now, Yjs later), history, picking (rbush), telemetry, and the CanvasStore factory. The vocabulary and contracts live one floor below in @invana/canvas-core.",
   "type": "module",
   "main": "./dist/index.js",

@@ -1,6 +1,6 @@
 {
   "name": "@invana/renderer-pixijs",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "PixiJS drawing backend for @invana/canvas \u2014 implements IRenderer + IPrimitivesRenderer, owns the Application, viewport, primitives, textures and fonts.",
   "type": "module",
   "main": "./dist/index.js",
