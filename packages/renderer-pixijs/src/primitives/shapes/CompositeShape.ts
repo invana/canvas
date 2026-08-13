@@ -33,7 +33,7 @@ import type {
   ShapePaintStyle,
   StarSpec,
 } from '../../types';
-import { boundsOfComposite, resolveCompositeRoot } from '@invana/canvas';
+import { boundsOfComposite, resolveCompositeRoot } from '@invana/canvas-core';
 
 // The composite's spec vocabulary lives in `specs/` — it is a description, not
 // drawing. Re-exported here so the long-standing import path keeps working.
@@ -43,7 +43,7 @@ export type {
   CompositePartStroke,
   CompositeRootSpec,
   CompositeSpec,
-} from '@invana/canvas';
+} from '@invana/canvas-core';
 
 /** Factory per root kind — composite borrows the real shape, no geometry copied. */
 const ROOT_CTORS: Record<

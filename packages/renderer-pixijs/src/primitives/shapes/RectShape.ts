@@ -1,5 +1,5 @@
 import type { Graphics } from 'pixi.js';
-import { boundsOfRect, containsRect, scaleRect } from '@invana/canvas';
+import { boundsOfRect, containsRect, scaleRect } from '@invana/canvas-core';
 import { ShapeBase } from '../base/ShapeBase';
 import { applyFill, applyMarkerFill, applyStroke } from '../paint/applyFillStroke';
 import { emitDashedStroke } from '../paint/dashedStroke';

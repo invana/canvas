@@ -670,9 +670,9 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
     devDependencies:
-      '@invana/canvas':
+      '@invana/canvas-core':
         specifier: workspace:*
-        version: link:../canvas
+        version: link:../canvas-core
       '@invana/graph':
         specifier: workspace:*
         version: link:../graph
@@ -701,9 +701,9 @@ importers:
         specifier: ^3.1.2
         version: 3.1.2
     devDependencies:
-      '@invana/canvas':
+      '@invana/canvas-core':
         specifier: workspace:*
-        version: link:../canvas
+        version: link:../canvas-core
       '@invana/graph':
         specifier: workspace:*
         version: link:../graph
@@ -732,9 +732,9 @@ importers:
         specifier: ^0.12.3
         version: 0.12.3
     devDependencies:
-      '@invana/canvas':
+      '@invana/canvas-core':
         specifier: workspace:*
-        version: link:../canvas
+        version: link:../canvas-core
       '@invana/graph':
         specifier: workspace:*
         version: link:../graph
@@ -763,9 +763,9 @@ importers:
         specifier: ^0.9.3
         version: 0.9.3
     devDependencies:
-      '@invana/canvas':
+      '@invana/canvas-core':
         specifier: workspace:*
-        version: link:../canvas
+        version: link:../canvas-core
       '@invana/graph':
         specifier: workspace:*
         version: link:../graph
@@ -787,9 +787,9 @@ importers:
 
   packages/graph-layout-geometric:
     devDependencies:
-      '@invana/canvas':
+      '@invana/canvas-core':
         specifier: workspace:*
-        version: link:../canvas
+        version: link:../canvas-core
       '@invana/graph':
         specifier: workspace:*
         version: link:../graph
@@ -818,9 +818,9 @@ importers:
         specifier: ^8.18.1
         version: 8.18.1
     devDependencies:
-      '@invana/canvas':
+      '@invana/canvas-core':
         specifier: workspace:*
-        version: link:../canvas
+        version: link:../canvas-core
       '@invana/canvas-store':
         specifier: workspace:*
         version: link:../canvas-store

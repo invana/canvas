@@ -16,7 +16,7 @@
  */
 
 import { Application, Container, Rectangle, type EventSystem } from 'pixi.js';
-import type { Camera, ICameraBinding, IOverlayDevice, IRenderer, ISurface, OverlaySpace, Rect, RendererCapabilities, RendererMountOptions, SurfaceOptions, SurfaceSpace } from '@invana/canvas';
+import type { Camera, ICameraBinding, IOverlayDevice, IRenderer, ISurface, OverlaySpace, Rect, RendererCapabilities, RendererMountOptions, SurfaceOptions, SurfaceSpace } from '@invana/canvas-core';
 import { Viewport } from 'pixi-viewport';
 import type { CanvasEventBus, RendererBackend } from '@invana/canvas-store';
 

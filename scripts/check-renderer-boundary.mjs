@@ -113,6 +113,32 @@ const BOUNDARIES = [
       'behind `CanvasStore`, `Patch`, and `ctx.createStateStore`).\n' +
       'See docs/rfcs/feat/2026-08-12-canvas-core-depends-on-the-kernel.md.',
   },
+  {
+    name: 'backend-detach',
+    // The engine may only be imported ABOVE it (domain packages, React layers,
+    // apps). Backends implement `@invana/canvas-core`'s contracts and layout
+    // packages extend its abstracts — neither may reach for the orchestrator;
+    // the store beneath it obviously can't either (that would be a cycle).
+    libs: ['@invana/canvas'],
+    allowed: [
+      'packages/canvas',
+      'packages/canvas-react',
+      'packages/canvas-ui',
+      'packages/canvas-designer',
+      'packages/canvas-telemetry-otel',
+      'packages/graph',
+      'packages/graph-datasets',
+      'packages/graph-layer-bubble-sets',
+      'packages/graph-layer-d3-contour',
+      'packages/graph-layer-maplibre',
+      'apps',
+    ],
+    remedy:
+      'A backend or layout package depends on `@invana/canvas-core` (contracts + abstracts) ' +
+      'and `@invana/canvas-store` (picking, store machinery) — never on the engine itself. ' +
+      'If the symbol you need only exists in `@invana/canvas`, it belongs in the contract: ' +
+      'move it down.\nSee docs/rfcs/feat/2026-08-13-backends-still-depend-on-the-engine.md.',
+  },
 ];
 
 /** Trees to scan. Built output and deps are not source. */

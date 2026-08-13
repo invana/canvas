@@ -41,7 +41,7 @@ import {
   sankeyRight,
 } from 'd3-sankey';
 
-import { Layout } from '@invana/canvas';
+import { Layout } from '@invana/canvas-core';
 import type { GraphLayer } from '@invana/graph';
 
 import type {

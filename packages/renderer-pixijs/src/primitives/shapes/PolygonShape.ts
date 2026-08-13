@@ -9,7 +9,7 @@ import {
   pointInPolygon,
   rayPolygonIntersection,
   scalePolygon,
-} from '@invana/canvas';
+} from '@invana/canvas-core';
 import type {
   Point,
   PolygonSpec,

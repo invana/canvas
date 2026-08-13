@@ -1,5 +1,5 @@
-import { Tween, easeInOutCubic, easeInOutSine, easeOutCubic, linear } from '@invana/canvas';
-import type { Easing } from '@invana/canvas';
+import { Tween, easeInOutCubic, easeInOutSine, easeOutCubic, linear } from '@invana/canvas-core';
+import type { Easing } from '@invana/canvas-core';
 import { ConnectorEffectBase } from '../base/ConnectorEffectBase';
 import type { EffectTarget, StyleOverride } from '../../types';
 

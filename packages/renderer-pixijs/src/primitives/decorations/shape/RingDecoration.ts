@@ -4,8 +4,8 @@ import { ShapeDecorationBase } from '../../base/ShapeDecorationBase';
 // Style types moved to the pixi-free spec vocabulary (`specs/decorationStyle.ts`)
 // so domain packages can describe decorations without importing a backend.
 // Re-exported here so existing importers keep working.
-import type { RingDecorationStyle } from '@invana/canvas';
-export type { RingDecorationStyle } from '@invana/canvas';
+import type { RingDecorationStyle } from '@invana/canvas-core';
+export type { RingDecorationStyle } from '@invana/canvas-core';
 
 
 

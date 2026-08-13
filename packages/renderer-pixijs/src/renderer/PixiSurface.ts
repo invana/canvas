@@ -13,7 +13,7 @@
  */
 
 import { Container, Graphics, Texture, TilingSprite } from 'pixi.js';
-import type { Camera, IOverlayDevice, ISurface, SurfaceBackdrop, SurfaceSpace } from '@invana/canvas';
+import type { Camera, IOverlayDevice, ISurface, SurfaceBackdrop, SurfaceSpace } from '@invana/canvas-core';
 import { PrimitivesRenderer } from './PrimitivesRenderer';
 import type { TextureRegistry } from '../assets/TextureRegistry';
 import { PixiOverlayDevice } from './PixiOverlayDevice';

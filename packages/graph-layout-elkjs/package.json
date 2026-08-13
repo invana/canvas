@@ -22,11 +22,11 @@
     "elkjs": "^0.9.3"
   },
   "peerDependencies": {
-    "@invana/canvas": "workspace:*",
+    "@invana/canvas-core": "workspace:*",
     "@invana/graph": "workspace:*"
   },
   "devDependencies": {
-    "@invana/canvas": "workspace:*",
+    "@invana/canvas-core": "workspace:*",
     "@invana/graph": "workspace:*",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",

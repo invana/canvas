@@ -4,8 +4,8 @@ import { ConnectorDecorationBase } from '../../base/ConnectorDecorationBase';
 // Style types moved to the pixi-free spec vocabulary (`specs/decorationStyle.ts`)
 // so domain packages can describe decorations without importing a backend.
 // Re-exported here so existing importers keep working.
-import type { MarchingAntsConnectorDecorationStyle } from '@invana/canvas';
-export type { MarchingAntsConnectorDecorationStyle } from '@invana/canvas';
+import type { MarchingAntsConnectorDecorationStyle } from '@invana/canvas-core';
+export type { MarchingAntsConnectorDecorationStyle } from '@invana/canvas-core';
 
 
 

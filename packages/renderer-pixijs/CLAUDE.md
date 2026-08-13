@@ -1,10 +1,13 @@
 # CLAUDE.md — packages/renderer-pixijs (`@invana/renderer-pixijs`)
 
 **The PixiJS drawing backend.** Implements the renderer contract from
-`@invana/canvas-core` (imported via `@invana/canvas`, which re-exports it) and
-owns every pixi import in the repo. Its `src/` layout — `renderer/` (the
-contract implementation) · `primitives/` (everything that draws) · `assets/`
-(loaded resources) — is the layout template a `renderer-threejs` would follow.
+`@invana/canvas-core` — its only workspace dependencies are the frozen floor
+(`@invana/canvas-core`, peers) and the picking seam (`@invana/canvas-store`);
+it does **not** depend on the engine (`pnpm check-boundaries`, `backend-detach`
+row). It owns every pixi import in the repo. Its `src/` layout — `renderer/`
+(the contract implementation) · `primitives/` (everything that draws) ·
+`assets/` (loaded resources) — is the layout template a `renderer-threejs`
+would follow.
 
 **Status:** landed. P6 of the renderer split is complete — see
 `docs/renderer-split-design.md`.
@@ -99,5 +102,5 @@ names mangle under minification, which is exactly where a devtools tree gets rea
 
 ## Build
 
-`tsup` → ESM + `.d.ts` + sourcemaps. `@invana/canvas` and `@invana/canvas-store`
+`tsup` → ESM + `.d.ts` + sourcemaps. `@invana/canvas-core` and `@invana/canvas-store`
 are externals (peers); `pixi.js` and `pixi-viewport` are dependencies.

@@ -10,7 +10,7 @@ import {
   rayPolygonIntersection,
   scaleStar,
   starVertices,
-} from '@invana/canvas';
+} from '@invana/canvas-core';
 import type {
   Point,
   Rect,

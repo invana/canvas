@@ -32,10 +32,12 @@
  */
 
 import { Container, RenderLayer, type FederatedPointerEvent } from 'pixi.js';
-import { DEFAULT_ENDPOINT_BADGE_GAP_PX, PickingIndex, bezierPathStyle, boundaryAnchor, bumpHorizontalPathStyle, bumpRadialPathStyle, bundlePathStyle, centerAnchor, connectorGeometryKey, connectorToSvg, edgePortAnchor, erRouter, loopCurvePathStyle, loopPolylinePathStyle, manhattanRouter, metroRouter, normalPathStyle, oneSideRouter, orthRouter, perpendicularAnchor, quadraticPathStyle, resolveBadgePosition, resolveConnectorBadgePosition, roundedPathStyle, samplePath, shapeSpecToSvg, silhouettePortAnchor, smoothPathStyle, stepRadialPathStyle, straightRouter, trimPathEnds } from '@invana/canvas';
+import { PickingIndex } from '@invana/canvas-store';
+import { DEFAULT_ENDPOINT_BADGE_GAP_PX, bezierPathStyle, boundaryAnchor, bumpHorizontalPathStyle, bumpRadialPathStyle, bundlePathStyle, centerAnchor, connectorGeometryKey, connectorToSvg, edgePortAnchor, erRouter, loopCurvePathStyle, loopPolylinePathStyle, manhattanRouter, metroRouter, normalPathStyle, oneSideRouter, orthRouter, perpendicularAnchor, quadraticPathStyle, resolveBadgePosition, resolveConnectorBadgePosition, roundedPathStyle, samplePath, shapeSpecToSvg, silhouettePortAnchor, smoothPathStyle, stepRadialPathStyle, straightRouter, trimPathEnds } from '@invana/canvas-core';
 import { ConnectorInstance } from './mounted/ConnectorInstance';
 import { ShapeInstance } from './mounted/ShapeInstance';
-import type { BadgeOptions, Camera, ConnectorHitRecord, HitGeometrySource, IElementRenderer, ShapeHitRecord } from '@invana/canvas';
+import type { BadgeOptions, Camera, IElementRenderer } from '@invana/canvas-core';
+import type { ConnectorHitRecord, HitGeometrySource, ShapeHitRecord } from '@invana/canvas-store';
 import { EventEmitter } from '@invana/canvas-store';
 import { TextureRegistry } from '../assets/TextureRegistry';
 import { CircleShape } from '../primitives/shapes/CircleShape';

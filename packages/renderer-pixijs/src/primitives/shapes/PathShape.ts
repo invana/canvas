@@ -2,7 +2,7 @@ import type { Graphics } from 'pixi.js';
 import { ShapeBase } from '../base/ShapeBase';
 import { applyFill, applyStroke } from '../paint/applyFillStroke';
 import { emitDashedStroke } from '../paint/dashedStroke';
-import { boundsOfPath, containsPath, scalePath } from '@invana/canvas';
+import { boundsOfPath, containsPath, scalePath } from '@invana/canvas-core';
 import type { PathSpec, Point, Rect, ShapeHostInfo, ShapePaintStyle } from '../../types';
 
 /**

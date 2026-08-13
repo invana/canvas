@@ -5,7 +5,7 @@ import {
   samplePath,
   tangentAt,
   trimPathEnds,
-} from '@invana/canvas';
+} from '@invana/canvas-core';
 import type {
   BaseConnectorSpec,
   ConnectorHostInfo,

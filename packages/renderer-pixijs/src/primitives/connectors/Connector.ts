@@ -6,7 +6,7 @@ import type {
   ConnectorPaintStyle,
   Path,
 } from '../../types';
-import { samplePath } from '@invana/canvas';
+import { samplePath } from '@invana/canvas-core';
 
 /**
  * The single concrete connector class. Renders any `Path` natively via

@@ -17,7 +17,7 @@
 
 import { Container, Graphics } from 'pixi.js';
 import { ConnectorDecorationBase } from '../../base/ConnectorDecorationBase';
-import { samplePathAt } from '@invana/canvas';
+import { samplePathAt } from '@invana/canvas-core';
 import {
   applyLabelResolution,
   mountLabelContent,

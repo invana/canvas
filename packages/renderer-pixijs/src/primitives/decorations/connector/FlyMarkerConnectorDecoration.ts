@@ -1,13 +1,13 @@
 import { Graphics } from 'pixi.js';
-import { samplePath } from '@invana/canvas';
-import type { FlyMarkerConnectorDecorationStyle } from '@invana/canvas';
+import { samplePath } from '@invana/canvas-core';
+import type { FlyMarkerConnectorDecorationStyle } from '@invana/canvas-core';
 import { ConnectorDecorationBase } from '../../base/ConnectorDecorationBase';
 import type { Path, Point } from '../../../types';
 
 // Style types moved to the pixi-free spec vocabulary (`specs/decorationStyle.ts`)
 // so domain packages can describe decorations without importing a backend.
 // Re-exported here so existing importers keep working.
-export type { FlyMarkerConnectorDecorationStyle } from '@invana/canvas';
+export type { FlyMarkerConnectorDecorationStyle } from '@invana/canvas-core';
 
 
 

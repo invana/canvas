@@ -5,7 +5,7 @@
  * orchestrates, `@invana/graph` describes, this package draws.
  *
  * ```ts
- * import { Canvas } from '@invana/canvas';
+ * import { Canvas } from '@invana/canvas-core';
  * import { PixiRenderer } from '@invana/renderer-pixijs';
  *
  * const canvas = new Canvas();

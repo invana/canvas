@@ -5,8 +5,8 @@ import type { Rect } from '../../../types';
 // Style types moved to the pixi-free spec vocabulary (`specs/decorationStyle.ts`)
 // so domain packages can describe decorations without importing a backend.
 // Re-exported here so existing importers keep working.
-import type { ToggleDecorationStyle, ToggleHitGeometry, TogglePlacement } from '@invana/canvas';
-export type { ToggleDecorationStyle, ToggleHitGeometry, TogglePlacement } from '@invana/canvas';
+import type { ToggleDecorationStyle, ToggleHitGeometry, TogglePlacement } from '@invana/canvas-core';
+export type { ToggleDecorationStyle, ToggleHitGeometry, TogglePlacement } from '@invana/canvas-core';
 
 
 

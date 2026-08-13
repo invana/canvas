@@ -1,4 +1,4 @@
-import type { LayoutOptions } from '@invana/canvas';
+import type { LayoutOptions } from '@invana/canvas-core';
 import type { SankeyNodeMinimal, SankeyLinkMinimal } from 'd3-sankey';
 
 /**

@@ -12,7 +12,7 @@
  */
 
 import type { Viewport } from 'pixi-viewport';
-import type { CameraChangeKind, CameraInputConfig, CameraInputModifier, CameraTransformValue, ICameraBinding, Point, Rect } from '@invana/canvas';
+import type { CameraChangeKind, CameraInputConfig, CameraInputModifier, CameraTransformValue, ICameraBinding, Point, Rect } from '@invana/canvas-core';
 
 /** Semantic modifier → the `pixi-viewport` key codes for that physical key. */
 const MODIFIER_KEYS: Record<CameraInputModifier, string[]> = {

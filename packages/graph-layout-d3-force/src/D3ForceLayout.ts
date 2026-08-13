@@ -36,7 +36,7 @@ import {
   type SimulationNodeDatum,
 } from 'd3-force';
 
-import { Layout, type LayoutOptions } from '@invana/canvas';
+import { Layout, type LayoutOptions } from '@invana/canvas-core';
 import { isPlaceableNode, type GraphLayer, type GraphNode } from '@invana/graph';
 
 import type { D3ForceLayoutOptions } from './types';

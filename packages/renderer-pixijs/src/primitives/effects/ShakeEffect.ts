@@ -1,4 +1,4 @@
-import { Tween, linear } from '@invana/canvas';
+import { Tween, linear } from '@invana/canvas-core';
 import { EffectBase } from '../base/EffectBase';
 import type { EffectTarget, TransformDelta } from '../../types';
 

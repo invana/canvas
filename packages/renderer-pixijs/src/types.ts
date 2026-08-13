@@ -27,14 +27,14 @@ import type {
   ShapePaintStyle,
   StyleOverride,
   TransformDelta,
-} from '@invana/canvas';
+} from '@invana/canvas-core';
 
 // ─── Spec vocabulary — re-exported for compatibility ───────────────────────
 //
 // The pixi-free half of this file now lives in `../specs`. It is re-exported
 // here so existing importers keep working; new code should import from
 // `@invana/canvas` directly. See `docs/renderer-split-design.md` P0.
-export type * from '@invana/canvas';
+export type * from '@invana/canvas-core';
 
 /**
  * The spec vocabulary this module both consumes and re-exports. A local
@@ -53,7 +53,7 @@ export type {
   ShapePaintStyle,
   StyleOverride,
   TransformDelta,
-} from '@invana/canvas';
+} from '@invana/canvas-core';
 
 
 export interface ShapeHostInfo {
@@ -545,7 +545,7 @@ export type ShapeDecorationCtor<TStyle = unknown> = new (style: TStyle) => IShap
 
 export type ConnectorDecorationCtor<TStyle = unknown> = new (style: TStyle) => IConnectorDecoration<TStyle>;
 
-export type { ElementEventMap as PrimitivesRendererEventMap } from '@invana/canvas';
+export type { ElementEventMap as PrimitivesRendererEventMap } from '@invana/canvas-core';
 
 // ─── Label primitives ──────────────────────────────────────────────────────
 

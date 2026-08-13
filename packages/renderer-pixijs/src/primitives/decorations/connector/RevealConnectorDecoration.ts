@@ -1,13 +1,13 @@
 import { Graphics } from 'pixi.js';
-import { Tween, easeInOutCubic, easeInOutSine, easeOutCubic, linear, samplePath } from '@invana/canvas';
-import type { Easing, RevealConnectorDecorationStyle, RevealDirection, RevealEasingName, RevealRepeat } from '@invana/canvas';
+import { Tween, easeInOutCubic, easeInOutSine, easeOutCubic, linear, samplePath } from '@invana/canvas-core';
+import type { Easing, RevealConnectorDecorationStyle, RevealDirection, RevealEasingName, RevealRepeat } from '@invana/canvas-core';
 import { ConnectorDecorationBase } from '../../base/ConnectorDecorationBase';
 import type { Path, Point } from '../../../types';
 
 // Style types moved to the pixi-free spec vocabulary (`specs/decorationStyle.ts`)
 // so domain packages can describe decorations without importing a backend.
 // Re-exported here so existing importers keep working.
-export type { RevealConnectorDecorationStyle , RevealDirection, RevealEasingName, RevealHostStroke, RevealRepeat} from '@invana/canvas';
+export type { RevealConnectorDecorationStyle , RevealDirection, RevealEasingName, RevealHostStroke, RevealRepeat} from '@invana/canvas-core';
 
 
 

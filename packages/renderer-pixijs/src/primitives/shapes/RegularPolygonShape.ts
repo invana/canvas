@@ -10,7 +10,7 @@ import {
   rayPolygonIntersection,
   regularPolygonVertices,
   scaleRegularPolygon,
-} from '@invana/canvas';
+} from '@invana/canvas-core';
 import type {
   Point,
   Rect,

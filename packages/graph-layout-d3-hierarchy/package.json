@@ -22,11 +22,11 @@
     "d3-hierarchy": "^3.1.2"
   },
   "peerDependencies": {
-    "@invana/canvas": "workspace:*",
+    "@invana/canvas-core": "workspace:*",
     "@invana/graph": "workspace:*"
   },
   "devDependencies": {
-    "@invana/canvas": "workspace:*",
+    "@invana/canvas-core": "workspace:*",
     "@invana/graph": "workspace:*",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",

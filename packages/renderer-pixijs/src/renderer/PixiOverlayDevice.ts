@@ -9,7 +9,7 @@
 
 import { Container, Graphics } from 'pixi.js';
 import { emitDashedStroke } from '../primitives/paint/dashedStroke';
-import type { IOverlayDevice, OverlayFillLike, OverlayStroke } from '@invana/canvas';
+import type { IOverlayDevice, OverlayFillLike, OverlayStroke } from '@invana/canvas-core';
 
 export class PixiOverlayDevice implements IOverlayDevice {
   private readonly root: Container;
