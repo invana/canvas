@@ -1,6 +1,6 @@
 # RFC — `fitOnLoad` frames the wrong box: auto-fit vs. bounds freshness
 
-**Status:** 🚧 investigated; one bug fixed, **the symptom is not fixed** — see §7.
+**Status:** ✅ **fixed 2026-08-13** — §7's revised proposal implemented; see §8.
 **Packages:** `@invana/canvas` (`Canvas.fitView` / `_armAutoFit`), `@invana/graph`
 (`GraphLayer.getBounds`).
 **Symptom class:** "the nodes aren't rendering" — reported four times; every time
@@ -216,3 +216,37 @@ the node to have rendered yet". That is deterministic on the first call.
 Scope note: `getBounds()` also feeds the minimap, ELK's size queries and image
 export, and it deliberately excludes hidden / collapsed elements — so this is a
 larger change than §4 assumed, and wants its own review before implementation.
+
+---
+
+## 8. Fix landed (2026-08-13) — §7's revised proposal, implemented
+
+**The measurement no longer depends on projection.** `GraphLayer.getBounds()`
+(`GraphLayer.ts`) now derives each node's box from the **store**:
+`store.getPosition(id)` (typed-array columns — always fresh, no frame involved)
+plus the pure `boundsOfNode(node)` footprint (centre-relative spec geometry),
+with the projected `getShapeWorldBounds` kept only as the fallback for an
+unregistered custom shape kind. Edge polylines still refine the box when fresh;
+they can no longer shrink it below the node cloud, so the runaway-zoom failure
+mode is structurally impossible. Hidden/collapsed exclusion unchanged — the
+minimap / ELK sizing / export consumers see the same box as before whenever the
+projection was fresh.
+
+**Enabler, shipped with it:** `HeadlessElementRenderer.boundsOfSpec` used to
+return `undefined`; it now answers with the kernel's pure `boundsOfSpec`, so a
+headless canvas measures footprints exactly like a drawing backend (this also
+un-stubs minimap estimates and ELK size queries in tests).
+
+**Regression test** — `packages/graph/tests/layer/GraphLayerBounds.test.ts`
+reproduces the exact mechanism headlessly (no rAF exists at all, the hardest
+version of "one-shot"): stacked nodes → `setPositionsBulk` spread → the **first**
+`getBounds()` call must see the spread **while the projected spec still holds
+the stale stacked position** (asserted). Plus a stacked-box control and
+hidden-node exclusion. 3 tests; graph suite 111/111.
+
+Still owed: the §4 step-3 eyeball pass over the five §1 surfaces (the automated
+browser check was foiled twice by Chrome suspending rAF in background tabs —
+recorded in `rfc:feat-2026-08-12-canvas-core-depends-on-the-kernel` §8; verify
+in a **visible** tab). The §7 "re-fit on `data:flush` within 1 s" band-aid in
+`_armAutoFit` is now redundant in principle but harmless; remove it in a later
+cleanup once the eyeball pass confirms.

@@ -1110,13 +1110,10 @@ export class GraphLayer extends WorldLayer<
     const renderer = this._renderer;
     if (!renderer) return super.getBounds();
 
-    // Bounds are read from the renderer's *projected* shape positions, but with
-    // `flushMode: 'frame'` the store buffers position writes until the next rAF.
-    // A one-shot layout that writes final positions then fires `end` →
-    // `camera.fitContent(layer.getBounds())` synchronously would otherwise read
-    // the *pre-layout* (stacked) bounds and fit to a near-zero box → runaway
-    // zoom. Drain pending mutations first so bounds reflect the authoritative
-    // store state (no-op when nothing is pending).
+    // Drain pending mutations so the event stream (and anything it derives,
+    // e.g. group frames) is consistent before measuring. Note this is *not*
+    // what makes the node boxes fresh — those are read straight from the
+    // store below (no-op when nothing is pending).
     this.store.flush();
 
     let minX = Infinity;
@@ -1136,7 +1133,22 @@ export class GraphLayer extends WorldLayer<
     for (const node of this.store.nodes()) {
       if (!includeHidden && node.hidden === true) continue;
       if (!includeHidden && this.collapsedAncestor(node.id) !== undefined) continue;
-      union(renderer.getShapeWorldBounds(node.id));
+      // **Store-derived, deterministic** (autofit RFC §7): position comes from
+      // the typed-array columns — always fresh, no projection involved — and the
+      // footprint from the pure spec-geometry `boundsOfNode` (centre-relative;
+      // "does not need the node to have rendered yet"). The projected
+      // `getShapeWorldBounds` used to be read here, and with `flushMode: 'frame'`
+      // a one-shot layout's synchronous `end → fitView` could measure the
+      // pre-layout (stacked) specs → a near-zero box → runaway zoom (the
+      // 4400 %/"nodes aren't rendering" symptom). Projection is now only the
+      // fallback for an unregistered shape kind.
+      const local = this.boundsOfNode(node);
+      const pos = this.store.getPosition(node.id);
+      if (local && pos) {
+        union({ x: pos.x + local.x, y: pos.y + local.y, width: local.width, height: local.height });
+      } else {
+        union(renderer.getShapeWorldBounds(node.id));
+      }
     }
     for (const edge of this.store.edges()) {
       if (!includeHidden && !this.store.isEdgeVisible(edge.id)) continue;

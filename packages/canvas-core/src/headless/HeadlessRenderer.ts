@@ -26,7 +26,8 @@ import type {
   RendererCapabilities,
 } from '../contracts/IRenderer';
 import type { ISurface, SurfaceBackdrop, SurfaceSpace } from '../contracts/ISurface';
-import type { ElementEventMap } from '../specs';
+import type { BaseShapeSpec, ElementEventMap } from '../specs';
+import { boundsOfSpec } from '../specs';
 import type { Rect } from '../specs/geom';
 import { HeadlessCameraBinding } from './HeadlessCameraBinding';
 
@@ -140,8 +141,15 @@ export class HeadlessElementRenderer implements IElementRenderer {
   connectorGeometryUnchanged(): boolean {
     return false;
   }
-  boundsOfSpec(): undefined {
-    return undefined;
+  /**
+   * Pure geometry, answered for real: the kernel's spec-geometry covers every
+   * built-in kind, so a headless canvas measures node footprints exactly like
+   * a drawing backend would (`GraphLayer.boundsOfNode`, minimap estimates,
+   * ELK size queries — and `getBounds()`'s store-derived fit box — all work
+   * with no GPU). `undefined` only for unregistered third-party kinds.
+   */
+  boundsOfSpec(spec: { readonly kind: string }): Rect | undefined {
+    return boundsOfSpec(spec as BaseShapeSpec);
   }
   scaleShapeSpec(): undefined {
     return undefined;
