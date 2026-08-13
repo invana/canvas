@@ -1,7 +1,7 @@
 {
   "name": "@invana/graph-datasets",
   "version": "0.0.11",
-  "description": "Example graph datasets for @invana/graph (Les Misérables, scientists org chart, random tree, etc.).",
+  "description": "Example graph datasets for @invana/graph (Les Mis\u00e9rables, scientists org chart, random tree, etc.).",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -33,7 +33,7 @@
     "lint": "eslint src/",
     "check-types": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "test": "vitest run"
+    "test": "vitest run --passWithNoTests"
   },
   "peerDependencies": {
     "@invana/canvas": "workspace:*",
