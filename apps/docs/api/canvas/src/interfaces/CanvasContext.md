@@ -1,14 +1,23 @@
 # Interface: CanvasContext
 
-Defined in: [canvas/src/context/CanvasContext.ts:23](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/context/CanvasContext.ts#L23)
+`CanvasContext` — the shared service surface every Layer / Behaviour /
+Layout receives at mount/register time.
+
+Architecture: see `architecture-proposal.md` §2.4.
+
+**One context, three audiences.** Per the proposal, there is no separate
+`LayerContext` / `BehaviourContext` / `LayoutContext` — the same shape is
+handed to every participant so cross-cutting access (read peer layers,
+fire camera moves, tap telemetry) doesn't need three parallel context types.
+
+The `Canvas` builds a concrete object that satisfies this interface and
+passes it down. Tests can construct a stub by satisfying these fields.
 
 ## Properties
 
 ### behaviours
 
 > `readonly` **behaviours**: [`BehaviourRegistry`](../classes/BehaviourRegistry.md)
-
-Defined in: [canvas/src/context/CanvasContext.ts:32](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/context/CanvasContext.ts#L32)
 
 Behaviour registry — `register / setEnabled / get<T>(id) / list`.
 Behaviours never auto-enable; the developer registers + enables explicitly
@@ -20,8 +29,6 @@ Behaviours never auto-enable; the developer registers + enables explicitly
 
 > `readonly` **camera**: [`Camera`](../classes/Camera.md)
 
-Defined in: [canvas/src/context/CanvasContext.ts:35](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/context/CanvasContext.ts#L35)
-
 Camera — pan/zoom/projection. Wraps a `pixi-viewport` `Viewport`.
 
 ***
@@ -29,8 +36,6 @@ Camera — pan/zoom/projection. Wraps a `pixi-viewport` `Viewport`.
 ### canvasElement?
 
 > `readonly` `optional` **canvasElement?**: `HTMLCanvasElement`
-
-Defined in: [canvas/src/context/CanvasContext.ts:71](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/context/CanvasContext.ts#L71)
 
 The underlying HTMLCanvasElement when running in DOM mode (`Canvas.init`).
 Undefined for `Canvas.initWithStage` (headless / test path). Layers that
@@ -43,9 +48,23 @@ read this to find a parent element and to attach native DOM listeners.
 
 > `readonly` **events**: [`CanvasEventBus`](../classes/CanvasEventBus.md)
 
-Defined in: [canvas/src/context/CanvasContext.ts:38](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/context/CanvasContext.ts#L38)
-
 Canvas-wide event bus + telemetry tap channel.
+
+***
+
+### gestures
+
+> `readonly` **gestures**: [`GestureArbiter`](GestureArbiter.md)
+
+Pointer-gesture arbitration — at most one owner at a time. A behaviour that
+needs the pointer to itself (drag, lasso, brush, resize, edge draw) claims
+it here rather than suspending the camera's pan plugin behind its back;
+`DragPanBehaviour` yields whenever `gestures.owner` names somebody else.
+
+Behaviours should reach for `Behaviour.claimGesture` /
+`Behaviour.releaseGesture` instead of calling this directly — the base class
+releases on `disable()` / `destroy()`, and a stranded claim would freeze
+both the camera and every other gesture.
 
 ***
 
@@ -53,22 +72,20 @@ Canvas-wide event bus + telemetry tap channel.
 
 > `readonly` **layers**: [`LayerRegistry`](../classes/LayerRegistry.md)
 
-Defined in: [canvas/src/context/CanvasContext.ts:25](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/context/CanvasContext.ts#L25)
-
 Layer registry — `add / remove / get<T>(id) / list / byZOrder`.
 
 ***
 
-### stage
+### store
 
-> `readonly` **stage**: `Container`
+> `readonly` **store**: [`CanvasStore`](../../../canvas-store/src/interfaces/CanvasStore.md)
 
-Defined in: [canvas/src/context/CanvasContext.ts:63](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/context/CanvasContext.ts#L63)
-
-The pixi `app.stage` (or test stage) — the renderer root. `ScreenLayer.mount`
-attaches its root container here, as a sibling of `world`. Pixi's child
-order = draw order: `world` is added first (bottom), each `ScreenLayer`'s
-root is added after (above). No screen-wrapper container exists.
+The renderer-free kernel (`@invana/canvas-store`) — `view` (reactive config +
+interaction state), `data` (bulk per-source stores), `events`, `theme`,
+history. The cross-cutting handle for the state migration: layers
+read/subscribe `store.data[id]` + `store.view`; behaviours write interaction
+via `store.view.update(...)`. During M0 the engine mirrors its config into
+`store.view.definition` (see `Canvas.update`).
 
 ***
 
@@ -76,34 +93,16 @@ root is added after (above). No screen-wrapper container exists.
 
 > `readonly` **theme**: [`ThemeState`](ThemeState.md)
 
-Defined in: [canvas/src/context/CanvasContext.ts:46](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/context/CanvasContext.ts#L46)
-
 The active theme channel. A single publisher (the domain `ThemeBehaviour`)
 calls `theme.set(...)`; theme-aware layers read `theme.current()` and/or
 subscribe to the `'theme:change'` event to recolour. `current()` is `null`
 until a theme is first published.
-
-***
-
-### world
-
-> `readonly` **world**: `Container`
-
-Defined in: [canvas/src/context/CanvasContext.ts:55](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/context/CanvasContext.ts#L55)
-
-The world container — a `pixi-viewport` `Viewport` instance. Camera-
-transformed; `WorldLayer.mount` attaches its root sub-layer container
-here. Typed as `Container` so domain code doesn't depend on
-`pixi-viewport`; reach for the `Viewport`-specific API via
-`camera.viewport`.
 
 ## Methods
 
 ### clearMessage()
 
 > **clearMessage**(): `void`
-
-Defined in: [canvas/src/context/CanvasContext.ts:82](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/context/CanvasContext.ts#L82)
 
 Clear the current canvas message.
 
@@ -113,11 +112,93 @@ Clear the current canvas message.
 
 ***
 
+### createOverlay()
+
+> **createOverlay**(`label`, `space?`): [`IOverlayDevice`](IOverlayDevice.md)
+
+A drawing device for a **transient** visual — a lasso, a brush rectangle, a
+drag ghost. Not for layer content: anything durable is a spec in the store
+(`docs/renderer-split-design.md` §3).
+
+Available to behaviours as well as layers, because a gesture overlay belongs
+to the gesture, not to any one layer.
+
+#### Parameters
+
+##### label
+
+`string`
+
+##### space?
+
+[`OverlaySpace`](../type-aliases/OverlaySpace.md)
+
+#### Returns
+
+[`IOverlayDevice`](IOverlayDevice.md)
+
+***
+
+### createStateStore()
+
+> **createStateStore**\<`T`\>(`initial`): [`ReactiveStore`](ReactiveStore.md)\<`T`\>
+
+Build a patch-emitting [ReactiveStore](ReactiveStore.md) — the factory behind
+`Layer.state`. Injected by the engine (which implements it with the
+kernel's `createReactiveStore`) because this package is dependency-free
+and cannot construct a store itself; the seam is also what makes the
+backend swappable (a collaborative canvas injects a Yjs-backed factory).
+
+#### Type Parameters
+
+##### T
+
+`T` *extends* `object`
+
+#### Parameters
+
+##### initial
+
+`T`
+
+#### Returns
+
+[`ReactiveStore`](ReactiveStore.md)\<`T`\>
+
+***
+
+### createSurface()
+
+> **createSurface**(`space`, `id`, `opts?`): [`ISurface`](ISurface.md)
+
+A layer's slice of the renderer — its drawing device, overlays, visibility
+and paint order. Replaces the layer bases constructing a pixi `Container`
+themselves, and is the seam a second backend implements
+(`docs/renderer-split-design.md` §4).
+
+#### Parameters
+
+##### space
+
+[`SurfaceSpace`](../type-aliases/SurfaceSpace.md)
+
+##### id
+
+`string`
+
+##### opts?
+
+[`SurfaceOptions`](SurfaceOptions.md)
+
+#### Returns
+
+[`ISurface`](ISurface.md)
+
+***
+
 ### showMessage()
 
 > **showMessage**(`text`, `timeout?`): `void`
-
-Defined in: [canvas/src/context/CanvasContext.ts:79](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/context/CanvasContext.ts#L79)
 
 Show a transient message on the shared canvas message channel — the same
 call as `Canvas.showMessage`. Lets layers / behaviours / layouts surface a

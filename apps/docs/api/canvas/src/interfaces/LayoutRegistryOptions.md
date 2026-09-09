@@ -1,11 +1,14 @@
 # Interface: LayoutRegistryOptions
 
-Defined in: [canvas/src/registries/LayoutRegistry.ts:13](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/registries/LayoutRegistry.ts#L13)
+`LayoutRegistry` — stores the Layouts registered on a Canvas, addressed by id.
+
+Simpler than `LayerRegistry` / `BehaviourRegistry`: layouts aren't mounted,
+z-ordered, or wired to input — they're held so `Canvas.update()` can push
+config to them by id and consumers can fetch + `apply()` them. A graph runs
+one layout at a time, but several may be registered (e.g. a layout picker).
 
 ## Properties
 
 ### bus
 
 > **bus**: [`CanvasEventBus`](../classes/CanvasEventBus.md)
-
-Defined in: [canvas/src/registries/LayoutRegistry.ts:14](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/registries/LayoutRegistry.ts#L14)

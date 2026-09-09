@@ -1,8 +1,10 @@
 {
   "name": "@invana/canvas-designer",
   "version": "0.0.12",
-  "description": "Node/Edge template designer for @invana/canvas \u2014 WYSIWYG authoring of composite node templates (drag canvas, layers, undo/redo, save/load); ships default starter templates. Optional: rendering templates needs only @invana/graph.",
+  "description": "Node/Edge template designer for @invana/canvas — WYSIWYG authoring of composite node templates (drag canvas, layers, undo/redo, save/load); ships default starter templates. Optional: rendering templates needs only @invana/graph.",
+  "homepage": "https://github.com/invana/canvas#readme",
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "typedocOptions": {
@@ -28,9 +30,9 @@
   },
   "devDependencies": {
     "@invana/canvas-ui": "workspace:*",
-    "@invana/forms": "^0.0.19",
+    "@invana/forms": "^0.0.23",
     "@invana/graph": "workspace:*",
-    "@invana/ui": "^0.0.19",
+    "@invana/ui": "^0.0.23",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/react": "^18.3.12",
@@ -49,7 +51,16 @@
     "card",
     "react"
   ],
+  "bugs": {
+    "url": "https://github.com/invana/canvas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/invana/canvas.git",
+    "directory": "packages/canvas-designer"
+  },
   "license": "Apache-2.0",
+  "author": "Ravi Raja Merugu",
   "module": "./dist/index.js",
   "exports": {
     ".": {

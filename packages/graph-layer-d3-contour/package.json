@@ -2,7 +2,9 @@
   "name": "@invana/graph-layer-d3-contour",
   "version": "0.0.12",
   "description": "Density-contour overlay Layer for @invana/graph, backed by d3-contour.",
+  "homepage": "https://github.com/invana/canvas#readme",
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "typedocOptions": {
@@ -23,7 +25,7 @@
   "peerDependencies": {
     "@invana/canvas": "workspace:*",
     "@invana/graph": "workspace:*",
-    "pixi.js": "^8.18.1"
+    "pixi.js": "^8.20.1"
   },
   "devDependencies": {
     "@invana/canvas": "workspace:*",
@@ -31,7 +33,7 @@
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/d3-contour": "^3.0.6",
-    "pixi.js": "^8.18.1",
+    "pixi.js": "^8.20.1",
     "tsup": "^8.3.5",
     "typescript": "5.9.2"
   },
@@ -44,7 +46,16 @@
     "density",
     "contour"
   ],
+  "bugs": {
+    "url": "https://github.com/invana/canvas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/invana/canvas.git",
+    "directory": "packages/graph-layer-d3-contour"
+  },
   "license": "Apache-2.0",
+  "author": "Ravi Raja Merugu",
   "module": "./dist/index.js",
   "exports": {
     ".": {

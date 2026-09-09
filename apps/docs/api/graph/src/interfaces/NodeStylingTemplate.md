@@ -1,7 +1,5 @@
 # Interface: NodeStylingTemplate
 
-Defined in: graph/src/template/types.ts:73
-
 Per-type styling: roles + typography. Every colour is a **pair** — a `*Role`
 field (themed, resolved from the active palette) **or** a direct numeric field
 (fixed literal). `*Role` wins when both are set.
@@ -12,15 +10,11 @@ field (themed, resolved from the active palette) **or** a direct numeric field
 
 > `optional` **accent?**: `number`
 
-Defined in: graph/src/template/types.ts:86
-
 ***
 
 ### accentRole?
 
 > `optional` **accentRole?**: [`ColorRole`](../type-aliases/ColorRole.md)
-
-Defined in: graph/src/template/types.ts:85
 
 ***
 
@@ -28,15 +22,11 @@ Defined in: graph/src/template/types.ts:85
 
 > `optional` **bg?**: `number`
 
-Defined in: graph/src/template/types.ts:84
-
 ***
 
 ### bgRole?
 
 > `optional` **bgRole?**: [`ColorRole`](../type-aliases/ColorRole.md)
-
-Defined in: graph/src/template/types.ts:83
 
 ***
 
@@ -44,15 +34,11 @@ Defined in: graph/src/template/types.ts:83
 
 > `optional` **fill?**: `number`
 
-Defined in: graph/src/template/types.ts:77
-
 ***
 
 ### fillRole?
 
 > `optional` **fillRole?**: [`ColorRole`](../type-aliases/ColorRole.md)
-
-Defined in: graph/src/template/types.ts:76
 
 ***
 
@@ -60,23 +46,17 @@ Defined in: graph/src/template/types.ts:76
 
 > `optional` **label?**: [`LabelStyling`](LabelStyling.md)
 
-Defined in: graph/src/template/types.ts:81
-
 ***
 
 ### name
 
 > **name**: `string`
 
-Defined in: graph/src/template/types.ts:74
-
 ***
 
 ### slots?
 
 > `optional` **slots?**: `Record`\<`string`, [`SlotStyling`](SlotStyling.md)\>
-
-Defined in: graph/src/template/types.ts:88
 
 Per-slot styling, keyed by slot name (e.g. `title`, `subtitle`, `divider`).
 
@@ -86,20 +66,20 @@ Per-slot styling, keyed by slot name (e.g. `title`, `subtitle`, `divider`).
 
 > `optional` **stroke?**: `number`
 
-Defined in: graph/src/template/types.ts:79
-
 ***
 
 ### strokeRole?
 
 > `optional` **strokeRole?**: [`ColorRole`](../type-aliases/ColorRole.md)
 
-Defined in: graph/src/template/types.ts:78
+Border colour — applies to **both** structure kinds: it becomes the shape's
+`bgStrokeColor` on a `simple` structure, and the composite silhouette's own
+stroke on a `card` (so it traces a custom `frame` too). Defaults to no
+border when unset; [strokeWidth](#strokewidth) defaults to `1` on a card and `1.5`
+on a simple shape.
 
 ***
 
 ### strokeWidth?
 
 > `optional` **strokeWidth?**: `number`
-
-Defined in: graph/src/template/types.ts:80

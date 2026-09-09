@@ -5,7 +5,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "lint": "turbo run lint && node scripts/check-renderer-boundary.mjs && node scripts/check-api-surface.mjs",
+    "lint": "turbo run lint && node scripts/check-renderer-boundary.mjs && node scripts/check-api-surface.mjs && node scripts/check-node-import.mjs",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
     "test": "turbo run test",
@@ -16,7 +16,8 @@
     "docs:dev": "pnpm --filter @canvas/docs dev",
     "docs:preview": "pnpm --filter @canvas/docs preview",
     "check-boundaries": "node scripts/check-renderer-boundary.mjs",
-    "check-api-surface": "node scripts/check-api-surface.mjs"
+    "check-api-surface": "node scripts/check-api-surface.mjs",
+    "check-node-import": "node scripts/check-node-import.mjs"
   },
   "devDependencies": {
     "git-cliff": "^2.13.1",

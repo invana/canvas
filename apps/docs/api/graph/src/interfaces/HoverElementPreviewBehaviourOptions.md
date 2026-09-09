@@ -1,20 +1,16 @@
 # Interface: HoverElementPreviewBehaviourOptions
 
-Defined in: [graph/src/behaviours/HoverElementPreviewBehaviour.ts:230](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/HoverElementPreviewBehaviour.ts#L230)
-
 Constructor options for `HoverElementPreviewBehaviour`.
 
 ## Extends
 
-- `BehaviourOptions`
+- [`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md)
 
 ## Properties
 
 ### card?
 
 > `optional` **card?**: [`HoverElementPreviewCardSpec`](HoverElementPreviewCardSpec.md)
-
-Defined in: [graph/src/behaviours/HoverElementPreviewBehaviour.ts:278](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/HoverElementPreviewBehaviour.ts#L278)
 
 The serializable card template — the **fallback** used when no per-type
 spec in [cards](#cards) matches the hovered element. Default `{}`.
@@ -24,8 +20,6 @@ spec in [cards](#cards) matches the hovered element. Default `{}`.
 ### cards?
 
 > `optional` **cards?**: [`HoverElementPreviewCardsByType`](HoverElementPreviewCardsByType.md)
-
-Defined in: [graph/src/behaviours/HoverElementPreviewBehaviour.ts:286](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/HoverElementPreviewBehaviour.ts#L286)
 
 Per-type card specs, keyed by element `type` (`cards.nodes[type]` /
 `cards.edges[type]`). Lets a 'person' node and a 'company' node show
@@ -38,8 +32,6 @@ Falls back to [card](#card) when a type has no entry. Default `{}`.
 
 > `optional` **closeDelay?**: `number`
 
-Defined in: [graph/src/behaviours/HoverElementPreviewBehaviour.ts:247](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/HoverElementPreviewBehaviour.ts#L247)
-
 Grace period, in ms, after the pointer leaves before the card hides —
 smooths jitter when crossing element gaps. Default `50`.
 
@@ -48,8 +40,6 @@ smooths jitter when crossing element gaps. Default `50`.
 ### enable?
 
 > `optional` **enable?**: `boolean` \| ((`element`, `kind`) => `boolean`)
-
-Defined in: [graph/src/behaviours/HoverElementPreviewBehaviour.ts:272](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/HoverElementPreviewBehaviour.ts#L272)
 
 Per-target enable predicate. `boolean` is a global on/off; a function runs
 per hover with the live `GraphNode` / `GraphEdge` record (+ its `kind`) and
@@ -61,13 +51,11 @@ may veto showing a card for that element. Default `true`.
 
 > `optional` **enabled?**: `boolean`
 
-Defined in: canvas/dist/index.d.ts:733
-
 Default `false` — the developer explicitly enables.
 
 #### Inherited from
 
-`BehaviourOptions.enabled`
+[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`enabled`](../../../canvas/src/interfaces/BehaviourOptions.md#enabled)
 
 ***
 
@@ -75,19 +63,15 @@ Default `false` — the developer explicitly enables.
 
 > **id**: `string`
 
-Defined in: canvas/dist/index.d.ts:726
-
 #### Inherited from
 
-`BehaviourOptions.id`
+[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`id`](../../../canvas/src/interfaces/BehaviourOptions.md#id)
 
 ***
 
 ### interactive?
 
 > `optional` **interactive?**: `boolean`
-
-Defined in: [graph/src/behaviours/HoverElementPreviewBehaviour.ts:265](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/HoverElementPreviewBehaviour.ts#L265)
 
 Interactive card — let the pointer enter the card (to select text, click
 links, scroll) without it vanishing. Default `true`. Set `false` for a
@@ -107,8 +91,6 @@ the element and the card — pair it with e.g. `closeDelay: 200`.
 
 > `optional` **onHide?**: () => `void`
 
-Defined in: [graph/src/behaviours/HoverElementPreviewBehaviour.ts:291](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/HoverElementPreviewBehaviour.ts#L291)
-
 Fired when the card hides.
 
 #### Returns
@@ -120,8 +102,6 @@ Fired when the card hides.
 ### onShow?
 
 > `optional` **onShow?**: (`snapshot`) => `void`
-
-Defined in: [graph/src/behaviours/HoverElementPreviewBehaviour.ts:289](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/HoverElementPreviewBehaviour.ts#L289)
 
 Fired when a card becomes visible.
 
@@ -141,8 +121,6 @@ Fired when a card becomes visible.
 
 > `optional` **openDelay?**: `number`
 
-Defined in: [graph/src/behaviours/HoverElementPreviewBehaviour.ts:241](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/HoverElementPreviewBehaviour.ts#L241)
-
 Dwell, in ms, before a hovered element's card shows. Default `50`.
 
 ***
@@ -150,8 +128,6 @@ Dwell, in ms, before a hovered element's card shows. Default `50`.
 ### placement?
 
 > `optional` **placement?**: [`PreviewPlacement`](../type-aliases/PreviewPlacement.md)
-
-Defined in: [graph/src/behaviours/HoverElementPreviewBehaviour.ts:250](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/HoverElementPreviewBehaviour.ts#L250)
 
 Anchor placement hint passed through to the consumer. Default `'bottom-right'`.
 
@@ -161,15 +137,13 @@ Anchor placement hint passed through to the consumer. Default `'bottom-right'`.
 
 > `optional` **shortcuts?**: readonly `string`[]
 
-Defined in: canvas/dist/index.d.ts:739
-
 Gesture identifiers this behaviour claims. Used by `BehaviourRegistry`
 for conflict warnings. Format is convention-free (`'shift+drag'`,
 `'wheel+ctrl'`, `'rclick'`); registries match strings as-is.
 
 #### Inherited from
 
-`BehaviourOptions.shortcuts`
+[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`shortcuts`](../../../canvas/src/interfaces/BehaviourOptions.md#shortcuts)
 
 ***
 
@@ -177,21 +151,17 @@ for conflict warnings. Format is convention-free (`'shift+drag'`,
 
 > **targetLayerId**: `string`
 
-Defined in: [graph/src/behaviours/HoverElementPreviewBehaviour.ts:232](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/HoverElementPreviewBehaviour.ts#L232)
-
 Required — the `GraphLayer` id this behaviour watches.
 
 #### Overrides
 
-`BehaviourOptions.targetLayerId`
+[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`targetLayerId`](../../../canvas/src/interfaces/BehaviourOptions.md#targetlayerid)
 
 ***
 
 ### targets?
 
 > `optional` **targets?**: readonly [`GraphElementKind`](../type-aliases/GraphElementKind.md)[]
-
-Defined in: [graph/src/behaviours/HoverElementPreviewBehaviour.ts:238](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/HoverElementPreviewBehaviour.ts#L238)
 
 Which kinds fire a preview. A hover on a kind not listed is ignored.
 Default `['node', 'edge']`.

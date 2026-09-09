@@ -2,8 +2,6 @@
 
 > **samplePathAt**(`path`, `t`): `object`
 
-Defined in: [canvas/src/primitives/connectors/pathSampling.ts:109](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/connectors/pathSampling.ts#L109)
-
 Combined point + unit-tangent sample at parameter `t ∈ [0, 1]` along the
 path. Used by labels-along-path and any other decoration that needs both
 the location and the local direction at the same parameter (e.g. for
@@ -20,7 +18,7 @@ paths reproduce segment endpoints exactly.
 
 ### path
 
-[`Path`](../type-aliases/Path.md)
+[`Path`](../../../renderer-pixijs/src/type-aliases/Path.md)
 
 ### t
 
@@ -32,8 +30,8 @@ paths reproduce segment endpoints exactly.
 
 ### point
 
-> **point**: `Point`
+> **point**: [`Point`](../../../renderer-pixijs/src/interfaces/Point.md)
 
 ### tangent
 
-> **tangent**: [`Vec2`](../interfaces/Vec2.md)
+> **tangent**: [`Vec2`](../../../renderer-pixijs/src/interfaces/Vec2.md)

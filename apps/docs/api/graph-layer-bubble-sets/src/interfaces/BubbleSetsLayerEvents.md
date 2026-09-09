@@ -1,10 +1,13 @@
 # Interface: BubbleSetsLayerEvents
 
-Defined in: [graph-layer-bubble-sets/src/types.ts:165](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-bubble-sets/src/types.ts#L165)
+A string-keyed event map (`{ eventType: payload }`) — the conventional generic
+bound for scoped [EventEmitter](../../../canvas/src/classes/EventEmitter.md)s (layer / behaviour / domain-store event
+channels). `EventEmitter`/`SourceEmitter` accept any `object`; this is the
+portable shape most maps use.
 
 ## Extends
 
-- `EventMap`
+- [`EventMap`](../../../canvas/src/type-aliases/EventMap.md)
 
 ## Indexable
 
@@ -15,8 +18,6 @@ Defined in: [graph-layer-bubble-sets/src/types.ts:165](https://github.com/invana
 ### recompute
 
 > **recompute**: `object`
-
-Defined in: [graph-layer-bubble-sets/src/types.ts:167](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-bubble-sets/src/types.ts#L167)
 
 Fired after each full recompute, before paint.
 
@@ -33,8 +34,6 @@ Fired after each full recompute, before paint.
 ### set:painted
 
 > **set:painted**: `object`
-
-Defined in: [graph-layer-bubble-sets/src/types.ts:169](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-bubble-sets/src/types.ts#L169)
 
 Fired once per set after it's painted.
 

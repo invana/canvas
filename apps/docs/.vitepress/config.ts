@@ -112,7 +112,7 @@ export default defineConfig({
             { text: 'Installation & first scene', link: '/guide/getting-started' },
             { text: 'Architecture', link: '/guide/architecture' },
             { text: 'Glossary', link: '/guide/glossary' },
-            { text: 'Package status', link: '/guide/packages' },
+            { text: 'Packages', link: '/guide/packages' },
           ],
         },
         {

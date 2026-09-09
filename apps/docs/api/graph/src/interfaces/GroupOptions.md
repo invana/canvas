@@ -1,7 +1,5 @@
 # Interface: GroupOptions
 
-Defined in: [graph/src/layer/types.ts:787](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L787)
-
 Marks a node as a **compound group** — a visual frame drawn behind its
 descendants (children point to it via `parentId`). The presence of this
 field on a node's resolved [NodeStyle](NodeStyle.md) is the only signal the layer
@@ -10,7 +8,13 @@ uses to decide whether to apply group semantics; the structural shape
 
 Group semantics, in summary:
 
-- **Expanded state** (`collapsed !== true`):
+Whether a frame is open or closed is **not** part of these options — it's
+the [COLLAPSED\_STATE](../variables/COLLAPSED_STATE.md) node state (`store.setNodeState(id,
+'collapsed')`, or `states: ['collapsed']` in the data to start closed).
+These options describe the frame itself; the state describes its condition,
+and `state.collapsed` overlays describe how it looks in that condition.
+
+- **Expanded** (the `collapsed` state absent):
   - The node renders behind its children (z-index pushed underneath when
     `behindChildren !== false`) and is **non-hittable** — pointer events
     pass through the frame to the canvas background. The frame is a pure
@@ -22,15 +26,20 @@ Group semantics, in summary:
   - With `autoFit: false`, the layer uses the declared `width` / `height`
     / `radius` literally; children may visually leak outside.
 
-- **Collapsed state** (`collapsed === true`):
+- **Collapsed** (the [COLLAPSED\_STATE](../variables/COLLAPSED_STATE.md) state active):
   - The node renders as a normal interactive node (`hittable: true`,
     default z-order). All descendants are hidden from the renderer; edges
     pointing at a hidden descendant are re-routed to the nearest visible
     collapsed-group ancestor at render time (no mutation to the edge data).
-  - The layer synthesises a count badge showing the number of hidden
-    descendants. The `+`/`−` toggle is rendered via the
-    [ToggleDecorationStyle](../../../canvas-react/src/variables/Canvas.md) decoration on the group — wire up
-    `CollapseExpandBehaviour` to make the toggle clickable.
+  - Auto-fit is skipped and the resolved shape closes to its own minimal
+    form (`ShapeCtor.collapsedOf` — a `tabbed-rect` becomes its tab; a
+    `rect` / `circle` has none and keeps its declared size). Author
+    `state.collapsed.shape` to describe the closed silhouette yourself
+    instead — declaring a shape there opts out of the minimal form.
+  - The `+`/`−` toggle is rendered via the [ToggleDecorationStyle](../../../canvas/src/variables/SpecStore.md)
+    decoration on the group — wire up `CollapseExpandBehaviour` to make the
+    toggle clickable. A count of the hidden descendants is available too,
+    opt-in via [GroupOptions.showCollapsedCount](#showcollapsedcount).
 
 Nested groups fall out of the `parentId` chain for free: a group node
 whose own `parentId` points at another group becomes a sub-group; the
@@ -45,8 +54,6 @@ shared with tree structures) — no separate group-membership concept.
 
 > `readonly` `optional` **autoFit?**: `boolean`
 
-Defined in: [graph/src/layer/types.ts:793](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L793)
-
 When `true`, the frame's size tracks the bounding box of its direct
 children (computed every flush). When `false`, the declared `width` /
 `height` / `radius` are used verbatim. Default `false`.
@@ -57,24 +64,9 @@ children (computed every flush). When `false`, the declared `width` /
 
 > `readonly` `optional` **behindChildren?**: `boolean`
 
-Defined in: [graph/src/layer/types.ts:815](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L815)
-
 Frame renders at `style.zIndex − 1` so descendants paint on top. Set to
 `false` to keep the frame at its declared z-index (and let descendants
 paint underneath when their z-index is lower). Default `true`.
-
-***
-
-### collapsed?
-
-> `readonly` `optional` **collapsed?**: `boolean`
-
-Defined in: [graph/src/layer/types.ts:809](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L809)
-
-True = render the group as a collapsed super-node (children hidden,
-+/- toggle shows `+`, count badge shows the hidden descendant count).
-Toggle through `CollapseExpandBehaviour` or by updating this field
-directly via `store.updateNode`. Default `false`.
 
 ***
 
@@ -82,20 +74,23 @@ directly via `store.updateNode`. Default `false`.
 
 > `readonly` `optional` **headerHeight?**: `number`
 
-Defined in: [graph/src/layer/types.ts:822](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L822)
+Height (px) of the band reserved above the children bbox for the
+group's title. Default `0`.
 
-Optional header band height (px) added above the children bbox. The
-frame still draws as a single rect / circle — `headerHeight` only
-shifts the auto-fit recompute so the label area at the top stays clear
-of children. Default `0`.
+How it *draws* depends on the frame's shape kind:
+
+- `kind: 'rect'` / `'circle'` — nothing is drawn. The band only shifts
+  the auto-fit recompute so a label placed at the top doesn't collide
+  with the children underneath it.
+- `kind: 'tabbed-rect'` — the band becomes the frame's **tab**: it's
+  the folder's title flag, sitting above the body rather than inside
+  it, and the title renders in it.
 
 ***
 
 ### height?
 
 > `readonly` `optional` **height?**: `number`
-
-Defined in: [graph/src/layer/types.ts:829](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L829)
 
 Sibling of [width](#width) for `kind: 'rect'`.
 
@@ -105,8 +100,6 @@ Sibling of [width](#width) for `kind: 'rect'`.
 
 > `readonly` `optional` **padding?**: `number`
 
-Defined in: [graph/src/layer/types.ts:802](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L802)
-
 Inset around the children bbox before the frame outline. Default `16`.
 
 ***
@@ -115,10 +108,73 @@ Inset around the children bbox before the frame outline. Default `16`.
 
 > `readonly` `optional` **radius?**: `number`
 
-Defined in: [graph/src/layer/types.ts:834](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L834)
-
 Floor (with `autoFit`) or fixed (without) radius. Circle frames only.
 Ignored for rect frames.
+
+***
+
+### showCollapsedCount?
+
+> `readonly` `optional` **showCollapsedCount?**: `boolean`
+
+Show a badge with the number of hidden descendants while collapsed.
+Default `false`.
+
+Off by default because the badge is placed `inside-center`, and on a
+`tabbed-rect` inside placements route into the **tab** — so the count
+lands on top of the group's own title. Turn it on for frames whose title
+is elsewhere (or absent).
+
+***
+
+### tabAlign?
+
+> `readonly` `optional` **tabAlign?**: `"center"` \| `"left"` \| `"right"`
+
+Which side of the frame the tab hugs. Default `'left'`.
+
+***
+
+### tabOffset?
+
+> `readonly` `optional` **tabOffset?**: `number`
+
+Gap between the [tabAlign](#tabalign) edge and the tab. Default `0`.
+
+***
+
+### tabPadding?
+
+> `readonly` `optional` **tabPadding?**: `number`
+
+Horizontal breathing room between the title and each end of an
+auto-sized tab. Default `10`. Ignored when [tabWidth](#tabwidth) is set.
+
+***
+
+### tabSkew?
+
+> `readonly` `optional` **tabSkew?**: `number`
+
+Horizontal run of the tab's angled side — the taper that reads as a
+folder tab rather than a box. Default `0` (square). The auto-sizing in
+[tabWidth](#tabwidth) adds this on top of the measured title, so leaning the
+tab never squeezes the text.
+
+***
+
+### tabWidth?
+
+> `readonly` `optional` **tabWidth?**: `number`
+
+Width of a `tabbed-rect` frame's tab. Ignored by other shape kinds.
+
+Leave it unset (the default) to **auto-size the tab to the title** — the
+layer measures the group's resolved `labelText` in its resolved font and
+hands the size to the shape, which decides what to do with it
+(`ShapeCtor.fitToContent`). That's what keeps a row of frames with
+differently-sized titles looking consistent without per-frame tuning.
+Set it to pin every tab to the same width instead.
 
 ***
 
@@ -126,12 +182,10 @@ Ignored for rect frames.
 
 > `readonly` `optional` **togglePlacement?**: `any`
 
-Defined in: [graph/src/layer/types.ts:853](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L853)
-
 Where the auto-attached `+` / `−` toggle sits relative to the group's
 frame. Two forms:
 
-- **Keyword** — one of the [TogglePlacement](../../../canvas-react/src/variables/Canvas.md) aliases
+- **Keyword** — one of the [TogglePlacement](../../../canvas/src/variables/SpecStore.md) aliases
   (`'bottom'`, `'inside-bottom'`, `'top-right'`, `'bottom-left'`, …).
   Resolved against the host's AABB by the toggle decoration.
 - **Shape-local coords** — `{ x, y }`, an absolute point inside the
@@ -151,8 +205,6 @@ position falls inside or outside the host's hit area.
 
 > `readonly` `optional` **userResizable?**: `boolean`
 
-Defined in: [graph/src/layer/types.ts:800](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L800)
-
 When `true`, `GroupResizeBehaviour` mounts corner / radial handle
 decorations on this group and lets the user drag to resize. Composes
 with `autoFit` per the floor rule on `width` / `height` / `radius`.
@@ -163,8 +215,6 @@ Default `false`.
 ### width?
 
 > `readonly` `optional` **width?**: `number`
-
-Defined in: [graph/src/layer/types.ts:827](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L827)
 
 Floor (with `autoFit`) or fixed (without) width. Rect frames only.
 Ignored for circle frames.

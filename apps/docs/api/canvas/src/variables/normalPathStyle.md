@@ -1,8 +1,6 @@
 # Variable: normalPathStyle
 
-> `const` **normalPathStyle**: [`IPathStyle`](../type-aliases/IPathStyle.md)
-
-Defined in: [canvas/src/primitives/connectors/pathStyles/normal.ts:11](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/connectors/pathStyles/normal.ts#L11)
+> `const` **normalPathStyle**: [`IPathStyle`](../../../renderer-pixijs/src/type-aliases/IPathStyle.md)
 
 Sharp segments. Walks the polyline emitting `M` then `L L L …`.
 

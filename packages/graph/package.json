@@ -1,8 +1,10 @@
 {
   "name": "@invana/graph",
   "version": "0.0.12",
-  "description": "Graph layer + behaviours for @invana/canvas \u2014 GraphLayer, MiniMapLayer, hover/select/lasso/brush/pan/drag behaviours.",
+  "description": "Graph layer + behaviours for @invana/canvas — GraphLayer, MiniMapLayer, hover/select/lasso/brush/pan/drag behaviours.",
+  "homepage": "https://github.com/invana/canvas#readme",
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "typedocOptions": {
@@ -42,7 +44,16 @@
     "edges",
     "visualization"
   ],
+  "bugs": {
+    "url": "https://github.com/invana/canvas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/invana/canvas.git",
+    "directory": "packages/graph"
+  },
   "license": "Apache-2.0",
+  "author": "Ravi Raja Merugu",
   "module": "./dist/index.js",
   "exports": {
     ".": {

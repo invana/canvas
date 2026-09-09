@@ -1,20 +1,16 @@
 # Class: KeyboardCameraInputBehaviour
 
-Defined in: [canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:55](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L55)
-
 What `BehaviourRegistry` sees.
 
 ## Extends
 
-- [`Behaviour`](Behaviour.md)
+- [`Behaviour`](Behaviour.md)\<[`KeyboardCameraInputBehaviourOptions`](../interfaces/KeyboardCameraInputBehaviourOptions.md)\>
 
 ## Constructors
 
 ### Constructor
 
 > **new KeyboardCameraInputBehaviour**(`opts`): `KeyboardCameraInputBehaviour`
-
-Defined in: [canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:61](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L61)
 
 #### Parameters
 
@@ -36,19 +32,30 @@ Defined in: [canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:61](https://g
 
 > `protected` **\_enabled**: `boolean`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:65](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/Behaviour.ts#L65)
-
 #### Inherited from
 
 [`Behaviour`](Behaviour.md).[`_enabled`](Behaviour.md#_enabled)
 
 ***
 
+### \_options
+
+> `protected` **\_options**: [`KeyboardCameraInputBehaviourOptions`](../interfaces/KeyboardCameraInputBehaviourOptions.md)
+
+The construction options, merged in-place by [setOptions](#setoptions). Named
+`_options` (not `options`) so subclasses that expose a bespoke
+`get options()` snapshot don't collide with it. Subclasses read their live
+config from here (or from fields re-synced in [onOptionsChanged](#onoptionschanged)).
+
+#### Inherited from
+
+[`Behaviour`](Behaviour.md).[`_options`](Behaviour.md#_options)
+
+***
+
 ### ctx?
 
 > `protected` `optional` **ctx?**: [`CanvasContext`](../interfaces/CanvasContext.md)
-
-Defined in: [canvas/src/behaviours/Behaviour.ts:66](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/Behaviour.ts#L66)
 
 #### Inherited from
 
@@ -60,19 +67,33 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:66](https://github.com/invana/ca
 
 > `readonly` **id**: `string`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:55](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/Behaviour.ts#L55)
-
 #### Inherited from
 
 [`Behaviour`](Behaviour.md).[`id`](Behaviour.md#id)
 
 ***
 
+### kind
+
+> `readonly` **kind**: `"keyboard-camera"` = `'keyboard-camera'`
+
+Stable **class kind** — a minification-safe discriminator matching the
+`@invana/canvas-ui` settings-editor registry key (e.g. `'drag-pan'`,
+`'wheel-zoom'`). Distinct from [id](../../../graph/src/classes/EdgeLODBehaviour.md#id) (the per-instance key): all
+`DragPanBehaviour` instances share `kind: 'drag-pan'`. Concrete behaviours
+set it as a class field; left `undefined` on any that haven't, so consumers
+fall back (e.g. to the class name). Lets domain-free tooling resolve an
+instance's editor without an `instanceof` ladder.
+
+#### Overrides
+
+[`Behaviour`](Behaviour.md).[`kind`](Behaviour.md#kind)
+
+***
+
 ### scope
 
 > `readonly` **scope**: `"canvas"` \| `"layer"`
-
-Defined in: [canvas/src/behaviours/Behaviour.ts:63](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/Behaviour.ts#L63)
 
 `'layer'` if `targetLayerId` is set, otherwise `'canvas'`. Set automatically
 from the constructor — subclasses don't need to re-declare.
@@ -87,8 +108,6 @@ from the constructor — subclasses don't need to re-declare.
 
 > `readonly` `optional` **shortcuts?**: readonly `string`[]
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:57](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/Behaviour.ts#L57)
-
 #### Inherited from
 
 [`Behaviour`](Behaviour.md).[`shortcuts`](Behaviour.md#shortcuts)
@@ -98,8 +117,6 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:57](https://github.com/invana/ca
 ### targetLayerId?
 
 > `readonly` `optional` **targetLayerId?**: `string`
-
-Defined in: [canvas/src/behaviours/Behaviour.ts:56](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/Behaviour.ts#L56)
 
 #### Inherited from
 
@@ -113,8 +130,6 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:56](https://github.com/invana/ca
 
 > **get** **enabled**(): `boolean`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:76](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/Behaviour.ts#L76)
-
 ##### Returns
 
 `boolean`
@@ -125,13 +140,29 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:76](https://github.com/invana/ca
 
 ***
 
+### hasGestureClaim
+
+#### Get Signature
+
+> **get** `protected` **hasGestureClaim**(): `boolean`
+
+Does this behaviour currently hold the gesture?
+
+##### Returns
+
+`boolean`
+
+#### Inherited from
+
+[`Behaviour`](Behaviour.md).[`hasGestureClaim`](Behaviour.md#hasgestureclaim)
+
+***
+
 ### isEnabled
 
 #### Get Signature
 
 > **get** `protected` **isEnabled**(): `boolean`
-
-Defined in: [canvas/src/behaviours/Behaviour.ts:139](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/Behaviour.ts#L139)
 
 Convenience `if (!enabled) return;` for use inside event handlers
 (without rebinding `this` cost).
@@ -152,8 +183,6 @@ Convenience `if (!enabled) return;` for use inside event handlers
 
 > **get** **isRegistered**(): `boolean`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:80](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/Behaviour.ts#L80)
-
 `true` once `register(ctx)` has run. Lets the registry skip already-wired behaviours.
 
 ##### Returns
@@ -168,11 +197,44 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:80](https://github.com/invana/ca
 
 ## Methods
 
+### claimGesture()
+
+> `protected` **claimGesture**(`opts?`): `boolean`
+
+Take exclusive ownership of the pointer gesture for the duration of a drag
+(`ctx.gestures`, see `input/GestureArbiter.ts`). Returns `false` when
+another behaviour already owns it — the caller must then **not** start its
+gesture, because two behaviours steering the same pointer is exactly what
+the arbiter exists to prevent.
+
+Claiming also suspends camera panning: `DragPanBehaviour` watches the
+arbiter and yields while anybody else owns the gesture. That replaces the
+old `camera.viewport.plugins.pause('drag')` reach-through, which put a
+`pixi-viewport` internal in the hands of domain behaviours.
+
+Pair every successful claim with [releaseGesture](#releasegesture) on **every** exit
+path — pointerup, pointercancel, abort. `disable()` and `destroy()` release
+automatically as a backstop.
+
+#### Parameters
+
+##### opts?
+
+[`GestureClaimOptions`](../interfaces/GestureClaimOptions.md)
+
+#### Returns
+
+`boolean`
+
+#### Inherited from
+
+[`Behaviour`](Behaviour.md).[`claimGesture`](Behaviour.md#claimgesture)
+
+***
+
 ### destroy()
 
 > **destroy**(): `void`
-
-Defined in: [canvas/src/behaviours/Behaviour.ts:95](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/Behaviour.ts#L95)
 
 Called by `BehaviourRegistry.unregister(id)`. Drops subscriptions.
 
@@ -190,8 +252,6 @@ Called by `BehaviourRegistry.unregister(id)`. Drops subscriptions.
 
 > **disable**(): `void`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:109](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/Behaviour.ts#L109)
-
 #### Returns
 
 `void`
@@ -206,8 +266,6 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:109](https://github.com/invana/c
 
 > **enable**(): `void`
 
-Defined in: [canvas/src/behaviours/Behaviour.ts:103](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/Behaviour.ts#L103)
-
 #### Returns
 
 `void`
@@ -218,11 +276,25 @@ Defined in: [canvas/src/behaviours/Behaviour.ts:103](https://github.com/invana/c
 
 ***
 
+### getOptions()
+
+> **getOptions**(): `Readonly`\<`TOptions`\>
+
+Snapshot of the current (merged) options — seeds a settings editor.
+
+#### Returns
+
+`Readonly`\<`TOptions`\>
+
+#### Inherited from
+
+[`Behaviour`](Behaviour.md).[`getOptions`](Behaviour.md#getoptions)
+
+***
+
 ### onDestroy()
 
 > `protected` **onDestroy**(`_ctx`): `void`
-
-Defined in: [canvas/src/behaviours/Behaviour.ts:121](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/Behaviour.ts#L121)
 
 Cleanup on destroy. Default no-op.
 
@@ -246,8 +318,6 @@ Cleanup on destroy. Default no-op.
 
 > `protected` **onDisable**(): `void`
 
-Defined in: [canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:77](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L77)
-
 Hook fired on disable.
 
 #### Returns
@@ -264,8 +334,6 @@ Hook fired on disable.
 
 > `protected` **onEnable**(): `void`
 
-Defined in: [canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:72](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L72)
-
 Hook fired when the developer enables the behaviour.
 
 #### Returns
@@ -278,11 +346,36 @@ Hook fired when the developer enables the behaviour.
 
 ***
 
+### onOptionsChanged()
+
+> `protected` **onOptionsChanged**(`_changes`): `void`
+
+Hook fired after [setOptions](#setoptions) merges a patch (and after any `enabled`
+toggle is applied). Default no-op. Override to apply an option change live:
+a behaviour whose effect is wired in [onEnable](#onenable) (a pixi-viewport
+plugin, a DOM listener) re-arms here; one that caches option values in
+fields re-syncs them from `this._options` here. `changes` is the raw patch;
+`this._options` already holds the merged result.
+
+#### Parameters
+
+##### \_changes
+
+`Partial`\<`TOptions`\>
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`Behaviour`](Behaviour.md).[`onOptionsChanged`](Behaviour.md#onoptionschanged)
+
+***
+
 ### onRegister()
 
 > `protected` **onRegister**(`_ctx`): `void`
-
-Defined in: [canvas/src/behaviours/KeyboardCameraInputBehaviour.ts:70](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/KeyboardCameraInputBehaviour.ts#L70)
 
 Subscribe to events / setup any handler resources.
 
@@ -302,11 +395,30 @@ Subscribe to events / setup any handler resources.
 
 ***
 
+### reArm()
+
+> `protected` **reArm**(): `void`
+
+Re-run [onDisable](#ondisable) then [onEnable](#onenable) when the behaviour is live, so
+an option change wired at enable-time (a pixi-viewport plugin, a listener
+bound with the old config) picks up `this._options`. No-op when disabled or
+unregistered (the next [onEnable](#onenable) will read the fresh options anyway).
+The idiomatic body of an [onOptionsChanged](#onoptionschanged) override for such
+behaviours.
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`Behaviour`](Behaviour.md).[`reArm`](Behaviour.md#rearm)
+
+***
+
 ### register()
 
 > **register**(`ctx`): `void`
-
-Defined in: [canvas/src/behaviours/Behaviour.ts:85](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/behaviours/Behaviour.ts#L85)
 
 Called by `BehaviourRegistry.register(behaviour)`. Subscribes to inputs.
 
@@ -323,3 +435,71 @@ Called by `BehaviourRegistry.register(behaviour)`. Subscribes to inputs.
 #### Inherited from
 
 [`Behaviour`](Behaviour.md).[`register`](Behaviour.md#register)
+
+***
+
+### releaseGesture()
+
+> `protected` **releaseGesture**(): `void`
+
+End this behaviour's gesture claim. Safe to call any number of times and
+when no claim is held — the arbiter identifies claims by token, so a stale
+release can never evict a later owner.
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`Behaviour`](Behaviour.md).[`releaseGesture`](Behaviour.md#releasegesture)
+
+***
+
+### serializeDefinition()
+
+> **serializeDefinition**(): `Record`\<`string`, `unknown`\>
+
+Contribute this behaviour's serialisable config to a canvas-state snapshot
+(the engine's `DefinitionSerializable` contract). The base implementation
+captures the explicit `enabled` flag (rule 7). Subclasses with additional
+JSON-serialisable options should override and spread `super.serializeDefinition()`.
+
+#### Returns
+
+`Record`\<`string`, `unknown`\>
+
+#### Inherited from
+
+[`Behaviour`](Behaviour.md).[`serializeDefinition`](Behaviour.md#serializedefinition)
+
+***
+
+### setOptions()
+
+> **setOptions**(`changes`): `void`
+
+Merge a serialisable options patch and apply it live. Reflects an `enabled`
+change by enabling/disabling, then calls [onOptionsChanged](#onoptionschanged) so the
+subclass can apply the rest (re-sync cached fields, re-arm a viewport
+plugin, recompute). This is the seam the engine's
+`canvas.update({ behaviours: { [id]: patch } })` path invokes — so a settings
+editor can retune any behaviour without remounting it.
+
+Subclasses with bespoke apply logic (e.g. clearing selection state on a
+mode change) override this and should call `super.setOptions(changes)` first
+to keep `_options` — and thus [getOptions](#getoptions) — coherent.
+
+#### Parameters
+
+##### changes
+
+`Partial`\<`TOptions`\>
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`Behaviour`](Behaviour.md).[`setOptions`](Behaviour.md#setoptions)

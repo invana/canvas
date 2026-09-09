@@ -1,7 +1,5 @@
 # Interface: ContextMenuEvent
 
-Defined in: [graph/src/behaviours/ContextMenuBehaviour.ts:40](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/ContextMenuBehaviour.ts#L40)
-
 Payload handed to [ContextMenuBehaviourOptions.onContextMenu](ContextMenuBehaviourOptions.md#oncontextmenu).
 
 ## Properties
@@ -9,8 +7,6 @@ Payload handed to [ContextMenuBehaviourOptions.onContextMenu](ContextMenuBehavio
 ### data
 
 > `readonly` **data**: `unknown`
-
-Defined in: [graph/src/behaviours/ContextMenuBehaviour.ts:49](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/ContextMenuBehaviour.ts#L49)
 
 Arbitrary user payload from `node.data` / `edge.data`. `undefined` for a
 canvas right-click or when the resolved item carries no `data`.
@@ -21,8 +17,6 @@ canvas right-click or when the resolved item carries no `data`.
 
 > `readonly` **id**: `string`
 
-Defined in: [graph/src/behaviours/ContextMenuBehaviour.ts:44](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/ContextMenuBehaviour.ts#L44)
-
 Node/edge id, or `null` for an empty-canvas right-click.
 
 ***
@@ -30,8 +24,6 @@ Node/edge id, or `null` for an empty-canvas right-click.
 ### screen
 
 > `readonly` **screen**: `object`
-
-Defined in: [graph/src/behaviours/ContextMenuBehaviour.ts:58](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/ContextMenuBehaviour.ts#L58)
 
 Pointer position in screen (canvas-relative) coordinates, via
 `camera.toScreen`. Add the canvas element's bounding-rect offset to place
@@ -52,8 +44,6 @@ canvas container.
 
 > `readonly` **targetType**: [`ContextMenuTargetType`](../type-aliases/ContextMenuTargetType.md)
 
-Defined in: [graph/src/behaviours/ContextMenuBehaviour.ts:42](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/ContextMenuBehaviour.ts#L42)
-
 What was right-clicked.
 
 ***
@@ -61,8 +51,6 @@ What was right-clicked.
 ### world
 
 > `readonly` **world**: `object`
-
-Defined in: [graph/src/behaviours/ContextMenuBehaviour.ts:51](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/ContextMenuBehaviour.ts#L51)
 
 Pointer position in world (scene) coordinates.
 

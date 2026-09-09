@@ -1,13 +1,11 @@
 # Type Alias: CanonicalStateName
 
-> **CanonicalStateName** = `"hovered"` \| `"selected"` \| `"highlighted"` \| `"dimmed"` \| `"disabled"`
-
-Defined in: [graph/src/layer/types.ts:196](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L196)
+> **CanonicalStateName** = `"hovered"` \| `"selected"` \| `"highlighted"` \| `"dimmed"` \| `"disabled"` \| `"collapsed"`
 
 /**
  * Canonical interaction-state names with sensible defaults baked into the
  * GraphLayer's resolver. State styling lives on the layer-level
- * [NodeOption.state](../interfaces/NodeOption.md#state) / per-node [NodeData.state](../interfaces/NodeData.md#state) catalogue —
+ * [NodeOption.state](../interfaces/NodeOption.md#state) / per-node `GraphNode.state` catalogue —
  * `default` is intentionally absent (it's the absence of any active state,
  * not a state itself).
  *

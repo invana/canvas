@@ -9,5 +9,6 @@
   "hideBreadcrumbs": true,
   "hidePageHeader": true,
   "skipErrorChecking": true,
-  "entryFileName": "index.md"
+  "entryFileName": "index.md",
+  "disableSources": true
 }

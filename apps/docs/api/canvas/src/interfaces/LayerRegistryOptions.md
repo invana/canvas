@@ -1,14 +1,27 @@
 # Interface: LayerRegistryOptions
 
-Defined in: [canvas/src/registries/LayerRegistry.ts:24](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/registries/LayerRegistry.ts#L24)
+`LayerRegistry` — stores the Layers added to a Canvas.
+
+Architecture: see `architecture-proposal.md` §2.4 (CanvasContext.layers).
+
+**Responsibilities**
+  - Add / remove (with mount / unmount lifecycle).
+  - Typed `get<T>(id)`.
+  - `byZOrder()` iteration — used by the Canvas tick.
+  - Fires `'scene:layer:add'` / `'scene:layer:remove'` on the bus.
+
+**Lifecycle wiring**
+
+The registry doesn't itself construct the `CanvasContext` — it would be
+circular (the registry is a field of the context). Instead the Canvas
+passes a `getContext()` thunk; `add(layer)` resolves it at the moment of
+mount. This keeps the registry decoupled from the context's full shape.
 
 ## Properties
 
 ### bus
 
 > **bus**: [`CanvasEventBus`](../classes/CanvasEventBus.md)
-
-Defined in: [canvas/src/registries/LayerRegistry.ts:32](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/registries/LayerRegistry.ts#L32)
 
 Bus for `layer:added` / `layer:removed` events.
 
@@ -17,8 +30,6 @@ Bus for `layer:added` / `layer:removed` events.
 ### getContext
 
 > **getContext**: () => [`CanvasContext`](CanvasContext.md)
-
-Defined in: [canvas/src/registries/LayerRegistry.ts:30](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/registries/LayerRegistry.ts#L30)
 
 Resolves the `CanvasContext` at the moment of mount, or `undefined` before
 the Canvas is initialised. Layers added pre-init are stored and mounted

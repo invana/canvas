@@ -2,8 +2,6 @@
 
 > **useCanvasMessage**(`canvas?`): [`UseCanvasMessageResult`](../interfaces/UseCanvasMessageResult.md)
 
-Defined in: [canvas-react/src/hooks/useCanvasMessage.ts:25](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas-react/src/hooks/useCanvasMessage.ts#L25)
-
 Read + drive the shared canvas message channel from React. Subscribes to the
 engine's `message` event (emitted by `Canvas.showMessage` — from anywhere:
 layouts, behaviours, app code) and tracks the current line, auto-clearing it

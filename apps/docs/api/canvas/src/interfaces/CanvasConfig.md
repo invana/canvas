@@ -1,7 +1,5 @@
 # Interface: CanvasConfig
 
-Defined in: [canvas/src/engine/CanvasConfig.ts:14](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/engine/CanvasConfig.ts#L14)
-
 Per-instance options keyed by id. Each value is the instance's own option bag.
 
 ## Properties
@@ -9,8 +7,6 @@ Per-instance options keyed by id. Each value is the instance's own option bag.
 ### activeLayout?
 
 > `optional` **activeLayout?**: `string`
-
-Defined in: [canvas/src/engine/CanvasConfig.ts:26](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/engine/CanvasConfig.ts#L26)
 
 Id of the active layout among [layouts](#layouts). A graph runs one at a time.
 `Canvas.runLayout(id)` applies it; a domain facade (e.g. `GraphCanvas`)
@@ -22,17 +18,25 @@ auto-runs it when the target layer's data changes.
 
 > `optional` **behaviours?**: `Record`\<`string`, `Record`\<`string`, `unknown`\>\>
 
-Defined in: [canvas/src/engine/CanvasConfig.ts:18](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/engine/CanvasConfig.ts#L18)
-
 Behaviour options keyed by the behaviour's id.
+
+***
+
+### fitOnLoad?
+
+> `optional` **fitOnLoad?**: `boolean`
+
+Fit the camera to content **once on load**, so the drawing is centred when it
+first appears — independent of any layout. The engine fits the union of its
+world layers' bounds once, after the viewport has its real size and (when an
+[activeLayout](#activelayout) is set) that layout has settled. Default `false`
+(opt-in). Init-only: read when the canvas initialises.
 
 ***
 
 ### layers?
 
 > `optional` **layers?**: `Record`\<`string`, `Record`\<`string`, `unknown`\>\>
-
-Defined in: [canvas/src/engine/CanvasConfig.ts:16](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/engine/CanvasConfig.ts#L16)
 
 Layer options keyed by the layer's id.
 
@@ -41,7 +45,5 @@ Layer options keyed by the layer's id.
 ### layouts?
 
 > `optional` **layouts?**: `Record`\<`string`, `Record`\<`string`, `unknown`\>\>
-
-Defined in: [canvas/src/engine/CanvasConfig.ts:20](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/engine/CanvasConfig.ts#L20)
 
 Layout options keyed by the layout's id.

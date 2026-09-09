@@ -1,7 +1,5 @@
 # Class: BubbleSetsLayer
 
-Defined in: [graph-layer-bubble-sets/src/BubbleSetsLayer.ts:40](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-bubble-sets/src/BubbleSetsLayer.ts#L40)
-
 ## Extends
 
 - `WorldLayer`\<[`BubbleSetsLayerOptions`](../interfaces/BubbleSetsLayerOptions.md), [`BubbleSetsLayerState`](../interfaces/BubbleSetsLayerState.md), [`BubbleSetsLayerEvents`](../interfaces/BubbleSetsLayerEvents.md), `never`, `WorldLayerHit`\>
@@ -12,13 +10,11 @@ Defined in: [graph-layer-bubble-sets/src/BubbleSetsLayer.ts:40](https://github.c
 
 > **new BubbleSetsLayer**(`opts`): `BubbleSetsLayer`
 
-Defined in: [graph-layer-bubble-sets/src/BubbleSetsLayer.ts:60](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-bubble-sets/src/BubbleSetsLayer.ts#L60)
-
 #### Parameters
 
 ##### opts
 
-`LayerOptions`\<[`BubbleSetsLayerOptions`](../interfaces/BubbleSetsLayerOptions.md)\>
+[`LayerOptions`](../../../canvas/src/interfaces/LayerOptions.md)\<[`BubbleSetsLayerOptions`](../interfaces/BubbleSetsLayerOptions.md)\>
 
 #### Returns
 
@@ -30,25 +26,21 @@ Defined in: [graph-layer-bubble-sets/src/BubbleSetsLayer.ts:60](https://github.c
 
 ## Properties
 
-### \_container?
+### \_surface?
 
-> `protected` `optional` **\_container?**: `Container`
-
-Defined in: canvas/dist/index.d.ts:932
+> `protected` `optional` **\_surface?**: [`ISurface`](../../../canvas/src/interfaces/ISurface.md)
 
 Backing field — assigned in `mount`, cleared in `unmount`.
 
 #### Inherited from
 
-`WorldLayer._container`
+`WorldLayer._surface`
 
 ***
 
 ### ctx?
 
-> `protected` `optional` **ctx?**: `CanvasContext`
-
-Defined in: canvas/dist/index.d.ts:572
+> `protected` `optional` **ctx?**: [`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
 Set by `mount(ctx)`; cleared by `unmount()`.
 
@@ -62,8 +54,6 @@ Set by `mount(ctx)`; cleared by `unmount()`.
 
 > **cullable**: `boolean`
 
-Defined in: canvas/dist/index.d.ts:563
-
 #### Inherited from
 
 `WorldLayer.cullable`
@@ -72,9 +62,7 @@ Defined in: canvas/dist/index.d.ts:563
 
 ### dirty
 
-> `readonly` **dirty**: `DirtyBatcher`\<`never`\>
-
-Defined in: canvas/dist/index.d.ts:558
+> `readonly` **dirty**: [`DirtyBatcher`](../../../canvas/src/classes/DirtyBatcher.md)\<`never`\>
 
 #### Inherited from
 
@@ -84,9 +72,7 @@ Defined in: canvas/dist/index.d.ts:558
 
 ### events
 
-> `readonly` **events**: `SourceEmitter`\<[`BubbleSetsLayerEvents`](../interfaces/BubbleSetsLayerEvents.md)\>
-
-Defined in: canvas/dist/index.d.ts:557
+> `readonly` **events**: [`SourceEmitter`](../../../canvas/src/classes/SourceEmitter.md)\<[`BubbleSetsLayerEvents`](../interfaces/BubbleSetsLayerEvents.md)\>
 
 #### Inherited from
 
@@ -98,8 +84,6 @@ Defined in: canvas/dist/index.d.ts:557
 
 > **hittable**: `boolean`
 
-Defined in: canvas/dist/index.d.ts:561
-
 #### Inherited from
 
 `WorldLayer.hittable`
@@ -110,11 +94,27 @@ Defined in: canvas/dist/index.d.ts:561
 
 > `readonly` **id**: `string`
 
-Defined in: canvas/dist/index.d.ts:554
-
 #### Inherited from
 
 `WorldLayer.id`
+
+***
+
+### kind
+
+> `readonly` **kind**: `"bubble-sets-layer"` = `'bubble-sets-layer'`
+
+Stable **class kind** — a minification-safe discriminator matching the
+`@invana/canvas-ui` settings-editor registry key (e.g. `'background-layer'`,
+`'minimap-layer'`). Distinct from [id](../../../graph-layer-maplibre/src/classes/MapLayer.md#id) (the per-instance key): all
+`BackgroundLayer` instances share `kind: 'background-layer'`. Concrete layers
+set it as a class field; left `undefined` on any that haven't, so consumers
+fall back (e.g. to the class name). Lets domain-free tooling resolve an
+instance's editor without an `instanceof` ladder.
+
+#### Overrides
+
+`WorldLayer.kind`
 
 ***
 
@@ -122,23 +122,9 @@ Defined in: canvas/dist/index.d.ts:554
 
 > `readonly` **options**: [`BubbleSetsLayerOptions`](../interfaces/BubbleSetsLayerOptions.md)
 
-Defined in: canvas/dist/index.d.ts:555
-
 #### Inherited from
 
 `WorldLayer.options`
-
-***
-
-### state
-
-> `readonly` **state**: `Store`\<[`BubbleSetsLayerState`](../interfaces/BubbleSetsLayerState.md)\>
-
-Defined in: canvas/dist/index.d.ts:556
-
-#### Inherited from
-
-`WorldLayer.state`
 
 ***
 
@@ -146,51 +132,23 @@ Defined in: canvas/dist/index.d.ts:556
 
 > **zIndex**: `number`
 
-Defined in: canvas/dist/index.d.ts:562
-
 #### Inherited from
 
 `WorldLayer.zIndex`
 
 ## Accessors
 
-### container
-
-#### Get Signature
-
-> **get** `protected` **container**(): `Container`
-
-Defined in: canvas/dist/index.d.ts:940
-
-Root pixi `Container` (RenderGroup) for this layer. Available from
-`onMount(ctx)` for the layer's lifetime. Throws before mount / after unmount.
-
-Pass to `ShapesRenderer` as the `container` option when wiring up a renderer
-inside `onMount`. Subclass-only — not part of the external layer API.
-
-##### Returns
-
-`Container`
-
-#### Inherited from
-
-`WorldLayer.container`
-
-***
-
 ### context
 
 #### Get Signature
 
-> **get** `protected` **context**(): `CanvasContext`
-
-Defined in: canvas/dist/index.d.ts:579
+> **get** `protected` **context**(): [`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
 Convenience accessor; throws when called pre-mount.
 
 ##### Returns
 
-`CanvasContext`
+[`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
 #### Inherited from
 
@@ -204,8 +162,6 @@ Convenience accessor; throws when called pre-mount.
 
 > **get** **mounted**(): `boolean`
 
-Defined in: canvas/dist/index.d.ts:574
-
 True between `mount` and `unmount`.
 
 ##### Returns
@@ -218,13 +174,51 @@ True between `mount` and `unmount`.
 
 ***
 
+### state
+
+#### Get Signature
+
+> **get** **state**(): [`ReactiveStore`](../../../canvas/src/interfaces/ReactiveStore.md)\<`TState`\>
+
+UI / interaction state (`ReactiveStore<TState>`). Because it is built
+through the injected kernel factory, every write emits patches and history /
+telemetry / a future CRDT backend all observe it.
+
+**Available from `mount()` onward** — accessing it before the first mount
+throws. (`createState()` is also called at first mount, so it may safely
+read subclass fields initialised in the subclass constructor.)
+
+##### Returns
+
+[`ReactiveStore`](../../../canvas/src/interfaces/ReactiveStore.md)\<`TState`\>
+
+#### Inherited from
+
+`WorldLayer.state`
+
+***
+
+### surface
+
+#### Get Signature
+
+> **get** `protected` **surface**(): [`ISurface`](../../../canvas/src/interfaces/ISurface.md)
+
+##### Returns
+
+[`ISurface`](../../../canvas/src/interfaces/ISurface.md)
+
+#### Inherited from
+
+`WorldLayer.surface`
+
+***
+
 ### visible
 
 #### Get Signature
 
 > **get** **visible**(): `boolean`
-
-Defined in: canvas/dist/index.d.ts:569
 
 Whether this layer renders. Setting `false` hides the layer's pixi
 container (via `onVisibleChange`, overridden by `WorldLayer` /
@@ -237,8 +231,6 @@ container (via `onVisibleChange`, overridden by `WorldLayer` /
 #### Set Signature
 
 > **set** **visible**(`value`): `void`
-
-Defined in: canvas/dist/index.d.ts:570
 
 ##### Parameters
 
@@ -260,8 +252,6 @@ Defined in: canvas/dist/index.d.ts:570
 
 > **addSet**(`set`): `void`
 
-Defined in: [graph-layer-bubble-sets/src/BubbleSetsLayer.ts:127](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-bubble-sets/src/BubbleSetsLayer.ts#L127)
-
 Append a set. No-op (with warning) if the id already exists.
 
 #### Parameters
@@ -280,8 +270,6 @@ Append a set. No-op (with warning) if the id already exists.
 
 > `protected` **applyDirty**(`_snap`): `void`
 
-Defined in: canvas/dist/index.d.ts:602
-
 Translate a dirty snapshot into renderer / pixi commands.
 Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
 
@@ -289,7 +277,7 @@ Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
 
 ##### \_snap
 
-`DirtySnapshot`\<`never`\>
+[`DirtySnapshot`](../../../canvas/src/interfaces/DirtySnapshot.md)\<`never`\>
 
 #### Returns
 
@@ -301,63 +289,9 @@ Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
 
 ***
 
-### createContainer()
-
-> **createContainer**(`label?`): `Container`
-
-Defined in: canvas/dist/index.d.ts:957
-
-Create a plain pixi `Container` attached to this layer's root container.
-Useful as a parent for mounted display objects (e.g. text sprites).
-
-#### Parameters
-
-##### label?
-
-`string`
-
-#### Returns
-
-`Container`
-
-#### Inherited from
-
-`WorldLayer.createContainer`
-
-***
-
-### createGraphics()
-
-> **createGraphics**(`label?`): `Graphics`
-
-Defined in: canvas/dist/index.d.ts:952
-
-Create a pixi `Graphics` attached to this layer's root container. The
-sanctioned way for layer authors to obtain a `Graphics` for direct
-painting via `@invana/canvas/draw` primitives — keeps pixi internal
-(no `new Graphics()` in user code).
-
-#### Parameters
-
-##### label?
-
-`string`
-
-#### Returns
-
-`Graphics`
-
-#### Inherited from
-
-`WorldLayer.createGraphics`
-
-***
-
 ### createState()
 
 > `protected` **createState**(): [`BubbleSetsLayerState`](../interfaces/BubbleSetsLayerState.md)
-
-Defined in: [graph-layer-bubble-sets/src/BubbleSetsLayer.ts:74](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-bubble-sets/src/BubbleSetsLayer.ts#L74)
 
 Build the initial UI / interaction state. Called once in the constructor.
 
@@ -375,8 +309,6 @@ Build the initial UI / interaction state. Called once in the constructor.
 
 > **flush**(): `void`
 
-Defined in: canvas/dist/index.d.ts:586
-
 Called by Canvas tick when `hasPending()` is true. Swaps the dirty
 snapshot, hands it to `applyDirty`. Subclasses normally don't override.
 
@@ -393,8 +325,6 @@ snapshot, hands it to `applyDirty`. Subclasses normally don't override.
 ### getBounds()
 
 > **getBounds**(): `object`
-
-Defined in: canvas/dist/index.d.ts:970
 
 Return the world-space AABB of everything currently rendered on this layer.
 Delegates to Pixi's `getLocalBounds()` — a one-shot scene-graph traversal.
@@ -430,8 +360,6 @@ Suitable for "fit to content" calls; do not call every frame.
 
 > **getSets**(): readonly [`BubbleSet`](../interfaces/BubbleSet.md)[]
 
-Defined in: [graph-layer-bubble-sets/src/BubbleSetsLayer.ts:166](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-bubble-sets/src/BubbleSetsLayer.ts#L166)
-
 Read-only view of the current set list.
 
 #### Returns
@@ -443,8 +371,6 @@ readonly [`BubbleSet`](../interfaces/BubbleSet.md)[]
 ### hasPending()
 
 > **hasPending**(): `boolean`
-
-Defined in: canvas/dist/index.d.ts:581
 
 Whether `flush()` has work to do this frame.
 
@@ -461,8 +387,6 @@ Whether `flush()` has work to do this frame.
 ### hitTest()
 
 > **hitTest**(`_worldX`, `_worldY`): `WorldLayerHit`
-
-Defined in: [graph-layer-bubble-sets/src/BubbleSetsLayer.ts:111](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-bubble-sets/src/BubbleSetsLayer.ts#L111)
 
 Hit-test in world coordinates. Returns the topmost hit or `null`.
 Concrete layers implement this against their own data + spatial index.
@@ -494,13 +418,11 @@ first hit, screen-layers-before-world per proposal Q6) calls this.
 
 > **mount**(`ctx`): `void`
 
-Defined in: canvas/dist/index.d.ts:942
-
 #### Parameters
 
 ##### ctx
 
-`CanvasContext`
+[`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
 #### Returns
 
@@ -516,15 +438,13 @@ Defined in: canvas/dist/index.d.ts:942
 
 > `protected` **onMount**(`ctx`): `void`
 
-Defined in: [graph-layer-bubble-sets/src/BubbleSetsLayer.ts:78](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-bubble-sets/src/BubbleSetsLayer.ts#L78)
-
 Domain-specific mount setup (subscribe to peers, attach renderer, etc.).
 
 #### Parameters
 
 ##### ctx
 
-`CanvasContext`
+[`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
 #### Returns
 
@@ -539,8 +459,6 @@ Domain-specific mount setup (subscribe to peers, attach renderer, etc.).
 ### onUnmount()
 
 > `protected` **onUnmount**(): `void`
-
-Defined in: [graph-layer-bubble-sets/src/BubbleSetsLayer.ts:99](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-bubble-sets/src/BubbleSetsLayer.ts#L99)
 
 Domain-specific unmount teardown.
 
@@ -558,9 +476,7 @@ Domain-specific unmount teardown.
 
 > `protected` **onVisibleChange**(`value`): `void`
 
-Defined in: canvas/dist/index.d.ts:944
-
-Keep the pixi container in sync when `layer.visible` is toggled.
+Keep the surface in sync when `layer.visible` is toggled.
 
 #### Parameters
 
@@ -582,8 +498,6 @@ Keep the pixi container in sync when `layer.visible` is toggled.
 
 > **recompute**(): `void`
 
-Defined in: [graph-layer-bubble-sets/src/BubbleSetsLayer.ts:175](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-bubble-sets/src/BubbleSetsLayer.ts#L175)
-
 Force an immediate recompute. Useful in `recompute: 'manual'` mode, or
 to refresh the overlay after externally mutating options that don't
 have setters yet.
@@ -598,12 +512,10 @@ have setters yet.
 
 > **redraw**(): `void`
 
-Defined in: canvas/dist/index.d.ts:595
-
 Force a full repaint of this layer from its current state, bypassing the
 per-frame dirty path. Base implementation is a no-op — only layers that
 mount a renderer override it (e.g. `GraphLayer.redraw` re-renders every
-node and edge). Driven by [Canvas.redraw](../../../graph/src/classes/GraphCanvas.md#redraw); reach for it after an
+node and edge). Driven by Canvas.redraw; reach for it after an
 external change that sidestepped the normal mutate-and-flush path (theme
 swap, palette change) or to recover from a suspected render desync.
 
@@ -620,8 +532,6 @@ swap, palette change) or to recover from a suspected render desync.
 ### removeSet()
 
 > **removeSet**(`id`): `boolean`
-
-Defined in: [graph-layer-bubble-sets/src/BubbleSetsLayer.ts:137](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-bubble-sets/src/BubbleSetsLayer.ts#L137)
 
 Remove a set by id. Returns `true` if anything was removed.
 
@@ -641,8 +551,6 @@ Remove a set by id. Returns `true` if anything was removed.
 
 > **setSets**(`sets`): `void`
 
-Defined in: [graph-layer-bubble-sets/src/BubbleSetsLayer.ts:121](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-bubble-sets/src/BubbleSetsLayer.ts#L121)
-
 Replace the full set list.
 
 #### Parameters
@@ -657,15 +565,39 @@ readonly [`BubbleSet`](../interfaces/BubbleSet.md)[]
 
 ***
 
+### setVisible()
+
+> **setVisible**(`visible`): `void`
+
+Toggle whole-layer visibility, repaint, and announce it. Unlike assigning
+`visible` (which only hides the pixi container via [onVisibleChange](#onvisiblechange)),
+this also forces a [redraw](#redraw) and emits `scene:layer:visibilitychange`
+on the canvas bus so dependent layers (minimap) and the render loop react
+automatically. No-op if the value is unchanged.
+
+#### Parameters
+
+##### visible
+
+`boolean`
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+`WorldLayer.setVisible`
+
+***
+
 ### setZIndex()
 
 > **setZIndex**(`z`): `void`
 
-Defined in: canvas/dist/index.d.ts:964
-
 Update this layer's z-order relative to its peers. Keeps the iteration
-field (`this.zIndex`, used by `LayerRegistry.byZOrder()`) and the pixi
-container's `zIndex` in sync, and flips `surfaces.world` into sorted mode
+field (`this.zIndex`, used by `LayerRegistry.byZOrder()`) and the surface's
+paint order in sync, and flips `surfaces.world` into sorted mode
 so the change renders.
 
 #### Parameters
@@ -684,11 +616,28 @@ so the change renders.
 
 ***
 
+### surfaceOptions()
+
+> `protected` **surfaceOptions**(): [`SurfaceOptions`](../../../canvas/src/interfaces/SurfaceOptions.md)
+
+Per-layer options for the drawing device this layer's surface builds.
+Override when the layer owns policy the renderer can't know — a graph layer
+with pinpoint nodes wants a larger hit floor than one of big cards.
+Read once, at mount.
+
+#### Returns
+
+[`SurfaceOptions`](../../../canvas/src/interfaces/SurfaceOptions.md)
+
+#### Inherited from
+
+`WorldLayer.surfaceOptions`
+
+***
+
 ### unmount()
 
 > **unmount**(): `void`
-
-Defined in: canvas/dist/index.d.ts:945
 
 #### Returns
 
@@ -703,8 +652,6 @@ Defined in: canvas/dist/index.d.ts:945
 ### updateSet()
 
 > **updateSet**(`id`, `patch`): `boolean`
-
-Defined in: [graph-layer-bubble-sets/src/BubbleSetsLayer.ts:151](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-bubble-sets/src/BubbleSetsLayer.ts#L151)
 
 Shallow-merge `patch` into the set with the given id. Nested `style` /
 `label` are also shallow-merged so callers can supply partial style /

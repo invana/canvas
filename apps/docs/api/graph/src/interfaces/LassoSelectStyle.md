@@ -1,7 +1,5 @@
 # Interface: LassoSelectStyle
 
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:34](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L34)
-
 Visual style for the polygon overlay. Same shape as the brush style.
 
 ## Properties
@@ -10,15 +8,11 @@ Visual style for the polygon overlay. Same shape as the brush style.
 
 > `optional` **fill?**: `number`
 
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:35](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L35)
-
 ***
 
 ### fillAlpha?
 
 > `optional` **fillAlpha?**: `number`
-
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:36](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L36)
 
 ***
 
@@ -26,23 +20,17 @@ Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:36](https://github.com
 
 > `optional` **stroke?**: `number`
 
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:37](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L37)
-
 ***
 
 ### strokeAlpha?
 
 > `optional` **strokeAlpha?**: `number`
 
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:38](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L38)
-
 ***
 
 ### strokeDash?
 
 > `optional` **strokeDash?**: `number`[]
-
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:42](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L42)
 
 Dash pattern in screen pixels `[dashLen, gapLen]`. Default `[4, 4]`.
 
@@ -51,7 +39,5 @@ Dash pattern in screen pixels `[dashLen, gapLen]`. Default `[4, 4]`.
 ### strokeWidth?
 
 > `optional` **strokeWidth?**: `number`
-
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:40](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L40)
 
 Stroke width in *screen* pixels (auto-divided by zoom). Default `1`.

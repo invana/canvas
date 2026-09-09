@@ -2,9 +2,7 @@
 
 > `const` **COLOR\_ROLE\_OPTIONS**: `object`[]
 
-Defined in: canvas-ui/src/editors/field-helpers.ts:26
-
-`select` options for a colour role, with an explicit empty `(none)` entry.
+`select` options for a colour role, with an explicit `(none)` entry.
 
 ## Type Declaration
 

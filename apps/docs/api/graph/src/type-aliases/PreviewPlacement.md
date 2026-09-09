@@ -2,8 +2,6 @@
 
 > **PreviewPlacement** = `"auto"` \| `"top"` \| `"right"` \| `"bottom"` \| `"left"` \| `"top-left"` \| `"top-right"` \| `"bottom-left"` \| `"bottom-right"`
 
-Defined in: [graph/src/behaviours/HoverElementPreviewBehaviour.ts:70](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/HoverElementPreviewBehaviour.ts#L70)
-
 Where the card anchors relative to the element — a hint passed through to the
 consumer in [PreviewSnapshot.placement](PreviewSnapshot.md).
 

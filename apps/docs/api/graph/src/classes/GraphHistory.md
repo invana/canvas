@@ -1,14 +1,10 @@
 # Class: GraphHistory
 
-Defined in: [graph/src/history/GraphHistory.ts:34](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/history/GraphHistory.ts#L34)
-
 ## Constructors
 
 ### Constructor
 
 > **new GraphHistory**(`store`, `opts?`): `GraphHistory`
-
-Defined in: [graph/src/history/GraphHistory.ts:49](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/history/GraphHistory.ts#L49)
 
 #### Parameters
 
@@ -28,9 +24,7 @@ Defined in: [graph/src/history/GraphHistory.ts:49](https://github.com/invana/can
 
 ### events
 
-> `readonly` **events**: `EventEmitter`\<[`GraphHistoryEventMap`](../type-aliases/GraphHistoryEventMap.md)\>
-
-Defined in: [graph/src/history/GraphHistory.ts:36](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/history/GraphHistory.ts#L36)
+> `readonly` **events**: [`EventEmitter`](../../../canvas/src/classes/EventEmitter.md)\<[`GraphHistoryEventMap`](../type-aliases/GraphHistoryEventMap.md)\>
 
 Fires `change` after every mutation so observers can re-read undo/redo state.
 
@@ -41,8 +35,6 @@ Fires `change` after every mutation so observers can re-read undo/redo state.
 #### Get Signature
 
 > **get** **canRedo**(): `boolean`
-
-Defined in: [graph/src/history/GraphHistory.ts:62](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/history/GraphHistory.ts#L62)
 
 True iff there is at least one undone entry that can be redone.
 
@@ -58,8 +50,6 @@ True iff there is at least one undone entry that can be redone.
 
 > **get** **canUndo**(): `boolean`
 
-Defined in: [graph/src/history/GraphHistory.ts:57](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/history/GraphHistory.ts#L57)
-
 True iff there is at least one entry that can be undone.
 
 ##### Returns
@@ -72,8 +62,6 @@ True iff there is at least one entry that can be undone.
 
 > **clear**(): `void`
 
-Defined in: [graph/src/history/GraphHistory.ts:129](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/history/GraphHistory.ts#L129)
-
 Wipe both stacks. Use when loading a fresh dataset.
 
 #### Returns
@@ -85,8 +73,6 @@ Wipe both stacks. Use when loading a fresh dataset.
 ### push()
 
 > **push**(`entry`): `void`
-
-Defined in: [graph/src/history/GraphHistory.ts:99](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/history/GraphHistory.ts#L99)
 
 Record an already-applied entry. Escape hatch for mutations that happen
 outside [transaction](#transaction) — e.g. a drag behaviour that writes positions
@@ -110,8 +96,6 @@ this only journals them.
 
 > **redo**(): `void`
 
-Defined in: [graph/src/history/GraphHistory.ts:118](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/history/GraphHistory.ts#L118)
-
 Re-apply the most recently undone entry and move it back onto the undo stack.
 
 #### Returns
@@ -123,8 +107,6 @@ Re-apply the most recently undone entry and move it back onto the undo stack.
 ### transaction()
 
 > **transaction**\<`T`\>(`label`, `fn`): `T`
-
-Defined in: [graph/src/history/GraphHistory.ts:74](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/history/GraphHistory.ts#L74)
 
 Run `fn`'s mutations as one undoable entry. Mutations MUST go through the
 [HistoryRecorder](../interfaces/HistoryRecorder.md) passed to `fn` to be journaled. The whole body runs
@@ -156,8 +138,6 @@ inside [GraphStore.batch](GraphStore.md#batch), so the canvas sees a single flus
 ### undo()
 
 > **undo**(): `void`
-
-Defined in: [graph/src/history/GraphHistory.ts:107](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/history/GraphHistory.ts#L107)
 
 Revert the most recent entry and move it onto the redo stack. No-op if empty.
 

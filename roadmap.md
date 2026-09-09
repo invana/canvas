@@ -53,7 +53,7 @@ Package layering — engine at the base, domain on top, React/UI and apps above
                    @invana/canvas       Canvas · Layer/Behaviour/Layout · specs · picking ·
                           │              connector geometry · camera · IRenderer contract
                           │              (renderer-AGNOSTIC — imports no drawing library)
-                          ▼ optional peer, resolved by lazy import()
+                          ▼ required dependency, imported at module scope
             @invana/renderer-pixijs      the pixi backend: Application, viewport, shapes,
                                          connectors, decorations, textures, fonts
                                          (the only package that touches pixi.js / WebGPU)
@@ -88,7 +88,7 @@ Legend: ✅ shipped · 🚧 in progress · 📋 planned
 | Serialisable config as single source of truth (`get()` / `update()` / `options:change`) | ✅ |
 | Typed-array `ColumnStore` + streaming feeds (frame-flush, batched events) | ✅ |
 | Light / dark theming via external config patches | ✅ |
-| **Pluggable renderer backend** — `@invana/canvas` is renderer-agnostic; the pixi backend lives in `@invana/renderer-pixijs` behind `IRenderer` / `ISurface` / `IElementRenderer` / `ICameraBinding`, resolved by lazy import as an optional peer. Enforced by `pnpm check-boundaries` | ✅ |
+| **Pluggable renderer backend** — `@invana/canvas` is renderer-agnostic; the pixi backend lives in `@invana/renderer-pixijs` behind `IRenderer` / `ISurface` / `IElementRenderer` / `ICameraBinding`, shipped as a required dependency and swappable via `new Canvas({ renderer })`. Enforced by `pnpm check-boundaries` | ✅ |
 | **Headless backend** — `HeadlessRenderer` draws nothing and implements everything, so layouts, picking, bounds and projection are testable with no GPU or DOM | ✅ |
 | Engine owns the only `requestAnimationFrame`; the backend presents when driven | ✅ |
 | Picking engine-side from specs (rbush + per-kind `contains`), identical across backends | ✅ |
@@ -148,7 +148,7 @@ Legend: ✅ shipped · 🚧 in progress · 📋 planned
 |---|---|
 | Serialisable config + live `update()` + `options:change` events | ✅ |
 | `options` → `state` vocabulary rename | 📋 |
-| OpenTelemetry over state mutations | 📋 |
+| OpenTelemetry over state mutations — `withTelemetry` action spans + per-frame FPS metrics + lifecycle logs, exported over OTLP by the opt-in [`@invana/canvas-telemetry-otel`](./packages/canvas-telemetry-otel) | ✅ |
 | Real-time collaboration (CRDT doc + ephemeral presence) | 📋 |
 | Offline + multi-user (Postgres + Redis sync) | 📋 |
 
@@ -161,10 +161,14 @@ Behaviours, layers, and layouts are configured today through one serialisable co
 1. **An editor for every behaviour / layer / layout** in `@invana/canvas-ui`, following
    the `fields.ts` + `mapping.ts` + `<Editor>` pattern the node editors already establish,
    applied via `useGraphCanvasUpdate().update(...)`.
-2. **OpenTelemetry** over those mutations — every edit becomes a traced, named action.
-3. **Real-time + offline collaboration** — a CRDT document (config / templates /
+2. **Real-time + offline collaboration** — a CRDT document (config / templates /
    annotations) synced FE↔backend, with ephemeral presence (cursors, idle/away) — so the
    frontend and `invana-backend` share the exact state of a user's analysis.
+
+Observability over those mutations already landed: every named `update()` is a traced
+action, alongside per-frame FPS metrics and lifecycle logs — console by default, OTLP to
+HyperDX or any collector via the opt-in
+[`@invana/canvas-telemetry-otel`](./packages/canvas-telemetry-otel).
 
 Detail in [`docs/collaborative-state-plan.md`](./docs/collaborative-state-plan.md).
 

@@ -1,14 +1,10 @@
 # Interface: UseCameraResult
 
-Defined in: [canvas-react/src/hooks/useCamera.ts:9](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas-react/src/hooks/useCamera.ts#L9)
-
 ## Properties
 
 ### fitContent
 
 > **fitContent**: (`worldRect`, `padding?`) => `void`
-
-Defined in: [canvas-react/src/hooks/useCamera.ts:21](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas-react/src/hooks/useCamera.ts#L21)
 
 Fit a world-space rectangle into the viewport.
 
@@ -16,7 +12,7 @@ Fit a world-space rectangle into the viewport.
 
 ##### worldRect
 
-`Rect$1`
+`Rect`
 
 ##### padding?
 
@@ -32,8 +28,6 @@ Fit a world-space rectangle into the viewport.
 
 > **getZoom**: () => `number`
 
-Defined in: [canvas-react/src/hooks/useCamera.ts:23](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas-react/src/hooks/useCamera.ts#L23)
-
 Read the current uniform scale (does not subscribe — use `useZoom` for live state).
 
 #### Returns
@@ -45,8 +39,6 @@ Read the current uniform scale (does not subscribe — use `useZoom` for live st
 ### pan
 
 > **pan**: (`dx`, `dy`) => `void`
-
-Defined in: [canvas-react/src/hooks/useCamera.ts:19](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas-react/src/hooks/useCamera.ts#L19)
 
 Pan by `(dx, dy)` screen pixels.
 
@@ -70,8 +62,6 @@ Pan by `(dx, dy)` screen pixels.
 
 > **setZoom**: (`scale`) => `void`
 
-Defined in: [canvas-react/src/hooks/useCamera.ts:15](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas-react/src/hooks/useCamera.ts#L15)
-
 Set an absolute scale, anchored at the viewport centre.
 
 #### Parameters
@@ -89,8 +79,6 @@ Set an absolute scale, anchored at the viewport centre.
 ### zoomIn
 
 > **zoomIn**: (`factor?`) => `void`
-
-Defined in: [canvas-react/src/hooks/useCamera.ts:11](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas-react/src/hooks/useCamera.ts#L11)
 
 Multiply scale by `factor` (default 1.2), anchored at the viewport centre.
 
@@ -110,8 +98,6 @@ Multiply scale by `factor` (default 1.2), anchored at the viewport centre.
 
 > **zoomOut**: (`factor?`) => `void`
 
-Defined in: [canvas-react/src/hooks/useCamera.ts:13](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas-react/src/hooks/useCamera.ts#L13)
-
 Divide scale by `factor` (default 1.2), anchored at the viewport centre.
 
 #### Parameters
@@ -129,8 +115,6 @@ Divide scale by `factor` (default 1.2), anchored at the viewport centre.
 ### zoomTo
 
 > **zoomTo**: (`scale`, `centerX?`, `centerY?`) => `void`
-
-Defined in: [canvas-react/src/hooks/useCamera.ts:17](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas-react/src/hooks/useCamera.ts#L17)
 
 Set an absolute scale around an arbitrary screen point (defaults to centre).
 

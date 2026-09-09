@@ -2,7 +2,11 @@
 
 ## Modules
 
+- [canvas-core/src](canvas-core/src/index.md)
+- [canvas-designer/src](canvas-designer/src/index.md)
 - [canvas-react/src](canvas-react/src/index.md)
+- [canvas-store/src](canvas-store/src/index.md)
+- [canvas-telemetry-otel/src](canvas-telemetry-otel/src/index.md)
 - [canvas-ui/src](canvas-ui/src/index.md)
 - [canvas/src](canvas/src/index.md)
 - [graph-datasets/src](graph-datasets/src/index.md)
@@ -15,3 +19,4 @@
 - [graph-layout-elkjs/src](graph-layout-elkjs/src/index.md)
 - [graph-layout-geometric/src](graph-layout-geometric/src/index.md)
 - [graph/src](graph/src/index.md)
+- [renderer-pixijs/src](renderer-pixijs/src/index.md)

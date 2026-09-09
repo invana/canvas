@@ -1,8 +1,6 @@
 # Variable: manhattanRouter
 
-> `const` **manhattanRouter**: [`IRouter`](../type-aliases/IRouter.md)
-
-Defined in: [canvas/src/primitives/connectors/routers/manhattan.ts:62](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/connectors/routers/manhattan.ts#L62)
+> `const` **manhattanRouter**: [`IRouter`](../../../renderer-pixijs/src/type-aliases/IRouter.md)
 
 Manhattan router — H/V segments only, **routing around obstacles when
 necessary**.

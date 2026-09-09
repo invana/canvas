@@ -1,8 +1,6 @@
 # Variable: quadraticPathStyle
 
-> `const` **quadraticPathStyle**: [`IPathStyle`](../type-aliases/IPathStyle.md)
-
-Defined in: [canvas/src/primitives/connectors/pathStyles/quadratic.ts:47](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/connectors/pathStyles/quadratic.ts#L47)
+> `const` **quadraticPathStyle**: [`IPathStyle`](../../../renderer-pixijs/src/type-aliases/IPathStyle.md)
 
 Quadratic Bézier from the first polyline point to the last with a single
 control point placed **perpendicular to the chord** at `curvePosition`

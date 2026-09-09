@@ -1,7 +1,19 @@
 # Variable: lesMiserables
 
-> `const` **lesMiserables**: [`LesMiserablesData`](../interfaces/LesMiserablesData.md)
-
-Defined in: [graph-datasets/src/lesMiserables.ts:397](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-datasets/src/lesMiserables.ts#L397)
+> `const` **lesMiserables**: `object`
 
 Les Misérables co-occurrence network — pass straight to `graph.setData()`.
+
+## Type Declaration
+
+### edges
+
+> **edges**: `GraphEdge` & `object`[]
+
+`data.value` is the number of scenes the two characters share (1–31).
+
+### nodes
+
+> **nodes**: `GraphNode` & `object`[]
+
+`data.group` is the co-occurrence cluster (0–10) — colour-by-group in stories.

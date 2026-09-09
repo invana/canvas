@@ -84,8 +84,10 @@ export function applyLabelResolution(view: LabelContentView, resolution: number)
 }
 
 /**
- * Measure `content` **without mounting it** — no display object is created,
- * nothing is added to the scene, and the result is not cached.
+ * Measure `content` **without mounting it** — no display object is created
+ * and nothing is added to the scene. The `TextStyle` used for the
+ * measurement is reused across calls (see {@link measureStyleFor}); the
+ * measurement itself is cached by value inside Pixi.
  *
  * Uses the same {@link textStyleFor} the renderer would, so the numbers match
  * what a `label` decoration will actually occupy. That's what makes it safe
@@ -101,11 +103,93 @@ export function measureLabelContent(
   wrap?: LabelWrap,
 ): { width: number; height: number } | null {
   if (content.kind !== 'text') return null;
-  const metrics = CanvasTextMetrics.measureText(
-    content.text,
-    new TextStyle(textStyleFor(content, withDerivedMaxLines(wrap))),
-  );
+  const options = textStyleFor(content, withDerivedMaxLines(wrap));
+  const metrics = CanvasTextMetrics.measureText(content.text, measureStyleFor(options));
   return { width: metrics.width, height: metrics.height };
+}
+
+// ─── Measurement TextStyle cache ───────────────────────────────────────────
+
+/**
+ * Cap on {@link measureStyleCache}. The number of *distinct* label styles in a
+ * visualisation is normally 1–3; the cap only exists so a pathological graph
+ * (a per-node font size, say) can't grow the map without bound.
+ */
+const MEASURE_STYLE_CACHE_LIMIT = 256;
+
+/**
+ * Value-keyed cache of the `TextStyle` instances handed to
+ * `CanvasTextMetrics.measureText`. Insertion-ordered, evicting the
+ * least-recently-used entry at {@link MEASURE_STYLE_CACHE_LIMIT}.
+ */
+const measureStyleCache = new Map<string, TextStyle>();
+
+/**
+ * Resolve `options` to a `TextStyle`, reusing a previously built instance when
+ * an identical style was measured before.
+ *
+ * Pixi already caches the *measurement* by value (`text` + `style.styleKey` +
+ * wrap width), so this saves the allocation, not the measuring: `measureText`
+ * needs a `TextStyle` **instance** because it reads `styleKey` off it, and
+ * `measureLabelContent` runs once per fit-to-label node on every re-project
+ * while the set of distinct label styles stays tiny.
+ *
+ * **Cached instances are never mutated.** Pixi's metrics cache retains the
+ * style by reference (`CanvasTextMetrics.style`), so mutating one shared style
+ * in place would retroactively rewrite `.style` on every cached measurement —
+ * which is why this is a cache and not a single scratch object.
+ */
+function measureStyleFor(options: TextStyleOptions): TextStyle {
+  const key = measureStyleKey(options);
+  const cached = measureStyleCache.get(key);
+  if (cached) {
+    // Refresh recency: delete + re-set moves the entry to the end of the
+    // insertion order, so eviction below always drops the coldest style.
+    measureStyleCache.delete(key);
+    measureStyleCache.set(key, cached);
+    return cached;
+  }
+  const style = new TextStyle(options);
+  measureStyleCache.set(key, style);
+  if (measureStyleCache.size > MEASURE_STYLE_CACHE_LIMIT) {
+    const oldest = measureStyleCache.keys().next();
+    if (!oldest.done) measureStyleCache.delete(oldest.value);
+  }
+  return style;
+}
+
+/**
+ * Build the cache key for {@link measureStyleFor} — a `|`-joined string over
+ * exactly the fields {@link textStyleFor} sets, in a fixed order.
+ *
+ * Hand-built rather than `JSON.stringify(options)` because the key is produced
+ * on the same per-node path the cache exists to make cheap, and stringifying a
+ * nested object costs a meaningful fraction of the allocation being saved.
+ * **Add a field here whenever `textStyleFor` learns one**, or two styles that
+ * differ only in the new field will collide.
+ */
+function measureStyleKey(o: TextStyleOptions): string {
+  const stroke = o.stroke as { color?: unknown; width?: number } | undefined;
+  const shadow = o.dropShadow as
+    | { color?: unknown; blur?: number; distance?: number; angle?: number; alpha?: number }
+    | undefined;
+  return [
+    o.fontFamily,
+    o.fontSize,
+    o.fill,
+    o.align,
+    o.fontWeight,
+    o.fontStyle,
+    o.fontVariant,
+    o.letterSpacing,
+    o.lineHeight,
+    o.wordWrap,
+    o.wordWrapWidth,
+    stroke ? `${String(stroke.color)},${stroke.width}` : '',
+    shadow
+      ? `${String(shadow.color)},${shadow.blur},${shadow.distance},${shadow.angle},${shadow.alpha}`
+      : '',
+  ].join('|');
 }
 
 // ─── Style builders ────────────────────────────────────────────────────────

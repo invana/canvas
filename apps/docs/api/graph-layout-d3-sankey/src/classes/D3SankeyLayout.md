@@ -1,18 +1,14 @@
 # Class: D3SankeyLayout
 
-Defined in: [graph-layout-d3-sankey/src/D3SankeyLayout.ts:67](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-sankey/src/D3SankeyLayout.ts#L67)
-
 ## Extends
 
-- `Layout`\<`GraphLayer`\>
+- [`Layout`](../../../canvas/src/classes/Layout.md)\<`GraphLayer`\>
 
 ## Constructors
 
 ### Constructor
 
 > **new D3SankeyLayout**(`opts?`): `D3SankeyLayout`
-
-Defined in: [graph-layout-d3-sankey/src/D3SankeyLayout.ts:72](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-sankey/src/D3SankeyLayout.ts#L72)
 
 #### Parameters
 
@@ -26,15 +22,13 @@ Defined in: [graph-layout-d3-sankey/src/D3SankeyLayout.ts:72](https://github.com
 
 #### Overrides
 
-`Layout<GraphLayer>.constructor`
+[`Layout`](../../../canvas/src/classes/Layout.md).[`constructor`](../../../canvas/src/classes/Layout.md#constructor)
 
 ## Properties
 
 ### events
 
-> `readonly` **events**: `EventEmitter`\<`LayoutEvents`\>
-
-Defined in: canvas/dist/index.d.ts:1876
+> `readonly` **events**: [`EventEmitter`](../../../canvas/src/classes/EventEmitter.md)\<[`LayoutEvents`](../../../canvas/src/type-aliases/LayoutEvents.md)\>
 
 Lifecycle event bus. See class docs for the event vocabulary.
 Subclasses with richer telemetry can declare their own typed
@@ -42,7 +36,7 @@ emitter on top (`override readonly events = new EventEmitter<MyEvents>()`).
 
 #### Inherited from
 
-`Layout.events`
+[`Layout`](../../../canvas/src/classes/Layout.md).[`events`](../../../canvas/src/classes/Layout.md#events)
 
 ***
 
@@ -50,13 +44,29 @@ emitter on top (`override readonly events = new EventEmitter<MyEvents>()`).
 
 > `readonly` **id**: `string`
 
-Defined in: canvas/dist/index.d.ts:1868
-
 Stable id (registry / config key).
 
 #### Inherited from
 
-`Layout.id`
+[`Layout`](../../../canvas/src/classes/Layout.md).[`id`](../../../canvas/src/classes/Layout.md#id)
+
+***
+
+### kind
+
+> `readonly` **kind**: `"d3-sankey-layout"` = `'d3-sankey-layout'`
+
+Stable **class kind** — a minification-safe discriminator matching the
+`@invana/canvas-ui` settings-editor registry key (e.g. `'d3-force-layout'`,
+`'elk-layout'`). Distinct from [id](../../../graph-layout-geometric/src/classes/GeometricLayout.md#id) (the per-instance key): all
+`D3ForceLayout` instances share `kind: 'd3-force-layout'`. Concrete layouts
+set it as a class field; left `undefined` on any that haven't, so consumers
+fall back (e.g. to the class name). Lets domain-free tooling resolve an
+instance's editor without an `instanceof` ladder.
+
+#### Overrides
+
+[`Layout`](../../../canvas/src/classes/Layout.md).[`kind`](../../../canvas/src/classes/Layout.md#kind)
 
 ***
 
@@ -64,21 +74,17 @@ Stable id (registry / config key).
 
 > `readonly` `optional` **targetLayerId?**: `string`
 
-Defined in: canvas/dist/index.d.ts:1870
-
 The layer this layout targets, if declared at construction.
 
 #### Inherited from
 
-`Layout.targetLayerId`
+[`Layout`](../../../canvas/src/classes/Layout.md).[`targetLayerId`](../../../canvas/src/classes/Layout.md#targetlayerid)
 
 ## Methods
 
 ### apply()
 
 > **apply**(`layer`): `Promise`\<`void`\>
-
-Defined in: [graph-layout-d3-sankey/src/D3SankeyLayout.ts:84](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-sankey/src/D3SankeyLayout.ts#L84)
 
 Run the layout against `layer`. Resolves once positions and per-edge
 hints have been written. Lifecycle events fire in order:
@@ -96,15 +102,33 @@ hints have been written. Lifecycle events fire in order:
 
 #### Overrides
 
-`Layout.apply`
+[`Layout`](../../../canvas/src/classes/Layout.md).[`apply`](../../../canvas/src/classes/Layout.md#apply)
+
+***
+
+### serializeDefinition()
+
+> **serializeDefinition**(): `Record`\<`string`, `unknown`\>
+
+Contribute this layout's serialisable config to a canvas-state snapshot (the
+engine's `DefinitionSerializable` contract). The base captures the wiring
+`targetLayerId`; iterative layouts holding tunable params (e.g. force
+strengths) should override and spread `super.serializeDefinition()` with a
+JSON-safe copy of those params.
+
+#### Returns
+
+`Record`\<`string`, `unknown`\>
+
+#### Inherited from
+
+[`Layout`](../../../canvas/src/classes/Layout.md).[`serializeDefinition`](../../../canvas/src/classes/Layout.md#serializedefinition)
 
 ***
 
 ### setOptions()
 
 > **setOptions**(`_patch`): `void`
-
-Defined in: canvas/dist/index.d.ts:1883
 
 Live-reconfigure. Called by `Canvas.update({ layouts: { id: patch } })`.
 Default no-op; iterative layouts (e.g. `D3ForceLayout`) override to merge
@@ -122,15 +146,13 @@ the patch and re-heat a running simulation.
 
 #### Inherited from
 
-`Layout.setOptions`
+[`Layout`](../../../canvas/src/classes/Layout.md).[`setOptions`](../../../canvas/src/classes/Layout.md#setoptions)
 
 ***
 
 ### stop()
 
 > **stop**(): `void`
-
-Defined in: [graph-layout-d3-sankey/src/D3SankeyLayout.ts:237](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-sankey/src/D3SankeyLayout.ts#L237)
 
 Cancel a run. The synchronous body of `apply()` rarely yields long
  enough for this to fire, but it keeps the contract symmetric with

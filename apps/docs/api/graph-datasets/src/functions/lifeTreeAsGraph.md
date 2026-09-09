@@ -1,8 +1,6 @@
 # Function: lifeTreeAsGraph()
 
-> **lifeTreeAsGraph**(): [`LifeTreeGraphData`](../interfaces/LifeTreeGraphData.md)
-
-Defined in: [graph-datasets/src/lifeTree.ts:148](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-datasets/src/lifeTree.ts#L148)
+> **lifeTreeAsGraph**(): `object`
 
 Flatten [lifeTreeHierarchy](../variables/lifeTreeHierarchy.md) to a `{nodes, edges}` shape compatible
 with `GraphLayer.setData`. BFS-traverses the tree, assigning slash-joined
@@ -17,4 +15,12 @@ case.
 
 ## Returns
 
-[`LifeTreeGraphData`](../interfaces/LifeTreeGraphData.md)
+`object`
+
+### edges
+
+> **edges**: `GraphEdge`\<`unknown`\>[]
+
+### nodes
+
+> **nodes**: `GraphNode`\<`unknown`\> & `object`[]

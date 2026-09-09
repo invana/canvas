@@ -2,8 +2,6 @@
 
 > **D3HierarchyLayoutMode** = `"tree"` \| `"cluster"` \| `"radial-tree"` \| `"radial-cluster"` \| `"pack"` \| `"sunburst"`
 
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:24](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-hierarchy/src/types.ts#L24)
-
 Layout mode.
 
 - `'tree'` — `d3.tree()` tidy layout, Cartesian (x, y) positions.

@@ -1,20 +1,16 @@
 # Interface: CreateNodeBehaviourOptions
 
-Defined in: [graph/src/behaviours/CreateNodeBehaviour.ts:24](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/CreateNodeBehaviour.ts#L24)
-
 Constructor options for `CreateNodeBehaviour`.
 
 ## Extends
 
-- `BehaviourOptions`
+- [`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md)
 
 ## Properties
 
 ### createNode?
 
 > `optional` **createNode?**: (`world`) => [`GraphNode`](GraphNode.md)\<`unknown`\>
-
-Defined in: [graph/src/behaviours/CreateNodeBehaviour.ts:32](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/CreateNodeBehaviour.ts#L32)
 
 Build the node to insert from the click's world position. Return `null`
 to veto creation. Default: `{ id: <generated>, position }`.
@@ -41,13 +37,11 @@ to veto creation. Default: `{ id: <generated>, position }`.
 
 > `optional` **enabled?**: `boolean`
 
-Defined in: canvas/dist/index.d.ts:733
-
 Default `false` — the developer explicitly enables.
 
 #### Inherited from
 
-`BehaviourOptions.enabled`
+[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`enabled`](../../../canvas/src/interfaces/BehaviourOptions.md#enabled)
 
 ***
 
@@ -55,19 +49,15 @@ Default `false` — the developer explicitly enables.
 
 > **id**: `string`
 
-Defined in: canvas/dist/index.d.ts:726
-
 #### Inherited from
 
-`BehaviourOptions.id`
+[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`id`](../../../canvas/src/interfaces/BehaviourOptions.md#id)
 
 ***
 
 ### onNodeCreate?
 
 > `optional` **onNodeCreate?**: (`node`) => `void`
-
-Defined in: [graph/src/behaviours/CreateNodeBehaviour.ts:35](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/CreateNodeBehaviour.ts#L35)
 
 Fired after a node is added to the store.
 
@@ -87,15 +77,13 @@ Fired after a node is added to the store.
 
 > `optional` **shortcuts?**: readonly `string`[]
 
-Defined in: canvas/dist/index.d.ts:739
-
 Gesture identifiers this behaviour claims. Used by `BehaviourRegistry`
 for conflict warnings. Format is convention-free (`'shift+drag'`,
 `'wheel+ctrl'`, `'rclick'`); registries match strings as-is.
 
 #### Inherited from
 
-`BehaviourOptions.shortcuts`
+[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`shortcuts`](../../../canvas/src/interfaces/BehaviourOptions.md#shortcuts)
 
 ***
 
@@ -103,10 +91,8 @@ for conflict warnings. Format is convention-free (`'shift+drag'`,
 
 > **targetLayerId**: `string`
 
-Defined in: [graph/src/behaviours/CreateNodeBehaviour.ts:26](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/CreateNodeBehaviour.ts#L26)
-
 Required — the `GraphLayer` id this behaviour adds nodes to.
 
 #### Overrides
 
-`BehaviourOptions.targetLayerId`
+[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`targetLayerId`](../../../canvas/src/interfaces/BehaviourOptions.md#targetlayerid)

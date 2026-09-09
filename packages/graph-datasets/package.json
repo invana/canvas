@@ -1,8 +1,10 @@
 {
   "name": "@invana/graph-datasets",
   "version": "0.0.12",
-  "description": "Example graph datasets for @invana/graph (Les Mis\u00e9rables, scientists org chart, random tree, etc.).",
+  "description": "Example graph datasets for @invana/graph (Les Misérables, scientists org chart, random tree, etc.).",
+  "homepage": "https://github.com/invana/canvas#readme",
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -55,7 +57,16 @@
     "examples",
     "visualization"
   ],
+  "bugs": {
+    "url": "https://github.com/invana/canvas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/invana/canvas.git",
+    "directory": "packages/graph-datasets"
+  },
   "license": "Apache-2.0",
+  "author": "Ravi Raja Merugu",
   "module": "./dist/index.js",
   "files": [
     "dist"

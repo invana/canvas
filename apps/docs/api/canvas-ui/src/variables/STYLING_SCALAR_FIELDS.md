@@ -2,6 +2,4 @@
 
 > `const` **STYLING\_SCALAR\_FIELDS**: `FieldConfig`[]
 
-Defined in: canvas-ui/src/editors/node-styling/fields.ts:11
-
-Scalar styling controls (rendered under the `styling` ObjectField).
+All scalar controls — the default when no `variant` is given (standalone).

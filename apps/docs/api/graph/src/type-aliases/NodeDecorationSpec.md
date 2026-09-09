@@ -1,13 +1,11 @@
 # Type Alias: NodeDecorationSpec
 
-> **NodeDecorationSpec** = [`DecorationSpecCommon`](../interfaces/DecorationSpecCommon.md) & `object` & [`Canvas`](../../../canvas-react/src/variables/Canvas.md) \| [`DecorationSpecCommon`](../interfaces/DecorationSpecCommon.md) & `object` & [`Canvas`](../../../canvas-react/src/variables/Canvas.md) \| [`DecorationSpecCommon`](../interfaces/DecorationSpecCommon.md) & `object` & [`Canvas`](../../../canvas-react/src/variables/Canvas.md) \| [`DecorationSpecCommon`](../interfaces/DecorationSpecCommon.md) & `object` & [`Canvas`](../../../canvas-react/src/variables/Canvas.md) \| [`DecorationSpecCommon`](../interfaces/DecorationSpecCommon.md) & `object` & [`Canvas`](../../../canvas-react/src/variables/Canvas.md) \| [`DecorationSpecCommon`](../interfaces/DecorationSpecCommon.md) & `object` & [`Canvas`](../../../canvas-react/src/variables/Canvas.md) \| [`DecorationSpecCommon`](../interfaces/DecorationSpecCommon.md) & `object` & [`Canvas`](../../../canvas-react/src/variables/Canvas.md) \| [`DecorationSpecCommon`](../interfaces/DecorationSpecCommon.md) & `object` & [`Canvas`](../../../canvas-react/src/variables/Canvas.md)
-
-Defined in: [graph/src/layer/types.ts:711](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L711)
+> **NodeDecorationSpec** = [`DecorationSpecCommon`](../interfaces/DecorationSpecCommon.md) & `object` & [`SpecStore`](../../../canvas/src/variables/SpecStore.md) \| [`DecorationSpecCommon`](../interfaces/DecorationSpecCommon.md) & `object` & [`SpecStore`](../../../canvas/src/variables/SpecStore.md) \| [`DecorationSpecCommon`](../interfaces/DecorationSpecCommon.md) & `object` & [`SpecStore`](../../../canvas/src/variables/SpecStore.md) \| [`DecorationSpecCommon`](../interfaces/DecorationSpecCommon.md) & `object` & [`SpecStore`](../../../canvas/src/variables/SpecStore.md) \| [`DecorationSpecCommon`](../interfaces/DecorationSpecCommon.md) & `object` & [`SpecStore`](../../../canvas/src/variables/SpecStore.md) \| [`DecorationSpecCommon`](../interfaces/DecorationSpecCommon.md) & `object` & [`SpecStore`](../../../canvas/src/variables/SpecStore.md) \| [`DecorationSpecCommon`](../interfaces/DecorationSpecCommon.md) & `object` & [`SpecStore`](../../../canvas/src/variables/SpecStore.md) \| [`DecorationSpecCommon`](../interfaces/DecorationSpecCommon.md) & `object` & [`SpecStore`](../../../canvas/src/variables/SpecStore.md)
 
 Discriminated union of decoration specs attachable to a node via
 [NodeStyle.decorations](../interfaces/NodeStyle.md#decorations). Each variant pairs `kind` (the registered
 canvas decoration name) with the matching style payload from
-`@invana/canvas/primitives`.
+`@invana/canvas`.
 
 Multiples are allowed — the same kind can appear several times (e.g. an
 inner + outer ring on a single node), as long as their `id`s differ.

@@ -1,7 +1,5 @@
 # Interface: NodeImage
 
-Defined in: [graph/src/layer/types.ts:421](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L421)
-
 Raster image attached to a node. Mirrors the canvas-level `kind: 'image'`
 `ShapeFillLayer` field-for-field. Two orthogonal sizing knobs:
 
@@ -25,15 +23,11 @@ Raster image attached to a node. Mirrors the canvas-level `kind: 'image'`
 
 > `readonly` `optional` **alpha?**: `number`
 
-Defined in: [graph/src/layer/types.ts:423](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L423)
-
 ***
 
 ### fit?
 
 > `readonly` `optional` **fit?**: `"cover"` \| `"contain"`
-
-Defined in: [graph/src/layer/types.ts:424](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L424)
 
 ***
 
@@ -41,12 +35,8 @@ Defined in: [graph/src/layer/types.ts:424](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **padding?**: `number`
 
-Defined in: [graph/src/layer/types.ts:425](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L425)
-
 ***
 
 ### url
 
 > `readonly` **url**: `string`
-
-Defined in: [graph/src/layer/types.ts:422](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L422)

@@ -1,7 +1,5 @@
 # Interface: ThemePalette
 
-Defined in: graph/src/theme/types.ts:31
-
 Concrete colour values for one light/dark variant of a [Theme](Theme.md).
 
 ## Extends
@@ -34,9 +32,7 @@ Concrete colour values for one light/dark variant of a [Theme](Theme.md).
 
 > **categorical**: `number`[]
 
-Defined in: graph/src/theme/types.ts:33
-
-Fill-by-category ramp consumed by `ColorByLabelBehaviour` / minimap.
+Fill-by-category ramp consumed by `ColorByBehaviour` / minimap.
 
 ***
 

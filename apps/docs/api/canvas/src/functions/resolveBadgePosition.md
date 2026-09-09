@@ -2,8 +2,6 @@
 
 > **resolveBadgePosition**(`hostWorldBounds`, `badgeLocalBounds`, `options`): `object`
 
-Defined in: [canvas/src/primitives/badges/placement.ts:117](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/badges/placement.ts#L117)
-
 Resolve the badge spec's `(x, y)` so that the chosen origin point on the
 badge AABB lands at the chosen anchor point on the host AABB, plus the
 caller's pixel offset.
@@ -20,11 +18,11 @@ the host anchor + offset.
 
 ### hostWorldBounds
 
-`Rect`
+[`Rect`](../../../renderer-pixijs/src/interfaces/Rect.md)
 
 ### badgeLocalBounds
 
-`Rect`
+[`Rect`](../../../renderer-pixijs/src/interfaces/Rect.md)
 
 ### options
 

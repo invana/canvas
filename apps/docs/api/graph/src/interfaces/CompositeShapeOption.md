@@ -1,21 +1,25 @@
 # Interface: CompositeShapeOption
 
-Defined in: [graph/src/layer/types.ts:302](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L302)
-
 Composite "card" shape — a fixed-size rounded body with a `parts[]` list of
 rects / circles / lines / labels laid out by the caller (or compiled from a
 [CardStructure](CardStructure.md) by the template system). First-class so node *card*
 templates are type-safe rather than going through the `as unknown` cast.
 Maps 1:1 to the canvas `composite` shape spec; `parts` reuses the engine's
-CompositePart union.
+[CompositePart](../../../canvas/src/variables/SpecStore.md) union.
 
 ## Properties
+
+### clip?
+
+> `readonly` `optional` **clip?**: `boolean`
+
+Clip parts to the root silhouette so edge-touching parts follow the rounded corners.
+
+***
 
 ### cornerRadius?
 
 > `readonly` `optional` **cornerRadius?**: `number`
-
-Defined in: [graph/src/layer/types.ts:306](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L306)
 
 ***
 
@@ -23,15 +27,11 @@ Defined in: [graph/src/layer/types.ts:306](https://github.com/invana/canvas/blob
 
 > `readonly` `optional` **fill?**: `number`
 
-Defined in: [graph/src/layer/types.ts:307](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L307)
-
 ***
 
 ### fillAlpha?
 
 > `readonly` `optional` **fillAlpha?**: `number`
-
-Defined in: [graph/src/layer/types.ts:308](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L308)
 
 ***
 
@@ -39,15 +39,11 @@ Defined in: [graph/src/layer/types.ts:308](https://github.com/invana/canvas/blob
 
 > `readonly` **height**: `number`
 
-Defined in: [graph/src/layer/types.ts:305](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L305)
-
 ***
 
 ### kind
 
 > `readonly` **kind**: `"composite"`
-
-Defined in: [graph/src/layer/types.ts:303](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L303)
 
 ***
 
@@ -55,15 +51,22 @@ Defined in: [graph/src/layer/types.ts:303](https://github.com/invana/canvas/blob
 
 > `readonly` **parts**: readonly `CompositePart`[]
 
-Defined in: [graph/src/layer/types.ts:310](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L310)
+***
+
+### root?
+
+> `readonly` `optional` **root?**: `CompositeRootSpec`
+
+Background silhouette of the card — a concrete engine root shape (rect /
+circle / polygon / regular-polygon / star / arc), centred in the box. Omit
+for a rounded rectangle built from `cornerRadius` + `fill` / `stroke`. Fill,
+stroke, hit-testing and every decoration follow it.
 
 ***
 
 ### stroke?
 
 > `readonly` `optional` **stroke?**: `object`
-
-Defined in: [graph/src/layer/types.ts:309](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L309)
 
 #### alpha?
 
@@ -82,5 +85,3 @@ Defined in: [graph/src/layer/types.ts:309](https://github.com/invana/canvas/blob
 ### width
 
 > `readonly` **width**: `number`
-
-Defined in: [graph/src/layer/types.ts:304](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L304)

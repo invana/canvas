@@ -1,6 +1,10 @@
 # Abstract Class: Layout\<TLayer\>
 
-Defined in: [canvas/src/layouts/Layout.ts:84](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layouts/Layout.ts#L84)
+## Extended by
+
+- [`OneShotPositionLayout`](../../../graph/src/classes/OneShotPositionLayout.md)
+- [`D3ForceLayout`](../../../graph-layout-d3-force/src/classes/D3ForceLayout.md)
+- [`D3SankeyLayout`](../../../graph-layout-d3-sankey/src/classes/D3SankeyLayout.md)
 
 ## Type Parameters
 
@@ -14,13 +18,11 @@ Defined in: [canvas/src/layouts/Layout.ts:84](https://github.com/invana/canvas/b
 
 > **new Layout**\<`TLayer`\>(`opts?`): `Layout`\<`TLayer`\>
 
-Defined in: [canvas/src/layouts/Layout.ts:97](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layouts/Layout.ts#L97)
-
 #### Parameters
 
 ##### opts?
 
-[`LayoutOptions`](../interfaces/LayoutOptions.md) = `{}`
+[`LayoutOptions`](../interfaces/LayoutOptions.md)
 
 #### Returns
 
@@ -32,8 +34,6 @@ Defined in: [canvas/src/layouts/Layout.ts:97](https://github.com/invana/canvas/b
 
 > `readonly` **events**: [`EventEmitter`](EventEmitter.md)\<[`LayoutEvents`](../type-aliases/LayoutEvents.md)\>
 
-Defined in: [canvas/src/layouts/Layout.ts:95](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layouts/Layout.ts#L95)
-
 Lifecycle event bus. See class docs for the event vocabulary.
 Subclasses with richer telemetry can declare their own typed
 emitter on top (`override readonly events = new EventEmitter<MyEvents>()`).
@@ -44,17 +44,27 @@ emitter on top (`override readonly events = new EventEmitter<MyEvents>()`).
 
 > `readonly` **id**: `string`
 
-Defined in: [canvas/src/layouts/Layout.ts:86](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layouts/Layout.ts#L86)
-
 Stable id (registry / config key).
+
+***
+
+### kind?
+
+> `readonly` `optional` **kind?**: `string`
+
+Stable **class kind** — a minification-safe discriminator matching the
+`@invana/canvas-ui` settings-editor registry key (e.g. `'d3-force-layout'`,
+`'elk-layout'`). Distinct from [id](../../../graph-layout-geometric/src/classes/GeometricLayout.md#id) (the per-instance key): all
+`D3ForceLayout` instances share `kind: 'd3-force-layout'`. Concrete layouts
+set it as a class field; left `undefined` on any that haven't, so consumers
+fall back (e.g. to the class name). Lets domain-free tooling resolve an
+instance's editor without an `instanceof` ladder.
 
 ***
 
 ### targetLayerId?
 
 > `readonly` `optional` **targetLayerId?**: `string`
-
-Defined in: [canvas/src/layouts/Layout.ts:88](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layouts/Layout.ts#L88)
 
 The layer this layout targets, if declared at construction.
 
@@ -63,8 +73,6 @@ The layer this layout targets, if declared at construction.
 ### apply()
 
 > `abstract` **apply**(`layer`): `Promise`\<`void`\>
-
-Defined in: [canvas/src/layouts/Layout.ts:118](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layouts/Layout.ts#L118)
 
 Run the layout against `layer`. Resolves when the run terminates
 (either a natural settle or an external `stop()`).
@@ -84,11 +92,25 @@ run first.
 
 ***
 
+### serializeDefinition()
+
+> **serializeDefinition**(): `Record`\<`string`, `unknown`\>
+
+Contribute this layout's serialisable config to a canvas-state snapshot (the
+engine's `DefinitionSerializable` contract). The base captures the wiring
+`targetLayerId`; iterative layouts holding tunable params (e.g. force
+strengths) should override and spread `super.serializeDefinition()` with a
+JSON-safe copy of those params.
+
+#### Returns
+
+`Record`\<`string`, `unknown`\>
+
+***
+
 ### setOptions()
 
 > **setOptions**(`_patch`): `void`
-
-Defined in: [canvas/src/layouts/Layout.ts:107](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layouts/Layout.ts#L107)
 
 Live-reconfigure. Called by `Canvas.update({ layouts: { id: patch } })`.
 Default no-op; iterative layouts (e.g. `D3ForceLayout`) override to merge

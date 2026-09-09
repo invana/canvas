@@ -2,8 +2,6 @@
 
 > `const` **LOOP\_CURVE\_PRESETS**: `object`
 
-Defined in: [canvas/src/primitives/connectors/pathStyles/loopCurve.ts:97](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/connectors/pathStyles/loopCurve.ts#L97)
-
 Named loop-curve shape presets. Each preset carries the four
 profile-shaping opts (`baseOffset`, `radius`, `width`, `bulge`); the
 caller fills in placement (`side` / `angle`, `pivotOffset`) per
@@ -28,19 +26,19 @@ Definitions:
 
 #### balloon.baseOffset
 
-> `readonly` **baseOffset**: `2` = `2`
+> `readonly` **baseOffset**: `2`
 
 #### balloon.bulge
 
-> `readonly` **bulge**: `26` = `26`
+> `readonly` **bulge**: `26`
 
 #### balloon.radius
 
-> `readonly` **radius**: `22` = `22`
+> `readonly` **radius**: `22`
 
 #### balloon.width
 
-> `readonly` **width**: `6` = `6`
+> `readonly` **width**: `6`
 
 ### hairpin
 
@@ -48,19 +46,19 @@ Definitions:
 
 #### hairpin.baseOffset
 
-> `readonly` **baseOffset**: `2` = `2`
+> `readonly` **baseOffset**: `2`
 
 #### hairpin.bulge
 
-> `readonly` **bulge**: `4` = `4`
+> `readonly` **bulge**: `4`
 
 #### hairpin.radius
 
-> `readonly` **radius**: `28` = `28`
+> `readonly` **radius**: `28`
 
 #### hairpin.width
 
-> `readonly` **width**: `8` = `8`
+> `readonly` **width**: `8`
 
 ### ring
 
@@ -68,19 +66,19 @@ Definitions:
 
 #### ring.baseOffset
 
-> `readonly` **baseOffset**: `2` = `2`
+> `readonly` **baseOffset**: `2`
 
 #### ring.bulge
 
-> `readonly` **bulge**: `20` = `20`
+> `readonly` **bulge**: `20`
 
 #### ring.radius
 
-> `readonly` **radius**: `20` = `20`
+> `readonly` **radius**: `20`
 
 #### ring.width
 
-> `readonly` **width**: `10` = `10`
+> `readonly` **width**: `10`
 
 ### teardrop
 
@@ -88,16 +86,16 @@ Definitions:
 
 #### teardrop.baseOffset
 
-> `readonly` **baseOffset**: `2` = `2`
+> `readonly` **baseOffset**: `2`
 
 #### teardrop.bulge
 
-> `readonly` **bulge**: `8` = `8`
+> `readonly` **bulge**: `8`
 
 #### teardrop.radius
 
-> `readonly` **radius**: `34` = `34`
+> `readonly` **radius**: `34`
 
 #### teardrop.width
 
-> `readonly` **width**: `4` = `4`
+> `readonly` **width**: `4`

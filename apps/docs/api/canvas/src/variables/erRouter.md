@@ -1,8 +1,6 @@
 # Variable: erRouter
 
-> `const` **erRouter**: [`IRouter`](../type-aliases/IRouter.md)
-
-Defined in: [canvas/src/primitives/connectors/routers/er.ts:26](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/connectors/routers/er.ts#L26)
+> `const` **erRouter**: [`IRouter`](../../../renderer-pixijs/src/type-aliases/IRouter.md)
 
 ER (entity-relationship) router — exits each endpoint perpendicular to
 its boundary, then routes orthogonally between the stub points.

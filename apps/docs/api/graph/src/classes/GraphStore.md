@@ -1,14 +1,29 @@
 # Class: GraphStore
 
-Defined in: [graph/src/store/GraphStore.ts:68](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L68)
+`DataSource` — the kernel's contract for a **bulk data store** owned by
+`CanvasStore.data[id]` (decision **D13**: *interface, not inheritance* — see
+`docs/canvas-store-d13-data-ownership.md`).
+
+The kernel owns sources behind this interface **without knowing their domain**:
+- the default [LayerData](../../../canvas-store/src/classes/LayerData.md) satisfies it out of the box, and
+- a domain store (e.g. `@invana/graph`'s `GraphStore`) *implements* it and is
+  registered via `CanvasStore.setSource(id, source)`.
+
+Only the three members the kernel needs to **own + bridge** a source live here;
+everything domain-specific (positions fast-path, adjacency, hierarchy, presence)
+stays off the interface. `CanvasStore` subscribes each source's [onFlush](../../../canvas/src/interfaces/DataSource.md#onflush)
+and re-emits it as a coarse `data:flush` on the bus (telemetry / collab); the
+domain renderer subscribes to the source directly for targeted updates.
+
+## Implements
+
+- [`DataSource`](../../../canvas/src/interfaces/DataSource.md)
 
 ## Constructors
 
 ### Constructor
 
 > **new GraphStore**(`opts?`): `GraphStore`
-
-Defined in: [graph/src/store/GraphStore.ts:145](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L145)
 
 #### Parameters
 
@@ -24,9 +39,7 @@ Defined in: [graph/src/store/GraphStore.ts:145](https://github.com/invana/canvas
 
 ### events
 
-> `readonly` **events**: `SourceEmitter`\<[`GraphStoreEventMap`](../type-aliases/GraphStoreEventMap.md)\>
-
-Defined in: [graph/src/store/GraphStore.ts:108](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L108)
+> `readonly` **events**: [`SourceEmitter`](../../../canvas/src/classes/SourceEmitter.md)\<[`GraphStoreEventMap`](../type-aliases/GraphStoreEventMap.md)\>
 
 Public event bus. Subscribe via `store.events.on('node:add', ...)`.
 
@@ -37,13 +50,29 @@ to the canvas tap channel, so telemetry sees all store mutations
 
 ## Accessors
 
+### schema
+
+#### Get Signature
+
+> **get** **schema**(): [`GraphSchema`](../interfaces/GraphSchema.md)
+
+The **authoritative** schema declared for this graph (e.g. the full Neo4j DB
+schema behind a connected canvas), or `undefined` when none is set. It is
+typically a *superset* of what's loaded — for the schema of the *loaded* data
+use `deriveSchema(store)`. The common resolution is `store.schema ??
+deriveSchema(store)` (authoritative wins).
+
+##### Returns
+
+[`GraphSchema`](../interfaces/GraphSchema.md)
+
+***
+
 ### version
 
 #### Get Signature
 
 > **get** **version**(): `number`
-
-Defined in: [graph/src/store/GraphStore.ts:177](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L177)
 
 Monotonic counter. Bumps on every mutation including silent position writes.
 
@@ -56,8 +85,6 @@ Monotonic counter. Bumps on every mutation including silent position writes.
 ### addData()
 
 > **addData**(`data`): `void`
-
-Defined in: [graph/src/store/GraphStore.ts:869](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L869)
 
 Append nodes + edges in one batch — non-destructive (does NOT clear).
 Convenience for streaming feeds that push a fresh chunk of items as
@@ -87,8 +114,6 @@ readonly [`GraphNode`](../interfaces/GraphNode.md)\<`unknown`\>[]
 
 > **addEdge**\<`D`\>(`edge`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:566](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L566)
-
 #### Type Parameters
 
 ##### D
@@ -111,8 +136,6 @@ Defined in: [graph/src/store/GraphStore.ts:566](https://github.com/invana/canvas
 
 > **addEdgesBulk**(`edges`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:856](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L856)
-
 #### Parameters
 
 ##### edges
@@ -128,8 +151,6 @@ readonly [`GraphEdge`](../interfaces/GraphEdge.md)\<`unknown`\>[]
 ### addEdgeState()
 
 > **addEdgeState**(`id`, `name`, `_opts?`): `void`
-
-Defined in: [graph/src/store/GraphStore.ts:745](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L745)
 
 Add a runtime (presence) state to an edge. See [addNodeState](#addnodestate).
 
@@ -159,8 +180,6 @@ Add a runtime (presence) state to an edge. See [addNodeState](#addnodestate).
 
 > **addNode**\<`D`\>(`node`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:417](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L417)
-
 Strict add — throws on duplicate.
 
 #### Type Parameters
@@ -185,8 +204,6 @@ Strict add — throws on duplicate.
 
 > **addNodesBulk**(`nodes`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:850](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L850)
-
 #### Parameters
 
 ##### nodes
@@ -202,8 +219,6 @@ readonly [`GraphNode`](../interfaces/GraphNode.md)\<`unknown`\>[]
 ### addNodeState()
 
 > **addNodeState**(`id`, `name`, `_opts?`): `void`
-
-Defined in: [graph/src/store/GraphStore.ts:679](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L679)
 
 Add a runtime (presence) state to a node. Idempotent — re-adding an already
 active state is a no-op (no event). No-op if the node id is unknown.
@@ -241,8 +256,6 @@ Reserved for collaboration — `actor` will tag the change with
 
 > **ancestorsOf**(`id`): `IterableIterator`\<`string`\>
 
-Defined in: [graph/src/store/GraphStore.ts:318](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L318)
-
 #### Parameters
 
 ##### id
@@ -258,8 +271,6 @@ Defined in: [graph/src/store/GraphStore.ts:318](https://github.com/invana/canvas
 ### applyDelta()
 
 > **applyDelta**(`delta`): `void`
-
-Defined in: [graph/src/store/GraphStore.ts:897](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L897)
 
 Apply a streaming delta in a single batch. Order within the batch:
 1. `removed.edgeIds`  — removed first so node removals can't cascade
@@ -327,8 +338,6 @@ readonly `object`[]
 
 > **batch**\<`T`\>(`fn`): `T`
 
-Defined in: [graph/src/store/GraphStore.ts:947](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L947)
-
 Coalesce all mutations inside `fn` into a single flush. Nested `batch`
 calls flush only on the outermost exit.
 
@@ -354,8 +363,6 @@ calls flush only on the outermost exit.
 
 > **bindBus**(`bus`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:170](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L170)
-
 Attach (or detach with `undefined`) the canvas event bus this store's
 events forward to. Called by the owning `GraphLayer` on mount/unmount so
 store mutations reach the telemetry tap channel (§ 6). Local
@@ -365,7 +372,7 @@ store mutations reach the telemetry tap channel (§ 6). Local
 
 ##### bus
 
-`CanvasEventBus`
+[`CanvasEventBus`](../../../canvas/src/classes/CanvasEventBus.md)
 
 #### Returns
 
@@ -376,8 +383,6 @@ store mutations reach the telemetry tap channel (§ 6). Local
 ### childrenOf()
 
 > **childrenOf**(`parentId`): `IterableIterator`\<`string`\>
-
-Defined in: [graph/src/store/GraphStore.ts:300](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L300)
 
 #### Parameters
 
@@ -395,8 +400,6 @@ Defined in: [graph/src/store/GraphStore.ts:300](https://github.com/invana/canvas
 
 > **clear**(): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:971](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L971)
-
 Wipe all data. Cancels any pending flush.
 
 #### Returns
@@ -408,8 +411,6 @@ Wipe all data. Cancels any pending flush.
 ### clearEdgeState()
 
 > **clearEdgeState**(`name`): `void`
-
-Defined in: [graph/src/store/GraphStore.ts:771](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L771)
 
 Strip a runtime (presence) state from every edge. See [clearNodeState](#clearnodestate).
 
@@ -428,8 +429,6 @@ Strip a runtime (presence) state from every edge. See [clearNodeState](#clearnod
 ### clearNodeState()
 
 > **clearNodeState**(`name`): `void`
-
-Defined in: [graph/src/store/GraphStore.ts:729](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L729)
 
 Strip a runtime (presence) state from every node that carries it, in one
 pass — e.g. clearing a transient `'selected'` / `'lineage'` set. Touches the
@@ -452,8 +451,6 @@ is unaffected (change those via [updateNode](#updatenode)).
 
 > **compact**(): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:1000](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L1000)
-
 Reclaim tombstoned slots. Invalidates any external code that cached
 slot indices. Renderer batch buffers etc. must invalidate first.
 
@@ -466,8 +463,6 @@ slot indices. Renderer batch buffers etc. must invalidate first.
 ### descendantsOf()
 
 > **descendantsOf**(`id`): `IterableIterator`\<`string`\>
-
-Defined in: [graph/src/store/GraphStore.ts:306](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L306)
 
 #### Parameters
 
@@ -485,8 +480,6 @@ Defined in: [graph/src/store/GraphStore.ts:306](https://github.com/invana/canvas
 
 > **edgeCount**(): `number`
 
-Defined in: [graph/src/store/GraphStore.ts:187](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L187)
-
 Number of live (non-tombstoned) edges.
 
 #### Returns
@@ -499,8 +492,6 @@ Number of live (non-tombstoned) edges.
 
 > **edges**(): `IterableIterator`\<[`GraphEdge`](../interfaces/GraphEdge.md)\<`unknown`\>\>
 
-Defined in: [graph/src/store/GraphStore.ts:221](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L221)
-
 #### Returns
 
 `IterableIterator`\<[`GraphEdge`](../interfaces/GraphEdge.md)\<`unknown`\>\>
@@ -510,8 +501,6 @@ Defined in: [graph/src/store/GraphStore.ts:221](https://github.com/invana/canvas
 ### edgesOf()
 
 > **edgesOf**(`nodeId`, `dir?`): `IterableIterator`\<[`GraphEdge`](../interfaces/GraphEdge.md)\<`unknown`\>\>
-
-Defined in: [graph/src/store/GraphStore.ts:245](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L245)
 
 Yield edges incident to `nodeId` in the requested direction.
 `'out'` — edges where `nodeId` is the source.
@@ -538,8 +527,6 @@ Yield edges incident to `nodeId` in the requested direction.
 
 > **edgeStatesOf**(`id`): readonly `string`[]
 
-Defined in: [graph/src/store/GraphStore.ts:803](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L803)
-
 Effective active states of an edge — union of document + presence.
 
 #### Parameters
@@ -557,8 +544,6 @@ readonly `string`[]
 ### edgesWithState()
 
 > **edgesWithState**(`name`): `IterableIterator`\<`string`\>
-
-Defined in: [graph/src/store/GraphStore.ts:840](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L840)
 
 Edge sibling of [nodesWithState](#nodeswithstate).
 
@@ -578,8 +563,6 @@ Edge sibling of [nodesWithState](#nodeswithstate).
 
 > **flush**(): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:965](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L965)
-
 Drain any pending events. Cancels the RAF-scheduled flush (frame mode).
 In sync mode this still works — handy for forcing the TTL eviction sweep
 even if no mutation has happened since the last flush.
@@ -588,13 +571,15 @@ even if no mutation has happened since the last flush.
 
 `void`
 
+#### Implementation of
+
+[`DataSource`](../../../canvas/src/interfaces/DataSource.md).[`flush`](../../../canvas/src/interfaces/DataSource.md#flush)
+
 ***
 
 ### getEdge()
 
 > **getEdge**\<`D`\>(`id`): [`GraphEdge`](../interfaces/GraphEdge.md)\<`D`\>
-
-Defined in: [graph/src/store/GraphStore.ts:209](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L209)
 
 #### Type Parameters
 
@@ -618,8 +603,6 @@ Defined in: [graph/src/store/GraphStore.ts:209](https://github.com/invana/canvas
 
 > **getNode**\<`D`\>(`id`): [`GraphNode`](../interfaces/GraphNode.md)\<`D`\>
 
-Defined in: [graph/src/store/GraphStore.ts:199](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L199)
-
 #### Type Parameters
 
 ##### D
@@ -642,8 +625,6 @@ Defined in: [graph/src/store/GraphStore.ts:199](https://github.com/invana/canvas
 
 > **getPosition**(`id`): [`Vec2`](../interfaces/Vec2.md)
 
-Defined in: [graph/src/store/GraphStore.ts:328](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L328)
-
 #### Parameters
 
 ##### id
@@ -660,8 +641,6 @@ Defined in: [graph/src/store/GraphStore.ts:328](https://github.com/invana/canvas
 
 > **hasEdge**(`id`): `boolean`
 
-Defined in: [graph/src/store/GraphStore.ts:195](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L195)
-
 #### Parameters
 
 ##### id
@@ -677,8 +656,6 @@ Defined in: [graph/src/store/GraphStore.ts:195](https://github.com/invana/canvas
 ### hasEdgeState()
 
 > **hasEdgeState**(`id`, `name`): `boolean`
-
-Defined in: [graph/src/store/GraphStore.ts:820](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L820)
 
 True iff `name` is in an edge's effective (document ∪ presence) state set.
 
@@ -702,8 +679,6 @@ True iff `name` is in an edge's effective (document ∪ presence) state set.
 
 > **hasNode**(`id`): `boolean`
 
-Defined in: [graph/src/store/GraphStore.ts:191](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L191)
-
 #### Parameters
 
 ##### id
@@ -719,8 +694,6 @@ Defined in: [graph/src/store/GraphStore.ts:191](https://github.com/invana/canvas
 ### hasNodeState()
 
 > **hasNodeState**(`id`, `name`): `boolean`
-
-Defined in: [graph/src/store/GraphStore.ts:814](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L814)
 
 True iff `name` is in a node's effective (document ∪ presence) state set.
 
@@ -740,11 +713,147 @@ True iff `name` is in a node's effective (document ∪ presence) state set.
 
 ***
 
+### hiddenEdgeCount()
+
+> **hiddenEdgeCount**(): `number`
+
+Count of explicitly-hidden edges (O(1)).
+
+#### Returns
+
+`number`
+
+***
+
+### hiddenEdges()
+
+> **hiddenEdges**(): `IterableIterator`\<`string`\>
+
+Ids of every explicitly-hidden edge (O(1)-tracked, no scan).
+
+#### Returns
+
+`IterableIterator`\<`string`\>
+
+***
+
+### hiddenNodeCount()
+
+> **hiddenNodeCount**(): `number`
+
+Count of explicitly-hidden nodes (O(1)).
+
+#### Returns
+
+`number`
+
+***
+
+### hiddenNodes()
+
+> **hiddenNodes**(): `IterableIterator`\<`string`\>
+
+Ids of every explicitly-hidden node (O(1)-tracked, no scan).
+
+#### Returns
+
+`IterableIterator`\<`string`\>
+
+***
+
+### hideEdge()
+
+> **hideEdge**(`id`): `void`
+
+Hide an edge. Idempotent; usable inside a caller's `batch()`.
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`void`
+
+***
+
+### hideEdges()
+
+> **hideEdges**(`ids`): `void`
+
+Hide many edges in one batch → one flush.
+
+#### Parameters
+
+##### ids
+
+`Iterable`\<`string`\>
+
+#### Returns
+
+`void`
+
+***
+
+### hideNode()
+
+> **hideNode**(`id`): `void`
+
+Hide a node. Idempotent; usable inside a caller's `batch()`.
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`void`
+
+***
+
+### hideNodes()
+
+> **hideNodes**(`ids`): `void`
+
+Hide many nodes in one batch → one flush.
+
+#### Parameters
+
+##### ids
+
+`Iterable`\<`string`\>
+
+#### Returns
+
+`void`
+
+***
+
+### hideNodesByPredicate()
+
+> **hideNodesByPredicate**(`fn`): `void`
+
+Hide every node for which `fn` returns true, in one batch → one flush.
+
+#### Parameters
+
+##### fn
+
+(`node`) => `boolean`
+
+#### Returns
+
+`void`
+
+***
+
 ### inDegree()
 
 > **inDegree**(`nodeId`): `number`
-
-Defined in: [graph/src/store/GraphStore.ts:233](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L233)
 
 #### Parameters
 
@@ -758,11 +867,84 @@ Defined in: [graph/src/store/GraphStore.ts:233](https://github.com/invana/canvas
 
 ***
 
+### isEdgeHidden()
+
+> **isEdgeHidden**(`id`): `boolean`
+
+True iff the edge's **explicit** hidden flag is set (O(1)).
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`boolean`
+
+***
+
+### isEdgeVisible()
+
+> **isEdgeVisible**(`id`): `boolean`
+
+Effective visibility of an edge — live, not explicitly hidden, and with
+**both endpoints visible**. This is the derived rule the renderer/hit-test
+consult; hiding a node makes its incident edges return `false` here without
+flagging them.
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`boolean`
+
+***
+
+### isNodeHidden()
+
+> **isNodeHidden**(`id`): `boolean`
+
+True iff the node's **explicit** hidden flag is set (O(1)).
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`boolean`
+
+***
+
+### isNodeVisible()
+
+> **isNodeVisible**(`id`): `boolean`
+
+Effective visibility of a node — live and not explicitly hidden.
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`boolean`
+
+***
+
 ### isPinned()
 
 > **isPinned**(`id`): `boolean`
-
-Defined in: [graph/src/store/GraphStore.ts:399](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L399)
 
 #### Parameters
 
@@ -779,8 +961,6 @@ Defined in: [graph/src/store/GraphStore.ts:399](https://github.com/invana/canvas
 ### neighborsOf()
 
 > **neighborsOf**(`nodeId`, `dir?`): `IterableIterator`\<`string`\>
-
-Defined in: [graph/src/store/GraphStore.ts:271](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L271)
 
 Yield neighbor node ids in the requested direction.
 
@@ -804,8 +984,6 @@ Yield neighbor node ids in the requested direction.
 
 > **nodeCount**(): `number`
 
-Defined in: [graph/src/store/GraphStore.ts:182](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L182)
-
 Number of live (non-tombstoned) nodes.
 
 #### Returns
@@ -818,8 +996,6 @@ Number of live (non-tombstoned) nodes.
 
 > **nodes**(): `IterableIterator`\<[`GraphNode`](../interfaces/GraphNode.md)\<`unknown`\>\>
 
-Defined in: [graph/src/store/GraphStore.ts:214](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L214)
-
 #### Returns
 
 `IterableIterator`\<[`GraphNode`](../interfaces/GraphNode.md)\<`unknown`\>\>
@@ -829,8 +1005,6 @@ Defined in: [graph/src/store/GraphStore.ts:214](https://github.com/invana/canvas
 ### nodeStatesOf()
 
 > **nodeStatesOf**(`id`): readonly `string`[]
-
-Defined in: [graph/src/store/GraphStore.ts:792](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L792)
 
 Effective active states of a node — the **union** of its document `states[]`
 (feed-owned) and its runtime presence set. This is what the renderer iterates
@@ -853,8 +1027,6 @@ readonly `string`[]
 
 > **nodesWithState**(`name`): `IterableIterator`\<`string`\>
 
-Defined in: [graph/src/store/GraphStore.ts:829](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L829)
-
 Ids of every node whose effective (document ∪ presence) state set contains
 `name`. Scans live nodes; useful for snapshots / iteration.
 
@@ -870,11 +1042,34 @@ Ids of every node whose effective (document ∪ presence) state set contains
 
 ***
 
+### onFlush()
+
+> **onFlush**(`listener`): () => `void`
+
+[DataSource](../../../canvas/src/interfaces/DataSource.md) (D13) — subscribe to a coalesced [LayerFlush](../../../canvas/src/interfaces/LayerFlush.md) delta
+projected from this store's per-flush changes (position-only updates → `moved`).
+Distinct from `events.on('flush', …)` (which carries aggregate counters): this
+is what `CanvasStore` bridges onto `data:flush`. Returns an unsubscribe.
+
+#### Parameters
+
+##### listener
+
+(`delta`) => `void`
+
+#### Returns
+
+() => `void`
+
+#### Implementation of
+
+[`DataSource`](../../../canvas/src/interfaces/DataSource.md).[`onFlush`](../../../canvas/src/interfaces/DataSource.md#onflush)
+
+***
+
 ### outDegree()
 
 > **outDegree**(`nodeId`): `number`
-
-Defined in: [graph/src/store/GraphStore.ts:227](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L227)
 
 #### Parameters
 
@@ -892,8 +1087,6 @@ Defined in: [graph/src/store/GraphStore.ts:227](https://github.com/invana/canvas
 
 > **parentOf**(`id`): `string`
 
-Defined in: [graph/src/store/GraphStore.ts:296](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L296)
-
 #### Parameters
 
 ##### id
@@ -910,8 +1103,6 @@ Defined in: [graph/src/store/GraphStore.ts:296](https://github.com/invana/canvas
 
 > **pinnedIds**(): `IterableIterator`\<`string`\>
 
-Defined in: [graph/src/store/GraphStore.ts:405](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L405)
-
 #### Returns
 
 `IterableIterator`\<`string`\>
@@ -921,8 +1112,6 @@ Defined in: [graph/src/store/GraphStore.ts:405](https://github.com/invana/canvas
 ### removeEdge()
 
 > **removeEdge**(`id`): `void`
-
-Defined in: [graph/src/store/GraphStore.ts:640](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L640)
 
 #### Parameters
 
@@ -939,8 +1128,6 @@ Defined in: [graph/src/store/GraphStore.ts:640](https://github.com/invana/canvas
 ### removeEdgeState()
 
 > **removeEdgeState**(`id`, `name`, `_opts?`): `void`
-
-Defined in: [graph/src/store/GraphStore.ts:760](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L760)
 
 Remove a runtime (presence) state from an edge. See [removeNodeState](#removenodestate).
 
@@ -970,8 +1157,6 @@ Remove a runtime (presence) state from an edge. See [removeNodeState](#removenod
 
 > **removeNode**(`id`, `opts?`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:494](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L494)
-
 Remove a node. Cascades by default — removes all incident edges first.
 `cascade: false` throws if any incident edges still exist.
 
@@ -996,8 +1181,6 @@ Remove a node. Cascades by default — removes all incident edges first.
 ### removeNodeState()
 
 > **removeNodeState**(`id`, `name`, `_opts?`): `void`
-
-Defined in: [graph/src/store/GraphStore.ts:697](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L697)
 
 Remove a runtime (presence) state from a node. No-op if the state isn't
 currently active (no event) or the node is unknown.
@@ -1028,8 +1211,6 @@ currently active (no event) or the node is unknown.
 
 > **reverseEdge**(`id`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:634](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L634)
-
 Reverse an edge's direction — swap its `source` and `target`. No-op if the
 edge doesn't exist. Routes through [updateEdge](#updateedge), so adjacency indexes
 are rewired and an `edge:update` is enqueued like any other re-pointing.
@@ -1046,11 +1227,53 @@ are rewired and an `edge:update` is enqueued like any other re-pointing.
 
 ***
 
+### setEdgeHidden()
+
+> **setEdgeHidden**(`id`, `hidden`): `void`
+
+Set an edge's explicit hidden flag. Idempotent.
+
+#### Parameters
+
+##### id
+
+`string`
+
+##### hidden
+
+`boolean`
+
+#### Returns
+
+`void`
+
+***
+
+### setEdgesHidden()
+
+> **setEdgesHidden**(`ids`, `hidden`): `void`
+
+Set the hidden flag on many edges in one batch → one flush.
+
+#### Parameters
+
+##### ids
+
+`Iterable`\<`string`\>
+
+##### hidden
+
+`boolean`
+
+#### Returns
+
+`void`
+
+***
+
 ### setEdgeState()
 
 > **setEdgeState**(`id`, `name`, `on?`, `opts?`): `void`
-
-Defined in: [graph/src/store/GraphStore.ts:718](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L718)
 
 Toggle a runtime (presence) state on an edge. See [setNodeState](#setnodestate).
 
@@ -1080,11 +1303,111 @@ Toggle a runtime (presence) state on an edge. See [setNodeState](#setnodestate).
 
 ***
 
+### setFlushMode()
+
+> **setFlushMode**(`mode`): `void`
+
+[DataSource](../../../canvas/src/interfaces/DataSource.md) (D13) — set the flush trigger. The engine drives `'manual'`
+(its single rAF loop calls [flush](#flush)); kernel `'frame'`/`'microtask'` both
+map to GraphStore's frame scheduler. GraphStore's native `'sync'` is the
+constructor default and isn't reachable through this setter.
+
+#### Parameters
+
+##### mode
+
+[`FlushMode`](../../../canvas/src/type-aliases/FlushMode.md)
+
+#### Returns
+
+`void`
+
+#### Implementation of
+
+[`DataSource`](../../../canvas/src/interfaces/DataSource.md).[`setFlushMode`](../../../canvas/src/interfaces/DataSource.md#setflushmode)
+
+***
+
+### setNodeBoundingBox()
+
+> **setNodeBoundingBox**(`id`, `box`): `void`
+
+Write a node's cached [GraphNode.boundingBox](../interfaces/GraphNode.md#boundingbox) — the local render size
+the `GraphLayer` computed after drawing it. **Silent**: this is a derived
+cache, not a data mutation, so it emits no change / flush event and does not
+bump [version](#version) (avoids a render feedback loop). Unknown ids are a
+no-op. Surfaced by [getNode](#getnode) / [nodes](#nodes) so layouts can read a
+node's footprint without recomputing its shape spec.
+
+#### Parameters
+
+##### id
+
+`string`
+
+##### box
+
+###### height
+
+`number`
+
+###### width
+
+`number`
+
+#### Returns
+
+`void`
+
+***
+
+### setNodeHidden()
+
+> **setNodeHidden**(`id`, `hidden`): `void`
+
+Set a node's explicit hidden flag. Idempotent.
+
+#### Parameters
+
+##### id
+
+`string`
+
+##### hidden
+
+`boolean`
+
+#### Returns
+
+`void`
+
+***
+
+### setNodesHidden()
+
+> **setNodesHidden**(`ids`, `hidden`): `void`
+
+Set the hidden flag on many nodes in one batch → one flush.
+
+#### Parameters
+
+##### ids
+
+`Iterable`\<`string`\>
+
+##### hidden
+
+`boolean`
+
+#### Returns
+
+`void`
+
+***
+
 ### setNodeState()
 
 > **setNodeState**(`id`, `name`, `on?`, `opts?`): `void`
-
-Defined in: [graph/src/store/GraphStore.ts:712](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L712)
 
 Toggle a runtime (presence) state on a node — `on ? addNodeState :
 removeNodeState`. Convenience for callers (e.g. hover) that compute the
@@ -1120,8 +1443,6 @@ desired membership as a boolean. Default `on = true`.
 
 > **setPinned**(`id`, `pinned`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:385](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L385)
-
 #### Parameters
 
 ##### id
@@ -1141,8 +1462,6 @@ Defined in: [graph/src/store/GraphStore.ts:385](https://github.com/invana/canvas
 ### setPosition()
 
 > **setPosition**(`id`, `pos`, `opts?`): `void`
-
-Defined in: [graph/src/store/GraphStore.ts:338](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L338)
 
 Set a single node's position.
 
@@ -1175,8 +1494,6 @@ bumps `version` — use for layout sim ticks at 60fps.
 
 > **setPositionsBulk**(`ids`, `xy`, `opts?`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:360](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L360)
-
 Set many positions in a single tight loop.
 
 `xy` is packed `[x0, y0, x1, y1, ...]` (length must equal `ids.length * 2`).
@@ -1205,11 +1522,149 @@ readonly `string`[]
 
 ***
 
+### setSchema()
+
+> **setSchema**(`schema`): `void`
+
+Set (or clear with `undefined`) the authoritative schema. Called by a data
+source that *knows* its schema independent of loaded records — a Neo4j /
+GraphQL / ontology adapter. Emits `'schema'` so reactive consumers re-read.
+
+#### Parameters
+
+##### schema
+
+[`GraphSchema`](../interfaces/GraphSchema.md)
+
+#### Returns
+
+`void`
+
+***
+
+### showAllHidden()
+
+> **showAllHidden**(): `void`
+
+Clear every explicit hidden flag (nodes + edges) in one batch → one flush.
+
+#### Returns
+
+`void`
+
+***
+
+### showEdge()
+
+> **showEdge**(`id`): `void`
+
+Show an edge (clear its explicit hidden flag). Idempotent.
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`void`
+
+***
+
+### showEdges()
+
+> **showEdges**(`ids`): `void`
+
+Show many edges in one batch → one flush.
+
+#### Parameters
+
+##### ids
+
+`Iterable`\<`string`\>
+
+#### Returns
+
+`void`
+
+***
+
+### showNode()
+
+> **showNode**(`id`): `void`
+
+Show a node (clear its explicit hidden flag). Idempotent.
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`void`
+
+***
+
+### showNodes()
+
+> **showNodes**(`ids`): `void`
+
+Show many nodes in one batch → one flush.
+
+#### Parameters
+
+##### ids
+
+`Iterable`\<`string`\>
+
+#### Returns
+
+`void`
+
+***
+
+### toggleEdgeHidden()
+
+> **toggleEdgeHidden**(`id`): `boolean`
+
+Flip an edge's explicit hidden flag. Returns the resulting hidden state.
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`boolean`
+
+***
+
+### toggleNodeHidden()
+
+> **toggleNodeHidden**(`id`): `boolean`
+
+Flip a node's explicit hidden flag. Returns the resulting hidden state.
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`boolean`
+
+***
+
 ### updateEdge()
 
 > **updateEdge**\<`D`\>(`id`, `patch`): `void`
-
-Defined in: [graph/src/store/GraphStore.ts:589](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L589)
 
 #### Type Parameters
 
@@ -1237,8 +1692,6 @@ Defined in: [graph/src/store/GraphStore.ts:589](https://github.com/invana/canvas
 
 > **updateNode**\<`D`\>(`id`, `patch`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:435](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L435)
-
 #### Type Parameters
 
 ##### D
@@ -1265,8 +1718,6 @@ Defined in: [graph/src/store/GraphStore.ts:435](https://github.com/invana/canvas
 
 > **upsertEdge**\<`D`\>(`edge`): `void`
 
-Defined in: [graph/src/store/GraphStore.ts:580](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L580)
-
 #### Type Parameters
 
 ##### D
@@ -1288,8 +1739,6 @@ Defined in: [graph/src/store/GraphStore.ts:580](https://github.com/invana/canvas
 ### upsertNode()
 
 > **upsertNode**\<`D`\>(`node`): `void`
-
-Defined in: [graph/src/store/GraphStore.ts:426](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/GraphStore.ts#L426)
 
 Add-or-merge. Streaming-friendly path.
 

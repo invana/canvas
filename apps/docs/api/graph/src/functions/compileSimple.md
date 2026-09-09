@@ -2,8 +2,6 @@
 
 > **compileSimple**(`struct`, `styling`, `bindings`, `node`, `palette`): `Partial`\<[`NodeStyle`](../interfaces/NodeStyle.md)\>
 
-Defined in: graph/src/template/compile.ts:44
-
 Compile a simple structure into label + shape + fill/stroke style fields.
 
 ## Parameters

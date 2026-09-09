@@ -1,8 +1,10 @@
 {
   "name": "@invana/renderer-pixijs",
   "version": "0.0.12",
-  "description": "PixiJS drawing backend for @invana/canvas \u2014 implements IRenderer + IPrimitivesRenderer, owns the Application, viewport, primitives, textures and fonts.",
+  "description": "PixiJS drawing backend for @invana/canvas — implements IRenderer + IPrimitivesRenderer, owns the Application, viewport, primitives, textures and fonts.",
+  "homepage": "https://github.com/invana/canvas#readme",
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "typedocOptions": {
@@ -18,8 +20,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "pixi.js": "^8.18.1",
-    "pixi-viewport": "^6.0.3"
+    "pixi.js": "^8.20.1"
   },
   "peerDependencies": {
     "@invana/canvas-core": "workspace:*",
@@ -30,6 +31,7 @@
     "@invana/canvas-store": "workspace:*",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "pixi-viewport": "^6.0.3",
     "tsup": "^8.3.5",
     "typescript": "5.9.2"
   },
@@ -41,7 +43,16 @@
     "webgl",
     "backend"
   ],
+  "bugs": {
+    "url": "https://github.com/invana/canvas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/invana/canvas.git",
+    "directory": "packages/renderer-pixijs"
+  },
   "license": "Apache-2.0",
+  "author": "Ravi Raja Merugu",
   "module": "./dist/index.js",
   "exports": {
     ".": {

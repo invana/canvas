@@ -145,6 +145,7 @@ export type {
   IRenderer,
   RendererCapabilities,
   RendererMountOptions,
+  RenderPreference,
   ISurface,
   ISurfaceHost,
   SurfaceBackdrop,

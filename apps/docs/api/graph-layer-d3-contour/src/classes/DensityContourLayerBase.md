@@ -1,7 +1,5 @@
 # Abstract Class: DensityContourLayerBase\<TOpt, TEvt\>
 
-Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:41](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L41)
-
 ## Extends
 
 - `WorldLayer`\<`TOpt`, [`DensityContourLayerState`](../interfaces/DensityContourLayerState.md), `TEvt`, `never`, `WorldLayerHit`\>
@@ -27,13 +25,11 @@ Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:41](https://g
 
 > **new DensityContourLayerBase**\<`TOpt`, `TEvt`\>(`opts`): `DensityContourLayerBase`\<`TOpt`, `TEvt`\>
 
-Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:56](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L56)
-
 #### Parameters
 
 ##### opts
 
-`LayerOptions`\<`TOpt`\>
+[`LayerOptions`](../../../canvas/src/interfaces/LayerOptions.md)\<`TOpt`\>
 
 #### Returns
 
@@ -45,25 +41,21 @@ Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:56](https://g
 
 ## Properties
 
-### \_container?
+### \_surface?
 
-> `protected` `optional` **\_container?**: `Container`
-
-Defined in: canvas/dist/index.d.ts:932
+> `protected` `optional` **\_surface?**: [`ISurface`](../../../canvas/src/interfaces/ISurface.md)
 
 Backing field — assigned in `mount`, cleared in `unmount`.
 
 #### Inherited from
 
-`WorldLayer._container`
+`WorldLayer._surface`
 
 ***
 
 ### ctx?
 
-> `protected` `optional` **ctx?**: `CanvasContext`
-
-Defined in: canvas/dist/index.d.ts:572
+> `protected` `optional` **ctx?**: [`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
 Set by `mount(ctx)`; cleared by `unmount()`.
 
@@ -77,8 +69,6 @@ Set by `mount(ctx)`; cleared by `unmount()`.
 
 > **cullable**: `boolean`
 
-Defined in: canvas/dist/index.d.ts:563
-
 #### Inherited from
 
 `WorldLayer.cullable`
@@ -87,9 +77,7 @@ Defined in: canvas/dist/index.d.ts:563
 
 ### dirty
 
-> `readonly` **dirty**: `DirtyBatcher`\<`never`\>
-
-Defined in: canvas/dist/index.d.ts:558
+> `readonly` **dirty**: [`DirtyBatcher`](../../../canvas/src/classes/DirtyBatcher.md)\<`never`\>
 
 #### Inherited from
 
@@ -99,9 +87,7 @@ Defined in: canvas/dist/index.d.ts:558
 
 ### events
 
-> `readonly` **events**: `SourceEmitter`\<`TEvt`\>
-
-Defined in: canvas/dist/index.d.ts:557
+> `readonly` **events**: [`SourceEmitter`](../../../canvas/src/classes/SourceEmitter.md)\<`TEvt`\>
 
 #### Inherited from
 
@@ -109,19 +95,9 @@ Defined in: canvas/dist/index.d.ts:557
 
 ***
 
-### gfx
-
-> `protected` **gfx**: `Graphics` = `null`
-
-Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:48](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L48)
-
-***
-
 ### hittable
 
 > **hittable**: `boolean`
-
-Defined in: canvas/dist/index.d.ts:561
 
 #### Inherited from
 
@@ -133,11 +109,27 @@ Defined in: canvas/dist/index.d.ts:561
 
 > `readonly` **id**: `string`
 
-Defined in: canvas/dist/index.d.ts:554
-
 #### Inherited from
 
 `WorldLayer.id`
+
+***
+
+### kind?
+
+> `readonly` `optional` **kind?**: `string`
+
+Stable **class kind** — a minification-safe discriminator matching the
+`@invana/canvas-ui` settings-editor registry key (e.g. `'background-layer'`,
+`'minimap-layer'`). Distinct from [id](../../../graph-layer-maplibre/src/classes/MapLayer.md#id) (the per-instance key): all
+`BackgroundLayer` instances share `kind: 'background-layer'`. Concrete layers
+set it as a class field; left `undefined` on any that haven't, so consumers
+fall back (e.g. to the class name). Lets domain-free tooling resolve an
+instance's editor without an `instanceof` ladder.
+
+#### Inherited from
+
+`WorldLayer.kind`
 
 ***
 
@@ -145,23 +137,9 @@ Defined in: canvas/dist/index.d.ts:554
 
 > `readonly` **options**: `TOpt`
 
-Defined in: canvas/dist/index.d.ts:555
-
 #### Inherited from
 
 `WorldLayer.options`
-
-***
-
-### state
-
-> `readonly` **state**: `Store`\<[`DensityContourLayerState`](../interfaces/DensityContourLayerState.md)\>
-
-Defined in: canvas/dist/index.d.ts:556
-
-#### Inherited from
-
-`WorldLayer.state`
 
 ***
 
@@ -169,51 +147,23 @@ Defined in: canvas/dist/index.d.ts:556
 
 > **zIndex**: `number`
 
-Defined in: canvas/dist/index.d.ts:562
-
 #### Inherited from
 
 `WorldLayer.zIndex`
 
 ## Accessors
 
-### container
-
-#### Get Signature
-
-> **get** `protected` **container**(): `Container`
-
-Defined in: canvas/dist/index.d.ts:940
-
-Root pixi `Container` (RenderGroup) for this layer. Available from
-`onMount(ctx)` for the layer's lifetime. Throws before mount / after unmount.
-
-Pass to `ShapesRenderer` as the `container` option when wiring up a renderer
-inside `onMount`. Subclass-only — not part of the external layer API.
-
-##### Returns
-
-`Container`
-
-#### Inherited from
-
-`WorldLayer.container`
-
-***
-
 ### context
 
 #### Get Signature
 
-> **get** `protected` **context**(): `CanvasContext`
-
-Defined in: canvas/dist/index.d.ts:579
+> **get** `protected` **context**(): [`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
 Convenience accessor; throws when called pre-mount.
 
 ##### Returns
 
-`CanvasContext`
+[`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
 #### Inherited from
 
@@ -227,8 +177,6 @@ Convenience accessor; throws when called pre-mount.
 
 > **get** **mounted**(): `boolean`
 
-Defined in: canvas/dist/index.d.ts:574
-
 True between `mount` and `unmount`.
 
 ##### Returns
@@ -241,13 +189,51 @@ True between `mount` and `unmount`.
 
 ***
 
+### state
+
+#### Get Signature
+
+> **get** **state**(): [`ReactiveStore`](../../../canvas/src/interfaces/ReactiveStore.md)\<`TState`\>
+
+UI / interaction state (`ReactiveStore<TState>`). Because it is built
+through the injected kernel factory, every write emits patches and history /
+telemetry / a future CRDT backend all observe it.
+
+**Available from `mount()` onward** — accessing it before the first mount
+throws. (`createState()` is also called at first mount, so it may safely
+read subclass fields initialised in the subclass constructor.)
+
+##### Returns
+
+[`ReactiveStore`](../../../canvas/src/interfaces/ReactiveStore.md)\<`TState`\>
+
+#### Inherited from
+
+`WorldLayer.state`
+
+***
+
+### surface
+
+#### Get Signature
+
+> **get** `protected` **surface**(): [`ISurface`](../../../canvas/src/interfaces/ISurface.md)
+
+##### Returns
+
+[`ISurface`](../../../canvas/src/interfaces/ISurface.md)
+
+#### Inherited from
+
+`WorldLayer.surface`
+
+***
+
 ### visible
 
 #### Get Signature
 
 > **get** **visible**(): `boolean`
-
-Defined in: canvas/dist/index.d.ts:569
 
 Whether this layer renders. Setting `false` hides the layer's pixi
 container (via `onVisibleChange`, overridden by `WorldLayer` /
@@ -260,8 +246,6 @@ container (via `onVisibleChange`, overridden by `WorldLayer` /
 #### Set Signature
 
 > **set** **visible**(`value`): `void`
-
-Defined in: canvas/dist/index.d.ts:570
 
 ##### Parameters
 
@@ -283,8 +267,6 @@ Defined in: canvas/dist/index.d.ts:570
 
 > `protected` **applyDirty**(`_snap`): `void`
 
-Defined in: canvas/dist/index.d.ts:602
-
 Translate a dirty snapshot into renderer / pixi commands.
 Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
 
@@ -292,7 +274,7 @@ Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
 
 ##### \_snap
 
-`DirtySnapshot`\<`never`\>
+[`DirtySnapshot`](../../../canvas/src/interfaces/DirtySnapshot.md)\<`never`\>
 
 #### Returns
 
@@ -304,63 +286,41 @@ Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
 
 ***
 
-### createContainer()
+### buildBands()
 
-> **createContainer**(`label?`): `Container`
+> `abstract` `protected` **buildBands**(`density`, `offsetX`, `offsetY`): `PathSpec`[]
 
-Defined in: canvas/dist/index.d.ts:957
+Describe the iso-bands as `path` specs. Bands arrive low-density →
+high-density; emit in that order so denser bands sit on top (later specs get
+a higher `zIndex`). `offsetX`/`offsetY` are the world-space origin of the
+compute grid — add them to each polygon point.
 
-Create a plain pixi `Container` attached to this layer's root container.
-Useful as a parent for mounted display objects (e.g. text sprites).
-
-#### Parameters
-
-##### label?
-
-`string`
-
-#### Returns
-
-`Container`
-
-#### Inherited from
-
-`WorldLayer.createContainer`
-
-***
-
-### createGraphics()
-
-> **createGraphics**(`label?`): `Graphics`
-
-Defined in: canvas/dist/index.d.ts:952
-
-Create a pixi `Graphics` attached to this layer's root container. The
-sanctioned way for layer authors to obtain a `Graphics` for direct
-painting via `@invana/canvas/draw` primitives — keeps pixi internal
-(no `new Graphics()` in user code).
+Subclasses *describe*; they never draw. That is what lets these bands render
+on any backend and appear in a serialised canvas.
 
 #### Parameters
 
-##### label?
+##### density
 
-`string`
+`ContourMultiPolygon`[]
+
+##### offsetX
+
+`number`
+
+##### offsetY
+
+`number`
 
 #### Returns
 
-`Graphics`
-
-#### Inherited from
-
-`WorldLayer.createGraphics`
+`PathSpec`[]
 
 ***
 
 ### createState()
 
 > `protected` **createState**(): [`DensityContourLayerState`](../interfaces/DensityContourLayerState.md)
-
-Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:68](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L68)
 
 Build the initial UI / interaction state. Called once in the constructor.
 
@@ -378,8 +338,6 @@ Build the initial UI / interaction state. Called once in the constructor.
 
 > **flush**(): `void`
 
-Defined in: canvas/dist/index.d.ts:586
-
 Called by Canvas tick when `hasPending()` is true. Swaps the dirty
 snapshot, hands it to `applyDirty`. Subclasses normally don't override.
 
@@ -396,8 +354,6 @@ snapshot, hands it to `applyDirty`. Subclasses normally don't override.
 ### getBounds()
 
 > **getBounds**(): `object`
-
-Defined in: canvas/dist/index.d.ts:970
 
 Return the world-space AABB of everything currently rendered on this layer.
 Delegates to Pixi's `getLocalBounds()` — a one-shot scene-graph traversal.
@@ -433,8 +389,6 @@ Suitable for "fit to content" calls; do not call every frame.
 
 > **hasPending**(): `boolean`
 
-Defined in: canvas/dist/index.d.ts:581
-
 Whether `flush()` has work to do this frame.
 
 #### Returns
@@ -450,8 +404,6 @@ Whether `flush()` has work to do this frame.
 ### hitTest()
 
 > **hitTest**(`_worldX`, `_worldY`): `WorldLayerHit`
-
-Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:112](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L112)
 
 Hit-test in world coordinates. Returns the topmost hit or `null`.
 Concrete layers implement this against their own data + spatial index.
@@ -483,13 +435,11 @@ first hit, screen-layers-before-world per proposal Q6) calls this.
 
 > **mount**(`ctx`): `void`
 
-Defined in: canvas/dist/index.d.ts:942
-
 #### Parameters
 
 ##### ctx
 
-`CanvasContext`
+[`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
 #### Returns
 
@@ -505,15 +455,13 @@ Defined in: canvas/dist/index.d.ts:942
 
 > `protected` **onMount**(`ctx`): `void`
 
-Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:72](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L72)
-
 Domain-specific mount setup (subscribe to peers, attach renderer, etc.).
 
 #### Parameters
 
 ##### ctx
 
-`CanvasContext`
+[`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
 #### Returns
 
@@ -528,8 +476,6 @@ Domain-specific mount setup (subscribe to peers, attach renderer, etc.).
 ### onUnmount()
 
 > `protected` **onUnmount**(): `void`
-
-Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:92](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L92)
 
 Domain-specific unmount teardown.
 
@@ -547,9 +493,7 @@ Domain-specific unmount teardown.
 
 > `protected` **onVisibleChange**(`value`): `void`
 
-Defined in: canvas/dist/index.d.ts:944
-
-Keep the pixi container in sync when `layer.visible` is toggled.
+Keep the surface in sync when `layer.visible` is toggled.
 
 #### Parameters
 
@@ -567,50 +511,12 @@ Keep the pixi container in sync when `layer.visible` is toggled.
 
 ***
 
-### paintDensity()
-
-> `abstract` `protected` **paintDensity**(`g`, `density`, `offsetX`, `offsetY`): `void`
-
-Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:197](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L197)
-
-Render the iso-bands into `g`. The bands are ordered low-density →
-high-density; subclasses typically paint in that order so denser bands
-sit on top. `offsetX`/`offsetY` are the world-space origin of the
-compute grid — add them to each polygon point.
-
-#### Parameters
-
-##### g
-
-`Graphics`
-
-##### density
-
-`ContourMultiPolygon`[]
-
-##### offsetX
-
-`number`
-
-##### offsetY
-
-`number`
-
-#### Returns
-
-`void`
-
-***
-
 ### recompute()
 
 > **recompute**(): `void`
 
-Defined in: [graph-layer-d3-contour/src/DensityContourLayerBase.ts:108](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-d3-contour/src/DensityContourLayerBase.ts#L108)
-
-Force an immediate recompute. Useful in `recompute: 'manual'` mode, or
-to refresh the overlay after externally mutating options that don't
-have setters yet.
+Force an immediate recompute — e.g. in `recompute: 'manual'` mode, or after
+a layout moved node positions without changing the data.
 
 #### Returns
 
@@ -622,12 +528,10 @@ have setters yet.
 
 > **redraw**(): `void`
 
-Defined in: canvas/dist/index.d.ts:595
-
 Force a full repaint of this layer from its current state, bypassing the
 per-frame dirty path. Base implementation is a no-op — only layers that
 mount a renderer override it (e.g. `GraphLayer.redraw` re-renders every
-node and edge). Driven by [Canvas.redraw](../../../graph/src/classes/GraphCanvas.md#redraw); reach for it after an
+node and edge). Driven by Canvas.redraw; reach for it after an
 external change that sidestepped the normal mutate-and-flush path (theme
 swap, palette change) or to recover from a suspected render desync.
 
@@ -641,15 +545,64 @@ swap, palette change) or to recover from a suspected render desync.
 
 ***
 
+### setOptions()
+
+> **setOptions**(`patch`): `void`
+
+Apply a config patch — the seam `canvas.update({ layers: { [id]: … } })`
+(and therefore the settings editors + the React wrapper) drives. Merges
+over the current options and repaints, so appearance fields (`bandwidth`,
+`thresholds`, `cellSize`, `padding`, the subclass's fill / stroke fields)
+are live-editable.
+
+`graphLayerId` is identity, not appearance — it's read once on mount, so
+patching it here has no effect; re-add the layer to retarget it.
+
+#### Parameters
+
+##### patch
+
+`Partial`\<`TOpt`\>
+
+#### Returns
+
+`void`
+
+***
+
+### setVisible()
+
+> **setVisible**(`visible`): `void`
+
+Toggle whole-layer visibility, repaint, and announce it. Unlike assigning
+`visible` (which only hides the pixi container via [onVisibleChange](#onvisiblechange)),
+this also forces a [redraw](#redraw) and emits `scene:layer:visibilitychange`
+on the canvas bus so dependent layers (minimap) and the render loop react
+automatically. No-op if the value is unchanged.
+
+#### Parameters
+
+##### visible
+
+`boolean`
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+`WorldLayer.setVisible`
+
+***
+
 ### setZIndex()
 
 > **setZIndex**(`z`): `void`
 
-Defined in: canvas/dist/index.d.ts:964
-
 Update this layer's z-order relative to its peers. Keeps the iteration
-field (`this.zIndex`, used by `LayerRegistry.byZOrder()`) and the pixi
-container's `zIndex` in sync, and flips `surfaces.world` into sorted mode
+field (`this.zIndex`, used by `LayerRegistry.byZOrder()`) and the surface's
+paint order in sync, and flips `surfaces.world` into sorted mode
 so the change renders.
 
 #### Parameters
@@ -668,11 +621,28 @@ so the change renders.
 
 ***
 
+### surfaceOptions()
+
+> `protected` **surfaceOptions**(): [`SurfaceOptions`](../../../canvas/src/interfaces/SurfaceOptions.md)
+
+Per-layer options for the drawing device this layer's surface builds.
+Override when the layer owns policy the renderer can't know — a graph layer
+with pinpoint nodes wants a larger hit floor than one of big cards.
+Read once, at mount.
+
+#### Returns
+
+[`SurfaceOptions`](../../../canvas/src/interfaces/SurfaceOptions.md)
+
+#### Inherited from
+
+`WorldLayer.surfaceOptions`
+
+***
+
 ### unmount()
 
 > **unmount**(): `void`
-
-Defined in: canvas/dist/index.d.ts:945
 
 #### Returns
 

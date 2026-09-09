@@ -2,8 +2,6 @@
 
 > **compileCard**(`struct`, `styling`, `bindings`, `node`, `palette`): `Partial`\<[`NodeStyle`](../interfaces/NodeStyle.md)\>
 
-Defined in: graph/src/template/compile.ts:119
-
 Compile a card structure into a `composite` shape option with laid-out parts.
 
 ## Parameters

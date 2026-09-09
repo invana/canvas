@@ -2,13 +2,12 @@
 
 > **useGraphCanvasOptions**(): \[[`CanvasConfig`](../interfaces/CanvasConfig.md), (`patch`) => `void`\]
 
-Defined in: [canvas-react/src/hooks/useGraphCanvasOptions.ts:13](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas-react/src/hooks/useGraphCanvasOptions.ts#L13)
-
-Subscribe to the canvas's serialisable config. Returns
-`[options, update]` — `options` is the current [CanvasConfig](../interfaces/CanvasConfig.md) snapshot
-(`canvas.get()`), kept in sync via the `options:change` bus event, and
-`update` is the same patcher as [useGraphCanvasUpdate](useGraphCanvasUpdate.md). Drive a
-settings UI from this.
+Subscribe to the canvas's serialisable config. Returns `[options, update]` —
+`options` is the current [CanvasConfig](../interfaces/CanvasConfig.md), read **reactively** from
+`store.view.definition` (the source of truth) via [useStore](useStore.md), so the
+component re-renders only when the config slice actually changes (no coarse
+`options:change` bus copy). `update` is the same patcher as
+[useGraphCanvasUpdate](useGraphCanvasUpdate.md). Drive a settings UI from this.
 
 ## Returns
 

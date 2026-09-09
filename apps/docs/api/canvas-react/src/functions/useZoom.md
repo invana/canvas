@@ -2,8 +2,6 @@
 
 > **useZoom**(`canvas?`): [`UseZoomResult`](../interfaces/UseZoomResult.md)
 
-Defined in: [canvas-react/src/hooks/useZoom.ts:26](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas-react/src/hooks/useZoom.ts#L26)
-
 Live zoom state + zoom actions for the resolved canvas. Subscribes to
 `camera:zoom`, so the returned `zoom` tracks wheel / pinch / programmatic
 zoom and re-renders the component.

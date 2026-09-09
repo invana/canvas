@@ -1,14 +1,10 @@
 # Interface: CanvasOptions
 
-Defined in: [canvas/src/engine/Canvas.ts:50](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/engine/Canvas.ts#L50)
-
 ## Properties
 
 ### antialias?
 
 > `optional` **antialias?**: `boolean`
-
-Defined in: [canvas/src/engine/Canvas.ts:73](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/engine/Canvas.ts#L73)
 
 GPU MSAA. Default `true`. Auto-disabled on the Canvas backend.
 
@@ -17,8 +13,6 @@ GPU MSAA. Default `true`. Auto-disabled on the Canvas backend.
 ### autoResize?
 
 > `optional` **autoResize?**: `boolean`
-
-Defined in: [canvas/src/engine/Canvas.ts:92](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/engine/Canvas.ts#L92)
 
 Automatically resize the renderer and camera when the container element
 changes size. Covers both window resize and programmatic expand/collapse.
@@ -30,8 +24,6 @@ Uses `ResizeObserver` internally. Default `false`.
 
 > `optional` **backgroundColor?**: `number`
 
-Defined in: [canvas/src/engine/Canvas.ts:79](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/engine/Canvas.ts#L79)
-
 Background colour. Default `0` (black, but only visible when `opaque: true`).
 
 ***
@@ -39,8 +31,6 @@ Background colour. Default `0` (black, but only visible when `opaque: true`).
 ### config?
 
 > `optional` **config?**: [`CanvasConfig`](CanvasConfig.md)
-
-Defined in: [canvas/src/engine/Canvas.ts:110](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/engine/Canvas.ts#L110)
 
 Serialisable visual config applied at the end of `init()` to the
 layers/behaviours already added (by id): each slice is pushed to the
@@ -53,8 +43,6 @@ The single place to set all settings. Pure JSON — see [CanvasConfig](CanvasCon
 
 > `optional` **container?**: `HTMLElement`
 
-Defined in: [canvas/src/engine/Canvas.ts:59](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/engine/Canvas.ts#L59)
-
 DOM element pixi mounts its `<canvas>` into. Required by `init()`.
 
 ***
@@ -62,8 +50,6 @@ DOM element pixi mounts its `<canvas>` into. Required by `init()`.
 ### height?
 
 > `optional` **height?**: `number`
-
-Defined in: [canvas/src/engine/Canvas.ts:67](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/engine/Canvas.ts#L67)
 
 Viewport height in CSS pixels. Default = `container.clientHeight`.
 
@@ -73,8 +59,6 @@ Viewport height in CSS pixels. Default = `container.clientHeight`.
 
 > `optional` **hello?**: `boolean`
 
-Defined in: [canvas/src/engine/Canvas.ts:85](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/engine/Canvas.ts#L85)
-
 Suppress pixi's "PixiJS X.X.X" startup log. Default `true`.
 
 ***
@@ -82,8 +66,6 @@ Suppress pixi's "PixiJS X.X.X" startup log. Default `true`.
 ### id?
 
 > `optional` **id?**: `string`
-
-Defined in: [canvas/src/engine/Canvas.ts:56](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/engine/Canvas.ts#L56)
 
 Stable identifier for this Canvas instance. Used as the source id on
 envelopes published by the bus's own `emit()`. Default: `'canvas'`.
@@ -95,8 +77,6 @@ Override when running multiple Canvas instances in one document.
 
 > `optional` **opaque?**: `boolean`
 
-Defined in: [canvas/src/engine/Canvas.ts:76](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/engine/Canvas.ts#L76)
-
 `true` → opaque scene, `backgroundAlpha = 1` (skips per-frame blend).
 
 ***
@@ -105,27 +85,43 @@ Defined in: [canvas/src/engine/Canvas.ts:76](https://github.com/invana/canvas/bl
 
 > `optional` **powerPreference?**: `"high-performance"` \| `"low-power"`
 
-Defined in: [canvas/src/engine/Canvas.ts:82](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/engine/Canvas.ts#L82)
-
 GPU power preference. Default `'high-performance'`.
 
 ***
 
 ### preference?
 
-> `optional` **preference?**: `"canvas"` \| `"webgpu"` \| `"webgl"`
+> `optional` **preference?**: [`RenderPreference`](../type-aliases/RenderPreference.md)
 
-Defined in: [canvas/src/engine/Canvas.ts:62](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/engine/Canvas.ts#L62)
+Preferred backend ([RenderPreference](../type-aliases/RenderPreference.md)). Default `'webgpu'`
+(WebGPU-first). Passed to the renderer verbatim — `'canvas'` mounts the 2D
+backend rather than being folded into `'webgl'`.
 
-Preferred backend. Default `'webgpu'`. Pixi falls back via its own logic.
+PixiJS's WebGPU renderer can crash at *render* time on some browser/driver
+combinations (a null bind-group during pipeline setup), which no init-time
+guard can catch. When that happens the engine halts its render loop and
+emits `'canvas:renderer:fallback'` so the host can degrade to WebGL (the
+`@invana/canvas-react` `<Canvas>` does this automatically). Pixi's own
+auto-fallback still covers browsers with no WebGPU at all; pass `'webgl'`
+explicitly to opt out of WebGPU entirely.
+
+***
+
+### renderer?
+
+> `optional` **renderer?**: [`IRenderer`](IRenderer.md)
+
+The drawing backend. Defaults to `@invana/renderer-pixijs` (the PixiJS
+backend); supply one to override — a three.js backend, or
+`HeadlessRenderer` for a test.
+
+When supplied, `Canvas` calls `mount` on it; you do not mount it yourself.
 
 ***
 
 ### resolution?
 
 > `optional` **resolution?**: `number`
-
-Defined in: [canvas/src/engine/Canvas.ts:70](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/engine/Canvas.ts#L70)
 
 Device pixel ratio. Default `window.devicePixelRatio`.
 
@@ -134,8 +130,6 @@ Device pixel ratio. Default `window.devicePixelRatio`.
 ### suppressBrowserContextMenu?
 
 > `optional` **suppressBrowserContextMenu?**: `boolean`
-
-Defined in: [canvas/src/engine/Canvas.ts:102](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/engine/Canvas.ts#L102)
 
 Suppress the browser's native right-click context menu on the canvas
 element. Diagram apps typically want to show their own menu UI via the
@@ -146,10 +140,25 @@ accessibility / dev tooling on right-click).
 
 ***
 
+### telemetry?
+
+> `optional` **telemetry?**: [`CanvasTelemetryConfig`](CanvasTelemetryConfig.md)
+
+Telemetry to emit — independently toggle `traces` / `metrics` / `logging`
+(see [CanvasTelemetryConfig](CanvasTelemetryConfig.md)). Each stream `true` uses the dep-free
+console adapter, so `telemetry: { traces: true, metrics: true }` works with
+zero extra installs; inject a real port (or use the opt-in
+`@invana/canvas-telemetry-otel` package) to export to OTLP / HyperDX. The
+engine + kernel stay vendor-free — the exporter lives outside.
+
+`metrics` covers the per-frame FPS / phase stream the engine emits on
+`render:loop:tick` (see frames); `traces` covers view-mutation,
+event-bus, and per-gesture interaction spans.
+
+***
+
 ### width?
 
 > `optional` **width?**: `number`
-
-Defined in: [canvas/src/engine/Canvas.ts:65](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/engine/Canvas.ts#L65)
 
 Viewport width in CSS pixels. Default = `container.clientWidth`.

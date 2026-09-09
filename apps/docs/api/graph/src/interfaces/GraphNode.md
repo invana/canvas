@@ -1,7 +1,5 @@
 # Interface: GraphNode\<D\>
 
-Defined in: [graph/src/store/types.ts:20](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L20)
-
 A node in the graph. `id` is unique within a `GraphStore`.
 
 ## Type Parameters
@@ -12,21 +10,51 @@ A node in the graph. `id` is unique within a `GraphStore`.
 
 ## Properties
 
+### boundingBox?
+
+> `optional` **boundingBox?**: `object`
+
+Cached **local render bounds** (`width` × `height`), written by the
+`GraphLayer` after each render via `GraphStore.setNodeBoundingBox`. Derived
+— *not* user input; it's the size the shape's `boundsOf` reported, so
+layouts (ELK collide/sizing, force radii) can read a node's footprint
+without recomputing its shape spec (which, for a composite card, means
+rebuilding every part). `undefined` until the node has rendered once.
+
+#### height
+
+> **height**: `number`
+
+#### width
+
+> **width**: `number`
+
+***
+
 ### data?
 
 > `optional` **data?**: `D`
 
-Defined in: [graph/src/store/types.ts:26](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L26)
-
 Arbitrary user payload — opaque to the store.
+
+***
+
+### hidden?
+
+> `optional` **hidden?**: `boolean`
+
+True iff this node is explicitly hidden. A hidden node is culled from the
+render batch, hit-test, bounds/camera, layout, labels and minimap — it is
+*not* merely alpha-0. Sibling of [pinned](#pinned); stored as a bit in the
+hot `flags` column, not on the cold record. Hiding a node also makes its
+incident edges *effectively* hidden without flagging them (see
+`GraphStore.isEdgeVisible`). Default `false`.
 
 ***
 
 ### id
 
 > **id**: `string`
-
-Defined in: [graph/src/store/types.ts:22](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L22)
 
 Stable identity. Must be unique within the store.
 
@@ -36,8 +64,6 @@ Stable identity. Must be unique within the store.
 
 > `optional` **parentId?**: `string`
 
-Defined in: [graph/src/store/types.ts:28](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L28)
-
 Logical parent. Cycles are rejected at write time.
 
 ***
@@ -46,8 +72,6 @@ Logical parent. Cycles are rejected at write time.
 
 > `optional` **pinned?**: `boolean`
 
-Defined in: [graph/src/store/types.ts:32](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L32)
-
 True iff layouts must not move this node.
 
 ***
@@ -55,8 +79,6 @@ True iff layouts must not move this node.
 ### position?
 
 > `optional` **position?**: `object`
-
-Defined in: [graph/src/store/types.ts:30](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L30)
 
 Canonical position. Owned by the store; mutated by layouts and drags.
 
@@ -74,8 +96,6 @@ Canonical position. Owned by the store; mutated by layouts and drags.
 
 > `optional` **state?**: `unknown`
 
-Defined in: [graph/src/store/types.ts:61](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L61)
-
 Per-instance overlay catalogue keyed by state name (singular `state`).
 Each value is a `NodeStyle` patch applied when that name appears in
 [states](#states). Typed by the consumer as
@@ -86,8 +106,6 @@ Each value is a `NodeStyle` patch applied when that name appears in
 ### states?
 
 > `optional` **states?**: readonly `string`[]
-
-Defined in: [graph/src/store/types.ts:46](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L46)
 
 Currently-active state names (plural). Each name should match a key in
 `style.state` (per-instance overlay catalogue) or in
@@ -106,18 +124,17 @@ visible state set with the new array — runtime states applied via
 
 > `optional` **style?**: `unknown`
 
-Defined in: [graph/src/store/types.ts:53](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L53)
-
 Visual + structural style for this node. Typed via
 `import('../layer/types').NodeStyle` in consumer code; left as `unknown`
 here to avoid a store → layer dependency cycle.
 
 ***
 
-### type?
+### type
 
-> `optional` **type?**: `string`
-
-Defined in: [graph/src/store/types.ts:24](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L24)
+> **type**: `string`
 
 Type tag — matches a `NodeOption.type` template if any. Free-form.
+
+**Required.** Every record carries one; where a graph has no meaningful
+kinds, use [UNKNOWN\_TYPE](../variables/UNKNOWN_TYPE.md).

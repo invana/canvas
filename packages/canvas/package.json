@@ -1,8 +1,10 @@
 {
   "name": "@invana/canvas",
   "version": "0.0.12",
-  "description": "WebGPU-first canvas rendering engine \u2014 Layer / Behaviour / Layout architecture (see architecture-proposal.md).",
+  "description": "WebGPU-first canvas rendering engine — Layer / Behaviour / Layout architecture (see architecture-proposal.md).",
+  "homepage": "https://github.com/invana/canvas#readme",
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -28,7 +30,8 @@
   },
   "dependencies": {
     "@invana/canvas-core": "workspace:*",
-    "@invana/canvas-store": "workspace:*"
+    "@invana/canvas-store": "workspace:*",
+    "@invana/renderer-pixijs": "workspace:*"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
@@ -39,8 +42,7 @@
     "vitest": "^3.2.6"
   },
   "peerDependencies": {
-    "typescript": ">=5.0.0",
-    "@invana/renderer-pixijs": "workspace:*"
+    "typescript": ">=5.0.0"
   },
   "keywords": [
     "canvas",
@@ -50,17 +52,21 @@
     "graph",
     "rendering"
   ],
+  "bugs": {
+    "url": "https://github.com/invana/canvas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/invana/canvas.git",
+    "directory": "packages/canvas"
+  },
   "license": "Apache-2.0",
+  "author": "Ravi Raja Merugu",
   "module": "./dist/index.js",
   "files": [
     "dist"
   ],
   "publishConfig": {
     "access": "public"
-  },
-  "peerDependenciesMeta": {
-    "@invana/renderer-pixijs": {
-      "optional": true
-    }
   }
 }

@@ -2,15 +2,13 @@
 
 > **Resolvable**\<`T`, `I`\> = `T` \| ((`input`) => `T`)
 
-Defined in: [graph/src/layer/types.ts:67](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L67)
-
 A field value that's either a static value or a function that derives the
 value from the host item (node / edge / raw data).
 
 Used on every field of `NodeStyle` / `EdgeStyle` (via `ResolvableNodeStyle`
 / `ResolvableEdgeStyle`) so callers can supply per-item-derived styling
 on the layer template (`options.node.style`) or per-instance input
-(`NodeInput.style`) without spreading hints into every node's `data`.
+(`GraphNode.style`) without spreading hints into every node's `data`.
 
 Resolved per render (layer-level) or once at insert (per-input). Keep
 resolvers cheap and pure — they may run per frame. Recursive returns

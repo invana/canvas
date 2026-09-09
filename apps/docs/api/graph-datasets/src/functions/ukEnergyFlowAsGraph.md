@@ -1,8 +1,6 @@
 # Function: ukEnergyFlowAsGraph()
 
-> **ukEnergyFlowAsGraph**(): [`UkEnergyFlowGraphData`](../interfaces/UkEnergyFlowGraphData.md)
-
-Defined in: [graph-datasets/src/uk-energy-flow.ts:92](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-datasets/src/uk-energy-flow.ts#L92)
+> **ukEnergyFlowAsGraph**(): `object`
 
 Project [ukEnergyFlow](../variables/ukEnergyFlow.md) to `{nodes, edges}` for `GraphLayer.setData`.
 
@@ -14,4 +12,12 @@ The mapping:
 
 ## Returns
 
-[`UkEnergyFlowGraphData`](../interfaces/UkEnergyFlowGraphData.md)
+`object`
+
+### edges
+
+> **edges**: `GraphEdge`\<`unknown`\> & `object`[] = `graphEdges`
+
+### nodes
+
+> **nodes**: `GraphNode`\<`unknown`\> & `object`[] = `graphNodes`

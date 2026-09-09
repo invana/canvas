@@ -89,9 +89,7 @@ export class PixiRenderer implements IRenderer {
     // Resolve the backend before handing it to pixi. `resolveRenderPreference`
     // downgrades to `'webgl'` up front where WebGPU is unusable; a WebGPU
     // *render-time* crash (uncatchable at init) is caught by the guard below.
-    const preference = resolveRenderPreference(
-      opts.preference === 'auto' ? 'webgpu' : (opts.preference ?? 'webgpu'),
-    );
+    const preference = resolveRenderPreference(opts.preference ?? 'webgpu');
     const initOpts = {
       width,
       height,

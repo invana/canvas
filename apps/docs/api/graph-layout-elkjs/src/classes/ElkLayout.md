@@ -1,7 +1,5 @@
 # Class: ElkLayout
 
-Defined in: [graph-layout-elkjs/src/ElkLayout.ts:65](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-elkjs/src/ElkLayout.ts#L65)
-
 ## Extends
 
 - `OneShotPositionLayout`\<[`ElkLayoutOptions`](../interfaces/ElkLayoutOptions.md)\>
@@ -11,8 +9,6 @@ Defined in: [graph-layout-elkjs/src/ElkLayout.ts:65](https://github.com/invana/c
 ### Constructor
 
 > **new ElkLayout**(`opts?`): `ElkLayout`
-
-Defined in: [graph-layout-elkjs/src/ElkLayout.ts:75](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-elkjs/src/ElkLayout.ts#L75)
 
 #### Parameters
 
@@ -32,9 +28,7 @@ Defined in: [graph-layout-elkjs/src/ElkLayout.ts:75](https://github.com/invana/c
 
 ### events
 
-> `readonly` **events**: `EventEmitter`\<`LayoutEvents`\>
-
-Defined in: canvas/dist/index.d.ts:1876
+> `readonly` **events**: [`EventEmitter`](../../../canvas/src/classes/EventEmitter.md)\<[`LayoutEvents`](../../../canvas/src/type-aliases/LayoutEvents.md)\>
 
 Lifecycle event bus. See class docs for the event vocabulary.
 Subclasses with richer telemetry can declare their own typed
@@ -50,8 +44,6 @@ emitter on top (`override readonly events = new EventEmitter<MyEvents>()`).
 
 > `readonly` **id**: `string`
 
-Defined in: canvas/dist/index.d.ts:1868
-
 Stable id (registry / config key).
 
 #### Inherited from
@@ -60,11 +52,27 @@ Stable id (registry / config key).
 
 ***
 
+### kind
+
+> `readonly` **kind**: `"elk-layout"` = `'elk-layout'`
+
+Stable **class kind** — a minification-safe discriminator matching the
+`@invana/canvas-ui` settings-editor registry key (e.g. `'d3-force-layout'`,
+`'elk-layout'`). Distinct from [id](../../../graph-layout-geometric/src/classes/GeometricLayout.md#id) (the per-instance key): all
+`D3ForceLayout` instances share `kind: 'd3-force-layout'`. Concrete layouts
+set it as a class field; left `undefined` on any that haven't, so consumers
+fall back (e.g. to the class name). Lets domain-free tooling resolve an
+instance's editor without an `instanceof` ladder.
+
+#### Overrides
+
+`OneShotPositionLayout.kind`
+
+***
+
 ### opts
 
 > `protected` **opts**: [`ElkLayoutOptions`](../interfaces/ElkLayoutOptions.md)
-
-Defined in: graph/dist/index.d.ts:2737
 
 The live options bag. Subclasses read their own fields off this (it's the
 merged result of the constructor opts and every [setOptions](#setoptions) patch),
@@ -80,8 +88,6 @@ rather than keeping a private copy — so config edits take effect.
 
 > `protected` **running**: `boolean`
 
-Defined in: graph/dist/index.d.ts:2745
-
 True while a run (compute + transition) is in flight.
 
 #### Inherited from
@@ -93,8 +99,6 @@ True while a run (compute + transition) is in flight.
 ### targetLayerId?
 
 > `readonly` `optional` **targetLayerId?**: `string`
-
-Defined in: canvas/dist/index.d.ts:1870
 
 The layer this layout targets, if declared at construction.
 
@@ -108,8 +112,6 @@ The layer this layout targets, if declared at construction.
 
 > `protected` **transition**: `number` \| `boolean`
 
-Defined in: graph/dist/index.d.ts:2739
-
 `false` | `true` (default ms) | explicit ms. See [OneShotLayoutOptions.transition](../../../graph-layout-d3-hierarchy/src/interfaces/D3HierarchyLayoutOptions.md#transition).
 
 #### Inherited from
@@ -120,9 +122,7 @@ Defined in: graph/dist/index.d.ts:2739
 
 ### transitionEase
 
-> `protected` **transitionEase**: `EasingName`
-
-Defined in: graph/dist/index.d.ts:2741
+> `protected` **transitionEase**: [`EasingName`](../../../canvas/src/type-aliases/EasingName.md)
 
 Easing key for the transition. See [OneShotLayoutOptions.transitionEase](../../../graph-layout-d3-hierarchy/src/interfaces/D3HierarchyLayoutOptions.md#transitionease).
 
@@ -135,8 +135,6 @@ Easing key for the transition. See [OneShotLayoutOptions.transitionEase](../../.
 ### apply()
 
 > **apply**(`layer`): `Promise`\<`void`\>
-
-Defined in: graph/dist/index.d.ts:2785
 
 Run the layout against `layer`. Resolves when the run terminates
 (either a natural settle or an external `stop()`).
@@ -164,8 +162,6 @@ run first.
 
 > `protected` **computeLayout**(`layer`): `Promise`\<`LayoutPositions`\<`ElkExtendedEdge`[]\>\>
 
-Defined in: [graph-layout-elkjs/src/ElkLayout.ts:119](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-elkjs/src/ElkLayout.ts#L119)
-
 Snapshot the store, run ELK (async), and return centre-converted positions.
 The base writes them (snap or glide per `transition`) and then calls
 [onPositionsApplied](#onpositionsapplied) with the routed edges. A throw here is surfaced
@@ -191,8 +187,6 @@ while ELK was in flight is dropped by the base's staleness check.
 ### onPositionsApplied()
 
 > `protected` **onPositionsApplied**(`layer`, `meta`): `void`
-
-Defined in: [graph-layout-elkjs/src/ElkLayout.ts:183](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-elkjs/src/ElkLayout.ts#L183)
 
 When ELK edge routing is on, read back each edge's computed bend points and
 write them as `style.shape.waypoints` (pathType 'orth') — once node positions
@@ -230,11 +224,29 @@ the cards without any per-edge offset.
 
 ***
 
+### serializeDefinition()
+
+> **serializeDefinition**(): `Record`\<`string`, `unknown`\>
+
+Contribute this layout's serialisable config to a canvas-state snapshot (the
+engine's `DefinitionSerializable` contract). The base captures the wiring
+`targetLayerId`; iterative layouts holding tunable params (e.g. force
+strengths) should override and spread `super.serializeDefinition()` with a
+JSON-safe copy of those params.
+
+#### Returns
+
+`Record`\<`string`, `unknown`\>
+
+#### Inherited from
+
+`OneShotPositionLayout.serializeDefinition`
+
+***
+
 ### setOptions()
 
 > **setOptions**(`patch`): `void`
-
-Defined in: graph/dist/index.d.ts:2761
 
 Live-reconfigure. Called by `Canvas.update({ layouts: { id: patch } })` (and
 once at init with the `config.layouts[id]` slice). Merges the patch into
@@ -259,11 +271,37 @@ the first `apply()` it just records the options (no premature run).
 
 ***
 
+### shouldPlaceNode()
+
+> `protected` **shouldPlaceNode**(`node`): `boolean`
+
+Whether a node should be placed by this run. Excludes explicitly-hidden
+nodes unless [OneShotLayoutOptions.includeHidden](../../../graph-layout-d3-hierarchy/src/interfaces/D3HierarchyLayoutOptions.md#includehidden) is set. Subclasses
+call this while snapshotting `layer.store.nodes()` so hidden nodes stay
+frozen at their last positions. Edges incident to a skipped node should be
+dropped from the layout graph too (both endpoints must be placeable).
+
+#### Parameters
+
+##### node
+
+###### hidden?
+
+`boolean`
+
+#### Returns
+
+`boolean`
+
+#### Inherited from
+
+`OneShotPositionLayout.shouldPlaceNode`
+
+***
+
 ### shouldTransition()
 
 > `protected` **shouldTransition**(`_layer`): `boolean`
-
-Defined in: graph/dist/index.d.ts:2784
 
 Whether this run should animate (vs snap), on top of the `transition`
 option. Defaults to `true`. Override to veto for runs whose output isn't a
@@ -289,8 +327,6 @@ sizes, sunburst arcs) where tweening the positions would look wrong.
 ### stop()
 
 > **stop**(): `void`
-
-Defined in: graph/dist/index.d.ts:2787
 
 Cancel an in-flight run. Positions already written stay in the store.
 

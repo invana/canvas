@@ -1,80 +1,104 @@
 # Interface: CanvasGlobalEvents
 
-Defined in: [canvas/src/events/CanvasEventBus.ts:58](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEventBus.ts#L58)
-
-Default canvas-wide event map. Domain packages or the canvas implementation
-can extend it via TypeScript module augmentation; for now we keep it open.
-
-Listed here are events that the canvas itself or its built-in primitives
-emit. Additional event names get added as their producers land.
-
-## Extends
-
-- [`EventMap`](../type-aliases/EventMap.md)
-
-## Indexable
-
-> \[`key`: `string`\]: `unknown`
+The canvas-wide event map. Consumers (engine, domain) **augment** this via
+declaration merging — `declare module '@invana/canvas-core' { interface
+CanvasGlobalEvents { 'shape:click': … } }` — so new events are typed without
+touching the core.
 
 ## Properties
 
-### background:click
+### canvas:message:show
 
-> **background:click**: `object`
+> **canvas:message:show**: `object`
 
-Defined in: [canvas/src/events/CanvasEventBus.ts:88](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEventBus.ts#L88)
+The shared status-message channel. `text: null` clears; `timeout` (ms) auto-clears.
 
-#### worldX
+#### text
 
-> **worldX**: `number`
+> **text**: `string`
 
-#### worldY
+#### timeout?
 
-> **worldY**: `number`
-
-***
-
-### behaviour:disabled
-
-> **behaviour:disabled**: `object`
-
-Defined in: [canvas/src/events/CanvasEventBus.ts:85](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEventBus.ts#L85)
-
-#### id
-
-> **id**: `string`
+> `optional` **timeout?**: `number`
 
 ***
 
-### behaviour:enabled
+### canvas:renderer:fallback
 
-> **behaviour:enabled**: `object`
+> **canvas:renderer:fallback**: `object`
 
-Defined in: [canvas/src/events/CanvasEventBus.ts:84](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEventBus.ts#L84)
+The active renderer crashed at **render time** and the engine has halted its
+render loop. Emitted once (experimental WebGPU only — see
+`CanvasOptions.preference`); the consumer should tear the canvas down and
+re-init on `to` (WebGL). `reason` is a short diagnostic tag.
 
-#### id
+#### from
 
-> **id**: `string`
+> **from**: `string`
+
+#### reason?
+
+> `optional` **reason?**: `string`
+
+#### to
+
+> **to**: `string`
 
 ***
 
-### behaviour:registered
+### canvas:renderer:ready
 
-> **behaviour:registered**: `object`
+> **canvas:renderer:ready**: `object`
 
-Defined in: [canvas/src/events/CanvasEventBus.ts:83](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEventBus.ts#L83)
+#### backend
 
-#### id
+> **backend**: `string`
 
-> **id**: `string`
+#### capabilities?
+
+> `optional` **capabilities?**: `Record`\<`string`, `unknown`\>
 
 ***
 
-### camera:pan
+### data:flush
 
-> **camera:pan**: `object`
+> **data:flush**: `object`
 
-Defined in: [canvas/src/events/CanvasEventBus.ts:87](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEventBus.ts#L87)
+A `layer` data flush (nodes/edges/groups/annotations delta), bridged onto the bus.
+
+#### delta
+
+> **delta**: [`LayerFlush`](LayerFlush.md)
+
+#### layerId
+
+> **layerId**: `string`
+
+***
+
+### data:intent
+
+> **data:intent**: `object`
+
+A named data **intent** — one per data action (audit / collab), distinct from the per-frame flush.
+
+#### action
+
+> **action**: `string`
+
+#### ids
+
+> **ids**: readonly `string`[]
+
+#### layerId
+
+> **layerId**: `string`
+
+***
+
+### input:background:click
+
+> **input:background:click**: `object`
 
 #### x
 
@@ -86,11 +110,43 @@ Defined in: [canvas/src/events/CanvasEventBus.ts:87](https://github.com/invana/c
 
 ***
 
-### camera:zoom
+### input:background:contextmenu
 
-> **camera:zoom**: `object`
+> **input:background:contextmenu**: `object`
 
-Defined in: [canvas/src/events/CanvasEventBus.ts:86](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEventBus.ts#L86)
+#### x
+
+> **x**: `number`
+
+#### y
+
+> **y**: `number`
+
+***
+
+### input:camera:pan
+
+> **input:camera:pan**: `object`
+
+A pan **gesture** reported by the renderer (drag / keyboard / inertia) —
+gesture *intent*, distinct from the resulting `view.interaction.camera` change
+(a `state:change`). `x`/`y` are the world-origin offset the camera settled on.
+
+#### x
+
+> **x**: `number`
+
+#### y
+
+> **y**: `number`
+
+***
+
+### input:camera:zoom
+
+> **input:camera:zoom**: `object`
+
+A zoom **gesture** reported by the renderer (wheel / pinch). `scale` is the resolved uniform zoom; `center*` the screen pivot.
 
 #### centerX
 
@@ -106,51 +162,67 @@ Defined in: [canvas/src/events/CanvasEventBus.ts:86](https://github.com/invana/c
 
 ***
 
-### layer:added
+### input:node:click
 
-> **layer:added**: `object`
-
-Defined in: [canvas/src/events/CanvasEventBus.ts:63](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEventBus.ts#L63)
+> **input:node:click**: `object`
 
 #### id
 
 > **id**: `string`
+
+#### layerId
+
+> **layerId**: `string`
+
+#### x
+
+> **x**: `number`
+
+#### y
+
+> **y**: `number`
 
 ***
 
-### layer:removed
+### input:node:drag:end
 
-> **layer:removed**: `object`
-
-Defined in: [canvas/src/events/CanvasEventBus.ts:64](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEventBus.ts#L64)
+> **input:node:drag:end**: `object`
 
 #### id
 
 > **id**: `string`
+
+#### layerId
+
+> **layerId**: `string`
 
 ***
 
-### layout:added
+### input:node:drag:start
 
-> **layout:added**: `object`
-
-Defined in: [canvas/src/events/CanvasEventBus.ts:65](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEventBus.ts#L65)
+> **input:node:drag:start**: `object`
 
 #### id
 
 > **id**: `string`
+
+#### layerId
+
+> **layerId**: `string`
 
 ***
 
-### layout:removed
+### input:node:hover
 
-> **layout:removed**: `object`
-
-Defined in: [canvas/src/events/CanvasEventBus.ts:66](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEventBus.ts#L66)
+> **input:node:hover**: `object`
 
 #### id
 
 > **id**: `string`
+
+#### layerId
+
+> **layerId**: `string`
 
 ***
 
@@ -158,19 +230,19 @@ Defined in: [canvas/src/events/CanvasEventBus.ts:66](https://github.com/invana/c
 
 > **layout:run:end**: `object`
 
-Defined in: [canvas/src/events/CanvasEventBus.ts:82](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEventBus.ts#L82)
-
-A layout run ended. `reason` distinguishes a natural settle (`'settled'`)
-from an external `stop()` / superseding `apply()` (`'stopped'`) or an
-aborted run (`'cancelled'`). Always pairs with a preceding `layout:run:start`.
+A layout run ended. `reason` distinguishes a natural settle from an external stop / abort.
 
 #### id
 
 > **id**: `string`
 
-#### reason
+#### layerId
 
-> **reason**: `"settled"` \| `"stopped"` \| `"cancelled"`
+> **layerId**: `string`
+
+#### reason?
+
+> `optional` **reason?**: `"settled"` \| `"stopped"` \| `"cancelled"`
 
 ***
 
@@ -178,86 +250,180 @@ aborted run (`'cancelled'`). Always pairs with a preceding `layout:run:start`.
 
 > **layout:run:start**: `object`
 
-Defined in: [canvas/src/events/CanvasEventBus.ts:76](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEventBus.ts#L76)
+A layout run started. `nodeCount`/`edgeCount`/`animate` describe the run when the producer knows them.
 
-A layout run started. Emitted by `Canvas.runLayout` when it forwards a
-registered layout's own `start` lifecycle event onto the canvas bus, so
-every canvas-driven run (`runLayout`, `refresh`, the "Run layout" button,
-expand re-layouts) surfaces consistently. `animate` reflects whether the
-run animates its settle (iterative layouts) or jumps to final positions;
-`nodeCount` / `edgeCount` describe the run size. Subscribe for progress
-UIs, telemetry, or layout-activity render policies.
+#### animate?
 
-#### animate
+> `optional` **animate?**: `boolean`
 
-> **animate**: `boolean`
+#### edgeCount?
 
-#### edgeCount
-
-> **edgeCount**: `number`
+> `optional` **edgeCount?**: `number`
 
 #### id
 
 > **id**: `string`
 
-#### nodeCount
+#### layerId
 
-> **nodeCount**: `number`
+> **layerId**: `string`
 
-***
+#### nodeCount?
 
-### message
-
-> **message**: `object`
-
-Defined in: [canvas/src/events/CanvasEventBus.ts:104](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEventBus.ts#L104)
-
-The shared message channel — anything (a layout's start/end, a behaviour
-activating, app code) emits a line for a status surface to display.
-`text: null` clears the current message; `timeout` (ms) auto-clears it.
-Emit via `Canvas.showMessage` / `ctx.showMessage` rather than by hand.
-
-#### text
-
-> **text**: `string`
-
-#### timeout?
-
-> `optional` **timeout?**: `number`
+> `optional` **nodeCount?**: `number`
 
 ***
 
-### options:change
+### layout:run:tick
 
-> **options:change**: `object`
+> **layout:run:tick**: `object`
 
-Defined in: [canvas/src/events/CanvasEventBus.ts:91](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEventBus.ts#L91)
+#### id
 
-`Canvas.update()` patched the options; carries the touched ids (serialisable).
+> **id**: `string`
 
-#### changedBehaviourIds
+#### progress?
 
-> **changedBehaviourIds**: readonly `string`[]
-
-#### changedLayerIds
-
-> **changedLayerIds**: readonly `string`[]
+> `optional` **progress?**: `number`
 
 ***
 
-### renderer:initialised
+### render:loop:tick
 
-> **renderer:initialised**: `object`
+> **render:loop:tick**: [`FrameTick`](../../../canvas-store/src/interfaces/FrameTick.md)
 
-Defined in: [canvas/src/events/CanvasEventBus.ts:59](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEventBus.ts#L59)
+One measured engine frame — emitted once per `Canvas.tickOnce`. Carries the
+inter-frame period, per-phase CPU breakdown, and the attributed
+[InteractionKind](../../../canvas-store/src/type-aliases/InteractionKind.md), so a tap can drive an FPS trace + attribute dips to
+the gesture that caused them. See [FrameTick](../../../canvas-store/src/interfaces/FrameTick.md).
 
-#### backend
+***
 
-> **backend**: `"canvas"` \| `"webgpu"` \| `"webgl"`
+### scene:behaviour:disable
 
-#### capabilities?
+> **scene:behaviour:disable**: `object`
 
-> `optional` **capabilities?**: `Record`\<`string`, `unknown`\>
+#### id
+
+> **id**: `string`
+
+***
+
+### scene:behaviour:enable
+
+> **scene:behaviour:enable**: `object`
+
+#### id
+
+> **id**: `string`
+
+***
+
+### scene:behaviour:register
+
+> **scene:behaviour:register**: `object`
+
+#### id
+
+> **id**: `string`
+
+***
+
+### scene:layer:add
+
+> **scene:layer:add**: `object`
+
+#### id
+
+> **id**: `string`
+
+***
+
+### scene:layer:remove
+
+> **scene:layer:remove**: `object`
+
+#### id
+
+> **id**: `string`
+
+***
+
+### scene:layer:visibilitychange
+
+> **scene:layer:visibilitychange**: `object`
+
+A layer's whole-layer `visible` flag changed via `Layer.setVisible`. Lets
+dependent layers (e.g. a `MiniMapLayer` mirroring a source graph) react
+without polling. `visible` is the post-change value.
+
+#### id
+
+> **id**: `string`
+
+#### visible
+
+> **visible**: `boolean`
+
+***
+
+### scene:layout:add
+
+> **scene:layout:add**: `object`
+
+#### id
+
+> **id**: `string`
+
+***
+
+### scene:layout:remove
+
+> **scene:layout:remove**: `object`
+
+#### id
+
+> **id**: `string`
+
+***
+
+### specs:flush
+
+> **specs:flush**: `object`
+
+One layer's coalesced **spec** changes — the visual description, ids only.
+Domain-free by construction: a renderer subscribes to this and never learns
+what a node or an edge is. See `docs/renderer-split-design.md` §4.2b.
+
+#### delta
+
+> **delta**: `SpecFlush`
+
+#### layerId
+
+> **layerId**: `string`
+
+***
+
+### state:change
+
+> **state:change**: `object`
+
+A `view`-store mutation, bridged onto the bus (see `createCanvasStore`).
+`durationMs` is the update's produce+commit wall-clock cost, when the store
+reports it — so a tap can attribute time without a separate telemetry sink.
+
+#### action?
+
+> `optional` **action?**: `string`
+
+#### changedPaths
+
+> **changedPaths**: `string`[]
+
+#### durationMs?
+
+> `optional` **durationMs?**: `number`
 
 ***
 
@@ -265,7 +431,7 @@ Defined in: [canvas/src/events/CanvasEventBus.ts:59](https://github.com/invana/c
 
 > **tap:dropped**: `object`
 
-Defined in: [canvas/src/events/CanvasEventBus.ts:89](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEventBus.ts#L89)
+A tap dropped an event (filtered or sampled out) — diagnostic.
 
 #### reason
 
@@ -280,9 +446,3 @@ Defined in: [canvas/src/events/CanvasEventBus.ts:89](https://github.com/invana/c
 ### theme:change
 
 > **theme:change**: [`ResolvedTheme`](ResolvedTheme.md)
-
-Defined in: [canvas/src/events/CanvasEventBus.ts:97](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/events/CanvasEventBus.ts#L97)
-
-The active theme was (re)published via `ctx.theme.set(...)`. The single
-publisher is the domain `ThemeBehaviour`; theme-aware layers subscribe and
-recolour from the resolved palette. Payload is plain-JSON (numbers/strings).

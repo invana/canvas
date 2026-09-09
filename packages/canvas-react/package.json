@@ -1,8 +1,10 @@
 {
   "name": "@invana/canvas-react",
   "version": "0.0.12",
-  "description": "React bindings for @invana/canvas \u2014 declarative <Canvas> with JSX children mapped to layers, behaviours, and layouts.",
+  "description": "React bindings for @invana/canvas — declarative <Canvas> with JSX children mapped to layers, behaviours, and layouts.",
+  "homepage": "https://github.com/invana/canvas#readme",
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "typedocOptions": {
@@ -19,7 +21,7 @@
   },
   "dependencies": {
     "@invana/canvas-store": "workspace:*",
-    "@invana/themes": "^0.0.19",
+    "@invana/themes": "^0.0.23",
     "lucide-react": "^0.562.0"
   },
   "peerDependencies": {
@@ -30,7 +32,7 @@
     "@invana/graph-layout-d3-force": "workspace:*",
     "@invana/graph-layout-d3-sankey": "workspace:*",
     "@invana/graph-layout-elkjs": "workspace:*",
-    "pixi.js": "^8.18.1",
+    "pixi.js": "^8.20.1",
     "react": "^18.0.0 || ^19.0.0",
     "react-dom": "^18.0.0 || ^19.0.0",
     "@invana/renderer-pixijs": "workspace:*"
@@ -57,13 +59,13 @@
     "@invana/graph-layout-d3-force": "workspace:*",
     "@invana/graph-layout-d3-sankey": "workspace:*",
     "@invana/graph-layout-elkjs": "workspace:*",
-    "@invana/themes": "^0.0.19",
+    "@invana/themes": "^0.0.23",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "lucide-react": "^0.562.0",
-    "pixi.js": "^8.18.1",
+    "pixi.js": "^8.20.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tsup": "^8.3.5",
@@ -77,7 +79,16 @@
     "visualization",
     "pixi"
   ],
+  "bugs": {
+    "url": "https://github.com/invana/canvas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/invana/canvas.git",
+    "directory": "packages/canvas-react"
+  },
   "license": "Apache-2.0",
+  "author": "Ravi Raja Merugu",
   "module": "./dist/index.js",
   "exports": {
     ".": {

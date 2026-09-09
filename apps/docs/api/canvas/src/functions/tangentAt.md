@@ -1,8 +1,6 @@
 # Function: tangentAt()
 
-> **tangentAt**(`path`, `t`): [`Vec2`](../interfaces/Vec2.md)
-
-Defined in: [canvas/src/primitives/connectors/pathSampling.ts:81](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/connectors/pathSampling.ts#L81)
+> **tangentAt**(`path`, `t`): [`Vec2`](../../../renderer-pixijs/src/interfaces/Vec2.md)
 
 Compute the tangent unit vector at `t ∈ [0, 1]` along the path.
 For v0 we only need `t = 0` (source) and `t = 1` (target) for marker
@@ -12,7 +10,7 @@ orientation; intermediate `t` is sampled via `samplePath` for now.
 
 ### path
 
-[`Path`](../type-aliases/Path.md)
+[`Path`](../../../renderer-pixijs/src/type-aliases/Path.md)
 
 ### t
 
@@ -20,4 +18,4 @@ orientation; intermediate `t` is sampled via `samplePath` for now.
 
 ## Returns
 
-[`Vec2`](../interfaces/Vec2.md)
+[`Vec2`](../../../renderer-pixijs/src/interfaces/Vec2.md)

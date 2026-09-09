@@ -2,11 +2,9 @@
 
 > **useCanvasEvent**\<`E`\>(`event`, `handler`, `canvas?`): `void`
 
-Defined in: [canvas-react/src/hooks/useCanvasEvent.ts:20](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas-react/src/hooks/useCanvasEvent.ts#L20)
-
 Subscribe to a typed canvas-wide event (`camera:zoom`, `camera:pan`,
 `layer:added`, …) for the lifetime of the calling component. Fully typed off
-the engine's exported CanvasGlobalEvents map.
+the engine's exported [CanvasGlobalEvents](../../../canvas/src/interfaces/CanvasGlobalEvents.md) map.
 
 The handler is held in a ref so changing it between renders does **not** tear
 down and re-create the subscription; only a change of the resolved `canvas`
@@ -17,7 +15,7 @@ effect is keyed on the resolved instance — correct across multiple canvases.
 
 ### E
 
-`E` *extends* keyof `CanvasGlobalEvents`
+`E` *extends* keyof [`CanvasGlobalEvents`](../../../canvas/src/interfaces/CanvasGlobalEvents.md)
 
 ## Parameters
 
@@ -25,7 +23,7 @@ effect is keyed on the resolved instance — correct across multiple canvases.
 
 `E`
 
-Event name from CanvasGlobalEvents.
+Event name from [CanvasGlobalEvents](../../../canvas/src/interfaces/CanvasGlobalEvents.md).
 
 ### handler
 

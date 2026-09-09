@@ -1,14 +1,13 @@
 # Function: useViewSection()
 
-> **useViewSection**(`options?`): [`ToolbarItem`](../type-aliases/ToolbarItem.md)[]
-
-Defined in: [canvas-react/src/hooks/useViewSection.ts:27](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas-react/src/hooks/useViewSection.ts#L27)
+> **useViewSection**(`options?`): `ToolbarItem`[]
 
 **View** toolbar section — zoom in / zoom out / fit-to-content / lock-view
-[ToolbarItem](../type-aliases/ToolbarItem.md)s built off [useZoom](useZoom.md) + [useFitContent](useFitContent.md) +
-[useLock](useLock.md). The lock is a toggle whose icon flips unlocked↔locked
-(set `showLock: false` to omit it); locking disables pan + node drag by default
-while leaving zoom available. Icons are baked in.
+ToolbarItems built off [useZoom](useZoom.md) + [useFitContent](useFitContent.md) +
+[useLock](useLock.md). Set `showZoom: false` to omit the two zoom buttons (fit stays);
+the lock is a toggle whose icon flips unlocked↔locked (set `showLock: false` to
+omit it); locking disables pan + node drag by default while leaving zoom
+available. Icons are baked in.
 
 ## Parameters
 
@@ -18,4 +17,4 @@ while leaving zoom available. Icons are baked in.
 
 ## Returns
 
-[`ToolbarItem`](../type-aliases/ToolbarItem.md)[]
+`ToolbarItem`[]

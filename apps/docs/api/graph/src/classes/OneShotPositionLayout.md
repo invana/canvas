@@ -1,7 +1,5 @@
 # Abstract Class: OneShotPositionLayout\<TOpts\>
 
-Defined in: [graph/src/layout/OneShotPositionLayout.ts:74](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layout/OneShotPositionLayout.ts#L74)
-
 Base class for **one-shot** layouts — those that compute a final position for
 every node in a single pass (ELK, d3-hierarchy trees/dendrograms, grid, snake,
 circular, radial, …), as opposed to iterative simulations like
@@ -13,7 +11,7 @@ them:
  - the serializable `transition` / `transitionEase` options;
  - **snap-or-tween**: writing the computed positions straight to the store, or
    gliding each node from its current spot to the target via the engine's
-   animatePositions helper;
+   [animatePositions](../../../canvas/src/functions/animatePositions.md) helper;
  - **cancellation**: a run-token + in-flight-transition handle so a re-`apply()`
    (or `stop()`) aborts the previous run/transition cleanly and the next run
    starts from wherever the nodes currently are;
@@ -26,7 +24,11 @@ the nodes have landed).
 
 ## Extends
 
-- `Layout`\<[`GraphLayer`](GraphLayer.md)\>
+- [`Layout`](../../../canvas/src/classes/Layout.md)\<[`GraphLayer`](GraphLayer.md)\>
+
+## Extended by
+
+- [`SubgraphPositionLayout`](SubgraphPositionLayout.md)
 
 ## Type Parameters
 
@@ -40,8 +42,6 @@ the nodes have landed).
 
 > **new OneShotPositionLayout**\<`TOpts`\>(`opts?`): `OneShotPositionLayout`\<`TOpts`\>
 
-Defined in: [graph/src/layout/OneShotPositionLayout.ts:99](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layout/OneShotPositionLayout.ts#L99)
-
 #### Parameters
 
 ##### opts?
@@ -54,15 +54,13 @@ Defined in: [graph/src/layout/OneShotPositionLayout.ts:99](https://github.com/in
 
 #### Overrides
 
-`Layout<GraphLayer>.constructor`
+[`Layout`](../../../canvas/src/classes/Layout.md).[`constructor`](../../../canvas/src/classes/Layout.md#constructor)
 
 ## Properties
 
 ### events
 
-> `readonly` **events**: `EventEmitter`\<`LayoutEvents`\>
-
-Defined in: canvas/dist/index.d.ts:1876
+> `readonly` **events**: [`EventEmitter`](../../../canvas/src/classes/EventEmitter.md)\<[`LayoutEvents`](../../../canvas/src/type-aliases/LayoutEvents.md)\>
 
 Lifecycle event bus. See class docs for the event vocabulary.
 Subclasses with richer telemetry can declare their own typed
@@ -70,7 +68,7 @@ emitter on top (`override readonly events = new EventEmitter<MyEvents>()`).
 
 #### Inherited from
 
-[`D3ForceLayout`](../../../graph-layout-d3-force/src/classes/D3ForceLayout.md).[`events`](../../../graph-layout-d3-force/src/classes/D3ForceLayout.md#events)
+[`Layout`](../../../canvas/src/classes/Layout.md).[`events`](../../../canvas/src/classes/Layout.md#events)
 
 ***
 
@@ -78,21 +76,35 @@ emitter on top (`override readonly events = new EventEmitter<MyEvents>()`).
 
 > `readonly` **id**: `string`
 
-Defined in: canvas/dist/index.d.ts:1868
-
 Stable id (registry / config key).
 
 #### Inherited from
 
-[`D3ForceLayout`](../../../graph-layout-d3-force/src/classes/D3ForceLayout.md).[`id`](../../../graph-layout-d3-force/src/classes/D3ForceLayout.md#id)
+[`Layout`](../../../canvas/src/classes/Layout.md).[`id`](../../../canvas/src/classes/Layout.md#id)
+
+***
+
+### kind?
+
+> `readonly` `optional` **kind?**: `string`
+
+Stable **class kind** — a minification-safe discriminator matching the
+`@invana/canvas-ui` settings-editor registry key (e.g. `'d3-force-layout'`,
+`'elk-layout'`). Distinct from [id](../../../graph-layout-geometric/src/classes/GeometricLayout.md#id) (the per-instance key): all
+`D3ForceLayout` instances share `kind: 'd3-force-layout'`. Concrete layouts
+set it as a class field; left `undefined` on any that haven't, so consumers
+fall back (e.g. to the class name). Lets domain-free tooling resolve an
+instance's editor without an `instanceof` ladder.
+
+#### Inherited from
+
+[`Layout`](../../../canvas/src/classes/Layout.md).[`kind`](../../../canvas/src/classes/Layout.md#kind)
 
 ***
 
 ### opts
 
 > `protected` **opts**: `TOpts`
-
-Defined in: [graph/src/layout/OneShotPositionLayout.ts:82](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layout/OneShotPositionLayout.ts#L82)
 
 The live options bag. Subclasses read their own fields off this (it's the
 merged result of the constructor opts and every [setOptions](#setoptions) patch),
@@ -104,8 +116,6 @@ rather than keeping a private copy — so config edits take effect.
 
 > `protected` **running**: `boolean` = `false`
 
-Defined in: [graph/src/layout/OneShotPositionLayout.ts:91](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layout/OneShotPositionLayout.ts#L91)
-
 True while a run (compute + transition) is in flight.
 
 ***
@@ -114,13 +124,11 @@ True while a run (compute + transition) is in flight.
 
 > `readonly` `optional` **targetLayerId?**: `string`
 
-Defined in: canvas/dist/index.d.ts:1870
-
 The layer this layout targets, if declared at construction.
 
 #### Inherited from
 
-[`D3ForceLayout`](../../../graph-layout-d3-force/src/classes/D3ForceLayout.md).[`targetLayerId`](../../../graph-layout-d3-force/src/classes/D3ForceLayout.md#targetlayerid)
+[`Layout`](../../../canvas/src/classes/Layout.md).[`targetLayerId`](../../../canvas/src/classes/Layout.md#targetlayerid)
 
 ***
 
@@ -128,17 +136,13 @@ The layer this layout targets, if declared at construction.
 
 > `protected` **transition**: `number` \| `boolean`
 
-Defined in: [graph/src/layout/OneShotPositionLayout.ts:84](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layout/OneShotPositionLayout.ts#L84)
-
 `false` | `true` (default ms) | explicit ms. See [OneShotLayoutOptions.transition](../interfaces/OneShotLayoutOptions.md#transition).
 
 ***
 
 ### transitionEase
 
-> `protected` **transitionEase**: `EasingName`
-
-Defined in: [graph/src/layout/OneShotPositionLayout.ts:86](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layout/OneShotPositionLayout.ts#L86)
+> `protected` **transitionEase**: [`EasingName`](../../../canvas/src/type-aliases/EasingName.md)
 
 Easing key for the transition. See [OneShotLayoutOptions.transitionEase](../interfaces/OneShotLayoutOptions.md#transitionease).
 
@@ -147,8 +151,6 @@ Easing key for the transition. See [OneShotLayoutOptions.transitionEase](../inte
 ### apply()
 
 > **apply**(`layer`): `Promise`\<`void`\>
-
-Defined in: [graph/src/layout/OneShotPositionLayout.ts:151](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layout/OneShotPositionLayout.ts#L151)
 
 Run the layout against `layer`. Resolves when the run terminates
 (either a natural settle or an external `stop()`).
@@ -168,15 +170,13 @@ run first.
 
 #### Overrides
 
-`Layout.apply`
+[`Layout`](../../../canvas/src/classes/Layout.md).[`apply`](../../../canvas/src/classes/Layout.md#apply)
 
 ***
 
 ### computeLayout()
 
 > `abstract` `protected` **computeLayout**(`layer`): [`LayoutPositions`](../interfaces/LayoutPositions.md)\<`unknown`\> \| `Promise`\<[`LayoutPositions`](../interfaces/LayoutPositions.md)\<`unknown`\>\>
-
-Defined in: [graph/src/layout/OneShotPositionLayout.ts:128](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layout/OneShotPositionLayout.ts#L128)
 
 Compute the target position for every node this layout places. Called once
 per `apply()`. May be async (e.g. ELK). Return `null` / empty `ids` to no-op.
@@ -200,8 +200,6 @@ manages cancellation, and fires the lifecycle.
 
 > `protected` **onPositionsApplied**(`_layer`, `_meta`): `void`
 
-Defined in: [graph/src/layout/OneShotPositionLayout.ts:137](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layout/OneShotPositionLayout.ts#L137)
-
 Hook run once the node positions have settled (immediately when snapping,
 or after the transition completes), before `tick` / `end`. `meta` is the
 payload [computeLayout](#computelayout) returned for this run. Override to write
@@ -224,11 +222,29 @@ pack sizes, sunburst arcs. Default no-op.
 
 ***
 
+### serializeDefinition()
+
+> **serializeDefinition**(): `Record`\<`string`, `unknown`\>
+
+Contribute this layout's serialisable config to a canvas-state snapshot (the
+engine's `DefinitionSerializable` contract). The base captures the wiring
+`targetLayerId`; iterative layouts holding tunable params (e.g. force
+strengths) should override and spread `super.serializeDefinition()` with a
+JSON-safe copy of those params.
+
+#### Returns
+
+`Record`\<`string`, `unknown`\>
+
+#### Inherited from
+
+[`Layout`](../../../canvas/src/classes/Layout.md).[`serializeDefinition`](../../../canvas/src/classes/Layout.md#serializedefinition)
+
+***
+
 ### setOptions()
 
 > **setOptions**(`patch`): `void`
-
-Defined in: [graph/src/layout/OneShotPositionLayout.ts:114](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layout/OneShotPositionLayout.ts#L114)
 
 Live-reconfigure. Called by `Canvas.update({ layouts: { id: patch } })` (and
 once at init with the `config.layouts[id]` slice). Merges the patch into
@@ -249,15 +265,37 @@ the first `apply()` it just records the options (no premature run).
 
 #### Overrides
 
-`Layout.setOptions`
+[`Layout`](../../../canvas/src/classes/Layout.md).[`setOptions`](../../../canvas/src/classes/Layout.md#setoptions)
+
+***
+
+### shouldPlaceNode()
+
+> `protected` **shouldPlaceNode**(`node`): `boolean`
+
+Whether a node should be placed by this run. Excludes explicitly-hidden
+nodes unless [OneShotLayoutOptions.includeHidden](../interfaces/OneShotLayoutOptions.md#includehidden) is set. Subclasses
+call this while snapshotting `layer.store.nodes()` so hidden nodes stay
+frozen at their last positions. Edges incident to a skipped node should be
+dropped from the layout graph too (both endpoints must be placeable).
+
+#### Parameters
+
+##### node
+
+###### hidden?
+
+`boolean`
+
+#### Returns
+
+`boolean`
 
 ***
 
 ### shouldTransition()
 
 > `protected` **shouldTransition**(`_layer`): `boolean`
-
-Defined in: [graph/src/layout/OneShotPositionLayout.ts:147](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layout/OneShotPositionLayout.ts#L147)
 
 Whether this run should animate (vs snap), on top of the `transition`
 option. Defaults to `true`. Override to veto for runs whose output isn't a
@@ -279,8 +317,6 @@ sizes, sunburst arcs) where tweening the positions would look wrong.
 ### stop()
 
 > **stop**(): `void`
-
-Defined in: [graph/src/layout/OneShotPositionLayout.ts:183](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layout/OneShotPositionLayout.ts#L183)
 
 Cancel an in-flight run. Positions already written stay in the store.
 

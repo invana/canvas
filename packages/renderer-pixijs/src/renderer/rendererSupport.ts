@@ -17,8 +17,13 @@
 // (the engine resolves the preference up front in `Canvas.init()` via
 // {@link resolveRenderPreference}, so the gate belongs there).
 
-/** Preferred PixiJS render backend. Mirrors `CanvasOptions.preference`. */
-export type RenderPreference = 'webgpu' | 'webgl' | 'canvas';
+// The preference vocabulary is declared once, by the renderer contract in
+// `@invana/canvas-core`. Re-exported (not re-declared) so this backend and the
+// engine cannot drift apart: a third independent copy of the union is exactly
+// how `'canvas'` came to be silently rewritten to `'webgl'` at the seam.
+import type { RenderPreference } from '@invana/canvas-core';
+
+export type { RenderPreference };
 
 /**
  * Whether the WebGPU API surface is present (`navigator.gpu`). Cheap and

@@ -1,12 +1,14 @@
 # Interface: OneShotLayoutOptions
 
-Defined in: [graph/src/layout/OneShotPositionLayout.ts:34](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layout/OneShotPositionLayout.ts#L34)
-
 Options shared by every one-shot (deterministic) layout.
 
 ## Extends
 
-- `LayoutOptions`
+- [`LayoutOptions`](../../../canvas/src/interfaces/LayoutOptions.md)
+
+## Extended by
+
+- [`SubgraphLayoutOptions`](SubgraphLayoutOptions.md)
 
 ## Properties
 
@@ -14,13 +16,21 @@ Options shared by every one-shot (deterministic) layout.
 
 > `optional` **id?**: `string`
 
-Defined in: canvas/dist/index.d.ts:1862
-
 Stable id, used to address the layout in a `LayoutRegistry` / config. Default `'layout'`.
 
 #### Inherited from
 
-`LayoutOptions.id`
+[`LayoutOptions`](../../../canvas/src/interfaces/LayoutOptions.md).[`id`](../../../canvas/src/interfaces/LayoutOptions.md#id)
+
+***
+
+### includeHidden?
+
+> `optional` **includeHidden?**: `boolean`
+
+Include explicitly-hidden nodes in the layout. Default `false` — hidden
+nodes are excluded from placement so they don't perturb the visible graph,
+and their last positions are left frozen (the layout never writes them).
 
 ***
 
@@ -28,13 +38,11 @@ Stable id, used to address the layout in a `LayoutRegistry` / config. Default `'
 
 > `optional` **targetLayerId?**: `string`
 
-Defined in: canvas/dist/index.d.ts:1864
-
 The layer this layout is meant to run against. Informational — `apply(layer)` still takes one explicitly.
 
 #### Inherited from
 
-`LayoutOptions.targetLayerId`
+[`LayoutOptions`](../../../canvas/src/interfaces/LayoutOptions.md).[`targetLayerId`](../../../canvas/src/interfaces/LayoutOptions.md#targetlayerid)
 
 ***
 
@@ -42,10 +50,8 @@ The layer this layout is meant to run against. Informational — `apply(layer)` 
 
 > `optional` **transition?**: `number` \| `boolean`
 
-Defined in: [graph/src/layout/OneShotPositionLayout.ts:43](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layout/OneShotPositionLayout.ts#L43)
-
 Animate nodes from their current positions to the computed layout instead
-of snapping. `true` uses DEFAULT\_POSITION\_TRANSITION\_MS; a number is
+of snapping. `true` uses [DEFAULT\_POSITION\_TRANSITION\_MS](../../../canvas/src/variables/DEFAULT_POSITION_TRANSITION_MS.md); a number is
 an explicit duration in ms; `false` snaps. Default `true`.
 
 Serializable (boolean | number) so it rides the canvas config bag and binds
@@ -55,9 +61,7 @@ straight to a lil-gui control.
 
 ### transitionEase?
 
-> `optional` **transitionEase?**: `EasingName`
+> `optional` **transitionEase?**: [`EasingName`](../../../canvas/src/type-aliases/EasingName.md)
 
-Defined in: [graph/src/layout/OneShotPositionLayout.ts:48](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layout/OneShotPositionLayout.ts#L48)
-
-Easing curve for the transition, as a serializable EasingName key.
+Easing curve for the transition, as a serializable [EasingName](../../../canvas/src/type-aliases/EasingName.md) key.
 Default `'easeOutCubic'`. Ignored when `transition` is `false`.

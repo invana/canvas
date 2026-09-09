@@ -1,7 +1,5 @@
 # Class: GraphLayer
 
-Defined in: [graph/src/layer/GraphLayer.ts:135](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L135)
-
 ## Extends
 
 - `WorldLayer`\<[`GraphLayerOptions`](../interfaces/GraphLayerOptions.md), `GraphLayerState`, [`GraphLayerEvents`](../interfaces/GraphLayerEvents.md), `never`, `WorldLayerHit`\>
@@ -12,13 +10,11 @@ Defined in: [graph/src/layer/GraphLayer.ts:135](https://github.com/invana/canvas
 
 > **new GraphLayer**(`opts`): `GraphLayer`
 
-Defined in: [graph/src/layer/GraphLayer.ts:258](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L258)
-
 #### Parameters
 
 ##### opts
 
-`LayerOptions`\<[`GraphLayerOptions`](../interfaces/GraphLayerOptions.md)\>
+[`LayerOptions`](../../../canvas/src/interfaces/LayerOptions.md)\<[`GraphLayerOptions`](../interfaces/GraphLayerOptions.md)\>
 
 #### Returns
 
@@ -30,31 +26,27 @@ Defined in: [graph/src/layer/GraphLayer.ts:258](https://github.com/invana/canvas
 
 ## Properties
 
-### \_container?
+### \_surface?
 
-> `protected` `optional` **\_container?**: `Container`
-
-Defined in: canvas/dist/index.d.ts:932
+> `protected` `optional` **\_surface?**: [`ISurface`](../../../canvas/src/interfaces/ISurface.md)
 
 Backing field — assigned in `mount`, cleared in `unmount`.
 
 #### Inherited from
 
-[`BubbleSetsLayer`](../../../graph-layer-bubble-sets/src/classes/BubbleSetsLayer.md).[`_container`](../../../graph-layer-bubble-sets/src/classes/BubbleSetsLayer.md#_container)
+[`BubbleSetsLayer`](../../../graph-layer-bubble-sets/src/classes/BubbleSetsLayer.md).[`_surface`](../../../graph-layer-bubble-sets/src/classes/BubbleSetsLayer.md#_surface)
 
 ***
 
 ### ctx?
 
-> `protected` `optional` **ctx?**: `CanvasContext`
-
-Defined in: canvas/dist/index.d.ts:572
+> `protected` `optional` **ctx?**: [`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
 Set by `mount(ctx)`; cleared by `unmount()`.
 
 #### Inherited from
 
-[`MiniMapLayer`](MiniMapLayer.md).[`ctx`](MiniMapLayer.md#ctx)
+`WorldLayer.ctx`
 
 ***
 
@@ -62,19 +54,15 @@ Set by `mount(ctx)`; cleared by `unmount()`.
 
 > **cullable**: `boolean`
 
-Defined in: canvas/dist/index.d.ts:563
-
 #### Inherited from
 
-[`MiniMapLayer`](MiniMapLayer.md).[`cullable`](MiniMapLayer.md#cullable)
+`WorldLayer.cullable`
 
 ***
 
 ### dirty
 
-> `readonly` **dirty**: `DirtyBatcher`\<`never`\>
-
-Defined in: canvas/dist/index.d.ts:558
+> `readonly` **dirty**: [`DirtyBatcher`](../../../canvas/src/classes/DirtyBatcher.md)\<`never`\>
 
 #### Inherited from
 
@@ -84,9 +72,7 @@ Defined in: canvas/dist/index.d.ts:558
 
 ### events
 
-> `readonly` **events**: `SourceEmitter`\<[`GraphLayerEvents`](../interfaces/GraphLayerEvents.md)\>
-
-Defined in: canvas/dist/index.d.ts:557
+> `readonly` **events**: [`SourceEmitter`](../../../canvas/src/classes/SourceEmitter.md)\<[`GraphLayerEvents`](../interfaces/GraphLayerEvents.md)\>
 
 #### Inherited from
 
@@ -98,11 +84,9 @@ Defined in: canvas/dist/index.d.ts:557
 
 > **hittable**: `boolean`
 
-Defined in: canvas/dist/index.d.ts:561
-
 #### Inherited from
 
-[`MiniMapLayer`](MiniMapLayer.md).[`hittable`](MiniMapLayer.md#hittable)
+`WorldLayer.hittable`
 
 ***
 
@@ -110,11 +94,27 @@ Defined in: canvas/dist/index.d.ts:561
 
 > `readonly` **id**: `string`
 
-Defined in: canvas/dist/index.d.ts:554
+#### Inherited from
+
+`WorldLayer.id`
+
+***
+
+### kind?
+
+> `readonly` `optional` **kind?**: `string`
+
+Stable **class kind** — a minification-safe discriminator matching the
+`@invana/canvas-ui` settings-editor registry key (e.g. `'background-layer'`,
+`'minimap-layer'`). Distinct from [id](../../../graph-layer-maplibre/src/classes/MapLayer.md#id) (the per-instance key): all
+`BackgroundLayer` instances share `kind: 'background-layer'`. Concrete layers
+set it as a class field; left `undefined` on any that haven't, so consumers
+fall back (e.g. to the class name). Lets domain-free tooling resolve an
+instance's editor without an `instanceof` ladder.
 
 #### Inherited from
 
-[`MiniMapLayer`](MiniMapLayer.md).[`id`](MiniMapLayer.md#id)
+`WorldLayer.kind`
 
 ***
 
@@ -122,31 +122,15 @@ Defined in: canvas/dist/index.d.ts:554
 
 > `readonly` **options**: [`GraphLayerOptions`](../interfaces/GraphLayerOptions.md)
 
-Defined in: canvas/dist/index.d.ts:555
-
 #### Inherited from
 
 `WorldLayer.options`
 
 ***
 
-### state
-
-> `readonly` **state**: `Store`\<`GraphLayerState`\>
-
-Defined in: canvas/dist/index.d.ts:556
-
-#### Inherited from
-
-`WorldLayer.state`
-
-***
-
 ### store
 
 > `readonly` **store**: [`GraphStore`](GraphStore.md)
-
-Defined in: [graph/src/layer/GraphLayer.ts:170](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L170)
 
 Data source. Either supplied by the caller or self-created.
 
@@ -156,51 +140,23 @@ Data source. Either supplied by the caller or self-created.
 
 > **zIndex**: `number`
 
-Defined in: canvas/dist/index.d.ts:562
-
 #### Inherited from
 
-[`MiniMapLayer`](MiniMapLayer.md).[`zIndex`](MiniMapLayer.md#zindex)
+`WorldLayer.zIndex`
 
 ## Accessors
-
-### container
-
-#### Get Signature
-
-> **get** `protected` **container**(): `Container`
-
-Defined in: canvas/dist/index.d.ts:940
-
-Root pixi `Container` (RenderGroup) for this layer. Available from
-`onMount(ctx)` for the layer's lifetime. Throws before mount / after unmount.
-
-Pass to `ShapesRenderer` as the `container` option when wiring up a renderer
-inside `onMount`. Subclass-only — not part of the external layer API.
-
-##### Returns
-
-`Container`
-
-#### Inherited from
-
-`WorldLayer.container`
-
-***
 
 ### context
 
 #### Get Signature
 
-> **get** `protected` **context**(): `CanvasContext`
-
-Defined in: canvas/dist/index.d.ts:579
+> **get** `protected` **context**(): [`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
 Convenience accessor; throws when called pre-mount.
 
 ##### Returns
 
-`CanvasContext`
+[`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
 #### Inherited from
 
@@ -213,8 +169,6 @@ Convenience accessor; throws when called pre-mount.
 #### Get Signature
 
 > **get** **edgeDefaults**(): [`ResolvableEdgeStyle`](../type-aliases/ResolvableEdgeStyle.md)\<[`GraphEdge`](../interfaces/GraphEdge.md)\<`unknown`\>\>
-
-Defined in: [graph/src/layer/GraphLayer.ts:707](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L707)
 
 Read-only snapshot of the current edge template style.
 
@@ -229,8 +183,6 @@ Read-only snapshot of the current edge template style.
 #### Get Signature
 
 > **get** **mounted**(): `boolean`
-
-Defined in: canvas/dist/index.d.ts:574
 
 True between `mount` and `unmount`.
 
@@ -250,8 +202,6 @@ True between `mount` and `unmount`.
 
 > **get** **nodeDefaults**(): [`ResolvableNodeStyle`](../type-aliases/ResolvableNodeStyle.md)\<[`GraphNode`](../interfaces/GraphNode.md)\<`unknown`\>\>
 
-Defined in: [graph/src/layer/GraphLayer.ts:702](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L702)
-
 Read-only snapshot of the current node template style (resolved per node at render).
 
 ##### Returns
@@ -260,13 +210,68 @@ Read-only snapshot of the current node template style (resolved per node at rend
 
 ***
 
+### schema
+
+#### Get Signature
+
+> **get** **schema**(): [`GraphSchema`](../interfaces/GraphSchema.md)
+
+The **authoritative** schema for this graph, if a data source declared one
+(delegates to [GraphStore.schema](GraphStore.md#schema)) — typically the full DB schema behind
+a connected canvas, a superset of what's loaded. `undefined` when none is set;
+resolve `layer.schema ?? deriveSchema(layer.store)` for authoritative-else-observed.
+
+##### Returns
+
+[`GraphSchema`](../interfaces/GraphSchema.md)
+
+***
+
+### state
+
+#### Get Signature
+
+> **get** **state**(): [`ReactiveStore`](../../../canvas/src/interfaces/ReactiveStore.md)\<`TState`\>
+
+UI / interaction state (`ReactiveStore<TState>`). Because it is built
+through the injected kernel factory, every write emits patches and history /
+telemetry / a future CRDT backend all observe it.
+
+**Available from `mount()` onward** — accessing it before the first mount
+throws. (`createState()` is also called at first mount, so it may safely
+read subclass fields initialised in the subclass constructor.)
+
+##### Returns
+
+[`ReactiveStore`](../../../canvas/src/interfaces/ReactiveStore.md)\<`TState`\>
+
+#### Inherited from
+
+`WorldLayer.state`
+
+***
+
+### surface
+
+#### Get Signature
+
+> **get** `protected` **surface**(): [`ISurface`](../../../canvas/src/interfaces/ISurface.md)
+
+##### Returns
+
+[`ISurface`](../../../canvas/src/interfaces/ISurface.md)
+
+#### Inherited from
+
+`WorldLayer.surface`
+
+***
+
 ### visible
 
 #### Get Signature
 
 > **get** **visible**(): `boolean`
-
-Defined in: canvas/dist/index.d.ts:569
 
 Whether this layer renders. Setting `false` hides the layer's pixi
 container (via `onVisibleChange`, overridden by `WorldLayer` /
@@ -279,8 +284,6 @@ container (via `onVisibleChange`, overridden by `WorldLayer` /
 #### Set Signature
 
 > **set** **visible**(`value`): `void`
-
-Defined in: canvas/dist/index.d.ts:570
 
 ##### Parameters
 
@@ -302,8 +305,6 @@ Defined in: canvas/dist/index.d.ts:570
 
 > `protected` **applyDirty**(`_snap`): `void`
 
-Defined in: canvas/dist/index.d.ts:602
-
 Translate a dirty snapshot into renderer / pixi commands.
 Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
 
@@ -311,7 +312,7 @@ Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
 
 ##### \_snap
 
-`DirtySnapshot`\<`never`\>
+[`DirtySnapshot`](../../../canvas/src/interfaces/DirtySnapshot.md)\<`never`\>
 
 #### Returns
 
@@ -326,8 +327,6 @@ Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
 ### boundsOfNode()
 
 > **boundsOfNode**(`node`): `any`
-
-Defined in: [graph/src/layer/GraphLayer.ts:883](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L883)
 
 Local AABB for `node`'s resolved shape. Delegates to the registered
 shape's `static boundsOf` via `PrimitivesRenderer.boundsOfSpec`, so
@@ -364,8 +363,6 @@ closed shape-kind enum.
 
 > **clear**(): `void`
 
-Defined in: [graph/src/layer/GraphLayer.ts:546](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L546)
-
 Remove every node and edge — tearing down their rendered shapes /
 connectors and notifying full-repaint consumers (e.g. `MiniMapLayer`). The
 canonical way to empty the graph; prefer it over
@@ -388,8 +385,6 @@ flush) so consumers update immediately rather than on some later event.
 
 > **collapsedAncestor**(`nodeId`): `string`
 
-Defined in: [graph/src/layer/GraphLayer.ts:1699](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L1699)
-
 Climb the `parentId` chain from `nodeId` (exclusive) and return the
 first ancestor whose resolved style has `group.collapsed === true`, or
 `undefined` if no such ancestor exists. Used to decide whether a node
@@ -408,63 +403,9 @@ re-route an incident edge (to that collapsed ancestor).
 
 ***
 
-### createContainer()
-
-> **createContainer**(`label?`): `Container`
-
-Defined in: canvas/dist/index.d.ts:957
-
-Create a plain pixi `Container` attached to this layer's root container.
-Useful as a parent for mounted display objects (e.g. text sprites).
-
-#### Parameters
-
-##### label?
-
-`string`
-
-#### Returns
-
-`Container`
-
-#### Inherited from
-
-`WorldLayer.createContainer`
-
-***
-
-### createGraphics()
-
-> **createGraphics**(`label?`): `Graphics`
-
-Defined in: canvas/dist/index.d.ts:952
-
-Create a pixi `Graphics` attached to this layer's root container. The
-sanctioned way for layer authors to obtain a `Graphics` for direct
-painting via `@invana/canvas/draw` primitives — keeps pixi internal
-(no `new Graphics()` in user code).
-
-#### Parameters
-
-##### label?
-
-`string`
-
-#### Returns
-
-`Graphics`
-
-#### Inherited from
-
-`WorldLayer.createGraphics`
-
-***
-
 ### createState()
 
 > `protected` **createState**(): `GraphLayerState`
-
-Defined in: [graph/src/layer/GraphLayer.ts:280](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L280)
 
 Build the initial UI / interaction state. Called once in the constructor.
 
@@ -481,8 +422,6 @@ Build the initial UI / interaction state. Called once in the constructor.
 ### effectiveEndpoint()
 
 > **effectiveEndpoint**(`nodeId`): `string`
-
-Defined in: [graph/src/layer/GraphLayer.ts:1716](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L1716)
 
 Resolve which renderer-side shape id an edge endpoint should attach to
 for `nodeId`. Returns the nearest collapsed-group ancestor when the
@@ -501,11 +440,27 @@ read — the store's `edge.source` / `edge.target` are never mutated.
 
 ***
 
+### exportData()
+
+> **exportData**(): [`GraphData`](../interfaces/GraphData.md)
+
+Serialise this layer's graph data — every node (with its live position,
+`pinned` flag, style, states and payload) and every edge — to a plain
+[GraphData](../interfaces/GraphData.md) object safe to `JSON.stringify`.
+
+Implements the engine's structural `DataSerializableLayer` contract, so
+`Canvas.exportState()` picks this layer's data up automatically. Round-trips
+through [importData](#importdata).
+
+#### Returns
+
+[`GraphData`](../interfaces/GraphData.md)
+
+***
+
 ### flush()
 
 > **flush**(): `void`
-
-Defined in: canvas/dist/index.d.ts:586
 
 Called by Canvas tick when `hasPending()` is true. Swaps the dirty
 snapshot, hands it to `applyDirty`. Subclasses normally don't override.
@@ -522,9 +477,7 @@ snapshot, hands it to `applyDirty`. Subclasses normally don't override.
 
 ### focusEdges()
 
-> **focusEdges**(`ids`): `void`
-
-Defined in: [graph/src/layer/GraphLayer.ts:940](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L940)
+> **focusEdges**(`ids`, `opts?`): `void`
 
 Centre the camera on a set of edges — pan so the midpoint of their
 endpoints sits at the viewport centre, **without changing zoom**. Unknown
@@ -539,6 +492,16 @@ resolve or the layer isn't mounted.
 
 Edge ids to centre on.
 
+##### opts?
+
+`includeHidden: true` also considers effectively-hidden edges
+  (default `false` — hidden edges, including those hidden because an
+  endpoint is, are skipped).
+
+###### includeHidden?
+
+`boolean`
+
 #### Returns
 
 `void`
@@ -548,8 +511,6 @@ Edge ids to centre on.
 ### focusNode()
 
 > **focusNode**(`id`, `opts?`): `void`
-
-Defined in: [graph/src/layer/GraphLayer.ts:924](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L924)
 
 Centre the camera on a single node, optionally zooming in. Sugar over
 [focusNodes](#focusnodes) for the common "focus on this node" action.
@@ -568,6 +529,10 @@ Node id to centre on.
 
 ##### opts?
 
+###### includeHidden?
+
+`boolean`
+
 ###### zoom?
 
 `number`
@@ -584,9 +549,7 @@ Minimum zoom: the camera zooms *in* to at least this
 
 ### focusNodes()
 
-> **focusNodes**(`ids`): `void`
-
-Defined in: [graph/src/layer/GraphLayer.ts:902](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L902)
+> **focusNodes**(`ids`, `opts?`): `void`
 
 Centre the camera on a set of nodes — pan so the midpoint of their
 positions sits at the viewport centre, **without changing zoom**. Unknown
@@ -605,6 +568,16 @@ explicit gesture (wheel / pinch / fit-to-content).
 
 Node ids to centre on.
 
+##### opts?
+
+`includeHidden: true` also considers explicitly-hidden nodes
+  (default `false` — hidden nodes are skipped so framing tracks what's
+  visible).
+
+###### includeHidden?
+
+`boolean`
+
 #### Returns
 
 `void`
@@ -613,35 +586,28 @@ Node ids to centre on.
 
 ### getBounds()
 
-> **getBounds**(): `object`
+> **getBounds**(`opts?`): `any`
 
-Defined in: canvas/dist/index.d.ts:970
+World-space AABB of this layer's content, or `null` when there is nothing
+to measure — an empty graph, or a layer whose renderer hasn't mounted.
 
-Return the world-space AABB of everything currently rendered on this layer.
-Delegates to Pixi's `getLocalBounds()` — a one-shot scene-graph traversal.
-Suitable for "fit to content" calls; do not call every frame.
+`null` rather than a zero rect because callers fit the camera to this: a
+zero rect produces a nonsense camera, whereas `null` lets them skip the fit
+(`docs/renderer-split-design.md` D3).
+
+#### Parameters
+
+##### opts?
+
+###### includeHidden?
+
+`boolean`
 
 #### Returns
 
-`object`
+`any`
 
-##### height
-
-> **height**: `number`
-
-##### width
-
-> **width**: `number`
-
-##### x
-
-> **x**: `number`
-
-##### y
-
-> **y**: `number`
-
-#### Inherited from
+#### Overrides
 
 `WorldLayer.getBounds`
 
@@ -649,9 +615,7 @@ Suitable for "fit to content" calls; do not call every frame.
 
 ### getGroupRole()
 
-> **getGroupRole**(`nodeId`): `"none"` \| `"expanded"` \| `"collapsed"`
-
-Defined in: [graph/src/layer/GraphLayer.ts:1685](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L1685)
+> **getGroupRole**(`nodeId`): `"none"` \| `"collapsed"` \| `"expanded"`
 
 Public predicate behaviours can use to filter group nodes out of their
 own hit pipeline. Hover / select / drag should typically skip groups
@@ -676,29 +640,25 @@ The string form is preferred over a boolean pair so a future
 
 #### Returns
 
-`"none"` \| `"expanded"` \| `"collapsed"`
+`"none"` \| `"collapsed"` \| `"expanded"`
 
 ***
 
 ### getRenderer()
 
-> **getRenderer**(): `PrimitivesRenderer`
-
-Defined in: [graph/src/layer/GraphLayer.ts:151](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L151)
+> **getRenderer**(): [`IElementRenderer`](../../../canvas/src/interfaces/IElementRenderer.md)
 
 Renderer accessor for behaviours. Undefined before `onMount`.
 
 #### Returns
 
-`PrimitivesRenderer`
+[`IElementRenderer`](../../../canvas/src/interfaces/IElementRenderer.md)
 
 ***
 
 ### hasPending()
 
 > **hasPending**(): `boolean`
-
-Defined in: canvas/dist/index.d.ts:581
 
 Whether `flush()` has work to do this frame.
 
@@ -712,11 +672,134 @@ Whether `flush()` has work to do this frame.
 
 ***
 
+### hiddenGroups()
+
+> **hiddenGroups**(): `string`[]
+
+Ids of every currently-hidden **group container** — a UI ("hidden groups"
+panel) helper so callers don't hand-roll the derivation. Computed on demand
+from `store.hiddenNodes()` ∩ group nodes (not a maintained index, so always
+correct); recompute it on the store's `node:visibility` event rather than
+every render. If your app already tracks its group ids, intersecting them
+with `store.hiddenNodes()` is cheaper than this `isGroupNode` scan.
+
+#### Returns
+
+`string`[]
+
+***
+
+### hideEdge()
+
+> **hideEdge**(`id`): `void`
+
+Hide an edge. Delegates to the store.
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`void`
+
+***
+
+### hideEdges()
+
+> **hideEdges**(`ids`): `void`
+
+Hide many edges in one batch → one paint.
+
+#### Parameters
+
+##### ids
+
+`Iterable`\<`string`\>
+
+#### Returns
+
+`void`
+
+***
+
+### hideGroup()
+
+> **hideGroup**(`id`): `void`
+
+Hide a group node and all its `parentId` descendants. One batch → one paint.
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`void`
+
+***
+
+### hideGroups()
+
+> **hideGroups**(`ids`): `void`
+
+Hide many groups (each container + its subtree) in one batch → one paint.
+
+#### Parameters
+
+##### ids
+
+`Iterable`\<`string`\>
+
+#### Returns
+
+`void`
+
+***
+
+### hideNode()
+
+> **hideNode**(`id`): `void`
+
+Hide a node (culls it + its incident edges). Delegates to the store.
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`void`
+
+***
+
+### hideNodes()
+
+> **hideNodes**(`ids`): `void`
+
+Hide many nodes in one batch → one paint.
+
+#### Parameters
+
+##### ids
+
+`Iterable`\<`string`\>
+
+#### Returns
+
+`void`
+
+***
+
 ### highlightNeighbourhood()
 
 > **highlightNeighbourhood**(`id`, `dir?`, `state?`): `void`
-
-Defined in: [graph/src/layer/GraphLayer.ts:729](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L729)
 
 Highlight a node together with its neighbours (in `dir`) and incident edges
 — adds the runtime state `state` to all of them in a single
@@ -754,8 +837,6 @@ Runtime state name to apply. Default `'highlighted'`.
 
 > **hitTest**(`_worldX`, `_worldY`): `WorldLayerHit`
 
-Defined in: [graph/src/layer/GraphLayer.ts:749](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L749)
-
 Placeholder hit test — returns `null` until proper hit testing wires up
 in a later phase (likely via the canvas hit-test pipeline reading the
 renderer's shape registry).
@@ -780,13 +861,36 @@ renderer's shape registry).
 
 ***
 
+### importData()
+
+> **importData**(`data`): `void`
+
+Replace this layer's data from a [GraphData](../interfaces/GraphData.md) snapshot produced by
+[exportData](#exportdata) — the import half of the `DataSerializableLayer`
+contract. Delegates to [setData](#setdata), so the renderer teardown/repaint and
+dependent-layer notifications all run.
+
+#### Parameters
+
+##### data
+
+[`GraphData`](../interfaces/GraphData.md)
+
+#### Returns
+
+`void`
+
+***
+
 ### isCollapsedGroup()
 
 > **isCollapsedGroup**(`node`): `boolean`
 
-Defined in: [graph/src/layer/GraphLayer.ts:1664](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L1664)
-
-True when this group node's resolved style carries `group.collapsed === true`.
+True when this node is a group frame **and** the [COLLAPSED\_STATE](../variables/COLLAPSED_STATE.md)
+state is active on it — from the store's presence set (what
+`CollapseExpandBehaviour` toggles) or the node's document `states[]`
+(how a feed authors "starts closed"). Collapse is interaction state, not
+styling, so it is never read off `style`.
 
 #### Parameters
 
@@ -800,11 +904,66 @@ True when this group node's resolved style carries `group.collapsed === true`.
 
 ***
 
+### isEdgeHidden()
+
+> **isEdgeHidden**(`id`): `boolean`
+
+True iff the edge's explicit hidden flag is set.
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`boolean`
+
+***
+
+### isEdgeVisible()
+
+> **isEdgeVisible**(`id`): `boolean`
+
+Effective visibility of an edge (not hidden and both endpoints visible).
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`boolean`
+
+***
+
+### isGroupHidden()
+
+> **isGroupHidden**(`id`): `boolean`
+
+Whether a group container is currently hidden. **Derived** from the
+container node's hidden flag (the source of truth), so it can't drift — no
+cached group index. `id` should be a group container node id; for a
+non-group node this simply reports that node's hidden state.
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`boolean`
+
+***
+
 ### isGroupNode()
 
 > **isGroupNode**(`node`): `boolean`
-
-Defined in: [graph/src/layer/GraphLayer.ts:1658](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L1658)
 
 True iff `node`'s resolved style carries a `group` field — the only
 signal that promotes the node from a regular renderable into a
@@ -826,17 +985,51 @@ contributions.
 
 ***
 
+### isNodeHidden()
+
+> **isNodeHidden**(`id`): `boolean`
+
+True iff the node is explicitly hidden.
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`boolean`
+
+***
+
+### isNodeVisible()
+
+> **isNodeVisible**(`id`): `boolean`
+
+Effective visibility of a node (live and not explicitly hidden).
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`boolean`
+
+***
+
 ### mount()
 
 > **mount**(`ctx`): `void`
-
-Defined in: canvas/dist/index.d.ts:942
 
 #### Parameters
 
 ##### ctx
 
-`CanvasContext`
+[`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
 #### Returns
 
@@ -852,15 +1045,13 @@ Defined in: canvas/dist/index.d.ts:942
 
 > `protected` **onMount**(`ctx`): `void`
 
-Defined in: [graph/src/layer/GraphLayer.ts:284](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L284)
-
 Domain-specific mount setup (subscribe to peers, attach renderer, etc.).
 
 #### Parameters
 
 ##### ctx
 
-`CanvasContext`
+[`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
 #### Returns
 
@@ -875,8 +1066,6 @@ Domain-specific mount setup (subscribe to peers, attach renderer, etc.).
 ### onUnmount()
 
 > `protected` **onUnmount**(): `void`
-
-Defined in: [graph/src/layer/GraphLayer.ts:490](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L490)
 
 Domain-specific unmount teardown.
 
@@ -894,9 +1083,11 @@ Domain-specific unmount teardown.
 
 > `protected` **onVisibleChange**(`value`): `void`
 
-Defined in: canvas/dist/index.d.ts:944
-
-Keep the pixi container in sync when `layer.visible` is toggled.
+Keep hit-testing in step with whole-layer visibility. `WorldLayer` hides the
+pixi container; graph picking runs through the renderer's own pointer router
+(not `layer.hitTest`), so a hidden layer would otherwise stay clickable. Gate
+the renderer's `hitTest` so a hidden layer's nodes/edges are non-interactive
+too (decision 11 of the visibility plan).
 
 #### Parameters
 
@@ -908,7 +1099,7 @@ Keep the pixi container in sync when `layer.visible` is toggled.
 
 `void`
 
-#### Inherited from
+#### Overrides
 
 `WorldLayer.onVisibleChange`
 
@@ -917,8 +1108,6 @@ Keep the pixi container in sync when `layer.visible` is toggled.
 ### recomputeGroup()
 
 > **recomputeGroup**(`groupId`): `void`
-
-Defined in: [graph/src/layer/GraphLayer.ts:1881](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L1881)
 
 Force a group's frame to re-project right now (outside the normal
 flush cycle). Public escape hatch for feeds that remove children
@@ -943,8 +1132,6 @@ mark the parent dirty on its own. Domain code can call this after
 
 > **redraw**(): `void`
 
-Defined in: [graph/src/layer/GraphLayer.ts:569](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L569)
-
 Force a full re-render of every node and edge from current store state +
 active states. Does **not** mutate data and is **not** undoable — it is a
 pure render pass. Use it after an external style/theme change that bypassed
@@ -966,8 +1153,6 @@ re-render the affected items automatically.
 
 > **resolveEdgeStyle**(`edge`): `Partial`\<[`EdgeStyle`](../interfaces/EdgeStyle.md)\>
 
-Defined in: [graph/src/layer/GraphLayer.ts:829](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L829)
-
 Sibling of [resolveNodeStyle](#resolvenodestyle) for edges. Public for the same reason.
 
 #### Parameters
@@ -986,14 +1171,12 @@ Sibling of [resolveNodeStyle](#resolvenodestyle) for edges. Public for the same 
 
 > **resolveNodeStyle**(`node`): `Partial`\<[`NodeStyle`](../interfaces/NodeStyle.md)\>
 
-Defined in: [graph/src/layer/GraphLayer.ts:779](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L779)
-
 Resolve the final flat NodeStyle for a node by merging contributions from
 the layer-level template (`options.node.style`), the per-node `style`,
 and every active state's layer + per-node overlay. Object.assign order
 encodes precedence (later wins).
 
-Exposed publicly so behaviours (NodeSizeLODBehaviour, label collision,
+Exposed publicly so behaviours (NodeScaleLODBehaviour, label collision,
 minimap, etc.) can read the same effective style the renderer sees,
 without duplicating the merge logic.
 
@@ -1009,11 +1192,32 @@ without duplicating the merge logic.
 
 ***
 
+### serializeDefinition()
+
+> **serializeDefinition**(): `Record`\<`string`, `unknown`\>
+
+Contribute this layer's **serialisable config** to a canvas-state snapshot —
+the layer-level styling template (`node` / `edge`), the card/structure/
+styling template registries, and a couple of scalar options. Implements the
+engine's `DefinitionSerializable` contract, so `Canvas.exportState()` picks
+it up into `definition.layers[id]` even on a declarative canvas whose options
+were passed to the constructor.
+
+Excludes `store` (a live instance) and `initData` (data is captured
+separately, positions and all). The result is passed through jsonSafe,
+so **function-valued style resolvers** (e.g. `labelText: (n) => …`) are
+dropped — they can't serialise. On import, `setOptions` shallow-merges this
+slice, preserving any live resolver the serialised template omitted.
+
+#### Returns
+
+`Record`\<`string`, `unknown`\>
+
+***
+
 ### setData()
 
 > **setData**(`data`): `void`
-
-Defined in: [graph/src/layer/GraphLayer.ts:513](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L513)
 
 Bulk-load nodes + edges, **replacing** any prior data. Wraps the
 underlying store inserts in a single `batch()` so subscribers see one
@@ -1043,8 +1247,6 @@ source of truth and the layer just orchestrates store → renderer.
 
 > **setEdgeDefaults**(`patch`): `void`
 
-Defined in: [graph/src/layer/GraphLayer.ts:623](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L623)
-
 Sibling of [setNodeDefaults](#setnodedefaults) for the edge template
 (`options.edge.style`). Patches the shared edge styling and re-renders
 every edge. Same shallow-merge contract — e.g. changing edge "type" means
@@ -1065,8 +1267,6 @@ every edge. Same shallow-merge contract — e.g. changing edge "type" means
 ### setNodeDefaults()
 
 > **setNodeDefaults**(`patch`): `void`
-
-Defined in: [graph/src/layer/GraphLayer.ts:603](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L603)
 
 Patch the layer-level node template (`options.node.style`) and re-render
 every node so the change takes effect immediately. Use this for global
@@ -1096,8 +1296,6 @@ but the template is still updated so later mounts pick it up.
 
 > **setOptions**(`patch`): `void`
 
-Defined in: [graph/src/layer/GraphLayer.ts:674](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L674)
-
 Live-update entry point. Dispatches a `GraphLayerOptions` slice to the
 concrete setters: `node.style` → [setNodeDefaults](#setnodedefaults), `edge.style` →
 [setEdgeDefaults](#setedgedefaults), `node.state` / `edge.state` →
@@ -1115,11 +1313,27 @@ concrete setters: `node.style` → [setNodeDefaults](#setnodedefaults), `edge.st
 
 ***
 
+### setSchema()
+
+> **setSchema**(`schema`): `void`
+
+Set/clear the authoritative schema (delegates to [GraphStore.setSchema](GraphStore.md#setschema)).
+
+#### Parameters
+
+##### schema
+
+[`GraphSchema`](../interfaces/GraphSchema.md)
+
+#### Returns
+
+`void`
+
+***
+
 ### setStateConfigs()
 
 > **setStateConfigs**(`patch`): `void`
-
-Defined in: [graph/src/layer/GraphLayer.ts:648](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L648)
 
 Patch the layer-level state *catalogues* (`options.node.state` /
 `options.edge.state`) — the named overlays applied while a state is active
@@ -1151,15 +1365,39 @@ the state catalogue (e.g. theme the `selected` ring colour).
 
 ***
 
+### setVisible()
+
+> **setVisible**(`visible`): `void`
+
+Toggle whole-layer visibility, repaint, and announce it. Unlike assigning
+`visible` (which only hides the pixi container via [onVisibleChange](#onvisiblechange)),
+this also forces a [redraw](#redraw) and emits `scene:layer:visibilitychange`
+on the canvas bus so dependent layers (minimap) and the render loop react
+automatically. No-op if the value is unchanged.
+
+#### Parameters
+
+##### visible
+
+`boolean`
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+`WorldLayer.setVisible`
+
+***
+
 ### setZIndex()
 
 > **setZIndex**(`z`): `void`
 
-Defined in: canvas/dist/index.d.ts:964
-
 Update this layer's z-order relative to its peers. Keeps the iteration
-field (`this.zIndex`, used by `LayerRegistry.byZOrder()`) and the pixi
-container's `zIndex` in sync, and flips `surfaces.world` into sorted mode
+field (`this.zIndex`, used by `LayerRegistry.byZOrder()`) and the surface's
+paint order in sync, and flips `surfaces.world` into sorted mode
 so the change renders.
 
 #### Parameters
@@ -1178,11 +1416,147 @@ so the change renders.
 
 ***
 
+### showAllHidden()
+
+> **showAllHidden**(): `void`
+
+Clear every explicit hidden flag (nodes + edges).
+
+#### Returns
+
+`void`
+
+***
+
+### showEdge()
+
+> **showEdge**(`id`): `void`
+
+Show a previously-hidden edge. Delegates to the store.
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`void`
+
+***
+
+### showEdges()
+
+> **showEdges**(`ids`): `void`
+
+Show many edges in one batch → one paint.
+
+#### Parameters
+
+##### ids
+
+`Iterable`\<`string`\>
+
+#### Returns
+
+`void`
+
+***
+
+### showGroup()
+
+> **showGroup**(`id`): `void`
+
+Show a group node and all its `parentId` descendants. One batch → one paint.
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`void`
+
+***
+
+### showGroups()
+
+> **showGroups**(`ids`): `void`
+
+Show many groups (each container + its subtree) in one batch → one paint.
+
+#### Parameters
+
+##### ids
+
+`Iterable`\<`string`\>
+
+#### Returns
+
+`void`
+
+***
+
+### showNode()
+
+> **showNode**(`id`): `void`
+
+Show a previously-hidden node. Delegates to the store.
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`void`
+
+***
+
+### showNodes()
+
+> **showNodes**(`ids`): `void`
+
+Show many nodes in one batch → one paint.
+
+#### Parameters
+
+##### ids
+
+`Iterable`\<`string`\>
+
+#### Returns
+
+`void`
+
+***
+
+### surfaceOptions()
+
+> `protected` **surfaceOptions**(): [`SurfaceOptions`](../../../canvas/src/interfaces/SurfaceOptions.md)
+
+Hand the layer's hit floor to the device the surface builds. Graph nodes
+can be small at low zoom, so this layer raises the pick tolerance above the
+renderer-wide default.
+
+#### Returns
+
+[`SurfaceOptions`](../../../canvas/src/interfaces/SurfaceOptions.md)
+
+#### Overrides
+
+`WorldLayer.surfaceOptions`
+
+***
+
 ### tickAnimations()
 
 > **tickAnimations**(`deltaMs`): `void`
-
-Defined in: [graph/src/layer/GraphLayer.ts:165](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/GraphLayer.ts#L165)
 
 Per-frame tick — delegated to `PrimitivesRenderer.tickAnimations` so
 animated decorations (`pulse-ring`, `marching-ants`, …) and the
@@ -1205,11 +1579,81 @@ looks for a public `renderer` property.
 
 ***
 
+### toggleEdgeHidden()
+
+> **toggleEdgeHidden**(`id`): `boolean`
+
+Flip an edge's hidden flag. Returns the resulting hidden state.
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`boolean`
+
+***
+
+### toggleGroupHidden()
+
+> **toggleGroupHidden**(`id`): `boolean`
+
+Flip a group's visibility by the container node's state — hides the whole
+subtree when it becomes hidden, shows it when it becomes visible. Returns the
+resulting hidden state of the group node.
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`boolean`
+
+***
+
+### toggleNodeHidden()
+
+> **toggleNodeHidden**(`id`): `boolean`
+
+Flip a node's hidden flag. Returns the resulting hidden state.
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`boolean`
+
+***
+
+### toSVG()
+
+> **toSVG**(): `string`
+
+Vector-SVG projection of this layer's nodes + edges — delegates to the
+internal `PrimitivesRenderer.toSVG()`. Consumed by `Canvas.exportSVG`
+(duck-typed via the engine's `SvgExportableLayer` contract). Returns `''`
+before mount. Coverage caveats (raster-only fills, non-label decorations,
+effects) are documented on `PrimitivesRenderer.toSVG`.
+
+#### Returns
+
+`string`
+
+***
+
 ### unmount()
 
 > **unmount**(): `void`
-
-Defined in: canvas/dist/index.d.ts:945
 
 #### Returns
 

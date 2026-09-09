@@ -2,8 +2,6 @@
 
 > **useDrawHistory**(): [`UseDrawHistoryResult`](../interfaces/UseDrawHistoryResult.md)
 
-Defined in: [canvas-react/src/hooks/useDrawHistory.ts:30](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas-react/src/hooks/useDrawHistory.ts#L30)
-
 Ready-made callbacks that make `CreateNodeBehaviour` / `DrawEdgeBehaviour` /
 `EraseBehaviour` **undoable**. Wire them to the behaviours' `onNodeCreate` /
 `onEdgeCreate` / `onErase` props — each pushes the already-applied mutation as

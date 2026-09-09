@@ -1,7 +1,5 @@
 # Interface: HistoryRecorder
 
-Defined in: [graph/src/history/types.ts:46](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/history/types.ts#L46)
-
 The mutation surface handed to [GraphHistory.transaction](../classes/GraphHistory.md#transaction)'s callback.
 Each method applies the change to the store **and** journals its inverse.
 Use these instead of calling `store.*` directly so the change is undoable.
@@ -11,8 +9,6 @@ Use these instead of calling `store.*` directly so the change is undoable.
 ### addEdge()
 
 > **addEdge**(`edge`): `void`
-
-Defined in: [graph/src/history/types.ts:56](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/history/types.ts#L56)
 
 Add an edge (inverse: remove it).
 
@@ -32,8 +28,6 @@ Add an edge (inverse: remove it).
 
 > **addNode**(`node`): `void`
 
-Defined in: [graph/src/history/types.ts:48](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/history/types.ts#L48)
-
 Add a node (inverse: remove it).
 
 #### Parameters
@@ -51,8 +45,6 @@ Add a node (inverse: remove it).
 ### moveNode()
 
 > **moveNode**(`id`, `position`): `void`
-
-Defined in: [graph/src/history/types.ts:54](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/history/types.ts#L54)
 
 Move a node (inverse: restore the prior position).
 
@@ -76,8 +68,6 @@ Move a node (inverse: restore the prior position).
 
 > **removeEdge**(`id`): `void`
 
-Defined in: [graph/src/history/types.ts:58](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/history/types.ts#L58)
-
 Remove an edge (inverse: re-add it).
 
 #### Parameters
@@ -96,8 +86,6 @@ Remove an edge (inverse: re-add it).
 
 > **removeNode**(`id`): `void`
 
-Defined in: [graph/src/history/types.ts:50](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/history/types.ts#L50)
-
 Remove a node + its incident edges, cascading (inverse: re-add node + edges).
 
 #### Parameters
@@ -115,8 +103,6 @@ Remove a node + its incident edges, cascading (inverse: re-add node + edges).
 ### updateEdge()
 
 > **updateEdge**(`id`, `patch`): `void`
-
-Defined in: [graph/src/history/types.ts:60](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/history/types.ts#L60)
 
 Patch an edge (inverse: restore the patched fields' prior values).
 
@@ -139,8 +125,6 @@ Patch an edge (inverse: restore the patched fields' prior values).
 ### updateNode()
 
 > **updateNode**(`id`, `patch`): `void`
-
-Defined in: [graph/src/history/types.ts:52](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/history/types.ts#L52)
 
 Patch a node (inverse: restore the patched fields' prior values).
 

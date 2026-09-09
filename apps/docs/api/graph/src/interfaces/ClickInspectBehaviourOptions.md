@@ -1,20 +1,16 @@
 # Interface: ClickInspectBehaviourOptions
 
-Defined in: [graph/src/behaviours/ClickInspectBehaviour.ts:50](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/ClickInspectBehaviour.ts#L50)
-
 Constructor options for `ClickInspectBehaviour`.
 
 ## Extends
 
-- `BehaviourOptions`
+- [`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md)
 
 ## Properties
 
 ### clearOnBackground?
 
 > `optional` **clearOnBackground?**: `boolean`
-
-Defined in: [graph/src/behaviours/ClickInspectBehaviour.ts:55](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/ClickInspectBehaviour.ts#L55)
 
 Clear the inspected element when clicking the empty canvas. Default `true`.
 
@@ -24,13 +20,11 @@ Clear the inspected element when clicking the empty canvas. Default `true`.
 
 > `optional` **enabled?**: `boolean`
 
-Defined in: canvas/dist/index.d.ts:733
-
 Default `false` — the developer explicitly enables.
 
 #### Inherited from
 
-`BehaviourOptions.enabled`
+[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`enabled`](../../../canvas/src/interfaces/BehaviourOptions.md#enabled)
 
 ***
 
@@ -38,11 +32,9 @@ Default `false` — the developer explicitly enables.
 
 > **id**: `string`
 
-Defined in: canvas/dist/index.d.ts:726
-
 #### Inherited from
 
-`BehaviourOptions.id`
+[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`id`](../../../canvas/src/interfaces/BehaviourOptions.md#id)
 
 ***
 
@@ -50,15 +42,13 @@ Defined in: canvas/dist/index.d.ts:726
 
 > `optional` **shortcuts?**: readonly `string`[]
 
-Defined in: canvas/dist/index.d.ts:739
-
 Gesture identifiers this behaviour claims. Used by `BehaviourRegistry`
 for conflict warnings. Format is convention-free (`'shift+drag'`,
 `'wheel+ctrl'`, `'rclick'`); registries match strings as-is.
 
 #### Inherited from
 
-`BehaviourOptions.shortcuts`
+[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`shortcuts`](../../../canvas/src/interfaces/BehaviourOptions.md#shortcuts)
 
 ***
 
@@ -66,10 +56,8 @@ for conflict warnings. Format is convention-free (`'shift+drag'`,
 
 > **targetLayerId**: `string`
 
-Defined in: [graph/src/behaviours/ClickInspectBehaviour.ts:52](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/ClickInspectBehaviour.ts#L52)
-
 Required — the `GraphLayer` id this behaviour reads clicks from.
 
 #### Overrides
 
-`BehaviourOptions.targetLayerId`
+[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`targetLayerId`](../../../canvas/src/interfaces/BehaviourOptions.md#targetlayerid)

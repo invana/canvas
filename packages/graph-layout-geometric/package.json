@@ -2,7 +2,9 @@
   "name": "@invana/graph-layout-geometric",
   "version": "0.0.12",
   "description": "Dependency-free geometric layouts (grid / snake / circular) for @invana/graph.",
+  "homepage": "https://github.com/invana/canvas#readme",
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "typedocOptions": {
@@ -39,7 +41,16 @@
     "snake",
     "circular"
   ],
+  "bugs": {
+    "url": "https://github.com/invana/canvas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/invana/canvas.git",
+    "directory": "packages/graph-layout-geometric"
+  },
   "license": "Apache-2.0",
+  "author": "Ravi Raja Merugu",
   "module": "./dist/index.js",
   "exports": {
     ".": {

@@ -105,6 +105,27 @@ working design-of-record documents. Day-to-day API/concept docs live in
     engine. Carries the file-origin map, the `package.json`, the four-package layering,
     the three prerequisites, and a **checkable acceptance test**:
     `grep "@invana/canvas'" packages/renderer-pixijs/src` → 0 hits.
+  - [fix/2026-09-10-renderer-preference-canvas-never-reaches-the-backend.md](./rfcs/fix/2026-09-10-renderer-preference-canvas-never-reaches-the-backend.md)
+    — 📋 proposed. **`preference: 'canvas'` is silently rewritten to `'webgl'`** one line
+    before it crosses the renderer seam (`Canvas.ts#L337`), so pixi's canvas backend is
+    unreachable through the engine — including via `bestRenderPreference()`, which the
+    TSDoc recommends and which returns `'canvas'` on a device with neither WebGPU nor
+    WebGL. Root cause is three independent declarations of one option (`'…|canvas'` in
+    the engine, `'…|auto'` in the kernel contract, `'…|canvas'` in the backend); the
+    rewrite was a type-fit, not a decision, and `'auto'` has no producer anywhere. 4 rows,
+    2 open decisions (adopt pixi 8.18's array-valued `preference`; drop `'auto'`).
+  - [fix/2026-09-10-label-measurement-allocates-a-textstyle-per-call.md](./rfcs/fix/2026-09-10-label-measurement-allocates-a-textstyle-per-call.md)
+    — 📋 proposed. **`measureLabelContent` builds a `TextStyle` per call**, once per
+    fit-to-label node per re-project, against 1–3 distinct styles. A cost defect with no
+    visible symptom: pixi's metrics cache is *value*-keyed, so the measuring is already
+    free on repeat and only the allocation is wasted. Records why the obvious fix — one
+    shared mutable `TextStyle` — is wrong (cached `CanvasTextMetrics` retain the style by
+    reference, so mutation would corrupt entries backing real `Text` objects). D2 is open
+    on purpose: measure first, and `rejected` is an honest outcome.
+
+## Release
+
+- [release-0.0.12-checklist.md](./release-0.0.12-checklist.md) — 🚧 **is v0.0.12 shippable?** The tree is mechanically green (build 20/20 · types 19/19 · lint 0 errors · 369 tests · boundaries · API surface · Node ESM smoke on the built `dist/`), so every open item is a *release* item, not a code one. Five blockers: **three package names publish for the first time** (`canvas-core`, `renderer-pixijs`, `canvas-telemetry-otel` are 404 on npm, and `@invana/canvas@0.0.12` hard-depends on two of them — `pnpm -r publish` is not atomic, so a token that cannot create names lands an unusable version); the branch is not `main`; **13 breaking commits since v0.0.11 with no breaking-change group in `cliff.toml`**; `apps/docs` still documents a `@invana/canvas/primitives` subpath that no longer exists and tells users to install `pixi.js`; and README/CLAUDE.md still call `renderer-pixijs` an optional lazily-resolved peer when it is a static hard dependency. Plus eleven should-fix rows (the dead `preference: 'canvas'` option, untested packages, the open security S1/S2; `canvas-telemetry-otel`'s missing docs and the publish-metadata gap are now fixed), a pre-tag verification table, and the ordered release sequence.
 
 ## Architecture
 

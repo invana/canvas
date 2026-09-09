@@ -257,7 +257,7 @@ export type { DataSource } from './state/data/DataSource';
 
 // ─── Renderer seam: the device-shaped half ───────────────────────────────────
 export type { RendererBackend } from './contracts/backend';
-export type { RendererInitOptions } from './contracts/RendererInitOptions';
+export type { RendererInitOptions, RenderPreference } from './contracts/RendererInitOptions';
 
 // ─── Frame observability contract ────────────────────────────────────────────
 export type {

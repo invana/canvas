@@ -1,7 +1,5 @@
 # Interface: ElkLayoutOptions
 
-Defined in: [graph-layout-elkjs/src/types.ts:83](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-elkjs/src/types.ts#L83)
-
 `ElkLayout` constructor options. See top-level module doc.
 
 Extends OneShotLayoutOptions, so it also accepts `id` / `targetLayerId`
@@ -19,8 +17,6 @@ Extends OneShotLayoutOptions, so it also accepts `id` / `targetLayerId`
 
 > `optional` **algorithm?**: [`ElkAlgorithmName`](../type-aliases/ElkAlgorithmName.md)
 
-Defined in: [graph-layout-elkjs/src/types.ts:85](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-elkjs/src/types.ts#L85)
-
 `elk.algorithm`. Default: `'layered'`.
 
 ***
@@ -28,8 +24,6 @@ Defined in: [graph-layout-elkjs/src/types.ts:85](https://github.com/invana/canva
 ### defaultNodeSize?
 
 > `optional` **defaultNodeSize?**: [`NodeSize`](NodeSize.md)
-
-Defined in: [graph-layout-elkjs/src/types.ts:119](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-elkjs/src/types.ts#L119)
 
 Fallback bounding box used when [nodeSize](#nodesize) is not provided and
 the node has no resolvable `style.shape`. Default `{ width: 40, height: 40 }`.
@@ -40,8 +34,6 @@ the node has no resolvable `style.shape`. Default `{ width: 40, height: 40 }`.
 
 > `optional` **direction?**: [`ElkDirection`](../type-aliases/ElkDirection.md)
 
-Defined in: [graph-layout-elkjs/src/types.ts:87](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-elkjs/src/types.ts#L87)
-
 `elk.direction`. Algorithms that respect direction: `layered`, `mrtree`, ...
 
 ***
@@ -50,8 +42,6 @@ Defined in: [graph-layout-elkjs/src/types.ts:87](https://github.com/invana/canva
 
 > `optional` **edgeNodeSpacing?**: `number`
 
-Defined in: [graph-layout-elkjs/src/types.ts:97](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-elkjs/src/types.ts#L97)
-
 `elk.spacing.edgeNode` — gap between an edge and a node.
 
 ***
@@ -59,8 +49,6 @@ Defined in: [graph-layout-elkjs/src/types.ts:97](https://github.com/invana/canva
 ### edgeRouting?
 
 > `optional` **edgeRouting?**: `"ORTHOGONAL"` \| `"POLYLINE"` \| `"SPLINES"`
-
-Defined in: [graph-layout-elkjs/src/types.ts:111](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-elkjs/src/types.ts#L111)
 
 `elk.edgeRouting`. When set, ELK computes node-avoiding edge geometry and
 `ElkLayout` writes the resulting bend points back as each edge's
@@ -78,8 +66,6 @@ nodes whose `node.position` is their CENTRE (circle natively; the
 
 > `optional` **edgeSpacing?**: `number`
 
-Defined in: [graph-layout-elkjs/src/types.ts:99](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-elkjs/src/types.ts#L99)
-
 `elk.spacing.edgeEdge` — gap between parallel edges.
 
 ***
@@ -87,8 +73,6 @@ Defined in: [graph-layout-elkjs/src/types.ts:99](https://github.com/invana/canva
 ### id?
 
 > `optional` **id?**: `string`
-
-Defined in: canvas/dist/index.d.ts:1862
 
 Stable id, used to address the layout in a `LayoutRegistry` / config. Default `'layout'`.
 
@@ -98,11 +82,50 @@ Stable id, used to address the layout in a `LayoutRegistry` / config. Default `'
 
 ***
 
+### includeGroups?
+
+> `optional` **includeGroups?**: `boolean`
+
+Lay **groups** out as true nested containers — a compound layout. Each
+group's members are nested under it in the ELK graph and ELK packs them
+*inside* the group box, sized from the group's own `padding` /
+`headerHeight`, so the group renders as one crisp contained cluster.
+
+A "group" here means what it means everywhere else in the engine: a node
+whose resolved style carries `group` (`GraphLayer.isGroupNode`). A plain
+`parentId` **tree** is *not* a group and lays out flat — `parentId` is the
+shared hierarchy field, so nesting on it alone would box up ordinary trees.
+A **collapsed** group is laid out as the single node the renderer draws in
+its members' place; the members themselves keep their frozen positions.
+
+Default `true`. It costs nothing on a graph without groups — the compound
+builder degenerates to exactly the flat graph — so pass `false` only to
+force group members to be placed as ordinary free-floating nodes.
+
+Note that `elk.hierarchyHandling: INCLUDE_CHILDREN` (edges routed across
+container boundaries) is applied only for algorithms that honour it —
+`layered` today. Other algorithms still nest, but solve each container
+separately.
+
+***
+
+### includeHidden?
+
+> `optional` **includeHidden?**: `boolean`
+
+Include explicitly-hidden nodes in the layout. Default `false` — hidden
+nodes are excluded from placement so they don't perturb the visible graph,
+and their last positions are left frozen (the layout never writes them).
+
+#### Inherited from
+
+`OneShotLayoutOptions.includeHidden`
+
+***
+
 ### layerSpacing?
 
 > `optional` **layerSpacing?**: `number`
-
-Defined in: [graph-layout-elkjs/src/types.ts:95](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-elkjs/src/types.ts#L95)
 
 `elk.layered.spacing.nodeNodeBetweenLayers` — gap between consecutive
 layers in the `layered` algorithm. Ignored by other algorithms.
@@ -112,8 +135,6 @@ layers in the `layered` algorithm. Ignored by other algorithms.
 ### layoutOptions?
 
 > `optional` **layoutOptions?**: `Record`\<`string`, `string`\>
-
-Defined in: [graph-layout-elkjs/src/types.ts:138](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-elkjs/src/types.ts#L138)
 
 Free-form ELK property bag, merged into the root graph's
 `layoutOptions` after the convenience fields above. Use for any
@@ -125,8 +146,6 @@ property the typed surface doesn't cover (`elk.layered.crossingMinimization.stra
 ### nodeSize?
 
 > `optional` **nodeSize?**: (`node`) => [`NodeSize`](NodeSize.md)
-
-Defined in: [graph-layout-elkjs/src/types.ts:130](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-elkjs/src/types.ts#L130)
 
 Per-node bounding box override. Called once per node at the start of
 `apply()` with the underlying `GraphNode`. When omitted, `ElkLayout`
@@ -152,8 +171,6 @@ blow up the final layout.
 
 > `optional` **nodeSpacing?**: `number`
 
-Defined in: [graph-layout-elkjs/src/types.ts:90](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-elkjs/src/types.ts#L90)
-
 `elk.spacing.nodeNode` — minimum gap between sibling nodes.
 
 ***
@@ -162,8 +179,6 @@ Defined in: [graph-layout-elkjs/src/types.ts:90](https://github.com/invana/canva
 
 > `optional` **padding?**: [`ElkPadding`](../type-aliases/ElkPadding.md)
 
-Defined in: [graph-layout-elkjs/src/types.ts:113](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-elkjs/src/types.ts#L113)
-
 `elk.padding` — graph-level padding.
 
 ***
@@ -171,8 +186,6 @@ Defined in: [graph-layout-elkjs/src/types.ts:113](https://github.com/invana/canv
 ### targetLayerId?
 
 > `optional` **targetLayerId?**: `string`
-
-Defined in: canvas/dist/index.d.ts:1864
 
 The layer this layout is meant to run against. Informational — `apply(layer)` still takes one explicitly.
 
@@ -185,8 +198,6 @@ The layer this layout is meant to run against. Informational — `apply(layer)` 
 ### transition?
 
 > `optional` **transition?**: `number` \| `boolean`
-
-Defined in: graph/dist/index.d.ts:2701
 
 Animate nodes from their current positions to the computed layout instead
 of snapping. `true` uses DEFAULT\_POSITION\_TRANSITION\_MS; a number is
@@ -203,11 +214,9 @@ straight to a lil-gui control.
 
 ### transitionEase?
 
-> `optional` **transitionEase?**: `EasingName`
+> `optional` **transitionEase?**: [`EasingName`](../../../canvas/src/type-aliases/EasingName.md)
 
-Defined in: graph/dist/index.d.ts:2706
-
-Easing curve for the transition, as a serializable EasingName key.
+Easing curve for the transition, as a serializable [EasingName](../../../canvas/src/type-aliases/EasingName.md) key.
 Default `'easeOutCubic'`. Ignored when `transition` is `false`.
 
 #### Inherited from
@@ -219,8 +228,6 @@ Default `'easeOutCubic'`. Ignored when `transition` is `false`.
 ### workerFactory?
 
 > `optional` **workerFactory?**: (`url?`) => `Worker`
-
-Defined in: [graph-layout-elkjs/src/types.ts:159](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-elkjs/src/types.ts#L159)
 
 Factory for the Web Worker that runs the ELK solver off the main thread.
 

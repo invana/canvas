@@ -31,7 +31,7 @@
  *     / behaviour / state pipeline against a renderer that draws nothing.
  */
 
-import type { IRenderer } from '@invana/canvas-core';
+import type { IRenderer, RenderPreference } from '@invana/canvas-core';
 import {
   CanvasEventBus,
   createCanvasStore,
@@ -39,6 +39,7 @@ import {
   type CanvasStore,
   type CanvasTelemetryConfig,
 } from '@invana/canvas-store';
+import { createDefaultRenderer } from '@invana/renderer-pixijs';
 
 import { CanvasThemeState } from '@invana/canvas-store';
 import { Camera } from '@invana/canvas-core';
@@ -93,7 +94,9 @@ export interface CanvasOptions {
   container?: HTMLElement;
 
   /**
-   * Preferred backend. Default `'webgpu'` (WebGPU-first).
+   * Preferred backend ({@link RenderPreference}). Default `'webgpu'`
+   * (WebGPU-first). Passed to the renderer verbatim — `'canvas'` mounts the 2D
+   * backend rather than being folded into `'webgl'`.
    *
    * PixiJS's WebGPU renderer can crash at *render* time on some browser/driver
    * combinations (a null bind-group during pipeline setup), which no init-time
@@ -103,12 +106,12 @@ export interface CanvasOptions {
    * auto-fallback still covers browsers with no WebGPU at all; pass `'webgl'`
    * explicitly to opt out of WebGPU entirely.
    */
-  preference?: 'webgpu' | 'webgl' | 'canvas';
+  preference?: RenderPreference;
 
   /**
-   * The drawing backend. Omit and `init` lazily resolves
-   * `@invana/renderer-pixijs` (design D1); supply one to bring your own — a
-   * three.js backend, or `HeadlessRenderer` for a test.
+   * The drawing backend. Defaults to `@invana/renderer-pixijs` (the PixiJS
+   * backend); supply one to override — a three.js backend, or
+   * `HeadlessRenderer` for a test.
    *
    * When supplied, `Canvas` calls `mount` on it; you do not mount it yourself.
    */
@@ -326,16 +329,14 @@ export class Canvas {
     // texture pool, the crash guard, the resize plumbing — is entirely the
     // renderer's job. `Canvas` asks for devices and imports no drawing library.
     //
-    // The default backend is resolved by **lazy import** (design D1, §4.6):
-    // `@invana/renderer-pixijs` is an *optional peer*, so it is never bundled
-    // with the engine and a consumer bringing their own backend need not
-    // install pixi at all. `init` was already async, so this costs nothing
-    // structurally — and a genuinely missing package fails with a message that
-    // names it rather than a module-resolution error.
-    const renderer = opts.renderer ?? (await this._resolveDefaultRenderer());
+    // The default backend is `@invana/renderer-pixijs`, a required dependency
+    // of the engine imported at module scope above: it ships with the engine so
+    // `init()` works with no configuration. A consumer bringing their own
+    // backend passes it via `opts.renderer`.
+    const renderer = opts.renderer ?? createDefaultRenderer({ events: this.events });
     this._renderer = renderer;
     await renderer.mount(container, {
-      ...(opts.preference ? { preference: opts.preference === 'canvas' ? 'webgl' : opts.preference } : {}),
+      ...(opts.preference ? { preference: opts.preference } : {}),
       ...(opts.width !== undefined ? { width: opts.width } : {}),
       ...(opts.height !== undefined ? { height: opts.height } : {}),
       ...(opts.resolution !== undefined ? { resolution: opts.resolution } : {}),
@@ -1010,32 +1011,8 @@ export class Canvas {
     this._rafHandle = null;
   }
 
-  /**
-   * Resolve the default drawing backend. Isolated so the dynamic import has one
-   * home, and so the failure mode is a sentence rather than a stack trace.
-   */
-  private async _resolveDefaultRenderer(): Promise<IRenderer> {
-    try {
-      // Typed structurally on purpose: importing the backend's types here would
-      // put `@invana/canvas` back in its own dependency cycle — the exact thing
-      // the optional peer avoids. The engine must compile with the backend
-      // absent.
-      // @ts-ignore — an *optional* peer is by definition not resolvable when the
-      // engine is built alone. That is the point: `@invana/canvas` compiles and
-      // ships with no backend installed.
-      const mod = (await import('@invana/renderer-pixijs')) as unknown as {
-        createDefaultRenderer(opts: { events: CanvasEventBus }): IRenderer;
-      };
-      return mod.createDefaultRenderer({ events: this.events });
-    } catch (err) {
-      throw new Error(
-        `Canvas "${this.id}": no renderer was supplied and the default backend ` +
-          '`@invana/renderer-pixijs` could not be loaded. Install it, or pass ' +
-          'your own via `Canvas.init({ renderer })`.\n' +
-          `Original error: ${err instanceof Error ? err.message : String(err)}`,
-      );
-    }
-  }
+  // No _resolveDefaultRenderer() — renderer-pixijs is a required dependency,
+  // imported directly at module scope above.
 
   /**
    * Build the camera and the `CanvasContext` on top of the mounted renderer.

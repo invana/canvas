@@ -2,8 +2,6 @@
 
 > **EdgeBadgePlacement** = `"start"` \| `"middle"` \| `"end"` \| `number`
 
-Defined in: [graph/src/layer/types.ts:572](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L572)
-
 Anchor point along an edge's routed path.
 
 - `'start'` / `'end'` — anchored *near* the source / target endpoint with

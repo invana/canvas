@@ -1,18 +1,16 @@
 # Class: LassoSelectBehaviour
 
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:121](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L121)
+What `BehaviourRegistry` sees.
 
 ## Extends
 
-- `Behaviour`
+- [`Behaviour`](../../../canvas/src/classes/Behaviour.md)
 
 ## Constructors
 
 ### Constructor
 
 > **new LassoSelectBehaviour**(`opts`): `LassoSelectBehaviour`
-
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:139](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L139)
 
 #### Parameters
 
@@ -26,7 +24,7 @@ Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:139](https://github.co
 
 #### Overrides
 
-`Behaviour.constructor`
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`constructor`](../../../canvas/src/classes/Behaviour.md#constructor)
 
 ## Properties
 
@@ -34,23 +32,34 @@ Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:139](https://github.co
 
 > `protected` **\_enabled**: `boolean`
 
-Defined in: canvas/dist/index.d.ts:750
+#### Inherited from
+
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`_enabled`](../../../canvas/src/classes/Behaviour.md#_enabled)
+
+***
+
+### \_options
+
+> `protected` **\_options**: [`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md)
+
+The construction options, merged in-place by [setOptions](#setoptions). Named
+`_options` (not `options`) so subclasses that expose a bespoke
+`get options()` snapshot don't collide with it. Subclasses read their live
+config from here (or from fields re-synced in [onOptionsChanged](#onoptionschanged)).
 
 #### Inherited from
 
-`Behaviour._enabled`
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`_options`](../../../canvas/src/classes/Behaviour.md#_options)
 
 ***
 
 ### ctx?
 
-> `protected` `optional` **ctx?**: `CanvasContext`
-
-Defined in: canvas/dist/index.d.ts:751
+> `protected` `optional` **ctx?**: [`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
 #### Inherited from
 
-`Behaviour.ctx`
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`ctx`](../../../canvas/src/classes/Behaviour.md#ctx)
 
 ***
 
@@ -58,11 +67,27 @@ Defined in: canvas/dist/index.d.ts:751
 
 > `readonly` **id**: `string`
 
-Defined in: canvas/dist/index.d.ts:742
-
 #### Inherited from
 
-`Behaviour.id`
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`id`](../../../canvas/src/classes/Behaviour.md#id)
+
+***
+
+### kind
+
+> `readonly` **kind**: `"lasso-select"` = `'lasso-select'`
+
+Stable **class kind** — a minification-safe discriminator matching the
+`@invana/canvas-ui` settings-editor registry key (e.g. `'drag-pan'`,
+`'wheel-zoom'`). Distinct from [id](EdgeLODBehaviour.md#id) (the per-instance key): all
+`DragPanBehaviour` instances share `kind: 'drag-pan'`. Concrete behaviours
+set it as a class field; left `undefined` on any that haven't, so consumers
+fall back (e.g. to the class name). Lets domain-free tooling resolve an
+instance's editor without an `instanceof` ladder.
+
+#### Overrides
+
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`kind`](../../../canvas/src/classes/Behaviour.md#kind)
 
 ***
 
@@ -70,14 +95,12 @@ Defined in: canvas/dist/index.d.ts:742
 
 > `readonly` **scope**: `"canvas"` \| `"layer"`
 
-Defined in: canvas/dist/index.d.ts:749
-
 `'layer'` if `targetLayerId` is set, otherwise `'canvas'`. Set automatically
 from the constructor — subclasses don't need to re-declare.
 
 #### Inherited from
 
-`Behaviour.scope`
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`scope`](../../../canvas/src/classes/Behaviour.md#scope)
 
 ***
 
@@ -85,11 +108,9 @@ from the constructor — subclasses don't need to re-declare.
 
 > `readonly` `optional` **shortcuts?**: readonly `string`[]
 
-Defined in: canvas/dist/index.d.ts:744
-
 #### Inherited from
 
-`Behaviour.shortcuts`
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`shortcuts`](../../../canvas/src/classes/Behaviour.md#shortcuts)
 
 ***
 
@@ -97,11 +118,9 @@ Defined in: canvas/dist/index.d.ts:744
 
 > `readonly` `optional` **targetLayerId?**: `string`
 
-Defined in: canvas/dist/index.d.ts:743
-
 #### Inherited from
 
-`Behaviour.targetLayerId`
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`targetLayerId`](../../../canvas/src/classes/Behaviour.md#targetlayerid)
 
 ## Accessors
 
@@ -111,7 +130,23 @@ Defined in: canvas/dist/index.d.ts:743
 
 > **get** **enabled**(): `boolean`
 
-Defined in: canvas/dist/index.d.ts:753
+##### Returns
+
+`boolean`
+
+#### Inherited from
+
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`enabled`](../../../canvas/src/classes/Behaviour.md#enabled)
+
+***
+
+### hasGestureClaim
+
+#### Get Signature
+
+> **get** `protected` **hasGestureClaim**(): `boolean`
+
+Does this behaviour currently hold the gesture?
 
 ##### Returns
 
@@ -119,7 +154,7 @@ Defined in: canvas/dist/index.d.ts:753
 
 #### Inherited from
 
-`Behaviour.enabled`
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`hasGestureClaim`](../../../canvas/src/classes/Behaviour.md#hasgestureclaim)
 
 ***
 
@@ -128,8 +163,6 @@ Defined in: canvas/dist/index.d.ts:753
 #### Get Signature
 
 > **get** `protected` **isEnabled**(): `boolean`
-
-Defined in: canvas/dist/index.d.ts:773
 
 Convenience `if (!enabled) return;` for use inside event handlers
 (without rebinding `this` cost).
@@ -140,7 +173,7 @@ Convenience `if (!enabled) return;` for use inside event handlers
 
 #### Inherited from
 
-`Behaviour.isEnabled`
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`isEnabled`](../../../canvas/src/classes/Behaviour.md#isenabled)
 
 ***
 
@@ -150,17 +183,17 @@ Convenience `if (!enabled) return;` for use inside event handlers
 
 > **get** **isRegistered**(): `boolean`
 
-Defined in: canvas/dist/index.d.ts:754
-
 `true` once `register(ctx)` has run. Lets the registry skip already-wired behaviours.
 
 ##### Returns
 
 `boolean`
 
+`true` once `register(ctx)` has run. Lets the registry skip already-wired behaviours.
+
 #### Inherited from
 
-`Behaviour.isRegistered`
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`isRegistered`](../../../canvas/src/classes/Behaviour.md#isregistered)
 
 ***
 
@@ -170,19 +203,50 @@ Defined in: canvas/dist/index.d.ts:754
 
 > **get** **options**(): `Readonly`\<`ResolvedOptions`\>
 
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:211](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L211)
-
 ##### Returns
 
 `Readonly`\<`ResolvedOptions`\>
 
 ## Methods
 
+### claimGesture()
+
+> `protected` **claimGesture**(`opts?`): `boolean`
+
+Take exclusive ownership of the pointer gesture for the duration of a drag
+(`ctx.gestures`, see `input/GestureArbiter.ts`). Returns `false` when
+another behaviour already owns it — the caller must then **not** start its
+gesture, because two behaviours steering the same pointer is exactly what
+the arbiter exists to prevent.
+
+Claiming also suspends camera panning: `DragPanBehaviour` watches the
+arbiter and yields while anybody else owns the gesture. That replaces the
+old `camera.viewport.plugins.pause('drag')` reach-through, which put a
+`pixi-viewport` internal in the hands of domain behaviours.
+
+Pair every successful claim with [releaseGesture](#releasegesture) on **every** exit
+path — pointerup, pointercancel, abort. `disable()` and `destroy()` release
+automatically as a backstop.
+
+#### Parameters
+
+##### opts?
+
+[`GestureClaimOptions`](../../../canvas/src/interfaces/GestureClaimOptions.md)
+
+#### Returns
+
+`boolean`
+
+#### Inherited from
+
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`claimGesture`](../../../canvas/src/classes/Behaviour.md#claimgesture)
+
+***
+
 ### destroy()
 
 > **destroy**(): `void`
-
-Defined in: canvas/dist/index.d.ts:758
 
 Called by `BehaviourRegistry.unregister(id)`. Drops subscriptions.
 
@@ -192,7 +256,7 @@ Called by `BehaviourRegistry.unregister(id)`. Drops subscriptions.
 
 #### Inherited from
 
-`Behaviour.destroy`
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`destroy`](../../../canvas/src/classes/Behaviour.md#destroy)
 
 ***
 
@@ -200,15 +264,13 @@ Called by `BehaviourRegistry.unregister(id)`. Drops subscriptions.
 
 > **disable**(): `void`
 
-Defined in: canvas/dist/index.d.ts:760
-
 #### Returns
 
 `void`
 
 #### Inherited from
 
-`Behaviour.disable`
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`disable`](../../../canvas/src/classes/Behaviour.md#disable)
 
 ***
 
@@ -216,23 +278,35 @@ Defined in: canvas/dist/index.d.ts:760
 
 > **enable**(): `void`
 
-Defined in: canvas/dist/index.d.ts:759
-
 #### Returns
 
 `void`
 
 #### Inherited from
 
-`Behaviour.enable`
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`enable`](../../../canvas/src/classes/Behaviour.md#enable)
+
+***
+
+### getOptions()
+
+> **getOptions**(): `Readonly`\<`TOptions`\>
+
+Snapshot of the current (merged) options — seeds a settings editor.
+
+#### Returns
+
+`Readonly`\<`TOptions`\>
+
+#### Inherited from
+
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`getOptions`](../../../canvas/src/classes/Behaviour.md#getoptions)
 
 ***
 
 ### onDestroy()
 
 > `protected` **onDestroy**(): `void`
-
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:192](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L192)
 
 Cleanup on destroy. Default no-op.
 
@@ -242,15 +316,13 @@ Cleanup on destroy. Default no-op.
 
 #### Overrides
 
-`Behaviour.onDestroy`
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`onDestroy`](../../../canvas/src/classes/Behaviour.md#ondestroy)
 
 ***
 
 ### onDisable()
 
 > `protected` **onDisable**(): `void`
-
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:205](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L205)
 
 Hook fired on disable.
 
@@ -260,15 +332,13 @@ Hook fired on disable.
 
 #### Overrides
 
-`Behaviour.onDisable`
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`onDisable`](../../../canvas/src/classes/Behaviour.md#ondisable)
 
 ***
 
 ### onEnable()
 
 > `protected` **onEnable**(): `void`
-
-Defined in: canvas/dist/index.d.ts:766
 
 Hook fired when the developer enables the behaviour.
 
@@ -278,47 +348,26 @@ Hook fired when the developer enables the behaviour.
 
 #### Inherited from
 
-`Behaviour.onEnable`
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`onEnable`](../../../canvas/src/classes/Behaviour.md#onenable)
 
 ***
 
-### onRegister()
+### onOptionsChanged()
 
-> `protected` **onRegister**(`ctx`): `void`
+> `protected` **onOptionsChanged**(`_changes`): `void`
 
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:147](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L147)
-
-Subscribe to events / setup any handler resources.
-
-#### Parameters
-
-##### ctx
-
-`CanvasContext`
-
-#### Returns
-
-`void`
-
-#### Overrides
-
-`Behaviour.onRegister`
-
-***
-
-### register()
-
-> **register**(`ctx`): `void`
-
-Defined in: canvas/dist/index.d.ts:756
-
-Called by `BehaviourRegistry.register(behaviour)`. Subscribes to inputs.
+Hook fired after [setOptions](#setoptions) merges a patch (and after any `enabled`
+toggle is applied). Default no-op. Override to apply an option change live:
+a behaviour whose effect is wired in [onEnable](#onenable) (a pixi-viewport
+plugin, a DOM listener) re-arms here; one that caches option values in
+fields re-syncs them from `this._options` here. `changes` is the raw patch;
+`this._options` already holds the merged result.
 
 #### Parameters
 
-##### ctx
+##### \_changes
 
-`CanvasContext`
+`Partial`\<`TOptions`\>
 
 #### Returns
 
@@ -326,7 +375,109 @@ Called by `BehaviourRegistry.register(behaviour)`. Subscribes to inputs.
 
 #### Inherited from
 
-`Behaviour.register`
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`onOptionsChanged`](../../../canvas/src/classes/Behaviour.md#onoptionschanged)
+
+***
+
+### onRegister()
+
+> `protected` **onRegister**(`ctx`): `void`
+
+Subscribe to events / setup any handler resources.
+
+#### Parameters
+
+##### ctx
+
+[`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
+
+#### Returns
+
+`void`
+
+#### Overrides
+
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`onRegister`](../../../canvas/src/classes/Behaviour.md#onregister)
+
+***
+
+### reArm()
+
+> `protected` **reArm**(): `void`
+
+Re-run [onDisable](#ondisable) then [onEnable](#onenable) when the behaviour is live, so
+an option change wired at enable-time (a pixi-viewport plugin, a listener
+bound with the old config) picks up `this._options`. No-op when disabled or
+unregistered (the next [onEnable](#onenable) will read the fresh options anyway).
+The idiomatic body of an [onOptionsChanged](#onoptionschanged) override for such
+behaviours.
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`reArm`](../../../canvas/src/classes/Behaviour.md#rearm)
+
+***
+
+### register()
+
+> **register**(`ctx`): `void`
+
+Called by `BehaviourRegistry.register(behaviour)`. Subscribes to inputs.
+
+#### Parameters
+
+##### ctx
+
+[`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`register`](../../../canvas/src/classes/Behaviour.md#register)
+
+***
+
+### releaseGesture()
+
+> `protected` **releaseGesture**(): `void`
+
+End this behaviour's gesture claim. Safe to call any number of times and
+when no claim is held — the arbiter identifies claims by token, so a stale
+release can never evict a later owner.
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`releaseGesture`](../../../canvas/src/classes/Behaviour.md#releasegesture)
+
+***
+
+### serializeDefinition()
+
+> **serializeDefinition**(): `Record`\<`string`, `unknown`\>
+
+Contribute this behaviour's serialisable config to a canvas-state snapshot
+(the engine's `DefinitionSerializable` contract). The base implementation
+captures the explicit `enabled` flag (rule 7). Subclasses with additional
+JSON-serialisable options should override and spread `super.serializeDefinition()`.
+
+#### Returns
+
+`Record`\<`string`, `unknown`\>
+
+#### Inherited from
+
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`serializeDefinition`](../../../canvas/src/classes/Behaviour.md#serializedefinition)
 
 ***
 
@@ -334,7 +485,16 @@ Called by `BehaviourRegistry.register(behaviour)`. Subscribes to inputs.
 
 > **setOptions**(`patch`): `void`
 
-Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:215](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/LassoSelectBehaviour.ts#L215)
+Merge a serialisable options patch and apply it live. Reflects an `enabled`
+change by enabling/disabling, then calls [onOptionsChanged](#onoptionschanged) so the
+subclass can apply the rest (re-sync cached fields, re-arm a viewport
+plugin, recompute). This is the seam the engine's
+`canvas.update({ behaviours: { [id]: patch } })` path invokes — so a settings
+editor can retune any behaviour without remounting it.
+
+Subclasses with bespoke apply logic (e.g. clearing selection state on a
+mode change) override this and should call `super.setOptions(changes)` first
+to keep `_options` — and thus [getOptions](#getoptions) — coherent.
 
 #### Parameters
 
@@ -345,3 +505,7 @@ Defined in: [graph/src/behaviours/LassoSelectBehaviour.ts:215](https://github.co
 #### Returns
 
 `void`
+
+#### Overrides
+
+[`Behaviour`](../../../canvas/src/classes/Behaviour.md).[`setOptions`](../../../canvas/src/classes/Behaviour.md#setoptions)

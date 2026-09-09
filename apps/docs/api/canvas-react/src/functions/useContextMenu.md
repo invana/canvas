@@ -2,8 +2,6 @@
 
 > **useContextMenu**\<`T`\>(): [`UseContextMenuResult`](../interfaces/UseContextMenuResult.md)\<`T`\>
 
-Defined in: [canvas-react/src/hooks/useContextMenu.ts:51](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas-react/src/hooks/useContextMenu.ts#L51)
-
 Headless open/close + position state for a right-click context menu, with the
 dismissal lifecycle baked in: while a menu is open, an outside `pointerdown`
 or `Escape` closes it.

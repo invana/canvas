@@ -1,8 +1,6 @@
 # Function: pathBounds()
 
-> **pathBounds**(`path`): `Rect`
-
-Defined in: [canvas/src/primitives/connectors/pathSampling.ts:153](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/connectors/pathSampling.ts#L153)
+> **pathBounds**(`path`): [`Rect`](../../../renderer-pixijs/src/interfaces/Rect.md)
 
 AABB of the path's anchor + control points. Used by hit-test bbox indexing.
 
@@ -10,8 +8,8 @@ AABB of the path's anchor + control points. Used by hit-test bbox indexing.
 
 ### path
 
-[`Path`](../type-aliases/Path.md)
+[`Path`](../../../renderer-pixijs/src/type-aliases/Path.md)
 
 ## Returns
 
-`Rect`
+[`Rect`](../../../renderer-pixijs/src/interfaces/Rect.md)

@@ -1,7 +1,5 @@
 # Abstract Class: Layer\<TOptions, TState, TEvents, TDirtyBucket\>
 
-Defined in: [canvas/src/layers/Layer.ts:77](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L77)
-
 The subset of `Layer` the `LayerRegistry` and `Canvas.tick` interact with.
 Lets the registry stay decoupled from the abstract class implementation.
 
@@ -9,6 +7,7 @@ Lets the registry stay decoupled from the abstract class implementation.
 
 - [`WorldLayer`](WorldLayer.md)
 - [`ScreenLayer`](ScreenLayer.md)
+- [`MapLayer`](../../../graph-layer-maplibre/src/classes/MapLayer.md)
 
 ## Type Parameters
 
@@ -38,8 +37,6 @@ Lets the registry stay decoupled from the abstract class implementation.
 
 > **new Layer**\<`TOptions`, `TState`, `TEvents`, `TDirtyBucket`\>(`opts`): `Layer`\<`TOptions`, `TState`, `TEvents`, `TDirtyBucket`\>
 
-Defined in: [canvas/src/layers/Layer.ts:118](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L118)
-
 #### Parameters
 
 ##### opts
@@ -56,8 +53,6 @@ Defined in: [canvas/src/layers/Layer.ts:118](https://github.com/invana/canvas/bl
 
 > `protected` `optional` **ctx?**: [`CanvasContext`](../interfaces/CanvasContext.md)
 
-Defined in: [canvas/src/layers/Layer.ts:111](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L111)
-
 Set by `mount(ctx)`; cleared by `unmount()`.
 
 ***
@@ -65,8 +60,6 @@ Set by `mount(ctx)`; cleared by `unmount()`.
 ### cullable
 
 > **cullable**: `boolean`
-
-Defined in: [canvas/src/layers/Layer.ts:94](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L94)
 
 #### Implementation of
 
@@ -78,23 +71,17 @@ Defined in: [canvas/src/layers/Layer.ts:94](https://github.com/invana/canvas/blo
 
 > `readonly` **dirty**: [`DirtyBatcher`](DirtyBatcher.md)\<`TDirtyBucket`\>
 
-Defined in: [canvas/src/layers/Layer.ts:88](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L88)
-
 ***
 
 ### events
 
 > `readonly` **events**: [`SourceEmitter`](SourceEmitter.md)\<`TEvents`\>
 
-Defined in: [canvas/src/layers/Layer.ts:87](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L87)
-
 ***
 
 ### hittable
 
 > **hittable**: `boolean`
-
-Defined in: [canvas/src/layers/Layer.ts:92](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L92)
 
 #### Implementation of
 
@@ -106,11 +93,23 @@ Defined in: [canvas/src/layers/Layer.ts:92](https://github.com/invana/canvas/blo
 
 > `readonly` **id**: `string`
 
-Defined in: [canvas/src/layers/Layer.ts:84](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L84)
-
 #### Implementation of
 
 [`ILayer`](../interfaces/ILayer.md).[`id`](../interfaces/ILayer.md#id)
+
+***
+
+### kind?
+
+> `readonly` `optional` **kind?**: `string`
+
+Stable **class kind** — a minification-safe discriminator matching the
+`@invana/canvas-ui` settings-editor registry key (e.g. `'background-layer'`,
+`'minimap-layer'`). Distinct from [id](../../../graph-layer-maplibre/src/classes/MapLayer.md#id) (the per-instance key): all
+`BackgroundLayer` instances share `kind: 'background-layer'`. Concrete layers
+set it as a class field; left `undefined` on any that haven't, so consumers
+fall back (e.g. to the class name). Lets domain-free tooling resolve an
+instance's editor without an `instanceof` ladder.
 
 ***
 
@@ -118,23 +117,11 @@ Defined in: [canvas/src/layers/Layer.ts:84](https://github.com/invana/canvas/blo
 
 > `readonly` **options**: `TOptions`
 
-Defined in: [canvas/src/layers/Layer.ts:85](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L85)
-
-***
-
-### state
-
-> `readonly` **state**: [`Store`](../type-aliases/Store.md)\<`TState`\>
-
-Defined in: [canvas/src/layers/Layer.ts:86](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L86)
-
 ***
 
 ### zIndex
 
 > **zIndex**: `number`
-
-Defined in: [canvas/src/layers/Layer.ts:93](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L93)
 
 #### Implementation of
 
@@ -147,8 +134,6 @@ Defined in: [canvas/src/layers/Layer.ts:93](https://github.com/invana/canvas/blo
 #### Get Signature
 
 > **get** `protected` **context**(): [`CanvasContext`](../interfaces/CanvasContext.md)
-
-Defined in: [canvas/src/layers/Layer.ts:159](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L159)
 
 Convenience accessor; throws when called pre-mount.
 
@@ -164,8 +149,6 @@ Convenience accessor; throws when called pre-mount.
 
 > **get** **mounted**(): `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:114](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L114)
-
 True between `mount` and `unmount`.
 
 ##### Returns
@@ -180,13 +163,31 @@ True between `mount` and `unmount`.
 
 ***
 
+### state
+
+#### Get Signature
+
+> **get** **state**(): [`ReactiveStore`](../interfaces/ReactiveStore.md)\<`TState`\>
+
+UI / interaction state (`ReactiveStore<TState>`). Because it is built
+through the injected kernel factory, every write emits patches and history /
+telemetry / a future CRDT backend all observe it.
+
+**Available from `mount()` onward** — accessing it before the first mount
+throws. (`createState()` is also called at first mount, so it may safely
+read subclass fields initialised in the subclass constructor.)
+
+##### Returns
+
+[`ReactiveStore`](../interfaces/ReactiveStore.md)\<`TState`\>
+
+***
+
 ### visible
 
 #### Get Signature
 
 > **get** **visible**(): `boolean`
-
-Defined in: [canvas/src/layers/Layer.ts:101](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L101)
 
 Whether this layer renders. Setting `false` hides the layer's pixi
 container (via `onVisibleChange`, overridden by `WorldLayer` /
@@ -199,8 +200,6 @@ container (via `onVisibleChange`, overridden by `WorldLayer` /
 #### Set Signature
 
 > **set** **visible**(`value`): `void`
-
-Defined in: [canvas/src/layers/Layer.ts:104](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L104)
 
 ##### Parameters
 
@@ -222,8 +221,6 @@ Defined in: [canvas/src/layers/Layer.ts:104](https://github.com/invana/canvas/bl
 
 > `protected` **applyDirty**(`_snap`): `void`
 
-Defined in: [canvas/src/layers/Layer.ts:204](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L204)
-
 Translate a dirty snapshot into renderer / pixi commands.
 Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
 
@@ -243,8 +240,6 @@ Default: no-op. Override when the layer batches work via `dirty.mark(...)`.
 
 > `abstract` `protected` **createState**(): `TState`
 
-Defined in: [canvas/src/layers/Layer.ts:198](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L198)
-
 Build the initial UI / interaction state. Called once in the constructor.
 
 #### Returns
@@ -256,8 +251,6 @@ Build the initial UI / interaction state. Called once in the constructor.
 ### flush()
 
 > **flush**(): `void`
-
-Defined in: [canvas/src/layers/Layer.ts:177](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L177)
 
 Called by Canvas tick when `hasPending()` is true. Swaps the dirty
 snapshot, hands it to `applyDirty`. Subclasses normally don't override.
@@ -276,8 +269,6 @@ snapshot, hands it to `applyDirty`. Subclasses normally don't override.
 
 > **hasPending**(): `boolean`
 
-Defined in: [canvas/src/layers/Layer.ts:169](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L169)
-
 Whether `flush()` has work to do this frame.
 
 #### Returns
@@ -293,8 +284,6 @@ Whether `flush()` has work to do this frame.
 ### mount()
 
 > **mount**(`ctx`): `void`
-
-Defined in: [canvas/src/layers/Layer.ts:140](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L140)
 
 #### Parameters
 
@@ -316,8 +305,6 @@ Defined in: [canvas/src/layers/Layer.ts:140](https://github.com/invana/canvas/bl
 
 > `protected` **onMount**(`_ctx`): `void`
 
-Defined in: [canvas/src/layers/Layer.ts:209](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L209)
-
 Domain-specific mount setup (subscribe to peers, attach renderer, etc.).
 
 #### Parameters
@@ -336,8 +323,6 @@ Domain-specific mount setup (subscribe to peers, attach renderer, etc.).
 
 > `protected` **onUnmount**(`_ctx`): `void`
 
-Defined in: [canvas/src/layers/Layer.ts:214](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L214)
-
 Domain-specific unmount teardown.
 
 #### Parameters
@@ -355,8 +340,6 @@ Domain-specific unmount teardown.
 ### onVisibleChange()
 
 > `protected` **onVisibleChange**(`_value`): `void`
-
-Defined in: [canvas/src/layers/Layer.ts:223](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L223)
 
 Called whenever `visible` changes (setter only — not on initial
 construction). Subclasses override to keep their pixi container's
@@ -378,8 +361,6 @@ construction). Subclasses override to keep their pixi container's
 
 > **redraw**(): `void`
 
-Defined in: [canvas/src/layers/Layer.ts:191](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L191)
-
 Force a full repaint of this layer from its current state, bypassing the
 per-frame dirty path. Base implementation is a no-op — only layers that
 mount a renderer override it (e.g. `GraphLayer.redraw` re-renders every
@@ -397,11 +378,35 @@ swap, palette change) or to recover from a suspected render desync.
 
 ***
 
+### setVisible()
+
+> **setVisible**(`visible`): `void`
+
+Toggle whole-layer visibility, repaint, and announce it. Unlike assigning
+`visible` (which only hides the pixi container via [onVisibleChange](#onvisiblechange)),
+this also forces a [redraw](#redraw) and emits `scene:layer:visibilitychange`
+on the canvas bus so dependent layers (minimap) and the render loop react
+automatically. No-op if the value is unchanged.
+
+#### Parameters
+
+##### visible
+
+`boolean`
+
+#### Returns
+
+`void`
+
+#### Implementation of
+
+[`ILayer`](../interfaces/ILayer.md).[`setVisible`](../interfaces/ILayer.md#setvisible)
+
+***
+
 ### unmount()
 
 > **unmount**(): `void`
-
-Defined in: [canvas/src/layers/Layer.ts:149](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/layers/Layer.ts#L149)
 
 #### Returns
 

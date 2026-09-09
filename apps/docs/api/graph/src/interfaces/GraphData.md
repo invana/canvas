@@ -1,8 +1,10 @@
 # Interface: GraphData
 
-Defined in: [graph/src/layer/types.ts:129](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L129)
-
 Initial-load shape passed to `graphLayer.setData(data)`.
+
+Carries **input** records — `type` is optional here and the store defaults it
+to `UNKNOWN_TYPE` on insert. Read the data back with `store.nodes()` /
+`exportData()` to get the stored form, where `type` is always a `string`.
 
 ## Properties
 
@@ -10,12 +12,8 @@ Initial-load shape passed to `graphLayer.setData(data)`.
 
 > **edges**: [`GraphEdge`](GraphEdge.md)\<`unknown`\>[]
 
-Defined in: [graph/src/layer/types.ts:131](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L131)
-
 ***
 
 ### nodes
 
 > **nodes**: [`GraphNode`](GraphNode.md)\<`unknown`\>[]
-
-Defined in: [graph/src/layer/types.ts:130](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/types.ts#L130)

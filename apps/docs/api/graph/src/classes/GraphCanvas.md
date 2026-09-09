@@ -1,7 +1,5 @@
 # Class: GraphCanvas
 
-Defined in: [graph/src/canvas/GraphCanvas.ts:30](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/canvas/GraphCanvas.ts#L30)
-
 ## Extends
 
 - `Canvas`
@@ -11,8 +9,6 @@ Defined in: [graph/src/canvas/GraphCanvas.ts:30](https://github.com/invana/canva
 ### Constructor
 
 > **new GraphCanvas**(`opts?`): `GraphCanvas`
-
-Defined in: canvas/dist/index.d.ts:2140
 
 #### Parameters
 
@@ -32,9 +28,7 @@ Defined in: canvas/dist/index.d.ts:2140
 
 ### behaviours
 
-> `readonly` **behaviours**: `BehaviourRegistry`
-
-Defined in: canvas/dist/index.d.ts:2125
+> `readonly` **behaviours**: [`BehaviourRegistry`](../../../canvas/src/classes/BehaviourRegistry.md)
 
 #### Inherited from
 
@@ -44,9 +38,7 @@ Defined in: canvas/dist/index.d.ts:2125
 
 ### camera
 
-> **camera**: `Camera`
-
-Defined in: canvas/dist/index.d.ts:2123
+> **camera**: [`Camera`](../../../canvas/src/classes/Camera.md)
 
 #### Inherited from
 
@@ -56,9 +48,7 @@ Defined in: canvas/dist/index.d.ts:2123
 
 ### context
 
-> **context**: `CanvasContext`
-
-Defined in: canvas/dist/index.d.ts:2127
+> **context**: [`CanvasContext`](../../../canvas/src/interfaces/CanvasContext.md)
 
 #### Inherited from
 
@@ -68,11 +58,9 @@ Defined in: canvas/dist/index.d.ts:2127
 
 ### events
 
-> `readonly` **events**: `CanvasEventBus`
+> `readonly` **events**: [`CanvasEventBus`](../../../canvas/src/classes/CanvasEventBus.md)
 
-Defined in: canvas/dist/index.d.ts:2108
-
-Public surface — populated by `init()` / `initWithStage()`. Accessing
+Public surface — populated by `init()` / `initWithRenderer()`. Accessing
 before init throws (definite-assignment via `!`). Use `isInitialised`
 to guard if needed.
 
@@ -82,11 +70,24 @@ to guard if needed.
 
 ***
 
+### gestures
+
+> `readonly` **gestures**: [`GestureArbiter`](../../../canvas/src/interfaces/GestureArbiter.md)
+
+Pointer-gesture arbitration for this canvas — see `input/GestureArbiter.ts`.
+Built in the constructor (no dependency on the scene graph) so it is live
+before any behaviour registers, and handed to every participant as
+`ctx.gestures`.
+
+#### Inherited from
+
+`Canvas.gestures`
+
+***
+
 ### id
 
 > `readonly` **id**: `string`
-
-Defined in: canvas/dist/index.d.ts:2099
 
 #### Inherited from
 
@@ -96,9 +97,7 @@ Defined in: canvas/dist/index.d.ts:2099
 
 ### layers
 
-> `readonly` **layers**: `LayerRegistry`
-
-Defined in: canvas/dist/index.d.ts:2124
+> `readonly` **layers**: [`LayerRegistry`](../../../canvas/src/classes/LayerRegistry.md)
 
 #### Inherited from
 
@@ -108,9 +107,7 @@ Defined in: canvas/dist/index.d.ts:2124
 
 ### layouts
 
-> `readonly` **layouts**: `LayoutRegistry`
-
-Defined in: canvas/dist/index.d.ts:2126
+> `readonly` **layouts**: [`LayoutRegistry`](../../../canvas/src/classes/LayoutRegistry.md)
 
 #### Inherited from
 
@@ -122,75 +119,35 @@ Defined in: canvas/dist/index.d.ts:2126
 
 > `readonly` **options**: `CanvasOptions`
 
-Defined in: canvas/dist/index.d.ts:2100
-
 #### Inherited from
 
 `Canvas.options`
 
 ***
 
-### stage
+### store
 
-> **stage**: `Container`
+> `readonly` **store**: [`CanvasStore`](../../../canvas-store/src/interfaces/CanvasStore.md)
 
-Defined in: canvas/dist/index.d.ts:2122
+The renderer-free kernel (`@invana/canvas-store`) — the observable truth this
+engine projects. **`store.view.definition` is the single source of truth for
+serialisable config**: [update](#update) writes it and [get](#get) reads it (no
+parallel `this.config`). Readers subscribe to slices via `useStore`/`select`.
 
-The pixi `Application.stage` (or, for `initWithStage`, the caller-
-provided stage). `ScreenLayer`s mount their roots directly here, as
-siblings of `world` — `world` is added first (bottom), each ScreenLayer
-after (above). No "screen" wrapper container.
-
-#### Inherited from
-
-`Canvas.stage`
-
-***
-
-### world
-
-> **world**: `Container`
-
-Defined in: canvas/dist/index.d.ts:2115
-
-The world container — a `pixi-viewport` `Viewport` instance attached to
-`app.stage`. Camera-transformed; `WorldLayer`s mount their roots here.
-Typed as `Container` so consumers don't depend on `pixi-viewport`; reach
-for the `Viewport`-specific API via `camera.viewport`.
+The store owns `view`, `data`, `events` (the one canvas-wide bus — [events](#events)
+*is* `store.events`), `theme`, and `history`.
 
 #### Inherited from
 
-`Canvas.world`
+`Canvas.store`
 
 ## Accessors
-
-### application
-
-#### Get Signature
-
-> **get** **application**(): `Application`\<`Renderer`\>
-
-Defined in: canvas/dist/index.d.ts:2143
-
-Pixi `Application`, available after `init()` (not `initWithStage`).
-
-##### Returns
-
-`Application`\<`Renderer`\>
-
-#### Inherited from
-
-`Canvas.application`
-
-***
 
 ### currentMessage
 
 #### Get Signature
 
 > **get** **currentMessage**(): `string`
-
-Defined in: canvas/dist/index.d.ts:2227
 
 The message currently on the channel, or `null` when idle. Stored so a
 status surface that subscribes *after* a message was pushed (e.g. a footer
@@ -209,13 +166,31 @@ keeps reporting it until replaced or [clearMessage](#clearmessage)-ed.
 
 ***
 
+### frames
+
+#### Get Signature
+
+> **get** **frames**(): `FrameMeter`
+
+Frame-performance recorder — instantaneous + windowed FPS and the per-phase
+CPU breakdown for the last N frames. Read it for a HUD (`canvas.frames.stats()`)
+or subscribe to the per-frame `render:loop:tick` event for streaming.
+
+##### Returns
+
+`FrameMeter`
+
+#### Inherited from
+
+`Canvas.frames`
+
+***
+
 ### isInitialised
 
 #### Get Signature
 
 > **get** **isInitialised**(): `boolean`
-
-Defined in: canvas/dist/index.d.ts:2141
 
 ##### Returns
 
@@ -225,13 +200,36 @@ Defined in: canvas/dist/index.d.ts:2141
 
 `Canvas.isInitialised`
 
+***
+
+### renderer
+
+#### Get Signature
+
+> **get** **renderer**(): [`IRenderer`](../../../canvas/src/interfaces/IRenderer.md)
+
+The mounted drawing backend, or `undefined` before `init()`.
+
+Replaces the old `application` getter, which handed out pixi's
+`Application` and could not survive the backend split — a getter typed in
+pixi nouns forces every consumer to know which backend is mounted. Reach
+for a *capability* (`renderer.capabilities`, `renderer.extract?.()`)
+instead; if you genuinely need the pixi object, narrow the backend
+yourself with an `instanceof PixiRenderer` at the call site.
+
+##### Returns
+
+[`IRenderer`](../../../canvas/src/interfaces/IRenderer.md)
+
+#### Inherited from
+
+`Canvas.renderer`
+
 ## Methods
 
 ### behaviour()
 
 > **behaviour**\<`T`\>(`id`): `T`
-
-Defined in: [graph/src/canvas/GraphCanvas.ts:39](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/canvas/GraphCanvas.ts#L39)
 
 Typed behaviour lookup.
 
@@ -239,7 +237,7 @@ Typed behaviour lookup.
 
 ##### T
 
-`T` *extends* `Behaviour` = `Behaviour`
+`T` *extends* [`Behaviour`](../../../canvas/src/classes/Behaviour.md)\<[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md)\> = [`Behaviour`](../../../canvas/src/classes/Behaviour.md)\<[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md)\>
 
 #### Parameters
 
@@ -257,8 +255,6 @@ Typed behaviour lookup.
 
 > **clearMessage**(): `void`
 
-Defined in: canvas/dist/index.d.ts:2218
-
 Clear the current canvas message (emits `message` with `text: null`).
 
 #### Returns
@@ -275,8 +271,6 @@ Clear the current canvas message (emits `message` with `text: null`).
 
 > **destroy**(): `void`
 
-Defined in: [graph/src/canvas/GraphCanvas.ts:58](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/canvas/GraphCanvas.ts#L58)
-
 Tear down everything: ticker callback, registries (which unmount their
 Layers / destroy their Behaviours and any ScreenLayer roots they own),
 the world subtree, bus subscriptions, pixi Application. Idempotent.
@@ -291,13 +285,192 @@ the world subtree, bus subscriptions, pixi Application. Idempotent.
 
 ***
 
+### downloadState()
+
+> **downloadState**(`filename?`): `void`
+
+Serialise the full canvas state and trigger a browser download of the
+`.json` file. No-op outside a DOM environment. Delegates to
+downloadCanvasState.
+
+#### Parameters
+
+##### filename?
+
+`string`
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+`Canvas.downloadState`
+
+***
+
+### export()
+
+> **export**(`opts?`): `Promise`\<`Blob`\>
+
+Export the canvas as a raster image `Blob` (PNG / JPEG / WebP).
+
+Renders a region of the world container off-screen via the renderer's
+`extract` system — `area: 'viewport'` (default) captures what's currently
+visible at the on-screen zoom; `area: 'content'` captures the whole diagram
+at native scale. Screen overlays (minimap, dev-info) are excluded; the
+background is reproduced from the `background` option. See
+ExportImageOptions.
+
+Rejects if called before [init](#init) / in headless mode (no GPU renderer),
+or when the capture region is empty. SVG export is a separate API (Phase 2).
+
+With `format: 'svg'` this returns a vector `image/svg+xml` blob via
+exportSVG instead of a raster extract (see [exportSVGString](#exportsvgstring)
+for coverage notes).
+
+#### Parameters
+
+##### opts?
+
+`ExportImageOptions`
+
+#### Returns
+
+`Promise`\<`Blob`\>
+
+#### Example
+
+```ts
+const blob = await canvas.export({ format: 'png', area: 'content' });
+const url = URL.createObjectURL(blob);
+```
+
+#### Inherited from
+
+`Canvas.export`
+
+***
+
+### exportDataURL()
+
+> **exportDataURL**(`opts?`): `string`
+
+Export the canvas as a `data:` URL — the synchronous counterpart to
+[export](#export), handy for `<img src>` / quick previews. Prefer [export](#export)
+for downloads (a `Blob` URL avoids a large base64 string). Same options and
+throw conditions as [export](#export).
+
+#### Parameters
+
+##### opts?
+
+`ExportImageOptions`
+
+#### Returns
+
+`string`
+
+#### Inherited from
+
+`Canvas.exportDataURL`
+
+***
+
+### exportState()
+
+> **exportState**(): `CanvasStateSnapshot`
+
+Serialise the canvas's **full render state** to a plain JSON object — view
+definition (scene / layers / behaviours / layouts / templates / theme +
+styling), live interaction (selection / hover / camera / focus), and every
+data-owning layer's records (nodes / edges with positions). The result is a
+pure POJO safe to `JSON.stringify` / persist / diff.
+
+The state counterpart to [export](#export) (which produces an *image*). Restore
+with [importState](#importstate). Delegates to exportCanvasState.
+
+#### Returns
+
+`CanvasStateSnapshot`
+
+#### Example
+
+```ts
+const snapshot = canvas.exportState();
+await fetch('/scene', { method: 'PUT', body: JSON.stringify(snapshot) });
+```
+
+#### Inherited from
+
+`Canvas.exportState`
+
+***
+
+### exportSVGString()
+
+> **exportSVGString**(`opts?`): `string`
+
+Export the canvas as a **true vector SVG** string — a second projection of
+the scene (shape specs + routed connector paths) into scalable markup,
+independent of the GPU raster path. Resolution-independent and faithful for
+geometric shapes, connectors, solid fills/strokes, composite cards, and
+text labels.
+
+Not represented (use raster [export](#export) when these matter): `image` /
+`glyph` / `svg` fills, decorations other than labels, effects, and blur /
+shadow filters — see `export/svgExport.ts`. Throws when the capture region
+is empty. Unlike raster export this works headless (no GPU renderer needed).
+
+#### Parameters
+
+##### opts?
+
+`ExportSvgOptions`
+
+#### Returns
+
+`string`
+
+#### Inherited from
+
+`Canvas.exportSVGString`
+
+***
+
+### fitView()
+
+> **fitView**(`padding?`): `void`
+
+Fit the camera to all content — zoom + centre so every world layer's content
+fits the viewport (the "zoom to extent" action; the same
+`camera.fitContent` the Fit toolbar button calls, over the union of layers).
+No-op when there's nothing with real extent to fit.
+
+#### Parameters
+
+##### padding?
+
+`number`
+
+Screen-px margin around the content. Default `80`.
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+`Canvas.fitView`
+
+***
+
 ### get()
 
 > **get**(): [`CanvasConfig`](../../../canvas-react/src/interfaces/CanvasConfig.md)
 
-Defined in: canvas/dist/index.d.ts:2185
-
-Current serialisable config snapshot — drive a settings UI / save-load from this.
+Current serialisable config snapshot — drive a settings UI / save-load from
+this. Projected from `store.view.definition` (the source of truth).
 
 #### Returns
 
@@ -309,15 +482,73 @@ Current serialisable config snapshot — drive a settings UI / save-load from th
 
 ***
 
+### importState()
+
+> **importState**(`snapshot`, `opts?`): `void`
+
+Restore the canvas from a CanvasStateSnapshot produced by
+[exportState](#exportstate). Loads each layer's data, pushes the definition to the
+registered instances, and restores the live interaction (unless
+`skipInteraction`). The canvas's layers/behaviours/layouts must already be
+registered under the snapshot's ids — import addresses instances by id, it
+does not create them. Delegates to importCanvasState.
+
+#### Parameters
+
+##### snapshot
+
+`CanvasStateSnapshot`
+
+##### opts?
+
+`ImportCanvasStateOptions`
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+`Canvas.importState`
+
+***
+
+### importStateFrom()
+
+> **importStateFrom**(`source`, `opts?`): `Promise`\<`void`\>
+
+Restore the canvas from a CanvasStateSnapshot, a JSON string, or a
+picked `File` / `Blob` (e.g. from an `<input type="file">`). Parses the
+source then applies it like [importState](#importstate). Delegates to
+importCanvasStateFromFile.
+
+#### Parameters
+
+##### source
+
+`CanvasStateSource`
+
+##### opts?
+
+`ImportCanvasStateOptions`
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Inherited from
+
+`Canvas.importStateFrom`
+
+***
+
 ### init()
 
 > **init**(`opts`): `Promise`\<`void`\>
 
-Defined in: [graph/src/canvas/GraphCanvas.ts:48](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/canvas/GraphCanvas.ts#L48)
-
 Production init: create a pixi `Application`, mount its canvas into the
 supplied DOM container, wire the ticker, and emit
-`'renderer:initialised'` on the bus.
+`'canvas:renderer:ready'` on the bus.
 
 The selected backend (and capabilities) flows through the bus event so
 consumers see which renderer pixi resolved.
@@ -338,23 +569,26 @@ consumers see which renderer pixi resolved.
 
 ***
 
-### initWithStage()
+### initWithRenderer()
 
-> **initWithStage**(`stage`, `screenWidth`, `screenHeight`): `void`
+> **initWithRenderer**(`renderer`, `screenWidth`, `screenHeight`): `void`
 
-Defined in: canvas/dist/index.d.ts:2160
+Init against a renderer the caller already built and mounted — the seam for
+a **headless** backend, and the reason the engine's own test suite needs no
+drawing library.
 
-Headless / test init. Caller provides a pre-built stage `Container`
-and viewport dimensions; we skip pixi's `Application` setup entirely.
+Synchronous on purpose. [init](#init) resolves its default backend with a
+lazy `import()` and is therefore async; this path takes the renderer as an
+argument instead, so it stays callable from a plain test body.
 
-Use case: unit tests of the layer / behaviour / dirty / state pipeline
-that don't need an actual GPU renderer.
+The caller owns the renderer's `mount` — this only wires the camera, the
+context and the layer/behaviour registries on top of it.
 
 #### Parameters
 
-##### stage
+##### renderer
 
-`Container`
+[`IRenderer`](../../../canvas/src/interfaces/IRenderer.md)
 
 ##### screenWidth
 
@@ -370,7 +604,7 @@ that don't need an actual GPU renderer.
 
 #### Inherited from
 
-`Canvas.initWithStage`
+`Canvas.initWithRenderer`
 
 ***
 
@@ -378,15 +612,13 @@ that don't need an actual GPU renderer.
 
 > **layer**\<`T`\>(`id`): `T`
 
-Defined in: [graph/src/canvas/GraphCanvas.ts:34](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/canvas/GraphCanvas.ts#L34)
-
 Typed layer lookup; defaults to `GraphLayer`.
 
 #### Type Parameters
 
 ##### T
 
-`T` *extends* `Layer`\<`unknown`, `object`, `EventMap`, `string`\> = [`GraphLayer`](GraphLayer.md)
+`T` *extends* [`Layer`](../../../canvas/src/classes/Layer.md)\<`unknown`, `object`, [`EventMap`](../../../canvas/src/type-aliases/EventMap.md), `string`\> = [`GraphLayer`](GraphLayer.md)
 
 #### Parameters
 
@@ -404,15 +636,13 @@ Typed layer lookup; defaults to `GraphLayer`.
 
 > **layout**\<`T`\>(`id`): `T`
 
-Defined in: [graph/src/canvas/GraphCanvas.ts:44](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/canvas/GraphCanvas.ts#L44)
-
 Typed layout lookup.
 
 #### Type Parameters
 
 ##### T
 
-`T` *extends* `Layout`\<`Layer`\<`any`, `any`, `any`, `any`\>\> = `Layout`\<`Layer`\<`any`, `any`, `any`, `any`\>\>
+`T` *extends* [`Layout`](../../../canvas/src/classes/Layout.md)\<[`Layer`](../../../canvas/src/classes/Layer.md)\<`any`, `any`, `any`, `any`\>\> = [`Layout`](../../../canvas/src/classes/Layout.md)\<[`Layer`](../../../canvas/src/classes/Layer.md)\<`any`, `any`, `any`, `any`\>\>
 
 #### Parameters
 
@@ -430,9 +660,7 @@ Typed layout lookup.
 
 > **redraw**(): `void`
 
-Defined in: canvas/dist/index.d.ts:2200
-
-Repaint every layer from its current state — calls Layer.redraw on
+Repaint every layer from its current state — calls [Layer.redraw](../../../canvas/src/classes/Layer.md#redraw) on
 each (a no-op for layers that don't override it). A pure render pass:
 positions and data are untouched. Use after an external style/theme change
 that bypassed the per-layer dirty path, or to recover from a suspected
@@ -453,8 +681,6 @@ once use [refresh](#refresh).
 
 > **refresh**(): `Promise`\<`void`\>
 
-Defined in: canvas/dist/index.d.ts:2207
-
 Full refresh: re-run the active layout (`config.activeLayout`) to
 re-position items, then [redraw](#redraw) every layer. The single call behind
 a toolbar "re-render" button — re-layout + repaint in one. Resolves once
@@ -473,8 +699,6 @@ the layout settles; the layout step is skipped when no `activeLayout` is set.
 ### runLayout()
 
 > **runLayout**(`id`): `Promise`\<`void`\>
-
-Defined in: canvas/dist/index.d.ts:2191
 
 Run a registered layout against the layer named by its `targetLayerId`.
 No-op if the layout or its target layer isn't found. Layouts run against
@@ -499,8 +723,6 @@ data, so call this after the target layer has data.
 ### showMessage()
 
 > **showMessage**(`text`, `timeout?`): `void`
-
-Defined in: canvas/dist/index.d.ts:2216
 
 Show a transient message on the shared canvas message channel — emits a
 `message` event for a status surface (e.g. canvas-react's `CanvasMessageBar`)
@@ -529,11 +751,56 @@ behaviours / layouts too, via `ctx.showMessage`.
 
 ***
 
+### stateToJSON()
+
+> **stateToJSON**(`space?`): `string`
+
+The current full canvas state as a JSON string (pretty-printed by default).
+Sugar over `JSON.stringify(this.exportState(), null, space)`; delegates to
+canvasStateToJSON.
+
+#### Parameters
+
+##### space?
+
+`string` \| `number`
+
+#### Returns
+
+`string`
+
+#### Inherited from
+
+`Canvas.stateToJSON`
+
+***
+
+### stopLayout()
+
+> **stopLayout**(): `void`
+
+Cancel the layout run that's currently in flight, if any. Reads the running
+layout id from the reactive run-status (`runtime.layout.activeId`, written by
+[runLayout](#runlayout)) and calls its optional `stop()` — which settles the run,
+emits `end` (`reason: 'stopped'`), and clears `runtime.layout.running` back
+through the same bridge. No-op when nothing is running or the layout has no
+`stop()`. This is the engine-level counterpart a "Stop layout" control calls
+to halt the active (e.g. load-time) layout, distinct from any layout a UI
+applied out-of-band.
+
+#### Returns
+
+`void`
+
+#### Inherited from
+
+`Canvas.stopLayout`
+
+***
+
 ### tickOnce()
 
 > **tickOnce**(`deltaMs?`): `void`
-
-Defined in: canvas/dist/index.d.ts:2165
 
 Run one tick manually with a fixed delta. Useful in tests; in production
 pixi's ticker calls `tick` automatically.
@@ -558,12 +825,11 @@ pixi's ticker calls `tick` automatically.
 
 > **update**(`patch`): `void`
 
-Defined in: [graph/src/canvas/GraphCanvas.ts:53](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/canvas/GraphCanvas.ts#L53)
-
-Apply a JSON config patch. Deep-merges into the held config, then pushes
-each layer/behaviour slice to that instance's `setOptions`, resolved by id
-(unknown ids no-op — register the instance first). Emits one
-`options:change` so observers (e.g. a settings UI) can re-read via [get](#get).
+Apply a JSON config patch. Writes `store.view.definition` (the source of
+truth) and pushes each layer/behaviour slice to that instance's `setOptions`,
+resolved by id (unknown ids no-op — register the instance first). Observers
+subscribe to `store.view` slices (`useStore` / `select`) or `state:change`
+rather than a coarse bus event.
 
 The config is pure JSON keyed by id — instances themselves are registered
 imperatively (`canvas.layers.add(new XLayer({ id }))`).

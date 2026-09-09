@@ -2,8 +2,6 @@
 
 > **greatCircleSamples**(`from`, `to`, `n`): \[`number`, `number`\][]
 
-Defined in: [graph-layer-maplibre/src/greatCircle.ts:45](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layer-maplibre/src/greatCircle.ts#L45)
-
 Sample `n` points (`n >= 2`) along the great circle from `from` to `to`.
 
 - `n = 2` returns just the endpoints.

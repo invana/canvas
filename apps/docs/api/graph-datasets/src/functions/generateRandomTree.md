@@ -1,8 +1,9 @@
 # Function: generateRandomTree()
 
-> **generateRandomTree**(`numNodes`): [`RandomTreeData`](../interfaces/RandomTreeData.md)
+> **generateRandomTree**(`numNodes`): `GraphData`
 
-Defined in: [graph-datasets/src/randomTree.ts:31](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-datasets/src/randomTree.ts#L31)
+Build an `numNodes`-node tree, engine-ready — ids are the node index as a
+string, so it drops straight into `setData` with no mapping at the call site.
 
 ## Parameters
 
@@ -12,4 +13,4 @@ Defined in: [graph-datasets/src/randomTree.ts:31](https://github.com/invana/canv
 
 ## Returns
 
-[`RandomTreeData`](../interfaces/RandomTreeData.md)
+`GraphData`

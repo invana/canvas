@@ -1,8 +1,6 @@
 # Variable: bezierPathStyle
 
-> `const` **bezierPathStyle**: [`IPathStyle`](../type-aliases/IPathStyle.md)
-
-Defined in: [canvas/src/primitives/connectors/pathStyles/bezier.ts:35](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/connectors/pathStyles/bezier.ts#L35)
+> `const` **bezierPathStyle**: [`IPathStyle`](../../../renderer-pixijs/src/type-aliases/IPathStyle.md)
 
 Single cubic Bézier between the first and last polyline points, with
 auto-generated control handles. Intermediate polyline points (router

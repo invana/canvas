@@ -1,7 +1,5 @@
 # Interface: D3HierarchyLayoutOptions
 
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:67](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-hierarchy/src/types.ts#L67)
-
 `D3HierarchyLayout` options.
 
 **All options default to `undefined`.** Only `mode` has an internal default
@@ -15,15 +13,13 @@ vetoed for `pack` / `sunburst`, which replace node geometry rather than move it)
 
 ## Extends
 
-- `OneShotLayoutOptions`
+- `SubgraphLayoutOptions`
 
 ## Properties
 
 ### center?
 
 > `optional` **center?**: `object`
-
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:114](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-hierarchy/src/types.ts#L114)
 
 Translate the projected coordinates by `(x, y)` after layout. Default
 `{ x: 0, y: 0 }`. Useful for centring the cluster around the world
@@ -43,21 +39,50 @@ origin in radial modes (the default already does this).
 
 > `optional` **id?**: `string`
 
-Defined in: canvas/dist/index.d.ts:1862
-
 Stable id, used to address the layout in a `LayoutRegistry` / config. Default `'layout'`.
 
 #### Inherited from
 
-`OneShotLayoutOptions.id`
+`SubgraphLayoutOptions.id`
+
+***
+
+### includeGroups?
+
+> `optional` **includeGroups?**: `boolean`
+
+Lay `parentId` **groups** out as containers — each group's members are
+placed among themselves, then the whole group is placed as one box at its
+parent's level. Only nodes whose resolved style carries `group` count as
+containers; a plain `parentId` tree is unaffected.
+
+Default `false`. Containment is exact, but a group's interior is solved
+without sight of its external edges — see the class docs. Prefer
+`ElkLayout` when edge routing across group boundaries matters.
+
+#### Inherited from
+
+`SubgraphLayoutOptions.includeGroups`
+
+***
+
+### includeHidden?
+
+> `optional` **includeHidden?**: `boolean`
+
+Include explicitly-hidden nodes in the layout. Default `false` — hidden
+nodes are excluded from placement so they don't perturb the visible graph,
+and their last positions are left frozen (the layout never writes them).
+
+#### Inherited from
+
+`SubgraphLayoutOptions.includeHidden`
 
 ***
 
 ### mode?
 
 > `optional` **mode?**: [`D3HierarchyLayoutMode`](../type-aliases/D3HierarchyLayoutMode.md)
-
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:69](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-hierarchy/src/types.ts#L69)
 
 Layout mode. Default `'radial-tree'`.
 
@@ -66,8 +91,6 @@ Layout mode. Default `'radial-tree'`.
 ### nodeSize?
 
 > `optional` **nodeSize?**: \[`number`, `number`\]
-
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:92](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-hierarchy/src/types.ts#L92)
 
 `tree.nodeSize([dx, dy])` / `cluster.nodeSize([dx, dy])`. Mutually
 exclusive with `size`.
@@ -78,8 +101,6 @@ exclusive with `size`.
 
 > `optional` **orientation?**: [`CartesianOrientation`](../type-aliases/CartesianOrientation.md)
 
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:104](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-hierarchy/src/types.ts#L104)
-
 Cartesian orientation. Default `'vertical'`. See [CartesianOrientation](../type-aliases/CartesianOrientation.md).
 Ignored in `radial-*` modes.
 
@@ -88,8 +109,6 @@ Ignored in `radial-*` modes.
 ### padding?
 
 > `optional` **padding?**: `number`
-
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:122](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-hierarchy/src/types.ts#L122)
 
 Pack-only: padding between sibling circles, in world units. Default `0`
 (d3's default). Ignored in non-pack modes.
@@ -100,8 +119,6 @@ Pack-only: padding between sibling circles, in world units. Default `0`
 
 > `optional` **radius?**: `number`
 
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:98](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-hierarchy/src/types.ts#L98)
-
 Polar radius for `radial-*` modes. Default `400`. Ignored for Cartesian
 modes.
 
@@ -110,8 +127,6 @@ modes.
 ### rootId?
 
 > `optional` **rootId?**: `string`
-
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:76](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-hierarchy/src/types.ts#L76)
 
 Explicit root node id. If omitted, the layout auto-detects the root as
 the unique node with no incoming edge in the snapshot. Throws if there
@@ -123,8 +138,6 @@ is none or more than one.
 
 > `optional` **separation?**: [`SeparationFn`](../type-aliases/SeparationFn.md)
 
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:107](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-hierarchy/src/types.ts#L107)
-
 Custom separation function. See d3-hierarchy `tree.separation`.
 
 ***
@@ -132,8 +145,6 @@ Custom separation function. See d3-hierarchy `tree.separation`.
 ### size?
 
 > `optional` **size?**: \[`number`, `number`\]
-
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:86](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-hierarchy/src/types.ts#L86)
 
 `tree.size([w, h])` / `cluster.size([w, h])`. Cartesian modes default
 to `[640, 480]` if neither `size` nor `nodeSize` is provided.
@@ -147,8 +158,6 @@ per-node angular spacing) instead.
 ### sort?
 
 > `optional` **sort?**: (`a`, `b`) => `number`
-
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:139](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-hierarchy/src/types.ts#L139)
 
 Pack-only: sibling sort comparator. Defaults to `(a, b) => b.value - a.value`
 (descending by value, which gives a tighter pack). Set to `null` to
@@ -178,21 +187,17 @@ leave d3's input order. Ignored in non-pack modes.
 
 > `optional` **targetLayerId?**: `string`
 
-Defined in: canvas/dist/index.d.ts:1864
-
 The layer this layout is meant to run against. Informational — `apply(layer)` still takes one explicitly.
 
 #### Inherited from
 
-`OneShotLayoutOptions.targetLayerId`
+`SubgraphLayoutOptions.targetLayerId`
 
 ***
 
 ### transition?
 
 > `optional` **transition?**: `number` \| `boolean`
-
-Defined in: graph/dist/index.d.ts:2701
 
 Animate nodes from their current positions to the computed layout instead
 of snapping. `true` uses DEFAULT\_POSITION\_TRANSITION\_MS; a number is
@@ -203,30 +208,26 @@ straight to a lil-gui control.
 
 #### Inherited from
 
-`OneShotLayoutOptions.transition`
+`SubgraphLayoutOptions.transition`
 
 ***
 
 ### transitionEase?
 
-> `optional` **transitionEase?**: `EasingName`
+> `optional` **transitionEase?**: [`EasingName`](../../../canvas/src/type-aliases/EasingName.md)
 
-Defined in: graph/dist/index.d.ts:2706
-
-Easing curve for the transition, as a serializable EasingName key.
+Easing curve for the transition, as a serializable [EasingName](../../../canvas/src/type-aliases/EasingName.md) key.
 Default `'easeOutCubic'`. Ignored when `transition` is `false`.
 
 #### Inherited from
 
-`OneShotLayoutOptions.transitionEase`
+`SubgraphLayoutOptions.transitionEase`
 
 ***
 
 ### value?
 
 > `optional` **value?**: (`node`) => `number`
-
-Defined in: [graph-layout-d3-hierarchy/src/types.ts:132](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-hierarchy/src/types.ts#L132)
 
 Pack-only: per-node value accessor used by `hierarchy.sum()`. Defaults
 to reading `node.data.value` (treats missing as `1`). The accumulated

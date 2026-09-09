@@ -49,12 +49,19 @@ sort_commits = "oldest"
 # Type → changelog section. First match wins; `skip = true` omits the commit.
 # The `<!-- N -->` prefix controls section order (git-cliff sorts groups by the
 # raw string); `striptags` removes it before rendering. Lower N appears first.
+#
+# The breaking row MUST stay first: `feat(x)!: …` would otherwise be swallowed
+# by `^feat` and filed as an ordinary feature, which is how 13 breaking changes
+# reached 0.0.12 with no signal to consumers. Matching on `!:` (rather than a
+# `BREAKING CHANGE` body regex) keeps `chore(release)` commits — whose footers
+# summarise the breakage — out of the section; they are skipped below.
 commit_parsers = [
-  { message = "^feat", group = "<!-- 0 -->Features" },
-  { message = "^fix", group = "<!-- 1 -->Bug Fixes" },
-  { message = "^perf", group = "<!-- 2 -->Performance" },
-  { message = "^refactor", group = "<!-- 3 -->Refactors" },
-  { message = "^docs", group = "<!-- 4 -->Documentation" },
+  { message = '^[a-z]+(\([^)]*\))?!:', group = "<!-- 0 -->Breaking Changes" },
+  { message = "^feat", group = "<!-- 1 -->Features" },
+  { message = "^fix", group = "<!-- 2 -->Bug Fixes" },
+  { message = "^perf", group = "<!-- 3 -->Performance" },
+  { message = "^refactor", group = "<!-- 4 -->Refactors" },
+  { message = "^docs", group = "<!-- 5 -->Documentation" },
   { message = "^release", skip = true },
   { message = "^chore", skip = true },
   { message = "^ci", skip = true },

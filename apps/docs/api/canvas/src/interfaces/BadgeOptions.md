@@ -1,7 +1,5 @@
 # Interface: BadgeOptions
 
-Defined in: [canvas/src/primitives/badges/types.ts:98](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/badges/types.ts#L98)
-
 Options for `PrimitivesRenderer.setBadge`. The `shape` field carries the
 full shape spec (any kind + fill + stroke + kind-specific fields);
 placement is interpreted differently depending on the host kind (shape
@@ -16,8 +14,6 @@ The path-only fields ([pathOffset](#pathoffset), [autoRotate](#autorotate),
 
 > `readonly` `optional` **autoRotate?**: `boolean`
 
-Defined in: [canvas/src/primitives/badges/types.ts:133](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/badges/types.ts#L133)
-
 **Connector hosts only.** When `true`, the badge's `rotation` follows
 the path tangent at the anchor point — i.e. the badge tilts to read
 along the line. Default `false`. Ignored on shape hosts.
@@ -26,9 +22,7 @@ along the line. Default `false`. Ignored on shape hosts.
 
 ### decorations?
 
-> `readonly` `optional` **decorations?**: `Readonly`\<`Record`\<`string`, [`DecorationSpec`](DecorationSpec.md)\>\>
-
-Defined in: [canvas/src/primitives/badges/types.ts:164](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/badges/types.ts#L164)
+> `readonly` `optional` **decorations?**: `Readonly`\<`Record`\<`string`, [`DecorationSpec`](../../../renderer-pixijs/src/interfaces/DecorationSpec.md)\>\>
 
 Decorations applied to the badge shape, keyed by slot. Internally each
 entry becomes a `setDecoration(badgeId, slot, spec)` call, so any
@@ -38,9 +32,7 @@ registered decoration kind (glow, ring, marching-ants, …) works.
 
 ### effects?
 
-> `readonly` `optional` **effects?**: `Readonly`\<`Record`\<`string`, [`EffectSpec`](EffectSpec.md)\>\>
-
-Defined in: [canvas/src/primitives/badges/types.ts:176](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/badges/types.ts#L176)
+> `readonly` `optional` **effects?**: `Readonly`\<`Record`\<`string`, [`EffectSpec`](../../../renderer-pixijs/src/interfaces/EffectSpec.md)\>\>
 
 Effects applied to the badge shape, keyed by slot. Internally each entry
 becomes a `setEffect(badgeId, slot, spec)` call, so any registered shape
@@ -57,8 +49,6 @@ effects.
 
 > `readonly` `optional` **keepUpright?**: `boolean`
 
-Defined in: [canvas/src/primitives/badges/types.ts:141](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/badges/types.ts#L141)
-
 **Connector hosts only.** When [autoRotate](#autorotate) is `true`, flip the
 badge by 180° if the tangent points "downwards" so its top edge always
 faces the viewer (text remains readable on every edge orientation).
@@ -70,8 +60,6 @@ Default `true`. Ignored on shape hosts.
 
 > `readonly` `optional` **offsetX?**: `number`
 
-Defined in: [canvas/src/primitives/badges/types.ts:117](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/badges/types.ts#L117)
-
 Pixel offset applied after origin resolution. Default `0` for both.
 
 ***
@@ -80,15 +68,11 @@ Pixel offset applied after origin resolution. Default `0` for both.
 
 > `readonly` `optional` **offsetY?**: `number`
 
-Defined in: [canvas/src/primitives/badges/types.ts:118](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/badges/types.ts#L118)
-
 ***
 
 ### origin?
 
 > `readonly` `optional` **origin?**: `"center"` \| [`NamedBadgePlacement`](../type-aliases/NamedBadgePlacement.md)
-
-Defined in: [canvas/src/primitives/badges/types.ts:157](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/badges/types.ts#L157)
 
 Which point of the badge's own AABB lands at the host anchor.
 
@@ -109,8 +93,6 @@ Which point of the badge's own AABB lands at the host anchor.
 
 > `readonly` `optional` **pathOffset?**: `number`
 
-Defined in: [canvas/src/primitives/badges/types.ts:126](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/badges/types.ts#L126)
-
 **Connector hosts only.** Shift the path-anchor along the local tangent
 direction (positive = forward toward `'end'`, negative = backward toward
 `'start'`). Useful for nudging a `'middle'`-anchored badge sideways
@@ -121,8 +103,6 @@ along the line without changing its `t`. Ignored on shape hosts.
 ### placement
 
 > `readonly` **placement**: [`BadgePlacement`](../type-aliases/BadgePlacement.md) \| [`ConnectorBadgePlacement`](../type-aliases/ConnectorBadgePlacement.md)
-
-Defined in: [canvas/src/primitives/badges/types.ts:114](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/badges/types.ts#L114)
 
 Where the badge attaches to its host.
 
@@ -140,7 +120,5 @@ host) throw with a clear error.
 ### shape
 
 > `readonly` **shape**: `BadgeShapeSpec`
-
-Defined in: [canvas/src/primitives/badges/types.ts:100](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/badges/types.ts#L100)
 
 The badge plate as a shape spec, sans `x` / `y` (placement provides position).

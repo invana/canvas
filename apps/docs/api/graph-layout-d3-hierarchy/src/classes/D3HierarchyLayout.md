@@ -1,18 +1,14 @@
 # Class: D3HierarchyLayout
 
-Defined in: [graph-layout-d3-hierarchy/src/D3HierarchyLayout.ts:74](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-hierarchy/src/D3HierarchyLayout.ts#L74)
-
 ## Extends
 
-- `OneShotPositionLayout`\<[`D3HierarchyLayoutOptions`](../interfaces/D3HierarchyLayoutOptions.md)\>
+- `SubgraphPositionLayout`\<[`D3HierarchyLayoutOptions`](../interfaces/D3HierarchyLayoutOptions.md)\>
 
 ## Constructors
 
 ### Constructor
 
 > **new D3HierarchyLayout**(`opts?`): `D3HierarchyLayout`
-
-Defined in: graph/dist/index.d.ts:2752
 
 #### Parameters
 
@@ -26,15 +22,13 @@ Defined in: graph/dist/index.d.ts:2752
 
 #### Inherited from
 
-`OneShotPositionLayout<D3HierarchyLayoutOptions>.constructor`
+`SubgraphPositionLayout<D3HierarchyLayoutOptions>.constructor`
 
 ## Properties
 
 ### events
 
-> `readonly` **events**: `EventEmitter`\<`LayoutEvents`\>
-
-Defined in: canvas/dist/index.d.ts:1876
+> `readonly` **events**: [`EventEmitter`](../../../canvas/src/classes/EventEmitter.md)\<[`LayoutEvents`](../../../canvas/src/type-aliases/LayoutEvents.md)\>
 
 Lifecycle event bus. See class docs for the event vocabulary.
 Subclasses with richer telemetry can declare their own typed
@@ -42,7 +36,7 @@ emitter on top (`override readonly events = new EventEmitter<MyEvents>()`).
 
 #### Inherited from
 
-`OneShotPositionLayout.events`
+`SubgraphPositionLayout.events`
 
 ***
 
@@ -50,13 +44,29 @@ emitter on top (`override readonly events = new EventEmitter<MyEvents>()`).
 
 > `readonly` **id**: `string`
 
-Defined in: canvas/dist/index.d.ts:1868
-
 Stable id (registry / config key).
 
 #### Inherited from
 
-`OneShotPositionLayout.id`
+`SubgraphPositionLayout.id`
+
+***
+
+### kind
+
+> `readonly` **kind**: `"d3-hierarchy-layout"` = `'d3-hierarchy-layout'`
+
+Stable **class kind** — a minification-safe discriminator matching the
+`@invana/canvas-ui` settings-editor registry key (e.g. `'d3-force-layout'`,
+`'elk-layout'`). Distinct from [id](../../../graph-layout-geometric/src/classes/GeometricLayout.md#id) (the per-instance key): all
+`D3ForceLayout` instances share `kind: 'd3-force-layout'`. Concrete layouts
+set it as a class field; left `undefined` on any that haven't, so consumers
+fall back (e.g. to the class name). Lets domain-free tooling resolve an
+instance's editor without an `instanceof` ladder.
+
+#### Overrides
+
+`SubgraphPositionLayout.kind`
 
 ***
 
@@ -64,23 +74,19 @@ Stable id (registry / config key).
 
 > `protected` **opts**: [`D3HierarchyLayoutOptions`](../interfaces/D3HierarchyLayoutOptions.md)
 
-Defined in: graph/dist/index.d.ts:2737
-
 The live options bag. Subclasses read their own fields off this (it's the
 merged result of the constructor opts and every [setOptions](#setoptions) patch),
 rather than keeping a private copy — so config edits take effect.
 
 #### Inherited from
 
-`OneShotPositionLayout.opts`
+`SubgraphPositionLayout.opts`
 
 ***
 
 ### running
 
 > `protected` **running**: `boolean`
-
-Defined in: graph/dist/index.d.ts:2745
 
 True while a run (compute + transition) is in flight.
 
@@ -94,21 +100,17 @@ True while a run (compute + transition) is in flight.
 
 > `readonly` `optional` **targetLayerId?**: `string`
 
-Defined in: canvas/dist/index.d.ts:1870
-
 The layer this layout targets, if declared at construction.
 
 #### Inherited from
 
-`OneShotPositionLayout.targetLayerId`
+`SubgraphPositionLayout.targetLayerId`
 
 ***
 
 ### transition
 
 > `protected` **transition**: `number` \| `boolean`
-
-Defined in: graph/dist/index.d.ts:2739
 
 `false` | `true` (default ms) | explicit ms. See [OneShotLayoutOptions.transition](../interfaces/D3HierarchyLayoutOptions.md#transition).
 
@@ -120,9 +122,7 @@ Defined in: graph/dist/index.d.ts:2739
 
 ### transitionEase
 
-> `protected` **transitionEase**: `EasingName`
-
-Defined in: graph/dist/index.d.ts:2741
+> `protected` **transitionEase**: [`EasingName`](../../../canvas/src/type-aliases/EasingName.md)
 
 Easing key for the transition. See [OneShotLayoutOptions.transitionEase](../interfaces/D3HierarchyLayoutOptions.md#transitionease).
 
@@ -135,8 +135,6 @@ Easing key for the transition. See [OneShotLayoutOptions.transitionEase](../inte
 ### apply()
 
 > **apply**(`layer`): `Promise`\<`void`\>
-
-Defined in: graph/dist/index.d.ts:2785
 
 Run the layout against `layer`. Resolves when the run terminates
 (either a natural settle or an external `stop()`).
@@ -156,19 +154,38 @@ run first.
 
 #### Inherited from
 
-`OneShotPositionLayout.apply`
+`SubgraphPositionLayout.apply`
+
+***
+
+### canRecurseGroups()
+
+> `protected` **canRecurseGroups**(): `boolean`
+
+`pack` / `sunburst` can't be run per group: their real output is the
+per-node geometry threaded through the run's `meta` (circle radii, arc
+sectors), and there is no meaningful way to merge that across one run per
+group. They fall back to a single flat run — an `autoFit` frame still wraps
+whatever its members occupy, it just isn't packed into a box.
+
+#### Returns
+
+`boolean`
+
+#### Overrides
+
+`SubgraphPositionLayout.canRecurseGroups`
 
 ***
 
 ### computeLayout()
 
-> `protected` **computeLayout**(`layer`): `LayoutPositions`\<`HierarchyMeta`\>
+> `protected` **computeLayout**(`layer`): `Promise`\<`LayoutPositions`\<`unknown`\>\>
 
-Defined in: [graph-layout-d3-hierarchy/src/D3HierarchyLayout.ts:90](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-hierarchy/src/D3HierarchyLayout.ts#L90)
-
-Compute positions for the whole snapshot in one pass. The base writes them
-(snap or tween), then calls [onPositionsApplied](#onpositionsapplied) to flush any pack /
-sunburst geometry. Lifecycle (`start` → `tick` → `end`) is owned by the base.
+Snapshot the layer and either run the subclass once (flat) or drive the
+group recursion. Subclasses normally leave this alone — override only for a
+layout that needs the layer itself, and then it probably shouldn't extend
+this class.
 
 #### Parameters
 
@@ -178,19 +195,42 @@ sunburst geometry. Lifecycle (`start` → `tick` → `end`) is owned by the base
 
 #### Returns
 
+`Promise`\<`LayoutPositions`\<`unknown`\>\>
+
+#### Inherited from
+
+`SubgraphPositionLayout.computeLayout`
+
+***
+
+### computeSubgraphLayout()
+
+> `protected` **computeSubgraphLayout**(`sub`): `LayoutPositions`\<`HierarchyMeta`\>
+
+Compute positions for one subgraph — the whole graph for a flat run, or a
+single group's members when `includeGroups` nests them. The base writes the
+result (snap or tween), then calls [onPositionsApplied](#onpositionsapplied) to flush any
+pack / sunburst geometry. Lifecycle (`start` → `tick` → `end`) is the base's.
+
+#### Parameters
+
+##### sub
+
+`LayoutSubgraph`
+
+#### Returns
+
 `LayoutPositions`\<`HierarchyMeta`\>
 
 #### Overrides
 
-`OneShotPositionLayout.computeLayout`
+`SubgraphPositionLayout.computeSubgraphLayout`
 
 ***
 
 ### onPositionsApplied()
 
 > `protected` **onPositionsApplied**(`layer`, `meta`): `void`
-
-Defined in: [graph-layout-d3-hierarchy/src/D3HierarchyLayout.ts:303](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-hierarchy/src/D3HierarchyLayout.ts#L303)
 
 Flush pack circle sizes / sunburst arc geometry onto `style.shape` once the
 node positions have settled. Each in its own store batch so the renderer
@@ -212,15 +252,33 @@ sees a single coalesced flush. No-op for the position-only modes.
 
 #### Overrides
 
-`OneShotPositionLayout.onPositionsApplied`
+`SubgraphPositionLayout.onPositionsApplied`
+
+***
+
+### serializeDefinition()
+
+> **serializeDefinition**(): `Record`\<`string`, `unknown`\>
+
+Contribute this layout's serialisable config to a canvas-state snapshot (the
+engine's `DefinitionSerializable` contract). The base captures the wiring
+`targetLayerId`; iterative layouts holding tunable params (e.g. force
+strengths) should override and spread `super.serializeDefinition()` with a
+JSON-safe copy of those params.
+
+#### Returns
+
+`Record`\<`string`, `unknown`\>
+
+#### Inherited from
+
+`SubgraphPositionLayout.serializeDefinition`
 
 ***
 
 ### setOptions()
 
 > **setOptions**(`patch`): `void`
-
-Defined in: graph/dist/index.d.ts:2761
 
 Live-reconfigure. Called by `Canvas.update({ layouts: { id: patch } })` (and
 once at init with the `config.layouts[id]` slice). Merges the patch into
@@ -241,15 +299,41 @@ the first `apply()` it just records the options (no premature run).
 
 #### Inherited from
 
-`OneShotPositionLayout.setOptions`
+`SubgraphPositionLayout.setOptions`
+
+***
+
+### shouldPlaceNode()
+
+> `protected` **shouldPlaceNode**(`node`): `boolean`
+
+Whether a node should be placed by this run. Excludes explicitly-hidden
+nodes unless [OneShotLayoutOptions.includeHidden](../interfaces/D3HierarchyLayoutOptions.md#includehidden) is set. Subclasses
+call this while snapshotting `layer.store.nodes()` so hidden nodes stay
+frozen at their last positions. Edges incident to a skipped node should be
+dropped from the layout graph too (both endpoints must be placeable).
+
+#### Parameters
+
+##### node
+
+###### hidden?
+
+`boolean`
+
+#### Returns
+
+`boolean`
+
+#### Inherited from
+
+`SubgraphPositionLayout.shouldPlaceNode`
 
 ***
 
 ### shouldTransition()
 
 > `protected` **shouldTransition**(): `boolean`
-
-Defined in: [graph-layout-d3-hierarchy/src/D3HierarchyLayout.ts:80](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-d3-hierarchy/src/D3HierarchyLayout.ts#L80)
 
 `pack` / `sunburst` replace node *geometry* (circle sizes / arc sectors)
 rather than move nodes, so tweening their positions would look wrong — snap
@@ -261,15 +345,13 @@ those. Position modes (tree / cluster / radial-*) honour `transition`.
 
 #### Overrides
 
-`OneShotPositionLayout.shouldTransition`
+`SubgraphPositionLayout.shouldTransition`
 
 ***
 
 ### stop()
 
 > **stop**(): `void`
-
-Defined in: graph/dist/index.d.ts:2787
 
 Cancel an in-flight run. Positions already written stay in the store.
 
@@ -279,4 +361,4 @@ Cancel an in-flight run. Positions already written stay in the store.
 
 #### Inherited from
 
-`OneShotPositionLayout.stop`
+`SubgraphPositionLayout.stop`

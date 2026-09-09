@@ -2,7 +2,9 @@
   "name": "@invana/graph-layout-d3-hierarchy",
   "version": "0.0.12",
   "description": "D3 hierarchy (tree / cluster / radial) Layout for @invana/graph.",
+  "homepage": "https://github.com/invana/canvas#readme",
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "typedocOptions": {
@@ -45,7 +47,16 @@
     "cluster",
     "radial"
   ],
+  "bugs": {
+    "url": "https://github.com/invana/canvas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/invana/canvas.git",
+    "directory": "packages/graph-layout-d3-hierarchy"
+  },
   "license": "Apache-2.0",
+  "author": "Ravi Raja Merugu",
   "module": "./dist/index.js",
   "exports": {
     ".": {

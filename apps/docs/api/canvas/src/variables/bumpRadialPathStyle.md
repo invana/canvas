@@ -1,8 +1,6 @@
 # Variable: bumpRadialPathStyle
 
-> `const` **bumpRadialPathStyle**: [`IPathStyle`](../type-aliases/IPathStyle.md)
-
-Defined in: [canvas/src/primitives/connectors/pathStyles/bumpRadial.ts:37](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/connectors/pathStyles/bumpRadial.ts#L37)
+> `const` **bumpRadialPathStyle**: [`IPathStyle`](../../../renderer-pixijs/src/type-aliases/IPathStyle.md)
 
 Single cubic Bézier from the first to the last polyline point with control
 points placed on the **midradius circle** at the source and target angles.

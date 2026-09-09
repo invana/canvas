@@ -1,0 +1,1139 @@
+# Interface: CanvasStore
+
+`CanvasStore` — the **contract** of the renderer-free store, one per `Canvas`.
+The single hub the engine writes to *and* subscribes from:
+
+- [CanvasStore.view](#view) — reactive `ReactiveStore<CanvasView>` (config + interaction state).
+- [CanvasStore.data](#data) — owned, keyed `LayerData` stores (the bulk graph).
+- [CanvasStore.events](#events) — the canvas-wide `CanvasEventBus` (tap channel for
+  telemetry / collaboration).
+
+The **implementation** (`createCanvasStore` — the zustand/immer-backed factory,
+the state↔bus bridges, telemetry wiring) lives in `@invana/canvas-store`; this
+package holds only the shape, so contracts and abstracts (`CanvasContext`,
+`Camera`) can type against the store without depending on the machinery.
+
+## Properties
+
+### actions
+
+> `readonly` **actions**: `object`
+
+Named, action-typed command API (`actions.layers.setStyle`, `actions.camera.zoom`, …).
+
+#### annotation
+
+> **annotation**: `object`
+
+##### annotation.add
+
+> **add**: (`l`, `a`) => `void`
+
+###### Parameters
+
+###### l
+
+`string`
+
+###### a
+
+[`AnnotationRecord`](AnnotationRecord.md)
+
+###### Returns
+
+`void`
+
+##### annotation.remove
+
+> **remove**: (`l`, `id`) => `void`
+
+###### Parameters
+
+###### l
+
+`string`
+
+###### id
+
+`string`
+
+###### Returns
+
+`void`
+
+##### annotation.update
+
+> **update**: (`l`, `id`, `patch`) => `void`
+
+###### Parameters
+
+###### l
+
+`string`
+
+###### id
+
+`string`
+
+###### patch
+
+`Partial`\<[`AnnotationRecord`](AnnotationRecord.md)\>
+
+###### Returns
+
+`void`
+
+#### behaviours
+
+> **behaviours**: `object`
+
+##### behaviours.add
+
+> **add**: (`id`, `opts`) => `void`
+
+###### Parameters
+
+###### id
+
+`string`
+
+###### opts
+
+`Bag`
+
+###### Returns
+
+`void`
+
+##### behaviours.disable
+
+> **disable**: (`id`) => `void`
+
+###### Parameters
+
+###### id
+
+`string`
+
+###### Returns
+
+`void`
+
+##### behaviours.enable
+
+> **enable**: (`id`) => `void`
+
+###### Parameters
+
+###### id
+
+`string`
+
+###### Returns
+
+`void`
+
+##### behaviours.remove
+
+> **remove**: (`id`) => `void`
+
+###### Parameters
+
+###### id
+
+`string`
+
+###### Returns
+
+`void`
+
+##### behaviours.update
+
+> **update**: (`id`, `patch`) => `void`
+
+###### Parameters
+
+###### id
+
+`string`
+
+###### patch
+
+`Bag`
+
+###### Returns
+
+`void`
+
+#### camera
+
+> **camera**: `object`
+
+##### camera.pan
+
+> **pan**: (`dx`, `dy`) => `void`
+
+###### Parameters
+
+###### dx
+
+`number`
+
+###### dy
+
+`number`
+
+###### Returns
+
+`void`
+
+##### camera.reset
+
+> **reset**: () => `void`
+
+###### Returns
+
+`void`
+
+##### camera.set
+
+> **set**: (`c`) => `void`
+
+###### Parameters
+
+###### c
+
+`CameraInput`
+
+###### Returns
+
+`void`
+
+##### camera.zoom
+
+> **zoom**: (`factor`) => `void`
+
+###### Parameters
+
+###### factor
+
+`number`
+
+###### Returns
+
+`void`
+
+##### camera.zoomTo
+
+> **zoomTo**: (`zoom`) => `void`
+
+###### Parameters
+
+###### zoom
+
+`number`
+
+###### Returns
+
+`void`
+
+#### edge
+
+> **edge**: `object`
+
+##### edge.add
+
+> **add**: (`l`, `e`) => `void`
+
+###### Parameters
+
+###### l
+
+`string`
+
+###### e
+
+[`EdgeRecord`](EdgeRecord.md)
+
+###### Returns
+
+`void`
+
+##### edge.remove
+
+> **remove**: (`l`, `id`) => `void`
+
+###### Parameters
+
+###### l
+
+`string`
+
+###### id
+
+`string`
+
+###### Returns
+
+`void`
+
+##### edge.update
+
+> **update**: (`l`, `id`, `patch`) => `void`
+
+###### Parameters
+
+###### l
+
+`string`
+
+###### id
+
+`string`
+
+###### patch
+
+`Partial`\<[`EdgeRecord`](EdgeRecord.md)\>
+
+###### Returns
+
+`void`
+
+#### focus
+
+> **focus**: `object`
+
+##### focus.clear
+
+> **clear**: () => `void`
+
+###### Returns
+
+`void`
+
+##### focus.set
+
+> **set**: (`ids`, `dim?`) => `void`
+
+###### Parameters
+
+###### ids
+
+`Iterable`\<`string`\>
+
+###### dim?
+
+`boolean`
+
+###### Returns
+
+`void`
+
+#### group
+
+> **group**: `object`
+
+##### group.add
+
+> **add**: (`l`, `g`) => `void`
+
+###### Parameters
+
+###### l
+
+`string`
+
+###### g
+
+[`GroupRecord`](GroupRecord.md)
+
+###### Returns
+
+`void`
+
+##### group.remove
+
+> **remove**: (`l`, `id`) => `void`
+
+###### Parameters
+
+###### l
+
+`string`
+
+###### id
+
+`string`
+
+###### Returns
+
+`void`
+
+##### group.update
+
+> **update**: (`l`, `id`, `patch`) => `void`
+
+###### Parameters
+
+###### l
+
+`string`
+
+###### id
+
+`string`
+
+###### patch
+
+`Partial`\<[`GroupRecord`](GroupRecord.md)\>
+
+###### Returns
+
+`void`
+
+#### hover
+
+> **hover**: `object`
+
+##### hover.clear
+
+> **clear**: () => `void`
+
+###### Returns
+
+`void`
+
+##### hover.set
+
+> **set**: (`id`) => `void`
+
+###### Parameters
+
+###### id
+
+`string`
+
+###### Returns
+
+`void`
+
+#### layers
+
+> **layers**: `object`
+
+##### layers.add
+
+> **add**: (`id`, `opts`) => `void`
+
+###### Parameters
+
+###### id
+
+`string`
+
+###### opts
+
+`Bag`
+
+###### Returns
+
+`void`
+
+##### layers.remove
+
+> **remove**: (`id`) => `void`
+
+###### Parameters
+
+###### id
+
+`string`
+
+###### Returns
+
+`void`
+
+##### layers.setStyle
+
+> **setStyle**: (`id`, `style`) => `void`
+
+###### Parameters
+
+###### id
+
+`string`
+
+###### style
+
+`Bag`
+
+###### Returns
+
+`void`
+
+##### layers.setVisible
+
+> **setVisible**: (`id`, `visible`) => `void`
+
+###### Parameters
+
+###### id
+
+`string`
+
+###### visible
+
+`boolean`
+
+###### Returns
+
+`void`
+
+##### layers.update
+
+> **update**: (`id`, `patch`) => `void`
+
+###### Parameters
+
+###### id
+
+`string`
+
+###### patch
+
+`Bag`
+
+###### Returns
+
+`void`
+
+#### layouts
+
+> **layouts**: `object`
+
+##### layouts.remove
+
+> **remove**: (`id`) => `void`
+
+###### Parameters
+
+###### id
+
+`string`
+
+###### Returns
+
+`void`
+
+##### layouts.run
+
+> **run**: (`id`) => `void`
+
+###### Parameters
+
+###### id
+
+`string`
+
+###### Returns
+
+`void`
+
+##### layouts.set
+
+> **set**: (`id`, `opts`) => `void`
+
+###### Parameters
+
+###### id
+
+`string`
+
+###### opts
+
+`Bag`
+
+###### Returns
+
+`void`
+
+##### layouts.tune
+
+> **tune**: (`id`, `patch`) => `void`
+
+###### Parameters
+
+###### id
+
+`string`
+
+###### patch
+
+`Bag`
+
+###### Returns
+
+`void`
+
+#### layoutStatus
+
+> **layoutStatus**: `object`
+
+##### layoutStatus.begin
+
+> **begin**: (`id`, `animate?`) => `void`
+
+###### Parameters
+
+###### id
+
+`string`
+
+###### animate?
+
+`boolean`
+
+###### Returns
+
+`void`
+
+##### layoutStatus.end
+
+> **end**: () => `void`
+
+###### Returns
+
+`void`
+
+##### layoutStatus.progress
+
+> **progress**: (`progress`) => `void`
+
+###### Parameters
+
+###### progress
+
+`number`
+
+###### Returns
+
+`void`
+
+#### message
+
+> **message**: `object`
+
+##### message.clear
+
+> **clear**: () => `void`
+
+###### Returns
+
+`void`
+
+##### message.show
+
+> **show**: (`text`) => `void`
+
+###### Parameters
+
+###### text
+
+`string`
+
+###### Returns
+
+`void`
+
+#### node
+
+> **node**: `object`
+
+##### node.add
+
+> **add**: (`l`, `n`) => `void`
+
+###### Parameters
+
+###### l
+
+`string`
+
+###### n
+
+[`NodeRecord`](NodeRecord.md)
+
+###### Returns
+
+`void`
+
+##### node.moveTo
+
+> **moveTo**: (`l`, `id`, `x`, `y`) => `void`
+
+###### Parameters
+
+###### l
+
+`string`
+
+###### id
+
+`string`
+
+###### x
+
+`number`
+
+###### y
+
+`number`
+
+###### Returns
+
+`void`
+
+##### node.remove
+
+> **remove**: (`l`, `id`) => `void`
+
+###### Parameters
+
+###### l
+
+`string`
+
+###### id
+
+`string`
+
+###### Returns
+
+`void`
+
+##### node.update
+
+> **update**: (`l`, `id`, `patch`) => `void`
+
+###### Parameters
+
+###### l
+
+`string`
+
+###### id
+
+`string`
+
+###### patch
+
+`Partial`\<[`NodeRecord`](NodeRecord.md)\>
+
+###### Returns
+
+`void`
+
+#### positions
+
+> **positions**: `object`
+
+Bulk layout output → node positions (transform-only re-render).
+
+##### positions.apply
+
+> **apply**: (`l`, `positions`) => `void`
+
+###### Parameters
+
+###### l
+
+`string`
+
+###### positions
+
+`Iterable`\<\{ `id`: `string`; `x`: `number`; `y`: `number`; \}\>
+
+###### Returns
+
+`void`
+
+#### raise
+
+> **raise**: `object`
+
+Paint-order lift, per source. `source` is the id of whatever is asking
+(a behaviour id) — each owns its own set, so a hover lift and a selection
+lift coexist and either can be dropped without disturbing the other.
+The renderer projects the union; see `CanvasView.interaction.raised`.
+
+##### raise.clear
+
+> **clear**: (`source`) => `void`
+
+###### Parameters
+
+###### source
+
+`string`
+
+###### Returns
+
+`void`
+
+##### raise.set
+
+> **set**: (`source`, `ids`) => `void`
+
+###### Parameters
+
+###### source
+
+`string`
+
+###### ids
+
+`Iterable`\<`string`\>
+
+###### Returns
+
+`void`
+
+#### scene
+
+> **scene**: `object`
+
+##### scene.set
+
+> **set**: (`patch`) => `void`
+
+###### Parameters
+
+###### patch
+
+`Partial`\<[`CanvasSceneOptions`](CanvasSceneOptions.md)\>
+
+###### Returns
+
+`void`
+
+##### scene.setBackground
+
+> **setBackground**: (`backgroundColor`) => `void`
+
+###### Parameters
+
+###### backgroundColor
+
+`number`
+
+###### Returns
+
+`void`
+
+##### scene.setZoomLimits
+
+> **setZoomLimits**: (`min`, `max`) => `void`
+
+###### Parameters
+
+###### min
+
+`number`
+
+###### max
+
+`number`
+
+###### Returns
+
+`void`
+
+#### selection
+
+> **selection**: `object`
+
+##### selection.add
+
+> **add**: (`ids`) => `void`
+
+###### Parameters
+
+###### ids
+
+`Iterable`\<`string`\>
+
+###### Returns
+
+`void`
+
+##### selection.clear
+
+> **clear**: () => `void`
+
+###### Returns
+
+`void`
+
+##### selection.set
+
+> **set**: (`ids`) => `void`
+
+###### Parameters
+
+###### ids
+
+`Iterable`\<`string`\>
+
+###### Returns
+
+`void`
+
+##### selection.toggle
+
+> **toggle**: (`id`) => `void`
+
+###### Parameters
+
+###### id
+
+`string`
+
+###### Returns
+
+`void`
+
+#### templates
+
+> **templates**: `object`
+
+##### templates.create
+
+> **create**: (`template`) => `void`
+
+###### Parameters
+
+###### template
+
+`unknown`
+
+###### Returns
+
+`void`
+
+##### templates.remove
+
+> **remove**: (`id`) => `void`
+
+###### Parameters
+
+###### id
+
+`string`
+
+###### Returns
+
+`void`
+
+##### templates.update
+
+> **update**: (`id`, `patch`) => `void`
+
+###### Parameters
+
+###### id
+
+`string`
+
+###### patch
+
+`Bag`
+
+###### Returns
+
+`void`
+
+#### theme
+
+> **theme**: `object`
+
+##### theme.set
+
+> **set**: (`patch`) => `void`
+
+###### Parameters
+
+###### patch
+
+`Bag`
+
+###### Returns
+
+`void`
+
+#### transientPins
+
+> **transientPins**: `object`
+
+##### transientPins.add
+
+> **add**: (`ids`) => `void`
+
+###### Parameters
+
+###### ids
+
+`Iterable`\<`string`\>
+
+###### Returns
+
+`void`
+
+##### transientPins.clear
+
+> **clear**: () => `void`
+
+###### Returns
+
+`void`
+
+##### transientPins.remove
+
+> **remove**: (`ids`) => `void`
+
+###### Parameters
+
+###### ids
+
+`Iterable`\<`string`\>
+
+###### Returns
+
+`void`
+
+***
+
+### data
+
+> `readonly` **data**: `Record`\<`string`, [`DataSource`](../../../canvas/src/interfaces/DataSource.md)\>
+
+Owned data, keyed by **source** id (D13 — each a [DataSource](../../../canvas/src/interfaces/DataSource.md)).
+
+***
+
+### events
+
+> `readonly` **events**: [`CanvasEventBus`](../../../canvas/src/classes/CanvasEventBus.md)
+
+Canvas-wide event bus + tap channel (state:change + data:flush).
+
+***
+
+### specs
+
+> `readonly` **specs**: `Record`\<`string`, `SpecStore`\>
+
+Owned **spec** collections, keyed by layer id — the durable visual
+description each renderer projects. Populated via [specsFor](#specsfor).
+
+***
+
+### theme
+
+> `readonly` **theme**: [`CanvasThemeState`](../../../canvas/src/classes/CanvasThemeState.md)
+
+Resolved-theme channel (`theme.current()` / `theme.set(...)` → `theme:change`).
+
+***
+
+### view
+
+> `readonly` **view**: [`ReactiveStore`](../../../canvas/src/interfaces/ReactiveStore.md)\<[`CanvasView`](../../../canvas/src/interfaces/CanvasView.md)\>
+
+Reactive config + interaction store (layers/behaviours/layouts settings, interaction).
+
+## Methods
+
+### layer()
+
+> **layer**(`id`): [`LayerData`](../classes/LayerData.md)
+
+Get (lazily creating) the **default** [LayerData](../classes/LayerData.md) for `id`; its flush is
+bridged onto [events](#events). Throws if a non-`LayerData` source was registered
+for `id` via [setSource](#setsource) — use [source](#source) / [data](#data) for those.
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+[`LayerData`](../classes/LayerData.md)
+
+***
+
+### setSource()
+
+> **setSource**(`id`, `source`): `void`
+
+Register a domain [DataSource](../../../canvas/src/interfaces/DataSource.md) under `id` (D13) — e.g. `@invana/graph`'s
+`GraphStore`. Its [DataSource.onFlush](../../../canvas/src/interfaces/DataSource.md#onflush) is bridged onto [events](#events) as
+`data:flush`. Replaces any source previously registered (or lazily created) for `id`.
+
+#### Parameters
+
+##### id
+
+`string`
+
+##### source
+
+[`DataSource`](../../../canvas/src/interfaces/DataSource.md)
+
+#### Returns
+
+`void`
+
+***
+
+### source()
+
+> **source**(`id`): [`DataSource`](../../../canvas/src/interfaces/DataSource.md)
+
+The [DataSource](../../../canvas/src/interfaces/DataSource.md) registered for `id`, or `undefined`.
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+[`DataSource`](../../../canvas/src/interfaces/DataSource.md)
+
+***
+
+### specsFor()
+
+> **specsFor**\<`T`\>(`id`): `SpecStore`\<`T`\>
+
+Get (lazily creating) the SpecStore for layer `id`; its flush is
+bridged onto [events](#events) as `specs:flush`.
+
+#### Type Parameters
+
+##### T
+
+`T` *extends* `object` = `object`
+
+#### Parameters
+
+##### id
+
+`string`
+
+#### Returns
+
+`SpecStore`\<`T`\>

@@ -1,7 +1,7 @@
 # @invana/canvas-core — public API surface (generated; do not hand-edit)
 # Regenerate: pnpm build && node scripts/check-api-surface.mjs --write
 
-## . (342 exports)
+## . (343 exports)
 AnchorCtx
 AnchorShapeRef
 AnchorSpec
@@ -166,6 +166,7 @@ RectSpec
 RegisterDecorationOptions
 RegisterEffectOptions
 RegularPolygonSpec
+RenderPreference
 RenderStats
 RendererBackend
 RendererCapabilities

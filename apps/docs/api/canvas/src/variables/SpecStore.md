@@ -1,0 +1,3 @@
+# Variable: SpecStore
+
+> **SpecStore**: `any`

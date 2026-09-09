@@ -1,14 +1,10 @@
 # Class: Camera
 
-Defined in: [canvas/src/camera/Camera.ts:67](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/camera/Camera.ts#L67)
-
 ## Constructors
 
 ### Constructor
 
 > **new Camera**(`opts`): `Camera`
-
-Defined in: [canvas/src/camera/Camera.ts:84](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/camera/Camera.ts#L84)
 
 #### Parameters
 
@@ -20,20 +16,6 @@ Defined in: [canvas/src/camera/Camera.ts:84](https://github.com/invana/canvas/bl
 
 `Camera`
 
-## Properties
-
-### viewport
-
-> `readonly` **viewport**: `Viewport`
-
-Defined in: [canvas/src/camera/Camera.ts:75](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/camera/Camera.ts#L75)
-
-The underlying `pixi-viewport` `Viewport`. Public for engine internals
-(camera-input behaviours that need `viewport.drag()` / `viewport.snap()`
-/ `viewport.animate()` etc.). Domain code should go through Camera's
-typed methods (`pan`, `setZoom`, `toWorld`, ...) rather than touching
-Viewport directly.
-
 ## Accessors
 
 ### scale
@@ -41,8 +23,6 @@ Viewport directly.
 #### Get Signature
 
 > **get** **scale**(): `number`
-
-Defined in: [canvas/src/camera/Camera.ts:119](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/camera/Camera.ts#L119)
 
 Current uniform scale.
 
@@ -58,8 +38,6 @@ Current uniform scale.
 
 > **get** **screenHeight**(): `number`
 
-Defined in: [canvas/src/camera/Camera.ts:136](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/camera/Camera.ts#L136)
-
 ##### Returns
 
 `number`
@@ -72,8 +50,6 @@ Defined in: [canvas/src/camera/Camera.ts:136](https://github.com/invana/canvas/b
 
 > **get** **screenWidth**(): `number`
 
-Defined in: [canvas/src/camera/Camera.ts:132](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/camera/Camera.ts#L132)
-
 ##### Returns
 
 `number`
@@ -85,8 +61,6 @@ Defined in: [canvas/src/camera/Camera.ts:132](https://github.com/invana/canvas/b
 #### Get Signature
 
 > **get** **x**(): `number`
-
-Defined in: [canvas/src/camera/Camera.ts:124](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/camera/Camera.ts#L124)
 
 Current world-container x in screen pixels. (Where world (0,0) sits.)
 
@@ -102,8 +76,6 @@ Current world-container x in screen pixels. (Where world (0,0) sits.)
 
 > **get** **y**(): `number`
 
-Defined in: [canvas/src/camera/Camera.ts:128](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/camera/Camera.ts#L128)
-
 ##### Returns
 
 `number`
@@ -113,8 +85,6 @@ Defined in: [canvas/src/camera/Camera.ts:128](https://github.com/invana/canvas/b
 ### centerOn()
 
 > **centerOn**(`worldX`, `worldY`): `void`
-
-Defined in: [canvas/src/camera/Camera.ts:235](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/camera/Camera.ts#L235)
 
 Centre the viewport on a world-space point — pan so `(worldX, worldY)`
 maps to the screen centre, keeping the current zoom. The pan-only
@@ -137,11 +107,53 @@ that should locate a target without rescaling the view.
 
 ***
 
+### configureInput()
+
+> **configureInput**(`config`): `void`
+
+Configure the camera's own pan / zoom inputs. This is the seam camera-input
+behaviours use instead of naming a backend plugin: the options are described
+semantically (`percent`, `modifier`) and the realisation lives in the
+binding, so `DragPanBehaviour` / `WheelZoomBehaviour` / `PinchZoomBehaviour`
+survive the renderer swap unchanged.
+
+Patch semantics — an omitted key is left alone, `null` removes that input:
+
+```ts
+camera.configureInput({ wheel: { percent: 0.2, modifier: 'control' } });
+camera.configureInput({ wheel: null });   // wheel zoom off, pinch untouched
+```
+
+Re-configuring an already-installed input replaces it, because the
+underlying inputs read their config only at install time.
+
+#### Parameters
+
+##### config
+
+[`CameraInputConfig`](../interfaces/CameraInputConfig.md)
+
+#### Returns
+
+`void`
+
+***
+
+### dispose()
+
+> **dispose**(): `void`
+
+Tear down subscriptions. Called by `Canvas.destroy`.
+
+#### Returns
+
+`void`
+
+***
+
 ### fitContent()
 
 > **fitContent**(`worldRect`, `padding?`): `void`
-
-Defined in: [canvas/src/camera/Camera.ts:206](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/camera/Camera.ts#L206)
 
 Fit a world-space rectangle into the viewport. Scales so the whole rect
 is visible (limited by the smaller axis), centres it. `padding` is in
@@ -151,11 +163,11 @@ screen pixels around the rect.
 
 ##### worldRect
 
-[`Rect`](../interfaces/Rect.md)
+[`Rect`](../../../renderer-pixijs/src/interfaces/Rect.md)
 
 ##### padding?
 
-`number` = `24`
+`number`
 
 #### Returns
 
@@ -165,24 +177,42 @@ screen pixels around the rect.
 
 ### getVisibleBounds()
 
-> **getVisibleBounds**(): [`Rect`](../interfaces/Rect.md)
-
-Defined in: [canvas/src/camera/Camera.ts:268](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/camera/Camera.ts#L268)
+> **getVisibleBounds**(): [`Rect`](../../../renderer-pixijs/src/interfaces/Rect.md)
 
 The world-space rectangle currently visible. Used by viewport culling
 (per `decorations-plan.md` §11.6) and minimap layers.
 
 #### Returns
 
-[`Rect`](../interfaces/Rect.md)
+[`Rect`](../../../renderer-pixijs/src/interfaces/Rect.md)
+
+***
+
+### onDragStart()
+
+> **onDragStart**(`fn`): () => `void`
+
+Subscribe to the start of a drag-pan gesture — fired once the pointer has
+actually moved enough to pan. `DragPanBehaviour` uses it as the cursor
+fallback for the `space` modifier, which can't be read off a pointer event.
+
+#### Parameters
+
+##### fn
+
+() => `void`
+
+#### Returns
+
+an unsubscribe function.
+
+() => `void`
 
 ***
 
 ### pan()
 
 > **pan**(`dx`, `dy`): `void`
-
-Defined in: [canvas/src/camera/Camera.ts:153](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/camera/Camera.ts#L153)
 
 Pan by `(dx, dy)` screen pixels.
 
@@ -206,9 +236,7 @@ Pan by `(dx, dy)` screen pixels.
 
 > **resize**(`screenWidth`, `screenHeight`): `void`
 
-Defined in: [canvas/src/camera/Camera.ts:244](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/camera/Camera.ts#L244)
-
-Update on viewport resize. Forwards to Viewport so its hit-area + plugin math stays correct.
+Update on viewport resize. Forwarded so the binding's own math stays correct.
 
 #### Parameters
 
@@ -226,11 +254,34 @@ Update on viewport resize. Forwards to Viewport so its hit-area + plugin math st
 
 ***
 
+### setDragSuspended()
+
+> **setDragSuspended**(`suspended`): `void`
+
+Suspend / restore drag-panning without tearing the input down. This is how
+gesture arbitration yields the camera: while another behaviour owns the
+pointer (a node drag, a lasso, a resize) panning is suspended, and it
+resumes when that gesture releases.
+
+Momentum is deliberately left running, so an in-flight glide finishes as it
+always has. Edge-triggered — restoring resets the underlying input, so a
+repeated call in the same state is a no-op.
+
+#### Parameters
+
+##### suspended
+
+`boolean`
+
+#### Returns
+
+`void`
+
+***
+
 ### setPosition()
 
 > **setPosition**(`x`, `y`): `void`
-
-Defined in: [canvas/src/camera/Camera.ts:146](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/camera/Camera.ts#L146)
 
 Set absolute world-container offset. `(x, y)` is where world (0,0) lives
 in screen pixels. Most consumers want `pan(dx, dy)` instead.
@@ -251,11 +302,48 @@ in screen pixels. Most consumers want `pan(dx, dy)` instead.
 
 ***
 
+### setTransform()
+
+> **setTransform**(`t`, `opts?`): `void`
+
+Write an absolute `{ x, y, zoom }` transform in one step — the seam for a
+layer mirroring an **external** camera authority (a MapLibre basemap, a
+remote collaborator's viewport, a replayed session).
+
+Unlike `setZoom` + `setPosition`, this re-anchors nothing: the transform
+lands exactly as given, because the external authority has already solved
+for it and any re-anchoring here would desync the two views. `zoom` is
+emitted only when it actually changed — most mirrored gestures are pan-only
+and the `input:camera:zoom` listeners are O(N) over their tracked elements.
+
+#### Parameters
+
+##### t
+
+[`CameraTransformValue`](../interfaces/CameraTransformValue.md)
+
+The transform to apply.
+
+##### opts?
+
+###### clamp?
+
+`boolean`
+
+Apply the camera's min/max zoom clamp. Default `true`.
+  Pass `false` when mirroring an authority with its own scale range — a web
+  mercator basemap runs to `2 ** 22`, far past the camera's default ceiling
+  of 100, and clamping would silently peg the canvas away from the map.
+
+#### Returns
+
+`void`
+
+***
+
 ### setZoom()
 
 > **setZoom**(`scale`): `void`
-
-Defined in: [canvas/src/camera/Camera.ts:163](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/camera/Camera.ts#L163)
 
 Set absolute scale, anchored at the viewport centre. The world point at
 the centre stays put. For zoom-around-an-arbitrary-point semantics use
@@ -277,11 +365,9 @@ the centre stays put. For zoom-around-an-arbitrary-point semantics use
 
 > **tick**(`dt`): `void`
 
-Defined in: [canvas/src/camera/Camera.ts:280](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/camera/Camera.ts#L280)
-
-Advance viewport plugins that animate over time (decelerate, snap, etc.).
-Called by `Canvas.tickOnce()` every frame. No-op until a camera-input
-behaviour enables a plugin that uses `update()`.
+Advance time-based input animation (momentum, snap). Called by
+`Canvas.tickOnce()` every frame — the engine owns the only clock (G3).
+No-op until a camera-input behaviour enables an input that animates.
 
 #### Parameters
 
@@ -297,9 +383,7 @@ behaviour enables a plugin that uses `update()`.
 
 ### toScreen()
 
-> **toScreen**(`worldX`, `worldY`): [`Point`](../interfaces/Point.md)
-
-Defined in: [canvas/src/camera/Camera.ts:259](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/camera/Camera.ts#L259)
+> **toScreen**(`worldX`, `worldY`): [`Point`](../../../renderer-pixijs/src/interfaces/Point.md)
 
 World → screen.
 
@@ -315,15 +399,13 @@ World → screen.
 
 #### Returns
 
-[`Point`](../interfaces/Point.md)
+[`Point`](../../../renderer-pixijs/src/interfaces/Point.md)
 
 ***
 
 ### toWorld()
 
-> **toWorld**(`screenX`, `screenY`): [`Point`](../interfaces/Point.md)
-
-Defined in: [canvas/src/camera/Camera.ts:253](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/camera/Camera.ts#L253)
+> **toWorld**(`screenX`, `screenY`): [`Point`](../../../renderer-pixijs/src/interfaces/Point.md)
 
 Screen → world.
 
@@ -339,7 +421,7 @@ Screen → world.
 
 #### Returns
 
-[`Point`](../interfaces/Point.md)
+[`Point`](../../../renderer-pixijs/src/interfaces/Point.md)
 
 ***
 
@@ -347,14 +429,12 @@ Screen → world.
 
 > **zoomAt**(`factor`, `centerX?`, `centerY?`): `void`
 
-Defined in: [canvas/src/camera/Camera.ts:184](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/camera/Camera.ts#L184)
-
 Multiply scale by `factor`, holding the world point under the screen
 cursor `(centerX, centerY)` in place. Default centre = viewport centre.
 
-Viewport has no built-in arbitrary-anchor zoom, so we do the math here:
-project the anchor to world, change scale, then translate so the same
-world point lands at the same screen point.
+Bindings offer only centre-anchored zoom, so the arbitrary-anchor math is
+done here: project the anchor to world, change scale, then translate so the
+same world point lands at the same screen point.
 
 #### Parameters
 
@@ -364,11 +444,11 @@ world point lands at the same screen point.
 
 ##### centerX?
 
-`number` = `...`
+`number`
 
 ##### centerY?
 
-`number` = `...`
+`number`
 
 #### Returns
 

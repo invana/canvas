@@ -1,8 +1,6 @@
 # Variable: straightRouter
 
-> `const` **straightRouter**: [`IRouter`](../type-aliases/IRouter.md)
-
-Defined in: [canvas/src/primitives/connectors/routers/straight.ts:14](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas/src/primitives/connectors/routers/straight.ts#L14)
+> `const` **straightRouter**: [`IRouter`](../../../renderer-pixijs/src/type-aliases/IRouter.md)
 
 Direct line from source through any waypoints to target.
 Output: `[source, ...waypoints, target]` — a flat polyline.

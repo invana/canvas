@@ -1,20 +1,16 @@
 # Interface: DragNodeBehaviourOptions
 
-Defined in: [graph/src/behaviours/DragNodeBehaviour.ts:44](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/DragNodeBehaviour.ts#L44)
-
 Constructor options for `DragNodeBehaviour`.
 
 ## Extends
 
-- `BehaviourOptions`
+- [`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md)
 
 ## Properties
 
 ### dragCursor?
 
 > `optional` **dragCursor?**: `string`
-
-Defined in: [graph/src/behaviours/DragNodeBehaviour.ts:55](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/DragNodeBehaviour.ts#L55)
 
 Cursor applied to the canvas while dragging. Default `'grabbing'`.
 
@@ -23,8 +19,6 @@ Cursor applied to the canvas while dragging. Default `'grabbing'`.
 ### dragSelection?
 
 > `optional` **dragSelection?**: `boolean`
-
-Defined in: [graph/src/behaviours/DragNodeBehaviour.ts:93](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/DragNodeBehaviour.ts#L93)
 
 When `true` (the default), grabbing a node that is part of the current
 selection drags the **whole selection** together — every selected node
@@ -42,21 +36,17 @@ no coupling to a specific select behaviour.
 
 > `optional` **enabled?**: `boolean`
 
-Defined in: canvas/dist/index.d.ts:733
-
 Default `false` — the developer explicitly enables.
 
 #### Inherited from
 
-`BehaviourOptions.enabled`
+[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`enabled`](../../../canvas/src/interfaces/BehaviourOptions.md#enabled)
 
 ***
 
 ### filter?
 
 > `optional` **filter?**: (`id`) => `boolean`
-
-Defined in: [graph/src/behaviours/DragNodeBehaviour.ts:52](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/DragNodeBehaviour.ts#L52)
 
 Predicate to restrict which node ids are draggable. Returning `false`
 ignores the pointerdown. Default = every node is draggable.
@@ -77,8 +67,6 @@ ignores the pointerdown. Default = every node is draggable.
 
 > `optional` **groupAware?**: `boolean`
 
-Defined in: [graph/src/behaviours/DragNodeBehaviour.ts:80](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/DragNodeBehaviour.ts#L80)
-
 When `true` (the default), dragging a node that is itself a compound
 group (resolved `style.group` set) translates every descendant by the
 same delta in one `setPositionsBulk` call so the whole subtree moves
@@ -96,19 +84,15 @@ is also updated so the declared frame follows the cursor.
 
 > **id**: `string`
 
-Defined in: canvas/dist/index.d.ts:726
-
 #### Inherited from
 
-`BehaviourOptions.id`
+[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`id`](../../../canvas/src/interfaces/BehaviourOptions.md#id)
 
 ***
 
 ### pinOnRelease?
 
 > `optional` **pinOnRelease?**: `boolean`
-
-Defined in: [graph/src/behaviours/DragNodeBehaviour.ts:66](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/DragNodeBehaviour.ts#L66)
 
 When `true`, set `GraphNode.pinned = true` on the dragged node when
 the gesture ends (real drag only — a click that didn't move is a
@@ -123,8 +107,6 @@ Default `false`. To un-pin a pinned node, call
 ### selectionBodyDrag?
 
 > `optional` **selectionBodyDrag?**: `boolean`
-
-Defined in: [graph/src/behaviours/DragNodeBehaviour.ts:121](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/DragNodeBehaviour.ts#L121)
 
 When `true` (the default), a plain (no-modifier) press anywhere inside the
 current selection's union bounding box — *including the empty world space
@@ -149,8 +131,6 @@ no longer possible — drag from outside the box, or set this `false`.
 
 > `optional` **selectionBodyPadding?**: `number`
 
-Defined in: [graph/src/behaviours/DragNodeBehaviour.ts:128](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/DragNodeBehaviour.ts#L128)
-
 Extra world-space padding added around the selection's union bounding box
 when testing a press for [selectionBodyDrag](#selectionbodydrag). Widens the grab target
 so presses just outside the tightest box still catch. Default `0`.
@@ -160,8 +140,6 @@ so presses just outside the tightest box still catch. Default `0`.
 ### selectionState?
 
 > `optional` **selectionState?**: `string`
-
-Defined in: [graph/src/behaviours/DragNodeBehaviour.ts:101](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/DragNodeBehaviour.ts#L101)
 
 Name of the layer visual-state that marks a node as selected. Default
 `'selected'`, matching `ClickSelectBehaviour`'s default `state`. Only
@@ -174,15 +152,13 @@ writes a different state name.
 
 > `optional` **shortcuts?**: readonly `string`[]
 
-Defined in: canvas/dist/index.d.ts:739
-
 Gesture identifiers this behaviour claims. Used by `BehaviourRegistry`
 for conflict warnings. Format is convention-free (`'shift+drag'`,
 `'wheel+ctrl'`, `'rclick'`); registries match strings as-is.
 
 #### Inherited from
 
-`BehaviourOptions.shortcuts`
+[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`shortcuts`](../../../canvas/src/interfaces/BehaviourOptions.md#shortcuts)
 
 ***
 
@@ -190,10 +166,8 @@ for conflict warnings. Format is convention-free (`'shift+drag'`,
 
 > **targetLayerId**: `string`
 
-Defined in: [graph/src/behaviours/DragNodeBehaviour.ts:46](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/DragNodeBehaviour.ts#L46)
-
 Required — the `GraphLayer` id whose nodes this behaviour drags.
 
 #### Overrides
 
-`BehaviourOptions.targetLayerId`
+[`BehaviourOptions`](../../../canvas/src/interfaces/BehaviourOptions.md).[`targetLayerId`](../../../canvas/src/interfaces/BehaviourOptions.md#targetlayerid)

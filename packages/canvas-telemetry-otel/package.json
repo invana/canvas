@@ -1,8 +1,10 @@
 {
   "name": "@invana/canvas-telemetry-otel",
   "version": "0.0.12",
-  "description": "OpenTelemetry (OTLP/HTTP) adapter for @invana/canvas telemetry \u2014 traces, metrics (FPS), and logs to HyperDX or any OTel collector.",
+  "description": "OpenTelemetry (OTLP/HTTP) adapter for @invana/canvas telemetry — traces, metrics (FPS), and logs to HyperDX or any OTel collector.",
+  "homepage": "https://github.com/invana/canvas#readme",
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "typedocOptions": {
@@ -51,7 +53,16 @@
     "metrics",
     "traces"
   ],
+  "bugs": {
+    "url": "https://github.com/invana/canvas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/invana/canvas.git",
+    "directory": "packages/canvas-telemetry-otel"
+  },
   "license": "Apache-2.0",
+  "author": "Ravi Raja Merugu",
   "module": "./dist/index.js",
   "exports": {
     ".": {

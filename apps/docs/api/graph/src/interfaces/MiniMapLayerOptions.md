@@ -1,7 +1,5 @@
 # Interface: MiniMapLayerOptions
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:54](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L54)
-
 Constructor options for `MiniMapLayer`.
 
 ## Properties
@@ -9,8 +7,6 @@ Constructor options for `MiniMapLayer`.
 ### backgroundColor?
 
 > `optional` **backgroundColor?**: [`MiniMapColor`](../type-aliases/MiniMapColor.md)
-
-Defined in: [graph/src/layer/MiniMapLayer.ts:76](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L76)
 
 Background fill used when [backgroundLayerId](#backgroundlayerid) is unset / unresolved. A
 `0xRRGGBB` or a `{ light, dark }` pair resolved against `mode`. Default
@@ -21,8 +17,6 @@ Background fill used when [backgroundLayerId](#backgroundlayerid) is unset / unr
 ### backgroundLayerId?
 
 > `optional` **backgroundLayerId?**: `string`
-
-Defined in: [graph/src/layer/MiniMapLayer.ts:70](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L70)
 
 Id of a `BackgroundLayer` to mirror. When set, the minimap paints its
 background with that layer's *resolved* colour — so the minimap backdrop
@@ -37,8 +31,6 @@ canvas cross-layer rule — no inference of "the only background layer".
 
 > `optional` **borderColor?**: [`MiniMapColor`](../type-aliases/MiniMapColor.md)
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:78](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L78)
-
 Border colour. Same forms as `backgroundColor`. Default `0x444444`.
 
 ***
@@ -46,8 +38,6 @@ Border colour. Same forms as `backgroundColor`. Default `0x444444`.
 ### borderWidth?
 
 > `optional` **borderWidth?**: `number`
-
-Defined in: [graph/src/layer/MiniMapLayer.ts:80](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L80)
 
 Border stroke width. Default `1`.
 
@@ -57,8 +47,6 @@ Border stroke width. Default `1`.
 
 > `optional` **enableDrag?**: `boolean`
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:94](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L94)
-
 Whether dragging the minimap pans the main camera. Default `true`.
 
 ***
@@ -66,8 +54,6 @@ Whether dragging the minimap pans the main camera. Default `true`.
 ### graphLayerId
 
 > **graphLayerId**: `string`
-
-Defined in: [graph/src/layer/MiniMapLayer.ts:56](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L56)
 
 Required — the `GraphLayer` id this minimap mirrors.
 
@@ -77,8 +63,6 @@ Required — the `GraphLayer` id this minimap mirrors.
 
 > `optional` **height?**: `number`
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:61](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L61)
-
 Minimap height in screen pixels. Default `150`.
 
 ***
@@ -87,8 +71,6 @@ Minimap height in screen pixels. Default `150`.
 
 > `optional` **margin?**: `number` \| \{ `x?`: `number`; `y?`: `number`; \}
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:111](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L111)
-
 Inset from the chosen corner, in screen pixels. Pass a single number for a
 symmetric inset, or `{ x, y }` for independent horizontal / vertical insets
 (e.g. to bottom-align the minimap with a control rail while clearing its
@@ -96,11 +78,38 @@ width). A missing axis on the object form falls back to `10`. Default `10`.
 
 ***
 
+### maskAlpha?
+
+> `optional` **maskAlpha?**: `number`
+
+Out-of-viewport mask alpha 0–1. Default `0.5`.
+
+***
+
+### maskColor?
+
+> `optional` **maskColor?**: [`MiniMapColor`](../type-aliases/MiniMapColor.md)
+
+Out-of-viewport mask overlay colour. Same forms as [backgroundColor](#backgroundcolor)
+(`0xRRGGBB` or a `{ light, dark }` pair resolved against `mode`). Default
+`0x000000`.
+
+***
+
+### maskEnabled?
+
+> `optional` **maskEnabled?**: `boolean`
+
+Dim everything *outside* the viewport rectangle with a translucent overlay,
+spotlighting the currently-visible region. Drawn above the mirrored world
+(so out-of-view nodes/edges are dimmed) and clipped to the minimap box.
+Default `true` — set `false` for the classic un-masked minimap.
+
+***
+
 ### mode?
 
 > `optional` **mode?**: [`MiniMapMode`](../type-aliases/MiniMapMode.md)
-
-Defined in: [graph/src/layer/MiniMapLayer.ts:104](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L104)
 
 How `{ light, dark }` colour variants are resolved. `'auto'` (default)
 follows `prefers-color-scheme`; `'light'` / `'dark'` pin explicitly. Has no
@@ -114,8 +123,6 @@ lockstep with the canvas BackgroundLayer.
 
 > `optional` **padding?**: `number`
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:92](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L92)
-
 World-space padding around node bounds. Default `20`.
 
 ***
@@ -123,8 +130,6 @@ World-space padding around node bounds. Default `20`.
 ### position?
 
 > `optional` **position?**: [`MiniMapPosition`](../type-aliases/MiniMapPosition.md)
-
-Defined in: [graph/src/layer/MiniMapLayer.ts:96](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L96)
 
 Anchor corner. Default `'bottom-right'`.
 
@@ -134,8 +139,6 @@ Anchor corner. Default `'bottom-right'`.
 
 > `optional` **viewportFill?**: [`MiniMapColor`](../type-aliases/MiniMapColor.md)
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:83](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L83)
-
 Viewport indicator fill. Same forms as `backgroundColor`. Default `0x4a90d9`.
 
 ***
@@ -143,8 +146,6 @@ Viewport indicator fill. Same forms as `backgroundColor`. Default `0x4a90d9`.
 ### viewportFillAlpha?
 
 > `optional` **viewportFillAlpha?**: `number`
-
-Defined in: [graph/src/layer/MiniMapLayer.ts:87](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L87)
 
 Viewport indicator fill alpha 0–1. Default `0.3`.
 
@@ -154,8 +155,6 @@ Viewport indicator fill alpha 0–1. Default `0.3`.
 
 > `optional` **viewportStroke?**: [`MiniMapColor`](../type-aliases/MiniMapColor.md)
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:85](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L85)
-
 Viewport indicator stroke. Same forms as `backgroundColor`. Default `0x2a70b9`.
 
 ***
@@ -164,8 +163,6 @@ Viewport indicator stroke. Same forms as `backgroundColor`. Default `0x2a70b9`.
 
 > `optional` **viewportStrokeWidth?**: `number`
 
-Defined in: [graph/src/layer/MiniMapLayer.ts:89](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L89)
-
 Viewport indicator stroke width. Default `2`.
 
 ***
@@ -173,7 +170,5 @@ Viewport indicator stroke width. Default `2`.
 ### width?
 
 > `optional` **width?**: `number`
-
-Defined in: [graph/src/layer/MiniMapLayer.ts:59](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/layer/MiniMapLayer.ts#L59)
 
 Minimap width in screen pixels. Default `200`.

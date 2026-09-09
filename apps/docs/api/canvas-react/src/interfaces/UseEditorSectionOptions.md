@@ -1,14 +1,10 @@
 # Interface: UseEditorSectionOptions
 
-Defined in: [canvas-react/src/hooks/useEditorSection.ts:8](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas-react/src/hooks/useEditorSection.ts#L8)
-
 ## Properties
 
 ### canvas?
 
 > `optional` **canvas?**: `Canvas`
-
-Defined in: [canvas-react/src/hooks/useEditorSection.ts:14](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas-react/src/hooks/useEditorSection.ts#L14)
 
 Explicit canvas instance; defaults to the context canvas.
 
@@ -18,16 +14,22 @@ Explicit canvas instance; defaults to the context canvas.
 
 > `optional` **clickSelectId?**: `string`
 
-Defined in: [canvas-react/src/hooks/useEditorSection.ts:10](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas-react/src/hooks/useEditorSection.ts#L10)
-
 Id of the `ClickSelectBehaviour` selection is read from. Default `'click-select'`.
+
+***
+
+### items?
+
+> `optional` **items?**: [`EditorItemKey`](../type-aliases/EditorItemKey.md)[]
+
+Which items to include, in canonical (cut · copy · paste · erase) order.
+Default: all four. Pass e.g. `['erase']` for an erase-only bar (no
+clipboard) — cut/copy/paste are simply omitted.
 
 ***
 
 ### layerId?
 
 > `optional` **layerId?**: `string`
-
-Defined in: [canvas-react/src/hooks/useEditorSection.ts:12](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/canvas-react/src/hooks/useEditorSection.ts#L12)
 
 Layer that erase / clipboard target. Default `'graph'`.

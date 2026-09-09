@@ -1,7 +1,5 @@
 # Interface: GeometricLayoutOptions
 
-Defined in: [graph-layout-geometric/src/types.ts:24](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-geometric/src/types.ts#L24)
-
 `GeometricLayout` options.
 
 Extends OneShotLayoutOptions, so it also accepts `id` / `targetLayerId`
@@ -14,15 +12,13 @@ iteration order.
 
 ## Extends
 
-- `OneShotLayoutOptions`
+- `SubgraphLayoutOptions`
 
 ## Properties
 
 ### center?
 
 > `optional` **center?**: `object`
-
-Defined in: [graph-layout-geometric/src/types.ts:51](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-geometric/src/types.ts#L51)
 
 Translate the whole layout by `(x, y)`. Default `{ x: 0, y: 0 }` (centred on origin).
 
@@ -40,8 +36,6 @@ Translate the whole layout by `(x, y)`. Default `{ x: 0, y: 0 }` (centred on ori
 
 > `optional` **clockwise?**: `boolean`
 
-Defined in: [graph-layout-geometric/src/types.ts:47](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-geometric/src/types.ts#L47)
-
 Whether nodes advance clockwise. Default `true`.
 
 ***
@@ -49,8 +43,6 @@ Whether nodes advance clockwise. Default `true`.
 ### columnGap?
 
 > `optional` **columnGap?**: `number`
-
-Defined in: [graph-layout-geometric/src/types.ts:32](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-geometric/src/types.ts#L32)
 
 Horizontal spacing between columns, in world units. Default `60`.
 
@@ -60,8 +52,6 @@ Horizontal spacing between columns, in world units. Default `60`.
 
 > `optional` **columns?**: `number`
 
-Defined in: [graph-layout-geometric/src/types.ts:30](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-geometric/src/types.ts#L30)
-
 Column count for `grid` / `snake`. Default `ceil(sqrt(n))` (a square-ish block).
 
 ***
@@ -70,21 +60,50 @@ Column count for `grid` / `snake`. Default `ceil(sqrt(n))` (a square-ish block).
 
 > `optional` **id?**: `string`
 
-Defined in: canvas/dist/index.d.ts:1862
-
 Stable id, used to address the layout in a `LayoutRegistry` / config. Default `'layout'`.
 
 #### Inherited from
 
-`OneShotLayoutOptions.id`
+`SubgraphLayoutOptions.id`
+
+***
+
+### includeGroups?
+
+> `optional` **includeGroups?**: `boolean`
+
+Lay `parentId` **groups** out as containers — each group's members are
+placed among themselves, then the whole group is placed as one box at its
+parent's level. Only nodes whose resolved style carries `group` count as
+containers; a plain `parentId` tree is unaffected.
+
+Default `false`. Containment is exact, but a group's interior is solved
+without sight of its external edges — see the class docs. Prefer
+`ElkLayout` when edge routing across group boundaries matters.
+
+#### Inherited from
+
+`SubgraphLayoutOptions.includeGroups`
+
+***
+
+### includeHidden?
+
+> `optional` **includeHidden?**: `boolean`
+
+Include explicitly-hidden nodes in the layout. Default `false` — hidden
+nodes are excluded from placement so they don't perturb the visible graph,
+and their last positions are left frozen (the layout never writes them).
+
+#### Inherited from
+
+`SubgraphLayoutOptions.includeHidden`
 
 ***
 
 ### mode?
 
 > `optional` **mode?**: [`GeometricLayoutMode`](../type-aliases/GeometricLayoutMode.md)
-
-Defined in: [graph-layout-geometric/src/types.ts:26](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-geometric/src/types.ts#L26)
 
 Layout mode. Default `'grid'`.
 
@@ -94,8 +113,6 @@ Layout mode. Default `'grid'`.
 
 > `optional` **nodeSpacing?**: `number`
 
-Defined in: [graph-layout-geometric/src/types.ts:43](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-geometric/src/types.ts#L43)
-
 Arc spacing used to auto-derive [radius](#radius) when it's omitted. Default `50`.
 
 ***
@@ -103,8 +120,6 @@ Arc spacing used to auto-derive [radius](#radius) when it's omitted. Default `50
 ### radius?
 
 > `optional` **radius?**: `number`
-
-Defined in: [graph-layout-geometric/src/types.ts:41](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-geometric/src/types.ts#L41)
 
 Circle radius in world units. Default: auto — derived from the node count
 and [nodeSpacing](#nodespacing) so neighbours sit ~`nodeSpacing` apart along the arc.
@@ -115,8 +130,6 @@ and [nodeSpacing](#nodespacing) so neighbours sit ~`nodeSpacing` apart along the
 
 > `optional` **rowGap?**: `number`
 
-Defined in: [graph-layout-geometric/src/types.ts:34](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-geometric/src/types.ts#L34)
-
 Vertical spacing between rows, in world units. Default `60`.
 
 ***
@@ -124,8 +137,6 @@ Vertical spacing between rows, in world units. Default `60`.
 ### startAngle?
 
 > `optional` **startAngle?**: `number`
-
-Defined in: [graph-layout-geometric/src/types.ts:45](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph-layout-geometric/src/types.ts#L45)
 
 Angle of the first node, in radians. Default `-π/2` (12 o'clock).
 
@@ -135,21 +146,17 @@ Angle of the first node, in radians. Default `-π/2` (12 o'clock).
 
 > `optional` **targetLayerId?**: `string`
 
-Defined in: canvas/dist/index.d.ts:1864
-
 The layer this layout is meant to run against. Informational — `apply(layer)` still takes one explicitly.
 
 #### Inherited from
 
-`OneShotLayoutOptions.targetLayerId`
+`SubgraphLayoutOptions.targetLayerId`
 
 ***
 
 ### transition?
 
 > `optional` **transition?**: `number` \| `boolean`
-
-Defined in: graph/dist/index.d.ts:2701
 
 Animate nodes from their current positions to the computed layout instead
 of snapping. `true` uses DEFAULT\_POSITION\_TRANSITION\_MS; a number is
@@ -160,19 +167,17 @@ straight to a lil-gui control.
 
 #### Inherited from
 
-`OneShotLayoutOptions.transition`
+`SubgraphLayoutOptions.transition`
 
 ***
 
 ### transitionEase?
 
-> `optional` **transitionEase?**: `EasingName`
+> `optional` **transitionEase?**: [`EasingName`](../../../canvas/src/type-aliases/EasingName.md)
 
-Defined in: graph/dist/index.d.ts:2706
-
-Easing curve for the transition, as a serializable EasingName key.
+Easing curve for the transition, as a serializable [EasingName](../../../canvas/src/type-aliases/EasingName.md) key.
 Default `'easeOutCubic'`. Ignored when `transition` is `false`.
 
 #### Inherited from
 
-`OneShotLayoutOptions.transitionEase`
+`SubgraphLayoutOptions.transitionEase`

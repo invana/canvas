@@ -2,8 +2,6 @@
 
 > **GraphStoreEventMap** = `object`
 
-Defined in: [graph/src/store/types.ts:134](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L134)
-
 Event-map shape for `GraphStore.events` (used by `EventEmitter<E>`).
 
 Subscribe to fine-grained `node:*` / `edge:*` events for per-entity updates,
@@ -15,8 +13,6 @@ or to `flush` for aggregated per-batch counts.
 
 > **edge:add**: `object`
 
-Defined in: [graph/src/store/types.ts:138](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L138)
-
 #### edgeId
 
 > **edgeId**: `string`
@@ -26,8 +22,6 @@ Defined in: [graph/src/store/types.ts:138](https://github.com/invana/canvas/blob
 ### edge:orphaned
 
 > **edge:orphaned**: `object`
-
-Defined in: [graph/src/store/types.ts:142](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L142)
 
 Emitted when a buffered edge is dropped after exceeding `pendingEdgeTTL`.
 
@@ -41,8 +35,6 @@ Emitted when a buffered edge is dropped after exceeding `pendingEdgeTTL`.
 
 > **edge:remove**: `object`
 
-Defined in: [graph/src/store/types.ts:140](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L140)
-
 #### edgeId
 
 > **edgeId**: `string`
@@ -52,8 +44,6 @@ Defined in: [graph/src/store/types.ts:140](https://github.com/invana/canvas/blob
 ### edge:state
 
 > **edge:state**: `object`
-
-Defined in: [graph/src/store/types.ts:152](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L152)
 
 Edge sibling of `node:state`.
 
@@ -79,8 +69,6 @@ Edge sibling of `node:state`.
 
 > **edge:update**: `object`
 
-Defined in: [graph/src/store/types.ts:139](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L139)
-
 #### edgeId
 
 > **edgeId**: `string`
@@ -91,11 +79,26 @@ Defined in: [graph/src/store/types.ts:139](https://github.com/invana/canvas/blob
 
 ***
 
+### edge:visibility
+
+> **edge:visibility**: `object`
+
+Edge sibling of `node:visibility` — fired only when an edge's **explicit**
+hidden flag changes, never for endpoint-driven (effective) hiding.
+
+#### edgeId
+
+> **edgeId**: `string`
+
+#### hidden
+
+> **hidden**: `boolean`
+
+***
+
 ### flush
 
 > **flush**: `object`
-
-Defined in: [graph/src/store/types.ts:154](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L154)
 
 Aggregate counts per flush. Fires once per batch / RAF flush.
 
@@ -129,8 +132,6 @@ Aggregate counts per flush. Fires once per batch / RAF flush.
 
 > **node:add**: `object`
 
-Defined in: [graph/src/store/types.ts:135](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L135)
-
 #### nodeId
 
 > **nodeId**: `string`
@@ -141,8 +142,6 @@ Defined in: [graph/src/store/types.ts:135](https://github.com/invana/canvas/blob
 
 > **node:remove**: `object`
 
-Defined in: [graph/src/store/types.ts:137](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L137)
-
 #### nodeId
 
 > **nodeId**: `string`
@@ -152,8 +151,6 @@ Defined in: [graph/src/store/types.ts:137](https://github.com/invana/canvas/blob
 ### node:state
 
 > **node:state**: `object`
-
-Defined in: [graph/src/store/types.ts:150](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L150)
 
 A runtime (presence) state was toggled on a node — `on` reflects the
 post-change membership of the runtime set. Fired per-toggle on flush,
@@ -183,8 +180,6 @@ Document `states[]` changes ride `node:update`, not this event.
 
 > **node:update**: `object`
 
-Defined in: [graph/src/store/types.ts:136](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/store/types.ts#L136)
-
 #### nodeId
 
 > **nodeId**: `string`
@@ -192,3 +187,38 @@ Defined in: [graph/src/store/types.ts:136](https://github.com/invana/canvas/blob
 #### patch
 
 > **patch**: `Partial`\<[`GraphNode`](../interfaces/GraphNode.md)\>
+
+***
+
+### node:visibility
+
+> **node:visibility**: `object`
+
+A node's **explicit** hidden flag changed. `hidden` is the post-change
+value. Fired only for explicit `hideNode`/`showNode`/`setNodeHidden`
+changes — the incident-edge cascade emits *nothing* (consumers derive it
+via `isEdgeVisible` and react to this event). Deduped per id within the
+flush window; bulk ops coalesce into one flush.
+
+#### hidden
+
+> **hidden**: `boolean`
+
+#### nodeId
+
+> **nodeId**: `string`
+
+***
+
+### schema
+
+> **schema**: `object`
+
+The **authoritative** schema was set/cleared via `setSchema` (e.g. a Neo4j
+adapter declaring the full DB schema). `authoritative` is whether one is now
+set. The payload intentionally omits the schema value (kept out of this map
+to avoid a type cycle); read it from `store.schema`.
+
+#### authoritative
+
+> **authoritative**: `boolean`

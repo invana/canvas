@@ -16,6 +16,12 @@
 - [LngLat](type-aliases/LngLat.md)
 - [LngLatTuple](type-aliases/LngLatTuple.md)
 
+## Variables
+
+- [WORLD\_SIZE](variables/WORLD_SIZE.md)
+
 ## Functions
 
 - [greatCircleSamples](functions/greatCircleSamples.md)
+- [projectLngLat](functions/projectLngLat.md)
+- [unprojectWorld](functions/unprojectWorld.md)

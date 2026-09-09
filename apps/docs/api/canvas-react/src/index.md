@@ -3,17 +3,14 @@
 ## Interfaces
 
 - [ApplicableLayout](interfaces/ApplicableLayout.md)
-- [BaseDetailViewProps](interfaces/BaseDetailViewProps.md)
 - [CanvasConfig](interfaces/CanvasConfig.md)
 - [ContextMenuState](interfaces/ContextMenuState.md)
+- [DownloadImageExportOptions](interfaces/DownloadImageExportOptions.md)
 - [EntityEditorTarget](interfaces/EntityEditorTarget.md)
-- [ToolbarButtonItem](interfaces/ToolbarButtonItem.md)
-- [ToolbarCustomItem](interfaces/ToolbarCustomItem.md)
-- [ToolbarDividerItem](interfaces/ToolbarDividerItem.md)
-- [ToolbarSelectItem](interfaces/ToolbarSelectItem.md)
-- [ToolbarToggleItem](interfaces/ToolbarToggleItem.md)
+- [GraphEventMap](interfaces/GraphEventMap.md)
 - [ToolContextValue](interfaces/ToolContextValue.md)
 - [UseCameraResult](interfaces/UseCameraResult.md)
+- [UseCanvasImageExportResult](interfaces/UseCanvasImageExportResult.md)
 - [UseCanvasMessageResult](interfaces/UseCanvasMessageResult.md)
 - [UseClearGraphResult](interfaces/UseClearGraphResult.md)
 - [UseClipboardOptions](interfaces/UseClipboardOptions.md)
@@ -25,6 +22,7 @@
 - [UseEditorSectionOptions](interfaces/UseEditorSectionOptions.md)
 - [UseEntityEditorOptions](interfaces/UseEntityEditorOptions.md)
 - [UseFitContentResult](interfaces/UseFitContentResult.md)
+- [UseGraphEventOptions](interfaces/UseGraphEventOptions.md)
 - [UseGridOptions](interfaces/UseGridOptions.md)
 - [UseGridResult](interfaces/UseGridResult.md)
 - [UseHistoryOptions](interfaces/UseHistoryOptions.md)
@@ -51,17 +49,12 @@
 
 ## Type Aliases
 
+- [EditorItemKey](type-aliases/EditorItemKey.md)
 - [GraphTool](type-aliases/GraphTool.md)
 - [LayoutFactory](type-aliases/LayoutFactory.md)
-- [PanelPosition](type-aliases/PanelPosition.md)
-- [RenderPreference](type-aliases/RenderPreference.md)
-- [ToolbarIcon](type-aliases/ToolbarIcon.md)
-- [ToolbarItem](type-aliases/ToolbarItem.md)
-- [TooltipSide](type-aliases/TooltipSide.md)
 
 ## Variables
 
-- [Canvas](variables/Canvas.md)
 - [CanvasContext](variables/CanvasContext.md)
 - [ClipboardContext](variables/ClipboardContext.md)
 - [DEFAULT\_EDGE\_TYPE\_LABELS](variables/DEFAULT_EDGE_TYPE_LABELS.md)
@@ -72,17 +65,18 @@
 
 ## Functions
 
-- [applyIconOverrides](functions/applyIconOverrides.md)
 - [bestRenderPreference](functions/bestRenderPreference.md)
 - [canUseWebGPU](functions/canUseWebGPU.md)
-- [dockCardClassName](functions/dockCardClassName.md)
 - [hasWebGL](functions/hasWebGL.md)
 - [hasWebGPUApi](functions/hasWebGPUApi.md)
 - [resolveRenderPreference](functions/resolveRenderPreference.md)
+- [useBehaviourRegistration](functions/useBehaviourRegistration.md)
 - [useCamera](functions/useCamera.md)
 - [useCanvas](functions/useCanvas.md)
 - [useCanvasEvent](functions/useCanvasEvent.md)
+- [useCanvasImageExport](functions/useCanvasImageExport.md)
 - [useCanvasMessage](functions/useCanvasMessage.md)
+- [useCanvasStateJson](functions/useCanvasStateJson.md)
 - [useClearGraph](functions/useClearGraph.md)
 - [useClipboard](functions/useClipboard.md)
 - [useContextMenu](functions/useContextMenu.md)
@@ -94,6 +88,7 @@
 - [useGraphCanvas](functions/useGraphCanvas.md)
 - [useGraphCanvasOptions](functions/useGraphCanvasOptions.md)
 - [useGraphCanvasUpdate](functions/useGraphCanvasUpdate.md)
+- [useGraphEvent](functions/useGraphEvent.md)
 - [useGrid](functions/useGrid.md)
 - [useHistory](functions/useHistory.md)
 - [useHistorySection](functions/useHistorySection.md)
@@ -102,8 +97,10 @@
 - [useLayout](functions/useLayout.md)
 - [useLayoutsSection](functions/useLayoutsSection.md)
 - [useLock](functions/useLock.md)
+- [useResolvedCanvas](functions/useResolvedCanvas.md)
 - [useSelection](functions/useSelection.md)
 - [useSelectMode](functions/useSelectMode.md)
+- [useStore](functions/useStore.md)
 - [useStyleEditorSection](functions/useStyleEditorSection.md)
 - [useTool](functions/useTool.md)
 - [useViewContext](functions/useViewContext.md)
@@ -116,946 +113,550 @@
 
 ### BackgroundLayer
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### BackgroundLayerProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### BrushSelectBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### BrushSelectBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### CanvasControlsToolbar
+### Canvas
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### CanvasControlsToolbarProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### CanvasMessageBar
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### CanvasMessageBarProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### CanvasProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
+
+***
+
+### CanvasRootProps
+
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### ClickInspectBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### ClickInspectBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### ClickSelectBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### ClickSelectBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### ClickViewBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### ClickViewBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### CollapseExpandBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### CollapseExpandBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### ColorByLabelBehaviour
+### ColorByBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### ColorByLabelBehaviourProps
+### ColorByBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### ContextMenuBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### ContextMenuBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### ContextMenuOverlay
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### ContextMenuOverlayProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### CreateNodeBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### CreateNodeBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### D3ForceLayout
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### D3ForceLayoutProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### defaultPropertyRenderers
+### D3SankeyLayout
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### DegreeSizeBehaviour
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### DegreeSizeBehaviourProps
+### D3SankeyLayoutProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### DetailCard
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### DetailCardProps
+### DensityContourFillLayer
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### DetailRow
+### DensityContourFillLayerProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
+
+***
+
+### DensityContourStrokeLayer
+
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
+
+***
+
+### DensityContourStrokeLayerProps
+
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### DevInfoLayer
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### DevInfoLayerProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### DragNodeBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### DragNodeBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### DragPanBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### DragPanBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### DrawEdgeBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### DrawEdgeBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### EdgeDetailView
+### EdgeLODBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### EdgeDetailViewProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### EdgeEndpoint
+### EdgeLODBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### EdgeEndpoints
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### EdgeEndpointsProps
+### EdgeScaleLODBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### EdgeSizeLODBehaviour
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### EdgeSizeLODBehaviourProps
+### EdgeScaleLODBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### EditToolbar
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### EditToolbarProps
+### ElkLayout
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
+
+***
+
+### ElkLayoutProps
+
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### EraseBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### EraseBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### GraphBackgroundContextMenu
+### GraphCanvas
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphBackgroundContextMenuProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### GraphBackgroundMenuContext
+### GraphCanvasProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphCanvasApp
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphCanvasAppControlContext
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphCanvasAppFooterOptions
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphCanvasAppHeaderOptions
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphCanvasAppProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### GraphClipboardProvider
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### GraphClipboardProviderProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphContextMenuCommonProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphContextMenuContext
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphControlsSections
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphControlsToolbar
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphControlsToolbarLite
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphControlsToolbarProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphEdgeContextMenu
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphEdgeContextMenuProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphEdgeMenuContext
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### GraphHistoryProvider
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### GraphHistoryProviderProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### GraphLayer
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### GraphLayerProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphLayoutToolbar
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphLayoutToolbarProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphNodeContextMenu
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphNodeContextMenuProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphNodeMenuContext
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphStatusBar
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphStatusBarProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphTargetMenuContext
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphToolbar
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GraphToolbarProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### GraphToolProvider
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### GraphToolProviderProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GridToolbar
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### GridToolbarProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### HistoryToolbar
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### HistoryToolbarProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### HoverActivateBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### HoverActivateBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### HoverElementPreviewBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### HoverElementPreviewBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### HoverElementPreviewCard
+### IconLODBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### HoverElementPreviewCardProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### InspectorPanel
+### IconLODBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### InspectorPanelProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### isImageUrl
+### ImageLODBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### isSafeHref
+### ImageLODBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### KeyboardCameraInputBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### KeyboardCameraInputBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### LabelCollisionBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### LabelCollisionBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### LabelResolutionLODBehaviour
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### LabelResolutionLODBehaviourProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### LassoSelectBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### LassoSelectBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
+
+***
+
+### MapLayer
+
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
+
+***
+
+### MapLayerProps
+
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### MiniMapLayer
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### MiniMapLayerProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### ModellerToolbar
+### NodeCentralityBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### ModellerToolbarProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### NodeDetailView
+### NodeCentralityBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### NodeDetailViewProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### NodeResizeBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### NodeResizeBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### NodeSizeLODBehaviour
+### NodeScaleLODBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### NodeSizeLODBehaviourProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### OverlayStyle
+### NodeScaleLODBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### Panel
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### PanelContent
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### PanelContentProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### PanelProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### ParallelEdgeBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### ParallelEdgeBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### PinchZoomBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### PinchZoomBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### PropertiesEditor
+### RenderPreference
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### PropertiesEditorProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Re-exports [RenderPreference](../../canvas/src/type-aliases/RenderPreference.md)
 
 ***
 
-### PropertiesEditorValues
+### TextLODBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### PropertyDetailView
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### PropertyDetailViewProps
+### TextLODBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### PropertyKind
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### PropertyRenderContext
+### TextResolutionLODBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### PropertyRenderer
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### RegionSlot
+### TextResolutionLODBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### renderPropertyValue
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### resolvePropertyRenderer
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### ThemeBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### ThemeBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### ThemeKind
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### ThemeToggle
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### ThemeToggleProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### ToolbarItems
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### ToolbarItemsProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### Tooltipped
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### TooltippedProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### useDevTool
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### UseDevToolOptions
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### UseDevToolResult
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### useMiniMap
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### UseMiniMapOptions
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### UseMiniMapResult
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### ViewToolbar
-
-Renames and re-exports [Canvas](variables/Canvas.md)
-
-***
-
-### ViewToolbarProps
-
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### WheelZoomBehaviour
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
 ### WheelZoomBehaviourProps
 
-Renames and re-exports [Canvas](variables/Canvas.md)
+Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)

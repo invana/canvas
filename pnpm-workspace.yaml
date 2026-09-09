@@ -15,7 +15,7 @@ onlyBuiltDependencies:
 overrides:
   # Single-major in the tree — plain range, no consumer crosses a major.
   ws: ">=8.21.1"
-  "@xmldom/xmldom": ">=0.8.13 <0.9.0"
+  "@xmldom/xmldom": ">=0.8.15 <0.9.0"
   flatted: ">=3.4.2"
   linkify-it: ">=5.0.1 <6"
   markdown-it: ">=14.2.0"

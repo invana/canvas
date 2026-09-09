@@ -2,8 +2,6 @@
 
 > **PreviewSnapshot**\<`DN`, `DE`\> = `object` & \{ `kind`: `"node"`; `node`: [`GraphNode`](../interfaces/GraphNode.md)\<`DN`\>; \} \| \{ `edge`: [`GraphEdge`](../interfaces/GraphEdge.md)\<`DE`\>; `kind`: `"edge"`; \}
 
-Defined in: [graph/src/behaviours/HoverElementPreviewBehaviour.ts:203](https://github.com/invana/canvas/blob/ee4faae6c3fc997ca94ad6a644b0fbd178a59b99/packages/graph/src/behaviours/HoverElementPreviewBehaviour.ts#L203)
-
 What `preview:show` / `preview:move` carry — the hovered element + its
 resolved card + anchor. Discriminated on `kind`, so `snapshot.node` /
 `snapshot.edge` is the properly-typed live `GraphNode` / `GraphEdge` record
