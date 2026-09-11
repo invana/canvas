@@ -1,6 +1,6 @@
 {
   "name": "@invana/graph-layout-d3-sankey",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "D3 Sankey Layout for @invana/graph.",
   "homepage": "https://github.com/invana/canvas#readme",
   "type": "module",
