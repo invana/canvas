@@ -6,6 +6,7 @@
 export {
   UNKNOWN_TYPE,
   GraphStore,
+  readValueKey,
   type EdgeDirection,
   type GraphEdge,
   type GraphElementKind,

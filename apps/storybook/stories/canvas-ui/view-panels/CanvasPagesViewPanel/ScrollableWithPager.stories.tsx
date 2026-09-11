@@ -11,7 +11,6 @@
 import { useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { CanvasPagesViewPanel, type CanvasPage } from '@invana/canvas-ui';
-import { ThemeProvider } from '@invana/themes';
 import { DemoBoard, DemoFrame, hueFor } from './canvas-pages-demo';
 
 const meta: Meta = { title: 'canvas-ui/view-panels/CanvasPagesViewPanel/ScrollableWithPager' };
@@ -43,20 +42,18 @@ function ScrollableDemo() {
   }));
 
   return (
-    <ThemeProvider>
-      <DemoFrame>
-        {/* A dozen-plus boards: mount only the active one so the strip doesn't
-            spin up a live engine / GPU context per tab. */}
-        <CanvasPagesViewPanel
-          pages={pages}
-          activeId={activeId}
-          onSelect={setActiveId}
-          onAdd={add}
-          addLabel="New page"
-          keepMounted={false}
-        />
-      </DemoFrame>
-    </ThemeProvider>
+    <DemoFrame>
+      {/* A dozen-plus boards: mount only the active one so the strip doesn't
+          spin up a live engine / GPU context per tab. */}
+      <CanvasPagesViewPanel
+        pages={pages}
+        activeId={activeId}
+        onSelect={setActiveId}
+        onAdd={add}
+        addLabel="New page"
+        keepMounted={false}
+      />
+    </DemoFrame>
   );
 }
 

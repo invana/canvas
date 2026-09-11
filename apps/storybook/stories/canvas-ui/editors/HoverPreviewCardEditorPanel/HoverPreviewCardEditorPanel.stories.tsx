@@ -24,7 +24,6 @@ import {
   ThemeToggle
 } from '@invana/canvas-ui';
 import type { GraphData, HoverElementPreviewCardSpec } from '@invana/graph';
-import { ThemeProvider } from '@invana/themes';
 
 const meta: Meta = { title: 'canvas-ui/editors/HoverPreviewCardEditorPanel' };
 export default meta;
@@ -71,35 +70,35 @@ export const HoverPreviewCardEditorStory: Story = {
     const [spec, setSpec] = useState<HoverElementPreviewCardSpec>(INITIAL_SPEC);
 
     return (
-      // A real consumer mounts the app under its own <ThemeProvider>.
-      <ThemeProvider>
-        <GraphCanvasApp
-          data={DATA}
-          onReady={(c) => c?.showMessage('Edit the card in the right panel · Apply · then hover a node')}
-          header={{
-            title: 'Hover Preview Card Editor',
-            center: <GraphControlsToolbar />,
-            right: (ctx) => <ThemeToggle ctx={ctx} />
-          }}
-          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-          // The controlled editor, docked in the resizable right region — a pure
-          // form (defaults in → spec out on Apply), no engine reference of its own.
-          right={{
-            content: <HoverPreviewCardEditorPanel defaults={INITIAL_SPEC} onSubmit={setSpec} />,
-            defaultSize: '380px',
-            maxSize: '460px',
-            collapsible: true
-          }}
-        >
-          {/* Headless hover preview: resolves the live `spec` against the hovered
-              node and renders the canvas-ui card. `card` re-syncs on every edit. */}
-          <HoverElementPreviewBehaviour
-            targetLayerId="graph"
-            card={spec}
-            renderCard={(s) => <HoverElementPreviewCard card={s.card} />}
-          />
-        </GraphCanvasApp>
-      </ThemeProvider>
+      // The app reads light/dark from a host `<ThemeProvider>` via `useTheme()`, and
+      // throws without one. In Storybook that host is the toolbar's single provider
+      // (`.storybook/preview.tsx`); a real consumer mounts its own.
+      <GraphCanvasApp
+        data={DATA}
+        onReady={(c) => c?.showMessage('Edit the card in the right panel · Apply · then hover a node')}
+        header={{
+          title: 'Hover Preview Card Editor',
+          center: <GraphControlsToolbar />,
+          right: (ctx) => <ThemeToggle ctx={ctx} />
+        }}
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        // The controlled editor, docked in the resizable right region — a pure
+        // form (defaults in → spec out on Apply), no engine reference of its own.
+        right={{
+          content: <HoverPreviewCardEditorPanel defaults={INITIAL_SPEC} onSubmit={setSpec} />,
+          defaultSize: '380px',
+          maxSize: '460px',
+          collapsible: true
+        }}
+      >
+        {/* Headless hover preview: resolves the live `spec` against the hovered
+            node and renders the canvas-ui card. `card` re-syncs on every edit. */}
+        <HoverElementPreviewBehaviour
+          targetLayerId="graph"
+          card={spec}
+          renderCard={(s) => <HoverElementPreviewCard card={s.card} />}
+        />
+      </GraphCanvasApp>
     );
   }
 };

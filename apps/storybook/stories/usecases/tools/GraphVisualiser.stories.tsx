@@ -55,7 +55,6 @@ import { D3SankeyLayout } from '@invana/graph-layout-d3-sankey';
 import { ClickViewBehaviour, MiniMapLayer, type ViewContext } from '@invana/canvas-react';
 import { CanvasMessageBar, GraphCanvasApp, GraphControlsToolbar, GraphStatusBar, EdgeDetailView, NodeDetailView, Panel, PanelContent, ToolbarItems } from '@invana/canvas-ui';
 import { Moon, Sun } from 'lucide-react';
-import { ThemeProvider } from '@invana/themes';
 
 const meta: Meta = { title: 'usecases/tools/GraphVisualiser' };
 export default meta;
@@ -248,75 +247,74 @@ export const GraphVisualiserStory: Story = {
     );
 
     return (
-      // A real consumer mounts the app under its own <ThemeProvider> — the app
-      // reads light/dark from it via useTheme() (and throws without one).
-      <ThemeProvider>
-        <GraphCanvasApp
-          data={active.data}
-          config={config}
-          // Each dataset gets a clean engine: its settings apply at init instead
-          // of merging over the previous dataset's, and `fitOnLoad` re-frames.
-          instanceKey={active.id}
-          onReady={onReady}
-          header={{
-            // The header is just slots — the brand + dataset switcher in `left`,
-            // a toolbar in `center`, a theme toggle in `right` (built from the
-            // control context the slot render-fn receives).
-            left: (
-              <div className="flex items-center gap-2">
-                <span className="text-[13px] font-semibold whitespace-nowrap">Graph Visualiser</span>
-                <ToolbarItems
-                  orientation="horizontal"
-                  items={[
-                    {
-                      type: 'select',
-                      key: 'dataset',
-                      label: 'Dataset',
-                      value: active.id,
-                      options: datasetOptions,
-                      onChange: setDatasetId,
-                      tooltip: 'Switch dataset'
-                    },
-                  ]}
-                />
-              </div>
-            ),
-            center: <GraphControlsToolbar />,
-            right: (ctx) => (
+      // The app reads light/dark from a host `<ThemeProvider>` via `useTheme()`, and
+      // throws without one. In Storybook that host is the toolbar's single provider
+      // (`.storybook/preview.tsx`); a real consumer mounts its own.
+      <GraphCanvasApp
+        data={active.data}
+        config={config}
+        // Each dataset gets a clean engine: its settings apply at init instead
+        // of merging over the previous dataset's, and `fitOnLoad` re-frames.
+        instanceKey={active.id}
+        onReady={onReady}
+        header={{
+          // The header is just slots — the brand + dataset switcher in `left`,
+          // a toolbar in `center`, a theme toggle in `right` (built from the
+          // control context the slot render-fn receives).
+          left: (
+            <div className="flex items-center gap-2">
+              <span className="text-[13px] font-semibold whitespace-nowrap">Graph Visualiser</span>
               <ToolbarItems
                 orientation="horizontal"
                 items={[
                   {
-                    type: 'toggle',
-                    key: 'theme',
-                    icon: Sun,
-                    activeIcon: Moon,
-                    label: 'Switch to dark theme',
-                    activeLabel: 'Switch to light theme',
-                    active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme
+                    type: 'select',
+                    key: 'dataset',
+                    label: 'Dataset',
+                    value: active.id,
+                    options: datasetOptions,
+                    onChange: setDatasetId,
+                    tooltip: 'Switch dataset'
                   },
                 ]}
               />
-            )
-          }}
-          // Footer is just slots too — status bar on the left, message line on the right.
-          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-        >
-          <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />
-          <ClickViewBehaviour
-            id="click-view"
-            targetLayerId="graph"
-            panel={(ctx: ViewContext) => (
-              <Panel position="right">
-                <PanelContent header={ctx.kind === 'edge' ? 'Edge Detail' : 'Node Detail'} onClose={ctx.close} fill>
-                  {ctx.kind === 'edge' ? <EdgeDetailView ctx={ctx} /> : <NodeDetailView ctx={ctx} />}
-                </PanelContent>
-              </Panel>
-            )}
-          />
-        </GraphCanvasApp>
-      </ThemeProvider>
+            </div>
+          ),
+          center: <GraphControlsToolbar />,
+          right: (ctx) => (
+            <ToolbarItems
+              orientation="horizontal"
+              items={[
+                {
+                  type: 'toggle',
+                  key: 'theme',
+                  icon: Sun,
+                  activeIcon: Moon,
+                  label: 'Switch to dark theme',
+                  activeLabel: 'Switch to light theme',
+                  active: ctx.themeKind === 'dark',
+                  onToggle: ctx.toggleTheme
+                },
+              ]}
+            />
+          )
+        }}
+        // Footer is just slots too — status bar on the left, message line on the right.
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+      >
+        <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />
+        <ClickViewBehaviour
+          id="click-view"
+          targetLayerId="graph"
+          panel={(ctx: ViewContext) => (
+            <Panel position="right">
+              <PanelContent header={ctx.kind === 'edge' ? 'Edge Detail' : 'Node Detail'} onClose={ctx.close} fill>
+                {ctx.kind === 'edge' ? <EdgeDetailView ctx={ctx} /> : <NodeDetailView ctx={ctx} />}
+              </PanelContent>
+            </Panel>
+          )}
+        />
+      </GraphCanvasApp>
     );
   }
 };

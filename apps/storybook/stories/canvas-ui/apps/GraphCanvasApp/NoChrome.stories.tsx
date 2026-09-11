@@ -20,7 +20,6 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ColorByBehaviour } from '@invana/canvas-react';
 import { GraphCanvasApp } from '@invana/canvas-ui';
 import { lesMiserables } from '@invana/graph-datasets';
-import { ThemeProvider } from '@invana/themes';
 
 const meta: Meta = { title: 'canvas-ui/apps/GraphCanvasApp/NoChrome' };
 export default meta;
@@ -29,22 +28,21 @@ type Story = StoryObj;
 export const NoChromeStory: Story = {
   name: 'NoChrome',
   render: () => (
-    // A real consumer mounts the app under its own <ThemeProvider> — the app
-    // reads light/dark from it via useTheme() (and throws without one).
-    <ThemeProvider>
-      <GraphCanvasApp
-        data={lesMiserables}
-        showHeader={false}
-        // Turn off the bundle's type-based colouring (one type → one colour here).
-        config={{ behaviours: { color: { enabled: false } } }}
-      >
-        {/* Colour each node by its Les Mis community group instead of its type. */}
-        <ColorByBehaviour
-          targetLayerId="graph"
-          colorEdges={false}
-          nodeValueKey="data.group"
-        />
-      </GraphCanvasApp>
-    </ThemeProvider>
+    // The app reads light/dark from a host `<ThemeProvider>` via `useTheme()`, and
+    // throws without one. In Storybook that host is the toolbar's single provider
+    // (`.storybook/preview.tsx`); a real consumer mounts its own.
+    <GraphCanvasApp
+      data={lesMiserables}
+      showHeader={false}
+      // Turn off the bundle's type-based colouring (one type → one colour here).
+      config={{ behaviours: { color: { enabled: false } } }}
+    >
+      {/* Colour each node by its Les Mis community group instead of its type. */}
+      <ColorByBehaviour
+        targetLayerId="graph"
+        colorEdges={false}
+        nodeValueKey="data.group"
+      />
+    </GraphCanvasApp>
   )
 };

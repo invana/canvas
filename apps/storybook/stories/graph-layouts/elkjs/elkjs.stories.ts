@@ -91,8 +91,8 @@ export const Layered: Story = {
         bg: {
           type: 'pattern',
           patternType: 'dots',
-          backgroundColor: '#0f172a',
-          color: '#475569',
+          // backgroundColor: '#0f172a',
+          // color: '#475569',
           size: 1.5,
           spacing: 24,
           alpha: 0.85
@@ -124,9 +124,9 @@ export const Layered: Story = {
         'drag-node': { enabled: true },
         theme: {
           enabled: true,
-          mode: 'system',
-          light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
-          dark: { backgroundColor: '#0f172a', color: '#475569' }
+          mode: 'document',
+          // light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
+          // dark: { backgroundColor: '#0f172a', color: '#475569' }
         }
       },
       layouts: {

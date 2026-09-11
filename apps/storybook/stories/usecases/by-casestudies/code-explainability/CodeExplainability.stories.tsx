@@ -60,6 +60,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BackgroundLayer,
   BrushSelectBehaviour,
+  CanvasThemeSync,
   ClickSelectBehaviour,
   CollapseExpandBehaviour,
   ColorByBehaviour,
@@ -75,7 +76,6 @@ import {
 import {
   CanvasMessageBar,
   CanvasSettingsEditorPanel,
-  CanvasThemeSync,
   GraphCanvasApp,
   GraphControlsToolbar,
   GraphStatusBar,
@@ -91,7 +91,6 @@ import type {
   NodeStylingRegistry,
   NodeTypeRegistry
 } from '@invana/graph';
-import { ThemeProvider } from '@invana/themes';
 import { Moon, Settings, Sun } from 'lucide-react';
 
 
@@ -448,110 +447,108 @@ export const CodeExplainabilityStory: Story = {
     }, []);
 
     return (
-      <ThemeProvider>
-        <GraphCanvasApp
-          data={data}
-          config={config}
-          onReady={onReady}
-          // `bundle={false}` — the batteries-included bundle registers a
-          // d3-force layout, and this graph is laid out by ELK alone. Turning it
-          // off makes the children below the *whole* canvas, which is also what
-          // keeps the settings panel honest: it lists exactly what's mounted, so
-          // a layout nothing points at never shows up as an editable surface.
-          bundle={false}
-          // The switch below is not a config *tweak*: cards and dots differ in
-          // which node templates exist at all. `config` is applied with
-          // `canvas.update()`, which deep-merges (`Canvas.ts:761`) — and
-          // `GraphLayer.setOptions` merges `nodeTypes` key-by-key
-          // (`GraphLayer.ts:874`), so a merge can never *remove* the card
-          // bindings. Without a remount the graph stays cards forever (the type
-          // binding is applied above the layer template, `GraphLayer.ts:967`).
-          // `instanceKey` exists for exactly this: re-init and apply the new
-          // config from scratch.
-          instanceKey={look}
-          header={{
-            title: 'Code explainability — where does a node become a pixel?',
-            // No layout picker: its default factory constructs a `D3ForceLayout`
-            // (`GraphControlsToolbar.tsx:56`), which would put d3-force back in
-            // through the front door. ELK's own options live in Settings.
-            center: <GraphControlsToolbar sections={{ layout: false }} />,
-            right: (ctx) => (
-              <ToolbarItems
-                orientation="horizontal"
-                items={[
-                  {
-                    type: 'select',
-                    key: 'look',
-                    label: 'Look',
-                    value: look,
-                    options: { cards: 'Cards — what is this symbol', dots: 'Dots — what is the shape' },
-                    onChange: (v) => setLook(v as 'cards' | 'dots')
-                  },
-                  ...dock.items,
-                  {
-                    type: 'toggle',
-                    key: 'theme',
-                    icon: Sun,
-                    activeIcon: Moon,
-                    label: 'Switch to dark theme',
-                    activeLabel: 'Switch to light theme',
-                    active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme
-                  },
-                ]}
-              />
-            )
+      <GraphCanvasApp
+        data={data}
+        config={config}
+        onReady={onReady}
+        // `bundle={false}` — the batteries-included bundle registers a
+        // d3-force layout, and this graph is laid out by ELK alone. Turning it
+        // off makes the children below the *whole* canvas, which is also what
+        // keeps the settings panel honest: it lists exactly what's mounted, so
+        // a layout nothing points at never shows up as an editable surface.
+        bundle={false}
+        // The switch below is not a config *tweak*: cards and dots differ in
+        // which node templates exist at all. `config` is applied with
+        // `canvas.update()`, which deep-merges (`Canvas.ts:761`) — and
+        // `GraphLayer.setOptions` merges `nodeTypes` key-by-key
+        // (`GraphLayer.ts:874`), so a merge can never *remove* the card
+        // bindings. Without a remount the graph stays cards forever (the type
+        // binding is applied above the layer template, `GraphLayer.ts:967`).
+        // `instanceKey` exists for exactly this: re-init and apply the new
+        // config from scratch.
+        instanceKey={look}
+        header={{
+          title: 'Code explainability — where does a node become a pixel?',
+          // No layout picker: its default factory constructs a `D3ForceLayout`
+          // (`GraphControlsToolbar.tsx:56`), which would put d3-force back in
+          // through the front door. ELK's own options live in Settings.
+          center: <GraphControlsToolbar sections={{ layout: false }} />,
+          right: (ctx) => (
+            <ToolbarItems
+              orientation="horizontal"
+              items={[
+                {
+                  type: 'select',
+                  key: 'look',
+                  label: 'Look',
+                  value: look,
+                  options: { cards: 'Cards — what is this symbol', dots: 'Dots — what is the shape' },
+                  onChange: (v) => setLook(v as 'cards' | 'dots')
+                },
+                ...dock.items,
+                {
+                  type: 'toggle',
+                  key: 'theme',
+                  icon: Sun,
+                  activeIcon: Moon,
+                  label: 'Switch to dark theme',
+                  activeLabel: 'Switch to light theme',
+                  active: ctx.themeKind === 'dark',
+                  onToggle: ctx.toggleTheme
+                },
+              ]}
+            />
+          )
+        }}
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        right={dock.region}
+      >
+        {/* With the bundle off, these children *are* the canvas — the same set
+            `GraphCanvasApp` would have mounted, minus the force layout, plus
+            ELK and collapse/expand. Every option comes from `config`, keyed by
+            the id each one registers under. */}
+        <BackgroundLayer id="background" />
+        <GraphLayer id="graph" data={data} />
+        <ColorByBehaviour id="color" targetLayerId="graph" />
+        {/* The sole theme publisher + the sync that drives its mode/family off
+            the host `<ThemeProvider>` — that pair is what makes the header's
+            sun/moon toggle repaint the canvas and not just the chrome. */}
+        <ThemeBehaviour id="theme" />
+        <CanvasThemeSync />
+        <DragPanBehaviour id="pan" />
+        <WheelZoomBehaviour id="wheel" />
+        <DragNodeBehaviour id="drag-node" targetLayerId="graph" />
+        <HoverActivateBehaviour id="hover" targetLayerId="graph" />
+        <ClickSelectBehaviour id="click-select" targetLayerId="graph" />
+        <BrushSelectBehaviour id="brush-select" targetLayerId="graph" />
+        <LassoSelectBehaviour id="lasso-select" targetLayerId="graph" />
+        {/* The one layout, named by `config.activeLayout`. `nodeSize` is a
+            function, so it rides the `options` prop rather than the
+            serialisable config — without it ELK lays out around points and the
+            cards overlap. `direction` is deliberately *not* here: it lives in
+            `config.layouts.elk`, so the Settings panel can drive it (wrapper
+            options are init-only; config wins by id). */}
+        <ElkLayout
+          id="elk"
+          targetLayerId="graph"
+          fitPadding={60}
+          options={{
+            // Containers are sized by their children, so only leaves get a
+            // fixed box — handing ELK a card-sized package would reserve room
+            // twice.
+            nodeSize: (node) =>
+              node.type === 'package'
+                ? { width: 0, height: 0 }
+                : look === 'cards'
+                  ? { width: CARD.width, height: CARD.height }
+                  : { width: 20, height: 20 }
           }}
-          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-          right={dock.region}
-        >
-          {/* With the bundle off, these children *are* the canvas — the same set
-              `GraphCanvasApp` would have mounted, minus the force layout, plus
-              ELK and collapse/expand. Every option comes from `config`, keyed by
-              the id each one registers under. */}
-          <BackgroundLayer id="background" />
-          <GraphLayer id="graph" data={data} />
-          <ColorByBehaviour id="color" targetLayerId="graph" />
-          {/* The sole theme publisher + the sync that drives its mode/family off
-              the host `<ThemeProvider>` — that pair is what makes the header's
-              sun/moon toggle repaint the canvas and not just the chrome. */}
-          <ThemeBehaviour id="theme" />
-          <CanvasThemeSync />
-          <DragPanBehaviour id="pan" />
-          <WheelZoomBehaviour id="wheel" />
-          <DragNodeBehaviour id="drag-node" targetLayerId="graph" />
-          <HoverActivateBehaviour id="hover" targetLayerId="graph" />
-          <ClickSelectBehaviour id="click-select" targetLayerId="graph" />
-          <BrushSelectBehaviour id="brush-select" targetLayerId="graph" />
-          <LassoSelectBehaviour id="lasso-select" targetLayerId="graph" />
-          {/* The one layout, named by `config.activeLayout`. `nodeSize` is a
-              function, so it rides the `options` prop rather than the
-              serialisable config — without it ELK lays out around points and the
-              cards overlap. `direction` is deliberately *not* here: it lives in
-              `config.layouts.elk`, so the Settings panel can drive it (wrapper
-              options are init-only; config wins by id). */}
-          <ElkLayout
-            id="elk"
-            targetLayerId="graph"
-            fitPadding={60}
-            options={{
-              // Containers are sized by their children, so only leaves get a
-              // fixed box — handing ELK a card-sized package would reserve room
-              // twice.
-              nodeSize: (node) =>
-                node.type === 'package'
-                  ? { width: 0, height: 0 }
-                  : look === 'cards'
-                    ? { width: CARD.width, height: CARD.height }
-                    : { width: 20, height: 20 }
-            }}
-          />
-          {/* A package frame's +/- toggle has no listener until this is mounted —
-              and neither does double-click, which `doubleClickToToggle` already
-              enables by default. Behaviours never auto-enable (root rule 7). */}
-          <CollapseExpandBehaviour id="collapse-expand" targetLayerId="graph" enabled />
-        </GraphCanvasApp>
-      </ThemeProvider>
+        />
+        {/* A package frame's +/- toggle has no listener until this is mounted —
+            and neither does double-click, which `doubleClickToToggle` already
+            enables by default. Behaviours never auto-enable (root rule 7). */}
+        <CollapseExpandBehaviour id="collapse-expand" targetLayerId="graph" enabled />
+      </GraphCanvasApp>
     );
   }
 };

@@ -70,7 +70,6 @@ import {
   type NodeTypeBinding
 } from '@invana/graph';
 import { invanaCodeKg } from '@invana/graph-datasets/usecase-demos';
-import { ThemeProvider } from '@invana/themes';
 import { TabbedPanel } from '@invana/ui';
 import { Moon, Sun } from 'lucide-react';
 
@@ -259,140 +258,138 @@ export const CanvasDesignerStory: Story = {
     }, []);
 
     return (
-      <ThemeProvider>
-        <GraphCanvasApp
-          data={data}
-          config={config}
-          onReady={onReady}
-          header={{
-            title: 'Canvas Designer',
-            center: <GraphControlsToolbar />,
-            right: (ctx) => (
-              <ToolbarItems
-                orientation="horizontal"
-                items={[
-                  {
-                    type: 'select',
-                    key: 'preset',
-                    label: 'Preset',
-                    value: preset,
-                    options: { cards: 'Cards (idCard)', dots: 'Dots (circle)' },
-                    onChange: (v) => applyPreset(v as 'cards' | 'dots')
-                  },
-                  {
-                    type: 'select',
-                    key: 'cluster',
-                    label: 'Sample',
-                    value: cluster,
-                    options: CLUSTERS,
-                    onChange: setCluster
-                  },
-                  {
-                    type: 'toggle',
-                    key: 'theme',
-                    icon: Sun,
-                    activeIcon: Moon,
-                    label: 'Switch to dark theme',
-                    activeLabel: 'Switch to light theme',
-                    active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme
-                  },
-                ]}
-              />
-            )
-          }}
-          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-          // The three-layer designer fills the resizable right region. `ctx.canvas`
-          // is `null` until every layer / behaviour registers — the settings editor
-          // handles that itself, and the two template forms are pure (JSON in →
-          // JSON out), so nothing here needs a readiness gate.
-          right={{
-            defaultSize: '380px',
-            maxSize: '520px',
-            collapsible: true,
-            content: (ctx) => (
-              <TabbedPanel
-                className="h-full border-0 bg-transparent shadow-none"
-                bodyClassName="overflow-y-auto"
-                defaultTab="templates"
-                tabs={[
-                  {
-                    value: 'templates',
-                    label: 'Templates',
-                    content: (
-                      <div className="flex flex-col gap-2 p-3">
-                        <ToolbarItems
-                          orientation="horizontal"
-                          items={[
-                            {
-                              type: 'select',
-                              key: 'editing-type',
-                              label: 'Entity type',
-                              value: editingType,
-                              options: Object.fromEntries(TYPES.map((t) => [t, t])),
-                              onChange: (v) => setEditingType(v as InvanaCodeNodeLabel)
-                            },
-                          ]}
-                        />
-                        {/* `defaults` loads once per mount, so the key carries both the
-                            picked type *and* its structure — a preset switch rewrites
-                            every binding, and the form has to reload with it. */}
-                        <NodeStructureEditorPanel
-                          key={`${editingType}:${bindings[editingType]?.structure ?? ''}`}
-                          defaults={bindings[editingType]}
-                          structures={structureNames}
-                          stylings={stylingNames}
-                          onSubmit={applyBinding}
-                          submitLabel={`Apply to ${editingType}`}
-                        />
-                      </div>
-                    )
-                  },
-                  {
-                    value: 'styling',
-                    label: 'Styling',
-                    content: (
-                      <div className="flex flex-col gap-2 p-3">
-                        <ToolbarItems
-                          orientation="horizontal"
-                          items={[
-                            {
-                              type: 'select',
-                              key: 'editing-styling',
-                              label: 'Styling template',
-                              value: editingStyling,
-                              options: { idCard: 'idCard (card)', circle: 'circle (simple)' },
-                              onChange: (v) => setEditingStyling(v as 'idCard' | 'circle')
-                            },
-                          ]}
-                        />
-                        {/* Remount when the edited template changes, same reason. */}
-                        <NodeStylingEditorPanel
-                          key={editingStyling}
-                          defaults={stylings[editingStyling]}
-                          variant={editingStyling === 'idCard' ? 'card' : 'simple'}
-                          onChange={applyStyling}
-                          onSubmit={applyStyling}
-                        />
-                      </div>
-                    )
-                  },
-                  {
-                    value: 'canvas',
-                    label: 'Canvas',
-                    content: (
-                      <CanvasSettingsEditorPanel
-                        canvas={ctx.canvas}
-                        className="border-0 bg-transparent shadow-none"
+      <GraphCanvasApp
+        data={data}
+        config={config}
+        onReady={onReady}
+        header={{
+          title: 'Canvas Designer',
+          center: <GraphControlsToolbar />,
+          right: (ctx) => (
+            <ToolbarItems
+              orientation="horizontal"
+              items={[
+                {
+                  type: 'select',
+                  key: 'preset',
+                  label: 'Preset',
+                  value: preset,
+                  options: { cards: 'Cards (idCard)', dots: 'Dots (circle)' },
+                  onChange: (v) => applyPreset(v as 'cards' | 'dots')
+                },
+                {
+                  type: 'select',
+                  key: 'cluster',
+                  label: 'Sample',
+                  value: cluster,
+                  options: CLUSTERS,
+                  onChange: setCluster
+                },
+                {
+                  type: 'toggle',
+                  key: 'theme',
+                  icon: Sun,
+                  activeIcon: Moon,
+                  label: 'Switch to dark theme',
+                  activeLabel: 'Switch to light theme',
+                  active: ctx.themeKind === 'dark',
+                  onToggle: ctx.toggleTheme
+                },
+              ]}
+            />
+          )
+        }}
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        // The three-layer designer fills the resizable right region. `ctx.canvas`
+        // is `null` until every layer / behaviour registers — the settings editor
+        // handles that itself, and the two template forms are pure (JSON in →
+        // JSON out), so nothing here needs a readiness gate.
+        right={{
+          defaultSize: '380px',
+          maxSize: '520px',
+          collapsible: true,
+          content: (ctx) => (
+            <TabbedPanel
+              className="h-full border-0 bg-transparent shadow-none"
+              bodyClassName="overflow-y-auto"
+              defaultTab="templates"
+              tabs={[
+                {
+                  value: 'templates',
+                  label: 'Templates',
+                  content: (
+                    <div className="flex flex-col gap-2 p-3">
+                      <ToolbarItems
+                        orientation="horizontal"
+                        items={[
+                          {
+                            type: 'select',
+                            key: 'editing-type',
+                            label: 'Entity type',
+                            value: editingType,
+                            options: Object.fromEntries(TYPES.map((t) => [t, t])),
+                            onChange: (v) => setEditingType(v as InvanaCodeNodeLabel)
+                          },
+                        ]}
                       />
-                    )
-                  },
-                ]}
-              />
-            )
-          }}
-        />
-      </ThemeProvider>
+                      {/* `defaults` loads once per mount, so the key carries both the
+                          picked type *and* its structure — a preset switch rewrites
+                          every binding, and the form has to reload with it. */}
+                      <NodeStructureEditorPanel
+                        key={`${editingType}:${bindings[editingType]?.structure ?? ''}`}
+                        defaults={bindings[editingType]}
+                        structures={structureNames}
+                        stylings={stylingNames}
+                        onSubmit={applyBinding}
+                        submitLabel={`Apply to ${editingType}`}
+                      />
+                    </div>
+                  )
+                },
+                {
+                  value: 'styling',
+                  label: 'Styling',
+                  content: (
+                    <div className="flex flex-col gap-2 p-3">
+                      <ToolbarItems
+                        orientation="horizontal"
+                        items={[
+                          {
+                            type: 'select',
+                            key: 'editing-styling',
+                            label: 'Styling template',
+                            value: editingStyling,
+                            options: { idCard: 'idCard (card)', circle: 'circle (simple)' },
+                            onChange: (v) => setEditingStyling(v as 'idCard' | 'circle')
+                          },
+                        ]}
+                      />
+                      {/* Remount when the edited template changes, same reason. */}
+                      <NodeStylingEditorPanel
+                        key={editingStyling}
+                        defaults={stylings[editingStyling]}
+                        variant={editingStyling === 'idCard' ? 'card' : 'simple'}
+                        onChange={applyStyling}
+                        onSubmit={applyStyling}
+                      />
+                    </div>
+                  )
+                },
+                {
+                  value: 'canvas',
+                  label: 'Canvas',
+                  content: (
+                    <CanvasSettingsEditorPanel
+                      canvas={ctx.canvas}
+                      className="border-0 bg-transparent shadow-none"
+                    />
+                  )
+                },
+              ]}
+            />
+          )
+        }}
+      />
     );
   }
 };

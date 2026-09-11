@@ -11,8 +11,11 @@
     // and `skipLibCheck` can't suppress a `.ts`. Redirect the specifier to a
     // local declaration stub (tsc-only; Vite resolves the real module at
     // runtime). Remove once the dependency ships compiled types.
+    // `./themes` is a one-line `export * from '../themes.config'` re-export, so
+    // it pulls the same raw source in — redirect it to the same stub.
     "paths": {
-      "@invana/styling/themes.config": ["./types/styling-themes-config.d.ts"]
+      "@invana/styling/themes.config": ["./types/styling-themes-config.d.ts"],
+      "@invana/styling/themes": ["./types/styling-themes-config.d.ts"]
     }
   },
   "include": ["stories/**/*", ".storybook/**/*", "src/**/*", "types/**/*", "vite-env.d.ts"],

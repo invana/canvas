@@ -37,7 +37,14 @@ import { BackgroundLayer, DragPanBehaviour, GraphLayer, WheelZoomBehaviour } fro
 import { ExportImageToolbar, GraphCanvasApp } from '@invana/canvas-ui';
 import type { GraphData, GraphNode } from '@invana/graph';
 
-const meta: Meta = { title: 'canvas/Export/ExportImage' };
+// `selfThemed`: this story pins its own `<ThemeProvider defaultMode="dark"
+// storageKey={null}>` — persistence off, so neither the preview's document theme
+// nor its storage mirror reaches it. Opting out keeps the toolbar from implying
+// control it doesn't have here.
+const meta: Meta = {
+  title: 'canvas/Export/ExportImage',
+  parameters: { selfThemed: true },
+};
 export default meta;
 type Story = StoryObj;
 

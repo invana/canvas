@@ -36,7 +36,6 @@ import {
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData, GraphNode } from '@invana/graph';
 import { paperCitations } from '@invana/graph-datasets/usecase-demos';
-import { ThemeProvider } from '@invana/themes';
 import { Moon, Settings, Sun } from 'lucide-react';
 
 /** The payload each Paper-citations paper node carries. */
@@ -224,37 +223,35 @@ export const SubjectBundleStory: Story = {
     );
 
     return (
-      <ThemeProvider>
-        <GraphCanvasApp
-          data={data}
-          config={config}
-          onReady={onReady}
-          header={{
-            title: 'Paper-citations — Subject Bundle',
-            center: <GraphControlsToolbar />,
-            right: (ctx) => (
-              <ToolbarItems
-                orientation="horizontal"
-                items={[
-                  ...dock.items,
-                  {
-                    type: 'toggle',
-                    key: 'theme',
-                    icon: Sun,
-                    activeIcon: Moon,
-                    label: 'Switch to dark theme',
-                    activeLabel: 'Switch to light theme',
-                    active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme
-                  },
-                ]}
-              />
-            )
-          }}
-          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-          right={dock.region}
-        />
-      </ThemeProvider>
+      <GraphCanvasApp
+        data={data}
+        config={config}
+        onReady={onReady}
+        header={{
+          title: 'Paper-citations — Subject Bundle',
+          center: <GraphControlsToolbar />,
+          right: (ctx) => (
+            <ToolbarItems
+              orientation="horizontal"
+              items={[
+                ...dock.items,
+                {
+                  type: 'toggle',
+                  key: 'theme',
+                  icon: Sun,
+                  activeIcon: Moon,
+                  label: 'Switch to dark theme',
+                  activeLabel: 'Switch to light theme',
+                  active: ctx.themeKind === 'dark',
+                  onToggle: ctx.toggleTheme
+                },
+              ]}
+            />
+          )
+        }}
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        right={dock.region}
+      />
     );
   }
 };

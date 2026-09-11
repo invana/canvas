@@ -225,6 +225,10 @@ export { SourceEmitter } from './state/events/SourceEmitter';
 // ─── Theme signal ────────────────────────────────────────────────────────────
 export type { ResolvedTheme, ThemeState, ThemeMode, ThemeKind } from './state/theme/types';
 export { CanvasThemeState } from './state/theme/CanvasThemeState';
+// The `inherit` sentinel: a themed option either pins a colour or defers to the
+// palette. Config vocabulary — resolved before anything reaches a renderer spec.
+export { INHERIT, isInherit, resolveThemed } from './state/theme/types';
+export type { Inherit, Themed } from './state/theme/types';
 
 // ─── Data primitives (dep-free; the machine-rate lane's building blocks) ─────
 export { scheduleFlush, type FlushMode } from './state/data/flush';

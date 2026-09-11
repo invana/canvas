@@ -29,7 +29,6 @@ import type { GraphCanvas, GraphSchema } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { ontology } from '@invana/graph-datasets/usecase-demos';
-import { ThemeProvider } from '@invana/themes';
 import { Gauge, Map, Moon, PanelRightClose, PanelRightOpen, Sun } from 'lucide-react';
 
 const meta: Meta = { title: 'canvas-ui/view-panels/SchemaViewPanel/CustomSchema' };
@@ -134,60 +133,58 @@ export const CustomSchemaStory: Story = {
     );
 
     return (
-      <ThemeProvider>
-        <GraphCanvasApp
-          data={data}
-          onReady={onReady}
-          header={{
-            title: 'SchemaViewPanel · custom',
-            center: <GraphControlsToolbar />,
-            // One shared toolbar — the schema toggle plus minimap / dev-overlay /
-            // theme, all as items.
-            right: (ctx) => (
-              <ToolbarItems
-                orientation="horizontal"
-                items={[
-                  ...dock.items,
-                  {
-                    type: 'toggle',
-                    key: 'minimap',
-                    icon: Map,
-                    label: 'Minimap: off',
-                    activeLabel: 'Minimap: on',
-                    active: minimapOn,
-                    onToggle: () => setMinimapOn((v) => !v)
-                  },
-                  {
-                    type: 'toggle',
-                    key: 'devinfo',
-                    icon: Gauge,
-                    label: 'Dev overlay: off',
-                    activeLabel: 'Dev overlay: on',
-                    active: devOn,
-                    onToggle: () => setDevOn((v) => !v)
-                  },
-                  {
-                    type: 'toggle',
-                    key: 'theme',
-                    icon: Sun,
-                    activeIcon: Moon,
-                    label: 'Switch to dark theme',
-                    activeLabel: 'Switch to light theme',
-                    active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme
-                  },
-                ]}
-              />
-            )
-          }}
-          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-          right={dock.region}
-        >
-          {/* Screen-fixed overlays driven by the header toggle items above. */}
-          {minimapOn && <MiniMapLayer backgroundLayerId="background" position="bottom-left" />}
-          {devOn && <DevInfoLayer enabled corner="top-left" margin={{ x: 12, y: 48 }} />}
-        </GraphCanvasApp>
-      </ThemeProvider>
+      <GraphCanvasApp
+        data={data}
+        onReady={onReady}
+        header={{
+          title: 'SchemaViewPanel · custom',
+          center: <GraphControlsToolbar />,
+          // One shared toolbar — the schema toggle plus minimap / dev-overlay /
+          // theme, all as items.
+          right: (ctx) => (
+            <ToolbarItems
+              orientation="horizontal"
+              items={[
+                ...dock.items,
+                {
+                  type: 'toggle',
+                  key: 'minimap',
+                  icon: Map,
+                  label: 'Minimap: off',
+                  activeLabel: 'Minimap: on',
+                  active: minimapOn,
+                  onToggle: () => setMinimapOn((v) => !v)
+                },
+                {
+                  type: 'toggle',
+                  key: 'devinfo',
+                  icon: Gauge,
+                  label: 'Dev overlay: off',
+                  activeLabel: 'Dev overlay: on',
+                  active: devOn,
+                  onToggle: () => setDevOn((v) => !v)
+                },
+                {
+                  type: 'toggle',
+                  key: 'theme',
+                  icon: Sun,
+                  activeIcon: Moon,
+                  label: 'Switch to dark theme',
+                  activeLabel: 'Switch to light theme',
+                  active: ctx.themeKind === 'dark',
+                  onToggle: ctx.toggleTheme
+                },
+              ]}
+            />
+          )
+        }}
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        right={dock.region}
+      >
+        {/* Screen-fixed overlays driven by the header toggle items above. */}
+        {minimapOn && <MiniMapLayer backgroundLayerId="background" position="bottom-left" />}
+        {devOn && <DevInfoLayer enabled corner="top-left" margin={{ x: 12, y: 48 }} />}
+      </GraphCanvasApp>
     );
   }
 };

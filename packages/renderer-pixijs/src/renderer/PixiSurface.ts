@@ -25,8 +25,13 @@ export interface PixiSurfaceOptions {
   readonly parent: Container;
   readonly camera: Camera;
   readonly textureRegistry?: TextureRegistry;
-  readonly canvasElement?: HTMLCanvasElement | null;
   readonly hitFloorPx?: number;
+  /**
+   * Called from {@link PixiSurface.destroy}, so the renderer can drop this
+   * surface from the canvas-wide `PixiPointerRouter`. A surface that stays
+   * registered after teardown would be picked against a destroyed index.
+   */
+  readonly onDestroy?: (surface: PixiSurface) => void;
 }
 
 export class PixiSurface implements ISurface {
@@ -40,6 +45,8 @@ export class PixiSurface implements ISurface {
    */
   readonly root: Container;
   private readonly overlays: IOverlayDevice[] = [];
+  /** Renderer-side teardown hook — see {@link PixiSurfaceOptions.onDestroy}. */
+  private readonly onDestroy?: (surface: PixiSurface) => void;
 
   /** Backdrop objects, kept so a per-frame transform update costs no rebuild. */
   private backdropSolid: Graphics | null = null;
@@ -51,6 +58,7 @@ export class PixiSurface implements ISurface {
   constructor(opts: PixiSurfaceOptions) {
     this.id = opts.id;
     this.space = opts.space;
+    if (opts.onDestroy) this.onDestroy = opts.onDestroy;
 
     this.root = new Container(opts.space === 'world' ? { isRenderGroup: true } : {});
     this.root.label = opts.id;
@@ -60,7 +68,6 @@ export class PixiSurface implements ISurface {
       container: this.root,
       camera: opts.camera,
       ...(opts.textureRegistry ? { textureRegistry: opts.textureRegistry } : {}),
-      ...(opts.canvasElement ? { canvasElement: opts.canvasElement } : {}),
       ...(opts.hitFloorPx !== undefined ? { hitFloorPx: opts.hitFloorPx } : {}),
     });
   }
@@ -150,6 +157,7 @@ export class PixiSurface implements ISurface {
   }
 
   destroy(): void {
+    this.onDestroy?.(this);
     for (const overlay of this.overlays) overlay.destroy();
     this.overlays.length = 0;
     this.clearBackdrop();

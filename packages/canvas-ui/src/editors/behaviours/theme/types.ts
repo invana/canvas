@@ -8,8 +8,12 @@
  * it in sync with `ThemeBehaviourOptions` by hand.
  */
 
-/** How the concrete light/dark kind is chosen. Mirrors the engine's `ThemeMode`. */
-export type ThemeMode = 'system' | 'light' | 'dark';
+/**
+ * How the theme is chosen. Mirrors the engine's `ThemeMode`: `'system'` follows
+ * the OS, `'document'` follows the host page's `data-theme` on `<html>` (family
+ * and kind), `'light'`/`'dark'` pin the kind.
+ */
+export type ThemeMode = 'system' | 'document' | 'light' | 'dark';
 
 /**
  * The serialisable subset of `ThemeBehaviourOptions` this editor produces.

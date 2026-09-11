@@ -9,8 +9,6 @@ export { GraphCanvasApp } from './GraphCanvasApp';
 export { BASE_CONFIG as graphCanvasAppBaseConfig } from './GraphCanvasApp';
 // Reusable host-theme → engine-`ThemeBehaviour` bridge; drop inside any canvas
 // (incl. nested) whose rendered theme should follow the app's light/dark toggle.
-export { CanvasThemeSync } from './CanvasThemeSync';
-export type { CanvasThemeSyncProps } from './CanvasThemeSync';
 export type {
   GraphCanvasAppProps,
   GraphCanvasAppControlContext,
@@ -21,3 +19,11 @@ export type {
 } from './GraphCanvasApp';
 export type { GraphCanvasAppHeaderOptions } from './GraphCanvasAppHeader';
 export type { GraphCanvasAppFooterOptions } from './GraphCanvasAppFooter';
+
+/**
+ * @deprecated Import from `@invana/canvas-react` instead — `CanvasThemeSync`
+ * renders no UI, so it belongs with the headless bindings. Re-exported here so
+ * existing `@invana/canvas-ui` consumers keep working.
+ */
+export { CanvasThemeSync } from '@invana/canvas-react';
+export type { CanvasThemeSyncProps } from '@invana/canvas-react';

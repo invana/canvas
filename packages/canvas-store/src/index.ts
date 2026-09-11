@@ -90,6 +90,11 @@ export {
   type ThemeState,
   type ThemeMode,
   type ThemeKind,
+  INHERIT,
+  isInherit,
+  resolveThemed,
+  type Inherit,
+  type Themed,
 } from '@invana/canvas-core';
 // Frame observability contract
 export type {

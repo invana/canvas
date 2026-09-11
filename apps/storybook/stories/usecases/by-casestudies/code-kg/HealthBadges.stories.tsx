@@ -38,7 +38,6 @@ import type { CanvasConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData, GraphNode, NodeBadge } from '@invana/graph';
 import type { ElkDirection } from '@invana/graph-layout-elkjs';
 import { invanaCodeKg } from '@invana/graph-datasets/usecase-demos';
-import { ThemeProvider } from '@invana/themes';
 import { Map, Moon, Settings, Sun } from 'lucide-react';
 
 /** The code-KG payload this story reads, declared where it's used. */
@@ -210,60 +209,58 @@ export const HealthBadgesStory: Story = {
     }, []);
 
     return (
-      <ThemeProvider>
-        <GraphCanvasApp
-          data={data}
-          config={config}
-          onReady={onReady}
-          header={{
-            title: 'Code Knowledge Graph',
-            center: <GraphControlsToolbar />,
-            right: (ctx) => (
-              <ToolbarItems
-                orientation="horizontal"
-                items={[
-                  {
-                    type: 'select',
-                    key: 'direction',
-                    label: 'Direction',
-                    value: direction,
-                    options: { RIGHT: 'Right', DOWN: 'Down', LEFT: 'Left', UP: 'Up' },
-                    onChange: (v) => setDirection(v as ElkDirection)
-                  },
-                  {
-                    type: 'toggle',
-                    key: 'minimap',
-                    icon: Map,
-                    label: 'Minimap: off',
-                    activeLabel: 'Minimap: on',
-                    active: minimapOn,
-                    onToggle: () => setMinimapOn((v) => !v)
-                  },
-                  ...dock.items,
-                  {
-                    type: 'toggle',
-                    key: 'theme',
-                    icon: Sun,
-                    activeIcon: Moon,
-                    label: 'Switch to dark theme',
-                    activeLabel: 'Switch to light theme',
-                    active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme
-                  },
-                ]}
-              />
-            )
-          }}
-          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-          right={dock.region}
-        >
-          {/* Registered as `elk`; `config.activeLayout` runs it once data is in,
-              and re-runs it whenever the direction patch lands. */}
-          <ElkLayout id="elk" targetLayerId="graph" fitPadding={80} />
+      <GraphCanvasApp
+        data={data}
+        config={config}
+        onReady={onReady}
+        header={{
+          title: 'Code Knowledge Graph',
+          center: <GraphControlsToolbar />,
+          right: (ctx) => (
+            <ToolbarItems
+              orientation="horizontal"
+              items={[
+                {
+                  type: 'select',
+                  key: 'direction',
+                  label: 'Direction',
+                  value: direction,
+                  options: { RIGHT: 'Right', DOWN: 'Down', LEFT: 'Left', UP: 'Up' },
+                  onChange: (v) => setDirection(v as ElkDirection)
+                },
+                {
+                  type: 'toggle',
+                  key: 'minimap',
+                  icon: Map,
+                  label: 'Minimap: off',
+                  activeLabel: 'Minimap: on',
+                  active: minimapOn,
+                  onToggle: () => setMinimapOn((v) => !v)
+                },
+                ...dock.items,
+                {
+                  type: 'toggle',
+                  key: 'theme',
+                  icon: Sun,
+                  activeIcon: Moon,
+                  label: 'Switch to dark theme',
+                  activeLabel: 'Switch to light theme',
+                  active: ctx.themeKind === 'dark',
+                  onToggle: ctx.toggleTheme
+                },
+              ]}
+            />
+          )
+        }}
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        right={dock.region}
+      >
+        {/* Registered as `elk`; `config.activeLayout` runs it once data is in,
+            and re-runs it whenever the direction patch lands. */}
+        <ElkLayout id="elk" targetLayerId="graph" fitPadding={80} />
 
-          {minimapOn && <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />}
-        </GraphCanvasApp>
-      </ThemeProvider>
+        {minimapOn && <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />}
+      </GraphCanvasApp>
     );
   }
 };

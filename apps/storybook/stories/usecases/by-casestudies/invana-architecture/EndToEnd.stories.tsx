@@ -113,7 +113,6 @@ import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { invanaArchitecture } from '@invana/graph-datasets/usecase-demos';
 import { CollapseExpandBehaviour, MiniMapLayer } from '@invana/canvas-react';
 import { CanvasMessageBar, GraphCanvasApp, GraphControlsToolbar, GraphStatusBar, ToolbarItems } from '@invana/canvas-ui';
-import { ThemeProvider } from '@invana/themes';
 import { Atom, LayoutDashboard, Moon, Network, Sun } from 'lucide-react';
 
 const meta: Meta = { title: 'usecases/by-casestudies/invana-architecture/EndToEnd' };
@@ -443,50 +442,49 @@ export const EndToEndStory: Story = {
     }, []);
 
     return (
-      // A real consumer mounts the app under its own <ThemeProvider> — the app
-      // reads light/dark from it (and throws without one).
-      <ThemeProvider>
-        <GraphCanvasApp
-          data={data}
-          config={config}
-          onReady={onReady}
-          header={{
-            title: 'Invana — end-to-end architecture',
-            center: <GraphControlsToolbar />,
-            right: (ctx) => (
-              <ToolbarItems
-                orientation="horizontal"
-                items={[
-                  {
-                    type: 'select',
-                    key: 'layout',
-                    label: 'Layout',
-                    value: layoutMode,
-                    display: 'segmented',
-                    options: { authored: 'Authored', force: 'Force', elk: 'ELK' },
-                    icons: { authored: LayoutDashboard, force: Atom, elk: Network },
-                    onChange: (v) => applyLayout(v as 'authored' | 'force' | 'elk')
-                  },
-                  {
-                    type: 'toggle',
-                    key: 'theme',
-                    icon: Sun,
-                    activeIcon: Moon,
-                    label: 'Switch to dark theme',
-                    activeLabel: 'Switch to light theme',
-                    active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme
-                  },
-                ]}
-              />
-            )
-          }}
-          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-        >
-          <CollapseExpandBehaviour id="collapse" targetLayerId="graph" />
-          <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />
-        </GraphCanvasApp>
-      </ThemeProvider>
+      // The app reads light/dark from a host `<ThemeProvider>` via `useTheme()`, and
+      // throws without one. In Storybook that host is the toolbar's single provider
+      // (`.storybook/preview.tsx`); a real consumer mounts its own.
+      <GraphCanvasApp
+        data={data}
+        config={config}
+        onReady={onReady}
+        header={{
+          title: 'Invana — end-to-end architecture',
+          center: <GraphControlsToolbar />,
+          right: (ctx) => (
+            <ToolbarItems
+              orientation="horizontal"
+              items={[
+                {
+                  type: 'select',
+                  key: 'layout',
+                  label: 'Layout',
+                  value: layoutMode,
+                  display: 'segmented',
+                  options: { authored: 'Authored', force: 'Force', elk: 'ELK' },
+                  icons: { authored: LayoutDashboard, force: Atom, elk: Network },
+                  onChange: (v) => applyLayout(v as 'authored' | 'force' | 'elk')
+                },
+                {
+                  type: 'toggle',
+                  key: 'theme',
+                  icon: Sun,
+                  activeIcon: Moon,
+                  label: 'Switch to dark theme',
+                  activeLabel: 'Switch to light theme',
+                  active: ctx.themeKind === 'dark',
+                  onToggle: ctx.toggleTheme
+                },
+              ]}
+            />
+          )
+        }}
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+      >
+        <CollapseExpandBehaviour id="collapse" targetLayerId="graph" />
+        <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />
+      </GraphCanvasApp>
     );
   }
 };

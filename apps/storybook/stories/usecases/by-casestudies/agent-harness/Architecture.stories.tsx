@@ -43,7 +43,9 @@ import { TextResolutionLODBehaviour } from '@invana/canvas-react';
 import { GraphCanvasApp, GraphControlsToolbar } from '@invana/canvas-ui';
 import { ThemeProvider } from '@invana/themes';
 
-const meta: Meta = { title: 'usecases/by-casestudies/agent-harness/Architecture' };
+// `selfThemed`: this story pins its own `<ThemeProvider storageKey={null}>`, so the
+// preview decorator skips it entirely and the Theme/Variant toolbar leaves it alone.
+const meta: Meta = { title: 'usecases/by-casestudies/agent-harness/Architecture', parameters: { selfThemed: true } };
 export default meta;
 type Story = StoryObj;
 

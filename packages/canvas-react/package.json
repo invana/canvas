@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@invana/canvas-store": "workspace:*",
-    "@invana/themes": "^0.0.23",
+    "@invana/themes": "^0.0.24",
     "lucide-react": "^0.562.0"
   },
   "peerDependencies": {
@@ -59,7 +59,7 @@
     "@invana/graph-layout-d3-force": "workspace:*",
     "@invana/graph-layout-d3-sankey": "workspace:*",
     "@invana/graph-layout-elkjs": "workspace:*",
-    "@invana/themes": "^0.0.23",
+    "@invana/themes": "^0.0.24",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/react": "^18.3.12",

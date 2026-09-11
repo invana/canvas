@@ -36,7 +36,6 @@ import type { EdgeDecorationSpec, EdgeStyle, GraphCanvas, GraphData, GraphLayer 
 import {
   microservices
 } from '@invana/graph-datasets/usecase-demos';
-import { ThemeProvider } from '@invana/themes';
 import { Activity, Map, Moon, Settings, Sun } from 'lucide-react';
 
 /** The service-topology vocabulary this story colours + sizes by. */
@@ -300,63 +299,61 @@ export const ServiceTopologyStory: Story = {
     }, []);
 
     return (
-      <ThemeProvider>
-        <GraphCanvasApp
-          data={data}
-          config={config}
-          onReady={onReady}
-          header={{
-            title: 'Microservices Topology',
-            center: <GraphControlsToolbar />,
-            right: (ctx) => (
-              <ToolbarItems
-                orientation="horizontal"
-                items={[
-                  {
-                    type: 'toggle',
-                    key: 'simulate',
-                    icon: Activity,
-                    label: 'Simulate degradation: off',
-                    activeLabel: 'Simulate degradation: on',
-                    active: simulateOn,
-                    onToggle: () => setSimulateOn((v) => !v)
-                  },
-                  {
-                    type: 'toggle',
-                    key: 'minimap',
-                    icon: Map,
-                    label: 'Minimap: off',
-                    activeLabel: 'Minimap: on',
-                    active: minimapOn,
-                    onToggle: () => setMinimapOn((v) => !v)
-                  },
-                  ...dock.items,
-                  {
-                    type: 'toggle',
-                    key: 'theme',
-                    icon: Sun,
-                    activeIcon: Moon,
-                    label: 'Switch to dark theme',
-                    activeLabel: 'Switch to light theme',
-                    active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme
-                  },
-                ]}
-              />
-            )
-          }}
-          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-          right={dock.region}
-        >
-          {/* Registered as `elk`; `config.activeLayout` runs it once data is in.
-              `fitPadding` frames the graph when the solve completes — the app's
-              own `fitOnLoad` fires against the pre-layout positions, so an
-              async layout has to own the final fit. */}
-          <ElkLayout id="elk" targetLayerId="graph" fitPadding={80} />
+      <GraphCanvasApp
+        data={data}
+        config={config}
+        onReady={onReady}
+        header={{
+          title: 'Microservices Topology',
+          center: <GraphControlsToolbar />,
+          right: (ctx) => (
+            <ToolbarItems
+              orientation="horizontal"
+              items={[
+                {
+                  type: 'toggle',
+                  key: 'simulate',
+                  icon: Activity,
+                  label: 'Simulate degradation: off',
+                  activeLabel: 'Simulate degradation: on',
+                  active: simulateOn,
+                  onToggle: () => setSimulateOn((v) => !v)
+                },
+                {
+                  type: 'toggle',
+                  key: 'minimap',
+                  icon: Map,
+                  label: 'Minimap: off',
+                  activeLabel: 'Minimap: on',
+                  active: minimapOn,
+                  onToggle: () => setMinimapOn((v) => !v)
+                },
+                ...dock.items,
+                {
+                  type: 'toggle',
+                  key: 'theme',
+                  icon: Sun,
+                  activeIcon: Moon,
+                  label: 'Switch to dark theme',
+                  activeLabel: 'Switch to light theme',
+                  active: ctx.themeKind === 'dark',
+                  onToggle: ctx.toggleTheme
+                },
+              ]}
+            />
+          )
+        }}
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        right={dock.region}
+      >
+        {/* Registered as `elk`; `config.activeLayout` runs it once data is in.
+            `fitPadding` frames the graph when the solve completes — the app's
+            own `fitOnLoad` fires against the pre-layout positions, so an
+            async layout has to own the final fit. */}
+        <ElkLayout id="elk" targetLayerId="graph" fitPadding={80} />
 
-          {minimapOn && <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />}
-        </GraphCanvasApp>
-      </ThemeProvider>
+        {minimapOn && <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />}
+      </GraphCanvasApp>
     );
   }
 };

@@ -18,7 +18,6 @@ import {
   type CanvasPageMenuItem
 } from '@invana/canvas-ui';
 import { Copy, Pencil, Trash2 } from 'lucide-react';
-import { ThemeProvider } from '@invana/themes';
 import { DemoBoard, DemoFrame, hueFor } from './canvas-pages-demo';
 
 const meta: Meta = { title: 'canvas-ui/view-panels/CanvasPagesViewPanel/PageActions' };
@@ -92,16 +91,14 @@ function PageActionsDemo() {
   ];
 
   return (
-    <ThemeProvider>
-      <DemoFrame>
-        <CanvasPagesViewPanel
-          pages={pages}
-          activeId={activeId}
-          onSelect={setActiveId}
-          pageMenuItems={pageMenuItems}
-        />
-      </DemoFrame>
-    </ThemeProvider>
+    <DemoFrame>
+      <CanvasPagesViewPanel
+        pages={pages}
+        activeId={activeId}
+        onSelect={setActiveId}
+        pageMenuItems={pageMenuItems}
+      />
+    </DemoFrame>
   );
 }
 

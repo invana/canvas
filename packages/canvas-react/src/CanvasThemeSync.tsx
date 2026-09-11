@@ -13,11 +13,23 @@
 // theme should follow the app toggle — including nested canvases (each binds to
 // its *nearest* engine via context), which is why it's a shared component rather
 // than per-view wiring. No-ops without a `<ThemeProvider>` ancestor.
+//
+// Lives in canvas-react, not canvas-ui: it renders no UI, it adapts a host signal
+// to the engine. It is deliberately a **separate component** rather than a prop on
+// `<ThemeBehaviour>` — every wrapper in this package holds `Props ≡ engine
+// options`, and a React-only prop could neither round-trip through the
+// serialisable `view.definition` nor be shown by the settings editor. It is also
+// not an engine `Behaviour`: a registered class is not in the React tree and could
+// never read `useThemeOptional()`.
+//
+// It is one of three inputs to `ThemeBehaviour`, layered by host capability:
+// this bridge (React + `<ThemeProvider>`) · `mode: 'document'` (any DOM) ·
+// `mode: 'system'` (any).
 
 import { useEffect } from 'react';
 import { themeFamily } from '@invana/graph';
 import { useThemeOptional } from '@invana/themes';
-import { useCanvas } from '@invana/canvas-react';
+import { useCanvas } from './CanvasContext';
 
 export interface CanvasThemeSyncProps {
   /** Id of the `ThemeBehaviour` on the target canvas to drive. Default `'theme'`. */

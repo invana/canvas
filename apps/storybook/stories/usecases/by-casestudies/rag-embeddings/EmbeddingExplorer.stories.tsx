@@ -34,7 +34,6 @@ import type { GraphCanvas, GraphData, GraphNode } from '@invana/graph';
 import {
   ragEmbeddings
 } from '@invana/graph-datasets/usecase-demos';
-import { ThemeProvider } from '@invana/themes';
 import { Map, Moon, Settings, Sun } from 'lucide-react';
 
 /** The embedding payload this story reads. */
@@ -170,61 +169,59 @@ export const EmbeddingExplorerStory: Story = {
     }, []);
 
     return (
-      <ThemeProvider>
-        <GraphCanvasApp
-          data={data}
-          config={config}
-          onReady={onReady}
-          header={{
-            title: 'RAG Embedding Explorer',
-            center: <GraphControlsToolbar />,
-            right: (ctx) => (
-              <ToolbarItems
-                orientation="horizontal"
-                items={[
-                  {
-                    type: 'toggle',
-                    key: 'minimap',
-                    icon: Map,
-                    label: 'Minimap: off',
-                    activeLabel: 'Minimap: on',
-                    active: minimapOn,
-                    onToggle: () => setMinimapOn((v) => !v)
-                  },
-                  ...dock.items,
-                  {
-                    type: 'toggle',
-                    key: 'theme',
-                    icon: Sun,
-                    activeIcon: Moon,
-                    label: 'Switch to dark theme',
-                    activeLabel: 'Switch to light theme',
-                    active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme
-                  },
-                ]}
-              />
-            )
-          }}
-          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-          right={dock.region}
-        >
-          {/* Under the points (`zIndex: -1` by default). Nothing moves the nodes
-              here, so it paints once off the authored positions. */}
-          <DensityContourFillLayer
-            id="density"
-            graphLayerId="graph"
-            bandwidth={32}
-            thresholds={12}
-            cellSize={4}
-            fillOpacity={0.45}
-            padding={80}
-            palette="magma"
-          />
+      <GraphCanvasApp
+        data={data}
+        config={config}
+        onReady={onReady}
+        header={{
+          title: 'RAG Embedding Explorer',
+          center: <GraphControlsToolbar />,
+          right: (ctx) => (
+            <ToolbarItems
+              orientation="horizontal"
+              items={[
+                {
+                  type: 'toggle',
+                  key: 'minimap',
+                  icon: Map,
+                  label: 'Minimap: off',
+                  activeLabel: 'Minimap: on',
+                  active: minimapOn,
+                  onToggle: () => setMinimapOn((v) => !v)
+                },
+                ...dock.items,
+                {
+                  type: 'toggle',
+                  key: 'theme',
+                  icon: Sun,
+                  activeIcon: Moon,
+                  label: 'Switch to dark theme',
+                  activeLabel: 'Switch to light theme',
+                  active: ctx.themeKind === 'dark',
+                  onToggle: ctx.toggleTheme
+                },
+              ]}
+            />
+          )
+        }}
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        right={dock.region}
+      >
+        {/* Under the points (`zIndex: -1` by default). Nothing moves the nodes
+            here, so it paints once off the authored positions. */}
+        <DensityContourFillLayer
+          id="density"
+          graphLayerId="graph"
+          bandwidth={32}
+          thresholds={12}
+          cellSize={4}
+          fillOpacity={0.45}
+          padding={80}
+          palette="magma"
+        />
 
-          {minimapOn && <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />}
-        </GraphCanvasApp>
-      </ThemeProvider>
+        {minimapOn && <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />}
+      </GraphCanvasApp>
     );
   }
 };

@@ -38,7 +38,6 @@ import {
   useSidePanels
 } from '@invana/canvas-ui';
 import { topicCartography } from '@invana/graph-datasets/topic-cartography';
-import { ThemeProvider } from '@invana/themes';
 import { Filter, Gauge, Map, Moon, Search, Sun } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 
@@ -95,66 +94,64 @@ export const FindInCanvasViewPanelStory: Story = {
     }, []);
 
     return (
-      <ThemeProvider>
-        <GraphCanvasApp
-          data={data}
-          config={config}
-          onReady={onReady}
-          header={{
-            title: 'FindInCanvasViewPanel',
-            center: <GraphControlsToolbar />,
-            // One shared toolbar — the panel toggles plus minimap / dev-overlay /
-            // theme, all as items.
-            right: (ctx) => (
-              <ToolbarItems
-                orientation="horizontal"
-                items={[
-                  ...dock.items,
-                  {
-                    type: 'toggle',
-                    key: 'minimap',
-                    icon: Map,
-                    label: 'Minimap: off',
-                    activeLabel: 'Minimap: on',
-                    active: minimapOn,
-                    onToggle: () => setMinimapOn((v) => !v)
-                  },
-                  {
-                    type: 'toggle',
-                    key: 'devinfo',
-                    icon: Gauge,
-                    label: 'Dev overlay: off',
-                    activeLabel: 'Dev overlay: on',
-                    active: devOn,
-                    onToggle: () => setDevOn((v) => !v)
-                  },
-                  {
-                    type: 'toggle',
-                    key: 'theme',
-                    icon: Sun,
-                    activeIcon: Moon,
-                    label: 'Switch to dark theme',
-                    activeLabel: 'Switch to light theme',
-                    active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme
-                  },
-                ]}
-              />
-            )
-          }}
-          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-          // The active panel docks into the app's resizable `right` region (or none).
-          right={dock.region}
-        >
-          {/* Screen-fixed overlays driven by the header toggle items above. */}
-          {minimapOn && <MiniMapLayer backgroundLayerId="background" position="bottom-left" />}
-          {devOn && <DevInfoLayer enabled corner="top-left" margin={{ x: 12, y: 48 }} />}
+      <GraphCanvasApp
+        data={data}
+        config={config}
+        onReady={onReady}
+        header={{
+          title: 'FindInCanvasViewPanel',
+          center: <GraphControlsToolbar />,
+          // One shared toolbar — the panel toggles plus minimap / dev-overlay /
+          // theme, all as items.
+          right: (ctx) => (
+            <ToolbarItems
+              orientation="horizontal"
+              items={[
+                ...dock.items,
+                {
+                  type: 'toggle',
+                  key: 'minimap',
+                  icon: Map,
+                  label: 'Minimap: off',
+                  activeLabel: 'Minimap: on',
+                  active: minimapOn,
+                  onToggle: () => setMinimapOn((v) => !v)
+                },
+                {
+                  type: 'toggle',
+                  key: 'devinfo',
+                  icon: Gauge,
+                  label: 'Dev overlay: off',
+                  activeLabel: 'Dev overlay: on',
+                  active: devOn,
+                  onToggle: () => setDevOn((v) => !v)
+                },
+                {
+                  type: 'toggle',
+                  key: 'theme',
+                  icon: Sun,
+                  activeIcon: Moon,
+                  label: 'Switch to dark theme',
+                  activeLabel: 'Switch to light theme',
+                  active: ctx.themeKind === 'dark',
+                  onToggle: ctx.toggleTheme
+                },
+              ]}
+            />
+          )
+        }}
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        // The active panel docks into the app's resizable `right` region (or none).
+        right={dock.region}
+      >
+        {/* Screen-fixed overlays driven by the header toggle items above. */}
+        {minimapOn && <MiniMapLayer backgroundLayerId="background" position="bottom-left" />}
+        {devOn && <DevInfoLayer enabled corner="top-left" margin={{ x: 12, y: 48 }} />}
 
-          {/* Standard right-click menu (Focus · Select · Hide/Show) — Hide feeds
-              the Filters panel. */}
-          <GraphContextMenu />
-        </GraphCanvasApp>
-      </ThemeProvider>
+        {/* Standard right-click menu (Focus · Select · Hide/Show) — Hide feeds
+            the Filters panel. */}
+        <GraphContextMenu />
+      </GraphCanvasApp>
     );
   }
 };

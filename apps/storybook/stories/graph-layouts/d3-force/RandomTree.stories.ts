@@ -117,7 +117,7 @@ export const RandomTreeStory: Story = {
         'drag-node': { enabled: true },
         theme: {
           enabled: true,
-          mode: 'system',
+          mode: 'document',
           light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
           dark: { backgroundColor: '#0b1220', color: '#475569' }
         }

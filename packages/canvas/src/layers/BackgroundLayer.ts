@@ -25,8 +25,7 @@
  */
 
 
-import type { CanvasContext } from '@invana/canvas-core';
-import type { ResolvedTheme } from '@invana/canvas-store';
+import { INHERIT, resolveThemed, type CanvasContext, type Themed } from '@invana/canvas-core';
 import { ScreenLayer, type ScreenLayerHit } from './ScreenLayer';
 import type { LayerOptions } from '@invana/canvas-core';
 
@@ -48,13 +47,25 @@ export type BackgroundMode = 'auto' | 'light' | 'dark';
 export type BackgroundKind = 'light' | 'dark';
 
 /**
- * A colour input. Pass a `number` / CSS string for a single colour, or a
- * `{ light, dark }` pair to swap based on the layer's `mode`.
+ * A colour input. Pass a `number` / CSS string to **pin** a colour, `'inherit'`
+ * to follow the active theme's palette role, or a `{ light, dark }` pair to
+ * swap on the layer's `mode` — each half of which may itself be `'inherit'`.
+ *
+ * `'inherit'` is the default for both colour options, and it is what makes the
+ * background themeable *and* overridable: an author-set colour wins over the
+ * theme and keeps winning across every theme switch, while an untouched one
+ * tracks the palette. See {@link INHERIT}.
+ *
+ * @example
+ * ```ts
+ * backgroundColor: 'inherit'                      // follows `surfaceRole`
+ * backgroundColor: '#0f172a'                      // pinned; the theme never touches it
+ * backgroundColor: { light: 'inherit', dark: '#000' }  // themed in light, pinned in dark
+ * ```
  */
 export type BackgroundColor =
-  | number
-  | string
-  | { light: number | string; dark: number | string };
+  | Themed<number | string>
+  | { light: Themed<number | string>; dark: Themed<number | string> };
 
 /** Construction-time options for `BackgroundLayer`. */
 export interface BackgroundLayerOptions {
@@ -64,10 +75,14 @@ export interface BackgroundLayerOptions {
   patternType?: BackgroundPatternType;
   /**
    * Pattern foreground colour (dot / line / grid colour). Accepts `0xRRGGBB`,
-   * a CSS string, or a `{ light, dark }` pair resolved against `mode`.
+   * a CSS string, `'inherit'`, or a `{ light, dark }` pair resolved against
+   * `mode`. Default `'inherit'` — follows {@link patternRole}.
    */
   color?: BackgroundColor;
-  /** Solid-fill colour painted behind the pattern. Same accepted forms as `color`. */
+  /**
+   * Solid-fill colour painted behind the pattern. Same accepted forms as
+   * {@link color}. Default `'inherit'` — follows {@link surfaceRole}.
+   */
   backgroundColor?: BackgroundColor;
   /** Dot radius / line thickness, in *texture pixels*. Default `1`. */
   size?: number;
@@ -93,30 +108,53 @@ export interface BackgroundLayerOptions {
    */
   hidePatternBelowZoom?: number;
   /**
-   * How `{ light, dark }` colour variants are resolved. `'auto'` (default)
-   * follows the active theme on `ctx.theme`; `'light'` / `'dark'` pin
-   * explicitly. Has no effect when both colours are plain scalars.
+   * Which half of a `{ light, dark }` colour pair is used, and which built-in
+   * fallback paints before any theme is published. `'auto'` (default) follows
+   * the active theme on `ctx.theme`; `'light'` / `'dark'` pin explicitly.
+   *
+   * It does **not** select a palette variant: the published `ResolvedTheme`
+   * carries one kind's palette, so an `'inherit'` colour always resolves to the
+   * theme's own kind regardless of this setting. Has no effect on plain
+   * scalars.
    */
   mode?: BackgroundMode;
   /**
-   * Palette role read for the solid backdrop colour on `'theme:change'`. When
-   * the published theme's palette carries this role, it overrides
-   * {@link backgroundColor}; otherwise the option stands. Default `'surface'`.
+   * Palette role the solid backdrop reads when {@link backgroundColor} is
+   * `'inherit'` (the default). Default `'surface'`.
+   *
+   * The role is only consulted for an `'inherit'` value — a pinned colour is
+   * never overridden, and no role name can reach past it.
    */
   surfaceRole?: string;
   /**
-   * Palette role read for the pattern (dots / grid / lines) colour on
-   * `'theme:change'`. Falls back to `'stroke'` when the role is absent but
-   * `'stroke'` is present; otherwise {@link color} stands. Default `'divider'`.
+   * Palette role the pattern (dots / grid / lines) reads when {@link color} is
+   * `'inherit'` (the default), falling back to `'stroke'` when the role is
+   * absent from the palette. Default `'divider'`.
    */
   patternRole?: string;
 }
 
+/**
+ * Colours painted for an `'inherit'` option when **no theme has been published**
+ * — a canvas with no `ThemeBehaviour` registered, or one whose behaviour hasn't
+ * been enabled yet. Chosen to match the `default` theme family's `surface` /
+ * `divider` roles in each kind, so enabling a theme is not a visible jump.
+ *
+ * The light values are the layer's historical hardcoded defaults, so a canvas
+ * with no theme looks exactly as it always has.
+ */
+const FALLBACK = {
+  background: { light: '#f8fafc', dark: '#0f172a' },
+  pattern: { light: '#6f7b8b', dark: '#475569' },
+  // background: { light: 'inherit', dark: 'inherit' },
+  // pattern: { light: 'inherit', dark: 'inherit' },
+} as const;
+
 const DEFAULTS: Required<BackgroundLayerOptions> = {
   type: 'solid',
   patternType: 'dots',
-  color: '#6f7b8b',
-  backgroundColor: '#f8fafc',
+  color: INHERIT,
+  backgroundColor: INHERIT,
   size: 1,
   spacing: 12,
   alpha: 0.6,
@@ -188,15 +226,16 @@ export class BackgroundLayer extends ScreenLayer<
     this.camY = ctx.camera.y;
     this.camScale = ctx.camera.scale;
 
-    // Adopt any theme already published before this layer mounted, then paint.
-    this.adoptTheme(ctx.theme.current());
+    // Colours are resolved at paint time (see `resolveColor`), so a theme
+    // published before this layer mounted is picked up by the first render with
+    // no adoption step.
     this.render();
 
-    // Recolour on every theme switch. The `ThemeBehaviour` is the sole
-    // publisher; we read the resolved kind (for `{ light, dark }` pairs) and
-    // the palette roles for the backdrop / pattern colours.
-    this.offTheme = ctx.events.on('theme:change', (theme) => {
-      this.adoptTheme(theme);
+    // Recolour on every theme switch — a full `render()` because the pattern
+    // tile is rasterised with the resolved colour baked in. Nothing is written
+    // back to `this.opts`: an author-set colour must survive every switch, and
+    // the options are what `getOptions()` and the settings editor read.
+    this.offTheme = ctx.events.on('theme:change', () => {
       if (this.mounted) this.render();
     });
 
@@ -287,7 +326,7 @@ export class BackgroundLayer extends ScreenLayer<
    * (whichever form the option carried), suitable for any pixi fill.
    */
   getResolvedBackgroundColor(): number | string {
-    return this.resolveColor(this.opts.backgroundColor);
+    return this.resolvedBackgroundColor();
   }
 
   // ─── Internals ──────────────────────────────────────────────────────────
@@ -312,7 +351,7 @@ export class BackgroundLayer extends ScreenLayer<
    */
   private paint(): void {
     const { width, height } = this.viewportSize();
-    const color = this.resolveColor(this.opts.backgroundColor);
+    const color = this.resolvedBackgroundColor();
 
     if (this.opts.type === 'solid') {
       this.surface.setBackdrop({ color, width, height });
@@ -365,7 +404,7 @@ export class BackgroundLayer extends ScreenLayer<
   }
 
   private createPatternTile(): HTMLCanvasElement {
-    const { patternType, color, size, spacing } = this.opts;
+    const { patternType, size, spacing } = this.opts;
     // Rasterise the tile at device-pixel density so dots / lines stay crisp on
     // retina / scaled displays. `tileScale` compensates so the on-screen size
     // is still expressed in CSS pixels.
@@ -380,7 +419,7 @@ export class BackgroundLayer extends ScreenLayer<
     off.height = Math.round(spacing * dpr);
     const ctx2d = off.getContext('2d')!;
     ctx2d.scale(dpr, dpr);
-    ctx2d.fillStyle = colorToCss(this.resolveColor(color));
+    ctx2d.fillStyle = colorToCss(this.resolvedPatternColor());
 
     switch (patternType) {
       case 'dots':
@@ -400,25 +439,48 @@ export class BackgroundLayer extends ScreenLayer<
     return off;
   }
 
-  private resolveColor(c: BackgroundColor): number | string {
-    if (typeof c === 'number' || typeof c === 'string') return c;
-    return this.getResolvedKind() === 'dark' ? c.dark : c.light;
+  /** The solid backdrop colour as painted — {@link INHERIT} resolved, pins honoured. */
+  private resolvedBackgroundColor(): number | string {
+    return this.resolveColor(this.opts.backgroundColor, this.opts.surfaceRole, FALLBACK.background);
   }
 
   /**
-   * Pull the backdrop / pattern colours out of a published theme's palette
-   * (when the configured roles are present). A `null` theme — or a palette that
-   * omits the roles, as the single-layer `{ light, dark }` shorthand does —
-   * leaves the current options untouched, so explicitly-set colours stand. The
-   * resolved `kind` is read live in `getResolvedKind()`, so `{ light, dark }`
-   * colour pairs follow the theme without any copy here.
+   * The pattern colour as painted. Falls back to the `'stroke'` role when the
+   * configured {@link BackgroundLayerOptions.patternRole} is absent from the
+   * palette — a theme may carry one without the other.
    */
-  private adoptTheme(theme: ResolvedTheme | null): void {
-    if (!theme) return;
-    const { palette } = theme;
-    const surface = palette[this.opts.surfaceRole];
-    if (surface !== undefined) this.opts = { ...this.opts, backgroundColor: surface };
-    const pattern = palette[this.opts.patternRole] ?? palette['stroke'];
-    if (pattern !== undefined) this.opts = { ...this.opts, color: pattern };
+  private resolvedPatternColor(): number | string {
+    return this.resolveColor(
+      this.opts.color,
+      [this.opts.patternRole, 'stroke'],
+      FALLBACK.pattern,
+    );
+  }
+
+  /**
+   * Resolve a colour option to something paintable, in two stages:
+   *
+   * 1. **Pick the variant** — a `{ light, dark }` pair collapses to one half via
+   *    {@link getResolvedKind} (the layer's `mode`, else the published theme's kind).
+   * 2. **Resolve the sentinel** — `'inherit'` reads `roles` off the live palette;
+   *    anything else is an author-set colour and passes through untouched.
+   *
+   * Called on every paint rather than adopted into `this.opts`, which is what
+   * keeps a pinned colour pinned across theme switches and keeps `getOptions()`
+   * reporting what the author wrote rather than what the theme last painted.
+   */
+  private resolveColor(
+    c: BackgroundColor,
+    roles: string | readonly string[],
+    fallback: { readonly light: string; readonly dark: string },
+  ): number | string {
+    const kind = this.getResolvedKind();
+    const picked = typeof c === 'object' && c !== null ? (kind === 'dark' ? c.dark : c.light) : c;
+    return resolveThemed<number | string>(
+      picked,
+      this.ctx?.theme.current()?.palette,
+      roles,
+      kind === 'dark' ? fallback.dark : fallback.light,
+    );
   }
 }

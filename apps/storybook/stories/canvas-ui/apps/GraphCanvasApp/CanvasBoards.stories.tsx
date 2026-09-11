@@ -42,7 +42,6 @@ import {
 } from '@invana/canvas-ui';
 import { Copy, Info, Pencil, Settings, Trash2 } from 'lucide-react';
 import type { EdgeStyle, GraphData, GraphNode, NodeStyle } from '@invana/graph';
-import { ThemeProvider } from '@invana/themes';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { D3HierarchyLayout } from '@invana/graph-layout-d3-hierarchy';
@@ -306,26 +305,24 @@ function CanvasBoards(): ReactNode {
   ];
 
   return (
-    <ThemeProvider>
-      <div
-        style={{
-          width: '100%',
-          height: '100vh',
-          background: 'var(--background, #fff)',
-          color: 'var(--foreground, #0f172a)'
-        }}
-      >
-        <CanvasPagesViewPanel
-          pages={pages}
-          activeId={String(activeId)}
-          onSelect={(id) => setActiveId(Number(id))}
-          onAdd={addBoard}
-          headerActions={headerActions}
-          pageMenuItems={pageMenuItems}
-          addLabel="New board"
-        />
-      </div>
-    </ThemeProvider>
+    <div
+      style={{
+        width: '100%',
+        height: '100vh',
+        background: 'var(--background, #fff)',
+        color: 'var(--foreground, #0f172a)'
+      }}
+    >
+      <CanvasPagesViewPanel
+        pages={pages}
+        activeId={String(activeId)}
+        onSelect={(id) => setActiveId(Number(id))}
+        onAdd={addBoard}
+        headerActions={headerActions}
+        pageMenuItems={pageMenuItems}
+        addLabel="New board"
+      />
+    </div>
   );
 }
 

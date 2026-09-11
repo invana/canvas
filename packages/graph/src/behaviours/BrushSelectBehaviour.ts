@@ -195,9 +195,18 @@ export class BrushSelectBehaviour extends Behaviour {
     this.layer = layer;
     this.ctxRef = ctx;
 
-    // Mount the screen-space overlay.
+    // Mount the overlay in **screen** space, because that is the space the rect
+    // is drawn in: `drawRect` uses the raw `screenFromEvent` corners, never
+    // world coordinates. A `'world'` overlay is attached to the camera-
+    // transformed container (`PixiRenderer.createOverlay`), so those screen
+    // numbers would be transformed a second time and the marquee would paint
+    // `screen * zoom + pan` away from the cursor — down and right of it on any
+    // fitted canvas. `LassoSelectBehaviour` keeps a `'world'` overlay and
+    // converts each point with `camera.toWorld` instead; the brush deliberately
+    // stays in screen space so its 1px dashed stroke reads the same at every
+    // zoom level.
     // Transient gesture visual — never state (`docs/renderer-split-design.md` §3).
-    this.overlay = ctx.createOverlay(`${this.id}-overlay`, 'world');
+    this.overlay = ctx.createOverlay(`${this.id}-overlay`, 'screen');
 
     const el = ctx.canvasElement;
     if (!el) {

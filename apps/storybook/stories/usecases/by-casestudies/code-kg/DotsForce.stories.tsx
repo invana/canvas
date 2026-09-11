@@ -37,7 +37,6 @@ import type { GraphCanvas, GraphData, GraphNode, NodeShapeOptions } from '@invan
 import {
   invanaCodeKg
 } from '@invana/graph-datasets/usecase-demos';
-import { ThemeProvider } from '@invana/themes';
 import { Map, Moon, Settings, Sun } from 'lucide-react';
 
 /** The code-KG payload this story reads, declared where it's used. */
@@ -220,80 +219,78 @@ export const DotsForceStory: Story = {
     }, []);
 
     return (
-      <ThemeProvider>
-        <GraphCanvasApp
-          data={data}
-          config={config}
-          onReady={onReady}
-          header={{
-            title: 'Invana Code KG — d3-force',
-            center: <GraphControlsToolbar />,
-            right: (ctx) => (
-              <ToolbarItems
-                orientation="horizontal"
-                items={[
-                  {
-                    type: 'select',
-                    key: 'color-mode',
-                    label: 'Colour by',
-                    value: colorMode,
-                    options: { type: 'Entity type', cluster: 'Cluster' },
-                    onChange: (v) => setColorMode(v as 'type' | 'cluster')
-                  },
-                  {
-                    type: 'select',
-                    key: 'labels',
-                    label: 'Types',
-                    // One trigger toggling a single entity type at a time keeps
-                    // the header compact; a tick marks the ones in play.
-                    value: '',
-                    options: Object.fromEntries(
-                      ALL_LABELS.map((l) => [l, `${labels.has(l) ? '✓ ' : ''}${l}`]),
-                    ),
-                    triggerLabelOnly: true,
-                    onChange: (l) =>
-                      setLabels((prev) => {
-                        const next = new Set(prev);
-                        if (next.has(l as InvanaCodeNodeLabel)) next.delete(l as InvanaCodeNodeLabel);
-                        else next.add(l as InvanaCodeNodeLabel);
-                        return next;
-                      })
-                  },
-                  {
-                    type: 'toggle',
-                    key: 'minimap',
-                    icon: Map,
-                    label: 'Minimap: off',
-                    activeLabel: 'Minimap: on',
-                    active: minimapOn,
-                    onToggle: () => setMinimapOn((v) => !v)
-                  },
-                  ...dock.items,
-                  {
-                    type: 'toggle',
-                    key: 'theme',
-                    icon: Sun,
-                    activeIcon: Moon,
-                    label: 'Switch to dark theme',
-                    activeLabel: 'Switch to light theme',
-                    active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme
-                  },
-                ]}
-              />
-            )
-          }}
-          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-          right={dock.region}
-        >
-          {/* Labels appear at 0.6× (`labelMinZoom`); this re-rasters them at 4×
-              once you pass 1.6× so the text you zoomed in to read stays crisp.
-              It never hides / shows labels — only their texture resolution. */}
-          <TextResolutionLODBehaviour id="label-lod" targetLayerId="graph" />
+      <GraphCanvasApp
+        data={data}
+        config={config}
+        onReady={onReady}
+        header={{
+          title: 'Invana Code KG — d3-force',
+          center: <GraphControlsToolbar />,
+          right: (ctx) => (
+            <ToolbarItems
+              orientation="horizontal"
+              items={[
+                {
+                  type: 'select',
+                  key: 'color-mode',
+                  label: 'Colour by',
+                  value: colorMode,
+                  options: { type: 'Entity type', cluster: 'Cluster' },
+                  onChange: (v) => setColorMode(v as 'type' | 'cluster')
+                },
+                {
+                  type: 'select',
+                  key: 'labels',
+                  label: 'Types',
+                  // One trigger toggling a single entity type at a time keeps
+                  // the header compact; a tick marks the ones in play.
+                  value: '',
+                  options: Object.fromEntries(
+                    ALL_LABELS.map((l) => [l, `${labels.has(l) ? '✓ ' : ''}${l}`]),
+                  ),
+                  triggerLabelOnly: true,
+                  onChange: (l) =>
+                    setLabels((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(l as InvanaCodeNodeLabel)) next.delete(l as InvanaCodeNodeLabel);
+                      else next.add(l as InvanaCodeNodeLabel);
+                      return next;
+                    })
+                },
+                {
+                  type: 'toggle',
+                  key: 'minimap',
+                  icon: Map,
+                  label: 'Minimap: off',
+                  activeLabel: 'Minimap: on',
+                  active: minimapOn,
+                  onToggle: () => setMinimapOn((v) => !v)
+                },
+                ...dock.items,
+                {
+                  type: 'toggle',
+                  key: 'theme',
+                  icon: Sun,
+                  activeIcon: Moon,
+                  label: 'Switch to dark theme',
+                  activeLabel: 'Switch to light theme',
+                  active: ctx.themeKind === 'dark',
+                  onToggle: ctx.toggleTheme
+                },
+              ]}
+            />
+          )
+        }}
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        right={dock.region}
+      >
+        {/* Labels appear at 0.6× (`labelMinZoom`); this re-rasters them at 4×
+            once you pass 1.6× so the text you zoomed in to read stays crisp.
+            It never hides / shows labels — only their texture resolution. */}
+        <TextResolutionLODBehaviour id="label-lod" targetLayerId="graph" />
 
-          {minimapOn && <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />}
-        </GraphCanvasApp>
-      </ThemeProvider>
+        {minimapOn && <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />}
+      </GraphCanvasApp>
     );
   }
 };

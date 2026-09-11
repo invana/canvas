@@ -46,8 +46,17 @@ export interface Theme {
 /** A registry of {@link Theme}s keyed by name. */
 export type ThemeRegistry = Record<string, Theme>;
 
-/** Mode selector. `'system'` follows `prefers-color-scheme`; the rest pin. */
-export type ThemeMode = 'system' | 'light' | 'dark';
+/**
+ * Mode selector.
+ *
+ * - `'system'` — follows `prefers-color-scheme` (the OS appearance setting).
+ * - `'document'` — follows the **host page**: the `data-theme` attribute (or a
+ *   `light`/`dark` class) on `<html>`, which is what design-kit theme switchers
+ *   write. Use it when the canvas should track an app-level theme picker rather
+ *   than the OS — and the family travels too, not just the light/dark kind.
+ * - `'light'` / `'dark'` — pin the kind, ignoring both.
+ */
+export type ThemeMode = 'system' | 'document' | 'light' | 'dark';
 
 /** The concrete kind a {@link ThemeMode} resolves to. */
 export type ThemeKind = 'light' | 'dark';

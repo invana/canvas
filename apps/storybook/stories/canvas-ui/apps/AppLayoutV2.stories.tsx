@@ -7,8 +7,9 @@
  *
  * **One view, one instance.** `CanvasPagesViewPanel` renders its strip and its
  * body as a single column, so the main section mounts it once and gets both —
- * the tabs (with `onAdd`, the per-page caret menu and the panel-toggle
- * `headerActions`) and, below them, one `<GraphCanvasApp>` per board with
+ * the tabs (with `onAdd`, the per-page caret menu and a `headerActions` gear that
+ * opens the inspector on its Settings tab) and, below them, one
+ * `<GraphCanvasApp>` per board with
  * `showHeader={false}`, because the chrome around it is the shell, not the app's
  * own rail. The footer stays a plain status bar.
  *
@@ -18,26 +19,95 @@
  * are exactly where you left them. Each board is its own engine, sharing nothing
  * but the host `<ThemeProvider>`. **Remove** tears one down.
  *
+ * **The right inspector is the active board's, nine panels deep** — closed until
+ * the strip's **gear** opens it on Settings — what the board
+ * is · its live **settings** (`CanvasSettingsEditorPanel`) · per-type **styling**
+ * (`StylingViewPanel`) · its **layers** (`LayersViewPanel`) · its saved
+ * **snapshots** (`CanvasSnapshotsViewPanel`) · **find** (`FindInCanvasViewPanel`,
+ * a locate) · its live **selection** (`SelectionViewPanel`, read off the kernel
+ * store) · the selected **element** in detail (`ElementInspectorViewPanel`,
+ * read-only, revealed automatically when you click a node or an edge) · its
+ * parked **filters** (`CanvasFiltersViewPanel`, a hide). The shell is *outside* every board's canvas
+ * context, so each board publishes its engine up through `onReady` and the panels
+ * take it as an explicit `canvas` prop — switch tabs in the main strip and all
+ * eight engine-bound panels follow the new board. Styling and snapshots are values the **host** owns
+ * (Invana persists them), so the shell keeps one per board — and for snapshots that
+ * makes this the **controlled** side of `CanvasSnapshotsViewPanel`: the shell passes
+ * `snapshots` and applies the panel's create / update / delete events, while the
+ * panel does the engine work (capture, restore, messages). Boards start with no
+ * history; take a snapshot and it lands under that board alone.
+ *
+ * **Every board carries a minimap** — a `MiniMapLayer` mounted *inside* each
+ * `<GraphCanvasApp>` (bottom-right, mirroring that board's `graph` layer, its
+ * backdrop borrowed from the board's `background` layer so it survives a theme
+ * flip). The header's map button mounts / unmounts it on every board at once,
+ * and because it is a real layer it appears in the inspector's **Layers** tab
+ * with an eye of its own.
+ *
+ * **Right-click anything for its menu** — a `<GraphContextMenu>` (nodes *and*
+ * edges) plus a `<GraphBackgroundContextMenu>` for the empty canvas, both
+ * mounted inside each board, so the menu belongs to the board you clicked, not
+ * the shell. Nodes and edges get the standard items — **Focus** · **Select** ·
+ * **Hide** — and this story appends an **Inspect** item through `nodeItems` /
+ * `edgeItems`, which receive `(ctx, defaults)` and return the final list. The
+ * background menu carries the board-wide controls: a **Selection** submenu
+ * (click · brush · lasso, the armed one accented), **Lock view** (pan + node
+ * drag off, zoom left alone), **Fit to view**, and **Show all hidden** — the
+ * same restore the inspector's Filters tab performs. The first two read the
+ * live behaviours and write through `canvas.update`, so they and the header
+ * toolbar's own pickers are two views of one state, not two copies.
+ *
+ * **The explorer bar lives in the shell header, not the pages** — one
+ * `<GraphControlsToolbarLite>` (layout · zoom / fit / lock · select-mode · grid)
+ * pinned to the header's true centre — the nav centres its middle section in
+ * what the left and right sections leave over, so the bar is absolutely
+ * positioned against a `relative` header instead — driving whichever board is
+ * active. It resolves its
+ * engine from context, and the shell sits outside every board, so the story
+ * re-provides `activeCanvas` on `CanvasContext` + `GraphCanvasContext` around
+ * it — the mirror image of the inspector panels, which take `canvas` as a prop.
+ * Its **Run** applies the toolbar's own d3-force; each board's tuned
+ * `graph-force` stays where it was, in the inspector's Settings tab.
+ *
  * **The footer is the active board's readout** — node / edge counts and the force
  * settings it runs, read from this story's own board list. Nothing there is
  * mocked; per-frame numbers (fps, zoom) would have to come from the engine, which
  * lives *inside* a board and can't be reached from the shell footer.
  */
 
-import { useMemo, useRef, useState, type ElementType } from 'react';
+import { useEffect, useMemo, useRef, useState, type ElementType } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import type { CanvasConfig } from '@invana/canvas';
-import type { GraphData, GraphNode } from '@invana/graph';
+import { CanvasContext, ClickInspectBehaviour, GraphCanvasContext, MiniMapLayer } from '@invana/canvas-react';
+import type {
+  ClickInspectBehaviour as ClickInspectBehaviourClass,
+  GraphCanvas,
+  GraphData,
+  GraphLayer,
+  GraphNode,
+} from '@invana/graph';
 import {
+  CanvasFiltersViewPanel,
   CanvasPagesViewPanel,
+  CanvasSettingsEditorPanel,
+  CanvasSnapshotsViewPanel,
+  FindInCanvasViewPanel,
+  ElementInspectorViewPanel,
+  GraphBackgroundContextMenu,
   GraphCanvasApp,
+  GraphContextMenu,
+  GraphControlsToolbarLite,
+  LayersViewPanel,
+  SelectionViewPanel,
+  StylingViewPanel,
   type CanvasPage,
   type CanvasPageMenuItem,
+  type CanvasSnapshot,
+  type TypeStylingPatch,
 } from '@invana/canvas-ui';
 import {
   AppLayoutV2,
-  ThemeProvider,
   ThemeSelector,
   type AppLayoutV2Props,
 } from '@invana/themes';
@@ -63,17 +133,31 @@ import {
 } from '@invana/ui';
 import {
   Copy,
+  Eye,
+  Filter,
   GitBranch,
+  History,
+  Info,
+  Lasso,
   Layers,
+  Lock,
+  LockOpen,
+  Map as MapIcon,
+  Maximize2,
+  MousePointer2,
+  MousePointerClick,
   Network,
+  Paintbrush,
   Palette,
   PanelLeftClose,
-  PanelLeftOpen,
   PanelRightClose,
-  PanelRightOpen,
   Pencil,
   Plus,
+  ScanSearch,
+  Search,
+  Settings,
   SlidersHorizontal,
+  SquareDashedMousePointer,
   Trash2,
   Users,
 } from 'lucide-react';
@@ -240,11 +324,150 @@ export const AppLayoutV2Story: Story = {
     );
     const [activeId, setActiveId] = useState('b0');
     const [leftOpen, setLeftOpen] = useState(true);
-    const [rightOpen, setRightOpen] = useState(true);
+    // The inspector starts **closed** — the canvas gets the full width until the
+    // strip's gear (or the rail's Inspector item) asks for it.
+    const [rightOpen, setRightOpen] = useState(false);
+    const [rightTab, setRightTab] = useState('canvas');
+    // Shell-wide, like the side panels: every board gets a minimap or none does.
+    const [minimapOn, setMinimapOn] = useState(true);
     const nextBoardId = useRef(2);
+
+    // The live engine per board. The inspector panels sit *outside* every
+    // `<GraphCanvasApp>`'s context (they're in the shell's right section), so
+    // each one is handed its canvas explicitly rather than resolving a provider.
+    const [canvases, setCanvases] = useState<Record<string, GraphCanvas | null>>({});
+
+    // One **stable** `onReady` per board: the app's ready bridge re-runs its
+    // effect whenever the callback identity changes, so a fresh arrow per render
+    // would republish the engine on every render.
+    const readyHandlers = useRef(new Map<string, (canvas: GraphCanvas | null) => void>());
+    const onReadyFor = (id: string): ((canvas: GraphCanvas | null) => void) => {
+      let handler = readyHandlers.current.get(id);
+      if (!handler) {
+        handler = (canvas) => setCanvases((all) => ({ ...all, [id]: canvas }));
+        readyHandlers.current.set(id, handler);
+      }
+      return handler;
+    };
+
+    // Per-type styling is a *persisted* value the host owns — one patch per
+    // board, which `StylingViewPanel` both edits and paints onto that board.
+    const [styling, setStyling] = useState<Record<string, TypeStylingPatch>>({});
+
+    // …and so are the saved snapshots — one list per board, which is why this
+    // shell drives the panel in **controlled** mode: it passes `snapshots` and
+    // applies the panel's create / update / delete events itself. (The standalone
+    // panel story shows the other mode, where the panel owns its own list.) The
+    // engine work — capture, restore, messages — is the panel's either way.
+    //
+    // Every board starts with no history: a snapshot is something you take, and
+    // seeded rows carry no document, so they could only ever refuse to restore.
+    const [activeSnapshot, setActiveSnapshot] = useState<Record<string, string | null>>({});
+    const [snapshots, setSnapshots] = useState<Record<string, CanvasSnapshot[]>>({});
+
+    // Stable empties — a fresh `{}` / `[]` per render would churn the panels' memos.
+    const noStyling = useMemo<TypeStylingPatch>(() => ({}), []);
+    const noSnapshots = useMemo<CanvasSnapshot[]>(() => [], []);
 
     const activeBoard = boards.find((b) => b.id === activeId) ?? boards[0]!;
     const activeTemplate = templates[activeBoard.templateIndex]!;
+    const activeCanvas = canvases[activeBoard.id] ?? null;
+
+    // **Controlled mode.** Unlike the standalone panel story (which lets the panel
+    // own its list), this shell keeps one list *per board* — the shape a server
+    // has — so it passes `snapshots` and applies the panel's events itself. The
+    // panel still does all the engine work: capture, restore, messages.
+    //
+    // Everything lands under `activeBoard.id`, so one board's history can never
+    // reach another's.
+    const onCreateSnapshot = (snapshot: CanvasSnapshot): void => {
+      setSnapshots((all) => ({
+        ...all,
+        [activeBoard.id]: [{ ...snapshot, by: 'you' }, ...(all[activeBoard.id] ?? [])],
+      }));
+      setActiveSnapshot((all) => ({ ...all, [activeBoard.id]: snapshot.id }));
+    };
+
+    const onUpdateSnapshot = (snapshot: CanvasSnapshot): void => {
+      setSnapshots((all) => ({
+        ...all,
+        [activeBoard.id]: (all[activeBoard.id] ?? []).map((v) => (v.id === snapshot.id ? snapshot : v)),
+      }));
+    };
+
+    const onDeleteSnapshot = (id: string): void => {
+      setSnapshots((all) => ({
+        ...all,
+        [activeBoard.id]: (all[activeBoard.id] ?? []).filter((v) => v.id !== id),
+      }));
+      // Deleting the highlighted row leaves nothing loaded to point at.
+      setActiveSnapshot((all) => (all[activeBoard.id] === id ? { ...all, [activeBoard.id]: null } : all));
+    };
+
+    /** Which snapshot is loaded, per board — the one row the panel highlights. */
+    const onRestoreSnapshot = (snapshot: CanvasSnapshot): void => {
+      setActiveSnapshot((all) => ({ ...all, [activeBoard.id]: snapshot.id }));
+    };
+
+    // The canvas strip's one action: open the inspector on the active board's
+    // settings. Activity-bar behaviour — clicking it again while that tab is
+    // showing puts the panel away, so the button is never a no-op. Both side
+    // panels stay reachable from the rail (Canvases / Inspector), and each keeps
+    // its own collapse action.
+    const openSettings = (): void => {
+      if (rightOpen && rightTab === 'settings') {
+        setRightOpen(false);
+        return;
+      }
+      setRightTab('settings');
+      setRightOpen(true);
+    };
+
+    // Clicking a node or an edge **reveals** the inspector on its Element tab.
+    // The trigger is `ClickInspectBehaviour` — the same source the panel reads —
+    // so the rail opens for exactly the elements the panel can show, and a
+    // background click (which clears the target) never opens it.
+    //
+    // Only a null → element transition opens the rail. Firing on every change
+    // would re-open a rail the user just closed while an element stayed clicked.
+    //
+    // Re-attaches on `scene:behaviour:register`: the behaviour is a child of the
+    // board's `<GraphCanvasApp>` while this shell learns of the engine through
+    // `onReady`, so on a first mount the behaviour may not exist yet. A one-shot
+    // lookup would silently never arm.
+    useEffect(() => {
+      if (!activeCanvas) return;
+      let off: (() => void) | undefined;
+      const attach = (): void => {
+        const behaviour = activeCanvas.behaviours.get<ClickInspectBehaviourClass>('click-inspect');
+        if (!behaviour) return;
+        off?.();
+        let had = behaviour.getTarget() != null;
+        off = behaviour.events.on('inspect:change', (target) => {
+          const has = target != null;
+          if (has && !had) {
+            setRightTab('element');
+            setRightOpen(true);
+          }
+          had = has;
+        });
+      };
+      attach();
+      const offRegister = activeCanvas.events.on('scene:behaviour:register', (e: { id: string }) => {
+        if (e.id === 'click-inspect') attach();
+      });
+      return () => {
+        off?.();
+        offRegister();
+      };
+    }, [activeCanvas]);
+
+    // Nine panels share one header, so a tab spells its name only
+    // while it is the active one; the rest stay icon-only (name kept for
+    // assistive tech).
+    const tabLabel = (value: string, text: string) => (
+      <span className={rightTab === value ? '' : 'sr-only'}>{text}</span>
+    );
 
     // Open a new board, cycling the templates, and make it the active one.
     const addBoard = (): void => {
@@ -300,7 +523,143 @@ export const AppLayoutV2Story: Story = {
           data={templates[b.templateIndex]!.data}
           config={templates[b.templateIndex]!.config}
           showHeader={false}
-        />
+          onReady={onReadyFor(b.id)}
+        >
+          {/* Right-click a node or an edge → the standard menu (Focus · Select ·
+              Hide), plus this story's own "Inspect" item. It is an in-canvas
+              child like the minimap, so each board gets its own menu bound to
+              its own engine; it mounts its own `ContextMenuBehaviour` and
+              resolves the bundle's `graph` layer + `click-select` behaviour by
+              their default ids. `nodeItems` / `edgeItems` receive
+              `(ctx, defaults)` — spread `defaults` to keep the standard set. */}
+          {/* The inspector shows the element you CLICKED, not the selection —
+              so it needs this behaviour, which tracks exactly one element and
+              clears on a background click. Not in any default bundle (rule 7:
+              behaviours never auto-enable), so each board mounts its own. */}
+          <ClickInspectBehaviour targetLayerId="graph" />
+
+          <GraphContextMenu
+            nodeItems={(ctx, defaults) => [
+              ...defaults,
+              {
+                id: 'inspect',
+                label: `Inspect ${ctx.id}`,
+                icon: Info,
+                onClick: () => console.log('node', ctx.id, ctx.data),
+              },
+            ]}
+            edgeItems={(ctx, defaults) => [
+              ...defaults,
+              {
+                id: 'inspect',
+                label: `Inspect ${ctx.id}`,
+                icon: Info,
+                onClick: () => console.log('edge', ctx.id, ctx.data),
+              },
+            ]}
+          />
+
+          {/* The empty-canvas menu is a separate behaviour scoped to the
+              background target, so it composes with the node/edge one above.
+              Board-wide actions live here: frame the graph, and bring back
+              anything the node/edge menu's Hide parked (the same restore the
+              inspector's Filters tab performs). */}
+          <GraphBackgroundContextMenu
+            items={({ canvas: board }) => {
+              // The builder runs on every right-click, so reading the live
+              // behaviour instances is the current state — no subscription, and
+              // no hook (a menu item is a callback, not a component). Read the
+              // instance rather than the store definition, because a direct
+              // `behaviour.disable()` (what `useLock` behind the toolbar's lock
+              // button does) flips the instance without writing the definition;
+              // the instance is true under both paths. Writes still go through
+              // `canvas.update`, so the definition — and every editor reading
+              // it — stays in step.
+              const on = (id: string): boolean => board.behaviours.get(id)?.enabled ?? false;
+
+              // Select mode is mutually exclusive and derived, not stored: the
+              // armed drag-select behaviour *is* the mode, and plain click is
+              // "neither armed" (`click-select` stays on underneath all three).
+              const mode = on('brush-select') ? 'brush' : on('lasso-select') ? 'lasso' : 'click';
+              const setMode = (next: string): void =>
+                board.update({
+                  behaviours: {
+                    'brush-select': { enabled: next === 'brush' },
+                    'lasso-select': { enabled: next === 'lasso' },
+                  },
+                });
+              const modes: { key: string; label: string; icon: ElementType }[] = [
+                { key: 'click', label: 'Click select', icon: MousePointer2 },
+                { key: 'brush', label: 'Brush select', icon: SquareDashedMousePointer },
+                { key: 'lasso', label: 'Lasso select', icon: Lasso },
+              ];
+
+              // Lock is app policy, not an engine concept: pan + node drag off,
+              // zoom left alone — the same pair `useLock` (and so the header
+              // toolbar's lock button) manages.
+              const locked = !on('pan');
+              const setLocked = (next: boolean): void =>
+                board.update({
+                  behaviours: { pan: { enabled: !next }, 'drag-node': { enabled: !next } },
+                });
+
+              return [
+                {
+                  id: 'select-mode',
+                  label: 'Selection',
+                  icon: MousePointer2,
+                  children: modes.map((m) => ({
+                    id: `select-${m.key}`,
+                    label: m.label,
+                    icon: m.icon,
+                    // MenuItem has no checked state, so the armed mode is marked
+                    // with the accent token rather than a tick.
+                    className: m.key === mode ? 'text-primary' : undefined,
+                    onClick: () => setMode(m.key),
+                  })),
+                },
+                {
+                  id: 'lock',
+                  label: locked ? 'Unlock view' : 'Lock view',
+                  icon: locked ? Lock : LockOpen,
+                  onClick: () => setLocked(!locked),
+                },
+                {
+                  id: 'fit',
+                  label: 'Fit to view',
+                  icon: Maximize2,
+                  onClick: () => board.fitView(),
+                },
+                {
+                  id: 'show-all',
+                  label: 'Show all hidden',
+                  icon: Eye,
+                  onClick: () => board.layers.get<GraphLayer>('graph')?.showAllHidden(),
+                },
+              ];
+            }}
+          />
+
+          {/* The minimap is an in-canvas **layer**, not shell chrome — so it
+              mounts inside each board, mirrors that board's `graph` layer, and
+              shows up in the inspector's Layers tab with its own eye. Mount /
+              unmount is the show/hide (the wrapper has no `visible` prop), and
+              `backgroundLayerId` keeps its backdrop on the canvas background
+              through a theme flip instead of pinning a second colour here. */}
+          {minimapOn && (
+            <MiniMapLayer
+              id="minimap"
+              graphLayerId="graph"
+              backgroundLayerId="background"
+              position="bottom-right"
+              width={180}
+              height={120}
+              margin={12}
+              borderColor={0x94a3b8}
+              padding={30}
+            />
+          )}
+        </GraphCanvasApp>
       ),
     }));
 
@@ -321,6 +680,12 @@ export const AppLayoutV2Story: Story = {
 
     const layout: AppLayoutV2Props = {
       header: {
+        // `relative` so the explorer bar below can pin itself to the header's
+        // true centre. `NavHorizontal` lays its three sections out in flow —
+        // the centre one is `flex-1 justify-center`, i.e. centred in whatever
+        // the left and right sections leave over — so with a wordmark + a
+        // three-level breadcrumb on the left the bar would sit right of centre.
+        className: 'relative',
         left: (
           <div className="flex items-center gap-1">
             <span className="select-none px-2 text-xl font-bold">Invana Studio</span>
@@ -346,6 +711,27 @@ export const AppLayoutV2Story: Story = {
             </Breadcrumb>
           </div>
         ),
+        // The explorer bar belongs to the **shell**, not to a page — one bar in
+        // the app header driving whichever board is active, the way the theme
+        // control and the canvas count already do. The shell renders outside
+        // every `<GraphCanvasApp>`, so the story re-provides the active board's
+        // engine on the two contexts the toolbar resolves through:
+        // `GraphCanvasContext` (the toolbar itself) and `CanvasContext` (the
+        // section hooks, via `useResolvedCanvas`). Both throw on a null engine,
+        // hence the gate until the first board is ready. `key` remounts the bar
+        // per board so one board's select-mode / grid toggle never bleeds into
+        // the next. Lite = the read-only explorer set (layout · zoom/fit/lock ·
+        // select-mode · grid); the full variant adds undo/erase, which belongs
+        // to an editor, not an explorer.
+        center: activeCanvas ? (
+          <div className="absolute left-1/2 -translate-x-1/2">
+            <CanvasContext.Provider value={activeCanvas}>
+              <GraphCanvasContext.Provider value={activeCanvas}>
+                <GraphControlsToolbarLite key={activeBoard.id} />
+              </GraphCanvasContext.Provider>
+            </CanvasContext.Provider>
+          </div>
+        ) : null,
         right: (
           <div className="flex items-center gap-1 px-2">
             <span className="text-meta text-muted-foreground tabular-nums">
@@ -353,6 +739,16 @@ export const AppLayoutV2Story: Story = {
             </span>
             <Button variant="ghost" size="xs" onClick={addBoard}>
               <Plus /> New canvas
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              title={minimapOn ? 'Hide the minimap' : 'Show the minimap'}
+              aria-pressed={minimapOn}
+              className={minimapOn ? 'text-primary' : undefined}
+              onClick={() => setMinimapOn((v) => !v)}
+            >
+              <MapIcon />
             </Button>
             {/* Real theme control — it drives the surrounding `ThemeProvider`. */}
             <Popover>
@@ -476,16 +872,10 @@ export const AppLayoutV2Story: Story = {
             pageMenuItems={pageMenuItems}
             headerActions={[
               {
-                id: 'left',
-                label: leftOpen ? 'Hide the canvases panel' : 'Show the canvases panel',
-                icon: leftOpen ? PanelLeftClose : PanelLeftOpen,
-                onClick: () => setLeftOpen((v) => !v),
-              },
-              {
-                id: 'right',
-                label: rightOpen ? 'Hide the inspector' : 'Show the inspector',
-                icon: rightOpen ? PanelRightClose : PanelRightOpen,
-                onClick: () => setRightOpen((v) => !v),
+                id: 'settings',
+                label: 'Canvas settings',
+                icon: Settings,
+                onClick: openSettings,
               },
             ]}
             className="h-full"
@@ -493,21 +883,39 @@ export const AppLayoutV2Story: Story = {
         ),
       },
 
-      // ── Right: what the active canvas is. Read from the board list above. ───
+      // ── Right: the inspector over the **active board's live engine** ───────
+      // Nine panels behind one header: what the board is (static, from the
+      // board list), its live settings, per-type styling, the scene's layers,
+      // its saved snapshots, a structured search, the live selection, the selected
+      // element in detail, and its parked elements. The shell sits *outside* every
+      // `<GraphCanvasApp>`'s context, so each engine-bound panel is handed
+      // `activeCanvas` explicitly rather than resolving a provider — the shape
+      // the panels are built for (`canvas` in, `null` until ready handled inside).
       rightSection: rightOpen
         ? {
-            defaultSize: '280px',
-            minSize: '240px',
-            maxSize: '380px',
+            defaultSize: '400px',
+            minSize: '340px',
+            maxSize: '560px',
             collapsible: true,
             content: (
               <TabbedPanel
                 className="border-0"
+                bodyClassName="p-0"
+                // The strip folds what doesn't fit into a `…` menu instead of
+                // setting the panel's minimum width — nine icon-only tabs are
+                // ~430px against a 340px `minSize`, which used to scroll the
+                // whole section sideways. `keepMounted` keeps each panel's
+                // scroll position (and the engine-bound ones' work) across tab
+                // switches. See rfc:fix-2026-09-11-inspector-tab-strip-overflows-panel.
+                overflow
+                keepMounted
+                activeTab={rightTab}
+                onTabChange={setRightTab}
                 tabs={[
                   {
                     value: 'canvas',
-                    label: 'Canvas',
-                    icon: SlidersHorizontal,
+                    label: tabLabel('canvas', 'Canvas'),
+                    icon: Info,
                     content: (
                       <ScrollArea className="h-full">
                         <div className="flex flex-col gap-4 p-3">
@@ -554,6 +962,101 @@ export const AppLayoutV2Story: Story = {
                       </ScrollArea>
                     ),
                   },
+                  {
+                    // The whole definition of the active board — every live
+                    // layer / behaviour / layout and its settings, applied
+                    // through `canvas.update(...)` as you edit.
+                    value: 'settings',
+                    label: tabLabel('settings', 'Settings'),
+                    icon: Settings,
+                    content: (
+                      <CanvasSettingsEditorPanel
+                        canvas={activeCanvas}
+                        title={null}
+                        className="rounded-none border-0"
+                      />
+                    ),
+                  },
+                  {
+                    // Colour / label key / size per **type the board is
+                    // painting**. Controlled: the shell holds the patch per
+                    // board (Invana persists it), the panel paints it.
+                    value: 'styling',
+                    label: tabLabel('styling', 'Styling'),
+                    icon: Paintbrush,
+                    content: (
+                      <StylingViewPanel
+                        canvas={activeCanvas}
+                        value={styling[activeBoard.id] ?? noStyling}
+                        onChange={(next) =>
+                          setStyling((all) => ({ ...all, [activeBoard.id]: next }))
+                        }
+                      />
+                    ),
+                  },
+                  {
+                    // The board's scene as a file-tree — layer eyes, and the
+                    // graph layer's nodes/edges grouped by type.
+                    value: 'layers',
+                    label: tabLabel('layers', 'Layers'),
+                    icon: Layers,
+                    content: <LayersViewPanel canvas={activeCanvas} />,
+                  },
+                  {
+                    // The board's history. Capture takes a real thumbnail off
+                    // the live renderer; restore is the shell's to answer.
+                    value: 'snapshots',
+                    label: tabLabel('snapshots', 'Snapshots'),
+                    icon: History,
+                    content: (
+                      <CanvasSnapshotsViewPanel
+                        canvas={activeCanvas}
+                        snapshots={snapshots[activeBoard.id] ?? noSnapshots}
+                        onCreateSnapshot={onCreateSnapshot}
+                        onUpdateSnapshot={onUpdateSnapshot}
+                        onDeleteSnapshot={onDeleteSnapshot}
+                        onRestoreSnapshot={onRestoreSnapshot}
+                        activeSnapshotId={activeSnapshot[activeBoard.id] ?? null}
+                      />
+                    ),
+                  },
+                  {
+                    // Structured search over the board — AND-combined field
+                    // filters; a result click frames *and* selects the element
+                    // (a locate, never a hide — that's the Filters tab).
+                    value: 'find',
+                    label: tabLabel('find', 'Find'),
+                    icon: Search,
+                    content: <FindInCanvasViewPanel canvas={activeCanvas} />,
+                  },
+                  {
+                    // What is selected on the board *right now* — read off the
+                    // kernel store (`view.interaction.selection`), so a click, a
+                    // brush and a lasso all land here. Row click frames an
+                    // element, ✕ drops just it, Hide parks the lot (→ Filters).
+                    value: 'selection',
+                    label: tabLabel('selection', 'Selection'),
+                    icon: MousePointerClick,
+                    content: <SelectionViewPanel canvas={activeCanvas} />,
+                  },
+                  {
+                    // The **detail** half of the pair the Selection tab opens:
+                    // one element at a time, read-only, with a "2 of 7" pager
+                    // over the same selection. Clicking an element on the canvas
+                    // reveals this tab (see the effect above).
+                    value: 'element',
+                    label: tabLabel('element', 'Element'),
+                    icon: ScanSearch,
+                    content: <ElementInspectorViewPanel canvas={activeCanvas} />,
+                  },
+                  {
+                    // The elements parked out of the board — right-click → Hide
+                    // on the canvas (or in Layers) lands them here.
+                    value: 'filters',
+                    label: tabLabel('filters', 'Filters'),
+                    icon: Filter,
+                    content: <CanvasFiltersViewPanel canvas={activeCanvas} />,
+                  },
                 ]}
                 headerActions={[
                   {
@@ -595,10 +1098,6 @@ export const AppLayoutV2Story: Story = {
       mainClassName: 'h-[calc(100vh-70px)]',
     };
 
-    return (
-      <ThemeProvider defaultTheme="default" defaultMode="dark" storageKey={null}>
-        <AppLayoutV2 {...layout} />
-      </ThemeProvider>
-    );
+    return <AppLayoutV2 {...layout} />;
   },
 };

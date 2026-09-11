@@ -14,7 +14,6 @@ import {
   type CanvasPage
 } from '@invana/canvas-ui';
 import { Info, Settings } from 'lucide-react';
-import { ThemeProvider } from '@invana/themes';
 import { DemoBoard, DemoFrame, hueFor } from './canvas-pages-demo';
 
 const meta: Meta = { title: 'canvas-ui/view-panels/CanvasPagesViewPanel/HeaderActions' };
@@ -53,17 +52,15 @@ function HeaderActionsDemo() {
   ];
 
   return (
-    <ThemeProvider>
-      <DemoFrame>
-        <CanvasPagesViewPanel
-          pages={pages}
-          activeId={activeId}
-          onSelect={setActiveId}
-          onAdd={add}
-          headerActions={headerActions}
-        />
-      </DemoFrame>
-    </ThemeProvider>
+    <DemoFrame>
+      <CanvasPagesViewPanel
+        pages={pages}
+        activeId={activeId}
+        onSelect={setActiveId}
+        onAdd={add}
+        headerActions={headerActions}
+      />
+    </DemoFrame>
   );
 }
 

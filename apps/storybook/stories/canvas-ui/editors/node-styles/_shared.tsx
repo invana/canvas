@@ -10,7 +10,6 @@ import { GraphCanvasContext, useCanvas, useSelection, type LayoutFactory } from 
 import { CanvasMessageBar, DevInfoToggleButton, GraphBackgroundContextMenu, GraphCanvasApp, GraphControlsToolbar, GraphNodeContextMenu, GraphStatusBar, MiniMapToggleButton, ThemeToggle, ToolbarItems, type GraphNodeMenuContext } from '@invana/canvas-ui';
 import { D3ForceLayout, type D3ForceLayoutOptions } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
-import { ThemeProvider } from '@invana/themes';
 import type { MenuItem } from '@invana/ui';
 import { Palette } from 'lucide-react';
 
@@ -165,45 +164,43 @@ export function LiveStyleEditorApp({ title, message, data, panel }: LiveStyleEdi
   const [open, setOpen] = useState(true);
 
   return (
-    <ThemeProvider>
-      <GraphCanvasApp
-        data={data}
-        onReady={(c) => c?.showMessage(message)}
-        config={{
-          behaviours: { color: { enabled: false } },
-          layouts: { 'graph-force': FORCE_OPTS },
-        }}
-        header={{
-          title,
-          center: <GraphControlsToolbar layouts={LAYOUTS} layoutLabel={LAYOUT_LABEL} />,
-          right: (ctx) => (
-            <>
-              <MiniMapToggleButton backgroundLayerId="background" position="bottom-left" />
-              <DevInfoToggleButton corner="top-left" margin={{ x: 12, y: 48 }} />
-              <ToolbarItems
-                orientation="horizontal"
-                items={[
-                  {
-                    type: 'toggle',
-                    key: 'editor',
-                    icon: Palette,
-                    label: 'Editor: hidden',
-                    activeLabel: 'Editor: shown',
-                    active: open,
-                    onToggle: () => setOpen((v) => !v),
-                  },
-                ]}
-              />
-              <ThemeToggle ctx={ctx} />
-            </>
-          ),
-        }}
-        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-        right={open ? { content: <PanelGate>{panel}</PanelGate>, defaultSize: '360px', maxSize: '460px', collapsible: true } : undefined}
-      >
-        <GraphNodeContextMenu items={nodeMenu} />
-        <GraphBackgroundContextMenu items={backgroundMenu} />
-      </GraphCanvasApp>
-    </ThemeProvider>
+    <GraphCanvasApp
+      data={data}
+      onReady={(c) => c?.showMessage(message)}
+      config={{
+        behaviours: { color: { enabled: false } },
+        layouts: { 'graph-force': FORCE_OPTS },
+      }}
+      header={{
+        title,
+        center: <GraphControlsToolbar layouts={LAYOUTS} layoutLabel={LAYOUT_LABEL} />,
+        right: (ctx) => (
+          <>
+            <MiniMapToggleButton backgroundLayerId="background" position="bottom-left" />
+            <DevInfoToggleButton corner="top-left" margin={{ x: 12, y: 48 }} />
+            <ToolbarItems
+              orientation="horizontal"
+              items={[
+                {
+                  type: 'toggle',
+                  key: 'editor',
+                  icon: Palette,
+                  label: 'Editor: hidden',
+                  activeLabel: 'Editor: shown',
+                  active: open,
+                  onToggle: () => setOpen((v) => !v),
+                },
+              ]}
+            />
+            <ThemeToggle ctx={ctx} />
+          </>
+        ),
+      }}
+      footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+      right={open ? { content: <PanelGate>{panel}</PanelGate>, defaultSize: '360px', maxSize: '460px', collapsible: true } : undefined}
+    >
+      <GraphNodeContextMenu items={nodeMenu} />
+      <GraphBackgroundContextMenu items={backgroundMenu} />
+    </GraphCanvasApp>
   );
 }

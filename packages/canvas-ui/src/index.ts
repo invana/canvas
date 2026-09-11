@@ -218,6 +218,7 @@ export type {
   BackgroundType,
   BackgroundPatternType,
   BackgroundMode,
+  BackgroundColorSource,
 } from './editors/layers/background-layer';
 
 // GeometricLayout
@@ -808,6 +809,30 @@ export type { CanvasFiltersViewPanelProps } from './view-panels/canvas-filters';
 export { FindInCanvasViewPanel } from './view-panels/find-in-canvas';
 export type { FindInCanvasViewPanelProps } from './view-panels/find-in-canvas';
 
+// ─── Selection ───────────────────────────────────────────────────────────────
+// A live list of what is currently selected on a `GraphCanvas`, split into Nodes
+// and Edges. Reads the **kernel** selection set (`view.interaction.selection`,
+// D11) via `useStore` and resolves each id against the graph layer for its kind /
+// name / swatch; per-row focus + deselect, header clear + hide-selected, all
+// written through `ClickSelectBehaviour` (which owns the selection visuals).
+// Engine-bound (takes a live canvas), import-clean (`@invana/graph` types only,
+// `@invana/ui` chrome).
+export { SelectionViewPanel } from './view-panels/selection';
+export type { SelectionViewPanelProps } from './view-panels/selection';
+
+// ─── Element inspector ───────────────────────────────────────────────────────
+// A read-only card for the element the user **clicked** — identity, endpoints
+// (edges), `data` properties, element state, and a Focus action. Driven by
+// `ClickInspectBehaviour` (register and enable one; it is in no default bundle),
+// or by an explicit `elementId`. Deliberately NOT the selection: a selection holds
+// many elements, an inspector has room for one. `SelectionViewPanel` answers the
+// other question — what is selected.
+// Read-only by design: EDITING an element is `InspectorPanel` + `PropertiesEditor`
+// (a floating toolbar surface over the same behaviour); this is the LOOKING path,
+// so inspecting a value can never overwrite it.
+export { ElementInspectorViewPanel } from './view-panels/element-inspector';
+export type { ElementInspectorViewPanelProps } from './view-panels/element-inspector';
+
 // ─── Canvas pages tab strip ──────────────────────────────────────────────────
 // A tab strip over independent "pages" (boards), styled like `@invana/ui`'s
 // `TabbedPanel` but with per-tab **edit** + **close** controls revealed on hover.
@@ -820,6 +845,36 @@ export type {
   CanvasPageMenuItem,
   CanvasPagesViewPanelProps,
 } from './view-panels/canvas-pages';
+
+// ─── Per-type styling ────────────────────────────────────────────────────────
+// Colour · label key · size/width for every node/edge **type the canvas is
+// painting**, read reactively from `useDerivedSchema`. Controlled for
+// persistence — a whole serialisable `TypeStylingPatch` out of `onChange`, which
+// the host stores — and live for painting: the panel applies the patch itself as
+// template field resolvers (`apply`, on by default), so later-arriving nodes are
+// styled too. Distinct from the `editors/` style surfaces, which edit one
+// element or one style object.
+export { StylingViewPanel } from './view-panels/styling';
+export type {
+  StylingViewPanelProps,
+  TypeStylingPatch,
+  NodeTypeStyling,
+  EdgeTypeStyling,
+} from './view-panels/styling';
+
+// ─── Canvas snapshots ─────────────────────────────────────────────────────────
+// The saved snapshots of a canvas as a timeline — grouped by day, newest first,
+// with a thumbnail, what changed, and a restore action per row. Presentational:
+// the host supplies the rows and `onRestore` (a snapshot is a host record, not
+// canvas state), and mounts its own lazily-loaded thumbnail through
+// `renderThumbnail`. canvas-ui draws the timeline; it does not persist snapshots.
+export { CanvasSnapshotsViewPanel } from './view-panels/canvas-snapshots';
+export type {
+  CanvasSnapshot,
+  CanvasSnapshotEvents,
+  CanvasSnapshotMessages,
+  CanvasSnapshotsViewPanelProps,
+} from './view-panels/canvas-snapshots';
 
 // ─── Schema view ─────────────────────────────────────────────────────────────
 // The graph's *schema* (its node/edge types + connectivity), derived live from a

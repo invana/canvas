@@ -1,7 +1,7 @@
 # @invana/canvas-store — public API surface (generated; do not hand-edit)
 # Regenerate: pnpm build && node scripts/check-api-surface.mjs --write
 
-## . (289 exports)
+## . (294 exports)
 AnchorCtx
 AnchorShapeRef
 AnchorSpec
@@ -85,8 +85,10 @@ HtmlTagStyle
 HttpMeterOptions
 HttpMetricRecord
 IAnchor
+INHERIT
 IPathStyle
 IRouter
+Inherit
 InsetAnchor
 InsetFillLayer
 IntentLogEntry
@@ -193,6 +195,7 @@ TelemetryTarget
 ThemeKind
 ThemeMode
 ThemeState
+Themed
 ToggleDecorationStyle
 ToggleHitGeometry
 TogglePlacement
@@ -255,6 +258,7 @@ distanceToSegmentSq
 fitSpecToContent
 fitTabbedRectToContent
 hasSilhouetteFill
+isInherit
 offsetPolygon
 onCanvasStoreCreated
 pointInPolygon
@@ -263,6 +267,7 @@ polygonContainsInflated
 rayPolygonIntersection
 regularPolygonVertices
 resolveCompositeRoot
+resolveThemed
 roundedPolygonOutline
 scaleArc
 scaleCircle

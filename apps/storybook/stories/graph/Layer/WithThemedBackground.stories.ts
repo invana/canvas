@@ -67,7 +67,7 @@ export const WithThemedBackgroundStory: Story = {
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
-    const theme = new ThemeBehaviour({ id: 'theme', enabled: true });
+    const theme = new ThemeBehaviour({ id: 'theme', enabled: true, mode: 'document' });
     canvas.behaviours.register(theme);
 
     const canvasOptions = {
@@ -84,12 +84,12 @@ export const WithThemedBackgroundStory: Story = {
 
     canvas.camera.fitContent(graph.getBounds(), 80);
 
-    const settings = { theme: 'default', mode: 'system' as ThemeMode };
+    const settings = { theme: 'default', mode: 'document' as ThemeMode };
     const gui = new GUI({ title: 'Theme' });
     onStoryTeardown(() => gui.destroy());
     gui
       .add(settings, 'theme', Object.keys(BUILT_IN_THEMES))
       .onChange((id: string) => theme.setTheme(id));
-    gui.add(settings, 'mode', ['system', 'light', 'dark']).onChange((m: ThemeMode) => theme.setMode(m));
+    gui.add(settings, 'mode', ['document', 'system', 'light', 'dark']).onChange((m: ThemeMode) => theme.setMode(m));
   }
 };

@@ -17,7 +17,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { CanvasMessageBar, GraphCanvasApp, GraphControlsToolbar, GraphStatusBar, ThemeToggle } from '@invana/canvas-ui';
 import { lesMiserables } from '@invana/graph-datasets';
-import { ThemeProvider } from '@invana/themes';
 
 const meta: Meta = { title: 'canvas-ui/apps/GraphCanvasApp/BottomTable' };
 export default meta;
@@ -62,21 +61,21 @@ const bottomTable = (
 export const BottomTableStory: Story = {
   name: 'BottomTable',
   render: () => (
-    // A real consumer mounts the app under its own <ThemeProvider>.
-    <ThemeProvider>
-      <GraphCanvasApp
-        data={DATA}
-        onReady={(c) => c?.showMessage('Drag the table handle to resize · it collapses too')}
-        header={{
-          title: 'Bottom Table',
-          center: <GraphControlsToolbar />,
-          right: (ctx) => <ThemeToggle ctx={ctx} />
-        }}
-        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-        // The bottom region spans the full width (no right region to share with).
-        bottom={{ content: bottomTable, defaultSize: 30, minSize: 12, collapsible: true }}
-        bottomSpan="full"
-      />
-    </ThemeProvider>
+    // The app reads light/dark from a host `<ThemeProvider>` via `useTheme()`, and
+    // throws without one. In Storybook that host is the toolbar's single provider
+    // (`.storybook/preview.tsx`); a real consumer mounts its own.
+    <GraphCanvasApp
+      data={DATA}
+      onReady={(c) => c?.showMessage('Drag the table handle to resize · it collapses too')}
+      header={{
+        title: 'Bottom Table',
+        center: <GraphControlsToolbar />,
+        right: (ctx) => <ThemeToggle ctx={ctx} />
+      }}
+      footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+      // The bottom region spans the full width (no right region to share with).
+      bottom={{ content: bottomTable, defaultSize: 30, minSize: 12, collapsible: true }}
+      bottomSpan="full"
+    />
   )
 };

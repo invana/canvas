@@ -13,7 +13,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { GraphCanvasApp } from '@invana/canvas-ui';
 import { lesMiserables } from '@invana/graph-datasets';
-import { ThemeProvider } from '@invana/themes';
 
 const meta: Meta = { title: 'canvas-ui/apps/GraphCanvasApp/Default' };
 export default meta;
@@ -26,10 +25,9 @@ const DATA = lesMiserables;
 
 export const Default: Story = {
   render: () => (
-    // A real consumer mounts the app under its own <ThemeProvider> — the app reads
-    // light/dark from it via useTheme() (and throws without one).
-    <ThemeProvider>
-      <GraphCanvasApp data={DATA} />
-    </ThemeProvider>
+    // The app reads light/dark from a host `<ThemeProvider>` via `useTheme()`, and
+    // throws without one. In Storybook that host is the toolbar's single provider
+    // (`.storybook/preview.tsx`); a real consumer mounts its own.
+    <GraphCanvasApp data={DATA} />
   )
 };

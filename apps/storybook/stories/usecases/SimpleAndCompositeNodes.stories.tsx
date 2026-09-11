@@ -18,7 +18,7 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ThemeProvider, useTheme } from '@invana/themes';
+import { useTheme } from '@invana/themes';
 import { RichSelect } from '@invana/ui';
 import { ClickViewBehaviour, HoverElementPreviewBehaviour, type LayoutFactory } from '@invana/canvas-react';
 import { EdgeDetailView, GraphCanvasApp, GraphControlsToolbar, HoverElementPreviewCard, MiniMapToggleButton, NodeDetailView, Panel, PanelContent, ThemeToggle, type GraphCanvasAppControlContext } from '@invana/canvas-ui';
@@ -175,50 +175,48 @@ export const SimpleAndCompositeNodesStory: Story = {
       // select-mode (rectangle / lasso) controls on top. The appended children
       // add a hover-preview card and a click-to-view detail dock without touching
       // the bundle.
-      <ThemeProvider>
-        <GraphCanvasApp
-          data={data}
-          config={config}
-          header={{
-            title: 'Simple + Composite Nodes',
-            center: <GraphControlsToolbar layouts={LAYOUTS} layoutLabel={LAYOUT_LABEL} />,
-            right: (ctx) => (
-              <>
-                <MiniMapToggleButton backgroundLayerId="background" position="bottom-right" />
-                <ThemeControls ctx={ctx} />
-              </>
-            )
-          }}
-        >
-          {/* Dwell over a node → a per-type preview card (distinct from the
-              bundle's `HoverActivateBehaviour`, which only highlights). */}
-          <HoverElementPreviewBehaviour
-            targetLayerId="graph"
-            placement="auto"
-            cards={HOVER_CARDS}
-            renderCard={(snapshot) => <HoverElementPreviewCard card={snapshot.card} />}
-          />
+      <GraphCanvasApp
+        data={data}
+        config={config}
+        header={{
+          title: 'Simple + Composite Nodes',
+          center: <GraphControlsToolbar layouts={LAYOUTS} layoutLabel={LAYOUT_LABEL} />,
+          right: (ctx) => (
+            <>
+              <MiniMapToggleButton backgroundLayerId="background" position="bottom-right" />
+              <ThemeControls ctx={ctx} />
+            </>
+          )
+        }}
+      >
+        {/* Dwell over a node → a per-type preview card (distinct from the
+            bundle's `HoverActivateBehaviour`, which only highlights). */}
+        <HoverElementPreviewBehaviour
+          targetLayerId="graph"
+          placement="auto"
+          cards={HOVER_CARDS}
+          renderCard={(snapshot) => <HoverElementPreviewCard card={snapshot.card} />}
+        />
 
-          {/* Click a node / edge → read-only properties dock on the right. The
-              behaviour tracks the clicked element (decoupled from selection) and
-              renders `panel(ctx)` verbatim — we supply the placement + chrome. A
-              background click or the close button clears it. */}
-          <ClickViewBehaviour
-            targetLayerId="graph"
-            panel={(ctx) => (
-              <Panel position="right" style={{ top: 12, bottom: 12 }}>
-                <PanelContent header={ctx.label} onClose={ctx.close} fill width={300}>
-                  {ctx.kind === 'edge' ? (
-                    <EdgeDetailView ctx={ctx} />
-                  ) : (
-                    <NodeDetailView ctx={ctx} />
-                  )}
-                </PanelContent>
-              </Panel>
-            )}
-          />
-        </GraphCanvasApp>
-      </ThemeProvider>
+        {/* Click a node / edge → read-only properties dock on the right. The
+            behaviour tracks the clicked element (decoupled from selection) and
+            renders `panel(ctx)` verbatim — we supply the placement + chrome. A
+            background click or the close button clears it. */}
+        <ClickViewBehaviour
+          targetLayerId="graph"
+          panel={(ctx) => (
+            <Panel position="right" style={{ top: 12, bottom: 12 }}>
+              <PanelContent header={ctx.label} onClose={ctx.close} fill width={300}>
+                {ctx.kind === 'edge' ? (
+                  <EdgeDetailView ctx={ctx} />
+                ) : (
+                  <NodeDetailView ctx={ctx} />
+                )}
+              </PanelContent>
+            </Panel>
+          )}
+        />
+      </GraphCanvasApp>
     );
   }
 };

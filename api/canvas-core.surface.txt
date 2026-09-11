@@ -1,7 +1,7 @@
 # @invana/canvas-core — public API surface (generated; do not hand-edit)
 # Regenerate: pnpm build && node scripts/check-api-surface.mjs --write
 
-## . (343 exports)
+## . (348 exports)
 AnchorCtx
 AnchorShapeRef
 AnchorSpec
@@ -98,12 +98,14 @@ IBehaviour
 ICameraBinding
 IElementRenderer
 ILayer
+INHERIT
 IOverlayDevice
 IPathStyle
 IRenderer
 IRouter
 ISurface
 ISurfaceHost
+Inherit
 InsetAnchor
 InsetFillLayer
 IntentLogEntry
@@ -222,6 +224,7 @@ TapOptions
 ThemeKind
 ThemeMode
 ThemeState
+Themed
 ToggleDecorationStyle
 ToggleHitGeometry
 TogglePlacement
@@ -284,6 +287,7 @@ fitSpecToContent
 fitTabbedRectToContent
 hasSilhouetteFill
 hexToCss
+isInherit
 linear
 loopCurvePathStyle
 loopPolylinePathStyle
@@ -308,6 +312,7 @@ resolveBadgePosition
 resolveCompositeRoot
 resolveConnectorBadgePosition
 resolveEasing
+resolveThemed
 roundedPathStyle
 roundedPolygonOutline
 samplePath

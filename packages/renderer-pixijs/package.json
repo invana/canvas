@@ -1,7 +1,7 @@
 {
   "name": "@invana/renderer-pixijs",
   "version": "0.0.12",
-  "description": "PixiJS drawing backend for @invana/canvas — implements IRenderer + IPrimitivesRenderer, owns the Application, viewport, primitives, textures and fonts.",
+  "description": "PixiJS drawing backend for @invana/canvas \u2014 implements IRenderer + IPrimitivesRenderer, owns the Application, viewport, primitives, textures and fonts.",
   "homepage": "https://github.com/invana/canvas#readme",
   "type": "module",
   "sideEffects": false,
@@ -15,9 +15,11 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "lint": "eslint src/",
+    "lint": "eslint src/ tests/",
     "check-types": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "pixi.js": "^8.20.1"
@@ -33,7 +35,8 @@
     "@repo/typescript-config": "workspace:*",
     "pixi-viewport": "^6.0.3",
     "tsup": "^8.3.5",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "vitest": "^3.2.6"
   },
   "keywords": [
     "canvas",

@@ -34,7 +34,6 @@ import {
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData, GraphNode } from '@invana/graph';
 import { paperCitations } from '@invana/graph-datasets/usecase-demos';
-import { ThemeProvider } from '@invana/themes';
 import { Layers, Moon, Settings, Sun } from 'lucide-react';
 
 /** Paper-citations's subject areas + the payload each paper node carries. */
@@ -183,61 +182,59 @@ export const CitationNetworkStory: Story = {
     }, []);
 
     return (
-      <ThemeProvider>
-        <GraphCanvasApp
-          data={data}
-          config={config}
-          onReady={onReady}
-          header={{
-            title: 'Paper-citations Citation Network',
-            center: <GraphControlsToolbar />,
-            right: (ctx) => (
-              <ToolbarItems
-                orientation="horizontal"
-                items={[
-                  {
-                    type: 'toggle',
-                    key: 'density',
-                    icon: Layers,
-                    label: 'Density overlay: off',
-                    activeLabel: 'Density overlay: on',
-                    active: densityOn,
-                    onToggle: () => setDensityOn((v) => !v)
-                  },
-                  ...dock.items,
-                  {
-                    type: 'toggle',
-                    key: 'theme',
-                    icon: Sun,
-                    activeIcon: Moon,
-                    label: 'Switch to dark theme',
-                    activeLabel: 'Switch to light theme',
-                    active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme
-                  },
-                ]}
-              />
-            )
-          }}
-          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-          right={dock.region}
-        >
-          {/* Toggled from the header. It recomputes on every settled layout run,
-              so the bands follow the nodes rather than their start positions. */}
-          {densityOn && (
-            <DensityContourFillLayer
-              id="density"
-              graphLayerId="graph"
-              bandwidth={20}
-              thresholds={10}
-              cellSize={4}
-              fillOpacity={0.4}
-              padding={80}
-              palette="blues"
+      <GraphCanvasApp
+        data={data}
+        config={config}
+        onReady={onReady}
+        header={{
+          title: 'Paper-citations Citation Network',
+          center: <GraphControlsToolbar />,
+          right: (ctx) => (
+            <ToolbarItems
+              orientation="horizontal"
+              items={[
+                {
+                  type: 'toggle',
+                  key: 'density',
+                  icon: Layers,
+                  label: 'Density overlay: off',
+                  activeLabel: 'Density overlay: on',
+                  active: densityOn,
+                  onToggle: () => setDensityOn((v) => !v)
+                },
+                ...dock.items,
+                {
+                  type: 'toggle',
+                  key: 'theme',
+                  icon: Sun,
+                  activeIcon: Moon,
+                  label: 'Switch to dark theme',
+                  activeLabel: 'Switch to light theme',
+                  active: ctx.themeKind === 'dark',
+                  onToggle: ctx.toggleTheme
+                },
+              ]}
             />
-          )}
-        </GraphCanvasApp>
-      </ThemeProvider>
+          )
+        }}
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        right={dock.region}
+      >
+        {/* Toggled from the header. It recomputes on every settled layout run,
+            so the bands follow the nodes rather than their start positions. */}
+        {densityOn && (
+          <DensityContourFillLayer
+            id="density"
+            graphLayerId="graph"
+            bandwidth={20}
+            thresholds={10}
+            cellSize={4}
+            fillOpacity={0.4}
+            padding={80}
+            palette="blues"
+          />
+        )}
+      </GraphCanvasApp>
     );
   }
 };

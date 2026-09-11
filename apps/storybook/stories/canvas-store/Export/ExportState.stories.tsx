@@ -33,7 +33,14 @@ import { BackgroundLayer, DragNodeBehaviour, DragPanBehaviour, GraphLayer, Wheel
 import { ClearCanvasToolbar, ExportStateToolbar, GraphCanvasApp } from '@invana/canvas-ui';
 import type { GraphData, GraphNode } from '@invana/graph';
 
-const meta: Meta = { title: 'canvas-store/Export/ExportState' };
+// `selfThemed`: this story pins its own `<ThemeProvider defaultMode="dark"
+// storageKey={null}>` — persistence off, so neither the preview's document theme
+// nor its storage mirror reaches it. Opting out keeps the toolbar from implying
+// control it doesn't have here.
+const meta: Meta = {
+  title: 'canvas-store/Export/ExportState',
+  parameters: { selfThemed: true },
+};
 export default meta;
 type Story = StoryObj;
 

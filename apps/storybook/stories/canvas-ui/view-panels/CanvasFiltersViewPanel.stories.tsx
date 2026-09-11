@@ -32,7 +32,6 @@ import {
   useSidePanels
 } from '@invana/canvas-ui';
 import { topicCartography } from '@invana/graph-datasets/topic-cartography';
-import { ThemeProvider } from '@invana/themes';
 import { Filter, Gauge, Map, Moon, Sun } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 
@@ -85,81 +84,79 @@ export const CanvasFiltersViewPanelStory: Story = {
     }, []);
 
     return (
-      <ThemeProvider>
-        <GraphCanvasApp
-          data={data}
-          config={config}
-          onReady={onReady}
-          // The select-mode picker (click / brush / lasso) lets you select before
-          // hiding via the right-click menu.
-          header={{
-            title: 'CanvasFiltersViewPanel',
-            center: <GraphControlsToolbar />,
-            // One shared toolbar — the panel toggle plus minimap / dev-overlay /
-            // theme, all as items.
-            right: (ctx) => (
-              <ToolbarItems
-                orientation="horizontal"
-                items={[
-                  ...dock.items,
-                  {
-                    type: 'toggle',
-                    key: 'minimap',
-                    icon: Map,
-                    label: 'Minimap: off',
-                    activeLabel: 'Minimap: on',
-                    active: minimapOn,
-                    onToggle: () => setMinimapOn((v) => !v)
-                  },
-                  {
-                    type: 'toggle',
-                    key: 'devinfo',
-                    icon: Gauge,
-                    label: 'Dev overlay: off',
-                    activeLabel: 'Dev overlay: on',
-                    active: devOn,
-                    onToggle: () => setDevOn((v) => !v)
-                  },
-                  {
-                    type: 'toggle',
-                    key: 'theme',
-                    icon: Sun,
-                    activeIcon: Moon,
-                    label: 'Switch to dark theme',
-                    activeLabel: 'Switch to light theme',
-                    active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme
-                  },
-                ]}
-              />
-            )
-          }}
-          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-          right={dock.region}
-        >
-          {/* Screen-fixed overlays driven by the header toggle items above. */}
-          {minimapOn && <MiniMapLayer backgroundLayerId="background" position="bottom-left" />}
-          {devOn && <DevInfoLayer enabled corner="top-left" margin={{ x: 12, y: 48 }} />}
+      <GraphCanvasApp
+        data={data}
+        config={config}
+        onReady={onReady}
+        // The select-mode picker (click / brush / lasso) lets you select before
+        // hiding via the right-click menu.
+        header={{
+          title: 'CanvasFiltersViewPanel',
+          center: <GraphControlsToolbar />,
+          // One shared toolbar — the panel toggle plus minimap / dev-overlay /
+          // theme, all as items.
+          right: (ctx) => (
+            <ToolbarItems
+              orientation="horizontal"
+              items={[
+                ...dock.items,
+                {
+                  type: 'toggle',
+                  key: 'minimap',
+                  icon: Map,
+                  label: 'Minimap: off',
+                  activeLabel: 'Minimap: on',
+                  active: minimapOn,
+                  onToggle: () => setMinimapOn((v) => !v)
+                },
+                {
+                  type: 'toggle',
+                  key: 'devinfo',
+                  icon: Gauge,
+                  label: 'Dev overlay: off',
+                  activeLabel: 'Dev overlay: on',
+                  active: devOn,
+                  onToggle: () => setDevOn((v) => !v)
+                },
+                {
+                  type: 'toggle',
+                  key: 'theme',
+                  icon: Sun,
+                  activeIcon: Moon,
+                  label: 'Switch to dark theme',
+                  activeLabel: 'Switch to light theme',
+                  active: ctx.themeKind === 'dark',
+                  onToggle: ctx.toggleTheme
+                },
+              ]}
+            />
+          )
+        }}
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        right={dock.region}
+      >
+        {/* Screen-fixed overlays driven by the header toggle items above. */}
+        {minimapOn && <MiniMapLayer backgroundLayerId="background" position="bottom-left" />}
+        {devOn && <DevInfoLayer enabled corner="top-left" margin={{ x: 12, y: 48 }} />}
 
-          {/* Standard right-click menu (Focus · Select · Hide/Show). `nodeItems` /
-              `edgeItems` receive `(ctx, defaults)`: spread `defaults` to keep the
-              standard items and add your own around them. */}
-          <GraphContextMenu
-            nodeItems={(ctx, defaults) => [
-              ...defaults,
-              {
-                id: 'inspect',
-                label: `Inspect ${ctx.id}`,
-                onClick: () => window.alert(`Node ${ctx.id}\n${JSON.stringify(ctx.data)}`)
-              },
-            ]}
-            edgeItems={(ctx, defaults) => [
-              ...defaults,
-              { id: 'log-edge', label: 'Log edge to console', onClick: () => console.log('edge', ctx.id, ctx.data) },
-            ]}
-          />
-        </GraphCanvasApp>
-      </ThemeProvider>
+        {/* Standard right-click menu (Focus · Select · Hide/Show). `nodeItems` /
+            `edgeItems` receive `(ctx, defaults)`: spread `defaults` to keep the
+            standard items and add your own around them. */}
+        <GraphContextMenu
+          nodeItems={(ctx, defaults) => [
+            ...defaults,
+            {
+              id: 'inspect',
+              label: `Inspect ${ctx.id}`,
+              onClick: () => window.alert(`Node ${ctx.id}\n${JSON.stringify(ctx.data)}`)
+            },
+          ]}
+          edgeItems={(ctx, defaults) => [
+            ...defaults,
+            { id: 'log-edge', label: 'Log edge to console', onClick: () => console.log('edge', ctx.id, ctx.data) },
+          ]}
+        />
+      </GraphCanvasApp>
     );
   }
 };

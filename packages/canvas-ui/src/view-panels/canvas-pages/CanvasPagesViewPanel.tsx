@@ -4,9 +4,16 @@
 // instead of a fixed set of inline icons — the consumer decides what a page can
 // do by passing `pageMenuItems`.
 //
-// Presentational + engine-agnostic (a `views/` component): it renders tabs and
-// page content and reports intent through callbacks (`onSelect` / `onAdd`, plus
-// each menu item's `onSelect(pageId)`). It owns no page state — the consumer
+// The strip itself is `@invana/ui`'s `NavItems` in its `folder` variant, with
+// `selectionMode="tabs"` and `menuTrigger="caret"` — the same renderer that
+// draws the kit's nav rails and `TabbedPanel`'s header. The folder look moved
+// into the kit's variant table unchanged, so this renders as it always did and
+// gains what the hand-rolled strip never had: roving-tabindex keyboard
+// navigation and `…` overflow folding instead of a sideways scroll.
+//
+// Presentational + engine-agnostic (a `view-panels/` component): it renders tabs
+// and page content and reports intent through callbacks (`onSelect` / `onAdd`,
+// plus each menu item's `onSelect(pageId)`). It owns no page state — the consumer
 // holds the page list and the active id and re-renders on change. The classic use
 // is one `<GraphCanvasApp>` per page, but nothing here knows that — `content` is
 // any `ReactNode`.
@@ -18,22 +25,11 @@
 // the active page is mounted (inactive pages unmount — cheaper, but their state
 // is torn down).
 
-import {
-  cn,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@invana/ui';
-import { ChevronDown, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
-import { useEffect, useRef } from 'react';
-import type {
-  CSSProperties,
-  ElementType,
-  MouseEvent as ReactMouseEvent,
-  ReactNode,
-} from 'react';
+import { cn, NavItems } from '@invana/ui';
+import type { NavItemConfig, NavMenuItem } from '@invana/ui';
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { useId, useMemo } from 'react';
+import type { CSSProperties, ElementType, ReactNode } from 'react';
 
 /** One page in the strip — its tab label plus the content shown when active. */
 export interface CanvasPage {
@@ -117,8 +113,20 @@ export interface CanvasPagesViewPanelProps {
   pageMenuItems?: CanvasPageMenuItem[];
   /** Tooltip / aria label for the add button. */
   addLabel?: string;
-  /** Accessible label for the active tab's dropdown trigger. */
+  /**
+   * Accessible label for the active tab's dropdown trigger.
+   *
+   * @deprecated The strip now renders through `NavItems`, which labels a caret
+   * `"<page title> menu"` so the label names the page it acts on. Kept so
+   * existing call sites keep compiling; it no longer reaches the DOM.
+   */
   menuLabel?: string;
+  /** Fold tabs that don't fit into a `…` menu at the end of the strip, instead of
+   *  scrolling the strip horizontally. Default `true` — the pager still steps
+   *  through every page, folded or not. */
+  overflow?: boolean;
+  /** Accessible label / tooltip for the overflow (`…`) trigger. */
+  overflowLabel?: string;
   /** Keep every page mounted and hide the inactive ones (default `true`), so a
    *  page's state (e.g. a canvas's camera / layout) survives tab switches. Set
    *  `false` to mount only the active page. */
@@ -135,121 +143,6 @@ export interface CanvasPagesViewPanelProps {
   /** Extra classes applied to the **active** tab only — override the default
    *  folder-tab look (e.g. a different accent colour). */
   activeTabClassName?: string;
-}
-
-// The active tab's actions dropdown. The caret trigger is a `role="button"` span
-// (not a real `<button>`) so it can nest inside the tab's own `role="tab"` button
-// without invalid interactive nesting — same pattern as the Layers panel. The
-// menu content is portaled out of the tab, so only the caret lives in the button.
-function PageMenu({
-  pageId,
-  items,
-  label,
-}: {
-  pageId: string;
-  items: CanvasPageMenuItem[];
-  label: string;
-}) {
-  // Keep a click on the caret from bubbling to the tab's `onSelect` (the caret
-  // only shows on the active tab, so this is belt-and-braces).
-  const stop = (e: ReactMouseEvent) => e.stopPropagation();
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <span
-          role="button"
-          tabIndex={0}
-          aria-label={label}
-          title={label}
-          onClick={stop}
-          className="grid h-4 w-4 shrink-0 place-items-center rounded text-current/70 hover:bg-accent hover:text-foreground"
-        >
-          <ChevronDown className="h-3.5 w-3.5" />
-        </span>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-44">
-        {items.map((item) => {
-          const Icon = item.icon;
-          const disabled =
-            typeof item.disabled === 'function' ? item.disabled(pageId) : item.disabled;
-          return (
-            <div key={item.id}>
-              {item.separatorBefore ? <DropdownMenuSeparator /> : null}
-              <DropdownMenuItem
-                disabled={disabled}
-                onSelect={() => item.onSelect(pageId)}
-                className={cn(
-                  item.destructive && 'text-destructive focus:text-destructive',
-                )}
-              >
-                {Icon ? <Icon className="mr-2 h-4 w-4" /> : null}
-                {item.label}
-              </DropdownMenuItem>
-            </div>
-          );
-        })}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-// One tab — a Bootstrap `nav-tabs` folder tab rendered as a plain `role="tab"`
-// button so it can host the active tab's dropdown caret. Not built on
-// `@invana/ui`'s `Tabs`, because Radix `TabsContent` unmounts inactive panels —
-// incompatible with `keepMounted`, and its trigger can't host nested controls.
-function Tab({
-  page,
-  active,
-  onSelect,
-  menuItems,
-  menuLabel,
-  className,
-  activeClassName,
-}: {
-  page: CanvasPage;
-  active: boolean;
-  onSelect: () => void;
-  menuItems?: CanvasPageMenuItem[];
-  menuLabel: string;
-  /** View-level classes for every tab (`tabClassName`). */
-  className?: string;
-  /** View-level classes for the active tab (`activeTabClassName`). */
-  activeClassName?: string;
-}) {
-  const Icon = page.icon;
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      disabled={page.disabled}
-      onClick={onSelect}
-      style={page.tabStyle}
-      className={cn(
-        // `shrink-0` so tabs keep their intrinsic width and the strip scrolls
-        // horizontally when they overflow, rather than compressing.
-        'group inline-flex h-full shrink-0 items-center gap-1.5 rounded-none px-3 py-2 text-sm transition-colors',
-        'text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-50',
-        // Bootstrap `nav-tabs` active tab: boxed on top / left / right with an
-        // *open bottom* (`border-b-0`) so it merges into the content panel below.
-        // The strip's own `border-b` is the nav's bottom line; `mb-[-1px]` drops
-        // the active tab 1px so its open bottom punches through that line (the
-        // classic folder-tab notch). Rounded top corners + primary text/border.
-        active && 'mb-[-1px] rounded-t-md border border-b-0 border-primary text-primary',
-        // Consumer overrides — ordered so they win via tailwind-merge: view-level
-        // (all tabs), then per-page, then the active-only view class.
-        className,
-        page.tabClassName,
-        active && activeClassName,
-      )}
-    >
-      {Icon ? <Icon className="h-3.5 w-3.5 shrink-0" /> : null}
-      <span className="max-w-[16ch] truncate">{page.title}</span>
-      {active && menuItems && menuItems.length > 0 ? (
-        <PageMenu pageId={page.id} items={menuItems} label={menuLabel} />
-      ) : null}
-    </button>
-  );
 }
 
 // A header icon button — the shared chrome for the pager (prev / next / +) and
@@ -320,7 +213,7 @@ function PagerControls({
  * caret dropdown of consumer-supplied {@link CanvasPageMenuItem}s (rename /
  * duplicate / remove / …). Presentational and engine-agnostic — the consumer owns
  * the page list + active id and applies the reported intents. See the module
- * header for `keepMounted` semantics.
+ * header for `keepMounted` and strip-renderer notes.
  */
 export function CanvasPagesViewPanel({
   pages,
@@ -331,7 +224,8 @@ export function CanvasPagesViewPanel({
   headerActions,
   pageMenuItems,
   addLabel = 'New page',
-  menuLabel = 'Page options',
+  overflow = true,
+  overflowLabel = 'More pages',
   keepMounted = true,
   className,
   headerClassName,
@@ -342,16 +236,56 @@ export function CanvasPagesViewPanel({
   const activePage = pages.find((p) => p.id === activeId);
   const activeIndex = pages.findIndex((p) => p.id === activeId);
 
-  // The horizontally-scrolling tabs container — held in a ref so the pager and
-  // the active-tab-follows effect can scroll it.
-  const stripRef = useRef<HTMLDivElement>(null);
+  // Stable prefix for the `aria-controls` ↔ `role="tabpanel"` pairing.
+  const uid = useId();
+  const panelId = (pageId: string): string => `${uid}-page-${pageId}`;
 
-  // Keep the active tab in view whenever the selection changes (via the pager or
-  // an external `activeId` change), so an off-screen tab scrolls into sight.
-  useEffect(() => {
-    const el = stripRef.current?.querySelector<HTMLElement>('[aria-selected="true"]');
-    el?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-  }, [activeId]);
+  // Pages → nav items. The caret menu hangs off the **active** tab only (as it
+  // always has), so an inactive tab stays a plain tab; `menuTrigger="caret"`
+  // keeps the tab body selecting while only the chevron opens the menu.
+  const items = useMemo<NavItemConfig[]>(
+    () =>
+      pages.map((page) => {
+        const active = page.id === activeId;
+        const menuItems: NavMenuItem[] | undefined =
+          active && pageMenuItems && pageMenuItems.length > 0
+            ? pageMenuItems.map((item) => ({
+                id: item.id,
+                label: item.label,
+                icon: item.icon,
+                destructive: item.destructive,
+                separatorBefore: item.separatorBefore,
+                disabled:
+                  typeof item.disabled === 'function' ? item.disabled(page.id) : item.disabled,
+                onSelect: () => item.onSelect(page.id),
+              }))
+            : undefined;
+        return {
+          key: page.id,
+          name: page.title,
+          label: page.title,
+          labelClassName: 'max-w-[16ch] truncate',
+          icon: page.icon,
+          disabled: page.disabled,
+          style: page.tabStyle,
+          menuItems,
+          menuTrigger: 'caret',
+          // Ordered so consumer overrides win via tailwind-merge, exactly as the
+          // hand-rolled tab did: the strip's own text treatment, then view-level
+          // classes (every tab), then per-page, then the active-only view class.
+          // `text-muted-foreground` is conditional so the variant's active
+          // `text-primary` isn't overridden by it.
+          className: cn(
+            'shrink-0 text-sm',
+            !active && 'text-muted-foreground',
+            tabClassName,
+            page.tabClassName,
+            active && activeTabClassName,
+          ),
+        };
+      }),
+    [pages, activeId, pageMenuItems, tabClassName, activeTabClassName],
+  );
 
   // Pager — step the selection to the previous / next tab (disabled at the ends).
   const hasPager = pages.length > 1;
@@ -379,30 +313,26 @@ export function CanvasPagesViewPanel({
     <div className={cn('flex h-full min-h-0 flex-col bg-card text-card-foreground', className)}>
       {/* Tab strip — a 30px bordered nav; its `border-b` is the nav bottom line.
           The pager cluster docks at `pagerPosition` (start / end); `headerActions`
-          are pinned to the far right, right of the pager. Tabs scroll between. */}
+          are pinned to the far right, right of the pager. The tabs take the rest
+          and fold into a `…` menu when they don't fit. */}
       <div className={cn('flex h-[30px] shrink-0 items-stretch border-b', headerClassName)}>
         {pagerPosition === 'start' ? pager : null}
 
-        {/* Scrollable tabs. Scrollbar hidden (the pager drives navigation); tabs
-            are `shrink-0`, so the row scrolls rather than compressing. */}
-        <div
-          ref={stripRef}
-          role="tablist"
-          className="flex min-w-0 flex-1 items-stretch overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
-          {pages.map((page) => (
-            <Tab
-              key={page.id}
-              page={page}
-              active={page.id === activeId}
-              onSelect={() => onSelect(page.id)}
-              menuItems={pageMenuItems}
-              menuLabel={menuLabel}
-              className={tabClassName}
-              activeClassName={activeTabClassName}
-            />
-          ))}
-        </div>
+        {/* `min-w-0` is load-bearing: it's the bounded width the strip measures
+            against, without which it reports that everything fits, forever.
+            `gap-0` because folder tabs sit flush, unlike a nav rail's chips. */}
+        <NavItems
+          items={items}
+          variant="folder"
+          selectionMode="tabs"
+          activeKey={activeId}
+          onActiveChange={onSelect}
+          panelId={panelId}
+          overflow={overflow}
+          overflowLabel={overflowLabel}
+          iconClassName="h-3.5 w-3.5 shrink-0"
+          className="min-w-0 flex-1 gap-0"
+        />
 
         {pagerPosition === 'end' ? pager : null}
 
@@ -437,6 +367,7 @@ export function CanvasPagesViewPanel({
               return (
                 <div
                   key={page.id}
+                  id={panelId(page.id)}
                   role="tabpanel"
                   aria-hidden={!active}
                   className="absolute inset-0"
@@ -447,7 +378,7 @@ export function CanvasPagesViewPanel({
               );
             })
           : activePage && (
-              <div role="tabpanel" className="absolute inset-0">
+              <div id={panelId(activePage.id)} role="tabpanel" className="absolute inset-0">
                 {activePage.content}
               </div>
             )}

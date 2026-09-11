@@ -28,7 +28,6 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { TextResolutionLODBehaviour, useLayout, type LayoutFactory } from '@invana/canvas-react';
 import { GraphCanvasApp } from '@invana/canvas-ui';
 import type { EdgeStyle, GraphData, GraphNode, NodeStyle } from '@invana/graph';
-import { ThemeProvider } from '@invana/themes';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { D3HierarchyLayout } from '@invana/graph-layout-d3-hierarchy';
@@ -46,27 +45,25 @@ type Story = StoryObj;
  */
 function AppGrid({ children }: { children: ReactNode }): ReactNode {
   return (
-    <ThemeProvider>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gridTemplateRows: '1fr 1fr',
-          // Padding around the grid + a matching gap gutter, so the four apps are
-          // evenly spaced from each other and from the edges (not butted together).
-          gap: 12,
-          padding: 12,
-          boxSizing: 'border-box',
-          width: '100%',
-          height: '100vh',
-          background: 'var(--border, #e2e8f0)'
-        }}
-      >
-        {Children.map(children, (child) => (
-          <div style={{ minWidth: 0, minHeight: 0, overflow: 'hidden' }}>{child}</div>
-        ))}
-      </div>
-    </ThemeProvider>
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gridTemplateRows: '1fr 1fr',
+        // Padding around the grid + a matching gap gutter, so the four apps are
+        // evenly spaced from each other and from the edges (not butted together).
+        gap: 12,
+        padding: 12,
+        boxSizing: 'border-box',
+        width: '100%',
+        height: '100vh',
+        background: 'var(--border, #e2e8f0)'
+      }}
+    >
+      {Children.map(children, (child) => (
+        <div style={{ minWidth: 0, minHeight: 0, overflow: 'hidden' }}>{child}</div>
+      ))}
+    </div>
   );
 }
 

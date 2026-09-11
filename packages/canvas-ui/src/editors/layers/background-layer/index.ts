@@ -8,6 +8,7 @@ export type {
   BackgroundType,
   BackgroundPatternType,
   BackgroundMode,
+  BackgroundColorSource,
 } from './types';
 
 // Field config + mapping — supply/override the schema, seed (`optionsToForm`),

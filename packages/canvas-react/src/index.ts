@@ -12,6 +12,8 @@ export { GraphCanvas } from './GraphCanvas';
 export type { GraphCanvasProps } from './GraphCanvas';
 export type { CanvasRootProps } from './useCanvasEngine';
 
+export { CanvasThemeSync } from './CanvasThemeSync';
+export type { CanvasThemeSyncProps } from './CanvasThemeSync';
 export { CanvasContext, useCanvas } from './CanvasContext';
 export { GraphCanvasContext, useGraphCanvas } from './GraphCanvasContext';
 // Re-exported for `<Canvas config={…}>` consumers — the serialisable, id-keyed

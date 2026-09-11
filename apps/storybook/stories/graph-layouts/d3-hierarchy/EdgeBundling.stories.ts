@@ -159,7 +159,7 @@ export const EdgeBundlingStory: Story = {
         'label-resolution': { enabled: settings.sharpLabelsOnZoom },
         theme: {
           enabled: true,
-          mode: 'system',
+          mode: 'document',
           light: { backgroundColor: '#f8fafc' },
           dark: { backgroundColor: '#0b1220' }
         }

@@ -17,7 +17,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { CanvasMessageBar, GraphCanvasApp, GraphControlsToolbar, GraphStatusBar, ThemeToggle } from '@invana/canvas-ui';
 import { lesMiserables } from '@invana/graph-datasets';
-import { ThemeProvider } from '@invana/themes';
 
 const meta: Meta = { title: 'canvas-ui/apps/GraphCanvasApp/SideRegions' };
 export default meta;
@@ -77,26 +76,25 @@ export const SideRegionsStory: Story = {
     );
 
     return (
-      // A real consumer mounts the app under its own <ThemeProvider> — the app
-      // reads light/dark from it via useTheme() (and throws without one).
-      <ThemeProvider>
-        <GraphCanvasApp
-          data={data}
-          onReady={(c) =>
-            c?.showMessage('Drag the panel handles to resize · both regions collapse')
-          }
-          header={{
-            title: 'Side Regions',
-            center: <GraphControlsToolbar />,
-            right: (ctx) => <ThemeToggle ctx={ctx} />
-          }}
-          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-          // The new resizable/collapsible side regions. Omitting either hides it.
-          right={{ content: rightPanel, defaultSize: 22, minSize: 15, collapsible: true }}
-          bottom={{ content: bottomTable, defaultSize: 28, minSize: 12, collapsible: true }}
-          bottomSpan="main-right"
-        />
-      </ThemeProvider>
+      // The app reads light/dark from a host `<ThemeProvider>` via `useTheme()`, and
+      // throws without one. In Storybook that host is the toolbar's single provider
+      // (`.storybook/preview.tsx`); a real consumer mounts its own.
+      <GraphCanvasApp
+        data={data}
+        onReady={(c) =>
+          c?.showMessage('Drag the panel handles to resize · both regions collapse')
+        }
+        header={{
+          title: 'Side Regions',
+          center: <GraphControlsToolbar />,
+          right: (ctx) => <ThemeToggle ctx={ctx} />
+        }}
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        // The new resizable/collapsible side regions. Omitting either hides it.
+        right={{ content: rightPanel, defaultSize: 22, minSize: 15, collapsible: true }}
+        bottom={{ content: bottomTable, defaultSize: 28, minSize: 12, collapsible: true }}
+        bottomSpan="main-right"
+      />
     );
   }
 };

@@ -33,13 +33,36 @@ export abstract class ScreenLayer<
   TDirtyBucket extends string = string,
   THit extends ScreenLayerHit = ScreenLayerHit,
 > extends Layer<TOptions, TState, TEvents, TDirtyBucket> {
-  /** Backing field — assigned in `mount`, cleared in `unmount`. */
+  /** Backing field — built on first {@link surface} access, cleared in `unmount`. */
   protected _surface?: ISurface;
+  /** Kept from `mount` so the surface can be built lazily on first access. */
+  private _surfaceCtx?: CanvasContext;
 
-
+  /**
+   * This layer's drawing surface, **built on first access**.
+   *
+   * Most screen layers never draw through one: the minimap, the legend, the dev
+   * HUD and the layers panel paint through `ctx.createOverlay` or straight into
+   * the DOM. Creating a surface for them eagerly allocated a whole
+   * `PrimitivesRenderer` — a picking index and a spec projector — that never
+   * held a single spec. Building on demand means a layer that doesn't draw
+   * through a surface doesn't pay for one.
+   *
+   * Throws before `mount` / after `unmount`, as it always did.
+   */
   protected get surface(): ISurface {
     if (!this._surface) {
-      throw new Error(`ScreenLayer "${this.id}" surface accessed before mount`);
+      const ctx = this._surfaceCtx;
+      if (!ctx) {
+        throw new Error(`ScreenLayer "${this.id}" surface accessed before mount`);
+      }
+      const surface = ctx.createSurface('screen', this.id, this.surfaceOptions());
+      // Read from the layer's own fields rather than captured values, so a
+      // `setZIndex` / `setVisible` that landed before the first access is
+      // carried onto the surface when it is finally built.
+      if (this.zIndex !== 0) surface.setZIndex(this.zIndex);
+      surface.setVisible(this.visible);
+      this._surface = surface;
     }
     return this._surface;
   }
@@ -59,12 +82,9 @@ export abstract class ScreenLayer<
   }
 
   override mount(ctx: CanvasContext): void {
-    // Build the surface BEFORE `super.mount(ctx)` so `onMount(ctx)` can rely on
-    // `this.surface`.
-    const surface = ctx.createSurface('screen', this.id, this.surfaceOptions());
-    if (this.zIndex !== 0) surface.setZIndex(this.zIndex);
-    surface.setVisible(this.visible);
-    this._surface = surface;
+    // Record the context BEFORE `super.mount(ctx)` so `onMount(ctx)` can still
+    // reach `this.surface` — it just builds it at that moment rather than here.
+    this._surfaceCtx = ctx;
     super.mount(ctx);
   }
 
@@ -78,6 +98,7 @@ export abstract class ScreenLayer<
     super.unmount();
     this._surface?.destroy();
     this._surface = undefined;
+    this._surfaceCtx = undefined;
   }
 
 

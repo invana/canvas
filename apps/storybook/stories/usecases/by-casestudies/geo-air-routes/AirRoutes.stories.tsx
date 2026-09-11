@@ -46,7 +46,6 @@ import type { GraphCanvas, GraphData, GraphNode } from '@invana/graph';
 import { projectLngLat } from '@invana/graph-layer-maplibre';
 import { airports } from '@invana/graph-datasets';
 import { Delaunay } from 'd3-delaunay';
-import { ThemeProvider } from '@invana/themes';
 import { Map as MapIcon, Moon, Settings, Sun } from 'lucide-react';
 
 const meta: Meta = { title: 'usecases/by-casestudies/geo-air-routes/AirRoutes' };
@@ -237,79 +236,77 @@ export const AirRoutesStory: Story = {
     }, []);
 
     return (
-      <ThemeProvider>
-        <GraphCanvasApp
-          data={data}
-          config={config}
-          // MapLibre drives the camera, so the bundle's pan / wheel behaviours
-          // (and its background layer — the basemap *is* the background) would
-          // fight it. Compose the scene from children instead.
-          bundle={false}
-          onReady={onReady}
-          header={{
-            title: 'Geo Air Routes',
-            right: (ctx) => (
-              <ToolbarItems
-                orientation="horizontal"
-                items={[
-                  {
-                    type: 'select',
-                    key: 'basemap',
-                    label: 'Basemap',
-                    value: basemap,
-                    options: { liberty: 'Liberty', bright: 'Bright', positron: 'Positron' },
-                    onChange: (v) => setBasemap(v as keyof typeof STYLES)
-                  },
-                  {
-                    type: 'toggle',
-                    key: 'minimap',
-                    icon: MapIcon,
-                    label: 'Minimap: off',
-                    activeLabel: 'Minimap: on',
-                    active: minimapOn,
-                    onToggle: () => setMinimapOn((v) => !v)
-                  },
-                  ...dock.items,
-                  {
-                    type: 'toggle',
-                    key: 'theme',
-                    icon: Sun,
-                    activeIcon: Moon,
-                    label: 'Switch to dark theme',
-                    activeLabel: 'Switch to light theme',
-                    active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme
-                  },
-                ]}
-              />
-            )
-          }}
-          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-          right={dock.region}
-        >
-          {/* The basemap, under everything. It mounts its own MapLibre canvas
-              beneath the Pixi one and mirrors its transform into the camera. */}
-          <MapLayer id="map" />
+      <GraphCanvasApp
+        data={data}
+        config={config}
+        // MapLibre drives the camera, so the bundle's pan / wheel behaviours
+        // (and its background layer — the basemap *is* the background) would
+        // fight it. Compose the scene from children instead.
+        bundle={false}
+        onReady={onReady}
+        header={{
+          title: 'Geo Air Routes',
+          right: (ctx) => (
+            <ToolbarItems
+              orientation="horizontal"
+              items={[
+                {
+                  type: 'select',
+                  key: 'basemap',
+                  label: 'Basemap',
+                  value: basemap,
+                  options: { liberty: 'Liberty', bright: 'Bright', positron: 'Positron' },
+                  onChange: (v) => setBasemap(v as keyof typeof STYLES)
+                },
+                {
+                  type: 'toggle',
+                  key: 'minimap',
+                  icon: MapIcon,
+                  label: 'Minimap: off',
+                  activeLabel: 'Minimap: on',
+                  active: minimapOn,
+                  onToggle: () => setMinimapOn((v) => !v)
+                },
+                ...dock.items,
+                {
+                  type: 'toggle',
+                  key: 'theme',
+                  icon: Sun,
+                  activeIcon: Moon,
+                  label: 'Switch to dark theme',
+                  activeLabel: 'Switch to light theme',
+                  active: ctx.themeKind === 'dark',
+                  onToggle: ctx.toggleTheme
+                },
+              ]}
+            />
+          )
+        }}
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        right={dock.region}
+      >
+        {/* The basemap, under everything. It mounts its own MapLibre canvas
+            beneath the Pixi one and mirrors its transform into the camera. */}
+        <MapLayer id="map" />
 
-          {/* Airports pinned at their mercator positions. The map layer sits at
-              `zIndex: -100`, so the graph's default order puts it on top. */}
-          <GraphLayer id="graph" data={data} />
+        {/* Airports pinned at their mercator positions. The map layer sits at
+            `zIndex: -100`, so the graph's default order puts it on top. */}
+        <GraphLayer id="graph" data={data} />
 
-          {/* Pixel-constant sizing keeps the circles and routes legible from
-              world view down to street level. */}
-          <NodeScaleLODBehaviour
-            id="node-scale-lod"
-            layers={[{ targetLayerId: 'graph', sizePx: 5, strokeWidthPx: 0.6 }]}
-          />
-          <EdgeScaleLODBehaviour
-            id="edge-scale-lod"
-            layers={[{ targetLayerId: 'graph', strokeWidthPx: 0.6 }]}
-          />
-          <HoverActivateBehaviour id="hover" targetLayerId="graph" />
+        {/* Pixel-constant sizing keeps the circles and routes legible from
+            world view down to street level. */}
+        <NodeScaleLODBehaviour
+          id="node-scale-lod"
+          layers={[{ targetLayerId: 'graph', sizePx: 5, strokeWidthPx: 0.6 }]}
+        />
+        <EdgeScaleLODBehaviour
+          id="edge-scale-lod"
+          layers={[{ targetLayerId: 'graph', strokeWidthPx: 0.6 }]}
+        />
+        <HoverActivateBehaviour id="hover" targetLayerId="graph" />
 
-          {minimapOn && <MiniMapLayer id="minimap" graphLayerId="graph" />}
-        </GraphCanvasApp>
-      </ThemeProvider>
+        {minimapOn && <MiniMapLayer id="minimap" graphLayerId="graph" />}
+      </GraphCanvasApp>
     );
   }
 };

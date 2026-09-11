@@ -15,6 +15,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { EdgePreviewCard, NodePreviewCard, type PreviewCardRow } from '@invana/canvas-ui';
 import {
   BackgroundLayer,
+  ThemeBehaviour,
   Canvas,
   DragNodeBehaviour,
   DragPanBehaviour,
@@ -103,7 +104,12 @@ export const HoverElementPreviewPerTypeStory: Story = {
   render: () => (
     <div style={{ width: '100%', height: '100vh' }}>
       <Canvas autoResize>
-        <BackgroundLayer id="background" type="pattern" patternType="dots" backgroundColor="#f8fafc" color="#cbd5e1" />
+        <BackgroundLayer id="background" type="pattern" patternType="dots" />
+        {/* The sole publisher of `theme:change`. Without it the background's
+            inherited colours have no palette to read and fall back to the
+            layer's built-in light default. `document` mode tracks the
+            Storybook theme + variant toolbar off `<html>`. */}
+        <ThemeBehaviour id="theme" mode="document" />
         <GraphLayer
           id="graph"
           data={data}

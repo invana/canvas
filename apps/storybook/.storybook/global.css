@@ -8,3 +8,17 @@ html, body, #storybook-root {
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
+
+/*
+ * The backdrop comes from the active design-kit theme, not from Storybook's
+ * `backgrounds` toolbar (disabled in `preview.tsx` — its hardcoded hexes were a
+ * second appearance control that could contradict the theme). `applyTheme()`
+ * swaps the `theme-*` class on `<html>`, which redefines these tokens, so the
+ * story backdrop follows the toolbar in every family and mode. Stories that
+ * paint their own surface (a `BackgroundLayer`, an app shell with
+ * `bg-background`) cover this; transparent ones inherit it.
+ */
+html, body, #storybook-root {
+  background: var(--color-background);
+  color: var(--color-foreground);
+}

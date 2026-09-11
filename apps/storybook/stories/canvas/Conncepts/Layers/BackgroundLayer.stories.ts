@@ -7,6 +7,7 @@ import {
   WorldLayer,
   type IElementRenderer
 } from '@invana/canvas';
+import { ThemeBehaviour, BUILT_IN_THEMES, type ThemeMode } from '@invana/graph';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
 
@@ -65,13 +66,20 @@ export const BackgroundLayerStory: Story = {
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));
 
+    // The sole publisher of `theme:change`. Without one, an `'inherit'` colour
+    // has no palette to read and falls back to the layer's built-in default —
+    // so the Source: theme controls below would do nothing. `mode: 'document'`
+    // tracks the Storybook toolbar's theme + variant off `<html>`.
+    const theme = new ThemeBehaviour({ id: 'theme', enabled: true, mode: 'document' });
+    canvas.behaviours.register(theme);
+
     const bg = new BackgroundLayer({
       id: 'bg',
       options: {
         type: 'pattern',
         patternType: 'dots',
-        backgroundColor: 0x0f172a,
-        color: 0x475569,
+        backgroundColor: 'inherit',
+        color: 'inherit',
         size: 1.5,
         spacing: 30,
         alpha: 0.8,
@@ -83,23 +91,33 @@ export const BackgroundLayerStory: Story = {
     const fixtures = new FixturesLayer({ id: 'fx', options: {} });
     canvas.layers.add(fixtures);
 
+    // Each colour is a *source* + a swatch, mirroring the canvas-ui editor:
+    // `theme` sends the `'inherit'` sentinel (the layer reads its palette role
+    // on every paint), `custom` sends the swatch's hex and pins it. The swatch
+    // always holds a real colour — `'inherit'` is not one, and lil-gui's
+    // `addColor` throws on a value it can't parse as a colour.
     const settings = {
       type: 'pattern' as 'solid' | 'pattern',
       patternType: 'dots' as 'dots' | 'grid' | 'lines',
+      backgroundSource: 'theme' as 'theme' | 'custom',
       backgroundColor: '#0f172a',
+      patternSource: 'theme' as 'theme' | 'custom',
       color: '#475569',
       size: 1.5,
       spacing: 30,
       alpha: 0.8,
-      followCamera: true
+      followCamera: true,
+      theme: 'default',
+      mode: 'document' as ThemeMode
     };
 
     const apply = () => {
       bg.setOptions({
         type: settings.type,
         patternType: settings.patternType,
-        backgroundColor: settings.backgroundColor,
-        color: settings.color,
+        backgroundColor:
+          settings.backgroundSource === 'theme' ? 'inherit' : settings.backgroundColor,
+        color: settings.patternSource === 'theme' ? 'inherit' : settings.color,
         size: settings.size,
         spacing: settings.spacing,
         alpha: settings.alpha,
@@ -111,12 +129,24 @@ export const BackgroundLayerStory: Story = {
     onStoryTeardown(() => gui.destroy());
     gui.add(settings, 'type', ['solid', 'pattern']).onChange(apply);
     gui.add(settings, 'patternType', ['dots', 'grid', 'lines']).onChange(apply);
-    gui.addColor(settings, 'backgroundColor').onChange(apply);
-    gui.addColor(settings, 'color').onChange(apply);
+    gui.add(settings, 'backgroundSource', ['theme', 'custom']).name('background').onChange(apply);
+    gui.addColor(settings, 'backgroundColor').name('background color').onChange(apply);
+    gui.add(settings, 'patternSource', ['theme', 'custom']).name('pattern').onChange(apply);
+    gui.addColor(settings, 'color').name('pattern color').onChange(apply);
     gui.add(settings, 'size', 0.5, 8, 0.5).onChange(apply);
     gui.add(settings, 'spacing', 10, 80, 2).onChange(apply);
     gui.add(settings, 'alpha', 0, 1, 0.05).onChange(apply);
     gui.add(settings, 'followCamera').onChange(apply);
+
+    // Switch the published palette to watch every `Source: theme` colour follow
+    // it, while a `Source: custom` colour stays exactly where it was pinned.
+    const themeFolder = gui.addFolder('Theme');
+    themeFolder
+      .add(settings, 'theme', Object.keys(BUILT_IN_THEMES))
+      .onChange((id: string) => theme.setTheme(id));
+    themeFolder
+      .add(settings, 'mode', ['document', 'system', 'light', 'dark'])
+      .onChange((m: ThemeMode) => theme.setMode(m));
 
     canvas.camera.fitContent(fixtures.getBounds(), 80);
   }

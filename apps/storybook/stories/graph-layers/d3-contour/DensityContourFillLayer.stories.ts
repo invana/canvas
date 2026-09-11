@@ -51,7 +51,7 @@ export const DensityContourFillLayer_Story: Story = {
     const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
 
-    // Background pattern, concrete colours; OS dark-mode swaps them via the
+    // Background pattern, concrete colours; the Theme toolbar swaps them via the
     // ThemeBehaviour below.
     canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
     canvas.layers.add(new DevInfoLayer({ id: 'dev-info', corner: 'bottom-left' }));
@@ -133,7 +133,7 @@ export const DensityContourFillLayer_Story: Story = {
         'drag-node': { enabled: true },
         theme: {
           enabled: true,
-          mode: 'system',
+          mode: 'document',
           light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
           dark: { backgroundColor: '#0f172a', color: '#475569' }
         }

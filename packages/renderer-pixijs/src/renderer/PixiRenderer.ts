@@ -25,6 +25,7 @@ import { acquireSharedTexturePool, releaseSharedTexturePool } from '../assets/sh
 import { resolveRenderPreference } from './rendererSupport';
 import { PixiOverlayDevice } from './PixiOverlayDevice';
 import { PixiSurface } from './PixiSurface';
+import { PixiPointerRouter } from './PixiPointerRouter';
 
 /** Spec kinds this backend can draw — the built-in shape and connector registries. */
 const PIXI_SPEC_KINDS = [
@@ -55,6 +56,14 @@ export class PixiRenderer implements IRenderer {
   private _stage?: Container;
   private _world?: Viewport;
   private _camera?: Camera;
+
+  /**
+   * The canvas's single pointer dispatcher. Built with the camera (so it is
+   * available from the same moment a surface can be), it owns the stage
+   * listeners and decides which surface wins each press — see
+   * {@link PixiPointerRouter} for why that is not each surface's own job.
+   */
+  private _pointerRouter?: PixiPointerRouter;
 
   private _holdsSharedTexturePool = false;
   private _resizeObserver?: ResizeObserver;
@@ -184,6 +193,9 @@ export class PixiRenderer implements IRenderer {
     this._resizeObserver?.disconnect();
     this._resizeObserver = undefined;
 
+    this._pointerRouter?.destroy();
+    this._pointerRouter = undefined;
+
     this._world?.destroy({ children: true });
     this._world = undefined;
     this._stage = undefined;
@@ -205,17 +217,19 @@ export class PixiRenderer implements IRenderer {
 
   createSurface(space: SurfaceSpace, id: string, opts?: SurfaceOptions): ISurface {
     const parent = space === 'screen' ? this.requireStage() : this.requireWorld();
-    return new PixiSurface({
+    const surface = new PixiSurface({
       id,
       space,
       parent,
       camera: this.requireCamera(),
-      canvasElement: this.canvasElement,
       // The layer's own policy wins over the renderer-wide default.
       ...((opts?.hitFloorPx ?? this.hitFloorPx) !== undefined
         ? { hitFloorPx: opts?.hitFloorPx ?? this.hitFloorPx }
         : {}),
+      onDestroy: (s) => this._pointerRouter?.remove(s),
     });
+    this.requirePointerRouter().add(surface);
+    return surface;
   }
 
   createOverlay(label: string, space: OverlaySpace = 'world'): IOverlayDevice {
@@ -242,6 +256,26 @@ export class PixiRenderer implements IRenderer {
    */
   attachCamera(camera: Camera): void {
     this._camera = camera;
+    // The router needs the camera to convert a press into world coordinates, and
+    // the documented ordering puts `attachCamera` before the first
+    // `createSurface` — so this is the earliest point it can exist, and it
+    // exists before anything can register with it.
+    this._pointerRouter?.destroy();
+    this._pointerRouter = new PixiPointerRouter({
+      stage: this.requireStage(),
+      camera,
+      ...(this.canvasElement ? { canvasElement: this.canvasElement } : {}),
+    });
+  }
+
+  /** The pointer router, or a thrown error if `attachCamera` hasn't run yet. */
+  private requirePointerRouter(): PixiPointerRouter {
+    if (!this._pointerRouter) {
+      throw new Error(
+        'PixiRenderer: pointer router unavailable — call attachCamera() before createSurface().',
+      );
+    }
+    return this._pointerRouter;
   }
 
   // ─── Per-frame ───────────────────────────────────────────────────────────

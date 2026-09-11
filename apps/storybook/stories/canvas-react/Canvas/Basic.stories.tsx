@@ -2,6 +2,7 @@ import {
   Canvas,
   GraphLayer,
   BackgroundLayer,
+  ThemeBehaviour,
   DragPanBehaviour,
   WheelZoomBehaviour,
   type GraphLayerProps
@@ -64,7 +65,12 @@ export const Basic: Story = {
     <div style={{ width: '100%', height: '100vh' }}>
       {/* No `telemetry` prop → no streams attached (the kernel's no-op path). */}
       <Canvas autoResize>
-        <BackgroundLayer id="bg" type="pattern" patternType="dots" backgroundColor="#f8fafc" color="#cbd5e1" />
+        <BackgroundLayer id="bg" type="pattern" patternType="dots" />
+        {/* The sole publisher of `theme:change`. Without it the background's
+            inherited colours have no palette to read and fall back to the
+            layer's built-in light default. `document` mode tracks the
+            Storybook theme + variant toolbar off `<html>`. */}
+        <ThemeBehaviour id="theme" mode="document" />
         <GraphLayer id="graph" data={DATA} node={NODE} edge={EDGE} />
         <DragPanBehaviour id="pan" />
         <WheelZoomBehaviour id="wheel" />

@@ -42,6 +42,7 @@ storybook-static/
 # VitePress
 **/.vitepress/cache/
 **/.vitepress/dist/
+**/.vitepress/.temp/
 
 # Graphify output
 graphify-out/

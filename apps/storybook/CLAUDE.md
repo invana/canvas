@@ -39,6 +39,22 @@ Titles mirror the path (`canvas-ui/<bucket>/<Name>`). When a new canvas-ui story
 
 Right-region content is a **sibling of `<Canvas>`** under the app's *lifted* context, so it can render before the engine is ready. `useGraphCanvas()` / `useCanvas()` / `useGraphCanvasUpdate()` **throw on the null lifted context** — gate the docked content on `useContext(GraphCanvasContext)` (bail to `null` when absent), as `editors/node-styles/_shared.tsx` (`PanelGate`) and the converted view stories do. Pure controlled editors (`defaults` in → patch out, e.g. `HoverPreviewCardEditorPanel`) need no gate; connected content (anything calling an engine hook) does. **A view panel that takes a `canvas` prop needs no gate either** — the region `content` render-fn is handed the live engine (`content: (ctx) => …` → `ctx.canvas`, which `useSidePanels`' `render(canvas)` forwards), and the panel handles the `null`-until-ready case internally. That's the preferred shape (`FindInCanvasViewPanel` / `CanvasFiltersViewPanel`): pass `canvas` explicitly, no context read in the story.
 
+## Theme — never mount your own `<ThemeProvider>`
+
+`.storybook/preview.tsx` mounts **one** `<ThemeProvider>` for every story and drives it from the
+**Theme × Variant** toolbar globals (through `setTheme` / `setMode`, via `ToolbarThemeBridge`).
+A story that mounts its own provider **shadows** it: an inner provider is seeded only at mount, so
+that story freezes on whatever was selected when it mounted and needs a page refresh to re-theme —
+including the pixi pixels, which reach the engine through `useTheme()` → `CanvasThemeSync` →
+`ThemeBehaviour`. So a `GraphCanvasApp` / `SchemaViewPanel` story just renders the component; the
+required `<ThemeProvider>` ancestor is already there.
+
+The one exception is a story that deliberately **pins** its appearance (an export/screenshot story):
+mount `<ThemeProvider storageKey={null} defaultMode="dark">` yourself **and** declare
+`parameters: { selfThemed: true }`, which makes the decorator skip the story entirely so the toolbar
+doesn't imply control it doesn't have. See
+`docs/rfcs/fix/2026-09-11-toolbar-theme-never-reaches-mounted-providers.md`.
+
 ## Styling — no hand-rolled CSS (root rule 13)
 
 **Never write manual CSS in a story** — no inline `style={{…}}` objects, no `CSSProperties` consts, no raw CSS for static presentation. Wrap demo layout/chrome in **`@invana/ui` components** (`Card`/`CardHeader`/`CardContent`, `Separator`, `Badge`, `Button`, …) and use **Tailwind design-token utility classes** via `className` (`flex`, `flex-col`, `gap-4`, `p-4`, `bg-card`, `text-muted-foreground`, `text-xs`, …) — the design-kit Tailwind theme is wired into Storybook (`.storybook/preview.ts`), so utilities work. `stories/canvas-ui/editors/TemplateStudio.stories.tsx` (its docked `right`-region editor panel — `Card`/`CardHeader`/`CardContent` + Tailwind utilities, no `CSSProperties`) is the reference.
@@ -224,7 +240,7 @@ The shape is **add everything, then `init()` last**:
 3. Build **one `const canvasOptions`** object — the whole serialisable config keyed by id: `layers` (per-id option bags, e.g. `graph.node.style`), `behaviours` (`{ enabled: true, … }` — `enabled` turns it on), `layouts` (per-id params), and `activeLayout`. No class refs, no functions — pure JSON.
 4. `await canvas.init({ container, autoResize: true, config: canvasOptions })` **last**. It mounts everything, applies the config, and enables behaviours. The `activeLayout` auto-runs against its target once data is present — **don't call `setData`/`layout.apply` for the initial render**.
 5. **lil-gui binds straight to `canvasOptions`** (the config *is* the source of truth) and pushes each change live via `canvas.update({ … })`. Layout/force edits go through `canvas.update({ layouts: { … } })` and re-heat the sim — no rebuild.
-6. **OS dark-mode** = `@invana/graph`'s `ThemeBehaviour` in single-layer shorthand: register it with a `targetLayerId` (`'bg'`); its `light` / `dark` `{ backgroundColor, color }` patches live in `config.behaviours.theme`, and the default `mode: 'system'` follows `prefers-color-scheme`. (Drop the `light`/`dark` shorthand and set `active` instead to drive a full named palette across the whole canvas.)
+6. **Light/dark** = `@invana/graph`'s `ThemeBehaviour` in single-layer shorthand: register it with a `targetLayerId` (`'bg'`); its `light` / `dark` `{ backgroundColor, color }` patches live in `config.behaviours.theme`. **Set `mode: 'document'`** — it reads the light/dark kind (and the family) off `documentElement`, which is what the **Theme × Variant toolbar** writes, so the canvas pixels follow the toolbar like the chrome around them. The default `mode: 'system'` follows `prefers-color-scheme` instead, which means the OS overrides the toolbar — only use it for a story that is *about* OS appearance. (Drop the `light`/`dark` shorthand and set `active` instead to drive a full named palette across the whole canvas.) React stories need none of this: `CanvasThemeSync` inside `GraphCanvasApp` already pushes the host theme in.
 7. Datasets generators return `GraphNode` / `GraphEdge` directly (e.g. `generateLattice(n)`) — feed `options.initData` with no mapping.
 
 ```ts
@@ -235,7 +251,7 @@ const graph = new GraphLayer({ id: 'graph', options: { initData: generateLattice
 canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
 canvas.layers.add(graph);
 canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
-canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg' }));
+canvas.behaviours.register(new ThemeBehaviour({ id: 'theme', targetLayerId: 'bg', mode: 'document' }));
 const forceLayout = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
 canvas.layouts.add(forceLayout);
 
@@ -247,7 +263,7 @@ const canvasOptions = {
   },
   behaviours: {
     pan: { enabled: true },
-    theme: { enabled: true, mode: 'system',
+    theme: { enabled: true, mode: 'document',
       light: { backgroundColor: '#f8fafc', color: '#94a3b8' },
       dark:  { backgroundColor: '#0f172a', color: '#475569' } },
   },

@@ -31,7 +31,7 @@
  * before the Layer's container is destroyed.
  */
 
-import { Container, RenderLayer, type FederatedPointerEvent } from 'pixi.js';
+import { Container, RenderLayer } from 'pixi.js';
 import { PickingIndex } from '@invana/canvas-store';
 import { DEFAULT_ENDPOINT_BADGE_GAP_PX, bezierPathStyle, boundaryAnchor, bumpHorizontalPathStyle, bumpRadialPathStyle, bundlePathStyle, centerAnchor, connectorGeometryKey, connectorToSvg, edgePortAnchor, erRouter, loopCurvePathStyle, loopPolylinePathStyle, manhattanRouter, metroRouter, normalPathStyle, oneSideRouter, orthRouter, perpendicularAnchor, quadraticPathStyle, resolveBadgePosition, resolveConnectorBadgePosition, roundedPathStyle, samplePath, shapeSpecToSvg, silhouettePortAnchor, smoothPathStyle, stepRadialPathStyle, straightRouter, trimPathEnds } from '@invana/canvas-core';
 import { ConnectorInstance } from './mounted/ConnectorInstance';
@@ -145,19 +145,6 @@ export interface PrimitivesRendererOptions {
    * not shared across renderer instances.
    */
   readonly textureRegistry?: TextureRegistry;
-  /**
-   * Optional DOM `<canvas>` element. Used by `hitMode: 'indexed'` to
-   * apply `cursor: pointer` on shape/connector hover (Pixi's native
-   * `gfx.cursor` auto-application is bypassed in indexed mode because
-   * `eventMode = 'none'` skips the federated hit-test walk).
-   *
-   * When omitted in indexed mode, hover-cursor styling is a no-op —
-   * shape/connector hits still emit `pointerover` / `pointerout` events
-   * to behaviours, just without the cursor feedback. Most consumers
-   * should pass this; `GraphLayer` forwards `CanvasContext.canvasElement`
-   * automatically.
-   */
-  readonly canvasElement?: HTMLCanvasElement;
   /**
    * Minimum hover/click target in screen pixels — used as a *fallback*
    * by {@link hitTest}: exact geometric hits always win; only when no
@@ -322,8 +309,6 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
   private raisedIds: ReadonlySet<string> = new Set();
   readonly camera: Camera;
   private readonly textureRegistry: TextureRegistry;
-  /** DOM canvas element used by the router for cursor styling. */
-  private readonly canvasElement: HTMLCanvasElement | null;
 
   /** Currently-hovered target. Tracks pointerover/out diffs. */
   private currentHover: { kind: 'shape' | 'connector'; id: string } | null = null;
@@ -331,32 +316,13 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
   private currentPart: { id: string; partId: string } | null = null;
   /** Target captured by a pointerdown — used to gate click emission. */
   private downHit: { kind: 'shape' | 'connector'; id: string; button: number } | null = null;
-  /**
-   * True while any pointer button is held down (regardless of where
-   * the pointerdown landed). Used to suppress hover state-changes
-   * during a drag — without this, dragging a node over neighbouring
-   * shapes fires `pointerover` on each one and triggers
-   * `HoverActivateBehaviour` mid-drag.
-   */
-  private pointerDown = false;
   /** Last left-click time + target — drives double-click detection. */
   private lastLeftClick: { kind: 'shape' | 'connector'; id: string; t: number } | null = null;
-  /** Pointer-router subscriptions to clean up on `destroy`. */
-  private pointerRouterUnsubs: Array<() => void> = [];
-  /**
-   * RAF handle + latest pointer-move event for the move-coalescing
-   * throttle. Raw `globalpointermove` fires hundreds of times per
-   * second on a fast mouse sweep; we only need to resolve the hit
-   * once per animation frame.
-   */
-  private pendingPointerMove: FederatedPointerEvent | null = null;
-  private pointerMoveRaf: number | null = null;
 
   constructor(opts: PrimitivesRendererOptions) {
     this._container = opts.container;
     this.camera = opts.camera;
     this.textureRegistry = opts.textureRegistry ?? new TextureRegistry();
-    this.canvasElement = opts.canvasElement ?? null;
     this.picking = new PickingIndex({
       source: this,
       camera: opts.camera,
@@ -407,7 +373,6 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
     // (hovered / selected) set so highlighted edges paint over unrelated nodes.
     this._container.addChild(this.overlayLayer);
     this.registerBuiltins();
-    this.installPointerRouter();
   }
 
   private registerBuiltins(): void {
@@ -581,9 +546,8 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
     if (spec.visible !== false) {
       this.picking.insertShape(id, spec.zIndex ?? 0);
     }
-    // Per-shape Pixi event dispatch is bypassed — the renderer's global
-    // pointer router (see `installPointerRouter`) handles hit-routing
-    // via `hitTest`. Disabling `eventMode` on the gfx skips Pixi's
+    // Per-shape Pixi event dispatch is bypassed — the canvas-wide
+    // `PixiPointerRouter` handles hit-routing via `hitTest`. Disabling `eventMode` on the gfx skips Pixi's
     // per-shape hit-test walk on every pointer event (the perf win on
     // dense graphs). `hitTest`'s narrow phase answers from the spec, in
     // `PickingIndex`; the geometric `hitArea` set by `ShapeBase` is left in
@@ -1857,85 +1821,41 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
   }
 
   /**
-   * Attach a single `globalpointer*` listener trio to the renderer's
-   * container. Pixi's *global* pointer events fire on every move /
-   * down / up regardless of which DisplayObject is under the cursor —
-   * so one listener handles the whole renderer's hit-routing.
+   * Hover-path pick at a point already expressed in **this surface's own
+   * space** (world coordinates for a `world` surface, screen pixels for a
+   * `screen` one). Exposed for {@link PixiPointerRouter}, which owns the
+   * single canvas-wide hit walk and asks each surface in turn.
    *
-   * Setting `eventMode = 'static'` on the container is the standard
-   * Pixi v8 idiom for opting into the event system; we don't set a
-   * `hitArea` because the container itself is never the dispatch
-   * target — we delegate to {@link hitTest} on every move/down/up.
+   * Uses the hysteresis-aware {@link pickHover}; press picking uses the raw
+   * {@link hitTest} instead, for the reason documented on {@link pickHover}.
    */
-  private installPointerRouter(): void {
-    this._container.eventMode = 'static';
-    // Always-true `hitArea` so the container catches `pointerdown` /
-    // `pointerup` for the whole canvas. Without this, Pixi can't find
-    // an interactive target on press (every shape's `eventMode` is
-    // `'none'` so the router can do its own hit-testing), and our
-    // `pointerdown` / `pointerup` listeners below never fire —
-    // breaking `DragNodeBehaviour` and anything else that listens for
-    // `shape:pointerdown` / `connector:pointerdown`. The container's
-    // own pointer events are then routed through `hitTest` exactly
-    // like the move stream. `globalpointermove` doesn't need this
-    // (the `global` variant fires regardless of hit) but the regular
-    // down / up events do.
-    this._container.hitArea = { contains: () => true };
-
-    // Move events are RAF-coalesced — only the latest pointer position
-    // is resolved per frame. Without this, a fast mouse sweep over a
-    // dense graph fires hundreds of pickAtWorld + hover-state churns
-    // per second, swamping the renderer.
-    const onMove = (e: FederatedPointerEvent): void => {
-      this.pendingPointerMove = e;
-      if (this.pointerMoveRaf !== null) return;
-      this.pointerMoveRaf = requestAnimationFrame(() => {
-        this.pointerMoveRaf = null;
-        const pending = this.pendingPointerMove;
-        this.pendingPointerMove = null;
-        if (pending) this.routePointerMove(pending);
-      });
-    };
-    const onDown = (e: FederatedPointerEvent): void => this.routePointerDown(e);
-    const onUp = (e: FederatedPointerEvent): void => this.routePointerUp(e);
-
-    this._container.on('globalpointermove', onMove);
-    this._container.on('pointerdown', onDown);
-    this._container.on('pointerup', onUp);
-    this._container.on('pointerupoutside', onUp);
-
-    this.pointerRouterUnsubs.push(
-      () => this._container.off('globalpointermove', onMove),
-      () => this._container.off('pointerdown', onDown),
-      () => this._container.off('pointerup', onUp),
-      () => this._container.off('pointerupoutside', onUp),
-    );
+  pickHoverAt(x: number, y: number): HitResult | null {
+    return this.pickHover(x, y);
   }
 
-  private routePointerMove(e: FederatedPointerEvent): void {
-    // Suppress hover state-changes while a pointer button is held.
-    // The currently-hovered target stays highlighted through the
-    // drag; on release, the next move resolves the cursor's actual
-    // target and fires `pointerover` / `pointerout` normally.
-    if (this.pointerDown) return;
-    const w = this.camera.toWorld(e.global.x, e.global.y);
-    // Hover uses the refined pick (hysteresis + node-incidence bias); click /
-    // drag stay on the raw hitTest in routePointerDown / routePointerUp.
-    const hit = this.pickHover(w.x, w.y);
+  /**
+   * Apply a resolved hover for this surface: diff it against the currently
+   * hovered target and emit `pointerover` / `pointerout`, plus the sub-part
+   * `partover` / `partout` stream.
+   *
+   * The router calls this on **every** registered surface each move frame —
+   * with the resolved hit on the one that won the pick and `null` on all the
+   * others — so a surface that loses the pick correctly un-hovers whatever it
+   * was holding. Cursor styling is the router's, not ours: only it knows which
+   * surface won.
+   */
+  dispatchMove(hit: HitResult | null, x: number, y: number): void {
     const prev = this.currentHover;
 
     // Sub-part hover runs every move (even within the same shape) so moving
     // between a card's rows fires partout/partover — independent of the
     // shape-level over/out diffing below.
-    this.updatePartHover(hit, w.x, w.y);
+    this.updatePartHover(hit, x, y);
 
     if (hit === null) {
       if (prev) {
-        this.events.emit(`${prev.kind}:pointerout`, {
-          id: prev.id, worldX: w.x, worldY: w.y,
-        });
+        this.events.emit(`${prev.kind}:pointerout`, { id: prev.id, worldX: x, worldY: y });
         this.currentHover = null;
-        this.applyHoverCursor(null);
       }
       return;
     }
@@ -1943,41 +1863,101 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
     if (prev && prev.kind === hit.kind && prev.id === hit.id) return;
 
     if (prev) {
-      this.events.emit(`${prev.kind}:pointerout`, {
-        id: prev.id, worldX: w.x, worldY: w.y,
-      });
+      this.events.emit(`${prev.kind}:pointerout`, { id: prev.id, worldX: x, worldY: y });
     }
-    this.events.emit(`${hit.kind}:pointerover`, {
-      id: hit.id, worldX: w.x, worldY: w.y,
-    });
+    this.events.emit(`${hit.kind}:pointerover`, { id: hit.id, worldX: x, worldY: y });
     this.currentHover = hit;
-    this.applyHoverCursor(hit);
   }
 
   /**
-   * Apply a hover cursor on the canvas DOM element. Skipped when a
-   * pointer-capture interaction is in flight (`downHit != null`) so
-   * behaviours like `DragNodeBehaviour` that own the cursor during a
-   * drag (`'grabbing'`) aren't overridden mid-gesture.
+   * This surface won the press: emit `shape:pointerdown` / `connector:pointerdown`
+   * and remember the target so {@link dispatchUp} can gate the click.
    */
-  private applyHoverCursor(hit: { kind: 'shape' | 'connector'; id: string } | null): void {
-    if (!this.canvasElement) return;
-    if (this.downHit) return;
-    this.canvasElement.style.cursor = hit ? 'pointer' : '';
+  dispatchDown(hit: HitResult, x: number, y: number, button: number, pointerId: number): void {
+    this.events.emit(`${hit.kind}:pointerdown`, {
+      id: hit.id, worldX: x, worldY: y, button, pointerId,
+    });
+    this.downHit = { kind: hit.kind, id: hit.id, button };
   }
 
   /**
-   * Resolve the `hitId` of the sub-part under a world point for a shape hit, or
-   * `undefined` (not a shape / no `hitTestPart` / no part there). Local
-   * coordinates mirror {@link geometricHit}: `(world − spec.origin) / gfxScale`.
-   * Shared by hover ({@link updatePartHover}) and right-click routing.
+   * This surface won the release: emit `pointerup`, then — when the press
+   * landed on the same target with the same button — `click` / `doubleclick`
+   * (left) or the context-menu pair (right).
    */
-  private partIdAt(hit: HitResult | null, worldX: number, worldY: number): string | undefined {
+  dispatchUp(hit: HitResult, x: number, y: number, button: number, pointerId: number): void {
+    this.events.emit(`${hit.kind}:pointerup`, {
+      id: hit.id, worldX: x, worldY: y, button, pointerId,
+    });
+
+    const down = this.downHit;
+    this.downHit = null;
+    if (!down) return;
+    if (down.kind !== hit.kind || down.id !== hit.id) return;
+    if (down.button !== button) return;
+
+    if (button === 0) {
+      this.events.emit(`${hit.kind}:click`, { id: hit.id, worldX: x, worldY: y, button: 0 });
+      // Manual double-click detection — Pixi's federated `e.detail`
+      // counter isn't available on `globalpointer*` paths the same way,
+      // so we track per-target click timestamps ourselves. 350ms matches
+      // common OS double-click intervals; same target required.
+      const now = performance.now();
+      const last = this.lastLeftClick;
+      if (last && last.kind === hit.kind && last.id === hit.id && now - last.t < 350) {
+        this.events.emit(`${hit.kind}:doubleclick`, { id: hit.id, worldX: x, worldY: y, button: 0 });
+        this.lastLeftClick = null;
+      } else {
+        this.lastLeftClick = { kind: hit.kind, id: hit.id, t: now };
+      }
+    } else if (button === 2) {
+      // Over a hittable sub-part → the part-scoped menu; otherwise the
+      // shape/connector-level menu. Mutually exclusive per right-click.
+      const partId = this.partIdAt(hit, x, y);
+      if (partId !== undefined) {
+        this.events.emit('shape:partcontextmenu', { id: hit.id, partId, worldX: x, worldY: y });
+      } else {
+        this.events.emit(`${hit.kind}:contextmenu`, { id: hit.id, worldX: x, worldY: y });
+      }
+    }
+  }
+
+  /**
+   * The press or release resolved somewhere else (another surface, or empty
+   * canvas). Drop the captured press so a later release on *this* surface
+   * can't synthesise a click out of two unrelated halves of a gesture.
+   */
+  clearDown(): void {
+    this.downHit = null;
+  }
+
+  /**
+   * Nothing anywhere was hit on a right-button release. The router fans this
+   * to every surface so per-layer subscribers (`ContextMenuBehaviour` listens
+   * on its own layer's renderer) keep receiving it as they did when each
+   * surface routed its own input.
+   */
+  emitBackgroundContextMenu(x: number, y: number): void {
+    this.events.emit('background:contextmenu', { worldX: x, worldY: y });
+  }
+
+  /** Is a press currently captured on this surface? Read by the router for cursor gating. */
+  get hasCapturedPress(): boolean {
+    return this.downHit !== null;
+  }
+
+  /**
+   * Resolve the `hitId` of the sub-part under a point, or `undefined` (not a
+   * shape / no `hitTestPart` / no part there). Local coordinates mirror
+   * {@link geometricHit}: `(point − spec.origin) / gfxScale`. Shared by hover
+   * ({@link updatePartHover}) and right-click routing.
+   */
+  private partIdAt(hit: HitResult | null, x: number, y: number): string | undefined {
     if (!hit || hit.kind !== 'shape') return undefined;
     const inst = this.shapeInstances.get(hit.id);
     if (!inst?.shape.hitTestPart) return undefined;
     const s = inst.gfxScale || 1;
-    return inst.shape.hitTestPart((worldX - inst.spec.x) / s, (worldY - inst.spec.y) / s);
+    return inst.shape.hitTestPart((x - inst.spec.x) / s, (y - inst.spec.y) / s);
   }
 
   /**
@@ -1985,8 +1965,8 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
    * `shape:partout` (leaving a part) / `shape:partover` (entering one). Atomic
    * shapes (no `hitTestPart`) never produce part events.
    */
-  private updatePartHover(hit: HitResult | null, worldX: number, worldY: number): void {
-    const partId = this.partIdAt(hit, worldX, worldY);
+  private updatePartHover(hit: HitResult | null, x: number, y: number): void {
+    const partId = this.partIdAt(hit, x, y);
     const cur = this.currentPart;
     // Leaving the current part — off the shape, or onto a different part.
     if (cur && (partId === undefined || cur.id !== hit?.id || cur.partId !== partId)) {
@@ -1995,80 +1975,8 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
     }
     // Entering a part (only when not already tracking one).
     if (partId !== undefined && hit && this.currentPart === null) {
-      this.events.emit('shape:partover', { id: hit.id, partId, worldX, worldY });
+      this.events.emit('shape:partover', { id: hit.id, partId, worldX: x, worldY: y });
       this.currentPart = { id: hit.id, partId };
-    }
-  }
-
-  private routePointerDown(e: FederatedPointerEvent): void {
-    this.pointerDown = true;
-    const w = this.camera.toWorld(e.global.x, e.global.y);
-    const hit = this.hitTest(w.x, w.y);
-    if (!hit) {
-      this.downHit = null;
-      return;
-    }
-    this.events.emit(`${hit.kind}:pointerdown`, {
-      id: hit.id, worldX: w.x, worldY: w.y, button: e.button, pointerId: e.pointerId,
-    });
-    this.downHit = { kind: hit.kind, id: hit.id, button: e.button };
-  }
-
-  private routePointerUp(e: FederatedPointerEvent): void {
-    this.pointerDown = false;
-    const w = this.camera.toWorld(e.global.x, e.global.y);
-    const hit = this.hitTest(w.x, w.y);
-
-    if (!hit) {
-      // Right-button release on empty canvas → background context menu.
-      // There's no shape/connector to attribute a pointerup/click to, so this
-      // is the only event the renderer surfaces for an empty-canvas right-click.
-      if (e.button === 2) {
-        this.events.emit('background:contextmenu', { worldX: w.x, worldY: w.y });
-      }
-      this.downHit = null;
-      return;
-    }
-
-    this.events.emit(`${hit.kind}:pointerup`, {
-      id: hit.id, worldX: w.x, worldY: w.y, button: e.button, pointerId: e.pointerId,
-    });
-
-    const down = this.downHit;
-    this.downHit = null;
-    if (!down) return;
-    if (down.kind !== hit.kind || down.id !== hit.id) return;
-    if (down.button !== e.button) return;
-
-    if (e.button === 0) {
-      this.events.emit(`${hit.kind}:click`, {
-        id: hit.id, worldX: w.x, worldY: w.y, button: 0,
-      });
-      // Manual double-click detection — Pixi's federated `e.detail`
-      // counter isn't available on `globalpointer*` paths the same way,
-      // so we track per-target click timestamps ourselves. 350ms matches
-      // common OS double-click intervals; same target required.
-      const now = performance.now();
-      const last = this.lastLeftClick;
-      if (last && last.kind === hit.kind && last.id === hit.id && now - last.t < 350) {
-        this.events.emit(`${hit.kind}:doubleclick`, {
-          id: hit.id, worldX: w.x, worldY: w.y, button: 0,
-        });
-        this.lastLeftClick = null;
-      } else {
-        this.lastLeftClick = { kind: hit.kind, id: hit.id, t: now };
-      }
-    } else if (e.button === 2) {
-      // Over a hittable sub-part → the part-scoped menu; otherwise the
-      // shape/connector-level menu. Mutually exclusive per right-click.
-      const partId = this.partIdAt(hit, w.x, w.y);
-      if (partId !== undefined) {
-        this.events.emit('shape:partcontextmenu', { id: hit.id, partId, worldX: w.x, worldY: w.y });
-      } else {
-        this.events.emit(`${hit.kind}:contextmenu`, {
-          id: hit.id, worldX: w.x, worldY: w.y,
-        });
-      }
     }
   }
 
@@ -2373,18 +2281,10 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
   // ─── Teardown ───────────────────────────────────────────────────────────
 
   destroy(): void {
-    if (this.pointerMoveRaf !== null) {
-      cancelAnimationFrame(this.pointerMoveRaf);
-      this.pointerMoveRaf = null;
-    }
-    this.pendingPointerMove = null;
-    for (const fn of this.pointerRouterUnsubs) fn();
-    this.pointerRouterUnsubs = [];
     this.currentHover = null;
     this.currentPart = null;
     this.downHit = null;
     this.lastLeftClick = null;
-    this.pointerDown = false;
     for (const id of [...this.shapeInstances.keys()]) this.removeShape(id);
     for (const id of [...this.connectorInstances.keys()]) this.removeConnector(id);
     this.animated.clear();

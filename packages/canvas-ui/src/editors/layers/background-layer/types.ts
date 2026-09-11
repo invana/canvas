@@ -16,6 +16,17 @@ export type BackgroundPatternType = 'dots' | 'grid' | 'lines';
 export type BackgroundMode = 'auto' | 'light' | 'dark';
 
 /**
+ * Where one colour comes from — the form-only half of the engine's `'inherit'`
+ * sentinel. `'theme'` emits the literal string `'inherit'` (the layer then reads
+ * its configured palette role); `'custom'` emits the swatch's colour, which the
+ * theme will never override.
+ *
+ * Form-only: the engine has no `*Source` option, and `optionsToForm` /
+ * `formToOptions` are what bridge the two representations.
+ */
+export type BackgroundColorSource = 'theme' | 'custom';
+
+/**
  * The subset of `BackgroundLayerOptions` this editor produces. Colours are
  * emitted as scalar strings (hex / CSS) — the engine's `BackgroundColor` also
  * accepts a `{ light, dark }` pair, which is out of scope for the scalar form
@@ -24,9 +35,9 @@ export type BackgroundMode = 'auto' | 'light' | 'dark';
 export interface BackgroundLayerOptions {
   type?: BackgroundType;
   patternType?: BackgroundPatternType;
-  /** Pattern foreground colour. */
+  /** Pattern foreground colour, or `'inherit'` to follow the theme's pattern role. */
   color?: string;
-  /** Solid backdrop colour painted behind the pattern. */
+  /** Solid backdrop colour, or `'inherit'` to follow the theme's surface role. */
   backgroundColor?: string;
   size?: number;
   spacing?: number;
@@ -40,11 +51,16 @@ export interface BackgroundLayerOptions {
 }
 
 /**
- * Flat form-field shape. Matches {@link BackgroundLayerOptions} 1:1 here —
- * colours are already scalar strings, so no re-encoding beyond the
- * `number ⇄ #rrggbb` bridge the mapping applies for seed values.
+ * Flat form-field shape: {@link BackgroundLayerOptions} plus the two
+ * form-only `*Source` selects that stand in for the `'inherit'` sentinel, which
+ * a colour swatch cannot represent. `mapping.ts` folds them back.
  */
-export type BackgroundLayerFields = BackgroundLayerOptions;
+export interface BackgroundLayerFields extends BackgroundLayerOptions {
+  /** Whether {@link BackgroundLayerOptions.backgroundColor} is themed or pinned. */
+  backgroundColorSource?: BackgroundColorSource;
+  /** Whether {@link BackgroundLayerOptions.color} is themed or pinned. */
+  colorSource?: BackgroundColorSource;
+}
 
 /** react-hook-form state — leaves register under `options.<field>`. */
 export interface BackgroundLayerFormState {

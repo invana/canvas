@@ -1,16 +1,47 @@
 import { numberToHex } from '../../../shared/color';
-import type { BackgroundLayerFields, BackgroundLayerOptions } from './types';
+import type { BackgroundColorSource, BackgroundLayerFields, BackgroundLayerOptions } from './types';
+
+/** The engine's inherit sentinel, mirrored here (canvas-ui imports no engine). */
+const INHERIT = 'inherit';
 
 /**
  * Resolve a `BackgroundColor` seed value to the hex/CSS string the swatch
  * shows. `0xRRGGBB` numbers become `#rrggbb`; CSS strings pass through; a
  * `{ light, dark }` pair is out of scope for the scalar field and round-trips
  * as `undefined` so the editor leaves it untouched.
+ *
+ * `'inherit'` also yields `undefined` — it is not a colour, and it is carried
+ * by the companion `*Source` field instead (see {@link colorToSource}).
  */
 function colorToField(v: unknown): string | undefined {
+  if (v === INHERIT) return undefined;
   if (typeof v === 'number') return numberToHex(v);
   if (typeof v === 'string') return v;
   return undefined;
+}
+
+/**
+ * Which `Source` the form shows for a colour seed. `'inherit'` — and an absent
+ * value, since `'inherit'` is the layer's default — is `'theme'`; a concrete
+ * colour is `'custom'`.
+ */
+function colorToSource(v: unknown): BackgroundColorSource {
+  return v === undefined || v === INHERIT ? 'theme' : 'custom';
+}
+
+/**
+ * Fold a `Source` + swatch pair back into one engine value. `'theme'` emits the
+ * `'inherit'` sentinel (which the layer resolves against its palette role on
+ * every paint); `'custom'` emits the picked colour. An unset `'custom'` swatch
+ * emits nothing, so a half-filled form can't blank the layer's colour.
+ */
+function sourceToColor(
+  source: BackgroundColorSource | undefined,
+  color: string | undefined,
+): string | undefined {
+  if (source === 'theme') return INHERIT;
+  if (source === 'custom') return color || undefined;
+  return color || undefined;
 }
 
 /**
@@ -23,7 +54,9 @@ export function optionsToForm(o: BackgroundLayerOptions = {}): BackgroundLayerFi
     type: o.type,
     patternType: o.patternType,
     color: colorToField(o.color),
+    colorSource: colorToSource(o.color),
     backgroundColor: colorToField(o.backgroundColor),
+    backgroundColorSource: colorToSource(o.backgroundColor),
     size: o.size,
     spacing: o.spacing,
     alpha: o.alpha,
@@ -40,14 +73,17 @@ export function optionsToForm(o: BackgroundLayerOptions = {}): BackgroundLayerFi
  * {@link BackgroundLayerOptions} patch. Only fields the form set are included
  * (no `undefined` / empty-string keys), so the result is safe to spread over
  * the layer's current options on `setOptions`. Colour strings pass straight
- * through — `BackgroundColor` accepts hex/CSS strings verbatim.
+ * through — `BackgroundColor` accepts hex/CSS strings verbatim — and each
+ * `*Source` select collapses back into its colour as `'inherit'` or a pin.
  */
 export function formToOptions(f: BackgroundLayerFields): BackgroundLayerOptions {
   const out: BackgroundLayerOptions = {};
   if (f.type !== undefined) out.type = f.type;
   if (f.patternType !== undefined) out.patternType = f.patternType;
-  if (f.color) out.color = f.color;
-  if (f.backgroundColor) out.backgroundColor = f.backgroundColor;
+  const color = sourceToColor(f.colorSource, f.color);
+  if (color) out.color = color;
+  const backgroundColor = sourceToColor(f.backgroundColorSource, f.backgroundColor);
+  if (backgroundColor) out.backgroundColor = backgroundColor;
   if (f.size !== undefined) out.size = f.size;
   if (f.spacing !== undefined) out.spacing = f.spacing;
   if (f.alpha !== undefined) out.alpha = f.alpha;

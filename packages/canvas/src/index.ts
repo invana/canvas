@@ -255,6 +255,8 @@ export {
 // definition (it also carries `ThemeKind` / `ThemeMode`).
 export type { ResolvedTheme, ThemeState, ThemeKind, ThemeMode } from '@invana/canvas-store';
 export { CanvasThemeState } from '@invana/canvas-store';
+export { INHERIT, isInherit, resolveThemed } from '@invana/canvas-store';
+export type { Inherit, Themed } from '@invana/canvas-store';
 
 // ─── Built-in layers ─────────────────────────────────────────────────────────
 export { WorldLayer } from './layers/WorldLayer';

@@ -16,7 +16,6 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { CanvasPagesViewPanel, type CanvasPage } from '@invana/canvas-ui';
-import { ThemeProvider } from '@invana/themes';
 import { DemoBoard, DemoFrame, hueFor } from './canvas-pages-demo';
 
 const meta: Meta = { title: 'canvas-ui/view-panels/CanvasPagesViewPanel/Basic' };
@@ -33,11 +32,9 @@ function BasicDemo() {
   const [activeId, setActiveId] = useState('0');
 
   return (
-    <ThemeProvider>
-      <DemoFrame>
-        <CanvasPagesViewPanel pages={pages} activeId={activeId} onSelect={setActiveId} />
-      </DemoFrame>
-    </ThemeProvider>
+    <DemoFrame>
+      <CanvasPagesViewPanel pages={pages} activeId={activeId} onSelect={setActiveId} />
+    </DemoFrame>
   );
 }
 

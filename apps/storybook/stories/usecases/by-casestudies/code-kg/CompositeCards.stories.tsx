@@ -39,7 +39,6 @@ import type { ElkDirection } from '@invana/graph-layout-elkjs';
 import {
   invanaCodeKg
 } from '@invana/graph-datasets/usecase-demos';
-import { ThemeProvider } from '@invana/themes';
 import { Map, Moon, Settings, Sun } from 'lucide-react';
 
 /** The code-KG payload this story reads, declared where it's used. */
@@ -231,92 +230,90 @@ export const CompositeCardsStory: Story = {
     }, []);
 
     return (
-      <ThemeProvider>
-        <GraphCanvasApp
-          data={data}
-          config={config}
-          onReady={onReady}
-          header={{
-            title: 'Invana Code KG — ELK cards',
-            center: <GraphControlsToolbar />,
-            right: (ctx) => (
-              <ToolbarItems
-                orientation="horizontal"
-                items={[
-                  {
-                    type: 'select',
-                    key: 'color-mode',
-                    label: 'Colour by',
-                    value: colorMode,
-                    options: { type: 'Entity type', cluster: 'Cluster' },
-                    onChange: (v) => setColorMode(v as 'type' | 'cluster')
-                  },
-                  {
-                    type: 'select',
-                    key: 'direction',
-                    label: 'Direction',
-                    value: direction,
-                    options: { RIGHT: 'Right', DOWN: 'Down', LEFT: 'Left', UP: 'Up' },
-                    onChange: (v) => setDirection(v as ElkDirection)
-                  },
-                  {
-                    type: 'select',
-                    key: 'labels',
-                    label: 'Types',
-                    // One trigger toggling a single entity type at a time; a
-                    // tick marks the ones in play.
-                    value: '',
-                    options: Object.fromEntries(
-                      ALL_LABELS.map((l) => [l, `${labels.has(l) ? '✓ ' : ''}${l}`]),
-                    ),
-                    triggerLabelOnly: true,
-                    onChange: (l) =>
-                      setLabels((prev) => {
-                        const next = new Set(prev);
-                        if (next.has(l as InvanaCodeNodeLabel)) next.delete(l as InvanaCodeNodeLabel);
-                        else next.add(l as InvanaCodeNodeLabel);
-                        return next;
-                      })
-                  },
-                  {
-                    type: 'toggle',
-                    key: 'minimap',
-                    icon: Map,
-                    label: 'Minimap: off',
-                    activeLabel: 'Minimap: on',
-                    active: minimapOn,
-                    onToggle: () => setMinimapOn((v) => !v)
-                  },
-                  ...dock.items,
-                  {
-                    type: 'toggle',
-                    key: 'theme',
-                    icon: Sun,
-                    activeIcon: Moon,
-                    label: 'Switch to dark theme',
-                    activeLabel: 'Switch to light theme',
-                    active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme
-                  },
-                ]}
-              />
-            )
-          }}
-          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-          right={dock.region}
-        >
-          {/* `nodeSize` feeds ELK the real card dimensions, so it lays out
-              around 300×165 rectangles rather than points. */}
-          <ElkLayout
-            id="elk"
-            targetLayerId="graph"
-            fitPadding={80}
-            options={{ nodeSize: () => ({ width: CARD.w, height: CARD.h }) }}
-          />
+      <GraphCanvasApp
+        data={data}
+        config={config}
+        onReady={onReady}
+        header={{
+          title: 'Invana Code KG — ELK cards',
+          center: <GraphControlsToolbar />,
+          right: (ctx) => (
+            <ToolbarItems
+              orientation="horizontal"
+              items={[
+                {
+                  type: 'select',
+                  key: 'color-mode',
+                  label: 'Colour by',
+                  value: colorMode,
+                  options: { type: 'Entity type', cluster: 'Cluster' },
+                  onChange: (v) => setColorMode(v as 'type' | 'cluster')
+                },
+                {
+                  type: 'select',
+                  key: 'direction',
+                  label: 'Direction',
+                  value: direction,
+                  options: { RIGHT: 'Right', DOWN: 'Down', LEFT: 'Left', UP: 'Up' },
+                  onChange: (v) => setDirection(v as ElkDirection)
+                },
+                {
+                  type: 'select',
+                  key: 'labels',
+                  label: 'Types',
+                  // One trigger toggling a single entity type at a time; a
+                  // tick marks the ones in play.
+                  value: '',
+                  options: Object.fromEntries(
+                    ALL_LABELS.map((l) => [l, `${labels.has(l) ? '✓ ' : ''}${l}`]),
+                  ),
+                  triggerLabelOnly: true,
+                  onChange: (l) =>
+                    setLabels((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(l as InvanaCodeNodeLabel)) next.delete(l as InvanaCodeNodeLabel);
+                      else next.add(l as InvanaCodeNodeLabel);
+                      return next;
+                    })
+                },
+                {
+                  type: 'toggle',
+                  key: 'minimap',
+                  icon: Map,
+                  label: 'Minimap: off',
+                  activeLabel: 'Minimap: on',
+                  active: minimapOn,
+                  onToggle: () => setMinimapOn((v) => !v)
+                },
+                ...dock.items,
+                {
+                  type: 'toggle',
+                  key: 'theme',
+                  icon: Sun,
+                  activeIcon: Moon,
+                  label: 'Switch to dark theme',
+                  activeLabel: 'Switch to light theme',
+                  active: ctx.themeKind === 'dark',
+                  onToggle: ctx.toggleTheme
+                },
+              ]}
+            />
+          )
+        }}
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        right={dock.region}
+      >
+        {/* `nodeSize` feeds ELK the real card dimensions, so it lays out
+            around 300×165 rectangles rather than points. */}
+        <ElkLayout
+          id="elk"
+          targetLayerId="graph"
+          fitPadding={80}
+          options={{ nodeSize: () => ({ width: CARD.w, height: CARD.h }) }}
+        />
 
-          {minimapOn && <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />}
-        </GraphCanvasApp>
-      </ThemeProvider>
+        {minimapOn && <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />}
+      </GraphCanvasApp>
     );
   }
 };

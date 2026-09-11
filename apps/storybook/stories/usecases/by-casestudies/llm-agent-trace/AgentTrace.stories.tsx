@@ -35,7 +35,6 @@ import type { EdgeDecorationSpec, EdgeStyle, GraphCanvas, GraphData, NodeShapeOp
 import {
   agentTrace
 } from '@invana/graph-datasets/usecase-demos';
-import { ThemeProvider } from '@invana/themes';
 import { Moon, Settings, Sun } from 'lucide-react';
 
 /** The trace vocabulary this story colours + shapes by. */
@@ -250,49 +249,47 @@ export const AgentTraceStory: Story = {
     }, []);
 
     return (
-      <ThemeProvider>
-        <GraphCanvasApp
-          data={data}
-          config={config}
-          onReady={onReady}
-          header={{
-            title: 'LLM Agent Trace',
-            center: <GraphControlsToolbar />,
-            right: (ctx) => (
-              <ToolbarItems
-                orientation="horizontal"
-                items={[
-                  {
-                    type: 'select',
-                    key: 'preset',
-                    label: 'Trace',
-                    value: presetId,
-                    options: Object.fromEntries(agentTrace.map((t) => [t.id, t.id])),
-                    onChange: setPresetId
-                  },
-                  ...dock.items,
-                  {
-                    type: 'toggle',
-                    key: 'theme',
-                    icon: Sun,
-                    activeIcon: Moon,
-                    label: 'Switch to dark theme',
-                    activeLabel: 'Switch to light theme',
-                    active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme
-                  },
-                ]}
-              />
-            )
-          }}
-          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-          right={dock.region}
-        >
-          {/* Registered as `elk`; `config.activeLayout` runs it once data is in,
-              and re-runs it on every preset swap. */}
-          <ElkLayout id="elk" targetLayerId="graph" fitPadding={80} />
-        </GraphCanvasApp>
-      </ThemeProvider>
+      <GraphCanvasApp
+        data={data}
+        config={config}
+        onReady={onReady}
+        header={{
+          title: 'LLM Agent Trace',
+          center: <GraphControlsToolbar />,
+          right: (ctx) => (
+            <ToolbarItems
+              orientation="horizontal"
+              items={[
+                {
+                  type: 'select',
+                  key: 'preset',
+                  label: 'Trace',
+                  value: presetId,
+                  options: Object.fromEntries(agentTrace.map((t) => [t.id, t.id])),
+                  onChange: setPresetId
+                },
+                ...dock.items,
+                {
+                  type: 'toggle',
+                  key: 'theme',
+                  icon: Sun,
+                  activeIcon: Moon,
+                  label: 'Switch to dark theme',
+                  activeLabel: 'Switch to light theme',
+                  active: ctx.themeKind === 'dark',
+                  onToggle: ctx.toggleTheme
+                },
+              ]}
+            />
+          )
+        }}
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        right={dock.region}
+      >
+        {/* Registered as `elk`; `config.activeLayout` runs it once data is in,
+            and re-runs it on every preset swap. */}
+        <ElkLayout id="elk" targetLayerId="graph" fitPadding={80} />
+      </GraphCanvasApp>
     );
   }
 };

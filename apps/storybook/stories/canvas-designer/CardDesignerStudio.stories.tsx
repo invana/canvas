@@ -23,7 +23,6 @@ import {
   DialogTitle,
   RichSelect
 } from '@invana/ui';
-import { ThemeProvider } from '@invana/themes';
 import { NodeCardDesigner, NodeTemplateList } from '@invana/canvas-designer';
 import { twitterActivity } from '@invana/graph-datasets';
 import {
@@ -278,59 +277,57 @@ function CardDesignerStudio() {
   );
 
   return (
-    <ThemeProvider>
-      <div style={pageStyle}>
-        <GraphCanvasApp
-          data={DATA}
-          config={CONFIG}
-          onReady={setCanvas}
-          header={{
-            title: 'Twitter feed',
-            right: (
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                {themeControls}
-                <Button onClick={openTemplates}>Templates</Button>
-              </div>
-            )
-          }}
-        />
+    <div style={pageStyle}>
+      <GraphCanvasApp
+        data={DATA}
+        config={CONFIG}
+        onReady={setCanvas}
+        header={{
+          title: 'Twitter feed',
+          right: (
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              {themeControls}
+              <Button onClick={openTemplates}>Templates</Button>
+            </div>
+          )
+        }}
+      />
 
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent style={dialogContentStyle}>
-            <DialogHeader>
-              <DialogTitle>{editingType ? `Edit ${editingType} card` : 'Node templates'}</DialogTitle>
-            </DialogHeader>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent style={dialogContentStyle}>
+          <DialogHeader>
+            <DialogTitle>{editingType ? `Edit ${editingType} card` : 'Node templates'}</DialogTitle>
+          </DialogHeader>
 
-            {editingType ? (
-              <div style={editorWrapStyle}>
-                <div style={{ padding: '4px 0' }}>
-                  <Button variant="ghost" onClick={() => setEditingType(null)}>
-                    ← All templates
-                  </Button>
-                </div>
-                <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
-                  <NodeCardDesigner
-                    key={editingType}
-                    defaults={templates.current[editingType]}
-                    dataFields={FIELDS[editingType] ?? []}
-                    palette={palette}
-                    onChange={(tpl) => applyTemplate(editingType, tpl)}
-                  />
-                </div>
+          {editingType ? (
+            <div style={editorWrapStyle}>
+              <div style={{ padding: '4px 0' }}>
+                <Button variant="ghost" onClick={() => setEditingType(null)}>
+                  ← All templates
+                </Button>
               </div>
-            ) : (
               <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
-                <NodeTemplateList
-                  items={TYPE_ORDER.map((t) => ({ type: t, template: templates.current[t]!, sample: SAMPLES[t] }))}
+                <NodeCardDesigner
+                  key={editingType}
+                  defaults={templates.current[editingType]}
+                  dataFields={FIELDS[editingType] ?? []}
                   palette={palette}
-                  onEdit={(t) => setEditingType(t)}
+                  onChange={(tpl) => applyTemplate(editingType, tpl)}
                 />
               </div>
-            )}
-          </DialogContent>
-        </Dialog>
-      </div>
-    </ThemeProvider>
+            </div>
+          ) : (
+            <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+              <NodeTemplateList
+                items={TYPE_ORDER.map((t) => ({ type: t, template: templates.current[t]!, sample: SAMPLES[t] }))}
+                palette={palette}
+                onEdit={(t) => setEditingType(t)}
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
 

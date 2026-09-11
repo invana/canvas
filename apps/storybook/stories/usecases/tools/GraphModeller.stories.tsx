@@ -61,7 +61,9 @@ import type * as graph from '@invana/graph';
 import { modellerSeed } from '@invana/graph-datasets/usecase-demos';
 import { ThemeProvider, useTheme } from '@invana/themes';
 
-const meta: Meta = { title: 'usecases/tools/GraphModeller' };
+// `selfThemed`: this story pins its own `<ThemeProvider storageKey={null}>`, so the
+// preview decorator skips it entirely and the Theme/Variant toolbar leaves it alone.
+const meta: Meta = { title: 'usecases/tools/GraphModeller', parameters: { selfThemed: true } };
 export default meta;
 type Story = StoryObj;
 
@@ -427,9 +429,11 @@ function ModellerApp() {
   // pieces. `bundle={false}` means MODELLER_OPTIONS is used as-is (no batteries
   // bundle merged) and the graph is composed entirely from these children.
   return (
-    // A real consumer mounts the app under its own <ThemeProvider>; the app reads
-    // light/dark from it via useTheme() and throws without one. `storageKey={null}`
-    // keeps the toggle from persisting into the next story (each story self-contained).
+    // The app reads light/dark from a host `<ThemeProvider>` via `useTheme()` and
+    // throws without one. This story deliberately **pins** its own with
+    // `storageKey={null}`, so the header's theme toggle owns the mode and the
+    // Storybook toolbar doesn't move it — every other story inherits the single
+    // provider the toolbar drives (`.storybook/preview.tsx`).
     <ThemeProvider storageKey={null}>
       <GraphCanvasApp
         data={SEED}

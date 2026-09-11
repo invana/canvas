@@ -17,7 +17,6 @@ import { epicSaga } from '@invana/graph-datasets/epic-saga';
 import { topicCartography } from '@invana/graph-datasets/topic-cartography';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { GeometricLayout } from '@invana/graph-layout-geometric';
-import { ThemeProvider } from '@invana/themes';
 import { Gauge, Layers, Map, Moon, Sun } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 
@@ -139,112 +138,110 @@ export const LayersViewPanelStory: Story = {
     );
 
     return (
-      <ThemeProvider>
-        <GraphCanvasApp
-          key={datasetId}
-          data={data}
-          config={ds.config}
-          onReady={onReady}
-          header={{
-            // Title + the dataset dropdown (a `select` ToolbarItem — its trigger
-            // reads `Dataset: <current>`, so it doubles as the loaded-dataset
-            // label). `left` renders immediately, so the switch is always live.
-            left: (
-              <>
-                <span className="text-[13px] font-semibold whitespace-nowrap mr-3">LayersViewPanel</span>
-                <ToolbarItems
-                  orientation="horizontal"
-                  items={[
-                    {
-                      type: 'select',
-                      key: 'dataset',
-                      label: 'Dataset',
-                      value: datasetId,
-                      options: { wikipedia: DATASETS.wikipedia.label, got: DATASETS.got.label },
-                      onChange: (v) => setDatasetId(v as DatasetId)
-                    },
-                  ]}
-                />
-              </>
-            ),
-            center: (
-              <GraphControlsToolbar
-                layouts={LAYOUTS}
-                layoutLabel={LAYOUT_LABEL}
-                applyInitialLayout={ds.applyInitialLayout}
-              />
-            ),
-            // One shared toolbar — Layers (from `useSidePanels`), the minimap /
-            // dev-overlay layer toggles, and the theme toggle, all as `items`.
-            right: (ctx) => (
+      <GraphCanvasApp
+        key={datasetId}
+        data={data}
+        config={ds.config}
+        onReady={onReady}
+        header={{
+          // Title + the dataset dropdown (a `select` ToolbarItem — its trigger
+          // reads `Dataset: <current>`, so it doubles as the loaded-dataset
+          // label). `left` renders immediately, so the switch is always live.
+          left: (
+            <>
+              <span className="text-[13px] font-semibold whitespace-nowrap mr-3">LayersViewPanel</span>
               <ToolbarItems
                 orientation="horizontal"
                 items={[
-                  ...dock.items,
                   {
-                    type: 'toggle',
-                    key: 'minimap',
-                    icon: Map,
-                    label: 'Minimap: off',
-                    activeLabel: 'Minimap: on',
-                    active: minimapOn,
-                    onToggle: () => setMinimapOn((v) => !v)
-                  },
-                  {
-                    type: 'toggle',
-                    key: 'devinfo',
-                    icon: Gauge,
-                    label: 'Dev overlay: off',
-                    activeLabel: 'Dev overlay: on',
-                    active: devOn,
-                    onToggle: () => setDevOn((v) => !v)
-                  },
-                  {
-                    type: 'toggle',
-                    key: 'theme',
-                    icon: Sun,
-                    activeIcon: Moon,
-                    label: 'Switch to dark theme',
-                    activeLabel: 'Switch to light theme',
-                    active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme
+                    type: 'select',
+                    key: 'dataset',
+                    label: 'Dataset',
+                    value: datasetId,
+                    options: { wikipedia: DATASETS.wikipedia.label, got: DATASETS.got.label },
+                    onChange: (v) => setDatasetId(v as DatasetId)
                   },
                 ]}
               />
-            )
-          }}
-          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-          // The star: the LayersViewPanel, docked into the app's resizable `right`
-          // region, toggled by the header “Layers” button.
-          right={dock.region}
-        >
-          {/* Screen-fixed overlays driven by the header toggle items above — they
-              render correctly from anywhere under the canvas context, so they live
-              here as GraphCanvasApp children, gated on their own state. */}
-          {minimapOn && <MiniMapLayer backgroundLayerId="background" position="bottom-left" />}
-          {devOn && <DevInfoLayer enabled corner="top-left" margin={{ x: 12, y: 48 }} />}
+            </>
+          ),
+          center: (
+            <GraphControlsToolbar
+              layouts={LAYOUTS}
+              layoutLabel={LAYOUT_LABEL}
+              applyInitialLayout={ds.applyInitialLayout}
+            />
+          ),
+          // One shared toolbar — Layers (from `useSidePanels`), the minimap /
+          // dev-overlay layer toggles, and the theme toggle, all as `items`.
+          right: (ctx) => (
+            <ToolbarItems
+              orientation="horizontal"
+              items={[
+                ...dock.items,
+                {
+                  type: 'toggle',
+                  key: 'minimap',
+                  icon: Map,
+                  label: 'Minimap: off',
+                  activeLabel: 'Minimap: on',
+                  active: minimapOn,
+                  onToggle: () => setMinimapOn((v) => !v)
+                },
+                {
+                  type: 'toggle',
+                  key: 'devinfo',
+                  icon: Gauge,
+                  label: 'Dev overlay: off',
+                  activeLabel: 'Dev overlay: on',
+                  active: devOn,
+                  onToggle: () => setDevOn((v) => !v)
+                },
+                {
+                  type: 'toggle',
+                  key: 'theme',
+                  icon: Sun,
+                  activeIcon: Moon,
+                  label: 'Switch to dark theme',
+                  activeLabel: 'Switch to light theme',
+                  active: ctx.themeKind === 'dark',
+                  onToggle: ctx.toggleTheme
+                },
+              ]}
+            />
+          )
+        }}
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        // The star: the LayersViewPanel, docked into the app's resizable `right`
+        // region, toggled by the header “Layers” button.
+        right={dock.region}
+      >
+        {/* Screen-fixed overlays driven by the header toggle items above — they
+            render correctly from anywhere under the canvas context, so they live
+            here as GraphCanvasApp children, gated on their own state. */}
+        {minimapOn && <MiniMapLayer backgroundLayerId="background" position="bottom-left" />}
+        {devOn && <DevInfoLayer enabled corner="top-left" margin={{ x: 12, y: 48 }} />}
 
-          {/* Edge zoom-LOD — below 0.5× thin the edges to the top 15% by degree
-              (keep the backbone), so the zoomed-out hairball is cheap to draw. */}
-          <EdgeLODBehaviour targetLayerId="graph" minZoom={0.5} keepFraction={0.15} keepBy="degree" />
+        {/* Edge zoom-LOD — below 0.5× thin the edges to the top 15% by degree
+            (keep the backbone), so the zoomed-out hairball is cheap to draw. */}
+        <EdgeLODBehaviour targetLayerId="graph" minZoom={0.5} keepFraction={0.15} keepBy="degree" />
 
-          {/* Right-click menus. */}
-          <GraphNodeContextMenu
-            items={(ctx) => [
-              { id: 'inspect', label: `Inspect ${ctx.id}`, onClick: () => window.alert(`Element ${ctx.id}`) },
-            ]}
-          />
-          <GraphBackgroundContextMenu
-            items={() => [
-              {
-                id: 'about',
-                label: `${ds.label} — full graph`,
-                onClick: () => window.alert(`${ds.label}: ${ds.meta.nodeCount} nodes / ${ds.meta.edgeCount} edges`)
-              },
-            ]}
-          />
-        </GraphCanvasApp>
-      </ThemeProvider>
+        {/* Right-click menus. */}
+        <GraphNodeContextMenu
+          items={(ctx) => [
+            { id: 'inspect', label: `Inspect ${ctx.id}`, onClick: () => window.alert(`Element ${ctx.id}`) },
+          ]}
+        />
+        <GraphBackgroundContextMenu
+          items={() => [
+            {
+              id: 'about',
+              label: `${ds.label} — full graph`,
+              onClick: () => window.alert(`${ds.label}: ${ds.meta.nodeCount} nodes / ${ds.meta.edgeCount} edges`)
+            },
+          ]}
+        />
+      </GraphCanvasApp>
     );
   }
 };

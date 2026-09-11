@@ -38,7 +38,6 @@ import type { GraphCanvas, GraphData, GraphNode } from '@invana/graph';
 import {
   citations
 } from '@invana/graph-datasets/usecase-demos';
-import { ThemeProvider } from '@invana/themes';
 import { Moon, Settings, Sun } from 'lucide-react';
 
 /** The payload each paper node carries. */
@@ -177,60 +176,58 @@ export const CitationGraphStory: Story = {
 
     return (
       // <GraphCanvasApp> reads light/dark from a host <ThemeProvider> (required).
-      <ThemeProvider>
-        <GraphCanvasApp
-          data={data}
-          config={config}
-          onReady={onReady}
-          header={{
-            title: 'Citation Graph',
-            center: <GraphControlsToolbar />,
-            right: (ctx) => (
-              <ToolbarItems
-                orientation="horizontal"
-                items={[
-                  ...dock.items,
-                  {
-                    type: 'toggle',
-                    key: 'theme',
-                    icon: Sun,
-                    activeIcon: Moon,
-                    label: 'Switch to dark theme',
-                    activeLabel: 'Switch to light theme',
-                    active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme
-                  },
-                ]}
-              />
-            )
-          }}
-          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-          right={dock.region}
-        >
-          {/* The density overlay sits under the graph (`zIndex: -1` by default)
-              and recomputes whenever a layout run settles — the bands follow the
-              node positions, which change without the data changing. */}
-          <DensityContourFillLayer
-            id="density"
-            graphLayerId="graph"
-            bandwidth={30}
-            thresholds={12}
-            cellSize={4}
-            fillOpacity={0.4}
-            padding={80}
-            palette="inferno"
-          />
+      <GraphCanvasApp
+        data={data}
+        config={config}
+        onReady={onReady}
+        header={{
+          title: 'Citation Graph',
+          center: <GraphControlsToolbar />,
+          right: (ctx) => (
+            <ToolbarItems
+              orientation="horizontal"
+              items={[
+                ...dock.items,
+                {
+                  type: 'toggle',
+                  key: 'theme',
+                  icon: Sun,
+                  activeIcon: Moon,
+                  label: 'Switch to dark theme',
+                  activeLabel: 'Switch to light theme',
+                  active: ctx.themeKind === 'dark',
+                  onToggle: ctx.toggleTheme
+                },
+              ]}
+            />
+          )
+        }}
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        right={dock.region}
+      >
+        {/* The density overlay sits under the graph (`zIndex: -1` by default)
+            and recomputes whenever a layout run settles — the bands follow the
+            node positions, which change without the data changing. */}
+        <DensityContourFillLayer
+          id="density"
+          graphLayerId="graph"
+          bandwidth={30}
+          thresholds={12}
+          cellSize={4}
+          fillOpacity={0.4}
+          padding={80}
+          palette="inferno"
+        />
 
-          {/* Priority-driven label thinning: the top-cited papers keep their
-              labels, the periphery yields when labels would overlap. */}
-          <LabelCollisionBehaviour
-            id="label-collision"
-            targetLayerId="graph"
-            strategy="hide"
-            flickerGuardMs={120}
-          />
-        </GraphCanvasApp>
-      </ThemeProvider>
+        {/* Priority-driven label thinning: the top-cited papers keep their
+            labels, the periphery yields when labels would overlap. */}
+        <LabelCollisionBehaviour
+          id="label-collision"
+          targetLayerId="graph"
+          strategy="hide"
+          flickerGuardMs={120}
+        />
+      </GraphCanvasApp>
     );
   }
 };

@@ -41,7 +41,6 @@ import {
   type NodeStylingTemplate,
   type NodeTypeBinding
 } from '@invana/graph';
-import { ThemeProvider } from '@invana/themes';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@invana/ui';
 
 const meta: Meta = { title: 'canvas-ui/editors/Template Studio' };
@@ -189,20 +188,18 @@ function StudioEditorsGate() {
 export const TemplateStudioStory: Story = {
   name: 'Template Studio',
   render: () => (
-    <ThemeProvider>
-      <GraphCanvasApp
-        data={DATA}
-        config={CONFIG}
-        onReady={(c) => c?.showMessage('Edit styling / structure in the right panel · switch the theme palette')}
-        header={{
-          title: 'Template Studio',
-          center: <GraphControlsToolbar />,
-          right: (ctx) => <ThemeToggle ctx={ctx} />
-        }}
-        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-        // The three-layer editors, docked into the resizable right region.
-        right={{ content: <StudioEditorsGate />, defaultSize: '360px', maxSize: '460px', collapsible: true }}
-      />
-    </ThemeProvider>
+    <GraphCanvasApp
+      data={DATA}
+      config={CONFIG}
+      onReady={(c) => c?.showMessage('Edit styling / structure in the right panel · switch the theme palette')}
+      header={{
+        title: 'Template Studio',
+        center: <GraphControlsToolbar />,
+        right: (ctx) => <ThemeToggle ctx={ctx} />
+      }}
+      footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+      // The three-layer editors, docked into the resizable right region.
+      right={{ content: <StudioEditorsGate />, defaultSize: '360px', maxSize: '460px', collapsible: true }}
+    />
   )
 };

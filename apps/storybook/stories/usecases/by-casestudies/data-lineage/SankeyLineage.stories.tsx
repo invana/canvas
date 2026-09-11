@@ -37,7 +37,6 @@ import {
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData } from '@invana/graph';
 import { ukEnergyFlowAsGraph } from '@invana/graph-datasets';
-import { ThemeProvider } from '@invana/themes';
 import { Moon, Settings, Sun } from 'lucide-react';
 
 const meta: Meta = { title: 'usecases/by-casestudies/data-lineage/SankeyLineage' };
@@ -197,49 +196,47 @@ export const SankeyLineageStory: Story = {
     }, []);
 
     return (
-      <ThemeProvider>
-        <GraphCanvasApp
-          data={data}
-          config={config}
-          onReady={onReady}
-          header={{
-            title: 'Data Lineage',
-            center: <GraphControlsToolbar />,
-            right: (ctx) => (
-              <ToolbarItems
-                orientation="horizontal"
-                items={[
-                  {
-                    type: 'select',
-                    key: 'volume',
-                    label: 'Volume',
-                    value: volumeFormat,
-                    options: { raw: 'Raw', k: 'TWh', M: 'TWh-K' },
-                    onChange: (v) => setVolumeFormat(v as 'raw' | 'k' | 'M')
-                  },
-                  ...dock.items,
-                  {
-                    type: 'toggle',
-                    key: 'theme',
-                    icon: Sun,
-                    activeIcon: Moon,
-                    label: 'Switch to dark theme',
-                    activeLabel: 'Switch to light theme',
-                    active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme
-                  },
-                ]}
-              />
-            )
-          }}
-          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-          right={dock.region}
-        >
-          {/* Registered as `sankey`; `config.activeLayout` runs it once data is
-              in, and again whenever the volume format rebuilds `data`. */}
-          <D3SankeyLayout id="sankey" targetLayerId="graph" fitPadding={80} />
-        </GraphCanvasApp>
-      </ThemeProvider>
+      <GraphCanvasApp
+        data={data}
+        config={config}
+        onReady={onReady}
+        header={{
+          title: 'Data Lineage',
+          center: <GraphControlsToolbar />,
+          right: (ctx) => (
+            <ToolbarItems
+              orientation="horizontal"
+              items={[
+                {
+                  type: 'select',
+                  key: 'volume',
+                  label: 'Volume',
+                  value: volumeFormat,
+                  options: { raw: 'Raw', k: 'TWh', M: 'TWh-K' },
+                  onChange: (v) => setVolumeFormat(v as 'raw' | 'k' | 'M')
+                },
+                ...dock.items,
+                {
+                  type: 'toggle',
+                  key: 'theme',
+                  icon: Sun,
+                  activeIcon: Moon,
+                  label: 'Switch to dark theme',
+                  activeLabel: 'Switch to light theme',
+                  active: ctx.themeKind === 'dark',
+                  onToggle: ctx.toggleTheme
+                },
+              ]}
+            />
+          )
+        }}
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        right={dock.region}
+      >
+        {/* Registered as `sankey`; `config.activeLayout` runs it once data is
+            in, and again whenever the volume format rebuilds `data`. */}
+        <D3SankeyLayout id="sankey" targetLayerId="graph" fitPadding={80} />
+      </GraphCanvasApp>
     );
   }
 };

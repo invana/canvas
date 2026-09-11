@@ -89,6 +89,7 @@ import { Behaviour, type BehaviourOptions, type CanvasContext } from '@invana/ca
 import { GraphLayer } from '../layer/GraphLayer';
 import type { EdgeStyle, NodeStyle } from '../layer/types';
 import type { GraphEdge, GraphNode } from '../store/types';
+import { readValueKey } from '../store/valueKey';
 
 // ─── Public types ────────────────────────────────────────────────────────────
 
@@ -370,19 +371,6 @@ function normaliseEdgesList(xs: readonly number[] | undefined): readonly number[
 }
 
 // ─── Free functions ──────────────────────────────────────────────────────────
-
-/**
- * Walk a root-relative dot path, returning `undefined` on any missing segment.
- * A small local helper rather than a dependency — `@invana/graph` has none by design.
- */
-function readPath(root: unknown, path: string): unknown {
-  let cur: unknown = root;
-  for (const seg of path.split('.')) {
-    if (cur == null || typeof cur !== 'object') return undefined;
-    cur = (cur as Record<string, unknown>)[seg];
-  }
-  return cur;
-}
 
 /**
  * Coerce an extracted value for `'categorical'` mode: `String(value)` uniformly.
@@ -672,12 +660,12 @@ export class ColorByBehaviour extends Behaviour<ColorByBehaviourOptions> {
 
   /** Extract a node's raw colour value: accessor if set, else the dot path. */
   private nodeValue(n: GraphNode): unknown {
-    return this.opts.nodeValueBy ? this.opts.nodeValueBy(n) : readPath(n, this.opts.nodeValueKey);
+    return this.opts.nodeValueBy ? this.opts.nodeValueBy(n) : readValueKey(n, this.opts.nodeValueKey);
   }
 
   /** Extract an edge's raw colour value: accessor if set, else the dot path. */
   private edgeValue(e: GraphEdge): unknown {
-    return this.opts.edgeValueBy ? this.opts.edgeValueBy(e) : readPath(e, this.opts.edgeValueKey);
+    return this.opts.edgeValueBy ? this.opts.edgeValueBy(e) : readValueKey(e, this.opts.edgeValueKey);
   }
 
   /** Map a raw value to a colour under the current mode. */

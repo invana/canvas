@@ -34,10 +34,10 @@ import {
   useLayout,
   type LayoutFactory,
 } from '@invana/canvas-react';
+import { CanvasThemeSync } from '@invana/canvas-react';
 
 import { Panel } from '../../components';
 import type { ToolbarIcon } from '../../components';
-import { CanvasThemeSync } from '../../apps/CanvasThemeSync';
 import { CanvasControlsToolbar } from '../../toolbars/CanvasControlsToolbar';
 import { SchemaToolbar } from '../../toolbars/SchemaToolbar';
 import { useDerivedSchema, type UseDerivedSchemaOptions } from './useDerivedSchema';
@@ -202,7 +202,7 @@ export function SchemaViewPanel({
             app theme by the shared `CanvasThemeSync`. Before the graph layer so it
             renders behind it. */}
         <BackgroundLayer id="bg" type="pattern" patternType="grid" alpha={0.5} />
-        <ThemeBehaviour id="theme" mode="system" active="default" accent="css-var" />
+        <ThemeBehaviour id="theme" mode="document" active="default" accent="css-var" />
         <CanvasThemeSync />
 
         <GraphLayer id={SCHEMA_METAGRAPH_LAYER_ID} data={meta} />

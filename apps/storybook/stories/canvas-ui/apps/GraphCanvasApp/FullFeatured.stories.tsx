@@ -24,7 +24,6 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ClickViewBehaviour, GraphClipboardProvider, TextResolutionLODBehaviour, type LayoutFactory, type ViewContext } from '@invana/canvas-react';
 import { CanvasMessageBar, DevInfoToggleButton, EdgeDetailView, NodeDetailView, GraphBackgroundContextMenu, type GraphBackgroundMenuContext, GraphCanvasApp, GraphControlsToolbar, GraphNodeContextMenu, type GraphNodeMenuContext, GraphStatusBar, MiniMapToggleButton, ThemeToggle } from '@invana/canvas-ui';
 import { lesMiserables } from '@invana/graph-datasets';
-import { ThemeProvider } from '@invana/themes';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import type { MenuItem } from '@invana/ui';
@@ -63,77 +62,76 @@ export const FullFeaturedStory: Story = {
     // inspector's Type row reflects its real category; edges are `APPEARS_WITH`.
     const data = lesMiserables;
     return (
-    // A real consumer mounts the app under its own <ThemeProvider> — the app
-    // reads light/dark from it via useTheme() (and throws without one).
-    <ThemeProvider>
-      <GraphCanvasApp
-        data={data}
-        // Seed the footer's <CanvasMessageBar> with a line — it's idle (renders
-        // nothing) until something calls `canvas.showMessage`. Persists (no
-        // timeout) so the message channel is visible in the story.
-        onReady={(c) => c?.showMessage('Click a node to inspect it · right-click for actions')}
-        config={{
-          layouts: {
-            'graph-force': {
-              charge: { strength: -240 },
-              link: { distance: 70 },
-              collide: { radius: 18 },
-              animate: false
+    // The app reads light/dark from a host `<ThemeProvider>` via `useTheme()`, and
+    // throws without one. In Storybook that host is the toolbar's single provider
+    // (`.storybook/preview.tsx`); a real consumer mounts its own.
+    <GraphCanvasApp
+      data={data}
+      // Seed the footer's <CanvasMessageBar> with a line — it's idle (renders
+      // nothing) until something calls `canvas.showMessage`. Persists (no
+      // timeout) so the message channel is visible in the story.
+      onReady={(c) => c?.showMessage('Click a node to inspect it · right-click for actions')}
+      config={{
+        layouts: {
+          'graph-force': {
+            charge: { strength: -240 },
+            link: { distance: 70 },
+            collide: { radius: 18 },
+            animate: false
+          }
+        },
+        // Community colours come from the bundle's own ColorByBehaviour —
+        // one option instead of a local palette plus a bgFill resolver.
+        behaviours: { color: { enabled: true, nodeValueKey: 'data.group' } }
+      }}
+      header={{
+        title: 'Graph Canvas App',
+        center: <GraphControlsToolbar layouts={LAYOUTS} layoutLabel={LAYOUT_LABEL} />,
+        right: (ctx) => (
+          <>
+            <MiniMapToggleButton backgroundLayerId="background" position="bottom-left" />
+            <DevInfoToggleButton corner="top-left" margin={{ x: 12, y: 48 }} />
+            <ThemeToggle ctx={ctx} />
+          </>
+        )
+      }}
+      footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+      // The docked right region is **hidden by default** and only mounts once
+      // you click a node/edge (see <ClickViewBehaviour onClick> below): omitting
+      // the `right` bag hides it and the canvas reclaims the width; a background
+      // click clears the selection → `undefined` → the region unmounts again.
+      right={
+        view
+          ? {
+              content:
+                view.kind === 'edge' ? <EdgeDetailView ctx={view} /> : <NodeDetailView ctx={view} />,
+              // Pin the inspector to exactly 320px: default = min = max, so the
+              // panel opens at 320 and the editor absorbs the rest of the width.
+              // (react-resizable-panels scales a lone `defaultSize` up to fill the
+              // row — pinning all three is the only way to hold an exact width.)
+              // It closes via a background click (clears `view` → region unmounts).
+              defaultSize: '320px',
+              // minSize: '0px',
+              maxSize: '320px',
+              collapsible: false
             }
-          },
-          // Community colours come from the bundle's own ColorByBehaviour —
-          // one option instead of a local palette plus a bgFill resolver.
-          behaviours: { color: { enabled: true, nodeValueKey: 'data.group' } }
-        }}
-        header={{
-          title: 'Graph Canvas App',
-          center: <GraphControlsToolbar layouts={LAYOUTS} layoutLabel={LAYOUT_LABEL} />,
-          right: (ctx) => (
-            <>
-              <MiniMapToggleButton backgroundLayerId="background" position="bottom-left" />
-              <DevInfoToggleButton corner="top-left" margin={{ x: 12, y: 48 }} />
-              <ThemeToggle ctx={ctx} />
-            </>
-          )
-        }}
-        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-        // The docked right region is **hidden by default** and only mounts once
-        // you click a node/edge (see <ClickViewBehaviour onClick> below): omitting
-        // the `right` bag hides it and the canvas reclaims the width; a background
-        // click clears the selection → `undefined` → the region unmounts again.
-        right={
-          view
-            ? {
-                content:
-                  view.kind === 'edge' ? <EdgeDetailView ctx={view} /> : <NodeDetailView ctx={view} />,
-                // Pin the inspector to exactly 320px: default = min = max, so the
-                // panel opens at 320 and the editor absorbs the rest of the width.
-                // (react-resizable-panels scales a lone `defaultSize` up to fill the
-                // row — pinning all three is the only way to hold an exact width.)
-                // It closes via a background click (clears `view` → region unmounts).
-                defaultSize: '320px',
-                // minSize: '0px',
-                maxSize: '320px',
-                collapsible: false
-              }
-            : undefined
-        }
-      >
+          : undefined
+      }
+    >
 
-        {/* Extra behaviours — click-to-inspect + label level-of-detail. Instead
-            of a floating <Panel>, `onClick` reports the clicked element (or null
-            on a background click); the story stashes it in state and renders the
-            detail view in the docked `right` region above. */}
-        <ClickViewBehaviour id="click-view" targetLayerId="graph" onClick={setView} />
-        <TextResolutionLODBehaviour id="label-lod" targetLayerId="graph" />
+      {/* Extra behaviours — click-to-inspect + label level-of-detail. Instead
+          of a floating <Panel>, `onClick` reports the clicked element (or null
+          on a background click); the story stashes it in state and renders the
+          detail view in the docked `right` region above. */}
+      <ClickViewBehaviour id="click-view" targetLayerId="graph" onClick={setView} />
+      <TextResolutionLODBehaviour id="label-lod" targetLayerId="graph" />
 
-        {/* Right-click menus. */}
-        <GraphClipboardProvider layerId="graph">
-          <GraphNodeContextMenu items={nodeMenu} />
-          <GraphBackgroundContextMenu items={backgroundMenu} />
-        </GraphClipboardProvider>
-      </GraphCanvasApp>
-    </ThemeProvider>
+      {/* Right-click menus. */}
+      <GraphClipboardProvider layerId="graph">
+        <GraphNodeContextMenu items={nodeMenu} />
+        <GraphBackgroundContextMenu items={backgroundMenu} />
+      </GraphClipboardProvider>
+    </GraphCanvasApp>
     );
   }
 };

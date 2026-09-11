@@ -20,7 +20,6 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ClickViewBehaviour, type ViewContext } from '@invana/canvas-react';
 import { EdgeDetailView, GraphCanvasApp, GraphControlsToolbar, NodeDetailView, PanelContent, ThemeToggle } from '@invana/canvas-ui';
 import { lesMiserables } from '@invana/graph-datasets';
-import { ThemeProvider } from '@invana/themes';
 
 const meta: Meta = { title: 'canvas-ui/apps/GraphCanvasApp/RightInspector' };
 export default meta;
@@ -75,9 +74,9 @@ function RightInspectorApp() {
 export const RightInspectorStory: Story = {
   name: 'RightInspector',
   render: () => (
-    // A real consumer mounts the app under its own <ThemeProvider>.
-    <ThemeProvider>
-      <RightInspectorApp />
-    </ThemeProvider>
+    // The app reads light/dark from a host `<ThemeProvider>` via `useTheme()`, and
+    // throws without one. In Storybook that host is the toolbar's single provider
+    // (`.storybook/preview.tsx`); a real consumer mounts its own.
+    <RightInspectorApp />
   )
 };

@@ -34,7 +34,6 @@ import type { GraphCanvas } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
-import { ThemeProvider } from '@invana/themes';
 import type { MenuItem } from '@invana/ui';
 import { Gauge, Map, Moon, Settings, Sun } from 'lucide-react';
 
@@ -133,66 +132,64 @@ export const CanvasSettingsEditorPanelStory: Story = {
     return (
       // GraphCanvasApp reads light/dark from a host <ThemeProvider> (and throws
       // without one).
-      <ThemeProvider>
-        <GraphCanvasApp
-          data={data}
-          config={config}
-          onReady={onReady}
-          header={{
-            title: 'Live Settings Editors',
-            center: <GraphControlsToolbar layouts={LAYOUTS} layoutLabel={LAYOUT_LABEL} />,
-            // One shared toolbar — the settings toggle plus minimap / dev-overlay /
-            // theme, all as items.
-            right: (ctx) => (
-              <ToolbarItems
-                orientation="horizontal"
-                items={[
-                  ...dock.items,
-                  {
-                    type: 'toggle',
-                    key: 'minimap',
-                    icon: Map,
-                    label: 'Minimap: off',
-                    activeLabel: 'Minimap: on',
-                    active: minimapOn,
-                    onToggle: () => setMinimapOn((v) => !v)
-                  },
-                  {
-                    type: 'toggle',
-                    key: 'devinfo',
-                    icon: Gauge,
-                    label: 'Dev overlay: off',
-                    activeLabel: 'Dev overlay: on',
-                    active: devOn,
-                    onToggle: () => setDevOn((v) => !v)
-                  },
-                  {
-                    type: 'toggle',
-                    key: 'theme',
-                    icon: Sun,
-                    activeIcon: Moon,
-                    label: 'Switch to dark theme',
-                    activeLabel: 'Switch to light theme',
-                    active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme
-                  },
-                ]}
-              />
-            )
-          }}
-          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-          // The active panel docks into the app's resizable `right` region (or none).
-          right={dock.region}
-        >
-          {/* Screen-fixed overlays driven by the header toggle items above. */}
-          {minimapOn && <MiniMapLayer backgroundLayerId="background" position="bottom-left" />}
-          {devOn && <DevInfoLayer enabled corner="top-left" margin={{ x: 12, y: 48 }} />}
+      <GraphCanvasApp
+        data={data}
+        config={config}
+        onReady={onReady}
+        header={{
+          title: 'Live Settings Editors',
+          center: <GraphControlsToolbar layouts={LAYOUTS} layoutLabel={LAYOUT_LABEL} />,
+          // One shared toolbar — the settings toggle plus minimap / dev-overlay /
+          // theme, all as items.
+          right: (ctx) => (
+            <ToolbarItems
+              orientation="horizontal"
+              items={[
+                ...dock.items,
+                {
+                  type: 'toggle',
+                  key: 'minimap',
+                  icon: Map,
+                  label: 'Minimap: off',
+                  activeLabel: 'Minimap: on',
+                  active: minimapOn,
+                  onToggle: () => setMinimapOn((v) => !v)
+                },
+                {
+                  type: 'toggle',
+                  key: 'devinfo',
+                  icon: Gauge,
+                  label: 'Dev overlay: off',
+                  activeLabel: 'Dev overlay: on',
+                  active: devOn,
+                  onToggle: () => setDevOn((v) => !v)
+                },
+                {
+                  type: 'toggle',
+                  key: 'theme',
+                  icon: Sun,
+                  activeIcon: Moon,
+                  label: 'Switch to dark theme',
+                  activeLabel: 'Switch to light theme',
+                  active: ctx.themeKind === 'dark',
+                  onToggle: ctx.toggleTheme
+                },
+              ]}
+            />
+          )
+        }}
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        // The active panel docks into the app's resizable `right` region (or none).
+        right={dock.region}
+      >
+        {/* Screen-fixed overlays driven by the header toggle items above. */}
+        {minimapOn && <MiniMapLayer backgroundLayerId="background" position="bottom-left" />}
+        {devOn && <DevInfoLayer enabled corner="top-left" margin={{ x: 12, y: 48 }} />}
 
-          {/* Right-click menus. */}
-          <GraphNodeContextMenu items={nodeMenu} />
-          <GraphBackgroundContextMenu items={backgroundMenu} />
-        </GraphCanvasApp>
-      </ThemeProvider>
+        {/* Right-click menus. */}
+        <GraphNodeContextMenu items={nodeMenu} />
+        <GraphBackgroundContextMenu items={backgroundMenu} />
+      </GraphCanvasApp>
     );
   }
 };

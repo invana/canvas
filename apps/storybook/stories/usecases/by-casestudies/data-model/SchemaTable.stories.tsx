@@ -57,7 +57,6 @@ import type {
 import type { ElkDirection } from '@invana/graph-layout-elkjs';
 import { starSchema } from '@invana/graph-datasets/usecase-demos';
 import { Button, Card } from '@invana/ui';
-import { ThemeProvider } from '@invana/themes';
 import { Moon, Settings, Sun } from 'lucide-react';
 
 const meta: Meta = { title: 'usecases/by-casestudies/data-model/SchemaTable' };
@@ -391,130 +390,128 @@ export const SchemaTableStory: Story = {
       : dock.region;
 
     return (
-      <ThemeProvider>
-        <GraphCanvasApp
-          data={data}
-          config={config}
-          onReady={onReady}
-          header={{
-            title: 'Schema Table',
-            center: <GraphControlsToolbar />,
-            right: (ctx) => (
-              <ToolbarItems
-                orientation="horizontal"
-                items={[
-                  {
-                    type: 'select',
-                    key: 'direction',
-                    label: 'Direction',
-                    value: direction,
-                    options: { RIGHT: 'Right', DOWN: 'Down', LEFT: 'Left', UP: 'Up' },
-                    onChange: (v) => setDirection(v as ElkDirection)
-                  },
-                  ...dock.items,
-                  {
-                    type: 'toggle',
-                    key: 'theme',
-                    icon: Sun,
-                    activeIcon: Moon,
-                    label: 'Switch to dark theme',
-                    activeLabel: 'Switch to light theme',
-                    active: ctx.themeKind === 'dark',
-                    onToggle: ctx.toggleTheme
-                  },
-                ]}
-              />
-            )
-          }}
-          footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-          right={rightRegion}
-        >
-          {/* Layered ELK over the star schema. */}
-          <ElkLayout id="layout" targetLayerId="graph" fitPadding={80} />
+      <GraphCanvasApp
+        data={data}
+        config={config}
+        onReady={onReady}
+        header={{
+          title: 'Schema Table',
+          center: <GraphControlsToolbar />,
+          right: (ctx) => (
+            <ToolbarItems
+              orientation="horizontal"
+              items={[
+                {
+                  type: 'select',
+                  key: 'direction',
+                  label: 'Direction',
+                  value: direction,
+                  options: { RIGHT: 'Right', DOWN: 'Down', LEFT: 'Left', UP: 'Up' },
+                  onChange: (v) => setDirection(v as ElkDirection)
+                },
+                ...dock.items,
+                {
+                  type: 'toggle',
+                  key: 'theme',
+                  icon: Sun,
+                  activeIcon: Moon,
+                  label: 'Switch to dark theme',
+                  activeLabel: 'Switch to light theme',
+                  active: ctx.themeKind === 'dark',
+                  onToggle: ctx.toggleTheme
+                },
+              ]}
+            />
+          )
+        }}
+        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        right={rightRegion}
+      >
+        {/* Layered ELK over the star schema. */}
+        <ElkLayout id="layout" targetLayerId="graph" fitPadding={80} />
 
-          {/* Keeps the composite's label parts crisp when zoomed in — composite
-              labels opt into this via `CompositeShape.setLabelResolution`. */}
-          <TextResolutionLODBehaviour id="label-lod" targetLayerId="graph" />
+        {/* Keeps the composite's label parts crisp when zoomed in — composite
+            labels opt into this via `CompositeShape.setLabelResolution`. */}
+        <TextResolutionLODBehaviour id="label-lod" targetLayerId="graph" />
 
-          {/* Whole-table menu — canvas-ui owns the positioning and dismissal. */}
-          <GraphNodeContextMenu
-            items={({ id, close }) => [
-              {
-                id: 'edit-schema',
-                label: 'Edit schema…',
-                onClick: () => {
+        {/* Whole-table menu — canvas-ui owns the positioning and dismissal. */}
+        <GraphNodeContextMenu
+          items={({ id, close }) => [
+            {
+              id: 'edit-schema',
+              label: 'Edit schema…',
+              onClick: () => {
+                setFieldMenu(null);
+                setEditing(id);
+                close();
+              }
+            },
+            {
+              id: 'add-field',
+              label: 'Add field',
+              onClick: () => {
+                patchData(id, { fields: [...fieldsOf(id), { name: 'new_field', type: 'string' }] });
+                close();
+              }
+            },
+          ]}
+        />
+
+        {/* Per-FIELD menu. The row-level `shape:partcontextmenu` has no
+            canvas-ui equivalent (menus are node / edge / background scoped),
+            so this one is positioned by hand — inside the canvas host, whose
+            `position: relative` makes camera screen coords land as-is. */}
+        {fieldMenu && (
+          <div className="absolute inset-0" onPointerDown={() => setFieldMenu(null)}>
+            <Card
+              className="absolute min-w-48 p-1"
+              style={{ left: fieldMenu.x, top: fieldMenu.y }}
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              <div className="text-muted-foreground px-2 py-1 text-xs">
+                Field: {fieldsOf(fieldMenu.nodeId)[fieldMenu.field]?.name}
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start"
+                onClick={() => {
+                  const fs = fieldsOf(fieldMenu.nodeId);
+                  fs.splice(fieldMenu.field + 1, 0, { name: 'new_field', type: 'string' });
+                  patchData(fieldMenu.nodeId, { fields: fs });
                   setFieldMenu(null);
-                  setEditing(id);
-                  close();
-                }
-              },
-              {
-                id: 'add-field',
-                label: 'Add field',
-                onClick: () => {
-                  patchData(id, { fields: [...fieldsOf(id), { name: 'new_field', type: 'string' }] });
-                  close();
-                }
-              },
-            ]}
-          />
-
-          {/* Per-FIELD menu. The row-level `shape:partcontextmenu` has no
-              canvas-ui equivalent (menus are node / edge / background scoped),
-              so this one is positioned by hand — inside the canvas host, whose
-              `position: relative` makes camera screen coords land as-is. */}
-          {fieldMenu && (
-            <div className="absolute inset-0" onPointerDown={() => setFieldMenu(null)}>
-              <Card
-                className="absolute min-w-48 p-1"
-                style={{ left: fieldMenu.x, top: fieldMenu.y }}
-                onPointerDown={(e) => e.stopPropagation()}
+                }}
               >
-                <div className="text-muted-foreground px-2 py-1 text-xs">
-                  Field: {fieldsOf(fieldMenu.nodeId)[fieldMenu.field]?.name}
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start"
-                  onClick={() => {
-                    const fs = fieldsOf(fieldMenu.nodeId);
-                    fs.splice(fieldMenu.field + 1, 0, { name: 'new_field', type: 'string' });
-                    patchData(fieldMenu.nodeId, { fields: fs });
-                    setFieldMenu(null);
-                  }}
-                >
-                  Add field below
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-destructive w-full justify-start"
-                  onClick={() => {
-                    patchData(fieldMenu.nodeId, {
-                      fields: fieldsOf(fieldMenu.nodeId).filter((_, j) => j !== fieldMenu.field)
-                    });
-                    setFieldMenu(null);
-                  }}
-                >
-                  Delete field
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start"
-                  onClick={() => {
-                    setEditing(fieldMenu.nodeId);
-                    setFieldMenu(null);
-                  }}
-                >
-                  Edit table schema…
-                </Button>
-              </Card>
-            </div>
-          )}
-        </GraphCanvasApp>
-      </ThemeProvider>
+                Add field below
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive w-full justify-start"
+                onClick={() => {
+                  patchData(fieldMenu.nodeId, {
+                    fields: fieldsOf(fieldMenu.nodeId).filter((_, j) => j !== fieldMenu.field)
+                  });
+                  setFieldMenu(null);
+                }}
+              >
+                Delete field
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start"
+                onClick={() => {
+                  setEditing(fieldMenu.nodeId);
+                  setFieldMenu(null);
+                }}
+              >
+                Edit table schema…
+              </Button>
+            </Card>
+          </div>
+        )}
+      </GraphCanvasApp>
     );
   }
 };

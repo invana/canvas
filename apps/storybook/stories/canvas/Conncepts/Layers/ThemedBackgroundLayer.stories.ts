@@ -71,18 +71,18 @@ export const ThemedBackground: Story = {
 
     // The sole theme publisher. Named-palette path (no single-layer shorthand),
     // so the background reads `surface` / `divider` straight off the palette.
-    const theme = new ThemeBehaviour({ id: 'theme', enabled: true });
+    const theme = new ThemeBehaviour({ id: 'theme', enabled: true, mode: 'document' });
     canvas.behaviours.register(theme);
 
     await canvas.init({ container, autoResize: true });
     canvas.camera.fitContent(fixtures.getBounds(), 80);
 
-    const settings = { theme: 'default', mode: 'system' as ThemeMode };
+    const settings = { theme: 'default', mode: 'document' as ThemeMode };
     const gui = new GUI({ title: 'Theme' });
     onStoryTeardown(() => gui.destroy());
     gui
       .add(settings, 'theme', Object.keys(BUILT_IN_THEMES))
       .onChange((id: string) => theme.setTheme(id));
-    gui.add(settings, 'mode', ['system', 'light', 'dark']).onChange((m: ThemeMode) => theme.setMode(m));
+    gui.add(settings, 'mode', ['document', 'system', 'light', 'dark']).onChange((m: ThemeMode) => theme.setMode(m));
   }
 };

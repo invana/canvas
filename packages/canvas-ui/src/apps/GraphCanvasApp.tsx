@@ -25,7 +25,7 @@
  * **Theme.** Light/dark + the active family are read from the host's
  * `@invana/themes` `<ThemeProvider>` (a **required ancestor** — `useTheme()`
  * throws without one): `isDark` drives the shell classes (scoped to this app's
- * layout root) while {@link ThemeTemplateSync} pushes the resolved mode + theme
+ * layout root) while {@link CanvasThemeSync} pushes the resolved mode + theme
  * family to the engine's `ThemeBehaviour`, which republishes the palette so
  * every theme-aware layer recolours. The component does **not** self-provide a
  * theme, so an app mounts it once under its own provider and the in-app toggle
@@ -54,7 +54,7 @@ import { AppLayoutV2, useTheme, type BottomSpan, type SectionConfig } from '@inv
 // Aliased: the engine type `GraphCanvas` (from `@invana/graph`) is used in this
 // file's public signatures (`onReady`), so the React root component takes a
 // distinct local name.
-import { GraphCanvas as GraphCanvasRoot } from '@invana/canvas-react';
+import { CanvasThemeSync, GraphCanvas as GraphCanvasRoot } from '@invana/canvas-react';
 import { CanvasContext } from '@invana/canvas-react';
 import { GraphCanvasContext, useGraphCanvas } from '@invana/canvas-react';
 import { BackgroundLayer } from '@invana/canvas-react';
@@ -71,7 +71,6 @@ import { ColorByBehaviour } from '@invana/canvas-react';
 import { ThemeBehaviour } from '@invana/canvas-react';
 import { buildHeaderNav, type GraphCanvasAppHeaderOptions } from './GraphCanvasAppHeader';
 import { buildFooterNav, type GraphCanvasAppFooterOptions } from './GraphCanvasAppFooter';
-import { CanvasThemeSync } from './CanvasThemeSync';
 
 // Re-export the layout's bottom-span union so consumers can type the `bottomSpan`
 // prop without reaching into `@invana/themes` directly.
@@ -241,27 +240,33 @@ export const BASE_CONFIG: CanvasConfig = {
     // Registered but disarmed — the toolbar's select-mode picker arms one at a time.
     'brush-select': { enabled: false },
     'lasso-select': { enabled: false },
-    // The sole theme publisher. Starts following the OS; `CanvasThemeSync`
+    // The sole theme publisher. Reads the host page's theme itself (`document`),
+    // so the canvas is correct on first paint and stays correct even without the
+    // bridge below; `CanvasThemeSync`
     // immediately pins it to the host theme's resolved mode + family, and the
     // accent role tracks the design-kit `--color-primary`. The published palette
     // recolours background, nodes, edges, labels and group frames — every layer
     // subscribes, so a theme switch repaints the whole canvas, not just the bg.
-    theme: { enabled: true, mode: 'system', active: 'default', accent: 'css-var' },
+    theme: { enabled: true, mode: 'document', active: 'default', accent: 'css-var' },
   },
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
- * The `data-theme` + class names for a shell theme kind (design-kit tokens),
- * applied to the app's **own** layout root — so the light/dark toggle themes
- * *this* app, scoped, without touching `document` or following the OS.
+ * The `data-theme` + class names for a shell theme variant (design-kit tokens),
+ * applied to the app's **own** layout root — so the theme switch themes *this*
+ * app, scoped, without touching `document` or following the OS.
+ *
+ * Both halves of the variant matter: `family` selects the palette (`default` ·
+ * `tailwind` · `vite` · `gold` · `ocean` · `forest` · `rose` · `minimal`) and
+ * `kind` its light/dark block. The family used to be hardcoded to `default`,
+ * which meant a host on a preset theme got a correctly-themed page and a
+ * `default`-themed app inside it — the scoped root overrode the document.
  */
-function shellThemeAttrs(kind: ThemeKind): { dataTheme: string; className: string } {
-  return {
-    dataTheme: kind === 'dark' ? 'default-dark' : 'default-light',
-    className: kind === 'dark' ? 'theme-default-dark dark' : 'theme-default-light light',
-  };
+function shellThemeAttrs(family: string, kind: ThemeKind): { dataTheme: string; className: string } {
+  const variantId = `${family}-${kind}`;
+  return { dataTheme: variantId, className: `theme-${variantId} ${kind}` };
 }
 
 /** Join truthy class names. */
@@ -487,7 +492,7 @@ export function GraphCanvasApp({
   // Theme comes from the host's <ThemeProvider> (a required ancestor — see the
   // module docs): `isDark` resolves light/dark (including `system` mode, which
   // follows the OS) and `toggleMode` flips it. The canvas colours follow via
-  // <ThemeTemplateSync> (driving the engine `ThemeBehaviour`) and the shell
+  // <CanvasThemeSync> (driving the engine `ThemeBehaviour`) and the shell
   // classes via the scoped layout root. `useTheme()` throws without a provider; we rethrow with
   // an actionable, component-named message so the missing-provider contract is
   // obvious at the call site rather than buried in a generic library error.
@@ -569,7 +574,9 @@ export function GraphCanvasApp({
   // root and force `h-full` (tailwind-merge lets the later `h-full` win) so the
   // app also works bounded / embedded, not just full-viewport. Theme classes live
   // on **this** root only — scoped to the app, never the document or the OS.
-  const { dataTheme, className: themeClass } = shellThemeAttrs(themeKind);
+  // `theme.theme` is the host's active family — so a host on `ocean` gets an
+  // ocean-tinted app, not a `default`-tinted one inside an ocean page.
+  const { dataTheme, className: themeClass } = shellThemeAttrs(theme.theme, themeKind);
   const rootStyle: CSSProperties = { width: width ?? '100%', height: height ?? '100%', ...style };
 
   // Lifted context so every region (siblings of <Canvas>) resolves the same live

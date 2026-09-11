@@ -11,7 +11,6 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { CanvasPagesViewPanel, type CanvasPage } from '@invana/canvas-ui';
-import { ThemeProvider } from '@invana/themes';
 import { DemoBoard, DemoFrame, hueFor } from './canvas-pages-demo';
 
 const meta: Meta = { title: 'canvas-ui/view-panels/CanvasPagesViewPanel/PagerPlacement' };
@@ -44,18 +43,16 @@ function Strip({ position }: { position: 'start' | 'end' }) {
 
 function PagerPlacementDemo() {
   return (
-    <ThemeProvider>
-      <div className="flex flex-col gap-6">
-        <div>
-          <div className="mb-2 text-sm font-medium text-muted-foreground">pagerPosition=&quot;start&quot;</div>
-          <Strip position="start" />
-        </div>
-        <div>
-          <div className="mb-2 text-sm font-medium text-muted-foreground">pagerPosition=&quot;end&quot; (default)</div>
-          <Strip position="end" />
-        </div>
+    <div className="flex flex-col gap-6">
+      <div>
+        <div className="mb-2 text-sm font-medium text-muted-foreground">pagerPosition=&quot;start&quot;</div>
+        <Strip position="start" />
       </div>
-    </ThemeProvider>
+      <div>
+        <div className="mb-2 text-sm font-medium text-muted-foreground">pagerPosition=&quot;end&quot; (default)</div>
+        <Strip position="end" />
+      </div>
+    </div>
   );
 }
 

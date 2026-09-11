@@ -21,7 +21,6 @@ import { BackgroundLayer, D3ForceLayout, DragNodeBehaviour, DragPanBehaviour, Gr
 import { CanvasMessageBar, GraphCanvasApp, GraphStatusBar } from '@invana/canvas-ui';
 import type { GraphNode } from '@invana/graph';
 import { lesMiserables } from '@invana/graph-datasets';
-import { ThemeProvider } from '@invana/themes';
 
 const meta: Meta = { title: 'canvas-ui/apps/GraphCanvasApp/CustomComposition' };
 export default meta;
@@ -31,64 +30,62 @@ const DATA = lesMiserables;
 export const CustomCompositionStory: Story = {
   name: 'CustomComposition',
   render: () => (
-    // A real consumer mounts the app under its own <ThemeProvider>. With `bundle`
-    // off there's no engine ThemeBehaviour, so the canvas colours are fixed here
-    // (the shell chrome still themes light/dark from the provider).
-    <ThemeProvider>
-      <GraphCanvasApp
+    // The app reads light/dark from a host `<ThemeProvider>` via `useTheme()`, and
+    // throws without one. In Storybook that host is the toolbar's single provider
+    // (`.storybook/preview.tsx`); a real consumer mounts its own.
+    <GraphCanvasApp
+      data={DATA}
+      // No bundle — we own every layer/behaviour/layout below. `config` is
+      // applied as-is; `activeLayout` points at our own <D3ForceLayout id="force">.
+      bundle={false}
+      config={{ activeLayout: 'force' }}
+      onReady={(c) => c?.showMessage('bundle={false} — this whole graph is composed by hand')}
+      header={{ title: 'Custom Composition' }}
+      footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+    >
+      {/* Own backdrop — a dark dotted pattern (no themed BackgroundLayer here). */}
+      <BackgroundLayer
+        id="bg"
+        type="pattern"
+        patternType="dots"
+        backgroundColor="#0f172a"
+        color="#334155"
+      />
+      {/* The graph layer + its hand-authored node / edge styling. Declared
+          before the layout that targets it. */}
+      <GraphLayer
+        id="graph"
         data={DATA}
-        // No bundle — we own every layer/behaviour/layout below. `config` is
-        // applied as-is; `activeLayout` points at our own <D3ForceLayout id="force">.
-        bundle={false}
-        config={{ activeLayout: 'force' }}
-        onReady={(c) => c?.showMessage('bundle={false} — this whole graph is composed by hand')}
-        header={{ title: 'Custom Composition' }}
-        footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-      >
-        {/* Own backdrop — a dark dotted pattern (no themed BackgroundLayer here). */}
-        <BackgroundLayer
-          id="bg"
-          type="pattern"
-          patternType="dots"
-          backgroundColor="#0f172a"
-          color="#334155"
-        />
-        {/* The graph layer + its hand-authored node / edge styling. Declared
-            before the layout that targets it. */}
-        <GraphLayer
-          id="graph"
-          data={DATA}
-          node={{
-            style: {
-              shape: { kind: 'star', points: 5, innerRadius: 5, outerRadius: 11 },
-              bgStrokeColor: 0x0f172a,
-              bgStrokeWidth: 1.5,
-              labelText: (n: GraphNode) => n.id,
-              labelColor: 0xe2e8f0,
-              labelFontSize: 10,
-              labelPlacement: 'bottom',
-              labelOffsetY: 5
-            }
-          }}
-          edge={{ style: { strokeColor: 0x475569, strokeWidth: 1, arrowTargetShape: 'diamond' } }}
-        />
-        <D3ForceLayout
-          id="force"
-          targetLayerId="graph"
-          options={{
-            charge: { strength: -220 },
-            link: { distance: 60 },
-            collide: { radius: 16 },
-            animate: false
-          }}
-        />
-        {/* Camera + interaction, wired up by hand. */}
-        <DragPanBehaviour id="pan" />
-        <WheelZoomBehaviour id="wheel" />
-        <DragNodeBehaviour id="drag-node" targetLayerId="graph" />
-        <HoverActivateBehaviour id="hover" targetLayerId="graph" state="highlighted" degree={1} />
-        <TextResolutionLODBehaviour id="label-lod" targetLayerId="graph" />
-      </GraphCanvasApp>
-    </ThemeProvider>
+        node={{
+          style: {
+            shape: { kind: 'star', points: 5, innerRadius: 5, outerRadius: 11 },
+            bgStrokeColor: 0x0f172a,
+            bgStrokeWidth: 1.5,
+            labelText: (n: GraphNode) => n.id,
+            labelColor: 0xe2e8f0,
+            labelFontSize: 10,
+            labelPlacement: 'bottom',
+            labelOffsetY: 5
+          }
+        }}
+        edge={{ style: { strokeColor: 0x475569, strokeWidth: 1, arrowTargetShape: 'diamond' } }}
+      />
+      <D3ForceLayout
+        id="force"
+        targetLayerId="graph"
+        options={{
+          charge: { strength: -220 },
+          link: { distance: 60 },
+          collide: { radius: 16 },
+          animate: false
+        }}
+      />
+      {/* Camera + interaction, wired up by hand. */}
+      <DragPanBehaviour id="pan" />
+      <WheelZoomBehaviour id="wheel" />
+      <DragNodeBehaviour id="drag-node" targetLayerId="graph" />
+      <HoverActivateBehaviour id="hover" targetLayerId="graph" state="highlighted" degree={1} />
+      <TextResolutionLODBehaviour id="label-lod" targetLayerId="graph" />
+    </GraphCanvasApp>
   )
 };
