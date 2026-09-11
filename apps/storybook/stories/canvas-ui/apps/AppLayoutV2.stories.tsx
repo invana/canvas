@@ -462,12 +462,17 @@ export const AppLayoutV2Story: Story = {
       };
     }, [activeCanvas]);
 
-    // Nine panels share one header, so a tab spells its name only
-    // while it is the active one; the rest stay icon-only (name kept for
-    // assistive tech).
-    const tabLabel = (value: string, text: string) => (
-      <span className={rightTab === value ? '' : 'sr-only'}>{text}</span>
-    );
+    // Nine panels share one header, so a tab spells its name only while it is
+    // the active one; the rest stay icon-only. `label` is dropped rather than
+    // hidden, because an `sr-only` node would travel into the `…` overflow menu
+    // and render clipped there — `name` is the plain-text form the menu and the
+    // tooltip both fall back to. See
+    // rfc:fix-2026-09-11-folded-tabs-have-no-label-in-the-overflow-menu.
+    const tab = (value: string, text: string) => ({
+      value,
+      name: text,
+      label: rightTab === value ? text : undefined,
+    });
 
     // Open a new board, cycling the templates, and make it the active one.
     const addBoard = (): void => {
@@ -913,8 +918,7 @@ export const AppLayoutV2Story: Story = {
                 onTabChange={setRightTab}
                 tabs={[
                   {
-                    value: 'canvas',
-                    label: tabLabel('canvas', 'Canvas'),
+                    ...tab('canvas', 'Canvas'),
                     icon: Info,
                     content: (
                       <ScrollArea className="h-full">
@@ -966,8 +970,7 @@ export const AppLayoutV2Story: Story = {
                     // The whole definition of the active board — every live
                     // layer / behaviour / layout and its settings, applied
                     // through `canvas.update(...)` as you edit.
-                    value: 'settings',
-                    label: tabLabel('settings', 'Settings'),
+                    ...tab('settings', 'Settings'),
                     icon: Settings,
                     content: (
                       <CanvasSettingsEditorPanel
@@ -981,8 +984,7 @@ export const AppLayoutV2Story: Story = {
                     // Colour / label key / size per **type the board is
                     // painting**. Controlled: the shell holds the patch per
                     // board (Invana persists it), the panel paints it.
-                    value: 'styling',
-                    label: tabLabel('styling', 'Styling'),
+                    ...tab('styling', 'Styling'),
                     icon: Paintbrush,
                     content: (
                       <StylingViewPanel
@@ -997,16 +999,14 @@ export const AppLayoutV2Story: Story = {
                   {
                     // The board's scene as a file-tree — layer eyes, and the
                     // graph layer's nodes/edges grouped by type.
-                    value: 'layers',
-                    label: tabLabel('layers', 'Layers'),
+                    ...tab('layers', 'Layers'),
                     icon: Layers,
                     content: <LayersViewPanel canvas={activeCanvas} />,
                   },
                   {
                     // The board's history. Capture takes a real thumbnail off
                     // the live renderer; restore is the shell's to answer.
-                    value: 'snapshots',
-                    label: tabLabel('snapshots', 'Snapshots'),
+                    ...tab('snapshots', 'Snapshots'),
                     icon: History,
                     content: (
                       <CanvasSnapshotsViewPanel
@@ -1024,8 +1024,7 @@ export const AppLayoutV2Story: Story = {
                     // Structured search over the board — AND-combined field
                     // filters; a result click frames *and* selects the element
                     // (a locate, never a hide — that's the Filters tab).
-                    value: 'find',
-                    label: tabLabel('find', 'Find'),
+                    ...tab('find', 'Find'),
                     icon: Search,
                     content: <FindInCanvasViewPanel canvas={activeCanvas} />,
                   },
@@ -1034,8 +1033,7 @@ export const AppLayoutV2Story: Story = {
                     // kernel store (`view.interaction.selection`), so a click, a
                     // brush and a lasso all land here. Row click frames an
                     // element, ✕ drops just it, Hide parks the lot (→ Filters).
-                    value: 'selection',
-                    label: tabLabel('selection', 'Selection'),
+                    ...tab('selection', 'Selection'),
                     icon: MousePointerClick,
                     content: <SelectionViewPanel canvas={activeCanvas} />,
                   },
@@ -1044,16 +1042,14 @@ export const AppLayoutV2Story: Story = {
                     // one element at a time, read-only, with a "2 of 7" pager
                     // over the same selection. Clicking an element on the canvas
                     // reveals this tab (see the effect above).
-                    value: 'element',
-                    label: tabLabel('element', 'Element'),
+                    ...tab('element', 'Element'),
                     icon: ScanSearch,
                     content: <ElementInspectorViewPanel canvas={activeCanvas} />,
                   },
                   {
                     // The elements parked out of the board — right-click → Hide
                     // on the canvas (or in Layers) lands them here.
-                    value: 'filters',
-                    label: tabLabel('filters', 'Filters'),
+                    ...tab('filters', 'Filters'),
                     icon: Filter,
                     content: <CanvasFiltersViewPanel canvas={activeCanvas} />,
                   },

@@ -2,9 +2,9 @@
 id: fix-2026-09-11-folded-tabs-have-no-label-in-the-overflow-menu
 type: fix
 title: A folded tab's row in the `…` menu renders its strip label, so a tab whose label is a node shows an icon and no text
-status: proposed
+status: accepted
 opened: 2026-09-11
-decided: null
+decided: 2026-09-12
 landed: null
 packages: [pkg:@invana/ui, pkg:@canvas/storybook]
 design_of_record: null
@@ -19,10 +19,10 @@ relations:
 |---|---|
 | **What breaks** | Every row of the right inspector's `…` overflow menu shows an icon and blank text |
 | **Root cause** | C3 — the overflow row renders `item.label`, the node built for the *strip*, and only falls back to the plain-text `name` when `label` is absent |
-| **Defect rows** | F1 |
-| **Dressing rows** | F2 (scope the sr-only to the strip; hides the symptom, cause stays) |
-| **Row status** | proposed 3 · accepted 0 · implemented 0 · landed 0 · deferred 0 · rejected 0 |
-| **Open decisions** | D1, D2 |
+| **Defect rows** | F1 · F4 |
+| **Dressing rows** | F2 (scope the sr-only to the strip; hides the symptom, cause stays) — **rejected**, F4 removes the node instead |
+| **Row status** | proposed 1 · accepted 0 · implemented 1 · landed 0 · deferred 1 · rejected 1 |
+| **Open decisions** | D1 (F1, upstream) |
 
 ## 1 · Symptom
 
@@ -71,7 +71,8 @@ F1 lands in `invana/design-kit`; `file:design-kit/…` is relative to that repo.
 | ID | Kind | Status | File/target | Change | Effect | Risk | Depends on |
 |---|---|---|---|---|---|---|---|
 | F1 | defect | proposed | `sym:NavItems` overflow row | Render the plain-text name when the label is not a string: `typeof item.label === 'string' ? item.label : item.name ?? item.label` | Every folded row reads its name. Honours what `name` is documented to be — "plain-text name for when `label` is a node" — in the one place a strip-tuned node is wrong | low — a string label is unaffected, which is every existing consumer bar this one | — |
-| F2 | dressing | proposed | `file:apps/storybook/stories/canvas-ui/apps/AppLayoutV2.stories.tsx#L468` | Scope the hiding to the strip: `<span className="[[role=tablist]_&]:sr-only">` so the node is only clipped inside the tab list, not in the menu | Rows read correctly **without** the kit release. **Does not remove the cause** — the next node label hits it again | low, but it is a CSS trick in a story that exists to demonstrate the component | — |
+| F2 | dressing | rejected | `file:apps/storybook/stories/canvas-ui/apps/AppLayoutV2.stories.tsx#L468` | Scope the hiding to the strip: `<span className="[[role=tablist]_&]:sr-only">` so the node is only clipped inside the tab list, not in the menu | Rows read correctly **without** the kit release. **Does not remove the cause** — the next node label hits it again | low, but it is a CSS trick in a story that exists to demonstrate the component | — |
+| F4 | defect | implemented | `file:apps/storybook/stories/canvas-ui/apps/AppLayoutV2.stories.tsx#L465-L475` | Replace `tabLabel()` with `tab(value, text)` → `{ value, name: text, label: activeTab === value ? text : undefined }`. The inactive tab carries **no label node at all**, so the strip stays icon-only and `sym:NavItems` falls through to `name` in both the strip tooltip and the `…` menu | Every folded row reads its name **without** the kit release and **without** F2's CSS trick — it feeds `name` the flat form the prop was documented for, which is C3's own remedy applied caller-side | low — story-local, 9 tabs, no kit change. **Trade-off:** the inactive tab's text leaves the DOM, so the strip's accessible name now rests on the tooltip `name` rather than an `sr-only` span (V4) | — |
 | F3 | defect | proposed | `sym:TabbedPanel` docs, `sym:TabConfig.name` | State that `name` is what the overflow menu shows for a node label | The prop's contract matches F1 | low | F1 |
 
 ## 5 · Blast radius
@@ -96,22 +97,23 @@ F1 lands in `invana/design-kit`; `file:design-kit/…` is relative to that repo.
 
 | ID | Status | Check | Target | Expected | Covers |
 |---|---|---|---|---|---|
-| V1 | pending | Narrow the right inspector until tabs fold, open `…` | `story:canvas-ui/apps/AppLayoutV2` | every row reads its panel name | F1, F2 |
+| V1 | pending | Narrow the right inspector until tabs fold, open `…` | `story:canvas-ui/apps/AppLayoutV2` | every row reads its panel name | F1, F4 |
 | V2 | pending | **Control** — fold the page tabs | `story:canvas-ui/view-panels/CanvasPagesViewPanel/ScrollableWithPager` | rows read their page titles, unchanged | F1 |
-| V3 | pending | **Control** — the active tab still spells its name on the strip while the others stay icon-only | `story:canvas-ui/apps/AppLayoutV2` | unchanged density; nine tabs still fit at 400px | F2 |
-| V4 | pending | Screen reader over a folded row | VoiceOver | name announced once, not twice | F1 |
-| V5 | pending | `pnpm check-types` | canvas | clean | F2 |
+| V3 | pending | **Control** — the active tab still spells its name on the strip while the others stay icon-only | `story:canvas-ui/apps/AppLayoutV2` | unchanged density; nine tabs still fit at 400px | F4 |
+| V4 | pending | Screen reader over a folded row **and over an inactive strip tab** | VoiceOver | the folded row announces its name once; the icon-only strip tab still announces one, via the tooltip `name` rather than the removed `sr-only` span | F1 · F4 |
+| V5 | **pass** | `pnpm check-types` | canvas | clean — 19/19 turbo tasks | F4 |
 
 ## 7 · Decisions
 
 | ID | Question | Options | Recommendation | Status |
 |---|---|---|---|---|
-| D1 | Does the row prefer `name` over a node label, or does the kit stop rendering nodes in the menu entirely? | prefer `name` / strings only | **Prefer `name`** — a node label is legitimate on a strip (a badge, a count); the menu is simply a different context, and `name` already exists to be the flat form | open |
-| D2 | Do we take F2 now, or wait for the `0.0.25` release? | F2 now / wait | **F2 now, and keep it** — the story is how F11 is reviewed, and a menu of blank rows misreads as a broken component. Keep it after F1 lands: it is correct on its own terms, and V3 depends on the sr-only trick surviving | open |
+| D1 | Does the row prefer `name` over a node label, or does the kit stop rendering nodes in the menu entirely? | prefer `name` / strings only | **Prefer `name`** — a node label is legitimate on a strip (a badge, a count); the menu is simply a different context, and `name` already exists to be the flat form | **open** — F4 sidesteps it caller-side, but the kit still misrenders a node label in the menu for the next consumer |
+| D2 | Do we take F2 now, or wait for the `0.0.25` release? | F2 now / wait / **F4** | **F4** — neither. Dropping the label beats hiding it: it needs no kit release (unlike F1) and no CSS trick in the story that demonstrates the component (unlike F2), and it is what `sym:TabConfig.name` was added for | **accepted** — F4 implemented, F2 rejected and kept as the record |
 
 ## 8 · History
 
 | Date | Event | Status | Note |
 |---|---|---|---|
+| 2026-09-12 | F4 implemented, F2 rejected, D2 answered | accepted | The story drops the inactive tab's label node instead of hiding it, so `name` carries both the tooltip and the `…` row. F1/F3 stay `proposed` against the design kit — D1 is still open and the kit still misrenders a node label in the menu. V5 pass; V1–V4 need a browser |
 | 2026-09-11 | Reported: the inspector's `…` menu shows icons with no text | proposed | immediately after F11 of `rfc:fix-2026-09-11-inspector-tab-strip-overflows-panel` landed |
 | 2026-09-11 | Diagnosed C1–C4 from the built `0.0.24` output; `sym:CanvasPagesViewPanel` isolated as the control | proposed | no repro run needed — T1 is a read |
