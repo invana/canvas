@@ -18,7 +18,7 @@
  */
 
 import type { OneShotLayoutOptions } from '@invana/graph';
-import type { GraphNode } from '@invana/graph';
+import type { GraphEdge, GraphNode } from '@invana/graph';
 
 /**
  * Built-in ELK algorithm names shipped in `elkjs/lib/elk.bundled.js`.
@@ -152,6 +152,45 @@ export interface ElkLayoutOptions extends OneShotLayoutOptions {
    * blow up the final layout.
    */
   nodeSize?: (node: GraphNode) => NodeSize;
+
+  /**
+   * Names the edges that are **returns** rather than forward flow — a retry
+   * arc, a state-machine transition back to an earlier state, a BPMN loop.
+   *
+   * A layered algorithm cannot draw a cycle, so ELK breaks it: it reverses one
+   * edge of the cycle and threads **dummy nodes** through every layer the
+   * reversed edge spans. Those dummies take real vertical slots, which pushes
+   * the nodes either side of them out of line — the "staggered band" a
+   * feedback loop always produces. ELK is doing the right general thing; it
+   * just has no way of knowing the edge *means* "go back".
+   *
+   * Edges this predicate accepts are **withheld from the ELK graph entirely**,
+   * so ELK lays out the remaining DAG with no cycle to break and no dummies.
+   * They are then routed afterwards along a reserved lane clear of every node
+   * box (see `elk.layered.spacing` notes in the package CLAUDE.md), which is
+   * how BPMN and yFiles draw the same picture.
+   *
+   * Opt-in, and deliberately a predicate rather than automatic cycle
+   * detection: which edge of a cycle is "the return" is a question about what
+   * the diagram means, not about its topology, and the answer belongs to the
+   * author. Mirrors {@link ElkLayoutOptions.nodeSize} in shape.
+   *
+   * Withholding an edge changes only its **routing**; both endpoints are still
+   * laid out, and an edge whose removal disconnects the graph simply leaves
+   * ELK placing the two components independently.
+   *
+   * @example
+   * ```ts
+   * new ElkLayout({ feedbackEdges: (e) => e.type === 'RETRY' })
+   * ```
+   */
+  feedbackEdges?: (edge: GraphEdge) => boolean;
+
+  /**
+   * Gap between the outermost node box and the first return lane, and between
+   * consecutive lanes when several returns stack. Default `36`.
+   */
+  feedbackLaneGap?: number;
 
   /**
    * Free-form ELK property bag, merged into the root graph's

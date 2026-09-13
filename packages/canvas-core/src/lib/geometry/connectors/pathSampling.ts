@@ -541,8 +541,10 @@ function tangentAtStart(path: Path): Vec2 {
   const next = path[1];
   if (!next) return { x: 1, y: 0 };
   switch (next.kind) {
-    case 'L':
-      return normalize(next.x - m.x, next.y - m.y);
+    case 'L': {
+      const to = distinctAnchorAfter(path, 1, m);
+      return normalize(to.x - m.x, to.y - m.y);
+    }
     case 'Q':
       return normalize(next.cx - m.x, next.cy - m.y);
     case 'C':
@@ -560,8 +562,12 @@ function tangentAtEnd(path: Path): Vec2 {
   switch (last.kind) {
     case 'M':
       return { x: 1, y: 0 };
-    case 'L':
-      return normalize(last.x - prevAnchor.x, last.y - prevAnchor.y);
+    case 'L': {
+      // Walk back to the last *distinct* anchor rather than trusting the
+      // immediately-preceding one — see `distinctAnchorBefore`.
+      const from = distinctAnchorBefore(path, path.length - 1, last);
+      return normalize(last.x - from.x, last.y - from.y);
+    }
     case 'Q': {
       // Tangent at t=1 of a quadratic is 2·(P2 − P1). Degenerate when the
       // control point coincides with the endpoint — walk back one leg.
@@ -616,6 +622,40 @@ function anchorBefore(path: Path, idx: number): Point {
     }
   }
   return { x, y };
+}
+
+/**
+ * Nearest anchor **before** `idx` that is not coincident with `to`.
+ *
+ * A zero-length terminal segment is easy to produce: any layout that pins an
+ * endpoint to the same point it already emitted as its final waypoint leaves
+ * two identical anchors at the end of the polyline. Differencing those yields
+ * `(0, 0)`, and {@link normalize} then answers its `{ x: 1, y: 0 }` fallback —
+ * so a marker silently points due east instead of along the path, which reads
+ * as an arrowhead at the wrong angle (and, against a node that paints above
+ * connectors, as a half-occluded one). Walking back to the last distinct
+ * anchor keeps the direction honest without changing any non-degenerate case.
+ *
+ * Falls back to {@link anchorBefore} when every prior anchor is coincident —
+ * a genuinely zero-length path, where any direction is equally meaningless.
+ */
+function distinctAnchorBefore(path: Path, idx: number, to: Point): Point {
+  for (let i = idx - 1; i >= 0; i--) {
+    const c: PathCommand = path[i]!;
+    if (c.kind !== 'M' && c.kind !== 'L' && c.kind !== 'Q' && c.kind !== 'C') continue;
+    if (c.x !== to.x || c.y !== to.y) return { x: c.x, y: c.y };
+  }
+  return anchorBefore(path, idx);
+}
+
+/** Mirror of {@link distinctAnchorBefore} for the leading tangent. */
+function distinctAnchorAfter(path: Path, idx: number, from: Point): Point {
+  for (let i = idx; i < path.length; i++) {
+    const c: PathCommand = path[i]!;
+    if (c.kind !== 'M' && c.kind !== 'L' && c.kind !== 'Q' && c.kind !== 'C') continue;
+    if (c.x !== from.x || c.y !== from.y) return { x: c.x, y: c.y };
+  }
+  return from;
 }
 
 function normalize(dx: number, dy: number): Vec2 {

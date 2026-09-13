@@ -1,6 +1,6 @@
 import type { Graphics } from 'pixi.js';
 import { ShapeBase } from '../base/ShapeBase';
-import { applyMarkerFill } from '../paint/applyFillStroke';
+import { finishMarkerPaint } from '../paint/applyFillStroke';
 import type {
   BaseShapeSpec,
   Point,
@@ -129,28 +129,6 @@ export class ArrowMarker extends ShapeBase<ArrowMarkerSpec> {
       baseX - perpX * halfW, baseY - perpY * halfW,   // wing 2
     ]);
 
-    if (style?.fill === false) {
-      // Halo / outline mode: stroke the marker silhouette at the requested
-      // width. Geometry size still comes from `strokeWidth × *Scale` (above),
-      // so the halo widens without scaling the marker.
-      if (style.color !== undefined && (style.strokeWidth ?? 0) > 0) {
-        g.stroke({
-          width: style.strokeWidth!,
-          color: style.color,
-          alpha: style.alpha ?? 1,
-        });
-      }
-      return;
-    }
-    if (style?.color !== undefined) {
-      g.fill({ color: style.color, alpha: style.alpha ?? 1 });
-      return;
-    }
-    if (spec.fill !== undefined) {
-      applyMarkerFill(g, spec.fill, style);
-      return;
-    }
-    // Default: black-filled arrow.
-    g.fill({ color: 0x000000 });
+    finishMarkerPaint(g, spec.fill, style);
   }
 }

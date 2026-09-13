@@ -66,6 +66,10 @@ export type { CompositeSpec, CompositePart, CompositeRootSpec } from './primitiv
 export { Connector } from './primitives/connectors/Connector';
 export { ArrowMarker, arrowMarkerSpec } from './primitives/connectors/ArrowMarker';
 export type { ArrowMarkerSpec } from './primitives/connectors/ArrowMarker';
+export { DiamondMarker, diamondMarkerSpec } from './primitives/connectors/DiamondMarker';
+export type { DiamondMarkerSpec } from './primitives/connectors/DiamondMarker';
+export { DotMarker, dotMarkerSpec } from './primitives/connectors/DotMarker';
+export type { DotMarkerSpec } from './primitives/connectors/DotMarker';
 
 // ─── Built-in decorations ──────────────────────────────────────────────────
 export { GlowDecoration } from './primitives/decorations/shape/GlowDecoration';

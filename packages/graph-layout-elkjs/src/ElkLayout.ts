@@ -144,7 +144,7 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
    * by the base (emits `end`, rejects the awaited `apply()`); a run superseded
    * while ELK was in flight is dropped by the base's staleness check.
    */
-  protected async computeLayout(layer: GraphLayer): Promise<LayoutPositions<ElkExtendedEdge[] | null> | null> {
+  protected async computeLayout(layer: GraphLayer): Promise<LayoutPositions<ElkRouteMeta | null> | null> {
     const store = layer.store;
     const fallback = this.opts.defaultNodeSize ?? FALLBACK_NODE_SIZE;
     const sizeOf = (n: GraphNode): NodeSize =>
@@ -173,11 +173,23 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
 
     // 3. Edges, with endpoints inside collapsed groups re-pointed at the frame
     //    that stands in for them (and the resulting duplicates merged).
-    const edges: ElkExtendedEdge[] = collectLayoutEdges(layer, placeable).map((e) => ({
-      id: e.id,
-      sources: [e.source],
-      targets: [e.target],
-    }));
+    // A **return** edge is withheld from ELK entirely (see
+    // `ElkLayoutOptions.feedbackEdges`): handing it over makes ELK break a cycle
+    // it cannot draw, reversing the edge and threading dummy nodes through every
+    // spanned layer — which is what staggers the band either side of a loop.
+    // Without it ELK lays out a clean DAG; the withheld edges are routed along
+    // their own lane in `onPositionsApplied`.
+    const isFeedback = this.opts.feedbackEdges;
+    const feedbackIds: string[] = [];
+    const edges: ElkExtendedEdge[] = [];
+    for (const e of collectLayoutEdges(layer, placeable)) {
+      const stored = isFeedback ? store.getEdge(e.id) : undefined;
+      if (stored && isFeedback?.(stored)) {
+        feedbackIds.push(e.id);
+        continue;
+      }
+      edges.push({ id: e.id, sources: [e.source], targets: [e.target] });
+    }
 
     // 4. Build the ELK graph + merge convenience options with the free-form
     //    passthrough (passthrough wins).
@@ -193,19 +205,37 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
     //    frame around the packed members.
     const ids: string[] = [];
     const xy: number[] = [];
+    // Node rects come along so the feedback router can place its lane clear of
+    // every box rather than guessing an offset.
+    const rects = new Map<string, ElkNodeRect>();
     const walk = (node: ElkNode, parentX: number, parentY: number): void => {
       const absX = parentX + (node.x ?? 0);
       const absY = parentY + (node.y ?? 0);
       if (node.id !== 'root') {
+        const w = node.width ?? 0;
+        const h = node.height ?? 0;
+        const cx = absX + w / 2;
+        const cy = absY + h / 2;
         ids.push(node.id);
-        xy.push(absX + (node.width ?? 0) / 2, absY + (node.height ?? 0) / 2);
+        xy.push(cx, cy);
+        rects.set(node.id, { cx, cy, w, h });
       }
       for (const child of node.children ?? []) walk(child, absX, absY);
     };
     walk(result, 0, 0);
 
     // Thread routed edges to onPositionsApplied (only when edge routing is on).
-    const meta = this.opts.edgeRouting !== undefined ? ((result.edges ?? []) as ElkExtendedEdge[]) : null;
+    // Feedback edges need routing whether or not `edgeRouting` is on — they were
+    // never handed to ELK, so nothing else will place them.
+    const routing = this.opts.edgeRouting !== undefined;
+    const meta: ElkRouteMeta | null =
+      routing || feedbackIds.length > 0
+        ? {
+            edges: routing ? ((result.edges ?? []) as ElkExtendedEdge[]) : [],
+            rects,
+            feedbackIds,
+          }
+        : null;
     return { ids, positions: new Float32Array(xy), meta };
   }
 
@@ -284,10 +314,12 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
    * the cards without any per-edge offset.
    */
   protected override onPositionsApplied(layer: GraphLayer, meta: unknown): void {
-    const routedEdges = meta as ElkExtendedEdge[] | null;
-    if (!routedEdges) return;
+    const route = meta as ElkRouteMeta | null;
+    if (!route) return;
+    const { edges: routedEdges, rects, feedbackIds } = route;
     const store = layer.store;
     store.batch(() => {
+      routeFeedbackEdges(store, rects, feedbackIds, this.opts);
       for (const e of routedEdges) {
         // A merged id stands for several store edges that collapsed onto the
         // same endpoint pair (members of a collapsed group). It addresses none
@@ -307,6 +339,13 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
             }))
           : [];
         const prev = (store.getEdge(e.id)?.style as EdgeStyle | undefined) ?? {};
+        // NOTE: pinning both endpoints to ELK's ports with the `edge-port`
+        // anchor was tried here and reverted — that anchor answers the outward
+        // face normal as its tangent, and it makes the endpoint coincide with
+        // the first/last waypoint. Together those pointed every arrowhead back
+        // into its own node. The short border-hugging leg this leaves behind is
+        // the lesser defect; see the History section of
+        // rfc:fix-2026-09-13-edge-arrow-style-fields-are-never-read.
         store.updateEdge(e.id, {
           style: { ...prev, shape: { ...(prev.shape ?? {}), pathType: 'orth', waypoints } },
         });
@@ -316,6 +355,94 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
+
+/**
+ * Route the edges withheld from ELK along a reserved lane that clears every
+ * node box.
+ *
+ * The shape is a staple: leave the source through the face that points *away*
+ * from the flow, run along the lane, drop into the target through the same
+ * face. Several returns stack into parallel lanes, longest span outermost, so
+ * they nest instead of crossing.
+ *
+ * **Endpoints are left on the default `boundary` anchor deliberately.** That
+ * anchor intersects the silhouette along the line to the neighbouring
+ * waypoint, and the first/last waypoint here sits directly above (or beside)
+ * the node centre — so the anchor lands exactly on the face midpoint with no
+ * correction needed. Pinning the endpoint with `edge-port` instead was tried
+ * and reverted: it answers the outward face normal as its tangent, which
+ * turned every arrowhead back into its own node
+ * (rfc:fix-2026-09-13-edge-arrow-style-fields-are-never-read).
+ */
+function routeFeedbackEdges(
+  store: GraphLayer['store'],
+  rects: ReadonlyMap<string, ElkNodeRect>,
+  feedbackIds: readonly string[],
+  opts: ElkLayoutOptions,
+): void {
+  if (feedbackIds.length === 0) return;
+
+  // Flow runs along one axis; the lane is offset along the other. For a
+  // left-to-right flow the return rides above the band, for top-to-bottom it
+  // rides to its left.
+  const direction = opts.direction ?? 'RIGHT';
+  const horizontalFlow = direction === 'RIGHT' || direction === 'LEFT';
+  const gap = opts.feedbackLaneGap ?? 36;
+
+  // The outer edge of everything laid out — the lane starts clear of it.
+  let extent = Infinity;
+  for (const r of rects.values()) {
+    extent = Math.min(extent, horizontalFlow ? r.cy - r.h / 2 : r.cx - r.w / 2);
+  }
+  if (!Number.isFinite(extent)) return;
+
+  // Longest span outermost so nested returns don't cross one another.
+  const spans = feedbackIds
+    .map((id) => {
+      const edge = store.getEdge(id);
+      const from = edge ? rects.get(edge.source) : undefined;
+      const to = edge ? rects.get(edge.target) : undefined;
+      if (!edge || !from || !to) return null;
+      const span = horizontalFlow ? Math.abs(from.cx - to.cx) : Math.abs(from.cy - to.cy);
+      return { id, from, to, span };
+    })
+    .filter((v): v is NonNullable<typeof v> => v !== null)
+    .sort((a, b) => a.span - b.span);
+
+  spans.forEach(({ id, from, to }, i) => {
+    const lane = extent - gap * (i + 1);
+    const waypoints = horizontalFlow
+      ? [
+          { x: from.cx, y: lane },
+          { x: to.cx, y: lane },
+        ]
+      : [
+          { x: lane, y: from.cy },
+          { x: lane, y: to.cy },
+        ];
+    const prev = (store.getEdge(id)?.style as EdgeStyle | undefined) ?? {};
+    store.updateEdge(id, {
+      style: { ...prev, shape: { ...(prev.shape ?? {}), pathType: 'orth', waypoints } },
+    });
+  });
+}
+
+/** Absolute centre + extent of one ELK-placed node, in canvas coordinates. */
+interface ElkNodeRect {
+  readonly cx: number;
+  readonly cy: number;
+  readonly w: number;
+  readonly h: number;
+}
+
+/** What `computeLayout` threads to `onPositionsApplied` when routing is on. */
+interface ElkRouteMeta {
+  readonly edges: ElkExtendedEdge[];
+  readonly rects: ReadonlyMap<string, ElkNodeRect>;
+  /** Edges withheld from ELK, routed by {@link routeFeedbackEdges} instead. */
+  readonly feedbackIds: readonly string[];
+}
+
 
 /**
  * Default Web Worker factory: load elkjs's worker build relative to this

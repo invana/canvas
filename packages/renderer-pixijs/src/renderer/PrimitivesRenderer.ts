@@ -53,6 +53,8 @@ import { CompositeShape } from '../primitives/shapes/CompositeShape';
 import { measureLabelContent } from '../primitives/paint/labelContent';
 import { Connector } from '../primitives/connectors/Connector';
 import { ArrowMarker } from '../primitives/connectors/ArrowMarker';
+import { DiamondMarker } from '../primitives/connectors/DiamondMarker';
+import { DotMarker } from '../primitives/connectors/DotMarker';
 import { GlowDecoration } from '../primitives/decorations/shape/GlowDecoration';
 import { PulseRingDecoration } from '../primitives/decorations/shape/PulseRingDecoration';
 import { LiquidFillDecoration } from '../primitives/decorations/shape/LiquidFillDecoration';
@@ -75,6 +77,16 @@ import { BreathingEffect } from '../primitives/effects/BreathingEffect';
 import { BreathingConnectorEffect } from '../primitives/effects/BreathingConnectorEffect';
 import { FadeInConnectorEffect } from '../primitives/effects/FadeInConnectorEffect';
 import { markerInsetFor } from '../primitives/base/ConnectorBase';
+
+/**
+ * True when two points coincide to within a sub-pixel epsilon. Used to reject a
+ * waypoint sitting on the shape's own centre, which would leave a boundary
+ * anchor with no ray to cast.
+ */
+function samePoint(a: Point, b: Point): boolean {
+  return Math.abs(a.x - b.x) < 1e-6 && Math.abs(a.y - b.y) < 1e-6;
+}
+
 import type {
   AnchorCtx,
   AnchorShapeRef,
@@ -392,6 +404,11 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
     // they can also be added directly via `addShape` and so connectors can
     // resolve them by `kind` from the read-only registry.
     this.registerShape('arrow', ArrowMarker);
+    // Marker kinds share the shape registry, so their keys must not collide
+    // with a body shape's — hence 'dot' rather than 'circle'. `@invana/graph`
+    // maps the public `ArrowShape` vocabulary onto these keys.
+    this.registerShape('diamond', DiamondMarker);
+    this.registerShape('dot', DotMarker);
 
     this.registerRouter('straight', straightRouter);
     // `orth` is the simple H/V router (matches X6 / JointJS naming).
@@ -2326,8 +2343,31 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
     const targetCenter = this.endpointCenter(spec.target);
 
     // Pass 2: re-resolve each endpoint with its declared anchor.
-    const source = this.resolveEndpoint(spec.source, targetCenter);
-    const target = this.resolveEndpoint(spec.target, sourceCenter);
+    //
+    // An anchor answers "where on this silhouette does the line leave?", and it
+    // answers it by aiming at `fromPoint`. With no waypoints the far endpoint is
+    // the right thing to aim at — the path really does head straight there. But
+    // a **routed** connector leaves toward its first waypoint, not toward the
+    // other node, and aiming at the far centre put the endpoint somewhere the
+    // route never goes: the router then had to join the two with a short leg
+    // running along the node's own border, which is the stub visible at every
+    // endpoint of an ELK-routed graph.
+    //
+    // So a routed connector aims each terminal anchor at its **adjacent
+    // waypoint**. Unrouted connectors keep the previous behaviour exactly.
+    // Degenerate waypoints (coincident with the shape centre, which would give
+    // the anchor no ray to cast) fall back to the far endpoint.
+    const waypoints = spec.waypoints;
+    const firstWp = waypoints?.[0];
+    const lastWp = waypoints?.[waypoints.length - 1];
+    const source = this.resolveEndpoint(
+      spec.source,
+      firstWp && !samePoint(firstWp, sourceCenter) ? firstWp : targetCenter,
+    );
+    const target = this.resolveEndpoint(
+      spec.target,
+      lastWp && !samePoint(lastWp, targetCenter) ? lastWp : sourceCenter,
+    );
 
     // `obstacles` is a memoised getter — routers that don't read it (e.g.
     // `straight`, `orth`) avoid the O(shapes) per-connector cost. Critical

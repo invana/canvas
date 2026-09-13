@@ -220,7 +220,28 @@ export class CompositeShape extends ShapeBase<CompositeSpec> {
     const ox = spec.width / 2 - (b.x + b.width / 2);
     const oy = spec.height / 2 - (b.y + b.height / 2);
     g.translateTransform(ox, oy);
-    root.paintInto(g); // filled silhouette — the mask shape
+    // A mask needs the silhouette's *geometry*, never its paint — the mask is
+    // the card's area, and what the root happens to be painted with is
+    // irrelevant to it. Two paint facts would otherwise leak in and shrink the
+    // mask to a thin ring, clipping away every part the composite draws:
+    //
+    //   1. An **absent fill** — `applyFill` returns early on `spec.fill ===
+    //      undefined`, so the trace is stroked but never filled. Passing an
+    //      explicit opaque style takes the style branch instead, which fills
+    //      unconditionally. The colour is arbitrary; only coverage is sampled.
+    //   2. A **dashed stroke** — shapes short-circuit to `emitDashedStroke` and
+    //      `return` before filling at all when a dash array is in play, and the
+    //      array is read from the spec when the style omits one. So the mask is
+    //      traced from a stroke-free copy of the root spec.
+    //
+    // `strokeWidth: 0` keeps the mask exactly the silhouette rather than the
+    // stroke-widened outline. The spec is restored immediately: `bounds()` and
+    // the hit test read it between draws.
+    // See rfc:fix-2026-09-13-composite-card-renders-as-bare-outline.
+    const rootSpec = this.rootSpecOf(spec);
+    root.setGeometrySpec({ ...rootSpec, stroke: undefined });
+    root.paintInto(g, { color: 0xffffff, alpha: 1, fill: true, strokeWidth: 0 });
+    root.setGeometrySpec(rootSpec);
     g.resetTransform();
   }
 

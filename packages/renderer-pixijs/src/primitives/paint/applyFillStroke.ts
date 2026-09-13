@@ -264,3 +264,38 @@ function insetBounds(bounds: Rect, inset: number): Rect {
 function alignmentFor(a: ShapeStroke['alignment']): number {
   return a === 'inside' ? 1 : a === 'outside' ? 0 : 0.5;
 }
+
+/**
+ * Finish a marker's silhouette: the trace is already in `g`, this applies the
+ * paint. Shared by every marker primitive (`ArrowMarker`, `DiamondMarker`,
+ * `DotMarker`) so they resolve fill / halo identically.
+ *
+ * Precedence, highest first:
+ *  1. `style.fill === false` — halo / outline mode. Stroke the silhouette at
+ *     the requested width without filling, so a glow widens the outline
+ *     without scaling the marker.
+ *  2. `style.color` — a decoration override paints the whole marker flat.
+ *  3. `spec.fill` — the marker's own fill (number shorthand or solid layer).
+ *  4. Black, so a marker is never silently invisible.
+ */
+export function finishMarkerPaint(
+  g: Graphics,
+  fill: ShapeFill | undefined,
+  style: ShapePaintStyle | undefined,
+): void {
+  if (style?.fill === false) {
+    if (style.color !== undefined && (style.strokeWidth ?? 0) > 0) {
+      g.stroke({ width: style.strokeWidth, color: style.color, alpha: style.alpha ?? 1 });
+    }
+    return;
+  }
+  if (style?.color !== undefined) {
+    g.fill({ color: style.color, alpha: style.alpha ?? 1 });
+    return;
+  }
+  if (fill !== undefined) {
+    applyMarkerFill(g, fill, style);
+    return;
+  }
+  g.fill({ color: 0x000000 });
+}

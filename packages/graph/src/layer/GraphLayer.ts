@@ -17,7 +17,7 @@ import { SpecProjector } from '@invana/canvas';
 import type { SpecStore } from '@invana/canvas';
 import { WorldLayer, jsonSafe, type IElementRenderer, type SurfaceOptions } from '@invana/canvas';
 import type { CanvasContext, LayerOptions, WorldLayerHit } from '@invana/canvas';
-import type { BaseConnectorSpec, BaseShapeSpec, ConnectorLabelStyle, ShapeLabelStyle } from '@invana/canvas';
+import type { BaseConnectorSpec, BaseShapeSpec, ConnectorLabelStyle, MarkerShapeSpec, ShapeLabelStyle } from '@invana/canvas';
 import type { BadgeOptions } from '@invana/canvas';
 import type { DecorationSpec, EffectSpec, Rect, ShapeFillLayer } from '@invana/canvas';
 
@@ -34,6 +34,7 @@ import {
   type EdgeBadge,
   type EdgeDecorationSpec,
   type EdgeOption,
+  type ArrowShape,
   type EdgePathType,
   type EdgeStyle,
   type GraphData,
@@ -1133,19 +1134,28 @@ export class GraphLayer extends WorldLayer<
     for (const node of this.store.nodes()) {
       if (!includeHidden && node.hidden === true) continue;
       if (!includeHidden && this.collapsedAncestor(node.id) !== undefined) continue;
-      // **Store-derived, deterministic** (autofit RFC §7): position comes from
-      // the typed-array columns — always fresh, no projection involved — and the
-      // footprint from the pure spec-geometry `boundsOfNode` (centre-relative;
-      // "does not need the node to have rendered yet"). The projected
-      // `getShapeWorldBounds` used to be read here, and with `flushMode: 'frame'`
-      // a one-shot layout's synchronous `end → fitView` could measure the
-      // pre-layout (stacked) specs → a near-zero box → runaway zoom (the
-      // 4400 %/"nodes aren't rendering" symptom). Projection is now only the
-      // fallback for an unregistered shape kind.
-      const local = this.boundsOfNode(node);
-      const pos = this.store.getPosition(node.id);
-      if (local && pos) {
-        union({ x: pos.x + local.x, y: pos.y + local.y, width: local.width, height: local.height });
+      // **Store-derived, deterministic** (autofit RFC §7): built from the node's
+      // own spec, so it is always fresh and needs no projection. The
+      // `getShapeWorldBounds` projection used to be read here, and with
+      // `flushMode: 'frame'` a one-shot layout's synchronous `end → fitView`
+      // could measure the pre-layout (stacked) specs → a near-zero box →
+      // runaway zoom (the 4400 %/"nodes aren't rendering" symptom). Projection
+      // is now only the fallback for an unregistered shape kind.
+      //
+      // The offset is the spec's **render origin** (`spec.x`/`spec.y`), never
+      // `store.getPosition`. `boundsOf` is origin-relative, and that origin is
+      // per kind: centre for `circle`, top-left for `rect` and `composite`.
+      // `nodeSpec` already reconciles the two via `shapeRenderXY`, so reading
+      // the origin back off the spec is what keeps the measured box and the
+      // painted shape in the same place. Adding the raw position instead put
+      // every composite's box half a card right and down — the camera then
+      // framed that phantom offset and clipped the real card off the left
+      // edge, which is what "auto-fit crops the graph" was.
+      // See rfc:fix-2026-09-13-autofit-crops-composite-graphs.
+      const spec = this.nodeSpec(node) as BaseShapeSpec & { x: number; y: number };
+      const local = renderer.boundsOfSpec(spec);
+      if (local) {
+        union({ x: spec.x + local.x, y: spec.y + local.y, width: local.width, height: local.height });
       } else {
         union(renderer.getShapeWorldBounds(node.id));
       }
@@ -1485,11 +1495,19 @@ export class GraphLayer extends WorldLayer<
     const bg = style.bgFill;
     const hasImage = style.image !== undefined;
     const hasIcon = style.icon !== undefined;
+    // A shape option may declare its own `fill` — `composite` does, and the
+    // designer's compiled cards rely on it. `bgFill` is the per-node override;
+    // when it is absent the shape's own fill stands. This mirrors how `stroke`
+    // already cascades below (assigned only when `bgStrokeColor` is set), and
+    // without it a declared `fill` was silently replaced by `undefined` —
+    // leaving an unfilled card, and, under `clip`, an empty clip mask that
+    // erased every part. See rfc:fix-2026-09-13-composite-card-renders-as-bare-outline.
+    const shapeFill = (shape as { fill?: number | ReadonlyArray<ShapeFillLayer> }).fill;
     let fill: number | ReadonlyArray<ShapeFillLayer> | undefined;
     if (!hasImage && !hasIcon && typeof bg === 'number') {
       fill = bg;
     } else if (bg === undefined && !hasImage && !hasIcon) {
-      fill = undefined;
+      fill = shapeFill;
     } else {
       const layers: ShapeFillLayer[] = [];
       if (typeof bg === 'number') {
@@ -1676,12 +1694,20 @@ export class GraphLayer extends WorldLayer<
       // previously-drawn marker — e.g. an edge that first renders with the default
       // `'triangle'` then re-renders with `'none'` (config/layout applied after the
       // first paint, as in the sankey story) would otherwise keep its arrowhead.
-      targetMarker:
-        arrowTargetShape !== 'none' ? { kind: 'arrow', fill: arrowTargetColor } : undefined,
-      sourceMarker:
-        style.arrowSourceShape && style.arrowSourceShape !== 'none'
-          ? { kind: 'arrow', fill: style.arrowSourceColor ?? strokeColor }
-          : undefined,
+      targetMarker: markerSpecFor(
+        arrowTargetShape,
+        arrowTargetColor,
+        style.arrowTargetSize,
+        style.arrowTargetAlpha,
+        strokeWidth,
+      ),
+      sourceMarker: markerSpecFor(
+        style.arrowSourceShape,
+        style.arrowSourceColor ?? strokeColor,
+        style.arrowSourceSize,
+        style.arrowSourceAlpha,
+        strokeWidth,
+      ),
     };
   }
 
@@ -2754,6 +2780,63 @@ function assignNodeStyle(target: Partial<NodeStyle>, contribution: Partial<NodeS
     // private accumulator, so writing through the mutable view is safe.
     (target as { group?: GroupOptions }).group = { ...priorGroup, ...contribution.group };
   }
+}
+
+/**
+ * Marker-registry kind backing each public {@link ArrowShape}. The registry is
+ * shared with body shapes, so `'circle'` is already taken — the circular marker
+ * registers as `'dot'` and this table is where the two vocabularies meet.
+ */
+const ARROW_MARKER_KIND: Readonly<Record<Exclude<ArrowShape, 'none'>, string>> = {
+  triangle: 'arrow',
+  diamond: 'diamond',
+  circle: 'dot',
+};
+
+/**
+ * Ratio of a marker's perpendicular span to its tangent extent, preserving the
+ * 4:3 proportion `ArrowMarker`'s defaults describe. Applied when `arrow*Size`
+ * pins an explicit length, so a resized marker keeps its silhouette.
+ */
+const MARKER_WIDTH_RATIO = 3 / 4;
+
+/**
+ * Build a connector marker spec from the flat `arrow*` fields of an
+ * {@link EdgeStyle}.
+ *
+ * **`arrow*Size` is pixels** — the marker's tip-to-tail extent along the path.
+ * The marker primitives size themselves as a multiple of the host connector's
+ * stroke width (so an unsized marker stays proportional to its line), so the
+ * pixel value is converted to that scale here. This is the one place the two
+ * unit systems meet; consumers write pixels because that is what they mean.
+ *
+ * Returns `undefined` for `'none'` / absent, which the caller emits verbatim —
+ * the marker keys are always present in the spec so the renderer's shallow
+ * merge can *remove* a previously-drawn marker.
+ */
+function markerSpecFor(
+  shape: ArrowShape | undefined,
+  color: number,
+  size: number | undefined,
+  alpha: number | undefined,
+  strokeWidth: number,
+): MarkerShapeSpec | undefined {
+  if (shape === undefined || shape === 'none') return undefined;
+  const kind = ARROW_MARKER_KIND[shape] ?? 'arrow';
+  // A bare number carries no alpha through `applyMarkerFill`; a solid layer does.
+  const fill = alpha !== undefined ? { kind: 'solid' as const, color, alpha } : color;
+  if (size === undefined || !(strokeWidth > 0)) {
+    return { kind, fill } as MarkerShapeSpec;
+  }
+  const lengthScale = size / strokeWidth;
+  // The marker registry is open by design (`kind: string`), so the per-kind
+  // scale fields live outside `MarkerShapeSpec`'s declared surface.
+  return {
+    kind,
+    fill,
+    lengthScale,
+    widthScale: lengthScale * MARKER_WIDTH_RATIO,
+  } as MarkerShapeSpec;
 }
 
 /**
