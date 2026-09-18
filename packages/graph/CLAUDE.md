@@ -153,6 +153,43 @@ graphLayer.flashEdge(id, opts)                    // edge equivalent
 
 The actual decoration **rendering logic** (HaloDecoration, BorderDecoration, etc.) lives in `@invana/canvas` because it's domain-agnostic. `@invana/graph` only owns the *graph-domain naming* and the *state shape* (which ids have which decorations). When `@invana/er-diagram` ships, it'll add its own sugar (`erLayer.haloTable(id)`, `erLayer.markConflict(tableId)`) over the same canvas decorations.
 
+## Composite node types — `src/nodes/composite/`
+
+Every ready-made node type built on the engine's domain-free `composite` shape lives in
+`src/nodes/composite/`, **one file per type**, named after its export
+(`userCard.ts` → `UserCard` / `userCard`). The folder is named for the engine concept, not
+for one look — a schema/ER table is a composite node type, not a card. It was `src/cards/`
+until 2026-09-19 (`docs/rfcs/feat/2026-09-19-composite-node-types-are-filed-as-cards-and-only-four-ship.md`);
+don't recreate that folder.
+
+Each type follows the same contract, so adding one is a file plus a barrel line:
+
+```ts
+export interface XCardSpec { … }              // every knob: width, colours, radii, spacing
+export const X_CARD_DEFAULTS: XCardSpec = { … }
+export class XCard extends CompositeCard<XCardSpec, XCardData> {
+  protected parts(data): CompositePart[]      // ordered children
+  protected frame(data, parts): CardFrame     // box + fill/stroke/clip
+}
+export function xCard(data: XCardData): CompositeShapeOption   // stock instance
+```
+
+- **Values live in `spec`, structure lives in `protected` methods.** A consumer restyles
+  with `new XCard({ width: 320 })`; they subclass only to change *structure*. Never
+  hard-code a colour or a gap inline where a spec field would do.
+- **Auto-size in `frame()`** when a type has optional rows (organisation, event, product,
+  schema table) — an absent field must leave no gap, and `tests/nodes/composite/cards.test.ts`
+  asserts exactly that.
+- **A part that runs to the card edge needs `clip: true`** on the frame — a `rect` is
+  square geometry and can't round a corner on its own.
+- Shared part builders (`metaRow`, `chip`) and the baked colour defaults live in
+  `shared.ts`. Colours are dark-theme literals for now; theme-role colouring is
+  `docs/node-styling-unification-plan.md`'s job, not a per-type decision.
+- These are **layer 2** of the card/template stack (root `CLAUDE.md`) — beside the
+  `src/template/` structure templates, not inside them. `IDCard` (a class here) and the
+  `idCard` key in `BUILT_IN_STRUCTURES` (a `CardStructure` there) are deliberately the
+  same name at two layers.
+
 ## Rules
 
 - No `pixi.js` imports — go through `@invana/canvas` API only. (The stale `pixi.js`

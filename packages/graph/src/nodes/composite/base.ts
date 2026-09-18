@@ -1,6 +1,6 @@
 import type { CompositePart } from '@invana/canvas';
 
-import type { CompositeShapeOption } from '../layer/types';
+import type { CompositeShapeOption } from '../../layer/types';
 
 /** The card's box + fill / stroke / clip, returned by {@link CompositeCard.build}. */
 export interface CardFrame {

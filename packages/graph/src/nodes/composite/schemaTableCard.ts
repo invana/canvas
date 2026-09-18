@@ -1,6 +1,6 @@
 import type { CompositePart } from '@invana/canvas';
 
-import type { CompositeShapeOption } from '../layer/types';
+import type { CompositeShapeOption } from '../../layer/types';
 import { CompositeCard, type CardFrame } from './base';
 import { CARD_BG, CARD_STROKE, iconifyUrl } from './shared';
 import type { SchemaTableData } from './types';

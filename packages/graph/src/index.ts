@@ -298,7 +298,7 @@ export {
   BUILT_IN_STYLINGS,
 } from './template';
 
-// ─── Built-in composite card node types ─────────────────────────────────────
+// ─── Built-in composite node types ──────────────────────────────────────────
 export {
   CompositeCard,
   type CardFrame,
@@ -319,16 +319,41 @@ export {
   taskCard,
   TASK_CARD_DEFAULTS,
   type TaskCardSpec,
+  IDCard,
+  idCard,
+  ID_CARD_DEFAULTS,
+  type IDCardSpec,
+  OrganisationCard,
+  organisationCard,
+  ORGANISATION_CARD_DEFAULTS,
+  type OrganisationCardSpec,
+  ProductCard,
+  productCard,
+  PRODUCT_CARD_DEFAULTS,
+  type ProductCardSpec,
+  EventCard,
+  eventCard,
+  EVENT_CARD_DEFAULTS,
+  type EventCardSpec,
   iconifyUrl,
+  chip,
+  metaRow,
   CARD_BG,
   CARD_STROKE,
+  type ChipOptions,
+  type MetaRowOptions,
   type SchemaField,
   type SchemaTableData,
   type UserCardData,
   type StatCardData,
+  type CardTag,
   type TaskTag,
   type TaskCardData,
-} from './cards';
+  type IDCardData,
+  type OrganisationCardData,
+  type ProductCardData,
+  type EventCardData,
+} from './nodes/composite';
 
 
 // Schema — the graph's metagraph value + the observed (loaded-data) source
