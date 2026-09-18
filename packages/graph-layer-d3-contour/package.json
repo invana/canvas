@@ -1,6 +1,6 @@
 {
   "name": "@invana/graph-layer-d3-contour",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "Density-contour overlay Layer for @invana/graph, backed by d3-contour.",
   "homepage": "https://github.com/invana/canvas#readme",
   "type": "module",

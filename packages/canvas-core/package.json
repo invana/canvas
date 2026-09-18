@@ -1,6 +1,6 @@
 {
   "name": "@invana/canvas-core",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "The dependency-free floor of the Invana canvas: the spec vocabulary (shapes/connectors/decorations as plain data) + pure geometry, the renderer contract, the Layer/Behaviour/Layout abstracts, CanvasContext, Camera semantics, the event bus, theme signal, data primitives and the ReactiveStore port contract. canvas-store (state machinery) and canvas (orchestrator) both build on it.",
   "homepage": "https://github.com/invana/canvas#readme",
   "type": "module",

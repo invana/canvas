@@ -1,6 +1,6 @@
 {
   "name": "@invana/canvas-react",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "React bindings for @invana/canvas — declarative <Canvas> with JSX children mapped to layers, behaviours, and layouts.",
   "homepage": "https://github.com/invana/canvas#readme",
   "type": "module",

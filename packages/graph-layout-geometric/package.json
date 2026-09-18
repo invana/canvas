@@ -1,6 +1,6 @@
 {
   "name": "@invana/graph-layout-geometric",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "Dependency-free geometric layouts (grid / snake / circular) for @invana/graph.",
   "homepage": "https://github.com/invana/canvas#readme",
   "type": "module",
