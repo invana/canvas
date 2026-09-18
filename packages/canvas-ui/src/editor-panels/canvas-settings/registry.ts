@@ -188,6 +188,11 @@ import {
   optionsToForm as parallelEdgeToForm,
   formToOptions as parallelEdgeToOptions,
 } from '../../editors/behaviours/parallel-edge/mapping';
+import { entranceFields } from '../../editors/behaviours/entrance/fields';
+import {
+  optionsToForm as entranceToForm,
+  formToOptions as entranceToOptions,
+} from '../../editors/behaviours/entrance/mapping';
 import { labelCollisionFields } from '../../editors/behaviours/label-collision/fields';
 import {
   optionsToForm as labelCollisionToForm,
@@ -292,6 +297,7 @@ export const DEFAULT_CANVAS_SETTINGS_SCHEMAS: Record<string, SettingsSchemaEntry
   'edge-size-lod': { section: 'behaviours', typeLabel: 'Edge Size LOD', fields: edgeScaleLodFields, toForm: edgeScaleLodToForm, toOptions: edgeScaleLodToOptions },
   'parallel-edge': { section: 'behaviours', typeLabel: 'Parallel Edge', fields: parallelEdgeFields, toForm: parallelEdgeToForm, toOptions: parallelEdgeToOptions },
   'label-collision': { section: 'behaviours', typeLabel: 'Label Collision', fields: labelCollisionFields, toForm: labelCollisionToForm, toOptions: labelCollisionToOptions },
+  'entrance': { section: 'behaviours', typeLabel: 'Entrance', fields: entranceFields, toForm: entranceToForm, toOptions: entranceToOptions },
 
   // Layouts
   'd3-force-layout': { section: 'layouts', typeLabel: 'D3 Force', fields: d3ForceLayoutFields, toForm: d3ForceLayoutToForm, toOptions: d3ForceLayoutToOptions },

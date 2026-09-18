@@ -67,6 +67,7 @@ export {
   type NodeDecorationSpec,
   type EdgeDecorationSpec,
   type DecorationSpecCommon,
+  type EdgeEffects,
   type NodeEffects,
   type NodeIcon,
   type NodeImage,
@@ -245,6 +246,10 @@ export {
   type EdgeLODKeepBy,
   ThemeBehaviour,
   type ThemeBehaviourOptions,
+  EntranceBehaviour,
+  type EntranceBehaviourOptions,
+  type EntranceOrder,
+  type ResolvedEntranceOptions,
 } from './behaviours';
 
 // ─── Theme (named palettes + roles) ────────────────────────────────────────

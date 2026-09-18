@@ -1,3 +1,4 @@
+import type { EasingName } from '../../lib/animation/easings';
 import type { CameraTransform, Rect } from '../../specs/geom';
 
 /**
@@ -114,6 +115,34 @@ export interface CanvasSceneOptions {
   worldBounds?: Rect | null;
   /** Default interaction mode the view starts in. */
   defaultViewMode?: string;
+
+  // ── Load behaviour ───────────────────────────────────────────────────────
+  // These three are *how the scene arrives*, not what it is — but they are
+  // authored config like any other, so they live in the definition and
+  // round-trip through export / import. The engine reads them on `update()`.
+
+  /**
+   * Frame the camera on the content once on load. See
+   * `CanvasConfig.fitOnLoad`.
+   */
+  fitOnLoad?: boolean;
+  /**
+   * Ease the first auto-fit instead of snapping to it. See
+   * `CanvasConfig.fitAnimation`.
+   */
+  fitAnimation?: {
+    durationMs?: number;
+    easing?: EasingName;
+  };
+  /**
+   * Fade the world content in once, the first time it is worth showing. See
+   * `CanvasConfig.entrance`.
+   */
+  entrance?: {
+    kind: 'fade';
+    durationMs?: number;
+    easing?: EasingName;
+  };
 }
 
 /** The empty-but-valid initial {@link CanvasView}. */

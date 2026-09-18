@@ -260,11 +260,20 @@ export function importCanvasState(
   // 2a. Option slices → registered instances (resolved by id → setOptions), and
   //     into `definition.{layers,behaviours,layouts,activeLayout}`. Storing
   //     `activeLayout` records which layout is active *without* running it.
+  //     Load behaviour (`fitOnLoad` / `fitAnimation` / `entrance`) rides along:
+  //     it lives in `definition.canvas`, but writing it there directly (2b) would
+  //     only record it — the engine arms these on `update()`. Routing them here
+  //     means an imported canvas frames and *arrives* the way the exported one
+  //     did, rather than restoring to a scene that simply appears.
+  const scene = definition.canvas ?? {};
   canvas.update({
     layers: definition.layers,
     behaviours: definition.behaviours,
     layouts: definition.layouts,
     ...(definition.activeLayout !== null ? { activeLayout: definition.activeLayout } : {}),
+    ...(scene.fitOnLoad !== undefined ? { fitOnLoad: scene.fitOnLoad } : {}),
+    ...(scene.fitAnimation !== undefined ? { fitAnimation: scene.fitAnimation } : {}),
+    ...(scene.entrance !== undefined ? { entrance: scene.entrance } : {}),
   });
 
   // 2b. Scene / templates / theme aren't part of `CanvasConfig` — write them to

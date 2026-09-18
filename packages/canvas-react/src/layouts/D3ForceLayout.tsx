@@ -25,7 +25,12 @@ export interface D3ForceLayoutProps {
   targetLayerId?: string;
   /**
    * Padding in screen pixels for the auto-fit that runs when the simulation
-   * settles. `null` disables auto-fit. Default `80`.
+   * settles. `null` disables auto-fit.
+   *
+   * Ignored when the canvas has armed its own fitter (`config.fitOnLoad: true`,
+   * which `GraphCanvasApp` ships on by default) — the engine frames on the same
+   * run, and two owners writing the transform is a visible extra hop. Default
+   * `80`, which then applies only when `fitOnLoad` is off.
    */
   fitPadding?: number | null;
   /**
@@ -80,6 +85,12 @@ export function D3ForceLayout({
         // would throw) or by a superseding `apply()` (whose own `'completed'`
         // will fit). Fitting here is wrong in both cases.
         if (reason === 'stopped') return;
+        // The engine's `config.fitOnLoad` fitter is armed, so it already frames
+        // on this same run — with the union of *every* world layer's bounds.
+        // Two owners writing the transform with different paddings land as an
+        // extra visible hop after the graph has settled, so defer to it. With
+        // `fitOnLoad` off (the default), this wrapper stays the fitter.
+        if (canvas.autoFitArmed) return;
         canvas.camera.fitContent(layer.getBounds(), fitPadding);
       });
     }

@@ -23,8 +23,12 @@ export interface D3SankeyLayoutProps {
   targetLayerId?: string;
   /**
    * Padding in screen pixels for the auto-fit that runs when the layout
-   * completes. `null` disables auto-fit — use that inside `GraphCanvasApp`,
-   * whose `config.fitOnLoad` is the single fitter. Default `80`.
+   * completes. `null` disables auto-fit.
+   *
+   * Ignored when the canvas has armed its own fitter (`config.fitOnLoad: true`,
+   * which `GraphCanvasApp` ships on by default) — the engine frames on the same
+   * run, and two owners writing the transform is a visible extra hop. Default
+   * `80`, which then applies only when `fitOnLoad` is off.
    */
   fitPadding?: number | null;
   /**
@@ -75,6 +79,12 @@ export function D3SankeyLayout({
         // A `'stopped'` end is a cancelled run (teardown, or a superseding
         // `apply()` that will fit on its own `'completed'`).
         if (reason === 'stopped') return;
+        // The engine's `config.fitOnLoad` fitter is armed, so it already frames
+        // on this same run — with the union of *every* world layer's bounds.
+        // Two owners writing the transform with different paddings land as an
+        // extra visible hop after the graph has settled, so defer to it. With
+        // `fitOnLoad` off (the default), this wrapper stays the fitter.
+        if (canvas.autoFitArmed) return;
         // `fitView` is the engine's union-of-world-layer-bounds fitter, one
         // frame later so the layout's positions have flushed to the renderer
         // (the flush is frame-coalesced — fitting synchronously frames the

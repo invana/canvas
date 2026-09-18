@@ -132,6 +132,8 @@ export { BreathingEffect } from './primitives/effects/BreathingEffect';
 export type { BreathingEffectStyle } from './primitives/effects/BreathingEffect';
 export { BreathingConnectorEffect } from './primitives/effects/BreathingConnectorEffect';
 export type { BreathingConnectorEffectStyle } from './primitives/effects/BreathingConnectorEffect';
+export { FadeInEffect } from './primitives/effects/FadeInEffect';
+export type { FadeInEffectStyle } from './primitives/effects/FadeInEffect';
 export { FadeInConnectorEffect } from './primitives/effects/FadeInConnectorEffect';
 export type {
   FadeInConnectorEffectStyle,

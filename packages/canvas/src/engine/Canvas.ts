@@ -51,6 +51,8 @@ import { LayerRegistry } from '@invana/canvas-core';
 import { BehaviourRegistry } from '@invana/canvas-core';
 import { LayoutRegistry } from '@invana/canvas-core';
 import type { CanvasContext } from '@invana/canvas-core';
+import type { ISurface } from '@invana/canvas-core';
+import { Tween, resolveEasing, type EasingName } from '@invana/canvas-core';
 import { type CanvasConfig, configurable, deepMerge } from './CanvasConfig';
 import {
   exportImage,
@@ -252,8 +254,41 @@ export class Canvas {
   /** Guards {@link _armAutoFit} against attaching duplicate follow listeners
    *  when `config.fitOnLoad: true` is applied more than once. */
   private _autoFitArmed = false;
+  /** Pending grace timer from {@link _armAutoFit} — fires only if the declared
+   *  `activeLayout` never reports a run. Cleared on the first run and on destroy. */
+  private _autoFitGrace: ReturnType<typeof setTimeout> | undefined;
   /** Rounded visible-bounds key from the last cull — re-cull only when it changes. */
   private _lastCullKey = '';
+
+  /**
+   * Every **world** surface handed out by {@link _buildContext}'s factory, in
+   * creation order. The entrance fades these and only these: screen-fixed
+   * chrome blinking in reads as a glitch.
+   *
+   * Tracked here rather than walked off the layers because a surface is the
+   * thing with an alpha, and a layer need not expose its own.
+   */
+  private readonly _worldSurfaces: Set<ISurface> = new Set();
+  /**
+   * Entrance state machine, or `null` when `config.entrance` is absent (the
+   * default — nothing is armed and no alpha is ever written).
+   *
+   * `armed` means the world is being held at alpha 0 waiting for the trigger;
+   * `tween` is non-null only while the fade is actually running. Once `played`
+   * is true the entrance never fires again for this canvas's life.
+   */
+  private _entrance: {
+    readonly durationMs: number;
+    readonly easing: EasingName | undefined;
+    armed: boolean;
+    played: boolean;
+    tween: Tween | null;
+    grace: ReturnType<typeof setTimeout> | undefined;
+  } | null = null;
+  /** `config.fitAnimation`, applied to the first auto-fit only. */
+  private _fitAnimation: { durationMs?: number; easing?: EasingName } | undefined;
+  /** False until the auto-fitter has issued its first fit — gates {@link _fitAnimation}. */
+  private _firstFitDone = false;
 
 
   constructor(opts: CanvasOptions = {}) {
@@ -414,8 +449,12 @@ export class Canvas {
     // delta on the first frame / when `tickOnce` is driven synchronously (tests).
     const dt = this._lastFrameTs > 0 && t0 - this._lastFrameTs > 0.5 ? t0 - this._lastFrameTs : deltaMs;
     this._lastFrameTs = t0;
-    // Advance pixi-viewport plugins (decelerate, snap, etc.).
+    // Advance pixi-viewport plugins (decelerate, snap, etc.) and any camera
+    // glide from `config.fitAnimation`.
     this.camera.tick(deltaMs);
+    // The canvas entrance (`config.entrance`) — one alpha write per world
+    // surface while it runs, and nothing at all otherwise.
+    this._tickEntrance(dt);
     const t1 = perfNow();
     // Drive every registered kernel data source's coalesced flush once per frame —
     // the single canvas clock (Phase 3.3). Drained BEFORE layers so a source's
@@ -487,6 +526,50 @@ export class Canvas {
   }
 
   /**
+   * {@link fitView}, eased — glide to the fitted transform instead of snapping.
+   * Used for the first auto-fit when `config.fitAnimation` is set.
+   *
+   * Solves for the same transform `Camera.fitContent` would write, then hands it
+   * to `Camera.animateTo` rather than applying it. Any user camera write during
+   * the glide cancels it.
+   */
+  private _fitViewAnimated(
+    opts: { durationMs?: number; easing?: EasingName },
+    padding = 80,
+  ): void {
+    const rect = this._contentBounds();
+    if (!rect) return;
+    const cam = this.camera;
+    const availW = Math.max(1, cam.screenWidth - padding * 2);
+    const availH = Math.max(1, cam.screenHeight - padding * 2);
+    const zoom = Math.min(availW / Math.max(1, rect.width), availH / Math.max(1, rect.height));
+    const cx = rect.x + rect.width / 2;
+    const cy = rect.y + rect.height / 2;
+    cam.animateTo(
+      { x: cam.screenWidth / 2 - cx * zoom, y: cam.screenHeight / 2 - cy * zoom, zoom },
+      {
+        ...(opts.durationMs !== undefined ? { durationMs: opts.durationMs } : {}),
+        ...(opts.easing !== undefined ? { easing: opts.easing } : {}),
+      },
+    );
+  }
+
+  /**
+   * Whether `config.fitOnLoad` has armed the engine's auto-fitter — i.e. whether
+   * **this canvas already owns framing**.
+   *
+   * Read it before fitting the camera from outside the engine (a layout wrapper,
+   * an app shell). The auto-fitter frames on the same `layout:run:end` a layout
+   * consumer would, using the union of *every* world layer's bounds; a second
+   * owner writing the transform with a different padding lands as an extra
+   * visible hop after the graph has already settled. The engine is the better
+   * owner of the two — it is the only one that can see the other layers.
+   */
+  get autoFitArmed(): boolean {
+    return this._autoFitArmed;
+  }
+
+  /**
    * Arm `config.fitOnLoad`: keep the view framed on the graph as its layout
    * runs. With no `activeLayout`, this is a single fit on the next frame (the
    * extra frame lets a just-loaded scene flush before {@link fitView} reads its
@@ -542,28 +625,95 @@ export class Canvas {
      */
     const FLUSH_WATCH_MS = 1_000;
     const FLUSH_THROTTLE_MS = 100;
+    /**
+     * How long the arming fit waits for a declared `activeLayout` to report a
+     * run before framing anyway. Covers a layout that is named in the config but
+     * never runs (no data, an id with no registered layout, a layout that throws)
+     * — without it, such a canvas would sit unframed forever.
+     */
+    const LAYOUT_GRACE_MS = 1_200;
     let watchUntil = 0;
     let lastFlushFit = 0;
+    /** One rAF in flight — see {@link requestFit}. */
+    let fitQueued = false;
+    /** True once the active layout has reported a tick or a settle. */
+    let layoutHasPlaced = false;
+
+    /**
+     * Coalesce every fit request onto **one camera write per frame**.
+     *
+     * `fitContent` writes the transform synchronously and emits two events, so
+     * the old shape — three independent signals (`data:flush`, `layout:run:tick`,
+     * `layout:run:end`), each with its own leading-edge throttle, each scheduling
+     * its own rAF — could put several *different* transforms on screen in quick
+     * succession. That staircase is what reads as jitter while a graph settles.
+     * Requests inside the same frame now collapse into the last one.
+     */
+    const requestFit = (): void => {
+      if (fitQueued) return;
+      fitQueued = true;
+      requestAnimationFrame(() => {
+        fitQueued = false;
+        // `config.fitAnimation` eases the **first** fit only. Easing the
+        // follow-fits too would turn a settling layout into a chase, each glide
+        // retargeting before the last finished.
+        const first = !this._firstFitDone;
+        this._firstFitDone = true;
+        if (first && this._fitAnimation) this._fitViewAnimated(this._fitAnimation);
+        else this.fitView();
+        // This is the frame the picture is worth showing: the camera has framed
+        // real positions. Start the entrance from here rather than from the
+        // first flush, which lands while the graph is still unplaced.
+        if (first) this._playEntrance();
+      });
+    };
     // One lifetime listener, gated by `watchUntil` — cheaper than subscribing
     // and unsubscribing per fit, and it cannot miss a flush that lands between
     // the two. Throttled so a live sim (which flushes every frame) can't turn
-    // this into a 60 Hz `fitContent`.
+    // this into a 60 Hz `fitContent`. Note it does **not** extend the window:
+    // only a deliberate fit request does, or a flushing sim would keep the watch
+    // open for the canvas's life.
     this.events.on('data:flush', () => {
       const now = performance.now();
       if (now > watchUntil || now - lastFlushFit < FLUSH_THROTTLE_MS) return;
       lastFlushFit = now;
-      requestAnimationFrame(() => this.fitView());
+      requestFit();
     });
     const fit = (): void => {
       watchUntil = performance.now() + FLUSH_WATCH_MS;
-      requestAnimationFrame(() => this.fitView());
+      requestFit();
     };
     const activeLayout = (): string | null | undefined =>
       this.store.view.getState().definition.activeLayout;
 
-    // Fit now — right for a canvas with no layout, and harmless otherwise (the
-    // run-driven fits below supersede it).
-    fit();
+    /**
+     * The arming fit, deferred by one frame — and **skipped** when a layout owns
+     * placement and has not run yet.
+     *
+     * Fitting here used to be unconditional, on the reasoning that the run-driven
+     * fits below supersede it. They do, but not before it has been *seen*: a
+     * graph whose nodes have no authored `position` sits entirely at the store
+     * origin until its layout writes, so this fit measures one node's box and
+     * frames it — a ~9× zoom onto empty space, held until the solve lands. The
+     * bounds are not stale (`doc:docs/autofit-bounds-rfc.md` fixed that; they are
+     * read from the store); they are *honest about a graph that has not been
+     * placed yet*, which is a different thing and can only be fixed by waiting.
+     *
+     * The wait is one frame, because `fitOnLoad` and `activeLayout` arrive in
+     * separate `update()` patches from a React root — reading `activeLayout` at
+     * arm time is exactly the bug the 2026-08 pass fixed. One frame later the
+     * config has landed, so the question can be asked honestly.
+     */
+    requestAnimationFrame(() => {
+      if (activeLayout() && !layoutHasPlaced) {
+        this._autoFitGrace = setTimeout(() => {
+          this._autoFitGrace = undefined;
+          if (!layoutHasPlaced) fit();
+        }, LAYOUT_GRACE_MS);
+        return;
+      }
+      fit();
+    });
 
     // **Always** subscribe, even when there is no `activeLayout` yet. Arming
     // happens on the `update()` that carries `fitOnLoad`, and that patch can
@@ -579,14 +729,122 @@ export class Canvas {
     let lastFit = 0;
     this.events.on('layout:run:tick', ({ id }) => {
       if (id !== activeLayout()) return;
+      this._clearAutoFitGrace();
+      layoutHasPlaced = true;
       const now = performance.now();
       if (now - lastFit < THROTTLE_MS) return;
       lastFit = now;
       fit();
     });
     this.events.on('layout:run:end', ({ id, reason }) => {
-      if (id === activeLayout() && reason === 'settled') fit();
+      if (id !== activeLayout() || reason !== 'settled') return;
+      this._clearAutoFitGrace();
+      layoutHasPlaced = true;
+      fit();
     });
+  }
+
+  /**
+   * Arm `config.entrance`: hold the world at alpha 0 and wait for the first
+   * frame worth showing.
+   *
+   * Arming writes alpha **immediately**, before any trigger. That ordering is
+   * the whole design: if the world were left opaque until the trigger fired,
+   * the content would paint normally for several frames and then snap to
+   * invisible to begin its fade — a pop, which is worse than the cut the
+   * entrance exists to remove.
+   *
+   * The trigger is the first fit when {@link CanvasConfig.fitOnLoad} is armed
+   * (the camera has framed real positions by then), otherwise the first
+   * `data:flush`. Either way a grace timer releases the fade regardless, so a
+   * canvas whose trigger never arrives cannot be left permanently invisible —
+   * the same reasoning as the auto-fitter's `LAYOUT_GRACE_MS`, and for the same
+   * reason: a feature that can hide a scene forever must have a floor.
+   */
+  private _armEntrance(cfg: NonNullable<CanvasConfig['entrance']>): void {
+    if (this._entrance) return;
+    /**
+     * How long the entrance waits for its trigger before fading in anyway.
+     * Deliberately longer than the auto-fitter's grace: the fit is usually this
+     * entrance's trigger, so this must not pre-empt it.
+     */
+    const ENTRANCE_GRACE_MS = 2_000;
+    this._entrance = {
+      durationMs: Math.max(1, cfg.durationMs ?? 320),
+      easing: cfg.easing,
+      armed: true,
+      played: false,
+      tween: null,
+      grace: setTimeout(() => {
+        if (this._entrance) this._entrance.grace = undefined;
+        this._playEntrance();
+      }, ENTRANCE_GRACE_MS),
+    };
+    for (const surface of this._worldSurfaces) surface.setAlpha(0);
+
+    // Arming *after* the canvas has already framed once — an imported snapshot,
+    // or a config patch that lands late — has no trigger left to wait for: the
+    // first fit is long gone and `data:flush` is gated behind it. Play on the
+    // next frame instead, so the restored scene fades in rather than sitting
+    // blank until the grace timer rescues it.
+    if (this._firstFitDone) {
+      requestAnimationFrame(() => this._playEntrance());
+      return;
+    }
+
+    // No `fitOnLoad` to hang off: the first data to reach the renderer is the
+    // scene. Registered unconditionally and guarded inside — `fitOnLoad` may be
+    // armed by a *later* `update()` than the one carrying `entrance`.
+    this.events.on('data:flush', () => {
+      if (this._autoFitArmed) return;
+      this._playEntrance();
+    });
+  }
+
+  /**
+   * Start the fade. Idempotent and one-shot: re-layouts, data changes and
+   * re-fits never replay it (G-5) — an entrance that fires twice is an
+   * animation tax, not a welcome.
+   */
+  private _playEntrance(): void {
+    const e = this._entrance;
+    if (!e || e.played) return;
+    e.played = true;
+    e.armed = false;
+    if (e.grace !== undefined) {
+      clearTimeout(e.grace);
+      e.grace = undefined;
+    }
+    e.tween = new Tween({
+      from: 0,
+      to: 1,
+      duration: e.durationMs,
+      easing: resolveEasing(e.easing),
+    });
+  }
+
+  /**
+   * Advance the entrance fade by one frame. Called from {@link tickOnce}; a
+   * no-op on every canvas that did not opt in, which is the default.
+   */
+  private _tickEntrance(dt: number): void {
+    const e = this._entrance;
+    if (!e?.tween) return;
+    const running = e.tween.tick(dt);
+    const alpha = running ? e.tween.value : 1;
+    for (const surface of this._worldSurfaces) surface.setAlpha(alpha);
+    if (running) return;
+    // Retire: leave every surface at exactly 1 and stop writing alpha, so the
+    // settled picture is identical to one that never had an entrance.
+    e.tween = null;
+    this._entrance = null;
+  }
+
+  /** Cancel the pending {@link _armAutoFit} grace timer, if any. */
+  private _clearAutoFitGrace(): void {
+    if (this._autoFitGrace === undefined) return;
+    clearTimeout(this._autoFitGrace);
+    this._autoFitGrace = undefined;
   }
 
   /**
@@ -687,11 +945,20 @@ export class Canvas {
         s.definition.layouts[id] = deepMerge(s.definition.layouts[id] ?? {}, o) as Record<string, unknown>;
       }
       if (patch.activeLayout !== undefined) s.definition.activeLayout = patch.activeLayout;
+      // Load behaviour is authored config like any other: it belongs in the
+      // definition, or `canvas.get()` and export/import silently lose it.
+      if (patch.fitOnLoad !== undefined) s.definition.canvas.fitOnLoad = patch.fitOnLoad;
+      if (patch.fitAnimation !== undefined) s.definition.canvas.fitAnimation = patch.fitAnimation;
+      if (patch.entrance !== undefined) s.definition.canvas.entrance = patch.entrance;
     }, 'canvas:update');
 
     // Fit-on-load is a config setting applied here (works whether config arrives at
     // `init` or via a later `update` — the React root does the latter). `true` arms
     // the auto-fitter (frames the graph on load and follows each active-layout run).
+    // Read before arming the fitter: `_armAutoFit`'s first fit is the
+    // entrance's trigger, and the eased-fit setting must be in place by then.
+    if (patch.fitAnimation !== undefined) this._fitAnimation = patch.fitAnimation;
+    if (patch.entrance !== undefined) this._armEntrance(patch.entrance);
     if (patch.fitOnLoad === true) this._armAutoFit();
   }
 
@@ -706,6 +973,9 @@ export class Canvas {
       behaviours: d.behaviours,
       layouts: d.layouts,
       ...(d.activeLayout !== null ? { activeLayout: d.activeLayout } : {}),
+      ...(d.canvas.fitOnLoad !== undefined ? { fitOnLoad: d.canvas.fitOnLoad } : {}),
+      ...(d.canvas.fitAnimation !== undefined ? { fitAnimation: d.canvas.fitAnimation } : {}),
+      ...(d.canvas.entrance !== undefined ? { entrance: d.canvas.entrance } : {}),
     };
   }
 
@@ -959,7 +1229,14 @@ export class Canvas {
     if (!this._isInitialised) return;
 
     this._interactions.dispose();
+    this._clearAutoFitGrace();
     this._stopFrameLoop();
+    this._clearAutoFitGrace();
+    if (this._entrance?.grace !== undefined) {
+      clearTimeout(this._entrance.grace);
+      this._entrance.grace = undefined;
+    }
+    this._entrance = null;
     // Registries first: layers unmount and destroy their surfaces while the
     // backend is still alive.
     this.layers?.clear();
@@ -1056,7 +1333,22 @@ export class Canvas {
       // `@invana/canvas-core` is dependency-free and cannot construct one. A
       // collaborative canvas swaps this for a Yjs-backed factory.
       createStateStore: (initial) => createReactiveStore(initial),
-      createSurface: (space, id, opts) => renderer.createSurface(space, id, opts),
+      createSurface: (space, id, opts) => {
+        const surface = renderer.createSurface(space, id, opts);
+        if (space === 'world') {
+          this._worldSurfaces.add(surface);
+          // A layer mounted *during* the entrance must join it mid-fade, not
+          // appear at full opacity over a half-faded scene.
+          const e = this._entrance;
+          if (e && !e.played) surface.setAlpha(e.tween ? e.tween.value : 0);
+          const destroy = surface.destroy.bind(surface);
+          surface.destroy = () => {
+            this._worldSurfaces.delete(surface);
+            destroy();
+          };
+        }
+        return surface;
+      },
       createOverlay: (label, space) => renderer.createOverlay(label, space),
       showMessage: (text, timeout) => this.showMessage(text, timeout),
       clearMessage: () => this.clearMessage(),

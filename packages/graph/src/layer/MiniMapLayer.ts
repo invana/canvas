@@ -516,8 +516,11 @@ export class MiniMapLayer extends ScreenLayer<
     // layer-template / resolver / state-overlay colours (e.g. colour-by-label)
     // are mirrored, not just concrete per-node `style.bgFill`.
     for (const node of graph.store.nodes()) {
-      // Skip hidden nodes — culled from the canvas, so culled from the minimap.
-      if (node.hidden === true) continue;
+      // Ask the store, don't read the flag: `isNodeVisible` also covers nodes
+      // under a collapsed group and nodes a running layout has not placed yet.
+      // Reading `node.hidden` here is what let the minimap draw a collapsed
+      // group's children while the canvas hid them.
+      if (!graph.store.isNodeVisible(node.id)) continue;
       const bounds = renderer?.getShapeWorldBounds(node.id) ?? this.fallbackNodeBounds(node);
       if (!bounds) continue;
       const tl = this.worldToMinimap(bounds.x, bounds.y);
@@ -657,7 +660,8 @@ export class MiniMapLayer extends ScreenLayer<
       maxY = -Infinity;
     let any = false;
     for (const node of graph.store.nodes()) {
-      if (node.hidden === true) continue;
+      // Same rule as the draw pass — the extent must match what is mirrored.
+      if (!graph.store.isNodeVisible(node.id)) continue;
       const b = renderer?.getShapeWorldBounds(node.id) ?? this.fallbackNodeBounds(node);
       if (!b) continue;
       any = true;

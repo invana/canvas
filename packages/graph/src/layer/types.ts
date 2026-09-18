@@ -795,13 +795,60 @@ export type EdgeDecorationSpec =
   | (DecorationSpecCommon & { readonly kind: 'reveal-connector' } & RevealConnectorDecorationStyle);
 
 /**
- * Host-modulation effects (sibling of decorations). Effects don't add
- * geometry — they modulate the host's transform (`shake`, `breathing`) or
- * style channels (tint/alpha). One spec per kind.
+ * Host-modulation effects on a node (sibling of decorations). Effects don't
+ * add geometry — they modulate the host's transform (`shake`, `breathing`) or
+ * its style channels (tint / alpha, e.g. `'fade-in'`). **One spec per kind**,
+ * so the key *is* the renderer slot: `{ shake: { amplitude: 2 } }` mounts the
+ * registered `'shake'` effect with that style.
+ *
+ * ### Resolution
+ *
+ * The layer merges this dict across every contributing scope, in the same
+ * precedence order it uses for {@link NodeStyle.decorations} — layer template
+ * (`NodeOption.style`), then the per-node `style`, then each active state's
+ * overlay. Later scopes win *per kind*, so a state overlay can retune one
+ * effect without disturbing the others.
+ *
+ * - `undefined` (key absent) — this scope says nothing; an earlier scope's
+ *   entry survives.
+ * - `null` — **explicit removal**. The effects analogue of a decoration's
+ *   `remove: true`: a higher-precedence scope drops an effect an earlier one
+ *   set. An effect that arrives from a `state` overlay is retired
+ *   automatically when that state clears.
+ *
+ * An unregistered `kind`, or one whose registered target is `'connector'`,
+ * throws from the renderer rather than being ignored — the same contract as
+ * a decoration `kind`.
+ *
+ * @example
+ * ```ts
+ * // Layer template: every node in the `error` state breathes.
+ * node: { state: { error: { effects: { breathing: { amplitude: 0.2 } } } } }
+ * ```
  */
 export interface NodeEffects {
   readonly shake?: unknown | null;
   readonly breathing?: unknown | null;
+  readonly [kind: string]: unknown | null | undefined;
+}
+
+/**
+ * Connector-side sibling of {@link NodeEffects} — host-modulation effects on
+ * an edge. Identical dict semantics (one spec per kind, key = renderer slot,
+ * `null` removes, merged across layer template → per-edge → active states).
+ *
+ * The registered connector effects are `'breathing-connector'` and
+ * `'fade-in-connector'`; a shape-only kind such as `'shake'` throws when the
+ * host is a connector.
+ *
+ * @example
+ * ```ts
+ * edge: { style: { effects: { 'fade-in-connector': { durationMs: 320 } } } }
+ * ```
+ */
+export interface EdgeEffects {
+  readonly 'breathing-connector'?: unknown | null;
+  readonly 'fade-in-connector'?: unknown | null;
   readonly [kind: string]: unknown | null | undefined;
 }
 
@@ -1258,6 +1305,14 @@ export interface EdgeStyle {
    * + active state overlays, dedupe by `id`, later precedence wins.
    */
   readonly badges?: readonly EdgeBadge[];
+
+  // ===== Effects (slot dict) — see EdgeEffects =====
+  /**
+   * Host-modulation effects attached to the edge, keyed by registered
+   * connector-effect kind. See {@link EdgeEffects} for the merge and removal
+   * semantics; the node-side mirror is {@link NodeStyle.effects}.
+   */
+  readonly effects?: EdgeEffects;
 }
 
 /** Resolver-aware mirror of {@link EdgeStyle}; generic over the resolver argument. */

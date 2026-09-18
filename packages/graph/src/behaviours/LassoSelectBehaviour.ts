@@ -370,7 +370,7 @@ export class LassoSelectBehaviour extends Behaviour {
     const enclosedShapes = new Set<string>();
     if (wantShapes) {
       for (const node of layer.store.nodes()) {
-        if (node.hidden === true) continue; // lasso skips hidden nodes
+        if (!layer.store.isNodeVisible(node.id)) continue; // lasso skips what you can't see
         const pos = node.position ?? { x: 0, y: 0 };
         if (pointInPolygon(pos.x, pos.y, polygon)) enclosedShapes.add(node.id);
       }

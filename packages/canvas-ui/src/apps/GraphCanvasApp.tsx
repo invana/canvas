@@ -67,6 +67,7 @@ import { HoverActivateBehaviour } from '@invana/canvas-react';
 import { ClickSelectBehaviour } from '@invana/canvas-react';
 import { BrushSelectBehaviour } from '@invana/canvas-react';
 import { LassoSelectBehaviour } from '@invana/canvas-react';
+import { EntranceBehaviour } from '@invana/canvas-react';
 import { ColorByBehaviour } from '@invana/canvas-react';
 import { ThemeBehaviour } from '@invana/canvas-react';
 import { buildHeaderNav, type GraphCanvasAppHeaderOptions } from './GraphCanvasAppHeader';
@@ -240,6 +241,12 @@ export const BASE_CONFIG: CanvasConfig = {
     // Registered but disarmed — the toolbar's select-mode picker arms one at a time.
     'brush-select': { enabled: false },
     'lasso-select': { enabled: false },
+    // Also registered disarmed: the staggered load animation. Registering it is
+    // what puts it in the settings editor (which introspects the live registries
+    // by `kind`); leaving it off is rule 7, and keeps an entrance nobody asked
+    // for from becoming a tax on every embedding. Turn it on per canvas — in the
+    // settings panel, or with `behaviours: { entrance: { enabled: true } }`.
+    entrance: { enabled: false },
     // The sole theme publisher. Reads the host page's theme itself (`document`),
     // so the canvas is correct on first paint and stays correct even without the
     // bridge below; `CanvasThemeSync`
@@ -347,6 +354,12 @@ function GraphCanvasAppMain({
           <ClickSelectBehaviour id="click-select" targetLayerId="graph" />
           <BrushSelectBehaviour id="brush-select" targetLayerId="graph" />
           <LassoSelectBehaviour id="lasso-select" targetLayerId="graph" />
+          {/* `enabled={false}` explicitly, not left to `BASE_CONFIG` to switch
+              off after the fact: the wrapper defaults to enabled, and an
+              entrance that registers armed can play its one shot before the
+              config lands. The other disarmed behaviours tolerate that race
+              because arming them does nothing visible; this one would fade. */}
+          <EntranceBehaviour id="entrance" targetLayerId="graph" enabled={false} />
         </>
       ) : null}
 

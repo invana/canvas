@@ -251,11 +251,34 @@ export abstract class OneShotPositionLayout<
 
     // Glide from current positions. New (un-positioned) nodes start at their
     // target so they don't fly in from the origin.
+    //
+    // `getPosition` alone cannot express "un-positioned" — the store's `x`/`y`
+    // are typed-array columns, so a node nobody has placed reads back as
+    // `(0, 0)` and this guard could never fire: every node of a fresh graph
+    // glided out from the origin, i.e. the whole diagram flew in from the centre
+    // on first load. `hasPosition` is the flag that makes the distinction real.
     const from = new Float32Array(ids.length * 2);
+    let moves = false;
     for (let i = 0; i < ids.length; i++) {
-      const p = store.getPosition(ids[i]!);
-      from[i * 2] = p?.x ?? target[i * 2]!;
-      from[i * 2 + 1] = p?.y ?? target[i * 2 + 1]!;
+      const id = ids[i]!;
+      const p = store.hasPosition(id) ? store.getPosition(id) : undefined;
+      const fx = p?.x ?? target[i * 2]!;
+      const fy = p?.y ?? target[i * 2 + 1]!;
+      from[i * 2] = fx;
+      from[i * 2 + 1] = fy;
+      if (!moves && (fx !== target[i * 2]! || fy !== target[i * 2 + 1]!)) moves = true;
+    }
+
+    // Nothing is actually moving — the first run on a freshly loaded graph,
+    // where every node starts where it is going. Snap: animating identical
+    // endpoints costs a `setPositionsBulk` per frame and, worse, delays `end`
+    // by the full duration — which is what the canvas's auto-fit waits for, so
+    // the graph would sit unframed for half a second to animate nothing.
+    if (!moves) {
+      store.setPositionsBulk(ids, target);
+      applyGeometry();
+      settle();
+      return;
     }
 
     await new Promise<void>((resolve) => {

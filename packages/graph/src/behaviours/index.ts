@@ -162,3 +162,10 @@ export type { EdgeLODBehaviourOptions, EdgeLODKeepBy } from './EdgeLODBehaviour'
 
 export { ThemeBehaviour } from './ThemeBehaviour';
 export type { ThemeBehaviourOptions } from './ThemeBehaviour';
+
+export { EntranceBehaviour } from './EntranceBehaviour';
+export type {
+  EntranceBehaviourOptions,
+  EntranceOrder,
+  ResolvedEntranceOptions,
+} from './EntranceBehaviour';

@@ -75,6 +75,7 @@ import { LabelConnectorDecoration } from '../primitives/decorations/connector/La
 import { ShakeEffect } from '../primitives/effects/ShakeEffect';
 import { BreathingEffect } from '../primitives/effects/BreathingEffect';
 import { BreathingConnectorEffect } from '../primitives/effects/BreathingConnectorEffect';
+import { FadeInEffect } from '../primitives/effects/FadeInEffect';
 import { FadeInConnectorEffect } from '../primitives/effects/FadeInConnectorEffect';
 import { markerInsetFor } from '../primitives/base/ConnectorBase';
 
@@ -464,6 +465,7 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
 
     this.registerEffect('shake', ShakeEffect, { target: 'shape' });
     this.registerEffect('breathing', BreathingEffect, { target: 'shape' });
+    this.registerEffect('fade-in', FadeInEffect, { target: 'shape' });
     this.registerEffect('breathing-connector', BreathingConnectorEffect, { target: 'connector' });
     this.registerEffect('fade-in-connector', FadeInConnectorEffect, { target: 'connector' });
   }

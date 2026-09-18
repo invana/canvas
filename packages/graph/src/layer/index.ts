@@ -59,6 +59,7 @@ export type {
   NodeDecorationSpec,
   EdgeDecorationSpec,
   DecorationSpecCommon,
+  EdgeEffects,
   NodeEffects,
   NodeIcon,
   NodeImage,

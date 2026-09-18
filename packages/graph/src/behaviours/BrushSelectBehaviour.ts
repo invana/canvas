@@ -432,7 +432,7 @@ export class BrushSelectBehaviour extends Behaviour {
     const enclosedShapes = new Set<string>();
     if (wantShapes) {
       for (const node of layer.store.nodes()) {
-        if (node.hidden === true) continue; // brush skips hidden nodes
+        if (!layer.store.isNodeVisible(node.id)) continue; // brush skips what you can't see
         const pos = node.position ?? { x: 0, y: 0 };
         if (pos.x >= wx1 && pos.x <= wx2 && pos.y >= wy1 && pos.y <= wy2) {
           enclosedShapes.add(node.id);

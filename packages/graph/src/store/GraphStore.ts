@@ -37,6 +37,26 @@ const FLAG_TOMBSTONE = 1 << 1;
  */
 const FLAG_HIDDEN = 1 << 2;
 
+/**
+ * Whether this node has **ever been given a position** — set on insert when the
+ * record carries one, and on every position write thereafter.
+ *
+ * The `x` / `y` columns are typed arrays, so a node inserted without a position
+ * reads back as `(0, 0)` — indistinguishable from a node deliberately placed at
+ * the origin. That ambiguity is not cosmetic: a one-shot layout decides whether
+ * to *glide* a node into place or *snap* it there by asking where it currently
+ * is, and with no way to answer "nowhere yet" it glided every node of a fresh
+ * graph out from the origin — the whole diagram flying in from the centre on
+ * first load. See `doc:docs/rfcs/fix/2026-09-17-auto-fit-frames-the-graph-before-the-layout-runs.md`
+ * rows F6 / F7.
+ *
+ * A bit rather than a `NaN` sentinel in the columns: the columns are hot maths
+ * (bounds unions, layout reads, culling) and a `NaN` in them poisons every
+ * arithmetic consumer. `pinned` and `hidden` already live here; this is the same
+ * mechanism, and `compact()` carries the whole `flags` byte across a rebuild.
+ */
+const FLAG_PLACED = 1 << 3;
+
 /** Node hot-field schema. */
 const NODE_SCHEMA = {
   x: 'f32',
@@ -84,6 +104,13 @@ export class GraphStore implements DataSource {
 
   // ─── Cold storage (Map<id, payload>) ────────────────────────────────────
   private readonly nodeMap: Map<string, GraphNode> = new Map();
+  /**
+   * Derived visibility inputs behind {@link isNodeVisible}, pushed in by the
+   * owning layer (see that method for why they cannot be computed here).
+   * Neither is authored data, so neither is serialised.
+   */
+  private collapseHidden: Set<string> = new Set();
+  private _placementPending = false;
   private readonly edgeMap: Map<string, GraphEdge> = new Map();
   private readonly childrenIndex: Map<string, Set<string>> = new Map();
 
@@ -399,6 +426,22 @@ export class GraphStore implements DataSource {
   }
 
   /**
+   * Whether `id` has ever been given a position — by the record it was inserted
+   * with, by a layout, or by a drag.
+   *
+   * `getPosition` answers `(0, 0)` for a node nobody has placed, because that is
+   * what the column holds; this is how a caller tells that apart from a node
+   * genuinely sitting at the origin. Ask it before treating a node's current
+   * position as meaningful — a transition's start point, a "restore my view"
+   * check, an incremental layout's seed.
+   */
+  hasPosition(id: string): boolean {
+    const slot = this.nodeCols.slot(id);
+    if (slot === undefined) return false;
+    return (this.nodeCols.column('flags')[slot]! & FLAG_PLACED) !== 0;
+  }
+
+  /**
    * Set a single node's position.
    *
    * Default fires `node:update`. `opts.silent: true` skips the event and just
@@ -411,6 +454,9 @@ export class GraphStore implements DataSource {
     const yCol = this.nodeCols.column('y');
     xCol[slot] = pos.x;
     yCol[slot] = pos.y;
+    // Any write is a placement — from here on this node has a real position.
+    const flagsCol = this.nodeCols.column('flags');
+    flagsCol[slot] = flagsCol[slot]! | FLAG_PLACED;
     this.nodeCols.touch();
     this._version++;
     if (!opts?.silent) {
@@ -434,6 +480,7 @@ export class GraphStore implements DataSource {
     }
     const xCol = this.nodeCols.column('x');
     const yCol = this.nodeCols.column('y');
+    const flagsCol = this.nodeCols.column('flags');
     const silent = !!opts?.silent;
     for (let i = 0; i < ids.length; i++) {
       const slot = this.nodeCols.slot(ids[i]!);
@@ -442,6 +489,7 @@ export class GraphStore implements DataSource {
       const y = xy[i * 2 + 1]!;
       xCol[slot] = x;
       yCol[slot] = y;
+      flagsCol[slot] = flagsCol[slot]! | FLAG_PLACED;
       if (!silent) {
         this.enqueueNodeUpdate(ids[i]!, { position: { x, y } });
       }
@@ -525,9 +573,103 @@ export class GraphStore implements DataSource {
     return (this.nodeCols.column('flags')[slot]! & FLAG_HIDDEN) !== 0;
   }
 
-  /** Effective visibility of a node — live and not explicitly hidden. */
+  /**
+   * **Effective visibility of a node — the single source of truth.**
+   *
+   * Every consumer that draws, hit-tests, measures or selects nodes asks this
+   * one question, so the canvas, the minimap, the legend and the selection
+   * behaviours cannot disagree about what the user can see. Three terms:
+   *
+   * 1. **live** — the node exists;
+   * 2. **not explicitly hidden** — {@link isNodeHidden}, the authored flag;
+   * 3. **not withheld** — hidden under a collapsed ancestor
+   *    ({@link isCollapseHidden}), or not yet placed while a layout owns
+   *    placement ({@link placementPending}).
+   *
+   * Terms 3's inputs are *derived*, pushed in by the owning layer rather than
+   * computed here: whether a node is a group frame comes from the layer's style
+   * resolution (which merges the layer template this store never sees), and
+   * whether a layout is mid-solve is canvas state. The store owns the **rule**;
+   * the layer supplies the **facts**. Neither derived input is serialised —
+   * collapse already round-trips as the `collapsed` node state, and placement
+   * as the position itself.
+   *
+   * **Read this, never `node.hidden`.** The raw flag is only term 2; reading it
+   * directly silently opts out of the other two. The two exceptions are
+   * deliberate and documented at their call sites: `isEdgeVisible` (collapse
+   * *re-routes* edges rather than hiding them) and a layout's own
+   * which-nodes-to-place filter (which must see nodes that are withheld
+   * *because* they are unplaced).
+   */
   isNodeVisible(id: string): boolean {
-    return this.nodeMap.has(id) && !this.isNodeHidden(id);
+    if (!this.nodeMap.has(id)) return false;
+    if (this.isNodeHidden(id)) return false;
+    if (this.collapseHidden.has(id)) return false;
+    if (this.isPlacementWithheld(id)) return false;
+    return true;
+  }
+
+  /**
+   * True while a layout owns placement and this node has never been placed —
+   * its stored `(0, 0)` is the zero-filled default, not a position anyone
+   * chose. Shared by {@link isNodeVisible} and {@link isEdgeVisible}.
+   */
+  private isPlacementWithheld(id: string): boolean {
+    return this._placementPending && !this.hasPosition(id);
+  }
+
+  /**
+   * Ids the owning layer has derived as hidden beneath a **collapsed
+   * ancestor**. Replaced wholesale on every collapse flip — it is a derived
+   * projection of the `collapsed` state plus the layer's group resolution, not
+   * authored data, so it is never serialised and never merged.
+   *
+   * Fires `node:visibility` for the symmetric difference, so a consumer that
+   * caches visibility learns it changed (the explicit-flag path already emits
+   * that event, and collapse must not be quieter than it).
+   */
+  setCollapseHidden(ids: Iterable<string>): void {
+    const next = ids instanceof Set ? (ids as Set<string>) : new Set(ids);
+    const prev = this.collapseHidden;
+    const touched: string[] = [];
+    for (const id of next) if (!prev.has(id)) touched.push(id);
+    for (const id of prev) if (!next.has(id)) touched.push(id);
+    if (touched.length === 0) return;
+    // Assign *before* emitting — a listener that calls `isNodeVisible` from the
+    // handler must see the new answer, not the one that prompted the event.
+    this.collapseHidden = next;
+    for (const id of touched) {
+      this.events.emit('node:visibility', { nodeId: id, hidden: !this.isNodeVisible(id) });
+    }
+    this.scheduleFlushIfNeeded();
+  }
+
+  /** True iff the node is withheld because an ancestor group is collapsed. */
+  isCollapseHidden(id: string): boolean {
+    return this.collapseHidden.has(id);
+  }
+
+  /**
+   * Whether a layout currently owns placement and has not yet reported a run.
+   *
+   * While true, a node that has never been placed ({@link hasPosition}) is not
+   * visible: its stored position is the zero-filled default, not a position
+   * anyone chose, and drawing it puts every unplaced node on top of every other
+   * at the origin. Set by the owning layer, which is what sees `layout:run:*`.
+   */
+  get placementPending(): boolean {
+    return this._placementPending;
+  }
+
+  /** Set {@link placementPending}. Fires `node:visibility` for affected nodes. */
+  setPlacementPending(pending: boolean): void {
+    if (this._placementPending === pending) return;
+    this._placementPending = pending;
+    for (const id of this.nodeMap.keys()) {
+      if (this.hasPosition(id)) continue;
+      this.events.emit('node:visibility', { nodeId: id, hidden: !this.isNodeVisible(id) });
+    }
+    this.scheduleFlushIfNeeded();
   }
 
   /** Hide many nodes in one batch → one flush. */
@@ -599,8 +741,22 @@ export class GraphStore implements DataSource {
     const cold = this.edgeMap.get(id);
     if (!cold) return false;
     if (this.isEdgeHidden(id)) return false;
+    // The two derived terms are deliberately asymmetric here, because what they
+    // mean for an edge is different:
+    //
+    // - **Collapse re-parents; it does not hide.** An edge crossing into a
+    //   collapsed group re-routes to the group frame and stays drawn (see
+    //   `GraphLayer.effectiveEndpoint`); only a collapse-induced self-loop is
+    //   culled, and the layer decides that. Folding collapse in here would
+    //   delete every edge terminating on a collapsed group.
+    // - **Placement has nowhere to re-route to.** An unplaced endpoint has no
+    //   position anyone chose, so a connector anchored to it collapses to a
+    //   degenerate stub at the origin — which paints as a stray arrowhead in
+    //   the middle of an otherwise empty canvas. Withhold the edge too.
     if (this.isNodeHidden(cold.source)) return false;
     if (this.isNodeHidden(cold.target)) return false;
+    if (this.isPlacementWithheld(cold.source)) return false;
+    if (this.isPlacementWithheld(cold.target)) return false;
     return true;
   }
 
@@ -779,6 +935,8 @@ export class GraphStore implements DataSource {
     if ('position' in patch && patch.position !== undefined) {
       this.nodeCols.column('x')[slot] = patch.position.x;
       this.nodeCols.column('y')[slot] = patch.position.y;
+      const posFlags = this.nodeCols.column('flags');
+      posFlags[slot] = posFlags[slot]! | FLAG_PLACED;
     }
 
     if ('pinned' in patch && patch.pinned !== undefined) {
@@ -1405,7 +1563,12 @@ export class GraphStore implements DataSource {
     const slot = this.nodeCols.add(node.id, {
       x: node.position?.x ?? 0,
       y: node.position?.y ?? 0,
-      flags: (node.pinned ? FLAG_PINNED : 0) | (node.hidden ? FLAG_HIDDEN : 0),
+      // A record that arrives without a `position` is *unplaced*, not at the
+      // origin — the distinction a layout needs to snap rather than glide it.
+      flags:
+        (node.pinned ? FLAG_PINNED : 0) |
+        (node.hidden ? FLAG_HIDDEN : 0) |
+        (node.position !== undefined ? FLAG_PLACED : 0),
     });
     this.outAdj.ensureCapacity(slot);
     this.inAdj.ensureCapacity(slot);

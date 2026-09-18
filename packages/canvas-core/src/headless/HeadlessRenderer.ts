@@ -185,6 +185,8 @@ export class HeadlessSurface implements ISurface {
   /** Last backdrop pushed — lets a background test assert without pixels. */
   backdrop: SurfaceBackdrop | null = null;
   visible = true;
+  /** Last alpha pushed — lets an entrance test assert without pixels. */
+  alpha = 1;
   zIndex = 0;
   destroyed = false;
 
@@ -201,6 +203,9 @@ export class HeadlessSurface implements ISurface {
   }
   setVisible(visible: boolean): void {
     this.visible = visible;
+  }
+  setAlpha(alpha: number): void {
+    this.alpha = alpha;
   }
   setZIndex(z: number): void {
     this.zIndex = z;

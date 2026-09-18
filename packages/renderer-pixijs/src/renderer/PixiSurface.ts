@@ -148,6 +148,12 @@ export class PixiSurface implements ISurface {
     this.root.visible = visible;
   }
 
+  setAlpha(alpha: number): void {
+    // Container alpha multiplies down the subtree, so per-item alpha (a
+    // `fade-in` effect, a dimmed node) keeps its meaning underneath.
+    this.root.alpha = alpha;
+  }
+
   setZIndex(z: number): void {
     this.root.zIndex = z;
     // Sorting is opt-in per parent in pixi; a surface asking for an explicit

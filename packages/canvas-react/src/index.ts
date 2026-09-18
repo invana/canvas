@@ -145,6 +145,9 @@ export type { LabelCollisionBehaviourProps } from './behaviours/LabelCollisionBe
 export { TextResolutionLODBehaviour } from './behaviours/TextResolutionLODBehaviour';
 export type { TextResolutionLODBehaviourProps } from './behaviours/TextResolutionLODBehaviour';
 
+export { EntranceBehaviour } from './behaviours/EntranceBehaviour';
+export type { EntranceBehaviourProps } from './behaviours/EntranceBehaviour';
+
 export { NodeScaleLODBehaviour } from './behaviours/NodeScaleLODBehaviour';
 export type { NodeScaleLODBehaviourProps } from './behaviours/NodeScaleLODBehaviour';
 

@@ -352,6 +352,21 @@ export type {
   BrushSelectOptions,
 } from './editors/behaviours/brush-select';
 
+// EntranceBehaviour
+export { EntranceEditorPanel, entranceFields } from './editors/behaviours/entrance';
+export {
+  optionsToForm as entranceOptionsToForm,
+  formToOptions as entranceFormToOptions,
+} from './editors/behaviours/entrance';
+export type {
+  EntranceEasingOption,
+  EntranceEditorPanelProps,
+  EntranceFields,
+  EntranceFormState,
+  EntranceOptions,
+  EntranceOrderOption,
+} from './editors/behaviours/entrance';
+
 // LassoSelectBehaviour
 export { LassoSelectEditorPanel, lassoSelectFields } from './editors/behaviours/lasso-select';
 export {

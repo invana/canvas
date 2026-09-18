@@ -196,6 +196,15 @@ export class GraphLayer extends WorldLayer<
   private subs: Array<() => void> = [];
 
   /**
+   * True once the canvas's active layout has reported a run for this canvas.
+   * Latches: a layout only owns "nothing has been placed yet" once, at the
+   * start of a canvas's life.
+   */
+  private layoutHasRun = false;
+  /** Pending {@link PLACEMENT_GRACE_MS} timer — see {@link evaluatePlacementPending}. */
+  private placementGrace: ReturnType<typeof setTimeout> | undefined;
+
+  /**
    * Edge ids whose endpoint moved since last flush. The connector path is
    * pinned to shape positions via the `boundary` anchor, but PixiJS doesn't
    * auto-reroute connectors when an anchored shape moves — we drain this set
@@ -258,6 +267,22 @@ export class GraphLayer extends WorldLayer<
    */
   private readonly nodeDecorationSlots: Map<string, Set<string>> = new Map();
   private readonly edgeDecorationSlots: Map<string, Set<string>> = new Map();
+
+  /**
+   * Currently-mounted **effect** slots per node / edge, and the style each was
+   * mounted with. Effects are keyed by kind (one spec per kind), so the slot id
+   * *is* the kind.
+   *
+   * Unlike {@link nodeDecorationSlots} this tracks the *value*, not just the
+   * key, because the effect sync must skip slots whose spec is unchanged:
+   * `PrimitivesRenderer.setEffect` disposes and reconstructs the effect on
+   * every write, so re-setting an unchanged slot restarts a running animation
+   * from its first frame. Harmless for a decoration, fatal for a one-shot fade
+   * — any re-render mid-entrance (hover, state toggle, LOD tier change) would
+   * reset that node to alpha 0 and fade it in again.
+   */
+  private readonly nodeEffectSlots: Map<string, Map<string, unknown>> = new Map();
+  private readonly edgeEffectSlots: Map<string, Map<string, unknown>> = new Map();
 
   /**
    * Currently-mounted badge slot ids per node, mirroring
@@ -334,6 +359,30 @@ export class GraphLayer extends WorldLayer<
     // Route the store's events onto the canvas tap channel so telemetry sees
     // every data + interaction-state mutation (§ 6). Detached in onUnmount.
     this.store.bindBus(ctx.events);
+
+    // ── Placement gate ───────────────────────────────────────────────────
+    // A layout that owns placement has not placed anything yet at mount, and a
+    // node with no authored `position` reads (0, 0) — so without this every
+    // unplaced node paints stacked at the origin until the solve lands. The
+    // store owns the rule (`isNodeVisible`); this supplies the fact.
+    //
+    // Both signals are re-read rather than latched at mount: a React root
+    // applies `activeLayout` in a later `update()` than the one that mounts the
+    // layer, which is the same ordering trap the auto-fitter hit.
+    const liftGate = (id: string): void => {
+      if (id !== this.activeLayoutId()) return;
+      this.layoutHasRun = true;
+      this.evaluatePlacementPending();
+    };
+    this.subs.push(ctx.events.on('layout:run:tick', ({ id }) => liftGate(id)));
+    // Any ending lifts it — a superseded run ends 'stopped', and waiting for a
+    // 'settled' that never comes would strand the graph behind the grace timer.
+    this.subs.push(ctx.events.on('layout:run:end', ({ id }) => liftGate(id)));
+    // `activeLayout` can be assigned after mount; re-evaluate when it changes.
+    this.subs.push(
+      ctx.store.view.subscribe(() => this.evaluatePlacementPending()),
+    );
+    this.evaluatePlacementPending();
     // Register the store as this source on the kernel (D13, Phase 3.2). The store
     // (which `implements DataSource`) becomes `CanvasStore.data[this.id]`, so the
     // kernel bridges its `onFlush` onto `data:flush` and a single rAF loop can
@@ -354,10 +403,12 @@ export class GraphLayer extends WorldLayer<
     // mounted); the projector's flush subscription catches every *other* writer.
     this.projector = new SpecProjector(this.specStore, this._renderer, {
       onKindChange: (changed) => {
-        // `removeShape` disposes attached decorations + badges — drop our tracking
-        // so the next sync treats it as a fresh mount, not a diff against ghosts.
+        // `removeShape` disposes attached decorations + badges + effects — drop
+        // our tracking so the next sync treats it as a fresh mount, not a diff
+        // against ghosts.
         this.nodeDecorationSlots.delete(changed);
         this.nodeBadgeSlots.delete(changed);
+        this.nodeEffectSlots.delete(changed);
       },
     });
 
@@ -435,6 +486,7 @@ export class GraphLayer extends WorldLayer<
         this.dirtyStateNodes.delete(nodeId);
         this.nodeDecorationSlots.delete(nodeId);
         this.nodeBadgeSlots.delete(nodeId);
+        this.nodeEffectSlots.delete(nodeId);
         this.unpublishSpec(nodeId);
         this._renderer?.removeShape(nodeId);
         this.dirtyGroups.delete(nodeId);
@@ -469,6 +521,7 @@ export class GraphLayer extends WorldLayer<
         this.deferredEdgeInstalls.delete(edgeId);
         this.edgeDecorationSlots.delete(edgeId);
         this.edgeBadgeSlots.delete(edgeId);
+        this.edgeEffectSlots.delete(edgeId);
         this.unpublishSpec(edgeId);
         this._renderer?.removeConnector(edgeId);
       }),
@@ -618,6 +671,11 @@ export class GraphLayer extends WorldLayer<
   protected override onUnmount(): void {
     for (const off of this.subs) off();
     this.subs.length = 0;
+    if (this.placementGrace !== undefined) {
+      clearTimeout(this.placementGrace);
+      this.placementGrace = undefined;
+    }
+    this.store.setPlacementPending(false);
     this.projector?.destroy();
     this.projector = undefined;
     this.store.bindBus(undefined);
@@ -1132,8 +1190,7 @@ export class GraphLayer extends WorldLayer<
     };
 
     for (const node of this.store.nodes()) {
-      if (!includeHidden && node.hidden === true) continue;
-      if (!includeHidden && this.collapsedAncestor(node.id) !== undefined) continue;
+      if (!includeHidden && !this.store.isNodeVisible(node.id)) continue;
       // **Store-derived, deterministic** (autofit RFC §7): built from the node's
       // own spec, so it is always fresh and needs no projection. The
       // `getShapeWorldBounds` projection used to be read here, and with
@@ -1476,8 +1533,11 @@ export class GraphLayer extends WorldLayer<
     // still emit a spec (so decorations / size are valid for any incident edge
     // re-route math against the node), but with `visible: false` so the
     // renderer skips drawing AND hit-testing it.
-    const hiddenByGroup = this.collapsedAncestor(node.id) !== undefined;
-    const culled = hiddenByGroup || node.hidden === true;
+    // One question, one authority: the store's rule already folds in the
+    // explicit flag, the collapsed-ancestor term this layer publishes, and the
+    // placement term. Recomputing any of them here is how the canvas and the
+    // minimap drifted apart in the first place.
+    const culled = !this.store.isNodeVisible(node.id);
 
     // Project the resolved style into a `ShapeFill` for the renderer.
     // Layers stack bottom-up:
@@ -1733,6 +1793,7 @@ export class GraphLayer extends WorldLayer<
     // not one was already there. Cheap to call in both branches.
     this.syncNodeLabel(id);
     this.syncNodeDecorations(id);
+    this.syncNodeEffects(id);
     this.syncNodeBadges(id);
     this.syncGroupSyntheticDecorations(id);
     // Anchors of incident connectors point to this shape — re-route in
@@ -1789,6 +1850,7 @@ export class GraphLayer extends WorldLayer<
     }
     this.syncEdgeLabel(id);
     this.syncEdgeDecorations(id);
+    this.syncEdgeEffects(id);
     this.syncEdgeBadges(id);
   }
 
@@ -1843,6 +1905,7 @@ export class GraphLayer extends WorldLayer<
     this.publishSpec(node.id, this.nodeSpec(node));
     this.syncNodeLabel(node.id);
     this.syncNodeDecorations(node.id);
+    this.syncNodeEffects(node.id);
     this.syncNodeBadges(node.id);
     this.syncGroupSyntheticDecorations(node.id);
   }
@@ -1857,6 +1920,7 @@ export class GraphLayer extends WorldLayer<
     this.publishSpec(edge.id, spec);
     this.syncEdgeLabel(edge.id);
     this.syncEdgeDecorations(edge.id);
+    this.syncEdgeEffects(edge.id);
     this.syncEdgeBadges(edge.id);
   }
 
@@ -2034,6 +2098,149 @@ export class GraphLayer extends WorldLayer<
   }
 
   /**
+   * Resolve the final effect dict for a node by merging every contributing
+   * scope — layer template (`NodeOption.style`), the per-node `style`, then
+   * each active state's overlay (layer-level first, per-node catalogue
+   * second). Same precedence order as {@link resolveNodeDecorations}.
+   *
+   * Effects are a **dict keyed by kind**, not an ordered array, so the merge
+   * is per key rather than a concat-and-dedupe:
+   *
+   * - an absent key leaves an earlier scope's entry standing;
+   * - `null` **removes** it — the effects analogue of a decoration's
+   *   `remove: true`, and what lets a state overlay add an effect that
+   *   retires when the state clears.
+   *
+   * Returns a `Map<kind, style>`; the caller emits one `setEffect` per entry,
+   * using the kind as the renderer slot.
+   */
+  private resolveNodeEffects(node: GraphNode): Map<string, unknown> {
+    const out = new Map<string, unknown>();
+
+    const mergeFrom = (style: Partial<NodeStyle> | undefined): void => {
+      const effects = style?.effects;
+      if (!effects) return;
+      for (const kind of Object.keys(effects)) {
+        const value = effects[kind];
+        if (value === undefined) continue;
+        if (value === null) out.delete(kind);
+        else out.set(kind, value);
+      }
+    };
+
+    if (this.nodeOption?.style) {
+      mergeFrom(resolveNodeStyleFields(this.nodeOption.style, node));
+    }
+    mergeFrom(node.style as Partial<NodeStyle> | undefined);
+
+    const activeStates = this.store.nodeStatesOf(node.id);
+    if (activeStates.length > 0) {
+      const perNodeCatalogue = node.state as Readonly<Record<string, NodeStyle>> | undefined;
+      for (const name of activeStates) {
+        const layerOverlay = this.nodeOption?.state?.[name];
+        if (layerOverlay) {
+          mergeFrom(resolveNodeStyleFields(layerOverlay, node));
+        }
+        const perNodeOverlay = perNodeCatalogue?.[name];
+        if (perNodeOverlay) mergeFrom(perNodeOverlay);
+      }
+    }
+
+    return out;
+  }
+
+  /** Sibling of {@link resolveNodeEffects} for edges. */
+  private resolveEdgeEffects(edge: GraphEdge): Map<string, unknown> {
+    const out = new Map<string, unknown>();
+
+    const mergeFrom = (style: Partial<EdgeStyle> | undefined): void => {
+      const effects = style?.effects;
+      if (!effects) return;
+      for (const kind of Object.keys(effects)) {
+        const value = effects[kind];
+        if (value === undefined) continue;
+        if (value === null) out.delete(kind);
+        else out.set(kind, value);
+      }
+    };
+
+    if (this.edgeOption?.style) {
+      mergeFrom(resolveEdgeStyleFields(this.edgeOption.style, edge));
+    }
+    mergeFrom(edge.style as Partial<EdgeStyle> | undefined);
+
+    const activeStates = this.store.edgeStatesOf(edge.id);
+    if (activeStates.length > 0) {
+      const perEdgeCatalogue = edge.state as Readonly<Record<string, EdgeStyle>> | undefined;
+      for (const name of activeStates) {
+        const layerOverlay = this.edgeOption?.state?.[name];
+        if (layerOverlay) {
+          mergeFrom(resolveEdgeStyleFields(layerOverlay, edge));
+        }
+        const perEdgeOverlay = perEdgeCatalogue?.[name];
+        if (perEdgeOverlay) mergeFrom(perEdgeOverlay);
+      }
+    }
+
+    return out;
+  }
+
+  /**
+   * Project the resolved effect dict onto the renderer for the given node.
+   * Diffs against {@link nodeEffectSlots}: mounts new kinds, clears vanished
+   * ones, and **leaves unchanged kinds alone**.
+   *
+   * That last clause is the one place this deliberately departs from
+   * {@link syncNodeDecorations}, which re-sets every slot unconditionally.
+   * `setEffect` disposes the previous instance and constructs a new one, so an
+   * unconditional re-set would restart a running animation from frame 0 every
+   * time anything else about the node changed. A decoration survives that; a
+   * one-shot `'fade-in'` does not.
+   */
+  private syncNodeEffects(id: string): void {
+    if (!this._renderer) return;
+    const node = this.store.getNode(id);
+    if (!node) return;
+    const next = this.resolveNodeEffects(node);
+    const prev = this.nodeEffectSlots.get(id);
+
+    if (prev) {
+      for (const kind of prev.keys()) {
+        if (!next.has(kind)) this._renderer.setEffect(id, kind, null);
+      }
+    }
+    for (const [kind, style] of next) {
+      if (prev?.has(kind) && effectStyleEquals(prev.get(kind), style)) continue;
+      this._renderer.setEffect(id, kind, { kind, style } as EffectSpec);
+    }
+
+    if (next.size === 0) this.nodeEffectSlots.delete(id);
+    else this.nodeEffectSlots.set(id, next);
+  }
+
+  /** Sibling of {@link syncNodeEffects} for edges. */
+  private syncEdgeEffects(id: string): void {
+    if (!this._renderer) return;
+    const edge = this.store.getEdge(id);
+    if (!edge) return;
+    const next = this.resolveEdgeEffects(edge);
+    const prev = this.edgeEffectSlots.get(id);
+
+    if (prev) {
+      for (const kind of prev.keys()) {
+        if (!next.has(kind)) this._renderer.setEffect(id, kind, null);
+      }
+    }
+    for (const [kind, style] of next) {
+      if (prev?.has(kind) && effectStyleEquals(prev.get(kind), style)) continue;
+      this._renderer.setEffect(id, kind, { kind, style } as EffectSpec);
+    }
+
+    if (next.size === 0) this.edgeEffectSlots.delete(id);
+    else this.edgeEffectSlots.set(id, next);
+  }
+
+  /**
    * Resolve the final list of badges for a node by concatenating every
    * contributing layer (layer template + per-node base + each active state
    * overlay) and deduping by `id`. Later precedence wins. Entries without an
@@ -2197,6 +2404,7 @@ export class GraphLayer extends WorldLayer<
     this.publishSpec(node.id, this.nodeSpec(node));
     this.syncNodeLabel(node.id);
     this.syncNodeDecorations(node.id);
+    this.syncNodeEffects(node.id);
     this.syncNodeBadges(node.id);
     this.syncGroupSyntheticDecorations(node.id);
     // Connectors anchored to this shape may need re-routing in either
@@ -2334,7 +2542,72 @@ export class GraphLayer extends WorldLayer<
     const now = this.isCollapsedGroup(node);
     if (was === now) return;
     this.lastCollapsedByGroup.set(node.id, now);
+    this.publishCollapseHidden();
     this.refreshDescendantsAndIncidentEdges(node.id);
+  }
+
+  /**
+   * How long the placement gate waits for a declared `activeLayout` to report a
+   * run before giving up and painting anyway.
+   *
+   * Not optional. Without a floor, a layout that is named in the config but
+   * never runs — no data, an unregistered id, a solver that throws — would hold
+   * every unplaced node invisible for the canvas's whole life, turning a
+   * ~150 ms cosmetic flash into a permanently blank graph. Matches the
+   * auto-fitter's own grace, which exists for exactly the same case.
+   */
+  private static readonly PLACEMENT_GRACE_MS = 1_200;
+
+  /** The canvas's active layout id, re-read on demand (never latched). */
+  private activeLayoutId(): string | null | undefined {
+    return this.ctx?.store.view.getState().definition.activeLayout;
+  }
+
+  /**
+   * Decide whether a layout currently owns placement, and tell the store.
+   *
+   * `true` only while an `activeLayout` is declared and has not yet reported a
+   * run. Everything else — no layout, or a layout that has run — leaves the
+   * gate open, because then `(0, 0)` is a node's real position rather than a
+   * default nobody chose.
+   */
+  private evaluatePlacementPending(): void {
+    const pending = !!this.activeLayoutId() && !this.layoutHasRun;
+    if (pending && this.placementGrace === undefined) {
+      this.placementGrace = setTimeout(() => {
+        this.placementGrace = undefined;
+        this.layoutHasRun = true;
+        this.store.setPlacementPending(false);
+        this.flush();
+      }, GraphLayer.PLACEMENT_GRACE_MS);
+    }
+    if (!pending && this.placementGrace !== undefined) {
+      clearTimeout(this.placementGrace);
+      this.placementGrace = undefined;
+    }
+    this.store.setPlacementPending(pending);
+  }
+
+  /**
+   * Recompute which nodes are hidden beneath a collapsed ancestor and push the
+   * set to the store, so `store.isNodeVisible` — the one question every
+   * consumer asks — accounts for collapse.
+   *
+   * The layer computes it because "is this node a group frame" comes from
+   * {@link resolveNodeStyle}, which merges the layer template the store never
+   * sees. The store owns the rule; this supplies the fact.
+   *
+   * O(N) over the nodes, run on a collapse flip (a user gesture), not per
+   * frame. Before this, collapse was projected only into each node's *spec*, so
+   * the canvas culled a child while the store still called it visible — and the
+   * minimap drew it, and lasso could select it.
+   */
+  private publishCollapseHidden(): void {
+    const hidden = new Set<string>();
+    for (const node of this.store.nodes()) {
+      if (this.collapsedAncestor(node.id) !== undefined) hidden.add(node.id);
+    }
+    this.store.setCollapseHidden(hidden);
   }
 
   /**
@@ -2944,6 +3217,33 @@ function mergeEdgeOptionWithDefaults(
  * {@link resolveEdgeDecorations} and aren't part of the decoration's
  * style payload.
  */
+/**
+ * Structural equality for an effect's style payload — the guard that lets
+ * {@link GraphLayer.syncNodeEffects} skip a slot whose spec did not change.
+ *
+ * Effect styles are serialisable JSON by construction (named easings, numbers,
+ * strings — see the `assertSerialisable` rule), so a recursive compare over
+ * plain objects and arrays is exact here. A false *negative* only costs a
+ * remount; there is no false positive, because any differing leaf is seen.
+ */
+function effectStyleEquals(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true;
+  if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    return a.every((v, i) => effectStyleEquals(v, b[i]));
+  }
+  const ka = Object.keys(a as Record<string, unknown>);
+  const kb = Object.keys(b as Record<string, unknown>);
+  if (ka.length !== kb.length) return false;
+  return ka.every(
+    (k) =>
+      Object.prototype.hasOwnProperty.call(b, k) &&
+      effectStyleEquals((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k]),
+  );
+}
+
 function splitDecorationSpec(
   spec: NodeDecorationSpec | EdgeDecorationSpec,
 ): { kind: string; style: Record<string, unknown> } {

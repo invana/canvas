@@ -103,6 +103,23 @@ export interface ISurface {
   setBackdrop(backdrop: SurfaceBackdrop | null): void;
 
   setVisible(visible: boolean): void;
+
+  /**
+   * Opacity of everything this surface holds, `0`–`1`. `1` is fully opaque and
+   * is every surface's starting state.
+   *
+   * The sibling of {@link setVisible}, which can only answer yes or no. A
+   * surface that can be *partly* there is what lets one tween fade a whole
+   * layer — the canvas entrance (`CanvasConfig.entrance`), and later any layer
+   * dim or cross-fade — without touching a single item's style.
+   *
+   * Compounds with per-item alpha rather than replacing it: a half-faded
+   * surface holding a half-transparent node shows it at a quarter. A backend
+   * with no notion of group opacity may no-op, in which case the effect is
+   * silently lost rather than failing.
+   */
+  setAlpha(alpha: number): void;
+
   setZIndex(z: number): void;
   destroy(): void;
 }

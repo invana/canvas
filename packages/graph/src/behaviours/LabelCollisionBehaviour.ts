@@ -315,7 +315,7 @@ export class LabelCollisionBehaviour extends Behaviour {
     const records: LabelRecord[] = [];
 
     for (const node of layer.store.nodes()) {
-      if (node.hidden === true) continue; // hidden nodes have no visible label
+      if (!layer.store.isNodeVisible(node.id)) continue; // invisible nodes have no label
       const settings = labelSettingsFromStyle(layer.resolveNodeStyle(node));
       if (settings === undefined) continue;
       const b = renderer.getDecorationWorldBounds(node.id, 'label');

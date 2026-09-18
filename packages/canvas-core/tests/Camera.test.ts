@@ -137,3 +137,89 @@ describe('Camera — the engine owns the clock (G3)', () => {
     expect(binding.tickedMs).toBe(32);
   });
 });
+
+/**
+ * C4 — `animateTo`: the eased camera glide behind `CanvasConfig.fitAnimation`.
+ *
+ * Time is driven by hand through `tick(dt)`, the same clock `Canvas.tickOnce`
+ * turns, so these assert the state machine rather than wall-clock behaviour.
+ */
+describe('Camera — animateTo', () => {
+  it('eases x, y and zoom together and lands exactly on the target', () => {
+    const { camera } = makeCamera();
+    camera.animateTo({ x: 100, y: 200, zoom: 2 }, { durationMs: 100, easing: 'linear' });
+    expect(camera.isAnimating).toBe(true);
+
+    camera.tick(50);
+    // Half way along a linear curve: every channel half way, none arrived.
+    expect(camera.x).toBeCloseTo(50);
+    expect(camera.y).toBeCloseTo(100);
+    expect(camera.scale).toBeCloseTo(1.5);
+    expect(camera.isAnimating).toBe(true);
+
+    camera.tick(50);
+    expect([camera.x, camera.y, camera.scale]).toEqual([100, 200, 2]);
+    expect(camera.isAnimating).toBe(false);
+  });
+
+  it('is cancelled by a user camera write, and does not fight back', () => {
+    // The `fitOnResize` lesson (D7) as a test: once the user has moved the
+    // camera, nothing of ours may move it back.
+    const { camera } = makeCamera();
+    camera.animateTo({ x: 100, y: 200, zoom: 2 }, { durationMs: 100, easing: 'linear' });
+    camera.tick(50);
+
+    camera.pan(7, 7);
+    expect(camera.isAnimating).toBe(false);
+    const [x, y] = [camera.x, camera.y];
+
+    camera.tick(50);
+    // The glide is dropped, not finished — the camera stays where the user left it.
+    expect([camera.x, camera.y]).toEqual([x, y]);
+  });
+
+  it('applies immediately and fires onDone for a non-positive duration', () => {
+    const { camera } = makeCamera();
+    const onDone = vi.fn();
+    camera.animateTo({ x: 10, y: 20, zoom: 3 }, { durationMs: 0, onDone });
+    expect([camera.x, camera.y, camera.scale]).toEqual([10, 20, 3]);
+    expect(onDone).toHaveBeenCalledTimes(1);
+    expect(camera.isAnimating).toBe(false);
+  });
+
+  it('calls onDone once the glide completes naturally', () => {
+    const { camera } = makeCamera();
+    const onDone = vi.fn();
+    camera.animateTo({ x: 10, y: 0, zoom: 1 }, { durationMs: 100, easing: 'linear', onDone });
+    camera.tick(50);
+    expect(onDone).not.toHaveBeenCalled();
+    camera.tick(50);
+    expect(onDone).toHaveBeenCalledTimes(1);
+  });
+
+  it('retargets from where the camera is, rather than compounding', () => {
+    const { camera } = makeCamera();
+    camera.animateTo({ x: 100, y: 0, zoom: 1 }, { durationMs: 100, easing: 'linear' });
+    camera.tick(50);
+    expect(camera.x).toBeCloseTo(50);
+
+    camera.animateTo({ x: 0, y: 0, zoom: 1 }, { durationMs: 100, easing: 'linear' });
+    camera.tick(50);
+    // Half way back from 50, not from the original 0.
+    expect(camera.x).toBeCloseTo(25);
+  });
+
+  it('clamps the target zoom like any other write', () => {
+    const { camera } = makeCamera({ maxScale: 4 });
+    camera.animateTo({ x: 0, y: 0, zoom: 99 }, { durationMs: 10, easing: 'linear' });
+    camera.tick(10);
+    expect(camera.scale).toBe(4);
+  });
+
+  it('leaves the camera alone when nothing asked it to animate', () => {
+    const { camera } = makeCamera();
+    camera.tick(16);
+    expect([camera.x, camera.y, camera.scale]).toEqual([0, 0, 1]);
+    expect(camera.isAnimating).toBe(false);
+  });
+});

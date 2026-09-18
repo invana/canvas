@@ -37,6 +37,8 @@
 import { select } from '../state/port/select';
 import type { CanvasEventBus } from '../state/events/CanvasEventBus';
 import type { CanvasStore } from '../state/CanvasStore';
+import { Tween } from '../lib/animation/Tween';
+import { resolveEasing, type EasingName } from '../lib/animation/easings';
 import type { Point, Rect } from '../specs/geom';
 import type {
   CameraInputConfig,
@@ -109,6 +111,18 @@ export class Camera {
   private _offBindingChange?: () => void;
   /** Whether drag-panning is currently yielded to another gesture owner. */
   private _dragSuspended = false;
+  /**
+   * In-flight {@link animateTo} tween, or `null`. Holds the endpoints and the
+   * eased progress; {@link tick} advances it and writes the interpolated
+   * transform through {@link binding} directly, bypassing the public mutators
+   * so it cannot cancel itself.
+   */
+  private _fitTween: {
+    readonly from: CameraTransform;
+    readonly to: CameraTransform;
+    readonly tween: Tween;
+    readonly onDone?: () => void;
+  } | null = null;
 
   constructor(opts: CameraOptions) {
     this.binding = opts.binding;
@@ -220,6 +234,8 @@ export class Camera {
    * in screen pixels. Most consumers want `pan(dx, dy)` instead.
    */
   setPosition(x: number, y: number): void {
+    // Whoever writes the transform last owns the camera — drop any glide.
+    this.cancelAnimation();
     const cur = this.binding.getTransform();
     if (x === cur.x && y === cur.y) return;
     this.binding.setTransform({ x, y, zoom: cur.zoom });
@@ -251,6 +267,8 @@ export class Camera {
    *   of 100, and clamping would silently peg the canvas away from the map.
    */
   setTransform(t: CameraTransform, opts?: { clamp?: boolean }): void {
+    // Whoever writes the transform last owns the camera — drop any glide.
+    this.cancelAnimation();
     const zoom = opts?.clamp === false ? t.zoom : this.clampScale(t.zoom);
     const cur = this.binding.getTransform();
     const zoomChanged = zoom !== cur.zoom;
@@ -275,6 +293,8 @@ export class Camera {
    * `zoomAt`.
    */
   setZoom(scale: number): void {
+    // Whoever writes the transform last owns the camera — drop any glide.
+    this.cancelAnimation();
     const next = this.clampScale(scale);
     if (next === this.scale) return;
     this.binding.zoomToCentre(next);
@@ -300,6 +320,8 @@ export class Camera {
     centerX: number = this._screenWidth / 2,
     centerY: number = this._screenHeight / 2,
   ): void {
+    // Whoever writes the transform last owns the camera — drop any glide.
+    this.cancelAnimation();
     const before = this.toWorld(centerX, centerY);
     const nextScale = this.clampScale(this.scale * factor);
     if (nextScale === this.scale) return;
@@ -319,6 +341,8 @@ export class Camera {
    * screen pixels around the rect.
    */
   fitContent(worldRect: Rect | null | undefined, padding = 24): void {
+    // Whoever writes the transform last owns the camera — drop any glide.
+    this.cancelAnimation();
     // `null` means "nothing to measure" — an empty graph, or a layer whose
     // renderer hasn't mounted. Fitting to a zero rect would produce a nonsense
     // camera, so the honest response is to leave the view alone. Accepting it
@@ -354,6 +378,8 @@ export class Camera {
    * that should locate a target without rescaling the view.
    */
   centerOn(worldX: number, worldY: number): void {
+    // Whoever writes the transform last owns the camera — drop any glide.
+    this.cancelAnimation();
     const scale = this.scale;
     const tx = this._screenWidth / 2 - worldX * scale;
     const ty = this._screenHeight / 2 - worldY * scale;
@@ -443,12 +469,98 @@ export class Camera {
   // ─── Internal ────────────────────────────────────────────────────────────
 
   /**
+   * Ease the camera to an absolute transform over `durationMs`, instead of
+   * snapping to it.
+   *
+   * The animated counterpart of {@link setTransform}, and the mechanism behind
+   * `CanvasConfig.fitAnimation`: the first auto-fit of a canvas can glide into
+   * frame rather than cutting. `x`, `y` and `zoom` are interpolated together on
+   * one eased curve, so the move reads as a single gesture.
+   *
+   * **Any other camera write cancels it.** A user who pans or zooms mid-glide
+   * owns the camera from that moment — an animation that fought back would be
+   * the `fitOnResize` mistake in a different costume (`D7`). The tween is also
+   * dropped, not finished, so `onDone` does not fire.
+   *
+   * Requires {@link tick} to be called each frame, which `Canvas.tickOnce` does.
+   *
+   * @param to         Target transform. `zoom` is clamped like any other write.
+   * @param durationMs Length of the glide. `<= 0` applies `to` immediately.
+   * @param easing     Named curve; defaults to `'easeOutCubic'`.
+   * @param onDone     Called once the glide completes naturally.
+   */
+  animateTo(
+    to: CameraTransform,
+    { durationMs = 400, easing, onDone }:
+      { durationMs?: number; easing?: EasingName; onDone?: () => void } = {},
+  ): void {
+    const target: CameraTransform = { x: to.x, y: to.y, zoom: this.clampScale(to.zoom) };
+    if (durationMs <= 0) {
+      this.setTransform(target);
+      onDone?.();
+      return;
+    }
+    // Cancel any glide already running before reading `from`, so a second call
+    // starts from where the camera actually is rather than compounding.
+    this._fitTween = null;
+    const from = this.binding.getTransform();
+    this._fitTween = {
+      from: { x: from.x, y: from.y, zoom: from.zoom },
+      to: target,
+      tween: new Tween({ from: 0, to: 1, duration: durationMs, easing: resolveEasing(easing) }),
+      ...(onDone ? { onDone } : {}),
+    };
+  }
+
+  /**
+   * Drop an in-flight {@link animateTo} without finishing it. Called by every
+   * public transform mutator, so whoever writes last owns the camera.
+   */
+  cancelAnimation(): void {
+    this._fitTween = null;
+  }
+
+  /** Whether an {@link animateTo} glide is currently running. */
+  get isAnimating(): boolean {
+    return this._fitTween !== null;
+  }
+
+  /**
    * Advance time-based input animation (momentum, snap). Called by
    * `Canvas.tickOnce()` every frame — the engine owns the only clock (G3).
    * No-op until a camera-input behaviour enables an input that animates.
    */
   tick(dt: number): void {
     this.binding.tick(dt);
+    this.advanceAnimation(dt);
+  }
+
+  /**
+   * Step an {@link animateTo} glide. Writes through {@link binding} rather than
+   * the public mutators — those cancel the tween, which would end the glide on
+   * its own first frame.
+   */
+  private advanceAnimation(dt: number): void {
+    const anim = this._fitTween;
+    if (!anim) return;
+    const running = anim.tween.tick(dt);
+    const t = anim.tween.value;
+    const x = anim.from.x + (anim.to.x - anim.from.x) * t;
+    const y = anim.from.y + (anim.to.y - anim.from.y) * t;
+    const zoom = anim.from.zoom + (anim.to.zoom - anim.from.zoom) * t;
+    this.binding.setTransform({ x, y, zoom });
+    this.bus?.emit('input:camera:zoom', {
+      scale: zoom,
+      centerX: this._screenWidth / 2,
+      centerY: this._screenHeight / 2,
+    });
+    this.bus?.emit('input:camera:pan', { x, y });
+    this.pushToStore();
+    if (running) return;
+    // Land exactly on the target — an eased curve can finish a hair short.
+    this._fitTween = null;
+    this.setTransform(anim.to);
+    anim.onDone?.();
   }
 
   /** Tear down subscriptions. Called by `Canvas.destroy`. */

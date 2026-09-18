@@ -482,7 +482,7 @@ export class ClickSelectBehaviour extends Behaviour {
     const next: Array<{ id: string; type: SelectableElementType }> = [];
     // Skip effectively-hidden elements — you can't select what you can't see.
     for (const node of store.nodes()) {
-      if (node.hidden === true) continue;
+      if (!store.isNodeVisible(node.id)) continue;
       next.push({ id: node.id, type: 'shape' });
     }
     for (const edge of store.edges()) {
