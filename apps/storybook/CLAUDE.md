@@ -55,6 +55,37 @@ mount `<ThemeProvider storageKey={null} defaultMode="dark">` yourself **and** de
 doesn't imply control it doesn't have. See
 `docs/rfcs/fix/2026-09-11-toolbar-theme-never-reaches-mounted-providers.md`.
 
+## `designs/` — the plate book is themed by role, like `tasks-panel`
+
+`stories/designs/*` are the reference renderings of the diagram plate book (a third
+top-level exception alongside `usecases/`, like the namespacing note below says). They
+follow the **same theming contract as `usecases/by-casestudies/tasks-panel/*`**, which is
+the pattern to copy for any story whose nodes are cards:
+
+- **Cards are `FreeformStructure` templates, not hand-built composite shapes.** Every
+  chrome colour is a `*Role` (`cardBg` · `stroke`/`muted` · `heading` · `foreground` ·
+  `divider` · `accent`), and `GraphLayer` recompiles the structure against the live palette
+  on every `theme:change`. A story that builds a `CompositeShapeOption` in a `shape`
+  resolver has to know which palette is live; a structure does not.
+- **The layer template carries no colour.** `GraphLayer.applyTheme` writes the themed
+  defaults (node border ← `stroke`, label ← `foreground`, edge stroke + arrows ← `muted`),
+  so anything a story pins there is *overwritten* on the first publish anyway.
+- **Only meaning stays literal.** The role vocabulary has no `success` / `warning` /
+  `danger` / `info`, so a run state, a bound, a key or an exit keeps a numeric colour —
+  the literal half of the template's colour pair. Use the corpus tokens: `0x1da54f`
+  success · `0xce8509` warning · `0x0b73da` info · `0xe05252` danger.
+- **`<ThemeBehaviour id="theme" />` + `<CanvasThemeSync />`**, never a hand-read of the
+  document or a React theme hook — `CanvasThemeSync` is what carries the toolbar's family
+  *and* mode into the canvas.
+- **Cluster colour comes from `ColorByBehaviour`**, not from pinned per-type hues.
+
+Known gaps to name in a docblock rather than work around: label backgrounds and state
+rings are not in the role map yet
+(`docs/rfcs/feat/2026-09-11-a-colour-is-either-themed-or-manual-never-both.md` F12), and
+there are no status roles.
+
+See `docs/rfcs/fix/2026-09-19-design-stories-ignore-the-theme-they-mount.md`.
+
 ## Styling — no hand-rolled CSS (root rule 13)
 
 **Never write manual CSS in a story** — no inline `style={{…}}` objects, no `CSSProperties` consts, no raw CSS for static presentation. Wrap demo layout/chrome in **`@invana/ui` components** (`Card`/`CardHeader`/`CardContent`, `Separator`, `Badge`, `Button`, …) and use **Tailwind design-token utility classes** via `className` (`flex`, `flex-col`, `gap-4`, `p-4`, `bg-card`, `text-muted-foreground`, `text-xs`, …) — the design-kit Tailwind theme is wired into Storybook (`.storybook/preview.ts`), so utilities work. `stories/canvas-ui/editors/TemplateStudio.stories.tsx` (its docked `right`-region editor panel — `Card`/`CardHeader`/`CardContent` + Tailwind utilities, no `CSSProperties`) is the reference.

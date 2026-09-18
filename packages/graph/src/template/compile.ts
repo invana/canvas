@@ -452,6 +452,7 @@ function elementToParts(el: CardElement, node: GraphNode, palette: RolePalette):
     }
     case 'rect': {
       const fill = color(el.fillRole, el.fill, palette);
+      const stroke = color(el.strokeRole, el.stroke, palette);
       return [
         {
           part: 'rect',
@@ -461,6 +462,9 @@ function elementToParts(el: CardElement, node: GraphNode, palette: RolePalette):
           height: el.height,
           ...(el.cornerRadius ? { cornerRadius: el.cornerRadius } : {}),
           ...(fill !== undefined ? { fill } : {}),
+          ...(el.fillAlpha !== undefined ? { fillAlpha: el.fillAlpha } : {}),
+          ...(stroke !== undefined ? { stroke: { color: stroke, width: el.strokeWidth ?? 1 } } : {}),
+          ...(el.hitId !== undefined ? { hitId: el.hitId } : {}),
         },
       ];
     }
@@ -468,6 +472,7 @@ function elementToParts(el: CardElement, node: GraphNode, palette: RolePalette):
       // `x`/`y` are the element's top-left (uniform with the designer canvas);
       // the composite `circle` part is centre-based.
       const fill = color(el.fillRole, el.fill, palette);
+      const stroke = color(el.strokeRole, el.stroke, palette);
       return [
         {
           part: 'circle',
@@ -475,6 +480,9 @@ function elementToParts(el: CardElement, node: GraphNode, palette: RolePalette):
           y: el.y + el.radius,
           radius: el.radius,
           ...(fill !== undefined ? { fill } : {}),
+          ...(el.fillAlpha !== undefined ? { fillAlpha: el.fillAlpha } : {}),
+          ...(stroke !== undefined ? { stroke: { color: stroke, width: el.strokeWidth ?? 1 } } : {}),
+          ...(el.hitId !== undefined ? { hitId: el.hitId } : {}),
         },
       ];
     }

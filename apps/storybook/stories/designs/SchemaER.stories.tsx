@@ -1,4 +1,5 @@
 import {
+  CanvasThemeSync,
   GraphCanvas,
   GraphLayer,
   BackgroundLayer,
@@ -7,11 +8,12 @@ import {
   WheelZoomBehaviour,
   DragNodeBehaviour,
   HoverActivateBehaviour,
+  TextResolutionLODBehaviour,
   ElkLayout,
   type GraphLayerProps
 } from '@invana/canvas-react';
-import type { CanvasConfig, CompositePart } from '@invana/canvas';
-import type { CompositeShapeOption, GraphData, GraphNode } from '@invana/graph';
+import type { CanvasConfig } from '@invana/canvas';
+import type { GraphData, NodeStructureRegistry, NodeTypeRegistry } from '@invana/graph';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 /**
@@ -19,131 +21,220 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
  * exact opposite of the network family: every node is read individually,
  * nothing may overlap, and each line's endpoint carries a hard fact.
  *
- * The grammar decisions, each visible in the config below:
+ * The grammar decisions, each visible in the definition below:
  *
- * - **Square corners** — `cornerRadius: 0` on the composite root. Radius
- *   signals how soft the abstraction is; a record is not a card.
- * - **The node is a composite, not a new kind** (rule R1) — the whole table is
- *   `node.style.shape` returning a `CompositeShapeOption`: a header strip, a
- *   divider `line`, then one `rect` + key glyph + two `label` parts per column.
- *   Height is computed from the column count. There is no `schema` template
+ * - **Square corners** — `cornerRadius: 0` on the card. Radius signals how soft
+ *   the abstraction is; a record is not a card.
+ * - **The table is a template, not a new kind** (rule R1) — each table is a
+ *   `FreeformStructure`: a header strip, a divider `line`, then one `rect` +
+ *   key glyph + two `text` elements per column. There is no `schema` structure
  *   kind in the engine and there should not be one.
  * - **Every row is an addressable sub-part** — each row `rect` carries a
  *   `hitId`, so the renderer emits `shape:partover` / `shape:partout` and a
  *   consumer can hover, right-click or anchor against *a column* rather than
- *   the table. That is the half of port-anchoring that already ships.
+ *   the table.
  * - **Routing is semantic** (rule R3) — `pathType: 'orth'` with ELK's
  *   `ORTHOGONAL` edge routing, because a foreign key is an axis-aligned fact.
- * - **Identifiers are monospace, prose is not** — column names and types use
- *   the mono stack; only the row count in the header is non-schema data, and
- *   it earns its ink by being the first thing anyone asks.
  *
- * **Known gap.** Cardinality should be crow's-foot / bar terminals. The engine
- * registers exactly one marker primitive (`ArrowMarker`), and `EdgeStyle`
- * exposes `'triangle' | 'diamond' | 'circle' | 'none'` — no crow's-foot or bar.
- * So cardinality falls back to an edge *label* (`1:N`) here. `diamond` and
- * `circle` do now render (rfc:fix-2026-09-13-edge-arrow-style-fields-are-never-read);
- * the two ER-specific marks are still missing. See the plate book's gap table.
+ * **Themed by role, not by palette.** Every chrome colour is a `*Role`
+ * (`cardBg` · `muted` · `heading` · `foreground` · `divider`), which
+ * `GraphLayer` recompiles against the live palette on every `theme:change` —
+ * so this file holds no light/dark values and the layer never remounts. Only
+ * the key glyph's amber is literal: the role vocabulary has no
+ * `success`/`warning`/`danger`, and a key is meaning, not chrome.
+ *
+ * The card outline takes `muted` rather than `stroke`: at canvas zoom the
+ * `stroke` role is a hairline that disappears, and a record's border is one of
+ * the marks the plate is *about*.
+ *
+ * **Known gaps.** Cardinality should be crow's-foot / bar terminals — the
+ * engine registers one marker primitive and `EdgeStyle` exposes
+ * `'triangle' | 'diamond' | 'circle' | 'none'`, so the fact rides in an edge
+ * *label* (`1:N`) until a marker registry lands. The label's plate is themed
+ * only once `paletteToEdgeDefaults` covers label backgrounds
+ * (`rfc:feat-2026-09-11-a-colour-is-either-themed-or-manual-never-both` F12);
+ * until then the label sits on the line with no plate.
+ *
+ * **Everything above the component is data.** `STRUCTURES` · `TYPES` · `DATA` ·
+ * `NODE` · `EDGE` · `CONFIG` are literal JSON — no helpers, no factories, no
+ * computed values — so the whole definition survives `JSON.stringify` and comes
+ * back identical.
+ *
+ * ⚠️ **Text `y` looks a line high on purpose.** `CardElementCommon.y` is the
+ * element's top-left, but `compileFreeform` emits the label part at
+ * `el.y + fontSize`, so a 12px title whose rendered top must land at 8 is
+ * authored as `-4`.
  */
 const meta: Meta = { title: 'designs/SchemaER' };
 export default meta;
 type Story = StoryObj;
 
-// ── Palette ─────────────────────────────────────────────────────────────────
-// Contrast-first. Every value is checked against the near-white card body it
-// sits on: body text and titles clear 7:1, secondary text 4.5:1, and the card
-// outline is a slate-500 rather than the slate-300 hairline a "quiet" border
-// tempts you into — at canvas zoom a 1px hairline below ~3:1 simply vanishes.
-const PAPER = 0xffffff;   // card body
-const INK = 0x0f172a;     // titles                        — 17.9:1 on PAPER
-const BODY = 0x334155;    // row text                      —  9.7:1
-const MUTED = 0x64748b;   // meta / types / edge labels    —  4.8:1
-const RULE = 0x94a3b8;    // dividers *inside* a card      —  2.8:1, decorative
-const LINE = 0x64748b;    // card outline + connectors     —  4.8:1
-const AMBER = 0x9a6207;   // branch, keys, retry
+// ── The definition — literal JSON, top to bottom ─────────────────────────────
+/**
+ * One structure per table: a free-form card's element list is fixed, so a
+ * four-column table and a five-column table are two structures (the same shape
+ * the tasks-panel plates take). Height is `28 + columns × 24`.
+ *
+ * `hitId` on each row plate is what promotes it to an addressable sub-part.
+ * The plate itself is the `muted` role at 0.14 / 0.05 / 0.001 alpha — a tint of
+ * a themed colour rather than a pinned grey, so the zebra survives a theme
+ * switch.
+ */
+const STRUCTURES: NodeStructureRegistry = {
+  customer: {
+    name: 'customer',
+    kind: 'freeform',
+    width: 208,
+    height: 124,
+    // Square. A record is not a card.
+    cornerRadius: 0,
+    bgRole: 'cardBg',
+    strokeRole: 'muted',
+    strokeWidth: 1.8,
+    elements: [
+      { id: 'header', type: 'rect', x: 0, y: 0, width: 208, height: 28, fillRole: 'muted', fillAlpha: 0.14 },
+      { id: 'table', type: 'text', x: 12, y: -4, bind: 'data.table', fontSize: 12, fontWeight: 600, colorRole: 'heading' },
+      { id: 'rows', type: 'text', x: 196, y: 0.5, bind: 'data.rows', anchor: 'right', fontSize: 9.5, colorRole: 'muted' },
+      { id: 'headrule', type: 'line', x: 0, y: 28, x2: 208, y2: 28, colorRole: 'divider' },
+      { id: 'row-id', type: 'rect', x: 0, y: 28, width: 208, height: 24, fillRole: 'muted', fillAlpha: 0.001, hitId: 'row:id' },
+      { id: 'key-id', type: 'rect', x: 11, y: 36, width: 7, height: 7, fill: 0xce8509 },
+      { id: 'name-id', type: 'text', x: 27, y: 23, text: 'id', fontSize: 11, colorRole: 'heading' },
+      { id: 'type-id', type: 'text', x: 196, y: 25.5, text: 'uuid', anchor: 'right', fontSize: 9.5, colorRole: 'muted' },
+      { id: 'rule-id', type: 'line', x: 0, y: 52, x2: 208, y2: 52, colorRole: 'divider' },
+      { id: 'row-email', type: 'rect', x: 0, y: 52, width: 208, height: 24, fillRole: 'muted', fillAlpha: 0.05, hitId: 'row:email' },
+      { id: 'name-email', type: 'text', x: 27, y: 47, text: 'email', fontSize: 11, colorRole: 'foreground' },
+      { id: 'type-email', type: 'text', x: 196, y: 49.5, text: 'citext', anchor: 'right', fontSize: 9.5, colorRole: 'muted' },
+      { id: 'rule-email', type: 'line', x: 0, y: 76, x2: 208, y2: 76, colorRole: 'divider' },
+      { id: 'row-tier', type: 'rect', x: 0, y: 76, width: 208, height: 24, fillRole: 'muted', fillAlpha: 0.001, hitId: 'row:tier' },
+      { id: 'name-tier', type: 'text', x: 27, y: 71, text: 'tier', fontSize: 11, colorRole: 'foreground' },
+      { id: 'type-tier', type: 'text', x: 196, y: 73.5, text: 'enum', anchor: 'right', fontSize: 9.5, colorRole: 'muted' },
+      { id: 'rule-tier', type: 'line', x: 0, y: 100, x2: 208, y2: 100, colorRole: 'divider' },
+      { id: 'row-created_at', type: 'rect', x: 0, y: 100, width: 208, height: 24, fillRole: 'muted', fillAlpha: 0.05, hitId: 'row:created_at' },
+      { id: 'name-created_at', type: 'text', x: 27, y: 95, text: 'created_at', fontSize: 11, colorRole: 'foreground' },
+      { id: 'type-created_at', type: 'text', x: 196, y: 97.5, text: 'timestamptz', anchor: 'right', fontSize: 9.5, colorRole: 'muted' }
+    ]
+  },
+  order: {
+    name: 'order',
+    kind: 'freeform',
+    width: 208,
+    height: 148,
+    // Square. A record is not a card.
+    cornerRadius: 0,
+    bgRole: 'cardBg',
+    strokeRole: 'muted',
+    strokeWidth: 1.8,
+    elements: [
+      { id: 'header', type: 'rect', x: 0, y: 0, width: 208, height: 28, fillRole: 'muted', fillAlpha: 0.14 },
+      { id: 'table', type: 'text', x: 12, y: -4, bind: 'data.table', fontSize: 12, fontWeight: 600, colorRole: 'heading' },
+      { id: 'rows', type: 'text', x: 196, y: 0.5, bind: 'data.rows', anchor: 'right', fontSize: 9.5, colorRole: 'muted' },
+      { id: 'headrule', type: 'line', x: 0, y: 28, x2: 208, y2: 28, colorRole: 'divider' },
+      { id: 'row-id', type: 'rect', x: 0, y: 28, width: 208, height: 24, fillRole: 'muted', fillAlpha: 0.001, hitId: 'row:id' },
+      { id: 'key-id', type: 'rect', x: 11, y: 36, width: 7, height: 7, fill: 0xce8509 },
+      { id: 'name-id', type: 'text', x: 27, y: 23, text: 'id', fontSize: 11, colorRole: 'heading' },
+      { id: 'type-id', type: 'text', x: 196, y: 25.5, text: 'uuid', anchor: 'right', fontSize: 9.5, colorRole: 'muted' },
+      { id: 'rule-id', type: 'line', x: 0, y: 52, x2: 208, y2: 52, colorRole: 'divider' },
+      { id: 'row-customer_id', type: 'rect', x: 0, y: 52, width: 208, height: 24, fillRole: 'muted', fillAlpha: 0.05, hitId: 'row:customer_id' },
+      { id: 'key-customer_id', type: 'rect', x: 11, y: 60, width: 7, height: 7, stroke: 0xce8509, strokeWidth: 1.4 },
+      { id: 'name-customer_id', type: 'text', x: 27, y: 47, text: 'customer_id', fontSize: 11, colorRole: 'heading' },
+      { id: 'type-customer_id', type: 'text', x: 196, y: 49.5, text: 'uuid', anchor: 'right', fontSize: 9.5, colorRole: 'muted' },
+      { id: 'rule-customer_id', type: 'line', x: 0, y: 76, x2: 208, y2: 76, colorRole: 'divider' },
+      { id: 'row-status', type: 'rect', x: 0, y: 76, width: 208, height: 24, fillRole: 'muted', fillAlpha: 0.001, hitId: 'row:status' },
+      { id: 'name-status', type: 'text', x: 27, y: 71, text: 'status', fontSize: 11, colorRole: 'foreground' },
+      { id: 'type-status', type: 'text', x: 196, y: 73.5, text: 'enum', anchor: 'right', fontSize: 9.5, colorRole: 'muted' },
+      { id: 'rule-status', type: 'line', x: 0, y: 100, x2: 208, y2: 100, colorRole: 'divider' },
+      { id: 'row-total_cents', type: 'rect', x: 0, y: 100, width: 208, height: 24, fillRole: 'muted', fillAlpha: 0.05, hitId: 'row:total_cents' },
+      { id: 'name-total_cents', type: 'text', x: 27, y: 95, text: 'total_cents', fontSize: 11, colorRole: 'foreground' },
+      { id: 'type-total_cents', type: 'text', x: 196, y: 97.5, text: 'bigint', anchor: 'right', fontSize: 9.5, colorRole: 'muted' },
+      { id: 'rule-total_cents', type: 'line', x: 0, y: 124, x2: 208, y2: 124, colorRole: 'divider' },
+      { id: 'row-placed_at', type: 'rect', x: 0, y: 124, width: 208, height: 24, fillRole: 'muted', fillAlpha: 0.001, hitId: 'row:placed_at' },
+      { id: 'name-placed_at', type: 'text', x: 27, y: 119, text: 'placed_at', fontSize: 11, colorRole: 'foreground' },
+      { id: 'type-placed_at', type: 'text', x: 196, y: 121.5, text: 'timestamptz', anchor: 'right', fontSize: 9.5, colorRole: 'muted' }
+    ]
+  },
+  order_item: {
+    name: 'order_item',
+    kind: 'freeform',
+    width: 208,
+    height: 124,
+    // Square. A record is not a card.
+    cornerRadius: 0,
+    bgRole: 'cardBg',
+    strokeRole: 'muted',
+    strokeWidth: 1.8,
+    elements: [
+      { id: 'header', type: 'rect', x: 0, y: 0, width: 208, height: 28, fillRole: 'muted', fillAlpha: 0.14 },
+      { id: 'table', type: 'text', x: 12, y: -4, bind: 'data.table', fontSize: 12, fontWeight: 600, colorRole: 'heading' },
+      { id: 'rows', type: 'text', x: 196, y: 0.5, bind: 'data.rows', anchor: 'right', fontSize: 9.5, colorRole: 'muted' },
+      { id: 'headrule', type: 'line', x: 0, y: 28, x2: 208, y2: 28, colorRole: 'divider' },
+      { id: 'row-id', type: 'rect', x: 0, y: 28, width: 208, height: 24, fillRole: 'muted', fillAlpha: 0.001, hitId: 'row:id' },
+      { id: 'key-id', type: 'rect', x: 11, y: 36, width: 7, height: 7, fill: 0xce8509 },
+      { id: 'name-id', type: 'text', x: 27, y: 23, text: 'id', fontSize: 11, colorRole: 'heading' },
+      { id: 'type-id', type: 'text', x: 196, y: 25.5, text: 'uuid', anchor: 'right', fontSize: 9.5, colorRole: 'muted' },
+      { id: 'rule-id', type: 'line', x: 0, y: 52, x2: 208, y2: 52, colorRole: 'divider' },
+      { id: 'row-order_id', type: 'rect', x: 0, y: 52, width: 208, height: 24, fillRole: 'muted', fillAlpha: 0.05, hitId: 'row:order_id' },
+      { id: 'key-order_id', type: 'rect', x: 11, y: 60, width: 7, height: 7, stroke: 0xce8509, strokeWidth: 1.4 },
+      { id: 'name-order_id', type: 'text', x: 27, y: 47, text: 'order_id', fontSize: 11, colorRole: 'heading' },
+      { id: 'type-order_id', type: 'text', x: 196, y: 49.5, text: 'uuid', anchor: 'right', fontSize: 9.5, colorRole: 'muted' },
+      { id: 'rule-order_id', type: 'line', x: 0, y: 76, x2: 208, y2: 76, colorRole: 'divider' },
+      { id: 'row-product_id', type: 'rect', x: 0, y: 76, width: 208, height: 24, fillRole: 'muted', fillAlpha: 0.001, hitId: 'row:product_id' },
+      { id: 'key-product_id', type: 'rect', x: 11, y: 84, width: 7, height: 7, stroke: 0xce8509, strokeWidth: 1.4 },
+      { id: 'name-product_id', type: 'text', x: 27, y: 71, text: 'product_id', fontSize: 11, colorRole: 'heading' },
+      { id: 'type-product_id', type: 'text', x: 196, y: 73.5, text: 'uuid', anchor: 'right', fontSize: 9.5, colorRole: 'muted' },
+      { id: 'rule-product_id', type: 'line', x: 0, y: 100, x2: 208, y2: 100, colorRole: 'divider' },
+      { id: 'row-qty', type: 'rect', x: 0, y: 100, width: 208, height: 24, fillRole: 'muted', fillAlpha: 0.05, hitId: 'row:qty' },
+      { id: 'name-qty', type: 'text', x: 27, y: 95, text: 'qty', fontSize: 11, colorRole: 'foreground' },
+      { id: 'type-qty', type: 'text', x: 196, y: 97.5, text: 'int', anchor: 'right', fontSize: 9.5, colorRole: 'muted' }
+    ]
+  },
+  product: {
+    name: 'product',
+    kind: 'freeform',
+    width: 208,
+    height: 100,
+    // Square. A record is not a card.
+    cornerRadius: 0,
+    bgRole: 'cardBg',
+    strokeRole: 'muted',
+    strokeWidth: 1.8,
+    elements: [
+      { id: 'header', type: 'rect', x: 0, y: 0, width: 208, height: 28, fillRole: 'muted', fillAlpha: 0.14 },
+      { id: 'table', type: 'text', x: 12, y: -4, bind: 'data.table', fontSize: 12, fontWeight: 600, colorRole: 'heading' },
+      { id: 'rows', type: 'text', x: 196, y: 0.5, bind: 'data.rows', anchor: 'right', fontSize: 9.5, colorRole: 'muted' },
+      { id: 'headrule', type: 'line', x: 0, y: 28, x2: 208, y2: 28, colorRole: 'divider' },
+      { id: 'row-id', type: 'rect', x: 0, y: 28, width: 208, height: 24, fillRole: 'muted', fillAlpha: 0.001, hitId: 'row:id' },
+      { id: 'key-id', type: 'rect', x: 11, y: 36, width: 7, height: 7, fill: 0xce8509 },
+      { id: 'name-id', type: 'text', x: 27, y: 23, text: 'id', fontSize: 11, colorRole: 'heading' },
+      { id: 'type-id', type: 'text', x: 196, y: 25.5, text: 'uuid', anchor: 'right', fontSize: 9.5, colorRole: 'muted' },
+      { id: 'rule-id', type: 'line', x: 0, y: 52, x2: 208, y2: 52, colorRole: 'divider' },
+      { id: 'row-sku', type: 'rect', x: 0, y: 52, width: 208, height: 24, fillRole: 'muted', fillAlpha: 0.05, hitId: 'row:sku' },
+      { id: 'name-sku', type: 'text', x: 27, y: 47, text: 'sku', fontSize: 11, colorRole: 'foreground' },
+      { id: 'type-sku', type: 'text', x: 196, y: 49.5, text: 'text', anchor: 'right', fontSize: 9.5, colorRole: 'muted' },
+      { id: 'rule-sku', type: 'line', x: 0, y: 76, x2: 208, y2: 76, colorRole: 'divider' },
+      { id: 'row-name', type: 'rect', x: 0, y: 76, width: 208, height: 24, fillRole: 'muted', fillAlpha: 0.001, hitId: 'row:name' },
+      { id: 'name-name', type: 'text', x: 27, y: 71, text: 'name', fontSize: 11, colorRole: 'foreground' },
+      { id: 'type-name', type: 'text', x: 196, y: 73.5, text: 'text', anchor: 'right', fontSize: 9.5, colorRole: 'muted' }
+    ]
+  }
+};
 
-// ── Geometry ────────────────────────────────────────────────────────────────
-const CARD_W = 208;
-const HEADER_H = 28;
-const ROW_H = 24;
+/** `type` selects the card; the column text is baked into the structure. */
+const TYPES: NodeTypeRegistry = {
+  customer: { structure: 'customer', styling: '', bindings: {} },
+  order: { structure: 'order', styling: '', bindings: {} },
+  order_item: { structure: 'order_item', styling: '', bindings: {} },
+  product: { structure: 'product', styling: '', bindings: {} }
+};
 
-type Key = 'pk' | 'fk';
-interface Column {
-  readonly name: string;
-  readonly type: string;
-  readonly key?: Key;
-}
-interface TableData {
-  readonly table: string;
-  readonly rows: string;
-  readonly columns: readonly Column[];
-}
-
-const tableOf = (n: GraphNode): TableData => n.data as TableData;
-const heightOf = (n: GraphNode): number => HEADER_H + tableOf(n).columns.length * ROW_H;
-
-// ── Data ────────────────────────────────────────────────────────────────────
-// A four-table order schema. `data` carries the columns; the shape resolver
-// turns them into geometry, so adding a column reshapes the card with no other
-// change anywhere.
+// A four-table order schema. `data` carries the two bound header fields; the
+// columns are the structure's own elements, so adding a column is a template
+// edit and nothing else changes.
 const DATA: GraphData = {
   nodes: [
-    {
-      id: 'customer',
-      type: 'table',
-      data: {
-        table: 'customer',
-        rows: '1.2M',
-        columns: [
-          { name: 'id', type: 'uuid', key: 'pk' },
-          { name: 'email', type: 'citext' },
-          { name: 'tier', type: 'enum' },
-          { name: 'created_at', type: 'timestamptz' }
-        ]
-      } satisfies TableData
-    },
-    {
-      id: 'order',
-      type: 'table',
-      data: {
-        table: 'order',
-        rows: '8.4M',
-        columns: [
-          { name: 'id', type: 'uuid', key: 'pk' },
-          { name: 'customer_id', type: 'uuid', key: 'fk' },
-          { name: 'status', type: 'enum' },
-          { name: 'total_cents', type: 'bigint' },
-          { name: 'placed_at', type: 'timestamptz' }
-        ]
-      } satisfies TableData
-    },
-    {
-      id: 'order_item',
-      type: 'table',
-      data: {
-        table: 'order_item',
-        rows: '31M',
-        columns: [
-          { name: 'id', type: 'uuid', key: 'pk' },
-          { name: 'order_id', type: 'uuid', key: 'fk' },
-          { name: 'product_id', type: 'uuid', key: 'fk' },
-          { name: 'qty', type: 'int' }
-        ]
-      } satisfies TableData
-    },
-    {
-      id: 'product',
-      type: 'table',
-      data: {
-        table: 'product',
-        rows: '96K',
-        columns: [
-          { name: 'id', type: 'uuid', key: 'pk' },
-          { name: 'sku', type: 'text' },
-          { name: 'name', type: 'text' }
-        ]
-      } satisfies TableData
-    }
+    { id: 'customer', type: 'customer', data: { table: 'customer', rows: '1.2M' } },
+    { id: 'order', type: 'order', data: { table: 'order', rows: '8.4M' } },
+    { id: 'order_item', type: 'order_item', data: { table: 'order_item', rows: '31M' } },
+    { id: 'product', type: 'product', data: { table: 'product', rows: '96K' } }
   ],
   edges: [
     { id: 'fk-order-customer', source: 'customer', target: 'order', type: 'HAS_MANY' },
@@ -152,111 +243,36 @@ const DATA: GraphData = {
   ]
 };
 
-// ── The table card, assembled from generic composite parts ──────────────────
-function tableCard(n: GraphNode): CompositeShapeOption {
-  const { table, rows, columns } = tableOf(n);
-  const height = heightOf(n);
-  const parts: CompositePart[] = [
-    // Header strip + its two labels.
-    { part: 'rect', x: 0, y: 0, width: CARD_W, height: HEADER_H, fill: LINE, fillAlpha: 0.14 },
-    { part: 'label', x: 12, y: 8, text: table, fontSize: 12, fontWeight: 600, fill: INK },
-    { part: 'label', x: CARD_W - 12, y: 10, text: rows, anchor: 'right', fontSize: 9.5, fill: MUTED },
-    { part: 'line', x: 0, y: HEADER_H, x2: CARD_W, y2: HEADER_H, stroke: { color: RULE, width: 1 } }
-  ];
-
-  columns.forEach((col, i) => {
-    const y = HEADER_H + i * ROW_H;
-    // The row plate. `hitId` is what promotes it to an addressable sub-part —
-    // the renderer reports the topmost hitId under the pointer and turns it
-    // into shape:partover / shape:partout.
-    parts.push({
-      part: 'rect',
-      x: 0,
-      y,
-      width: CARD_W,
-      height: ROW_H,
-      fill: LINE,
-      fillAlpha: i % 2 === 1 ? 0.05 : 0.001,
-      hitId: `row:${col.name}`
-    });
-    // Key glyph: filled square = primary, hollow = foreign, nothing otherwise.
-    if (col.key) {
-      parts.push({
-        part: 'rect',
-        x: 11,
-        y: y + 8,
-        width: 7,
-        height: 7,
-        fill: col.key === 'pk' ? AMBER : PAPER,
-        stroke: col.key === 'fk' ? { color: AMBER, width: 1.4 } : undefined
-      });
-    }
-    parts.push({ part: 'label', x: 27, y: y + 6, text: col.name, fontSize: 11, fill: col.key ? INK : BODY });
-    parts.push({ part: 'label', x: CARD_W - 12, y: y + 7, text: col.type, anchor: 'right', fontSize: 9.5, fill: MUTED });
-    if (i < columns.length - 1) {
-      parts.push({ part: 'line', x: 0, y: y + ROW_H, x2: CARD_W, y2: y + ROW_H, stroke: { color: RULE, width: 1, alpha: 0.5 } });
-    }
-  });
-
-  return {
-    kind: 'composite',
-    width: CARD_W,
-    height,
-    // Square. A record is not a card.
-    cornerRadius: 0,
-    fill: PAPER,
-    stroke: { color: LINE, width: 1.8 },
-    parts,
-    clip: true
-  };
-}
-
-// ── Style ───────────────────────────────────────────────────────────────────
+// The layer template carries no colour at all. `GraphLayer.applyTheme` writes
+// the themed defaults (edge stroke + arrows ← `muted`, labels ← `foreground`)
+// on every `theme:change`, and the structures above resolve their own roles.
 const NODE: GraphLayerProps['node'] = {
-  style: {
-    shape: tableCard,
-    // The composite carries its own labels; the node-level label would double up.
-    labelText: ''
-  },
-  state: {
-    hovered: {
-      // Composites delegate decorations to the root shape, so one ring traces
-      // the whole card silhouette with no per-part code.
-      decorations: [{ kind: 'ring', id: 'focus', color: AMBER, width: 2, gap: 3 }]
-    }
-  }
+  // Each card draws its own words; the node-level label would double them up.
+  style: { labelText: '' }
 };
 
 const EDGE: GraphLayerProps['edge'] = {
   style: {
     shape: { pathType: 'orth' },
-    strokeColor: LINE,
     strokeWidth: 1.6,
-    // GAP: cardinality wants crow's-foot + bar terminals. Only four arrow
-    // shapes exist, so the fact rides in the label until a marker registry lands.
     arrowSourceShape: 'none',
     arrowTargetShape: 'triangle',
     // Pixels, tip-to-tail. Sized to read against a 208px-wide table card.
     arrowTargetSize: 12,
-    arrowTargetColor: LINE,
     labelText: '1:N',
     labelFontSize: 9.5,
-    labelColor: MUTED,
     labelPlacement: 'center',
     // `labelKeepUpright` only un-flips upside-down text; it still lets the
     // label follow the path. Orthogonal routes have vertical legs, so a label
     // landing on one rendered sideways. Switching rotation off entirely is the
     // option that keeps `1:N` horizontal wherever it lands.
-    labelAutoRotate: false,
-    labelBackgroundFill: PAPER,
-    labelBackgroundPadding: 3,
-    labelBackgroundCornerRadius: 2
+    labelAutoRotate: false
   }
 };
 
 const CONFIG: CanvasConfig = {
-  // One fitter. The layout's own fit runs before composite card bounds are
-  // known and framed the graph with `customer` off-screen.
+  // One fitter. The layout's own fit runs before the card bounds are known and
+  // framed the graph with `customer` off-screen.
   fitOnLoad: true,
   activeLayout: 'elk',
   layouts: {
@@ -273,24 +289,34 @@ const CONFIG: CanvasConfig = {
 
 export const SchemaER: Story = {
   render: () => (
+    // The host <div> sizes the engine's render surface — structural, and exempt
+    // from the no-inline-CSS rule (root rule 13).
     <div style={{ width: '100%', height: '100dvh' }}>
       <GraphCanvas autoResize config={CONFIG}>
+        {/* Colours left unset: the backdrop follows `surface`, the grid `divider`. */}
         <BackgroundLayer id="bg" type="pattern" patternType="grid" />
-        <ThemeBehaviour id="theme" mode="document" />
-        <GraphLayer id="graph" data={DATA} node={NODE} edge={EDGE} />
-        {/* nodeSize is a function, so it rides on `options` rather than the
-            serialisable config — ELK needs each card's real height to pack
-            layers without overlap, and that height is derived from the data. */}
-        <ElkLayout
-          id="elk"
-          targetLayerId="graph"
-          fitPadding={72}
-          options={{ nodeSize: (n: GraphNode) => ({ width: CARD_W, height: heightOf(n) }) }}
+        <ThemeBehaviour id="theme" />
+        {/* Drives the behaviour's mode + family from the host `@invana/themes`
+            theme, which is what makes every role above follow the toolbar. */}
+        <CanvasThemeSync />
+        <GraphLayer
+          id="graph"
+          data={DATA}
+          node={NODE}
+          edge={EDGE}
+          nodeStructureTemplates={STRUCTURES}
+          nodeTypes={TYPES}
         />
+        {/* No `nodeSize`: each card's structure declares its own box, so ELK
+            packs the layers from the real heights with nothing passed in. */}
+        <ElkLayout id="elk" targetLayerId="graph" fitPadding={72} />
         <DragPanBehaviour id="pan" />
         <WheelZoomBehaviour id="wheel" />
         <DragNodeBehaviour id="drag" />
         <HoverActivateBehaviour id="hover" degree={0} />
+        {/* Column names are 9.5–11px composite labels; this re-rasterises them
+            in tiers as the camera comes in so they stay crisp. */}
+        <TextResolutionLODBehaviour id="label-lod" targetLayerId="graph" enabled />
       </GraphCanvas>
     </div>
   )

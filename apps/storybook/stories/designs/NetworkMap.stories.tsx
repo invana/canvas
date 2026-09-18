@@ -1,4 +1,6 @@
 import {
+  CanvasThemeSync,
+  ColorByBehaviour,
   GraphCanvas,
   GraphLayer,
   BackgroundLayer,
@@ -24,8 +26,10 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
  * - **Radius encodes degree** — `node.style.shape` is a *resolver*, so the
  *   circle's radius is computed per node from its precomputed degree. Size is
  *   the only channel carrying magnitude.
- * - **Colour encodes cluster, never magnitude** (rule R2) — `bgFill` resolves
- *   off `node.type`, so hue answers "which tier" and nothing else.
+ * - **Colour encodes cluster, never magnitude** (rule R2) — `ColorByBehaviour`
+ *   in `'categorical'` mode paints `bgFill` from `node.type`, so hue answers
+ *   "which tier" and nothing else, out of one categorical ramp designed to read
+ *   on both a light and a dark backdrop.
  * - **Weight encodes flow** — intra-cluster edges sit at *structure* weight
  *   (1.5px, low alpha); the three cross-tier bridges sit at *emphasis* weight
  *   (4px) with `pathType: 'bundle'`, so the eye reads three regions rather
@@ -39,6 +43,19 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
  * direct neighbours, which is what turns a hairball into a readable local
  * neighbourhood without a click.
  *
+ * **Themed by role, not by palette.** This story declares no colour at all.
+ * Node borders and labels, edge strokes and arrowheads are written by
+ * `GraphLayer.applyTheme` from the live palette on every `theme:change`
+ * (`stroke` · `foreground` · `muted`); the cluster fills come from
+ * `ColorByBehaviour`, which owns the categorical ramp. Nothing here has to know
+ * which palette is live, and nothing remounts when it changes.
+ *
+ * Two marks the original plate had are gone with the pinned palette, and both
+ * come back through the engine rather than the story: the paper-coloured label
+ * halo and the cut-out ring around each node need label-background and ring
+ * colours in the role map — `rfc:feat-2026-09-11-a-colour-is-either-themed-or-manual-never-both`
+ * F12. Until then `LabelCollisionBehaviour` alone arbitrates overlap.
+ *
  * Namespace note: `designs/` is a deliberate third exception to the storybook
  * namespacing rule (alongside `usecases/`) — these stories belong to the
  * cross-package *visual system*, not to any one package.
@@ -46,19 +63,6 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 const meta: Meta = { title: 'designs/NetworkMap' };
 export default meta;
 type Story = StoryObj;
-
-// ── Palette ─────────────────────────────────────────────────────────────────
-// Contrast-first. Every value is checked against the near-white card body it
-// sits on: body text and titles clear 7:1, secondary text 4.5:1, and the card
-// outline is a slate-500 rather than the slate-300 hairline a "quiet" border
-// tempts you into — at canvas zoom a 1px hairline below ~3:1 simply vanishes.
-const PAPER = 0xffffff;   // card body
-const INK = 0x0f172a;     // titles                        — 17.9:1 on PAPER
-const BODY = 0x334155;    // row text                      —  9.7:1
-const LINE = 0x64748b;    // card outline + connectors     —  4.8:1
-const VIOLET = 0x5b3fd1;  // agents, live flow, selection
-const TEAL = 0x0b7a6e;    // data, tools, success
-const AMBER = 0x9a6207;   // branch, keys, retry
 
 // ── Topology ────────────────────────────────────────────────────────────────
 // A service mesh in three tiers. `type` is the cluster; every node carries its
@@ -109,32 +113,26 @@ const DATA: GraphData = {
   }))
 };
 
-const TIER_FILL: Record<Tier, number> = { ingest: TEAL, compute: VIOLET, storage: AMBER };
-
 // ── Style ───────────────────────────────────────────────────────────────────
+// No colour anywhere: `bgFill` belongs to `ColorByBehaviour`, and the border +
+// label colour to the theme. What is left is geometry and level-of-detail.
 const NODE: GraphLayerProps['node'] = {
   style: {
-    // Radius = degree. The one channel carrying magnitude.
+    // Radius = degree. The one channel carrying magnitude, and the one thing
+    // here a template can't express — a structure's shape is fixed, so this
+    // stays a resolver over the node's own data.
     shape: (n: GraphNode) => {
       const degree = (n.data as { degree?: number } | undefined)?.degree ?? 1;
       return { kind: 'circle' as const, radius: 6 + Math.min(degree, 8) * 1.3 };
     },
-    bgFill: (n: GraphNode) => TIER_FILL[(n.type as Tier) ?? 'ingest'] ?? LINE,
     // A full-strength ring is what separates two touching nodes of the same
-    // tier; at 0.35 alpha they merged into one blob.
-    bgStrokeColor: PAPER,
+    // tier; at 0.35 alpha they merged into one blob. The colour is the theme's
+    // `stroke` role, written by `applyTheme`.
     bgStrokeWidth: 2,
     labelText: (n: GraphNode) => n.id,
-    labelColor: BODY,
     labelFontSize: 11,
     labelPlacement: 'bottom',
     labelOffsetY: 7,
-    // The halo (rule: 3px paper-coloured plate under any label crossing an
-    // edge) is cheaper than collision avoidance and reads better.
-    labelBackgroundFill: PAPER,
-    labelBackgroundAlpha: 0.82,
-    labelBackgroundPadding: 3,
-    labelBackgroundCornerRadius: 3,
     // R5 — labels are shed at distance, but the fitted view must still be
     // readable, so the threshold sits below the fit zoom rather than above it.
     // `LabelCollisionBehaviour` drops the ones that would overlap.
@@ -142,15 +140,11 @@ const NODE: GraphLayerProps['node'] = {
     labelCollisionGroup: 'node'
   },
   // The canonical state catalogue (`hovered` / `highlighted` / `dimmed`) is
-  // auto-merged into every GraphLayer; these entries override its visuals.
+  // auto-merged into every GraphLayer and already draws the hover ring; these
+  // entries only add what it can't know — that a label must show through its
+  // LOD threshold while its node is the focus.
   state: {
-    hovered: {
-      labelForceShow: true,
-      labelColor: INK,
-      labelFontSize: 11,
-      bgStrokeWidth: 3,
-      decorations: [{ kind: 'ring', id: 'halo', color: VIOLET, alpha: 0.9, width: 2.5, gap: 6 }]
-    },
+    hovered: { labelForceShow: true, bgStrokeWidth: 3 },
     highlighted: { labelForceShow: true, bgStrokeWidth: 2.5 },
     dimmed: { bgAlpha: 0.18, labelAlpha: 0 }
   }
@@ -159,7 +153,8 @@ const NODE: GraphLayerProps['node'] = {
 const EDGE: GraphLayerProps['edge'] = {
   style: {
     // Structure weight for the mesh, emphasis weight + bundling for bridges.
-    strokeColor: (e) => (e.type === 'bridge' ? LINE : TIER_FILL[TIERS[e.source] ?? 'ingest']),
+    // Both keep the themed `muted` stroke — the distinction is weight, alpha
+    // and route, which is what rule R2 asks for.
     strokeWidth: (e) => (e.type === 'bridge' ? 4 : 1.5),
     strokeAlpha: (e) => (e.type === 'bridge' ? 0.75 : 0.5),
     strokeCap: 'round',
@@ -189,11 +184,20 @@ const CONFIG: CanvasConfig = {
 
 export const NetworkMap: Story = {
   render: () => (
+    // The host <div> sizes the engine's render surface — structural, and exempt
+    // from the no-inline-CSS rule (root rule 13).
     <div style={{ width: '100%', height: '100dvh' }}>
       <GraphCanvas autoResize config={CONFIG}>
         <BackgroundLayer id="bg" type="pattern" patternType="dots" />
-        <ThemeBehaviour id="theme" mode="document" />
+        <ThemeBehaviour id="theme" />
+        {/* Drives the behaviour's mode + family from the host `@invana/themes`
+            theme, which is what makes the whole scene follow the toolbar. */}
+        <CanvasThemeSync />
         <GraphLayer id="graph" data={DATA} node={NODE} edge={EDGE} />
+        {/* Cluster colour. Nodes only — an edge takes its tier from neither
+            endpoint when it bridges two, so the mesh keeps the themed stroke and
+            the bridges are told apart by weight and route instead. */}
+        <ColorByBehaviour id="color" targetLayerId="graph" nodeValueKey="type" colorEdges={false} enabled />
         <D3ForceLayout id="force" targetLayerId="graph" fitPadding={72} />
         <DragPanBehaviour id="pan" />
         <WheelZoomBehaviour id="wheel" />

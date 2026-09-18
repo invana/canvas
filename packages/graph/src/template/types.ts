@@ -103,6 +103,16 @@ export interface CardElementCommon {
   label?: string;
   /** Hidden elements are kept in the template but not drawn (layers eye-toggle). */
   hidden?: boolean;
+  /**
+   * Promotes this element to an addressable **sub-part**: the renderer reports
+   * the topmost `hitId` under the pointer and turns it into `shape:partover` /
+   * `shape:partout`, so a consumer can hover, right-click or anchor against a
+   * *row* rather than the whole card. Honoured on `rect` / `circle` elements
+   * (the engine's `CompositePart` carries it on those kinds); ignored on the
+   * rest. A transparent full-width `rect` with a `hitId` is the idiomatic way
+   * to make a whole row hoverable.
+   */
+  hitId?: string;
 }
 
 /**
@@ -136,8 +146,25 @@ export type CardElement =
       cornerRadius?: number;
       fillRole?: ColorRole;
       fill?: number;
+      /** Fill opacity (0–1). A tint of a themed fill — zebra rows, header strips. */
+      fillAlpha?: number;
+      /** Outline colour pair — an outlined glyph (a hollow key square, a chip). */
+      strokeRole?: ColorRole;
+      stroke?: number;
+      strokeWidth?: number;
     })
-  | (CardElementCommon & { type: 'circle'; radius: number; fillRole?: ColorRole; fill?: number })
+  | (CardElementCommon & {
+      type: 'circle';
+      radius: number;
+      fillRole?: ColorRole;
+      fill?: number;
+      /** Fill opacity (0–1). */
+      fillAlpha?: number;
+      /** Outline colour pair. */
+      strokeRole?: ColorRole;
+      stroke?: number;
+      strokeWidth?: number;
+    })
   | (CardElementCommon & {
       type: 'line';
       x2: number;
