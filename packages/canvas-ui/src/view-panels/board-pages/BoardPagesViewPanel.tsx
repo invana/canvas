@@ -1,5 +1,10 @@
-// CanvasPagesViewPanel — a tab strip over a set of "pages" (boards), styled like
-// a Bootstrap `nav-tabs` folder-tab bar. The active tab exposes a **dropdown of
+// BoardPagesViewPanel — a tab strip over a set of **boards**, styled like a
+// Bootstrap `nav-tabs` folder-tab bar.
+//
+// A board is whatever the host puts behind a tab. Some are *drawn* — a canvas
+// with a camera, layers and a layout engine; others are *declared* — panels
+// bound to one record, with none of that. This strip is the thing they share,
+// which is why nothing here knows which it is holding. The active tab exposes a **dropdown of
 // developer-supplied actions** (rename / duplicate / remove / …) via a caret,
 // instead of a fixed set of inline icons — the consumer decides what a page can
 // do by passing `pageMenuItems`.
@@ -15,15 +20,16 @@
 // and page content and reports intent through callbacks (`onSelect` / `onAdd`,
 // plus each menu item's `onSelect(pageId)`). It owns no page state — the consumer
 // holds the page list and the active id and re-renders on change. The classic use
-// is one `<GraphCanvasApp>` per page, but nothing here knows that — `content` is
-// any `ReactNode`.
+// is one `<GraphCanvasApp>` per drawn board, but nothing here knows that —
+// `content` is any `ReactNode`, and a dashboard is as valid a body as a canvas.
 //
 // State retention across tab switches is opt-in via `keepMounted` (default on):
-// every page stays mounted and inactive ones are hidden (absolutely stacked,
-// full-size, `visibility: hidden`), so switching a tab is pure visibility and a
-// canvas keeps its camera / layout / selection. With `keepMounted={false}` only
-// the active page is mounted (inactive pages unmount — cheaper, but their state
-// is torn down).
+// every board stays mounted and inactive ones are hidden (absolutely stacked,
+// full-size, `visibility: hidden`), so switching a tab is pure visibility — a
+// drawn board keeps its camera, layout and selection, and a declared one keeps
+// its scroll position and whatever it has fetched. With `keepMounted={false}`
+// only the active board is mounted (inactive ones unmount — cheaper, but their
+// state is torn down).
 
 import { cn, NavItems } from '@invana/ui';
 import type { NavItemConfig, NavMenuItem } from '@invana/ui';
@@ -31,8 +37,8 @@ import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { useId, useMemo } from 'react';
 import type { CSSProperties, ElementType, ReactNode } from 'react';
 
-/** One page in the strip — its tab label plus the content shown when active. */
-export interface CanvasPage {
+/** One board in the strip — its tab label plus the content shown when active. */
+export interface BoardPage {
   /** Stable identity — the key for mounting and the value passed to callbacks. */
   id: string;
   /** Tab label. */
@@ -57,7 +63,7 @@ export interface CanvasPage {
  * whose menu is open. This is how a host declares what a page can do — rename,
  * duplicate, remove, export, … — without the view knowing any of those verbs.
  */
-export interface CanvasPageMenuItem {
+export interface BoardPageMenuItem {
   /** Stable key for the row. */
   id: string;
   /** Row label. */
@@ -80,7 +86,7 @@ export interface CanvasPageMenuItem {
  * pager / `+`) — e.g. settings, about, help. Strip-level, not per-page: its
  * `onSelect` takes no page id. The consumer supplies the list via `headerActions`.
  */
-export interface CanvasHeaderAction {
+export interface BoardHeaderAction {
   /** Stable key for the button. */
   id: string;
   /** Accessible label / tooltip. */
@@ -93,9 +99,9 @@ export interface CanvasHeaderAction {
   disabled?: boolean;
 }
 
-export interface CanvasPagesViewPanelProps {
+export interface BoardPagesViewPanelProps {
   /** The pages, in tab order. */
-  pages: CanvasPage[];
+  pages: BoardPage[];
   /** Id of the active page. */
   activeId: string;
   /** Select a page (tab click). */
@@ -107,10 +113,10 @@ export interface CanvasPagesViewPanelProps {
   pagerPosition?: 'start' | 'end';
   /** Extra icon buttons pinned to the far right of the strip (right of the pager)
    *  — e.g. settings, about. Optional. */
-  headerActions?: CanvasHeaderAction[];
+  headerActions?: BoardHeaderAction[];
   /** Actions offered on the **active** tab via a caret dropdown. Omit (or pass an
    *  empty list) to hide the caret entirely. */
-  pageMenuItems?: CanvasPageMenuItem[];
+  pageMenuItems?: BoardPageMenuItem[];
   /** Tooltip / aria label for the add button. */
   addLabel?: string;
   /**
@@ -127,9 +133,10 @@ export interface CanvasPagesViewPanelProps {
   overflow?: boolean;
   /** Accessible label / tooltip for the overflow (`…`) trigger. */
   overflowLabel?: string;
-  /** Keep every page mounted and hide the inactive ones (default `true`), so a
-   *  page's state (e.g. a canvas's camera / layout) survives tab switches. Set
-   *  `false` to mount only the active page. */
+  /** Keep every board mounted and hide the inactive ones (default `true`), so a
+   *  board's state survives tab switches — a drawn board's camera and layout, a
+   *  declared board's scroll and fetched data. Set `false` to mount only the
+   *  active board. */
   keepMounted?: boolean;
   /** Extra classes on the root column. */
   className?: string;
@@ -138,7 +145,7 @@ export interface CanvasPagesViewPanelProps {
   /** Extra classes on the body. */
   bodyClassName?: string;
   /** Extra classes applied to *every* tab button (win over the built-ins via
-   *  tailwind-merge). Per-page `CanvasPage.tabClassName` layers on top of this. */
+   *  tailwind-merge). Per-page `BoardPage.tabClassName` layers on top of this. */
   tabClassName?: string;
   /** Extra classes applied to the **active** tab only — override the default
    *  folder-tab look (e.g. a different accent colour). */
@@ -210,12 +217,12 @@ function PagerControls({
 
 /**
  * A Bootstrap-style tab strip over independent pages. The active tab carries a
- * caret dropdown of consumer-supplied {@link CanvasPageMenuItem}s (rename /
+ * caret dropdown of consumer-supplied {@link BoardPageMenuItem}s (rename /
  * duplicate / remove / …). Presentational and engine-agnostic — the consumer owns
  * the page list + active id and applies the reported intents. See the module
  * header for `keepMounted` and strip-renderer notes.
  */
-export function CanvasPagesViewPanel({
+export function BoardPagesViewPanel({
   pages,
   activeId,
   onSelect,
@@ -232,7 +239,7 @@ export function CanvasPagesViewPanel({
   bodyClassName,
   tabClassName,
   activeTabClassName,
-}: CanvasPagesViewPanelProps) {
+}: BoardPagesViewPanelProps) {
   const activePage = pages.find((p) => p.id === activeId);
   const activeIndex = pages.findIndex((p) => p.id === activeId);
 

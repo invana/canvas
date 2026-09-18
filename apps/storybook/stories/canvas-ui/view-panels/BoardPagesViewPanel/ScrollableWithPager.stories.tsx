@@ -10,10 +10,10 @@
 
 import { useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { CanvasPagesViewPanel, type CanvasPage } from '@invana/canvas-ui';
-import { DemoBoard, DemoFrame, hueFor } from './canvas-pages-demo';
+import { BoardPagesViewPanel, type BoardPage } from '@invana/canvas-ui';
+import { DemoBoard, DemoFrame, hueFor } from './board-pages-demo';
 
-const meta: Meta = { title: 'canvas-ui/view-panels/CanvasPagesViewPanel/ScrollableWithPager' };
+const meta: Meta = { title: 'canvas-ui/view-panels/BoardPagesViewPanel/ScrollableWithPager' };
 export default meta;
 type Story = StoryObj;
 
@@ -35,7 +35,7 @@ function ScrollableDemo() {
     setActiveId(id);
   };
 
-  const pages: CanvasPage[] = items.map((x) => ({
+  const pages: BoardPage[] = items.map((x) => ({
     id: x.id,
     title: x.title,
     content: <DemoBoard title={x.title} hue={hueFor(Number(x.id))} />
@@ -45,7 +45,7 @@ function ScrollableDemo() {
     <DemoFrame>
       {/* A dozen-plus boards: mount only the active one so the strip doesn't
           spin up a live engine / GPU context per tab. */}
-      <CanvasPagesViewPanel
+      <BoardPagesViewPanel
         pages={pages}
         activeId={activeId}
         onSelect={setActiveId}

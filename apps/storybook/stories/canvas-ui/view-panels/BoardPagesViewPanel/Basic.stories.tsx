@@ -1,5 +1,5 @@
 /**
- * `<CanvasPagesViewPanel>` from `@invana/canvas-ui` — the baseline: a Bootstrap
+ * `<BoardPagesViewPanel>` from `@invana/canvas-ui` — the baseline: a Bootstrap
  * `nav-tabs` strip over independent pages. Click a tab to switch; the active tab
  * is the boxed folder tab (border on top / left / right, open bottom).
  *
@@ -15,16 +15,16 @@
 
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { CanvasPagesViewPanel, type CanvasPage } from '@invana/canvas-ui';
-import { DemoBoard, DemoFrame, hueFor } from './canvas-pages-demo';
+import { BoardPagesViewPanel, type BoardPage } from '@invana/canvas-ui';
+import { DemoBoard, DemoFrame, hueFor } from './board-pages-demo';
 
-const meta: Meta = { title: 'canvas-ui/view-panels/CanvasPagesViewPanel/Basic' };
+const meta: Meta = { title: 'canvas-ui/view-panels/BoardPagesViewPanel/Basic' };
 export default meta;
 type Story = StoryObj;
 
 function BasicDemo() {
   const titles = ['Overview', 'Details', 'Notes'];
-  const pages: CanvasPage[] = titles.map((title, i) => ({
+  const pages: BoardPage[] = titles.map((title, i) => ({
     id: String(i),
     title,
     content: <DemoBoard title={title} hue={hueFor(i)} />
@@ -33,7 +33,7 @@ function BasicDemo() {
 
   return (
     <DemoFrame>
-      <CanvasPagesViewPanel pages={pages} activeId={activeId} onSelect={setActiveId} />
+      <BoardPagesViewPanel pages={pages} activeId={activeId} onSelect={setActiveId} />
     </DemoFrame>
   );
 }

@@ -9,14 +9,14 @@
 import { useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
-  CanvasPagesViewPanel,
-  type CanvasHeaderAction,
-  type CanvasPage
+  BoardPagesViewPanel,
+  type BoardHeaderAction,
+  type BoardPage
 } from '@invana/canvas-ui';
 import { Info, Settings } from 'lucide-react';
-import { DemoBoard, DemoFrame, hueFor } from './canvas-pages-demo';
+import { DemoBoard, DemoFrame, hueFor } from './board-pages-demo';
 
-const meta: Meta = { title: 'canvas-ui/view-panels/CanvasPagesViewPanel/HeaderActions' };
+const meta: Meta = { title: 'canvas-ui/view-panels/BoardPagesViewPanel/HeaderActions' };
 export default meta;
 type Story = StoryObj;
 
@@ -40,20 +40,20 @@ function HeaderActionsDemo() {
     setActiveId(id);
   };
 
-  const pages: CanvasPage[] = items.map((x) => ({
+  const pages: BoardPage[] = items.map((x) => ({
     id: x.id,
     title: x.title,
     content: <DemoBoard title={x.title} hue={hueFor(Number(x.id))} />
   }));
 
-  const headerActions: CanvasHeaderAction[] = [
+  const headerActions: BoardHeaderAction[] = [
     { id: 'settings', label: 'Settings', icon: Settings, onClick: () => window.alert('Settings') },
-    { id: 'about', label: 'About', icon: Info, onClick: () => window.alert('CanvasPagesViewPanel demo') },
+    { id: 'about', label: 'About', icon: Info, onClick: () => window.alert('BoardPagesViewPanel demo') },
   ];
 
   return (
     <DemoFrame>
-      <CanvasPagesViewPanel
+      <BoardPagesViewPanel
         pages={pages}
         activeId={activeId}
         onSelect={setActiveId}

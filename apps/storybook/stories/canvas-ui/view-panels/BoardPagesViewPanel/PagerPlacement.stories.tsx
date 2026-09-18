@@ -10,16 +10,16 @@
 
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { CanvasPagesViewPanel, type CanvasPage } from '@invana/canvas-ui';
-import { DemoBoard, DemoFrame, hueFor } from './canvas-pages-demo';
+import { BoardPagesViewPanel, type BoardPage } from '@invana/canvas-ui';
+import { DemoBoard, DemoFrame, hueFor } from './board-pages-demo';
 
-const meta: Meta = { title: 'canvas-ui/view-panels/CanvasPagesViewPanel/PagerPlacement' };
+const meta: Meta = { title: 'canvas-ui/view-panels/BoardPagesViewPanel/PagerPlacement' };
 export default meta;
 type Story = StoryObj;
 
 function Strip({ position }: { position: 'start' | 'end' }) {
   const titles = ['One', 'Two', 'Three', 'Four'];
-  const pages: CanvasPage[] = titles.map((title, i) => ({
+  const pages: BoardPage[] = titles.map((title, i) => ({
     id: String(i),
     title,
     content: <DemoBoard title={`${title} — pager at ${position}`} hue={hueFor(i)} />
@@ -27,7 +27,7 @@ function Strip({ position }: { position: 'start' | 'end' }) {
   const [activeId, setActiveId] = useState('0');
   return (
     <DemoFrame>
-      <CanvasPagesViewPanel
+      <BoardPagesViewPanel
         pages={pages}
         activeId={activeId}
         onSelect={setActiveId}

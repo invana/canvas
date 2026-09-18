@@ -13,14 +13,14 @@
 import { useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
-  CanvasPagesViewPanel,
-  type CanvasPage,
-  type CanvasPageMenuItem
+  BoardPagesViewPanel,
+  type BoardPage,
+  type BoardPageMenuItem
 } from '@invana/canvas-ui';
 import { Copy, Pencil, Trash2 } from 'lucide-react';
-import { DemoBoard, DemoFrame, hueFor } from './canvas-pages-demo';
+import { DemoBoard, DemoFrame, hueFor } from './board-pages-demo';
 
-const meta: Meta = { title: 'canvas-ui/view-panels/CanvasPagesViewPanel/PageActions' };
+const meta: Meta = { title: 'canvas-ui/view-panels/BoardPagesViewPanel/PageActions' };
 export default meta;
 type Story = StoryObj;
 
@@ -70,13 +70,13 @@ function PageActionsDemo() {
     });
   };
 
-  const pages: CanvasPage[] = items.map((x) => ({
+  const pages: BoardPage[] = items.map((x) => ({
     id: x.id,
     title: x.title,
     content: <DemoBoard title={x.title} hue={x.hue} />
   }));
 
-  const pageMenuItems: CanvasPageMenuItem[] = [
+  const pageMenuItems: BoardPageMenuItem[] = [
     { id: 'rename', label: 'Rename', icon: Pencil, onSelect: rename },
     { id: 'duplicate', label: 'Duplicate', icon: Copy, onSelect: duplicate },
     {
@@ -92,7 +92,7 @@ function PageActionsDemo() {
 
   return (
     <DemoFrame>
-      <CanvasPagesViewPanel
+      <BoardPagesViewPanel
         pages={pages}
         activeId={activeId}
         onSelect={setActiveId}

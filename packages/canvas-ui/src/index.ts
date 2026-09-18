@@ -848,18 +848,40 @@ export type { SelectionViewPanelProps } from './view-panels/selection';
 export { ElementInspectorViewPanel } from './view-panels/element-inspector';
 export type { ElementInspectorViewPanelProps } from './view-panels/element-inspector';
 
-// ─── Canvas pages tab strip ──────────────────────────────────────────────────
-// A tab strip over independent "pages" (boards), styled like `@invana/ui`'s
+// ─── Board pages tab strip ───────────────────────────────────────────────────
+// A tab strip over independent **boards**, styled like `@invana/ui`'s
 // `TabbedPanel` but with per-tab **edit** + **close** controls revealed on hover.
-// Presentational + engine-agnostic; keeps inactive pages mounted (state kept) by
-// default so a canvas per page survives tab switches. See its module header.
-export { CanvasPagesViewPanel } from './view-panels/canvas-pages';
+// A board behind a tab may be *drawn* (a canvas) or *declared* (panels bound to
+// one record) — this strip is what they share, and it knows which it is holding
+// no more than `TabbedPanel` knows what is in a tab. Presentational +
+// engine-agnostic; keeps inactive boards mounted (state kept) by default so a
+// camera, a layout or a scroll position survives a tab switch. See its module
+// header.
+export { BoardPagesViewPanel } from './view-panels/board-pages';
 export type {
-  CanvasHeaderAction,
-  CanvasPage,
-  CanvasPageMenuItem,
-  CanvasPagesViewPanelProps,
-} from './view-panels/canvas-pages';
+  BoardHeaderAction,
+  BoardPage,
+  BoardPageMenuItem,
+  BoardPagesViewPanelProps,
+} from './view-panels/board-pages';
+
+// The names this panel shipped under, kept so an upgrade is a no-op. A page in
+// this strip was never required to be a canvas — the strip is presentational and
+// takes a `ReactNode` — and a consumer now mounts dashboards in it, which have no
+// camera and no layers. Adopt the `Board*` names; these go once the known
+// consumers have (rfc:feat-2026-09-19-the-page-host-is-named-for-canvases-but-hosts-boards D-1).
+/** @deprecated Renamed to {@link BoardPagesViewPanel}. */
+export { BoardPagesViewPanel as CanvasPagesViewPanel } from './view-panels/board-pages';
+export type {
+  /** @deprecated Renamed to `BoardHeaderAction`. */
+  BoardHeaderAction as CanvasHeaderAction,
+  /** @deprecated Renamed to `BoardPage`. */
+  BoardPage as CanvasPage,
+  /** @deprecated Renamed to `BoardPageMenuItem`. */
+  BoardPageMenuItem as CanvasPageMenuItem,
+  /** @deprecated Renamed to `BoardPagesViewPanelProps`. */
+  BoardPagesViewPanelProps as CanvasPagesViewPanelProps,
+} from './view-panels/board-pages';
 
 // ─── Per-type styling ────────────────────────────────────────────────────────
 // Colour · label key · size/width for every node/edge **type the canvas is
