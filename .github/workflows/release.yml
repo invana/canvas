@@ -6,9 +6,18 @@ name: Release
 #
 # and the tag push drives every stage below:
 #
-#   resolve ─┬─ publish ── npm
-#            ├─ notes ──── the GitHub Release
-#            └─ storybook ─ GitHub Pages
+#   resolve ─┬─ publish ──── npm, then dist-branches (matrix: one job per package)
+#            ├─ notes ────── the GitHub Release
+#            └─ storybook ── GitHub Pages
+#
+# The dist-branches stage mirrors every published package onto a branch, so a
+# consumer can install one straight from git without the registry:
+#
+#   pnpm add github:invana/canvas#releases/graph-layout-elkjs
+#
+# The matrix is derived from the workspace, not hand-listed — a new package gets
+# published, branched and released by existing. See
+# docs/rfcs/feat/2026-09-19-packages-are-only-installable-from-npm.md.
 #
 # Everything is gated on the tag, so a plain commit to main deploys nothing.
 # To redeploy the docs site between releases, run this workflow manually with
@@ -50,6 +59,7 @@ jobs:
       ref: ${{ steps.target.outputs.ref }}
       tag: ${{ steps.target.outputs.tag }}
       release: ${{ steps.target.outputs.release }}
+      packages: ${{ steps.packages.outputs.packages }}
     steps:
       - id: target
         env:
@@ -63,10 +73,25 @@ jobs:
             printf 'ref=%s\ntag=\nrelease=false\n' "$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.target.outputs.ref }}
+
+      # The dist-branches matrix, read off the workspace at the target ref so a
+      # re-run of an older tag branches exactly the packages that tag had.
+      - name: Enumerate publishable packages
+        id: packages
+        run: |
+          packages="$(node scripts/list-publishable-packages.mjs)"
+          echo "packages=$packages" >> "$GITHUB_OUTPUT"
+          echo "count=$(jq length <<<"$packages")" >> "$GITHUB_OUTPUT"
+
       - name: Summary
         run: |
           echo "Target ref: ${{ steps.target.outputs.ref }}" >> "$GITHUB_STEP_SUMMARY"
           echo "Full release: ${{ steps.target.outputs.release }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Packages: ${{ steps.packages.outputs.count }}" >> "$GITHUB_STEP_SUMMARY"
 
   # ── Stage 1 ─────────────────────────────────────────────────────────────
   # Build and publish every non-private workspace package. `workspace:*`
@@ -115,7 +140,75 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      # Reusing these bytes is what keeps a release branch and its npm tarball
+      # from ever disagreeing. upload/download are pinned to the same major on
+      # purpose: download v8 changes digest-mismatch and decompress behaviour.
+      - name: Upload built packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: package-dist
+          path: packages/*/dist
+          retention-days: 1
+
   # ── Stage 2 ─────────────────────────────────────────────────────────────
+  # Git-branch distribution: force-push each package's shippable files to
+  # releases/<pkg>, so `pnpm add github:invana/canvas#releases/<pkg>` resolves
+  # without the npm registry. One job per package, derived from stage 0.
+  dist-branches:
+    name: releases/${{ matrix.pkg }}
+    needs: [resolve, publish]
+    if: needs.resolve.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    strategy:
+      # One package failing must not strand the other seventeen — each branch is
+      # independent, and a re-run picks up only what is missing.
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.resolve.outputs.packages) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.resolve.outputs.ref }}
+
+      - name: Download built packages
+        uses: actions/download-artifact@v7
+        with:
+          name: package-dist
+          path: packages
+
+      # The tree that gets pushed: the npm tarball's content with a manifest
+      # that resolves off-workspace. Fails loudly on a missing dist/.
+      - name: Assemble the branch tree
+        env:
+          DIR: ${{ matrix.dir }}
+          PKG: ${{ matrix.pkg }}
+        run: |
+          node scripts/assemble-dist-branch.mjs "packages/$DIR" "$RUNNER_TEMP/release/$PKG"
+          ls -R "$RUNNER_TEMP/release/$PKG" | head -40
+
+      # A fresh history per push: the branch carries built output only, so it
+      # shares no commits with main and never grows it.
+      - name: Push to releases/${{ matrix.pkg }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PKG: ${{ matrix.pkg }}
+          TAG: ${{ needs.resolve.outputs.tag }}
+          SHA: ${{ github.sha }}
+        run: |
+          cd "$RUNNER_TEMP/release/$PKG"
+          git init -q -b "releases/$PKG"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://x-access-token:$GITHUB_TOKEN@github.com/$REPO.git"
+          git add -A
+          git commit -q -m "release: $PKG $TAG from $SHA"
+          git push -q --force origin "releases/$PKG"
+
+  # ── Stage 3 ─────────────────────────────────────────────────────────────
   # The GitHub Release, with notes generated from Conventional Commits by
   # git-cliff using cliff.toml — the same config release.sh uses for
   # CHANGELOG.md.
@@ -159,7 +252,7 @@ jobs:
           tag_name: ${{ needs.resolve.outputs.tag }}
           body_path: RELEASE_NOTES.md
 
-  # ── Stage 3 ─────────────────────────────────────────────────────────────
+  # ── Stage 4 ─────────────────────────────────────────────────────────────
   # The Storybook site. Independent of the publish stage — it builds from
   # source, so it needs no artifact, and it runs on a blank-tag dispatch too.
   storybook:
