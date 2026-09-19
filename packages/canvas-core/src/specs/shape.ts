@@ -356,6 +356,21 @@ export type CompositePart =
       readonly text: string;
       /** Horizontal anchor of the text block at `(x, y)`. Default `'left'`. */
       readonly anchor?: 'left' | 'center' | 'right';
+      /**
+       * Vertical anchor of the text block at `(x, y)` — the partner of
+       * {@link anchor}, measured against the **rendered line box** rather than
+       * `fontSize` (a line box is ascent + descent + line gap, typically
+       * 1.2–1.4 × `fontSize`).
+       *
+       * Default `'top'`, which places `y` at the top of the block — the
+       * historical behaviour, so an existing label never moves.
+       *
+       * Use `'middle'` to centre text in a box (a pill, a table row, an avatar
+       * disc): give `y` the box's centre line and let the renderer do the
+       * measuring. Don't pre-offset `y` by `(boxHeight - fontSize) / 2` — that
+       * underestimates the line box and lands the text low.
+       */
+      readonly vAnchor?: 'top' | 'middle' | 'bottom';
       readonly fontSize?: number;
       readonly fontWeight?: number | string;
       readonly fontStyle?: 'normal' | 'italic';

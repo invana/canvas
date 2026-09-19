@@ -203,7 +203,10 @@ function textStyleFor(
     fontFamily: content.fontFamily ?? 'sans-serif',
     fontSize: content.fontSize ?? 12,
     fill: content.fill ?? 0x111827,
-    align: content.align ?? 'center',
+    // Left, matching the `anchor` default the CompositePart contract documents.
+    // A wrapped label with no explicit `align` used to centre its lines, which
+    // silently disagreed with the horizontal anchor.
+    align: content.align ?? 'left',
   };
   if (content.fontWeight !== undefined) style.fontWeight = content.fontWeight as never;
   if (content.fontStyle !== undefined) style.fontStyle = content.fontStyle;

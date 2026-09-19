@@ -28,6 +28,11 @@ export interface ProductCardSpec {
   mediaHeight: number;
   /** Height reserved for the tag-chip row when tags are present. */
   tagRowHeight: number;
+  /**
+   * Corner radius of the stock pill and tag chips, in pixels. Half the chip's
+   * height reads as a full pill; drop it toward `4` for a squarer tag.
+   */
+  chipRadius: number;
   bg: number;
   stroke: number;
   titleColor: number;
@@ -43,6 +48,7 @@ export const PRODUCT_CARD_DEFAULTS: ProductCardSpec = {
   cornerRadius: 12,
   mediaHeight: 96,
   tagRowHeight: 26,
+  chipRadius: 9,
   bg: CARD_BG,
   stroke: CARD_STROKE,
   titleColor: 0xf1f5f9,
@@ -81,7 +87,7 @@ export class ProductCard extends CompositeCard<ProductCardSpec, ProductCardData>
   /** Two-line product title below the media band. */
   protected title(data: ProductCardData, parts: CompositePart[]): void {
     const { width, padding, mediaHeight, titleColor } = this.spec;
-    parts.push({ part: 'label', x: padding, y: mediaHeight + padding - 2, text: data.title, fontSize: 14, fontWeight: 700, fill: titleColor, maxWidth: width - padding * 2, maxLines: 2, overflow: 'ellipsis', lineHeight: 18 });
+    parts.push({ part: 'label', x: padding, y: mediaHeight + padding - 2, text: data.title, fontSize: 14, fontWeight: 700, fill: titleColor, align: 'left', maxWidth: width - padding * 2, maxLines: 2, overflow: 'ellipsis', lineHeight: 18 });
   }
 
   /** Y of the price row — below a title laid out as two lines. */
@@ -102,11 +108,11 @@ export class ProductCard extends CompositeCard<ProductCardSpec, ProductCardData>
 
   /** Stock pill + tag chips, left → right. */
   protected tags(data: ProductCardData, parts: CompositePart[]): void {
-    const { padding } = this.spec;
+    const { padding, chipRadius } = this.spec;
     const y = this.priceRowY() + 28;
     let x = padding;
-    if (data.stock) x += chip(parts, { x, y, text: STOCK_LABEL[data.stock], color: STOCK_COLOR[data.stock] }) + 6;
-    for (const tag of data.tags ?? []) x += chip(parts, { x, y, text: tag.label, color: tag.color }) + 6;
+    if (data.stock) x += chip(parts, { x, y, text: STOCK_LABEL[data.stock], color: STOCK_COLOR[data.stock], cornerRadius: chipRadius }) + 6;
+    for (const tag of data.tags ?? []) x += chip(parts, { x, y, text: tag.label, color: tag.color, cornerRadius: chipRadius }) + 6;
   }
 
   /** Whether this card renders a chip row at all. */

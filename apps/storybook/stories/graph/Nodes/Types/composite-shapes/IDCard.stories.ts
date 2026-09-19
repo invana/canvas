@@ -20,7 +20,7 @@ import {
   GraphLayer,
   HoverActivateBehaviour,
   TextResolutionLODBehaviour,
-  idCard,
+  IDCard as IDCardBuilder,
   type GraphNode,
   type IDCardData
 } from '@invana/graph';
@@ -42,12 +42,16 @@ export const IDCard: Story = {
       { type: 'node', id: 'b4', position: { x: 0, y: 220 }, data: { name: 'Unbadged Visitor', idNumber: 'ID —', accent: 0x64748b } satisfies IDCardData },
     ];
 
+    // Squared-off chips for this story: `chipRadius` is an ordinary spec
+    // field, so no subclassing — the stock default is a full pill.
+    const card = new IDCardBuilder({ chipRadius: 1 });
+
     const container = canvasElement.querySelector<HTMLDivElement>('#composite-id-card')!;
     const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
 
     canvas.layers.add(new BackgroundLayer({ id: 'bg', options: { type: 'pattern', patternType: 'dots', backgroundColor: '#0b1220', color: '#334155', size: 1.5, spacing: 24, alpha: 0.85 } }));
-    canvas.layers.add(new GraphLayer({ id: 'graph', options: { initData: { nodes, edges: [] }, node: { style: { shape: (n) => idCard(n.data as IDCardData), bgStrokeWidth: 0 } } } }));
+    canvas.layers.add(new GraphLayer({ id: 'graph', options: { initData: { nodes, edges: [] }, node: { style: { shape: (n) => card.build(n.data as IDCardData), bgStrokeWidth: 0 } } } }));
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));

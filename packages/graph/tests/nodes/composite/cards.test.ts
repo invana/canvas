@@ -7,6 +7,7 @@ import { idCard } from '../../../src/nodes/composite/idCard';
 import { organisationCard, OrganisationCard } from '../../../src/nodes/composite/organisationCard';
 import { productCard, ProductCard } from '../../../src/nodes/composite/productCard';
 import { schemaTableCard } from '../../../src/nodes/composite/schemaTableCard';
+import { chip, metaRow } from '../../../src/nodes/composite/shared';
 import { statCard } from '../../../src/nodes/composite/statCard';
 import { taskCard } from '../../../src/nodes/composite/taskCard';
 import { userCard } from '../../../src/nodes/composite/userCard';
@@ -130,3 +131,88 @@ describe('composite node types — spec drives geometry', () => {
   });
 });
 
+describe('composite node types — wrapped labels align left', () => {
+  // The renderer defaults an unset `align` to 'center'
+  // (packages/renderer-pixijs/src/primitives/paint/labelContent.ts), which only
+  // shows on a label that actually wraps. Every multi-line label must therefore
+  // say `align: 'left'` out loud, or a two-line title silently centres.
+  for (const [name, build] of Object.entries(FULL)) {
+    it(`${name} declares align on every wrapping label`, () => {
+      const wrapped = (build().parts ?? []).filter(
+        (p) => p.part === 'label' && (p.maxLines ?? 1) > 1,
+      );
+      for (const p of wrapped) {
+        expect(p.part === 'label' && p.align).toBe('left');
+      }
+    });
+  }
+});
+
+describe('composite node types — box-centred text uses vAnchor', () => {
+  // A label centred in a box (pill, table row, avatar disc) must say
+  // `vAnchor: 'middle'` and put `y` on the box's centre line. The old idiom —
+  // pre-offsetting y by (boxHeight - fontSize) / 2 — underestimates the line
+  // box (ascent + descent + line gap) and lands the text low.
+  // See docs/rfcs/fix/2026-09-19-composite-label-text-cannot-be-vertically-centred.md
+  it('chip centres its label on the pill middle line', () => {
+    const parts: CompositePart[] = [];
+    const w = chip(parts, { x: 10, y: 100, text: 'In stock', color: 0x22c55e });
+    expect(w).toBeGreaterThan(0);
+    const rect = parts.find((p) => p.part === 'rect');
+    const label = parts.find((p) => p.part === 'label');
+    expect(rect?.part === 'rect' && rect.height).toBe(18);
+    expect(label?.part === 'label' && label.vAnchor).toBe('middle');
+    // Centre line of an 18px pill at y=100 — not 100 + (18 - fontSize) / 2.
+    expect(label?.part === 'label' && label.y).toBe(109);
+  });
+
+  it('metaRow centres its text on the icon box middle line', () => {
+    const parts: CompositePart[] = [];
+    metaRow(parts, { x: 0, y: 40, width: 200, icon: 'lucide/map-pin', text: 'Geneva, CH', iconColor: 0x94a3b8, textColor: 0xcbd5e1 });
+    const label = parts.find((p) => p.part === 'label');
+    expect(label?.part === 'label' && label.vAnchor).toBe('middle');
+    expect(label?.part === 'label' && label.y).toBe(47); // 40 + 14/2
+  });
+
+  it('no card pre-offsets a centred label by fontSize', () => {
+    // Every anchor:'center' label is centring in a box, so it must pair with
+    // vAnchor:'middle' — a horizontally centred label sitting at a box top is
+    // the signature of the old guess.
+    for (const [name, build] of Object.entries(FULL)) {
+      const centred = (build().parts ?? []).filter((p) => p.part === 'label' && p.anchor === 'center');
+      for (const p of centred) {
+        expect(p.part === 'label' && p.vAnchor, `${name}: a centred label without vAnchor`).toBe('middle');
+      }
+    }
+  });
+});
+
+describe('composite node types — chip corner radius', () => {
+  /** The rounded rect a chip draws, found by its height. */
+  const chipRect = (card: CompositeShapeOption, height = 18) =>
+    (card.parts ?? []).find(
+      (p): p is Extract<CompositePart, { part: 'rect' }> => p.part === 'rect' && p.height === height,
+    );
+
+  it('chip defaults to a full pill', () => {
+    const parts: CompositePart[] = [];
+    chip(parts, { x: 0, y: 0, text: 'In stock', color: 0x22c55e });
+    const rect = parts.find((p) => p.part === 'rect');
+    expect(rect?.part === 'rect' && rect.cornerRadius).toBe(9); // height 18 / 2
+  });
+
+  it('chip honours an explicit cornerRadius', () => {
+    const parts: CompositePart[] = [];
+    chip(parts, { x: 0, y: 0, text: 'In stock', color: 0x22c55e, cornerRadius: 3 });
+    const rect = parts.find((p) => p.part === 'rect');
+    expect(rect?.part === 'rect' && rect.cornerRadius).toBe(3);
+  });
+
+  it('a card spec restyles its chips without subclassing', () => {
+    const data = { title: 'Keyboard', price: '$149.00', stock: 'in', accent: 0xf59e0b } as const;
+    const squared = new ProductCard({ chipRadius: 3 }).build(data);
+    expect(chipRect(squared)?.cornerRadius).toBe(3);
+    // …and the stock default is still a pill.
+    expect(chipRect(productCard(data))?.cornerRadius).toBe(9);
+  });
+});

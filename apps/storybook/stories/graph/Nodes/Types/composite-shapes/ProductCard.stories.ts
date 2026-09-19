@@ -20,7 +20,7 @@ import {
   GraphLayer,
   HoverActivateBehaviour,
   TextResolutionLODBehaviour,
-  productCard,
+  ProductCard as ProductCardBuilder,
   type GraphNode,
   type ProductCardData
 } from '@invana/graph';
@@ -42,12 +42,16 @@ export const ProductCard: Story = {
       { type: 'node', id: 'p4', position: { x: 0, y: 260 }, data: { title: 'Braided USB-C Cable, 2 m', price: '$19.00', icon: 'lucide/cable', accent: 0x64748b } satisfies ProductCardData },
     ];
 
+    // Squared-off chips for this story: `chipRadius` is an ordinary spec
+    // field, so no subclassing — the stock default is a full pill.
+    const card = new ProductCardBuilder({ chipRadius: 1 });
+
     const container = canvasElement.querySelector<HTMLDivElement>('#composite-product-card')!;
     const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
 
     canvas.layers.add(new BackgroundLayer({ id: 'bg', options: { type: 'pattern', patternType: 'dots', backgroundColor: '#0b1220', color: '#334155', size: 1.5, spacing: 24, alpha: 0.85 } }));
-    canvas.layers.add(new GraphLayer({ id: 'graph', options: { initData: { nodes, edges: [] }, node: { style: { shape: (n) => productCard(n.data as ProductCardData), bgStrokeWidth: 0 } } } }));
+    canvas.layers.add(new GraphLayer({ id: 'graph', options: { initData: { nodes, edges: [] }, node: { style: { shape: (n) => card.build(n.data as ProductCardData), bgStrokeWidth: 0 } } } }));
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan', enabled: true }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom', enabled: true }));

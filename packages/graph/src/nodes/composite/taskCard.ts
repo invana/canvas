@@ -2,7 +2,7 @@ import type { CompositePart } from '@invana/canvas';
 
 import type { CompositeShapeOption } from '../../layer/types';
 import { CompositeCard, type CardFrame } from './base';
-import { CARD_BG, CARD_STROKE, iconifyUrl } from './shared';
+import { CARD_BG, CARD_STROKE, chip, iconifyUrl } from './shared';
 import type { TaskCardData } from './types';
 
 /** Full configuration for a {@link TaskCard} — edit any field to re-style. */
@@ -13,6 +13,11 @@ export interface TaskCardSpec {
   cornerRadius: number;
   /** Bottom accent bar height (0 to hide it). */
   accentHeight: number;
+  /**
+   * Corner radius of the priority pill and tag chips, in pixels. Half the chip's
+   * height reads as a full pill; drop it toward `4` for a squarer tag.
+   */
+  chipRadius: number;
   bg: number;
   stroke: number;
   titleColor: number;
@@ -29,6 +34,7 @@ export const TASK_CARD_DEFAULTS: TaskCardSpec = {
   padding: 14,
   cornerRadius: 12,
   accentHeight: 4,
+  chipRadius: 9,
   bg: CARD_BG,
   stroke: CARD_STROKE,
   titleColor: 0xf1f5f9,
@@ -48,12 +54,13 @@ export class TaskCard extends CompositeCard<TaskCardSpec, TaskCardData> {
     super({ ...TASK_CARD_DEFAULTS, ...spec });
   }
 
-  /** A rounded pill chip (tinted rect + centred label). Returns its width. */
+  /**
+   * A rounded pill chip. Delegates to the shared {@link chip} builder so every
+   * pill in the catalogue measures and centres identically — there used to be
+   * two implementations here and they drifted apart.
+   */
   protected pill(parts: CompositePart[], x: number, y: number, text: string, color: number): number {
-    const w = text.length * 6.5 + 16;
-    parts.push({ part: 'rect', x, y, width: w, height: 18, cornerRadius: 9, fill: color, fillAlpha: 0.2 });
-    parts.push({ part: 'label', x: x + w / 2, y: y + 4, text, anchor: 'center', fontSize: 11, fontWeight: 600, fill: color });
-    return w;
+    return chip(parts, { x, y, text, color, cornerRadius: this.spec.chipRadius });
   }
 
   /** Bottom accent bar (priority colour). */
@@ -65,9 +72,9 @@ export class TaskCard extends CompositeCard<TaskCardSpec, TaskCardData> {
   protected title(data: TaskCardData, parts: CompositePart[]): void {
     const { width, padding, titleColor, priorityColors, priorityLabels } = this.spec;
     const pText = priorityLabels[data.priority];
-    const pw = pText.length * 6.5 + 16;
-    this.pill(parts, width - padding - pw, padding, pText, priorityColors[data.priority]);
-    parts.push({ part: 'label', x: padding, y: padding, text: data.title, fontSize: 14, fontWeight: 700, fill: titleColor, maxWidth: width - padding * 2 - pw - 8, maxLines: 2, overflow: 'ellipsis', lineHeight: 18 });
+    // Lay the pill out first; its measured width is what the title wraps around.
+    const pw = this.pill(parts, width - padding - pText.length * 6.5 - 16, padding, pText, priorityColors[data.priority]);
+    parts.push({ part: 'label', x: padding, y: padding, text: data.title, fontSize: 14, fontWeight: 700, fill: titleColor, align: 'left', maxWidth: width - padding * 2 - pw - 8, maxLines: 2, overflow: 'ellipsis', lineHeight: 18 });
   }
 
   /** Tag chips, left → right. */
@@ -82,7 +89,7 @@ export class TaskCard extends CompositeCard<TaskCardSpec, TaskCardData> {
     const { width, padding } = this.spec;
     if (data.assignee) {
       parts.push({ part: 'circle', x: padding + 12, y: footY + 10, radius: 12, fill: data.assignee.color });
-      parts.push({ part: 'label', x: padding + 12, y: footY + 3, text: data.assignee.initials, anchor: 'center', fontSize: 10, fontWeight: 700, fill: 0xffffff });
+      parts.push({ part: 'label', x: padding + 12, y: footY + 10, anchor: 'center', vAnchor: 'middle', text: data.assignee.initials, fontSize: 10, fontWeight: 700, fill: 0xffffff });
     }
     if (data.due) {
       parts.push({ part: 'icon', x: width - padding - 78, y: footY + 4, size: 14, icon: { kind: 'svg-url', url: iconifyUrl('lucide/calendar'), color: 0x94a3b8, strokeWidth: 2 } });

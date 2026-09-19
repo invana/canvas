@@ -98,7 +98,7 @@ export class SchemaTableCard extends CompositeCard<SchemaTableCardSpec, SchemaTa
       parts.push({ part: 'icon', x: PAD, y: (H - box) / 2, size: box, icon: { kind: 'svg-url', url: iconifyUrl(data.icon), color: titleColor, strokeWidth: 2 } });
       titleX = PAD + box + 8;
     }
-    parts.push({ part: 'label', x: titleX, y: (H - 14) / 2, text: data.label, fontSize: 14, fontWeight: 700, fill: titleColor, maxWidth: width - titleX - PAD, maxLines: 1, overflow: 'ellipsis' });
+    parts.push({ part: 'label', x: titleX, y: H / 2, vAnchor: 'middle', text: data.label, fontSize: 14, fontWeight: 700, fill: titleColor, maxWidth: width - titleX - PAD, maxLines: 1, overflow: 'ellipsis' });
   }
 
   /** One field row (chip + name + type). */
@@ -111,11 +111,11 @@ export class SchemaTableCard extends CompositeCard<SchemaTableCardSpec, SchemaTa
     const chipY = rowY + (RH - chipBox) / 2;
     const chip = this.typeChip(field.type);
     parts.push({ part: 'rect', x: PAD, y: chipY, width: chipBox, height: chipBox, cornerRadius: 3, fill: chip.color });
-    parts.push({ part: 'label', x: PAD + chipBox / 2, y: chipY + (chipBox - 8) / 2, text: chip.char, anchor: 'center', fontSize: 8, fontWeight: 700, fill: 0xffffff });
+    parts.push({ part: 'label', x: PAD + chipBox / 2, y: chipY + chipBox / 2, anchor: 'center', vAnchor: 'middle', text: chip.char, fontSize: 8, fontWeight: 700, fill: 0xffffff });
 
     const nameX = PAD + chipBox + 8;
-    parts.push({ part: 'label', x: nameX, y: rowY + (RH - 13) / 2, text: field.name, fontSize: 13, fill: nameColor, maxWidth: W - nameX - PAD - typeColWidth, maxLines: 1, overflow: 'ellipsis' });
-    parts.push({ part: 'label', x: W - PAD, y: rowY + (RH - 11) / 2, text: field.type, anchor: 'right', fontSize: 11, fill: typeColor, maxWidth: typeColWidth, maxLines: 1, overflow: 'ellipsis' });
+    parts.push({ part: 'label', x: nameX, y: rowY + RH / 2, vAnchor: 'middle', text: field.name, fontSize: 13, fill: nameColor, maxWidth: W - nameX - PAD - typeColWidth, maxLines: 1, overflow: 'ellipsis' });
+    parts.push({ part: 'label', x: W - PAD, y: rowY + RH / 2, anchor: 'right', vAnchor: 'middle', text: field.type, fontSize: 11, fill: typeColor, maxWidth: typeColWidth, maxLines: 1, overflow: 'ellipsis' });
   }
 
   protected parts(data: SchemaTableData, opts: SchemaTableCardOptions): CompositePart[] {

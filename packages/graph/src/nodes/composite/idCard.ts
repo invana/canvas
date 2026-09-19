@@ -31,6 +31,11 @@ export interface IDCardSpec {
   photoSize: number;
   /** Corner radius of the photo chip. */
   photoRadius: number;
+  /**
+   * Corner radius of the status chip, in pixels. Half the chip's
+   * height reads as a full pill; drop it toward `4` for a squarer tag.
+   */
+  chipRadius: number;
   bg: number;
   stroke: number;
   orgColor: number;
@@ -49,6 +54,7 @@ export const ID_CARD_DEFAULTS: IDCardSpec = {
   headerHeight: 26,
   photoSize: 52,
   photoRadius: 8,
+  chipRadius: 9,
   bg: CARD_BG,
   stroke: CARD_STROKE,
   orgColor: 0xffffff,
@@ -82,7 +88,7 @@ export class IDCard extends CompositeCard<IDCardSpec, IDCardData> {
     const { width, headerHeight: H, padding, orgColor } = this.spec;
     if (H <= 0) return;
     parts.push({ part: 'rect', x: 0, y: 0, width, height: H, fill: data.accent });
-    if (data.org) parts.push({ part: 'label', x: padding, y: (H - 10) / 2, text: data.org.toUpperCase(), fontSize: 10, fontWeight: 700, fill: orgColor, maxWidth: width - padding * 2, maxLines: 1, overflow: 'ellipsis' });
+    if (data.org) parts.push({ part: 'label', x: padding, y: H / 2, vAnchor: 'middle', text: data.org.toUpperCase(), fontSize: 10, fontWeight: 700, fill: orgColor, maxWidth: width - padding * 2, maxLines: 1, overflow: 'ellipsis' });
   }
 
   /** Photo chip — the `photo` icon, or `initials` on an accent-tinted square. */
@@ -93,7 +99,7 @@ export class IDCard extends CompositeCard<IDCardSpec, IDCardData> {
     if (data.photo) {
       parts.push({ part: 'icon', x: padding, y, size: S, icon: { kind: 'svg-url', url: iconifyUrl(data.photo), color: data.accent, strokeWidth: 2, sizeRatio: 0.55 } });
     } else if (data.initials) {
-      parts.push({ part: 'label', x: padding + S / 2, y: y + (S - 18) / 2, text: data.initials, anchor: 'center', fontSize: 18, fontWeight: 700, fill: data.accent });
+      parts.push({ part: 'label', x: padding + S / 2, y: y + S / 2, anchor: 'center', vAnchor: 'middle', text: data.initials, fontSize: 18, fontWeight: 700, fill: data.accent });
     }
   }
 
@@ -104,7 +110,7 @@ export class IDCard extends CompositeCard<IDCardSpec, IDCardData> {
     const y = headerHeight + padding;
     const maxWidth = width - x - padding;
     parts.push({ part: 'label', x, y: y + 6, text: data.name, fontSize: 15, fontWeight: 700, fill: nameColor, maxWidth, maxLines: 1, overflow: 'ellipsis' });
-    if (data.title) parts.push({ part: 'label', x, y: y + 26, text: data.title, fontSize: 12, fill: titleColor, maxWidth, maxLines: 2, overflow: 'ellipsis', lineHeight: 15 });
+    if (data.title) parts.push({ part: 'label', x, y: y + 26, text: data.title, fontSize: 12, fill: titleColor, align: 'left', maxWidth, maxLines: 2, overflow: 'ellipsis', lineHeight: 15 });
   }
 
   /** Y of the divider, below the photo block. */
@@ -114,13 +120,13 @@ export class IDCard extends CompositeCard<IDCardSpec, IDCardData> {
 
   /** Badge number (left) + status pill and validity note (right). */
   protected footer(data: IDCardData, parts: CompositePart[]): void {
-    const { padding, width, idColor, validColor } = this.spec;
+    const { padding, width, idColor, validColor, chipRadius } = this.spec;
     const y = this.dividerY() + 12;
     let right = width - padding;
     if (data.status) {
       const text = STATUS_LABEL[data.status];
       const w = text.length * 6.5 + 16;
-      chip(parts, { x: right - w, y, text, color: STATUS_COLOR[data.status] });
+      chip(parts, { x: right - w, y, text, color: STATUS_COLOR[data.status], cornerRadius: chipRadius });
       right -= w + 8;
     }
     parts.push({ part: 'label', x: padding, y: y + 3, text: data.idNumber, fontSize: 12, fontWeight: 600, fill: idColor, maxWidth: right - padding - 6, maxLines: 1, overflow: 'ellipsis' });

@@ -16,6 +16,11 @@ export interface OrganisationCardSpec {
   logoRadius: number;
   /** Height of one meta row (location / headcount / founded). */
   metaRowHeight: number;
+  /**
+   * Corner radius of the entity-type tag chip, in pixels. Half the chip's
+   * height reads as a full pill; drop it toward `4` for a squarer tag.
+   */
+  chipRadius: number;
   bg: number;
   stroke: number;
   nameColor: number;
@@ -31,6 +36,7 @@ export const ORGANISATION_CARD_DEFAULTS: OrganisationCardSpec = {
   logoSize: 40,
   logoRadius: 8,
   metaRowHeight: 22,
+  chipRadius: 8.5,
   bg: CARD_BG,
   stroke: CARD_STROKE,
   nameColor: 0xf1f5f9,
@@ -60,17 +66,17 @@ export class OrganisationCard extends CompositeCard<OrganisationCardSpec, Organi
     if (data.logo) {
       parts.push({ part: 'icon', x: padding, y: padding, size: S, icon: { kind: 'svg-url', url: iconifyUrl(data.logo), color: data.accent, strokeWidth: 2, sizeRatio: 0.55 } });
     } else if (data.monogram) {
-      parts.push({ part: 'label', x: padding + S / 2, y: padding + (S - 16) / 2, text: data.monogram.toUpperCase(), anchor: 'center', fontSize: 16, fontWeight: 700, fill: data.accent });
+      parts.push({ part: 'label', x: padding + S / 2, y: padding + S / 2, anchor: 'center', vAnchor: 'middle', text: data.monogram.toUpperCase(), fontSize: 16, fontWeight: 700, fill: data.accent });
     }
   }
 
   /** Name + entity-type tag, beside the logo chip. */
   protected identity(data: OrganisationCardData, parts: CompositePart[]): void {
-    const { padding, logoSize, width, nameColor } = this.spec;
+    const { padding, logoSize, width, nameColor, chipRadius } = this.spec;
     const x = padding + logoSize + 12;
     const maxWidth = width - x - padding;
     parts.push({ part: 'label', x, y: padding + 2, text: data.name, fontSize: 15, fontWeight: 700, fill: nameColor, maxWidth, maxLines: 1, overflow: 'ellipsis' });
-    if (data.kind) chip(parts, { x, y: padding + 22, text: data.kind, color: data.accent, height: 17, fontSize: 10 });
+    if (data.kind) chip(parts, { x, y: padding + 22, text: data.kind, color: data.accent, height: 17, fontSize: 10, cornerRadius: chipRadius });
   }
 
   /** The meta rows this card renders, in order — only the present ones. */

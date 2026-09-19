@@ -67,7 +67,7 @@ export class UserCard extends CompositeCard<UserCardSpec, UserCardData> {
     const acx = padding + r;
     const acy = padding + r;
     parts.push({ part: 'circle', x: acx, y: acy, radius: r, fill: data.avatar });
-    parts.push({ part: 'label', x: acx, y: acy - 8, text: data.initials, anchor: 'center', fontSize: 15, fontWeight: 700, fill: 0xffffff });
+    parts.push({ part: 'label', x: acx, y: acy, anchor: 'center', vAnchor: 'middle', text: data.initials, fontSize: 15, fontWeight: 700, fill: 0xffffff });
     if (data.status) {
       parts.push({ part: 'circle', x: acx + 15, y: acy + 15, radius: 7, fill: bg });
       parts.push({ part: 'circle', x: acx + 15, y: acy + 15, radius: 4.5, fill: STATUS_COLOR[data.status] });

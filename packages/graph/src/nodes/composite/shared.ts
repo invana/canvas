@@ -60,7 +60,8 @@ export function metaRow(parts: CompositePart[], o: MetaRowOptions): void {
   const fontSize = o.fontSize ?? 12;
   parts.push({ part: 'icon', x: o.x, y: o.y, size, icon: { kind: 'svg-url', url: iconifyUrl(o.icon), color: o.iconColor, strokeWidth: 2 } });
   const tx = o.x + size + gap;
-  parts.push({ part: 'label', x: tx, y: o.y + (size - fontSize) / 2, text: o.text, fontSize, fill: o.textColor, maxWidth: o.x + o.width - tx, maxLines: 1, overflow: 'ellipsis' });
+  // `vAnchor` centres against the rendered line box; don't pre-offset with fontSize.
+  parts.push({ part: 'label', x: tx, y: o.y + size / 2, vAnchor: 'middle', text: o.text, fontSize, fill: o.textColor, maxWidth: o.x + o.width - tx, maxLines: 1, overflow: 'ellipsis' });
 }
 
 /** Geometry + copy for one {@link chip} — a rounded, tinted pill. */
@@ -76,6 +77,11 @@ export interface ChipOptions {
   fontSize?: number;
   /** Background tint alpha. Default `0.2`. */
   alpha?: number;
+  /**
+   * Corner radius in pixels. Default `height / 2` — a full pill. Pass a smaller
+   * number for a squarer tag (`4` reads as a chip, `0` as a plain box).
+   */
+  cornerRadius?: number;
 }
 
 /**
@@ -87,7 +93,7 @@ export function chip(parts: CompositePart[], o: ChipOptions): number {
   const h = o.height ?? 18;
   const fontSize = o.fontSize ?? 11;
   const w = o.text.length * (fontSize * 0.59) + 16;
-  parts.push({ part: 'rect', x: o.x, y: o.y, width: w, height: h, cornerRadius: h / 2, fill: o.color, fillAlpha: o.alpha ?? 0.2 });
-  parts.push({ part: 'label', x: o.x + w / 2, y: o.y + (h - fontSize) / 2, text: o.text, anchor: 'center', fontSize, fontWeight: 600, fill: o.color });
+  parts.push({ part: 'rect', x: o.x, y: o.y, width: w, height: h, cornerRadius: o.cornerRadius ?? h / 2, fill: o.color, fillAlpha: o.alpha ?? 0.2 });
+  parts.push({ part: 'label', x: o.x + w / 2, y: o.y + h / 2, anchor: 'center', vAnchor: 'middle', text: o.text, fontSize, fontWeight: 600, fill: o.color });
   return w;
 }

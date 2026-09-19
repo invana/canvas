@@ -62,15 +62,18 @@ export class EventCard extends CompositeCard<EventCardSpec, EventCardData> {
   protected dateChip(data: EventCardData, parts: CompositePart[]): void {
     const { padding, dateChipSize: S, dateChipRadius, dayColor, monthColor } = this.spec;
     parts.push({ part: 'rect', x: padding, y: padding, width: S, height: S, cornerRadius: dateChipRadius, fill: data.accent });
-    parts.push({ part: 'label', x: padding + S / 2, y: padding + 8, text: data.day, anchor: 'center', fontSize: 20, fontWeight: 700, fill: dayColor });
-    parts.push({ part: 'label', x: padding + S / 2, y: padding + S - 17, text: data.month.toUpperCase(), anchor: 'center', fontSize: 10, fontWeight: 600, fill: monthColor });
+    // Two stacked bands inside the chip, each centred on its own line via
+    // `vAnchor` — the day takes the upper ~38%, the month sits below it. Both
+    // scale with `dateChipSize` instead of being nudged by hand.
+    parts.push({ part: 'label', x: padding + S / 2, y: padding + S * 0.38, anchor: 'center', vAnchor: 'middle', text: data.day, fontSize: 20, fontWeight: 700, fill: dayColor });
+    parts.push({ part: 'label', x: padding + S / 2, y: padding + S * 0.78, anchor: 'center', vAnchor: 'middle', text: data.month.toUpperCase(), fontSize: 10, fontWeight: 600, fill: monthColor });
   }
 
   /** Two-line event title, beside the date chip. */
   protected title(data: EventCardData, parts: CompositePart[]): void {
     const { padding, dateChipSize, width, titleColor } = this.spec;
     const x = padding + dateChipSize + 12;
-    parts.push({ part: 'label', x, y: padding + 4, text: data.title, fontSize: 14, fontWeight: 700, fill: titleColor, maxWidth: width - x - padding, maxLines: 2, overflow: 'ellipsis', lineHeight: 18 });
+    parts.push({ part: 'label', x, y: padding + 4, text: data.title, fontSize: 14, fontWeight: 700, fill: titleColor, align: 'left', maxWidth: width - x - padding, maxLines: 2, overflow: 'ellipsis', lineHeight: 18 });
   }
 
   /** The meta rows this card renders, in order — only the present ones. */

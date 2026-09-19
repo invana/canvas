@@ -291,10 +291,17 @@ export class CompositeShape extends ShapeBase<CompositeSpec> {
       // (possibly freshly mounted) view before measuring / placing it.
       if (this.labelResolution !== null) applyLabelResolution(view, this.labelResolution);
 
-      // Place the (measured) text block at the relative coordinate.
+      // Place the (measured) text block at the relative coordinate. Both axes
+      // measure the *rendered* block — the vertical one matters because a line
+      // box is ascent + descent + line gap (~1.2-1.4x fontSize), so a caller
+      // cannot centre text by pre-offsetting `y` with `fontSize`.
+      // Measured after `applyLabelResolution` above, so the LOD rescale is
+      // already folded into both dimensions.
       const w = view.display.width;
+      const h = view.display.height;
       const dx = p.anchor === 'right' ? -w : p.anchor === 'center' ? -w / 2 : 0;
-      view.display.position.set(p.x + dx, p.y);
+      const dy = p.vAnchor === 'bottom' ? -h : p.vAnchor === 'middle' ? -h / 2 : 0;
+      view.display.position.set(p.x + dx, p.y + dy);
 
       // Re-assert the persistent text-visibility flag so a zoom-LOD hide
       // survives this redraw / re-mount.

@@ -20,7 +20,7 @@ import {
   GraphLayer,
   HoverActivateBehaviour,
   TextResolutionLODBehaviour,
-  organisationCard,
+  OrganisationCard as OrganisationCardBuilder,
   type GraphEdge,
   type GraphNode,
   type OrganisationCardData
@@ -52,6 +52,10 @@ export const OrganisationCard: Story = {
       { type: 'edge', id: 'e3', source: 'cern', target: 'skunk' },
     ];
 
+    // Squared-off chips for this story: `chipRadius` is an ordinary spec
+    // field, so no subclassing — the stock default is a full pill.
+    const card = new OrganisationCardBuilder({ chipRadius: 1 });
+
     const container = canvasElement.querySelector<HTMLDivElement>('#composite-organisation-card')!;
     const canvas = new GraphCanvas();
     onStoryTeardown(() => canvas.destroy());
@@ -62,7 +66,7 @@ export const OrganisationCard: Story = {
         id: 'graph',
         options: {
           initData: { nodes, edges },
-          node: { style: { shape: (n) => organisationCard(n.data as OrganisationCardData), bgStrokeWidth: 0 } },
+          node: { style: { shape: (n) => card.build(n.data as OrganisationCardData), bgStrokeWidth: 0 } },
           edge: { style: { strokeColor: 0x475569, strokeWidth: 1.4, arrowTargetShape: 'none', shape: { pathType: 'orth' } } }
         }
       }),
