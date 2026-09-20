@@ -86,6 +86,48 @@ there are no status roles.
 
 See `docs/rfcs/fix/2026-09-19-design-stories-ignore-the-theme-they-mount.md`.
 
+## Imperative engine stories — theme by *omission*, author only what means something
+
+`designs/` above covers stories whose nodes are cards. For a plain imperative engine story
+(`graph/Groups/*`, `graph/Behaviours/*`, a shape or connector demo) there are no structures
+to hang roles on, and none are needed — `GraphLayer` already recolours the base look from
+the palette. The contract:
+
+- **`BackgroundLayer({ id: 'bg', options: {} })`** — no colours. Its options default to the
+  `inherit` sentinel, so it adopts `surface` + `divider` and repaints on every publish.
+  Without it the pixi surface is transparent and the diagram sits on Storybook's own chrome.
+- **`ThemeBehaviour({ id: 'theme' })` on the named-palette path** — `{ enabled: true, mode:
+  'document' }` in the config, and **no** `targetLayerId` / `light` / `dark`. The
+  `{ light, dark }` shorthand publishes an *empty* palette on purpose (it themes one layer
+  and stands the role recolour down), which is right for a layout story whose subject is the
+  backdrop and wrong for anything whose subject is the nodes.
+- **Author no colour the role map already covers.** Node `labelColor` ← `foreground`, node
+  `bgStrokeColor` ← `stroke`, edge `strokeColor` + arrowheads ← `muted`, group frame
+  `bgFill`/`bgStrokeColor` ← `cardBg`/`divider`. A pinned value on a node *record* outranks
+  the theme, so leaving it out is what makes the story themeable — deletion is the fix, not
+  a lighter hex.
+- **Author the colour that carries meaning** — but check which tier it lands in. On a
+  plain node an authored colour outranks the theme. On a **group frame it does not**:
+  `GraphLayer.applyTheme` writes `cardBg`/`divider` into each group node's own record on
+  every publish, so an authored frame hue is destroyed. Until that changes, a distinction
+  between frames has to live in a channel the role map doesn't touch — `bgAlpha`,
+  `bgStrokeWidth`, `bgStrokeDashArray`, the label, or the member fills.
+- **A weight of a themed colour beats a second hue.** Nesting depth, a ghost variant and a
+  tint all belong in `bgAlpha` / `bgStrokeWidth` / `bgStrokeDashArray`, which are outside the
+  role map and therefore survive every publish in both kinds.
+- **A story may read `canvas.context.theme.current()`** to seed a lil-gui swatch, and
+  re-seed on `canvas.events.on('theme:change', …)` — that is the engine signal the story's
+  own behaviour published, not a second hand-read of `document`. `graph/Groups/AllOptions`
+  is the reference.
+
+`graph/Groups/HackerStyle` is the deliberate exception: it pins a neon-on-dark identity and
+mounts no `ThemeBehaviour`, because its subject is that the group machinery is
+palette-agnostic. Leave it alone.
+
+See `docs/rfcs/fix/2026-09-20-group-stories-paint-a-light-palette-in-dark-mode.md`.
+`graph/Behaviours/GroupResize` still carries the old pinned palette — convert it when next
+touched.
+
 ## Styling — no hand-rolled CSS (root rule 13)
 
 **Never write manual CSS in a story** — no inline `style={{…}}` objects, no `CSSProperties` consts, no raw CSS for static presentation. Wrap demo layout/chrome in **`@invana/ui` components** (`Card`/`CardHeader`/`CardContent`, `Separator`, `Badge`, `Button`, …) and use **Tailwind design-token utility classes** via `className` (`flex`, `flex-col`, `gap-4`, `p-4`, `bg-card`, `text-muted-foreground`, `text-xs`, …) — the design-kit Tailwind theme is wired into Storybook (`.storybook/preview.ts`), so utilities work. `stories/canvas-ui/editors/TemplateStudio.stories.tsx` (its docked `right`-region editor panel — `Card`/`CardHeader`/`CardContent` + Tailwind utilities, no `CSSProperties`) is the reference.

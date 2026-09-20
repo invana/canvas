@@ -9,8 +9,8 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
-import { GraphCanvas, GraphLayer } from '@invana/graph';
+import { BackgroundLayer, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { GraphCanvas, GraphLayer, ThemeBehaviour } from '@invana/graph';
 import type { GraphEdge, GraphNode } from '@invana/graph';
 import GUI from 'lil-gui';
 
@@ -25,10 +25,13 @@ export const GroupVisibilityStory: Story = {
   render: () => createContainer({ id: 'graph-group-visibility' }),
 
   play: async ({ canvasElement }) => {
+    // `fill` is authored per group — blue for A, rose for B — and is the only
+    // thing distinguishing them. It now survives a theme publish, so the hue
+    // stays meaning while everything unset (stroke, labels, edges, backdrop)
+    // follows the palette.
     const groupStyle = (fill: number) => ({
       shape: { kind: 'circle' as const, radius: 34 },
       bgFill: fill,
-      bgStrokeColor: 0x6b7fff,
       bgStrokeWidth: 1,
       group: { autoFit: true, padding: 22 }
     });
@@ -47,7 +50,7 @@ export const GroupVisibilityStory: Story = {
       id,
       source,
       target,
-      style: { strokeColor: 0x94a3b8, strokeWidth: 1.2, arrowTargetShape: 'none' }
+      style: { strokeWidth: 1.2, arrowTargetShape: 'none' }
     });
     const edges: GraphEdge[] = [edge('a1-a2', 'a1', 'a2'), edge('b1-b2', 'b1', 'b2'), edge('a2-hub', 'a2', 'hub'), edge('b1-hub', 'b1', 'hub')];
 
@@ -56,14 +59,25 @@ export const GroupVisibilityStory: Story = {
     onStoryTeardown(() => canvas.destroy());
 
     const graph = new GraphLayer({ id: 'graph', options: { initData: { nodes, edges } } });
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
 
     await canvas.init({
       container,
       autoResize: true,
-      config: { behaviours: { pan: { enabled: true }, zoom: { enabled: true } } }
+      config: {
+        behaviours: {
+          // Named-palette mode: no `targetLayerId`, no `light`/`dark`
+          // shorthand, so the whole canvas recolours and follows the
+          // toolbar's *family* as well as its light/dark kind.
+          theme: { enabled: true, mode: 'document' },
+          pan: { enabled: true },
+          zoom: { enabled: true }
+        }
+      }
     });
     canvas.camera.fitContent(graph.getBounds(), 60);
 

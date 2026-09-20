@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { BackgroundLayer, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   CollapseExpandBehaviour,
   DragNodeBehaviour,
   GraphCanvas,
   GraphLayer,
+  ThemeBehaviour,
   type GraphEdge,
   type GraphNode
 } from '@invana/graph';
@@ -35,8 +36,8 @@ export const CircleNestedGroupsStory: Story = {
           // children while expanded; the small base is reused on collapse
           // so the super-node reads as node-sized.
           shape: { kind: 'circle', radius: 36 },
-          bgFill: 0xf5f7ff,
-          bgStrokeColor: 0x6b7fff,
+          // No frame colour: an unset `bgFill` / `bgStrokeColor` resolves from
+          // the theme (`cardBg` / `divider`) and re-resolves on every switch.
           bgStrokeWidth: 1,
           group: { autoFit: true, padding: 36 }
         }
@@ -47,8 +48,11 @@ export const CircleNestedGroupsStory: Story = {
         position: { x: 0, y: -50 },
         style: {
           shape: { kind: 'circle', radius: 28 },
-          bgFill: 0xeef2ff,
-          bgStrokeColor: 0x6b7fff,
+          // Nesting depth was two near-identical off-whites; both frames now
+          // resolve to `cardBg`, so depth reads as a *weight* of that one
+          // themed fill instead — `bgAlpha` is outside the role map, so it
+          // survives every publish and works in both kinds.
+          bgAlpha: 0.55,
           bgStrokeWidth: 1,
           group: { autoFit: true, padding: 22 }
         }
@@ -61,7 +65,6 @@ export const CircleNestedGroupsStory: Story = {
           shape: { kind: 'circle', radius: 18 },
           bgFill: 0x3b82f6,
           labelText: 'node1',
-          labelColor: 0x334155,
           labelFontSize: 12,
           labelPlacement: 'bottom',
           labelOffsetY: 6
@@ -75,7 +78,6 @@ export const CircleNestedGroupsStory: Story = {
           shape: { kind: 'circle', radius: 18 },
           bgFill: 0x3b82f6,
           labelText: 'node2',
-          labelColor: 0x334155,
           labelFontSize: 12,
           labelPlacement: 'bottom',
           labelOffsetY: 6
@@ -89,7 +91,6 @@ export const CircleNestedGroupsStory: Story = {
           shape: { kind: 'circle', radius: 18 },
           bgFill: 0x3b82f6,
           labelText: 'node3',
-          labelColor: 0x334155,
           labelFontSize: 12,
           labelPlacement: 'bottom',
           labelOffsetY: 6
@@ -104,9 +105,11 @@ export const CircleNestedGroupsStory: Story = {
     onStoryTeardown(() => canvas.destroy());
 
     const graph = new GraphLayer({ id: 'graph', options: { initData: { nodes, edges } } });
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
     canvas.layers.add(graph);
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag', targetLayerId: 'graph' }));
     canvas.behaviours.register(
@@ -115,6 +118,10 @@ export const CircleNestedGroupsStory: Story = {
 
     const canvasOptions = {
       behaviours: {
+        // Named-palette mode: no `targetLayerId`, no `light`/`dark` shorthand,
+        // so the whole canvas recolours — frame, labels, edges and backdrop —
+        // and follows the toolbar's *family* as well as its light/dark kind.
+        theme: { enabled: true, mode: 'document' },
         pan: { enabled: true },
         zoom: { enabled: true },
         drag: { enabled: true },

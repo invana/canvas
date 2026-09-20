@@ -26,6 +26,14 @@ type Story = StoryObj;
  * keeps the frame interior transparent so connectors stay visible all
  * the way through (the renderer paints all connectors below all shapes;
  * a translucent group still occludes whatever the fill paints over).
+ *
+ * **The deliberate theme exception in this folder.** Every sibling story
+ * mounts a `ThemeBehaviour` and lets the palette paint what it hasn't
+ * authored; this one mounts none and pins a neon-on-dark identity end to
+ * end, because its subject is precisely that the group machinery does not
+ * care which palette you hand it. That is only shown by a palette the theme
+ * did *not* pick — so this story stays dark under a light toolbar, on
+ * purpose. Don't "fix" it to follow the theme.
  */
 export const HackerStyleStory: Story = {
   name: 'HackerStyle',

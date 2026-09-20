@@ -1,11 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import GUI from 'lil-gui';
-import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { BackgroundLayer, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   CollapseExpandBehaviour,
   DragNodeBehaviour,
   GraphCanvas,
   GraphLayer,
+  ThemeBehaviour,
   type GraphEdge,
   type GraphNode,
   type NodeStyle
@@ -39,6 +40,10 @@ export const GroupWithEdgesStory: Story = {
     // visible (the renderer paints connectors below shapes, so the
     // cross-group edge gets occluded inside the colored silhouette).
     // Flip via GUI to `stroke-only` to see the edge unobstructed.
+    // The indigo / fuchsia pair is the only thing telling Service A from
+    // Service B, so it stays **authored** — an authored colour outranks the
+    // theme and keeps outranking it across every switch. Everything left unset
+    // (the plain intra-group edges, the backdrop) follows the palette.
     const settings = { bgVariant: 'filled' as 'filled' | 'stroke-only' };
     const variantStyleA = (v: typeof settings.bgVariant) =>
       v === 'filled'
@@ -114,10 +119,10 @@ export const GroupWithEdgesStory: Story = {
     ];
 
     const edges: GraphEdge[] = [
-      { type: 'edge', id: 'a1-a2', source: 'a1', target: 'a2', style: { strokeColor: 0x94a3b8, strokeWidth: 1, arrowTargetShape: 'none' } },
-      { type: 'edge', id: 'a2-a3', source: 'a2', target: 'a3', style: { strokeColor: 0x94a3b8, strokeWidth: 1, arrowTargetShape: 'none' } },
-      { type: 'edge', id: 'b1-b2', source: 'b1', target: 'b2', style: { strokeColor: 0x94a3b8, strokeWidth: 1, arrowTargetShape: 'none' } },
-      { type: 'edge', id: 'b1-b3', source: 'b1', target: 'b3', style: { strokeColor: 0x94a3b8, strokeWidth: 1, arrowTargetShape: 'none' } },
+      { type: 'edge', id: 'a1-a2', source: 'a1', target: 'a2', style: { strokeWidth: 1, arrowTargetShape: 'none' } },
+      { type: 'edge', id: 'a2-a3', source: 'a2', target: 'a3', style: { strokeWidth: 1, arrowTargetShape: 'none' } },
+      { type: 'edge', id: 'b1-b2', source: 'b1', target: 'b2', style: { strokeWidth: 1, arrowTargetShape: 'none' } },
+      { type: 'edge', id: 'b1-b3', source: 'b1', target: 'b3', style: { strokeWidth: 1, arrowTargetShape: 'none' } },
       // Cross-group — re-routes to the collapsed super-node when either side collapses.
       { type: 'edge', id: 'cross', source: 'a3', target: 'b1', style: { strokeColor: 0x6b7fff, strokeWidth: 1.5, strokeDashArray: [4, 3], arrowTargetShape: 'none' } },
     ];
@@ -128,9 +133,11 @@ export const GroupWithEdgesStory: Story = {
 
     // Data is content — it rides on the layer via `initData`.
     const graph = new GraphLayer({ id: 'graph', options: { initData: { nodes, edges } } });
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
     canvas.layers.add(graph);
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag', targetLayerId: 'graph' }));
     canvas.behaviours.register(
@@ -139,6 +146,10 @@ export const GroupWithEdgesStory: Story = {
 
     const canvasOptions = {
       behaviours: {
+        // Named-palette mode: no `targetLayerId`, no `light`/`dark` shorthand,
+        // so the whole canvas recolours — frame, labels, edges and backdrop —
+        // and follows the toolbar's *family* as well as its light/dark kind.
+        theme: { enabled: true, mode: 'document' },
         pan: { enabled: true },
         zoom: { enabled: true },
         drag: { enabled: true },

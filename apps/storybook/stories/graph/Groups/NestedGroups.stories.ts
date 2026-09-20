@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { BackgroundLayer, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   CollapseExpandBehaviour,
   DragNodeBehaviour,
   GraphCanvas,
   GraphLayer,
+  ThemeBehaviour,
   type GraphEdge,
   type GraphNode
 } from '@invana/graph';
@@ -21,6 +22,7 @@ type Story = StoryObj;
  * the inner frame's bounds are up to date before the outer auto-fits
  * around them, so dragging `node1` outward correctly grows both frames
  * in one pass.
+ *
  */
 export const NestedGroupsStory: Story = {
   name: 'NestedGroups',
@@ -36,8 +38,8 @@ export const NestedGroupsStory: Story = {
           // while expanded; on collapse the small base is reused so the
           // super-node reads as node-sized.
           shape: { kind: 'rect', width: 90, height: 70, cornerRadius: 10 },
-          bgFill: 0xf5f7ff,
-          bgStrokeColor: 0x6b7fff,
+          // No frame colour: an unset `bgFill` / `bgStrokeColor` resolves from
+          // the theme (`cardBg` / `divider`) and re-resolves on every switch.
           bgStrokeWidth: 1,
           group: { autoFit: true, padding: 28 }
         }
@@ -48,8 +50,10 @@ export const NestedGroupsStory: Story = {
         position: { x: 0, y: -60 },
         style: {
           shape: { kind: 'rect', width: 70, height: 50, cornerRadius: 8 },
-          bgFill: 0xeef2ff,
-          bgStrokeColor: 0x6b7fff,
+          // Nesting depth as a weight of the themed fill: both frames resolve
+          // to `cardBg`, and `bgAlpha` is outside the role map so it survives
+          // every publish and reads in both light and dark.
+          bgAlpha: 0.55,
           bgStrokeWidth: 1,
           group: { autoFit: true, padding: 18 }
         }
@@ -62,7 +66,6 @@ export const NestedGroupsStory: Story = {
           shape: { kind: 'circle', radius: 18 },
           bgFill: 0x3b82f6,
           labelText: 'node1',
-          labelColor: 0x334155,
           labelFontSize: 12,
           labelPlacement: 'bottom',
           labelOffsetY: 6
@@ -76,7 +79,6 @@ export const NestedGroupsStory: Story = {
           shape: { kind: 'circle', radius: 18 },
           bgFill: 0x3b82f6,
           labelText: 'node2',
-          labelColor: 0x334155,
           labelFontSize: 12,
           labelPlacement: 'bottom',
           labelOffsetY: 6
@@ -90,7 +92,6 @@ export const NestedGroupsStory: Story = {
           shape: { kind: 'circle', radius: 18 },
           bgFill: 0x3b82f6,
           labelText: 'node3',
-          labelColor: 0x334155,
           labelFontSize: 12,
           labelPlacement: 'bottom',
           labelOffsetY: 6
@@ -105,9 +106,11 @@ export const NestedGroupsStory: Story = {
     onStoryTeardown(() => canvas.destroy());
 
     const graph = new GraphLayer({ id: 'graph', options: { initData: { nodes, edges } } });
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
     canvas.layers.add(graph);
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag', targetLayerId: 'graph' }));
     canvas.behaviours.register(
@@ -116,6 +119,10 @@ export const NestedGroupsStory: Story = {
 
     const canvasOptions = {
       behaviours: {
+        // Named-palette mode: no `targetLayerId`, no `light`/`dark` shorthand,
+        // so the whole canvas recolours — frame, labels, edges and backdrop —
+        // and follows the toolbar's *family* as well as its light/dark kind.
+        theme: { enabled: true, mode: 'document' },
         pan: { enabled: true },
         zoom: { enabled: true },
         drag: { enabled: true },
@@ -125,5 +132,6 @@ export const NestedGroupsStory: Story = {
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
     canvas.camera.fitContent(graph.getBounds(), 100);
+
   }
 };

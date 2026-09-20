@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import GUI from 'lil-gui';
-import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { BackgroundLayer, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   COLLAPSED_STATE,
   CollapseExpandBehaviour,
@@ -8,6 +8,7 @@ import {
   GraphCanvas,
   GraphLayer,
   NodeResizeBehaviour,
+  ThemeBehaviour,
   type GraphEdge,
   type GraphNode,
   type GroupOptions,
@@ -71,12 +72,15 @@ export const RectGroupStory: Story = {
       bgVariant: 'filled' as 'filled' | 'stroke-only' | 'ghost'
     };
 
+    // Alpha only — the *fill* is the theme's `cardBg`, so the three variants are
+    // three weights of one themed colour rather than three pinned hexes.
+    // `stroke-only` still unsets `bgFill` outright: a transparent interior is
+    // what keeps a cross-group connector visible (see `GroupWithEdges`).
     const variantStyle = (
       v: typeof settings.bgVariant,
-    ): { bgFill?: number; bgAlpha?: number } => {
+    ): { bgFill?: undefined; bgAlpha?: number } => {
       if (v === 'stroke-only') return { bgFill: undefined, bgAlpha: undefined };
-      if (v === 'ghost') return { bgFill: 0x6b7fff, bgAlpha: 0.08 };
-      return { bgFill: 0xf5f7ff, bgAlpha: 1 };
+      return { bgAlpha: v === 'ghost' ? 0.08 : 1 };
     };
 
     const nodes: GraphNode[] = [
@@ -88,8 +92,8 @@ export const RectGroupStory: Story = {
           // children when expanded; on collapse the layer reuses this
           // declared size so the super-node reads as node-sized.
           shape: { kind: 'rect', width: 80, height: 60, cornerRadius: 8 },
-          bgFill: 0xf5f7ff,
-          bgStrokeColor: 0x6b7fff,
+          // No frame colour: an unset `bgFill` / `bgStrokeColor` resolves from
+          // the theme (`cardBg` / `divider`) and re-resolves on every switch.
           bgStrokeWidth: 1,
           group: {
             autoFit: settings.autoFit,
@@ -99,7 +103,6 @@ export const RectGroupStory: Story = {
             userResizable: settings.userResizable
           },
           labelText: 'Group A',
-          labelColor: 0x6b7fff,
           labelFontSize: 11,
           labelFontWeight: 600,
           labelPlacement: 'inside-top-left'
@@ -113,7 +116,6 @@ export const RectGroupStory: Story = {
           shape: { kind: 'circle', radius: 18 },
           bgFill: 0x3b82f6,
           labelText: 'node1',
-          labelColor: 0x334155,
           labelFontSize: 12,
           labelPlacement: 'bottom',
           labelOffsetY: 6
@@ -127,7 +129,6 @@ export const RectGroupStory: Story = {
           shape: { kind: 'circle', radius: 18 },
           bgFill: 0x3b82f6,
           labelText: 'node2',
-          labelColor: 0x334155,
           labelFontSize: 12,
           labelPlacement: 'bottom',
           labelOffsetY: 6
@@ -141,7 +142,6 @@ export const RectGroupStory: Story = {
           shape: { kind: 'circle', radius: 18 },
           bgFill: 0x3b82f6,
           labelText: 'node3',
-          labelColor: 0x334155,
           labelFontSize: 12,
           labelPlacement: 'bottom',
           labelOffsetY: 6
@@ -156,9 +156,11 @@ export const RectGroupStory: Story = {
     onStoryTeardown(() => canvas.destroy());
 
     const graph = new GraphLayer({ id: 'graph', options: { initData: { nodes, edges } } });
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
     canvas.layers.add(graph);
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag', targetLayerId: 'graph' }));
     canvas.behaviours.register(
@@ -168,6 +170,10 @@ export const RectGroupStory: Story = {
 
     const canvasOptions = {
       behaviours: {
+        // Named-palette mode: no `targetLayerId`, no `light`/`dark` shorthand,
+        // so the whole canvas recolours — frame, labels, edges and backdrop —
+        // and follows the toolbar's *family* as well as its light/dark kind.
+        theme: { enabled: true, mode: 'document' },
         pan: { enabled: true },
         zoom: { enabled: true },
         drag: { enabled: true },
@@ -182,7 +188,13 @@ export const RectGroupStory: Story = {
     const apply = (): void => {
       const node = graph.store.getNode('group-a');
       if (!node) return;
-      const priorStyle = (node.style ?? {}) as NodeStyle;
+      // Drop the paint keys before re-spreading: `updateNode` replaces `style`
+      // wholesale, and a leftover `bgFill: undefined` from `stroke-only` would
+      // keep the frame transparent after switching back to `filled`.
+      const prior = { ...((node.style ?? {}) as NodeStyle) } as Record<string, unknown>;
+      delete prior.bgFill;
+      delete prior.bgAlpha;
+      const priorStyle = prior as NodeStyle;
       const priorShape = priorStyle.shape;
       // Resolve togglePlacement — `'custom'` switches to absolute coords.
       const togglePlacement =
@@ -202,8 +214,6 @@ export const RectGroupStory: Story = {
       graph.store.updateNode('group-a', {
         style: {
           ...priorStyle,
-          // Bg variant override — spread after prior so stroke-only clears
-          // the leftover bgFill / bgAlpha.
           ...variantStyle(settings.bgVariant),
           // Sync width/height onto the declared shape too so non-autoFit
           // reads them and autoFit treats them as the floor.

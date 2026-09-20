@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { BackgroundLayer, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   CollapseExpandBehaviour,
   DragNodeBehaviour,
   GraphCanvas,
   GraphLayer,
+  ThemeBehaviour,
   type GraphEdge,
   type GraphNode
 } from '@invana/graph';
@@ -34,6 +35,10 @@ export const FixedSizeGroupStory: Story = {
         position: { x: -120, y: -100 },
         style: {
           shape: { kind: 'rect', width: 240, height: 200, cornerRadius: 8 },
+          // Authored amber, deliberately pinned: it is what marks this frame as
+          // the fixed-size one. An authored colour outranks the theme and keeps
+          // outranking it across every switch — the theme only fills what is
+          // left unset (here: the labels, the edges and the backdrop).
           bgFill: 0xfef9c3,
           bgStrokeColor: 0xeab308,
           bgStrokeWidth: 1,
@@ -74,9 +79,11 @@ export const FixedSizeGroupStory: Story = {
 
     // Data is content — it rides on the layer via `initData`.
     const graph = new GraphLayer({ id: 'graph', options: { initData: { nodes, edges } } });
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
     canvas.layers.add(graph);
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag', targetLayerId: 'graph' }));
     canvas.behaviours.register(
@@ -85,6 +92,10 @@ export const FixedSizeGroupStory: Story = {
 
     const canvasOptions = {
       behaviours: {
+        // Named-palette mode: no `targetLayerId`, no `light`/`dark` shorthand,
+        // so the whole canvas recolours — frame, labels, edges and backdrop —
+        // and follows the toolbar's *family* as well as its light/dark kind.
+        theme: { enabled: true, mode: 'document' },
         pan: { enabled: true },
         zoom: { enabled: true },
         drag: { enabled: true },

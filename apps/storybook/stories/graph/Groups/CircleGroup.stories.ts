@@ -1,11 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import GUI from 'lil-gui';
-import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { BackgroundLayer, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   GraphCanvas,
   CollapseExpandBehaviour,
   DragNodeBehaviour,
   GraphLayer,
+  ThemeBehaviour,
   type GraphEdge,
   type GraphNode,
   type NodeStyle
@@ -37,8 +38,8 @@ export const CircleGroupStory: Story = {
           // wrap children while expanded; the small radius is what shows
           // on collapse, so the super-node reads as node-sized.
           shape: { kind: 'circle', radius: 32 },
-          bgFill: 0xf5f7ff,
-          bgStrokeColor: 0x6b7fff,
+          // No frame colour: an unset `bgFill` / `bgStrokeColor` resolves from
+          // the theme (`cardBg` / `divider`) and re-resolves on every switch.
           bgStrokeWidth: 1,
           group: { autoFit: settings.autoFit, padding: settings.padding }
         }
@@ -51,7 +52,6 @@ export const CircleGroupStory: Story = {
           shape: { kind: 'circle', radius: 18 },
           bgFill: 0x3b82f6,
           labelText: 'node1',
-          labelColor: 0x334155,
           labelFontSize: 12,
           labelPlacement: 'bottom',
           labelOffsetY: 6
@@ -65,7 +65,6 @@ export const CircleGroupStory: Story = {
           shape: { kind: 'circle', radius: 18 },
           bgFill: 0x3b82f6,
           labelText: 'node2',
-          labelColor: 0x334155,
           labelFontSize: 12,
           labelPlacement: 'bottom',
           labelOffsetY: 6
@@ -79,7 +78,6 @@ export const CircleGroupStory: Story = {
           shape: { kind: 'circle', radius: 18 },
           bgFill: 0x3b82f6,
           labelText: 'node3',
-          labelColor: 0x334155,
           labelFontSize: 12,
           labelPlacement: 'bottom',
           labelOffsetY: 6
@@ -95,8 +93,10 @@ export const CircleGroupStory: Story = {
     onStoryTeardown(() => canvas.destroy());
 
     const graph = new GraphLayer({ id: 'graph', options: { initData: { nodes, edges } } });
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
     canvas.layers.add(graph);
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag', targetLayerId: 'graph' }));
     canvas.behaviours.register(
@@ -105,6 +105,10 @@ export const CircleGroupStory: Story = {
 
     const canvasOptions = {
       behaviours: {
+        // Named-palette mode: no `targetLayerId`, no `light`/`dark` shorthand,
+        // so the whole canvas recolours — frame, labels, edges and backdrop —
+        // and follows the toolbar's *family* as well as its light/dark kind.
+        theme: { enabled: true, mode: 'document' },
         pan: { enabled: true },
         zoom: { enabled: true },
         drag: { enabled: true },

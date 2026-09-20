@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import GUI from 'lil-gui';
-import { DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
+import { BackgroundLayer, DragPanBehaviour, WheelZoomBehaviour } from '@invana/canvas';
 import {
   COLLAPSED_STATE,
   GraphCanvas,
@@ -8,6 +8,7 @@ import {
   DragNodeBehaviour,
   GraphLayer,
   NodeResizeBehaviour,
+  ThemeBehaviour,
   type GraphEdge,
   type GraphNode,
   type GroupOptions,
@@ -135,19 +136,19 @@ export const AllOptionsStory: Story = {
         id: 'node1',
         parentId: 'group-a',
         position: { x: -50, y: -30 },
-        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6, labelText: 'node1', labelPlacement: 'bottom', labelOffsetY: 6, labelColor: 0x334155, labelFontSize: 12 }
+        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6, labelText: 'node1', labelPlacement: 'bottom', labelOffsetY: 6, labelFontSize: 12 }
       },
       { type: 'node',
         id: 'node2',
         parentId: 'group-a',
         position: { x: 50, y: -30 },
-        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6, labelText: 'node2', labelPlacement: 'bottom', labelOffsetY: 6, labelColor: 0x334155, labelFontSize: 12 }
+        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6, labelText: 'node2', labelPlacement: 'bottom', labelOffsetY: 6, labelFontSize: 12 }
       },
       { type: 'node',
         id: 'node3',
         parentId: 'group-a',
         position: { x: 0, y: 70 },
-        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6, labelText: 'node3', labelPlacement: 'bottom', labelOffsetY: 6, labelColor: 0x334155, labelFontSize: 12 }
+        style: { shape: { kind: 'circle', radius: 18 }, bgFill: 0x3b82f6, labelText: 'node3', labelPlacement: 'bottom', labelOffsetY: 6, labelFontSize: 12 }
       },
     ];
 
@@ -159,9 +160,11 @@ export const AllOptionsStory: Story = {
     onStoryTeardown(() => canvas.destroy());
 
     const graph = new GraphLayer({ id: 'graph', options: { initData: { nodes, edges } } });
+    canvas.layers.add(new BackgroundLayer({ id: 'bg', options: {} }));
     canvas.layers.add(graph);
 
     canvas.behaviours.register(new DragPanBehaviour({ id: 'pan' }));
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme' }));
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
 
     const dragBehaviour = new DragNodeBehaviour({
@@ -188,6 +191,10 @@ export const AllOptionsStory: Story = {
     // them live via each instance's enable()/disable() below.
     const canvasOptions = {
       behaviours: {
+        // Named-palette mode: no `targetLayerId`, no `light`/`dark` shorthand,
+        // so the whole canvas recolours — frame, labels, edges and backdrop —
+        // and follows the toolbar's *family* as well as its light/dark kind.
+        theme: { enabled: true, mode: 'document' },
         pan: { enabled: true },
         zoom: { enabled: true },
         drag: { enabled: settings.dragEnabled },
@@ -291,6 +298,29 @@ export const AllOptionsStory: Story = {
     label.add(settings, 'labelPlacement', LABEL_PLACEMENTS).onChange(apply);
     label.add(settings, 'labelOffsetX', -40, 40, 1).onChange(apply);
     label.add(settings, 'labelOffsetY', -40, 40, 1).onChange(apply);
+
+    // ── Keep the colour swatches honest ─────────────────────────────────
+    //
+    // This story pins every field on the record by design — that is what an
+    // "all options" inspector *is*. So its three colour swatches would show a
+    // light-mode hex forever while the rest of the canvas re-themed around
+    // them. Seed them from the published palette instead, and re-seed on every
+    // switch: the swatch shows what is actually on screen, and a colour the
+    // user picks still wins until the next switch.
+    //
+    // Reading `ctx.theme` is reading the engine signal this story's own
+    // `ThemeBehaviour` published — not a second hand-read of `document`.
+    const seedFromTheme = (palette: Readonly<Record<string, number>>): void => {
+      settings.bgFill = palette.cardBg ?? settings.bgFill;
+      settings.bgStrokeColor = palette.divider ?? settings.bgStrokeColor;
+      settings.labelColor = palette.foreground ?? settings.labelColor;
+      for (const c of gui.controllersRecursive()) c.updateDisplay();
+      apply();
+    };
+    // The behaviour publishes during `init`, before this subscription exists.
+    const published = canvas.context.theme.current();
+    if (published) seedFromTheme(published.palette);
+    onStoryTeardown(canvas.events.on('theme:change', (theme) => seedFromTheme(theme.palette)));
 
     const beh = gui.addFolder('Behaviours');
     beh.add(settings, 'dragEnabled').name('DragNode enabled').onChange((on: boolean) => (on ? dragBehaviour.enable() : dragBehaviour.disable()));
