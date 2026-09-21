@@ -17,17 +17,20 @@ import type { CompositePart, CompositeRootSpec } from '@invana/canvas';
 import type { ColorRole } from '../theme/types';
 import type { RolePalette } from '../theme/roles';
 import type { GraphNode } from '../store/types';
-import type { CompositeShapeOption, NodeStyle } from '../layer/types';
-import { resolveText } from './bindings';
+import type { CompositeShapeOption, NodeBadge, NodeStyle } from '../layer/types';
+import { resolvePath, resolveText } from './bindings';
 import type {
   CardElement,
   CardSlot,
   CardStructure,
   CompositeFrame,
   FreeformStructure,
+  NodeBadgeTemplate,
   NodeStylingTemplate,
   SimpleStructure,
   SlotStyling,
+  TemplateColor,
+  ValueLookup,
 } from './types';
 
 /** Solid stroke payload for a composite root shape. */
@@ -86,6 +89,190 @@ function color(
     if (v !== undefined) return v;
   }
   return direct;
+}
+
+// ─── Value lookups + interpolation ────────────────────────────────────────────
+
+/** `{}` (the bound value) or `{dotted.path}` (any other field of the record). */
+const BIND_TOKEN = /\{([^{}]*)\}/g;
+
+/**
+ * Substitute `{}` / `{dotted.path}` tokens against a record.
+ *
+ * One rule, used by every template string — a badge's label and a card text
+ * element — so `'{}%'` and `'L{data.lineRange.0}–{data.lineRange.1}'` are the
+ * same feature rather than two syntaxes. A string with no braces passes
+ * through untouched, which is what keeps every existing literal working.
+ */
+export function interpolate(template: string, node: GraphNode, bound?: unknown): string {
+  if (!template.includes('{')) return template;
+  return template.replace(BIND_TOKEN, (_match, path: string) =>
+    path === ''
+      ? bound === undefined || bound === null
+        ? ''
+        : String(bound)
+      : resolveText(node, path),
+  );
+}
+
+/** First band whose half-open interval contains `value`; declaration order wins. */
+function matchBand<T>(bands: readonly { from?: number; to?: number; value: T }[], value: number): T | undefined {
+  for (const band of bands) {
+    if (band.from !== undefined && value < band.from) continue;
+    if (band.to !== undefined && value >= band.to) continue;
+    return band.value;
+  }
+  return undefined;
+}
+
+/**
+ * Resolve a {@link ValueLookup} against a record: the categorical `map` first,
+ * then the numeric `bands`, then `fallback`. `undefined` when nothing matched,
+ * so the caller keeps whatever it already had.
+ *
+ * `fallbackBind` lets a lookup inherit the bind of the thing it sits on (a
+ * badge's own `bind`), so the common case names the field once.
+ */
+export function resolveLookup<T>(
+  lookup: ValueLookup<T> | undefined,
+  node: GraphNode,
+  fallbackBind?: string,
+): T | undefined {
+  if (!lookup) return undefined;
+  const path = lookup.bind ?? fallbackBind;
+  const value = path !== undefined ? resolvePath(node, path) : undefined;
+  if (lookup.map && value !== undefined && value !== null) {
+    const hit = lookup.map[String(value)];
+    if (hit !== undefined) return hit;
+  }
+  if (lookup.bands && typeof value === 'number') {
+    const hit = matchBand(lookup.bands, value);
+    if (hit !== undefined) return hit;
+  }
+  return lookup.fallback;
+}
+
+/** A {@link TemplateColor} — literal number or role name — against the palette. */
+function templateColor(value: TemplateColor | undefined, palette: RolePalette): number | undefined {
+  if (value === undefined) return undefined;
+  return typeof value === 'number' ? value : palette[value];
+}
+
+/**
+ * Colour for one element: the record-driven lookup first, then the element's
+ * own `*Role` / literal pair. A lookup that matches nothing falls through, so
+ * the pair is the honest fallback rather than a hole.
+ */
+function lookupColor(
+  lookup: ValueLookup<TemplateColor> | undefined,
+  role: ColorRole | undefined,
+  direct: number | undefined,
+  node: GraphNode,
+  palette: RolePalette,
+): number | undefined {
+  const hit = templateColor(resolveLookup(lookup, node), palette);
+  if (hit !== undefined) return hit;
+  return color(role, direct, palette);
+}
+
+/**
+ * Resolve a template's `size` — a flat number, or a {@link ValueLookup} over a
+ * second field. See {@link NodeStylingTemplate.size} for why this composes with
+ * a type binding's structure instead of fighting it.
+ */
+export function compileSize(
+  size: number | ValueLookup<number> | undefined,
+  node: GraphNode,
+): number | undefined {
+  if (size === undefined) return undefined;
+  return typeof size === 'number' ? size : resolveLookup(size, node);
+}
+
+// ─── Badges ───────────────────────────────────────────────────────────────────
+
+/**
+ * Does this template produce a badge for this record?
+ *
+ * An unbound template always does (a static per-type badge). A bound one needs
+ * its field to be **present** — `undefined` / `null` means "no badge", which is
+ * what lets a coverage pill vanish on the files the analyser had no figure for
+ * — and then has to satisfy every `when*` clause that was declared. `0` and
+ * `''` are values, not absences.
+ */
+function badgeApplies(t: NodeBadgeTemplate, value: unknown): boolean {
+  if (t.bind === undefined) return true;
+  if (value === undefined || value === null) return false;
+  if (t.whenEquals !== undefined && value !== t.whenEquals) return false;
+  if (t.whenGreaterThan !== undefined && !(typeof value === 'number' && value > t.whenGreaterThan)) {
+    return false;
+  }
+  if (t.whenLessThan !== undefined && !(typeof value === 'number' && value < t.whenLessThan)) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Compile a styling template's {@link NodeBadgeTemplate} list into the concrete
+ * {@link NodeBadge} list for one node — bindings resolved, colours looked up
+ * and roles substituted, and every badge whose bound field is absent dropped.
+ *
+ * Returns `undefined` when the template declares no badges (so the node
+ * contributes nothing), and an **empty array** when it declares some and this
+ * record matched none.
+ */
+export function compileBadges(
+  styling: NodeStylingTemplate | undefined,
+  node: GraphNode,
+  palette: RolePalette,
+): NodeBadge[] | undefined {
+  const templates = styling?.badges;
+  if (!templates || templates.length === 0) return undefined;
+
+  const out: NodeBadge[] = [];
+  for (const t of templates) {
+    const value = t.bind !== undefined ? resolvePath(node, t.bind) : undefined;
+    if (!badgeApplies(t, value)) continue;
+
+    const {
+      bind: _bind,
+      whenEquals: _whenEquals,
+      whenGreaterThan: _whenGreaterThan,
+      whenLessThan: _whenLessThan,
+      labelText,
+      fill: _fill,
+      fillRole: _fillRole,
+      fillLookup: _fillLookup,
+      strokeColor: _strokeColor,
+      strokeColorRole: _strokeColorRole,
+      labelColor: _labelColor,
+      labelColorRole: _labelColorRole,
+      ...geometry
+    } = t;
+
+    const badge: { -readonly [K in keyof NodeBadge]: NodeBadge[K] } = { ...geometry };
+
+    // The badge's own `bind` is the lookup's default field, so a coverage pill
+    // names `data.coverage` once and bands it here.
+    const fill = templateColor(resolveLookup(t.fillLookup, node, t.bind), palette);
+    badge.fill = fill ?? color(t.fillRole, t.fill, palette);
+    if (badge.fill === undefined) delete badge.fill;
+    const stroke = color(t.strokeColorRole, t.strokeColor, palette);
+    if (stroke !== undefined) badge.strokeColor = stroke;
+    const labelColor = color(t.labelColorRole, t.labelColor, palette);
+    if (labelColor !== undefined) badge.labelColor = labelColor;
+
+    const text =
+      labelText !== undefined
+        ? interpolate(labelText, node, value)
+        : value === undefined || value === null
+          ? ''
+          : String(value);
+    if (text !== '') badge.labelText = text;
+
+    out.push(badge);
+  }
+  return out;
 }
 
 /** Compile a simple structure into label + shape + fill/stroke style fields. */
@@ -406,7 +593,15 @@ export function compileFreeform(
   palette: RolePalette,
 ): Partial<NodeStyle> {
   const bg = color(struct.bgRole, struct.bg, palette) ?? palette.cardBg ?? 0xffffff;
-  const strokeColor = color(struct.strokeRole, struct.stroke, palette);
+  // The silhouette's own colour may be read off the record — a card accented by
+  // its cluster traces that colour round the whole frame, not just the bar.
+  const strokeColor = lookupColor(
+    struct.strokeLookup,
+    struct.strokeRole,
+    struct.stroke,
+    node,
+    palette,
+  );
   const parts: CompositePart[] = [];
 
   for (const el of struct.elements) {
@@ -435,11 +630,29 @@ export function compileFreeform(
 
 /** Map one {@link CardElement} to its composite part(s). */
 function elementToParts(el: CardElement, node: GraphNode, palette: RolePalette): CompositePart[] {
+  // A presence rule, before anything is built: an element whose required field
+  // is absent is not drawn at all, so an interpolated string never renders its
+  // punctuation around nothing (`L–`).
+  if (el.requires !== undefined) {
+    const present = resolvePath(node, el.requires);
+    if (present === undefined || present === null) return [];
+  }
   switch (el.type) {
     case 'text': {
-      const raw = el.bind ? resolveText(node, el.bind) : (el.text ?? '');
+      // `text` wins when set and may interpolate `{}` (the bound value) or
+      // `{dotted.path}`; `bind` alone renders the bound value verbatim.
+      const bound = el.bind ? resolvePath(node, el.bind) : undefined;
+      const raw =
+        el.text !== undefined
+          ? interpolate(el.text, node, bound)
+          : el.bind
+            ? resolveText(node, el.bind)
+            : '';
       const text = el.uppercase ? raw.toUpperCase() : raw;
-      const fill = color(el.colorRole, el.color, palette) ?? palette.foreground ?? 0x111111;
+      const fill =
+        lookupColor(el.colorLookup, el.colorRole, el.color, node, palette) ??
+        palette.foreground ??
+        0x111111;
       const wrap =
         el.maxWidth !== undefined
           ? { maxWidth: el.maxWidth, maxLines: el.maxLines ?? 1, overflow: 'ellipsis' as const }
@@ -454,13 +667,16 @@ function elementToParts(el: CardElement, node: GraphNode, palette: RolePalette):
           fontSize: el.fontSize ?? 13,
           fontWeight: el.fontWeight ?? 400,
           ...(el.fontStyle ? { fontStyle: el.fontStyle } : {}),
+          ...(el.fontVariant ? { fontVariant: el.fontVariant } : {}),
+          ...(el.lineHeight !== undefined ? { lineHeight: el.lineHeight } : {}),
+          ...(el.align ? { align: el.align } : {}),
           fill,
           ...wrap,
         },
       ];
     }
     case 'rect': {
-      const fill = color(el.fillRole, el.fill, palette);
+      const fill = lookupColor(el.fillLookup, el.fillRole, el.fill, node, palette);
       const stroke = color(el.strokeRole, el.stroke, palette);
       return [
         {
@@ -480,7 +696,7 @@ function elementToParts(el: CardElement, node: GraphNode, palette: RolePalette):
     case 'circle': {
       // `x`/`y` are the element's top-left (uniform with the designer canvas);
       // the composite `circle` part is centre-based.
-      const fill = color(el.fillRole, el.fill, palette);
+      const fill = lookupColor(el.fillLookup, el.fillRole, el.fill, node, palette);
       const stroke = color(el.strokeRole, el.stroke, palette);
       return [
         {
@@ -496,7 +712,10 @@ function elementToParts(el: CardElement, node: GraphNode, palette: RolePalette):
       ];
     }
     case 'line': {
-      const stroke = color(el.colorRole, el.color, palette) ?? palette.divider ?? 0xe2e8f0;
+      const stroke =
+        lookupColor(el.colorLookup, el.colorRole, el.color, node, palette) ??
+        palette.divider ??
+        0xe2e8f0;
       return [
         { part: 'line', x: el.x, y: el.y, x2: el.x2, y2: el.y2, stroke: { color: stroke, width: el.strokeWidth ?? 1 } },
       ];

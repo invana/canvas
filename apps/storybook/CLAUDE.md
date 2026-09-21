@@ -171,6 +171,73 @@ Inside the `@invana/canvas` namespace, the seven core engine concepts each get a
 - `Canvas/Behaviours/...`  — registrable behaviours: `DragPanBehaviour`, `WheelZoomBehaviour`, etc.
 - `Canvas/Events/...`      — canvas / layer event demos.
 
+### A story's settings are **data** — no functions in a config
+
+Everything a story passes as engine configuration — `CanvasConfig`, a layer's
+option bag, a behaviour's options, a layout's options, and the node template
+registries (`nodeStructureTemplates` / `nodeStylingTemplates` / `nodeTypes`) —
+must be **plain JSON**: no arrow functions, no factory calls, no `as const`
+helpers that only exist to build one.
+
+Why it is a rule and not a preference: a config is **loaded, edited and saved by
+`CanvasSettingsEditorPanel`**, and it is what a saved visualisation *is*. A
+callback cannot survive a round trip, cannot be diffed or sent to a
+collaborator, and is invisible to the settings panel — so a story that uses one
+is demonstrating a picture the product cannot actually persist. It is also what
+Storybook's "Show code" tab shows a reader.
+
+**The tell:** a resolver whose body is `node.type === 'x' ? A : undefined` is a
+per-type constant wearing a function's clothes. It belongs in a per-type
+template, not in `node.style`.
+
+| Instead of a resolver on `node.style` | Declare |
+|---|---|
+| `shape:` | `nodeStructureTemplates.<name>.shape` (a `simple` structure) |
+| `bgFill` / `bgStrokeColor` / `bgStrokeWidth` | `nodeStylingTemplates.<name>.fill` / `.stroke` / `.strokeWidth` (or the `*Role` pair, which is preferred — roles track the theme) |
+| a translucent tint | `.fillAlpha` / `.strokeAlpha` — **never `bgAlpha`**, which fades the border with the fill |
+| `group:` (this type is a container frame) | `nodeStylingTemplates.<name>.group` |
+| `labelText:` | `nodeTypes.<type>.bindings.label` — a dotted path read off the record (`'id'`, `'data.name'`) |
+| `badges:` | `nodeStylingTemplates.<name>.badges` — each entry `bind`s to a dotted path, `fillLookup` maps that value to a colour, `labelText` interpolates it (`'{}%'`), `whenGreaterThan` / `whenLessThan` / `whenEquals` gate it, and a badge whose bound field is **absent** is not drawn. `HealthBadges` is the worked case |
+| a `shape:` resolver that only changes **size** | `nodeStylingTemplates.<name>.size` — a number, or a `ValueLookup` over a second field (`{ bind: 'data.complexity', map: { simple: 4, complex: 8 } }`). It is applied *after* the merge and normalised onto whatever shape survived, so it composes with the binding's structure instead of being overwritten by it — which is what frees `bindings.label` too. `DotsForce` is the worked case |
+| a `shape:` resolver that builds a **composite card** | one `nodeStructureTemplates.<name>` of `kind: 'freeform'`. `CompositeCards` is the worked case: eight elements, one structure for all five entity kinds |
+| a colour inside a card that depends on the record | `fillLookup` (`rect` / `circle`), `colorLookup` (`text` / `line`), `strokeLookup` (the structure's own border) — all `ValueLookup`. A switch between two *fields* is one lookup whose `bind` changes, not two structures |
+| `` `${a}–${b}` `` in card text | `text: 'L{data.lineRange.0}–{data.lineRange.1}'` — `{}` is the bound value, `{dotted.path}` any field. Pair it with `requires: '<path>'` so the element disappears instead of rendering `L–` where the field is absent |
+| which nodes get all of the above | a `nodeTypes.<type>` entry — the type *is* the selector |
+
+Then wire the type: `nodeTypes: { package: { structure: 'packageFrame', styling: 'packageFrame', bindings: { label: 'id' } } }`.
+
+Precedence, when you need to know which wins: layer `node.style` → **type
+binding** → per-node `style` → state overlays.
+
+**Also not allowed, and each has a data answer:**
+
+- **Factory helpers** (`const card = (accent) => ({…})`, `bind('appCard')`).
+  Write the literals out. Four near-identical stylings are more text than one
+  factory called four times, but a registry is data, a factory call is not
+  something a saved config can contain, and `bind('engineCard')` hides which
+  types share a styling behind a function name. Written out, the repetition is
+  the legend. (This is the same rule as *"don't write helper functions in story
+  files"* in `packages/graph/CLAUDE.md`.)
+- **`ElkLayout`'s `nodeSize` callback.** Containers ignore it — the layout
+  discards a container's box and sizes from its children or its declared floor.
+  Leaves measure from their declared structure. The fallback for an unmeasurable
+  node is `defaultNodeSize` in `config.layouts.<id>`, which is JSON.
+- **Styling in the dataset.** Putting `style` or `states: […]` on records buys
+  JSON by moving the selector into the data — it makes a shared dataset carry
+  one story's presentation. A dataset states *what is true* (`type`, `parentId`,
+  payload); a config states *how it looks*.
+
+**Where a function is still fine:** React render props, hooks, event handlers
+(`onReady`, `onChange`), and `onStoryTeardown`. Those are the story's own
+component, not engine settings. A genuinely per-*instance* value with no type
+to key on is the one honest exception — reach for it only after checking that a
+type binding cannot say it.
+
+**Worked reference:** `stories/usecases/by-casestudies/code-explainability/CodeExplainability.stories.tsx`
+and the RFC behind it,
+[`docs/rfcs/feat/2026-09-21-per-type-presentation-is-only-expressible-as-callbacks.md`](../../docs/rfcs/feat/2026-09-21-per-type-presentation-is-only-expressible-as-callbacks.md).
+It went from seven resolvers + a layout callback to zero.
+
 ### Layout-package stories — `graph-layouts/<flavour>/...`
 
 Stories for any `@invana/graph-layout-<flavour>` package live under a *single* shared parent folder, namespaced by the package suffix (the package name with the `graph-layout-` prefix stripped):
@@ -309,7 +376,7 @@ export const MyStory: Story = {
 The shape is **add everything, then `init()` last**:
 
 1. `const canvas = new GraphCanvas()` (from `@invana/graph`). Register cleanup first.
-2. **Register** layers / behaviours / layouts **by id** (mounting is deferred until `init`). Only *wiring* + non-serialisable bits go in the constructor: ids, `layerId` / `targetLayerId`, resolver functions, and the graph layer's initial content via **`options.initData`** (data is content, not config — it rides on the layer).
+2. **Register** layers / behaviours / layouts **by id** (mounting is deferred until `init`). Only *wiring* goes in the constructor: ids, `layerId` / `targetLayerId`, and the graph layer's initial content via **`options.initData`** (data is content, not config — it rides on the layer). **Presentation does not** — see *A story's settings are data* above; a per-type look belongs in the template registries, not in a resolver.
 3. Build **one `const canvasOptions`** object — the whole serialisable config keyed by id: `layers` (per-id option bags, e.g. `graph.node.style`), `behaviours` (`{ enabled: true, … }` — `enabled` turns it on), `layouts` (per-id params), and `activeLayout`. No class refs, no functions — pure JSON.
 4. `await canvas.init({ container, autoResize: true, config: canvasOptions })` **last**. It mounts everything, applies the config, and enables behaviours. The `activeLayout` auto-runs against its target once data is present — **don't call `setData`/`layout.apply` for the initial render**.
 5. **lil-gui binds straight to `canvasOptions`** (the config *is* the source of truth) and pushes each change live via `canvas.update({ … })`. Layout/force edits go through `canvas.update({ layouts: { … } })` and re-heat the sim — no rebuild.

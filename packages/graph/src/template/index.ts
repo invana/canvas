@@ -8,6 +8,10 @@ export type {
   CardElement,
   CardElementCommon,
   NodeStylingTemplate,
+  NodeBadgeTemplate,
+  TemplateColor,
+  ValueLookup,
+  ValueBand,
   SlotStyling,
   LabelStyling,
   NodeTypeBinding,
@@ -16,5 +20,13 @@ export type {
   NodeTypeRegistry,
 } from './types';
 export { resolvePath, resolveText } from './bindings';
-export { compileSimple, compileCard, compileFreeform } from './compile';
+export {
+  compileSimple,
+  compileCard,
+  compileFreeform,
+  compileBadges,
+  compileSize,
+  resolveLookup,
+  interpolate,
+} from './compile';
 export { BUILT_IN_STRUCTURES, BUILT_IN_STYLINGS } from './structures';

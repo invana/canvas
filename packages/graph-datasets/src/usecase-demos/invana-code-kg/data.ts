@@ -97,9 +97,10 @@ export const data = invanaCodeKg;
  *
  * 602 code entities across 8 architectural clusters. Colour-by-type partitions
  * by entity kind (`file` · `function` · `class` · `config` · `document`) with no
- * wiring; a consumer that would rather colour by *cluster* supplies its own
- * `bgFill` resolver, since `data.cluster` can't be reached from serialisable
- * settings.
+ * wiring; a consumer that would rather colour by *cluster* points
+ * `ColorByBehaviour.nodeValueKey` at `data.cluster` — every field of this
+ * dataset is reachable from serialisable settings, including from a node
+ * template's `ValueLookup` (`size`, badge fills, card element colours).
  *
  * Edges are hairline and heavily faded — at 1,329 relations their aggregate is the
  * picture — and hover dims everything off the 1-hop neighbourhood, which is the

@@ -5,20 +5,42 @@
  * out as a layered dependency DAG instead of a force cloud, and dressed in the
  * `<GraphCanvasApp>` shell.
  *
- * Every node renders as a **composite "card"** (the `kind: 'composite'` shape)
- * so the card itself surfaces the node's data — label, complexity, name,
- * summary, file path, line range. The card's accent bar + border colour follow
+ * Every node renders as a **composite "card"** (a `FreeformStructure` compiling
+ * to the `kind: 'composite'` shape) so the card itself surfaces the node's data
+ * — label, complexity, name, summary, file path, line range. The card's accent bar + border colour follow
  * the active palette (entity **type** or the 8 architectural **clusters**), both
  * offered by the header's *Colour by* switch. `<ElkLayout>` is mounted as a
- * child (fed the real 300×165 card size through its `nodeSize` resolver) and run
- * via `config.activeLayout`; the header's **direction** picker re-runs it, the
- * **types** picker rebuilds `data`, and **Settings** docks
+ * child and run via `config.activeLayout`; the header's **direction** picker
+ * re-runs it, the **types** picker rebuilds `data`, and **Settings** docks
  * `<CanvasSettingsEditorPanel>` over the rest.
  *
  * Edges use the obstacle-aware `manhattan` router: the renderer collects every
  * card as an obstacle and A*-routes each edge through the lanes ELK reserved
  * (`edgeNodeSpacing`), recomputed on every re-route — so avoidance holds after
  * the layout moves nodes, with no per-edge waypoint step.
+ *
+ * ### The card is data too
+ *
+ * `apps/storybook/CLAUDE.md` § *"A story's settings are data"* wants every
+ * engine setting as plain JSON, and **there is no function in this config**:
+ *
+ * - **The card** is `nodeStructureTemplates.codeCard`, one `FreeformStructure`
+ *   of eight absolutely-positioned elements. It replaced a `shape` resolver
+ *   that built the same composite by hand.
+ * - **The accent** — the frame's border, the left bar and the complexity tag —
+ *   is one `ValueLookup` the header's *Colour by* switch re-points between
+ *   `type` and `data.cluster`. A template colour used to be a literal or a
+ *   role, neither of which reads the record; that is what kept the card a
+ *   callback.
+ * - **`L123–187`** is `text: 'L{data.lineRange.0}–{data.lineRange.1}'` with
+ *   `requires: 'data.lineRange'`, so the 253 records that carry no range show
+ *   nothing rather than `L–`.
+ * - **ELK sizing** is `config.layouts.elk.defaultNodeSize` — a *fallback* only,
+ *   consulted when a node can't be measured, because `resolveNodeSize` measures
+ *   the composed card itself.
+ *
+ * Scoped as `F4`–`F7` of
+ * `docs/rfcs/feat/2026-09-21-only-colour-can-be-driven-by-a-second-data-field.md`.
  */
 
 import { useCallback, useMemo, useState } from 'react';
@@ -34,26 +56,23 @@ import {
   useSidePanels
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
-import type { GraphCanvas, GraphData, GraphNode, NodeShapeOptions } from '@invana/graph';
+import type {
+  GraphCanvas,
+  GraphData,
+  NodeStructureRegistry,
+  NodeStylingRegistry,
+  NodeTypeRegistry,
+  TemplateColor,
+  ValueLookup
+} from '@invana/graph';
 import type { ElkDirection } from '@invana/graph-layout-elkjs';
 import {
   invanaCodeKg
 } from '@invana/graph-datasets/usecase-demos';
 import { Map, Moon, Settings, Sun } from 'lucide-react';
 
-/** The code-KG payload this story reads, declared where it's used. */
+/** The entity kinds this story filters on. */
 type InvanaCodeNodeLabel = 'file' | 'function' | 'class' | 'config' | 'document';
-interface InvanaCodeNodeProperties {
-  readonly name: string;
-  readonly filePath: string;
-  readonly summary: string;
-  readonly tags: readonly string[];
-  readonly complexity: 'simple' | 'moderate' | 'complex';
-  readonly lineRange?: readonly [number, number];
-  readonly cluster: string | null;
-  readonly coverage?: number;
-  readonly errors?: number;
-}
 
 const meta: Meta = { title: 'usecases/by-casestudies/code-kg/CompositeCards' };
 export default meta;
@@ -125,11 +144,164 @@ export const CompositeCardsStory: Story = {
       const UNCLUSTERED_FILL = 0x94a3b8; // slate-400 — node in no cluster
       const inner = CARD.w - CARD.pad * 2; // 264
 
-      const props = (n: GraphNode): InvanaCodeNodeProperties => n.data as InvanaCodeNodeProperties;
-      const accentOf = (n: GraphNode): number =>
+      /**
+       * **The *Colour by* switch, as data.** One `ValueLookup`, referenced by
+       * the three things the accent colours (the frame's border, the left bar,
+       * the complexity tag). Flipping the header switch swaps which *field*
+       * drives it — `type` or `data.cluster` — and nothing else about the card
+       * changes. That is the whole reason the card can be a template at all:
+       * a template element's colour used to be a literal or a role, neither of
+       * which reads the record.
+       *
+       * `fallback` catches a record in no cluster (`cluster: null`); in `type`
+       * mode all five kinds are pinned, so it is unreachable there.
+       */
+      const accent: ValueLookup<TemplateColor> =
         colorMode === 'type'
-          ? LABEL_FILL[n.type as InvanaCodeNodeLabel]
-          : (CLUSTER_FILL[props(n).cluster ?? ''] ?? UNCLUSTERED_FILL);
+          ? { bind: 'type', map: LABEL_FILL, fallback: UNCLUSTERED_FILL }
+          : { bind: 'data.cluster', map: CLUSTER_FILL, fallback: UNCLUSTERED_FILL };
+
+      /**
+       * **The card, as one `FreeformStructure`** — the same 300×165 card the
+       * `shape` resolver used to build, expressed as absolutely-positioned
+       * elements. A `text` element's `y` is its **top**, and the compiler adds
+       * the font size to reach the baseline the resolver wrote directly, so
+       * every text `y` here is the old baseline minus its `fontSize`.
+       *
+       * Every colour that carries *meaning* stays literal (the card is a fixed
+       * dark slate by design, like its `tasks-panel` cousins); every colour
+       * that carries *identity* comes from `accent` above.
+       */
+      const structures: NodeStructureRegistry = {
+        codeCard: {
+          name: 'codeCard',
+          kind: 'freeform',
+          width: CARD.w,
+          height: CARD.h,
+          cornerRadius: CARD.radius,
+          bg: 0x1f2937,
+          // The silhouette's own border follows the accent — a lookup on the
+          // structure, because the frame is not one of the elements.
+          strokeLookup: accent,
+          strokeWidth: 2,
+          elements: [
+            // Left accent bar, inset by the corner radius top and bottom.
+            {
+              id: 'accent-bar',
+              type: 'rect',
+              x: 0,
+              y: CARD.radius,
+              width: 4,
+              height: CARD.h - 2 * CARD.radius,
+              fillLookup: accent
+            },
+            // Header divider.
+            {
+              id: 'divider',
+              type: 'line',
+              x: CARD.pad,
+              y: 46,
+              x2: CARD.w - CARD.pad,
+              y2: 46,
+              color: 0x374151,
+              strokeWidth: 1
+            },
+            // Top tags: entity kind (left, small-caps) + complexity (right).
+            {
+              id: 'kind',
+              type: 'text',
+              x: CARD.pad,
+              y: 6,
+              bind: 'type',
+              fontSize: 10,
+              fontWeight: 600,
+              fontVariant: 'small-caps',
+              color: 0x94a3b8
+            },
+            {
+              id: 'complexity',
+              type: 'text',
+              x: CARD.w - CARD.pad,
+              y: 6,
+              bind: 'data.complexity',
+              anchor: 'right',
+              fontSize: 10,
+              fontWeight: 600,
+              colorLookup: accent
+            },
+            // Heading (name) + description (summary).
+            {
+              id: 'name',
+              type: 'text',
+              x: CARD.pad,
+              y: 40,
+              bind: 'data.name',
+              fontSize: 16,
+              fontWeight: 700,
+              color: 0xf1f5f9,
+              maxWidth: inner,
+              maxLines: 1
+            },
+            {
+              id: 'summary',
+              type: 'text',
+              x: CARD.pad,
+              y: 74,
+              bind: 'data.summary',
+              fontSize: 12,
+              color: 0x94a3b8,
+              lineHeight: 16,
+              align: 'left',
+              maxWidth: inner,
+              maxLines: 2
+            },
+            // Footer: file path (left) + line range (right).
+            {
+              id: 'path',
+              type: 'text',
+              x: CARD.pad,
+              y: CARD.h - 39,
+              bind: 'data.filePath',
+              fontSize: 11,
+              fontWeight: 500,
+              color: 0x64748b,
+              maxWidth: inner - 64,
+              maxLines: 1
+            },
+            {
+              id: 'lines',
+              type: 'text',
+              x: CARD.w - CARD.pad,
+              y: CARD.h - 39,
+              // `{path}` tokens interpolate against the record — the resolver
+              // built this with a template literal. `requires` is what keeps it
+              // honest: 253 of the 602 records carry no line range (every
+              // `file`, every `config`), and without it they would read `L–`.
+              text: 'L{data.lineRange.0}–{data.lineRange.1}',
+              requires: 'data.lineRange',
+              anchor: 'right',
+              fontSize: 11,
+              fontWeight: 500,
+              color: 0x64748b
+            }
+          ]
+        }
+      };
+
+      /**
+       * A freeform structure is self-contained — it carries its own colours and
+       * bindings — so the styling and binding halves are empty. The five kinds
+       * are written out because the registry is the legend: this is the list of
+       * entity kinds that render as a card.
+       */
+      const stylings: NodeStylingRegistry = { codeCard: { name: 'codeCard' } };
+      const nodeTypes: NodeTypeRegistry = {
+        file: { structure: 'codeCard', styling: 'codeCard', bindings: {} },
+        function: { structure: 'codeCard', styling: 'codeCard', bindings: {} },
+        class: { structure: 'codeCard', styling: 'codeCard', bindings: {} },
+        config: { structure: 'codeCard', styling: 'codeCard', bindings: {} },
+        document: { structure: 'codeCard', styling: 'codeCard', bindings: {} }
+      };
 
       return {
         // The ELK layout mounted as a child below owns the arrangement.
@@ -143,39 +315,14 @@ export const CompositeCardsStory: Story = {
         layers: {
           background: { type: 'pattern', patternType: 'dots', size: 1.2, spacing: 26, alpha: 0.7 },
           graph: {
+            // The card IS the node visual — the structure above carries its
+            // own fill, border and text, so there is no layer-level node style
+            // at all. Everything that used to live in a `shape` resolver is now
+            // `nodeStructureTemplates.codeCard`.
+            nodeStructureTemplates: structures,
+            nodeStylingTemplates: stylings,
+            nodeTypes,
             node: {
-              style: {
-                // The card IS the node visual — it carries its own fill/stroke
-                // and surfaces the data, so there's no separate label here.
-                // `bgFill` / `bgStrokeColor` stay unset: setting them would
-                // override the card's own.
-                shape: (n: GraphNode): NodeShapeOptions => {
-                  const p = props(n);
-                  const accent = accentOf(n);
-                  return {
-                    kind: 'composite',
-                    width: CARD.w,
-                    height: CARD.h,
-                    cornerRadius: CARD.radius,
-                    fill: 0x1f2937,
-                    stroke: { color: accent, width: 2 },
-                    parts: [
-                      // left accent bar + header divider
-                      { part: 'rect', x: 0, y: CARD.radius, width: 4, height: CARD.h - 2 * CARD.radius, fill: accent },
-                      { part: 'line', x: CARD.pad, y: 46, x2: CARD.w - CARD.pad, y2: 46, stroke: { color: 0x374151, width: 1 } },
-                      // top tags: entity kind (left) + complexity (right)
-                      { part: 'label', x: CARD.pad, y: 16, text: (n.type as string) ?? '', fontSize: 10, fontWeight: 600, fontVariant: 'small-caps', fill: 0x94a3b8 },
-                      { part: 'label', x: CARD.w - CARD.pad, y: 16, text: p.complexity, anchor: 'right', fontSize: 10, fontWeight: 600, fill: accent },
-                      // heading (name) + description (summary)
-                      { part: 'label', x: CARD.pad, y: 56, text: p.name, fontSize: 16, fontWeight: 700, fill: 0xf1f5f9, maxWidth: inner, maxLines: 1, overflow: 'ellipsis' },
-                      { part: 'label', x: CARD.pad, y: 86, text: p.summary, fontSize: 12, fill: 0x94a3b8, lineHeight: 16, align: 'left', maxWidth: inner, maxLines: 2, overflow: 'ellipsis' },
-                      // footer: file path (left) + line range (right)
-                      { part: 'label', x: CARD.pad, y: CARD.h - 28, text: p.filePath, fontSize: 11, fontWeight: 500, fill: 0x64748b, maxWidth: inner - 64, maxLines: 1, overflow: 'ellipsis' },
-                      { part: 'label', x: CARD.w - CARD.pad, y: CARD.h - 28, text: p.lineRange ? `L${p.lineRange[0]}–${p.lineRange[1]}` : '', anchor: 'right', fontSize: 11, fontWeight: 500, fill: 0x64748b },
-                    ]
-                  } as unknown as NodeShapeOptions;
-                }
-              },
               state: {
                 // `bgStrokeColor` overrides the card's own border for the hover
                 // / select ring; `dimmed` fades off-focus cards.
@@ -215,7 +362,13 @@ export const CompositeCardsStory: Story = {
             layerSpacing: 90,
             // Reserve a lane between nodes and edges so the manhattan router
             // has clear channels — fewer edges forced over cards.
-            edgeNodeSpacing: 24
+            edgeNodeSpacing: 24,
+            // Fallback only, and JSON where the deleted `nodeSize` callback was
+            // a function: `resolveNodeSize` measures each card from its own
+            // composed spec (`boundsOfNode`), and reaches this pair only when a
+            // node cannot be measured at all. The card's own numbers, so the
+            // fallback and the measurement agree.
+            defaultNodeSize: { width: CARD.w, height: CARD.h }
           }
         }
       };
@@ -303,14 +456,11 @@ export const CompositeCardsStory: Story = {
         footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
         right={dock.region}
       >
-        {/* `nodeSize` feeds ELK the real card dimensions, so it lays out
-            around 300×165 rectangles rather than points. */}
-        <ElkLayout
-          id="elk"
-          targetLayerId="graph"
-          fitPadding={80}
-          options={{ nodeSize: () => ({ width: CARD.w, height: CARD.h }) }}
-        />
+        {/* Registered as `elk`; `config.activeLayout` runs it once data is in,
+            and re-runs it whenever the direction patch lands. Every option it
+            takes — including the `defaultNodeSize` that replaced its `nodeSize`
+            callback — comes from `config.layouts.elk`. */}
+        <ElkLayout id="elk" targetLayerId="graph" fitPadding={80} />
 
         {minimapOn && <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />}
       </GraphCanvasApp>

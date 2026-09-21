@@ -205,7 +205,20 @@ export const SchemaTableStory: Story = {
       const NAME_COLOR = 0xe2e8f0;
       const TYPE_COLOR = 0x64748b;
 
-      /** Build the composite spec for one table node. Pure data → parts. */
+      /**
+       * Build the composite spec for one table node. Pure data → parts.
+       *
+       * **This is the one resolver the settings-are-data rule allows** (see
+       * `apps/storybook/CLAUDE.md` § *A story's settings are data*). It is not a
+       * per-type constant wearing a function's clothes: every table is a
+       * *different* composite, because `parts` is one row per entry in that
+       * record's own `fields[]` and `height` is computed from the count. A
+       * `nodeTypes` binding keys on `type`, and all five tables share one type
+       * — what differs is per **instance**, and changes as the user edits the
+       * schema. The resolver also reads `hoverRow` at draw time, which is
+       * per-instance *and* per-frame. There is nothing here a saved config
+       * could hold instead.
+       */
       const buildTable = (node: GraphNode): CompositeShapeOption => {
         const d = node.data as TableData;
         const height = HEADER_H + d.fields.length * ROW_H + 6;

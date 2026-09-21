@@ -63,7 +63,13 @@ import {
   type RolePalette,
 } from '../theme/roles';
 import { DEFAULT_THEME } from '../theme/themes';
-import { compileCard, compileFreeform, compileSimple } from '../template/compile';
+import {
+  compileBadges,
+  compileCard,
+  compileFreeform,
+  compileSimple,
+  compileSize,
+} from '../template/compile';
 import { BUILT_IN_STRUCTURES, BUILT_IN_STYLINGS } from '../template/structures';
 import type {
   NodeStructureRegistry,
@@ -671,7 +677,22 @@ export class GraphLayer extends WorldLayer<
         : struct.kind === 'card'
           ? compileCard(struct, styling, binding.bindings, node, this.themePalette)
           : compileSimple(struct, styling, binding.bindings, node, this.themePalette);
-    return styling?.group ? { ...frag, group: styling.group } : frag;
+    // `badges` joins `group` here for the same reason: it is per-type
+    // presentation that any structure kind can carry, and compiling it against
+    // the live record + palette is what lets a badge be *bound* to a field
+    // instead of being decided in advance (see `compileBadges`).
+    const badges = compileBadges(styling, node, this.themePalette);
+    // `size` joins them: resolved here, applied by `resolveNodeStyle` *after*
+    // the whole merge, so a second field can drive the radius while this
+    // binding's structure still supplies the skeleton and the label.
+    const size = compileSize(styling?.size, node);
+    if (!styling?.group && badges === undefined && size === undefined) return frag;
+    return {
+      ...frag,
+      ...(styling?.group ? { group: styling.group } : {}),
+      ...(badges !== undefined ? { badges } : {}),
+      ...(size !== undefined ? { size } : {}),
+    };
   }
 
   protected override onUnmount(): void {
@@ -2263,6 +2284,20 @@ export class GraphLayer extends WorldLayer<
 
     if (this.nodeOption?.style) {
       pushFrom(resolveNodeStyleFields(this.nodeOption.style, node));
+    }
+    // The per-type template contributes between the layer template and the
+    // per-node style, matching `resolveNodeStyle`'s precedence. Without this
+    // the badges a `NodeStylingTemplate` declares would compile into the
+    // resolved style and never be projected — badge projection reads *this*
+    // method, not `resolveNodeStyle`. Only the styling is looked up (not
+    // `resolveTypeBinding`), so a type with no badge templates costs one map
+    // read rather than a second structure compile per node.
+    if (this.nodeTypes && node.type) {
+      const styling = this.nodeStylings[this.nodeTypes[node.type]?.styling ?? ''];
+      if (styling?.badges) {
+        const compiled = compileBadges(styling, node, this.themePalette);
+        if (compiled && compiled.length > 0) collected.push(...compiled);
+      }
     }
     pushFrom(node.style as Partial<NodeStyle> | undefined);
 

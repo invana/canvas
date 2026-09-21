@@ -14,10 +14,31 @@
  * minimap toggle, and **Settings** — `<CanvasSettingsEditorPanel>` docked in the
  * right region for the force params and every behaviour.
  *
- * Exercises: `D3ForceLayout` at real scale, field-level resolvers driving fill
- * and node radius (by complexity), `labelMinZoom` +
- * `<TextResolutionLODBehaviour>` to keep 602 labels legible *and* crisp, 1-hop
- * hover emphasis, shift+click multi-select, and a `MiniMapLayer`.
+ * ### Colour, size and label are all data
+ *
+ * Per `apps/storybook/CLAUDE.md` § *"A story's settings are data"*, **there is
+ * no function in this config**:
+ *
+ * - **Colour** is `behaviours.color` — the header's *Colour by* switch flips
+ *   `nodeValueKey` between the dotted paths `type` and `data.cluster`, with
+ *   every colour pinned in `valueColors`. It replaced a `bgFill` resolver.
+ * - **Radius** is `nodeStylingTemplates.dot.size`, a `ValueLookup` over
+ *   `data.complexity` — a *second* field, orthogonal to `type`. It replaced a
+ *   `shape` resolver.
+ * - **The label** is `nodeTypes.<kind>.bindings.label`. It replaced a
+ *   `labelText` resolver, and it could only be written once `size` existed:
+ *   a type binding carries a structure, a structure carries the shape, and
+ *   `NodeStyle.size` is applied *after* the merge — so the radius survives the
+ *   binding rather than being overwritten by it.
+ *
+ * Scoped as `F1` · `F2` of
+ * `docs/rfcs/feat/2026-09-21-only-colour-can-be-driven-by-a-second-data-field.md`.
+ *
+ * Exercises: `D3ForceLayout` at real scale, serialisable colour- and
+ * size-by-field,
+ * `labelMinZoom` + `<TextResolutionLODBehaviour>` to keep 602 labels legible
+ * *and* crisp, 1-hop hover emphasis, shift+click multi-select, and a
+ * `MiniMapLayer`.
  */
 
 import { useCallback, useMemo, useState } from 'react';
@@ -33,25 +54,20 @@ import {
   useSidePanels
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
-import type { GraphCanvas, GraphData, GraphNode, NodeShapeOptions } from '@invana/graph';
+import type {
+  GraphCanvas,
+  GraphData,
+  NodeStructureRegistry,
+  NodeStylingRegistry,
+  NodeTypeRegistry
+} from '@invana/graph';
 import {
   invanaCodeKg
 } from '@invana/graph-datasets/usecase-demos';
 import { Map, Moon, Settings, Sun } from 'lucide-react';
 
-/** The code-KG payload this story reads, declared where it's used. */
+/** The entity kinds this story filters on. */
 type InvanaCodeNodeLabel = 'file' | 'function' | 'class' | 'config' | 'document';
-type InvanaCodeComplexity = 'simple' | 'moderate' | 'complex';
-interface InvanaCodeNodeProperties {
-  readonly name: string;
-  readonly filePath: string;
-  readonly summary: string;
-  readonly tags: readonly string[];
-  readonly complexity: InvanaCodeComplexity;
-  readonly cluster: string | null;
-  readonly coverage?: number;
-  readonly errors?: number;
-}
 
 const meta: Meta = { title: 'usecases/by-casestudies/code-kg/DotsForce' };
 export default meta;
@@ -95,38 +111,108 @@ export const DotsForceStory: Story = {
     }, [labels]);
 
     const config: CanvasConfig = useMemo(() => {
-      // Fill by node type / entity kind …
-      const LABEL_FILL: Record<InvanaCodeNodeLabel, number> = {
-        file: 0x3b82f6, // blue
-        function: 0x10b981, // emerald
-        class: 0x8b5cf6, // violet
-        config: 0xf59e0b, // amber
-        document: 0xec4899, // pink
+      /**
+       * **One structure for every entity kind.** A dot is a circle with a
+       * label under it — the lean `simple` path. The radius here is only the
+       * skeleton's: `stylings.dot.size` rewrites it per record below.
+       */
+      const structures: NodeStructureRegistry = {
+        dot: {
+          name: 'dot',
+          kind: 'simple',
+          shape: { kind: 'circle', radius: 4 },
+          slots: { label: true }
+        }
       };
-      // … or by the analyser's 8 architectural clusters (the source `layers`).
-      const CLUSTER_FILL: Record<string, number> = {
-        'layer:graph-connectors': 0x2563eb, // blue
-        'layer:modeller': 0x8b5cf6, // violet
-        'layer:engine-domain': 0x10b981, // emerald
-        'layer:engine-platform': 0x14b8a6, // teal
-        'layer:studio-ui': 0xf59e0b, // amber
-        'layer:studio-data': 0xec4899, // pink
-        'layer:studio-types': 0xef4444, // red
-        'layer:config': 0x64748b, // slate
+
+      /**
+       * **Radius by complexity, as data.** `data.complexity` is a *second*
+       * categorical field, orthogonal to `type` — the dataset has complex
+       * files and simple ones, complex classes and simple ones (325 simple /
+       * 213 moderate / 64 complex across all five kinds).
+       *
+       * `size` is the field that makes this expressible. It compiles to
+       * `NodeStyle.size`, which the layer applies **after** the whole template
+       * resolves and normalises onto whatever shape survived (`circle` →
+       * `radius`), so it composes with the structure above instead of fighting
+       * it. That ordering is also what frees the label: a type binding can now
+       * carry `bindings.label` without its structure's shape overwriting the
+       * per-complexity radius.
+       *
+       * Deliberately **no colours and no label typography** here: both are
+       * theme-owned on the layer template below, and a styling template
+       * out-ranks it.
+       */
+      const stylings: NodeStylingRegistry = {
+        dot: {
+          name: 'dot',
+          size: {
+            bind: 'data.complexity',
+            map: { simple: 4, moderate: 5.5, complex: 8 }
+          }
+        }
       };
-      const UNCLUSTERED_FILL = 0x94a3b8; // slate-400 — node in no cluster
-      // Complex modules read larger.
-      const COMPLEXITY_RADIUS: Record<InvanaCodeComplexity, number> = {
-        simple: 4,
-        moderate: 5.5,
-        complex: 8
+
+      /**
+       * The five entity kinds, each bound to the same structure + styling and
+       * the same label path. Written out rather than generated: a registry is
+       * data, and the repetition is the legend — it is the list of kinds this
+       * picture draws.
+       */
+      const nodeTypes: NodeTypeRegistry = {
+        file: { structure: 'dot', styling: 'dot', bindings: { label: 'data.name' } },
+        function: { structure: 'dot', styling: 'dot', bindings: { label: 'data.name' } },
+        class: { structure: 'dot', styling: 'dot', bindings: { label: 'data.name' } },
+        config: { structure: 'dot', styling: 'dot', bindings: { label: 'data.name' } },
+        document: { structure: 'dot', styling: 'dot', bindings: { label: 'data.name' } }
       };
-      const props = (n: GraphNode): InvanaCodeNodeProperties => n.data as InvanaCodeNodeProperties;
 
       return {
         behaviours: {
-          // The resolvers below own node colour.
-          color: { enabled: false },
+          /**
+           * **The "Colour by" switch, as data.** One behaviour, two dotted
+           * paths: `type` is the entity kind (`file` · `function` · `class` ·
+           * `config` · `document`), `data.cluster` the analyser's eight
+           * architectural clusters. Both are root-relative paths over the
+           * stored record, so the switch is a string swap in a saved config
+           * rather than a new closure — which is what the settings panel reads
+           * and what a `bgFill` resolver could never round-trip.
+           *
+           * One `valueColors` map serves both modes: the two key spaces don't
+           * collide (`file` vs `layer:config`), and only the keys the active
+           * path yields are ever looked up. Pinning them is what keeps a
+           * cluster's colour from depending on which node the force sim happens
+           * to seed first.
+           *
+           * `colorEdges: false` — at 1,329 relations the edges are deliberately
+           * one faded grey; their aggregate is the picture.
+           */
+          color: {
+            enabled: true,
+            mode: 'categorical',
+            nodeValueKey: colorMode === 'type' ? 'type' : 'data.cluster',
+            colorEdges: false,
+            valueColors: {
+              // … by node type / entity kind …
+              file: 0x3b82f6, // blue
+              function: 0x10b981, // emerald
+              class: 0x8b5cf6, // violet
+              config: 0xf59e0b, // amber
+              document: 0xec4899, // pink
+              // … or by the analyser's 8 architectural clusters (the source `layers`).
+              'layer:graph-connectors': 0x2563eb, // blue
+              'layer:modeller': 0x8b5cf6, // violet
+              'layer:engine-domain': 0x10b981, // emerald
+              'layer:engine-platform': 0x14b8a6, // teal
+              'layer:studio-ui': 0xf59e0b, // amber
+              'layer:studio-data': 0xec4899, // pink
+              'layer:studio-types': 0xef4444, // red
+              'layer:config': 0x64748b // slate
+            },
+            // slate-400 — an entity in no cluster. Unreachable in `type` mode,
+            // where all five kinds are pinned.
+            fallbackColor: 0x94a3b8
+          },
           hover: { enabled: true, state: 'highlighted', degree: 1, direction: 'both' },
           'click-select': { enabled: true, multiple: true, trigger: ['shift'] },
           'label-lod': { enabled: true }
@@ -134,17 +220,16 @@ export const DotsForceStory: Story = {
         layers: {
           background: { type: 'pattern', patternType: 'dots', size: 1.2, spacing: 26, alpha: 0.7 },
           graph: {
+            // The dot's circle, its radius-by-complexity and its label text all
+            // come from the per-type templates above; the fill comes from the
+            // `color` behaviour. What is left on the layer template is what the
+            // theme owns and what is genuinely layer-wide (the LOD zoom floor)
+            // — there is no resolver in this config.
+            nodeStructureTemplates: structures,
+            nodeStylingTemplates: stylings,
+            nodeTypes,
             node: {
               style: {
-                shape: (n: GraphNode): NodeShapeOptions => ({
-                  kind: 'circle',
-                  radius: COMPLEXITY_RADIUS[props(n).complexity]
-                }),
-                bgFill: (n: GraphNode) =>
-                  colorMode === 'type'
-                    ? LABEL_FILL[n.type as InvanaCodeNodeLabel]
-                    : (CLUSTER_FILL[props(n).cluster ?? ''] ?? UNCLUSTERED_FILL),
-                labelText: (n: GraphNode) => props(n).name,
                 bgAlpha: 0.95,
                 bgStrokeColor: 0xffffff,
                 bgStrokeWidth: 1,

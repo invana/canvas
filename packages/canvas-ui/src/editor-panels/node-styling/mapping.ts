@@ -37,13 +37,15 @@ export function stylingToForm(styling: NodeStylingTemplate = { name: '' }): Node
  * anything it doesn't model would otherwise be dropped on every save. The form
  * is a role-and-typography editor, so what it doesn't model is the literal
  * colour pairs (`fill` / `stroke` / `bg` / `accent`), the rest of `label`'s
- * typography, and — since this is structural rather than cosmetic —
- * {@link NodeStylingTemplate.group}.
+ * typography, and — since these are structural rather than cosmetic —
+ * {@link NodeStylingTemplate.group} and {@link NodeStylingTemplate.badges}.
  *
  * Losing `group` is the sharp edge: a styling template carries whether nodes of
  * its type render as a **container**, so a silent drop would un-frame every
- * group in the graph on an unrelated colour edit. Carrying `base` through is
- * what stops an editor from deleting what it can't show.
+ * group in the graph on an unrelated colour edit. `badges` is the same hazard
+ * one step smaller — a data-bound badge list is a picture the form cannot show
+ * and must not delete. Carrying `base` through is what stops an editor from
+ * deleting what it can't show.
  *
  * Per-slot extras (`color`, `fontFamily`, `fontStyle`) are still dropped — the
  * slot rows are rebuilt by name and reconciling them is a separate job.
@@ -61,6 +63,7 @@ export function formToStyling(
     ...(base?.bg !== undefined ? { bg: base.bg } : {}),
     ...(base?.accent !== undefined ? { accent: base.accent } : {}),
     ...(base?.group ? { group: base.group } : {}),
+    ...(base?.badges ? { badges: base.badges } : {}),
     name: (styling.name ?? '').trim(),
   };
 
