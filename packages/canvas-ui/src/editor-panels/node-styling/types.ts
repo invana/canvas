@@ -11,6 +11,10 @@ export interface NodeStylingScalarFields {
   fillRole: string;
   strokeRole: string;
   strokeWidth: number;
+  /** Fill opacity, 0–1. Compiles onto the fill layer, not the shape's `bgAlpha`. */
+  fillAlpha: number;
+  /** Border opacity, 0–1. Independent of {@link fillAlpha}. */
+  strokeAlpha: number;
   // card
   bgRole: string;
   accentRole: string;

@@ -18,7 +18,7 @@
 
 import type { ShapeLabelPlacement } from '@invana/canvas';
 import type { ColorRole } from '../theme/types';
-import type { NodeShapeOptions } from '../layer/types';
+import type { GroupOptions, NodeShapeOptions } from '../layer/types';
 
 /**
  * Authoring descriptor for a composite card's background silhouette, sized to
@@ -230,6 +230,31 @@ export interface NodeStylingTemplate {
   strokeRole?: ColorRole;
   stroke?: number;
   strokeWidth?: number;
+
+  /**
+   * Opacity of the **fill only**, `0`–`1`. Default opaque.
+   *
+   * Deliberately not the shape's overall opacity: `NodeStyle.bgAlpha` fades the
+   * border with the fill, so a hairline under a low `bgAlpha` all but vanishes.
+   * This compiles onto the fill layer (`{ kind: 'solid', color, alpha }`) and
+   * leaves {@link strokeAlpha} to say what the outline does.
+   *
+   * The use that motivates it is a **theme-agnostic tint**: a neutral at low
+   * alpha composites against whatever backdrop is behind it, so one value reads
+   * correctly in light *and* dark, where a literal picked for one is wrong in
+   * the other.
+   *
+   * **Scope: `simple` structures.** A `card` paints its fill through the
+   * composite root rather than `bgFill`, and takes no alpha yet.
+   */
+  fillAlpha?: number;
+
+  /**
+   * Opacity of the border only, `0`–`1`. Default opaque. Sibling of
+   * {@link fillAlpha}, and `simple`-structure-scoped for the same reason.
+   */
+  strokeAlpha?: number;
+
   label?: LabelStyling;
   // card:
   bgRole?: ColorRole;
@@ -238,6 +263,30 @@ export interface NodeStylingTemplate {
   accent?: number;
   /** Per-slot styling, keyed by slot name (e.g. `title`, `subtitle`, `divider`). */
   slots?: Record<string, SlotStyling>;
+
+  /**
+   * Render nodes of this type as a **compound group frame** — a container drawn
+   * behind the descendants that point at it via `parentId`. See
+   * {@link GroupOptions} for the full contract (auto-fit, header band, collapse
+   * semantics).
+   *
+   * Why this lives on *styling* rather than on the structure or the binding: the
+   * data says which nodes are children of which (`parentId` is hierarchy, and a
+   * tree has it whether or not anything is drawn round it). Whether that
+   * hierarchy *renders as a frame* is a presentation decision — the same call as
+   * fill and stroke, and one a second styling template can answer differently
+   * for the same skeleton.
+   *
+   * Declaring it here is what keeps a group out of `node.style` resolvers: it is
+   * a per-type constant, so it belongs in the per-type template, and a config
+   * that uses it stays serialisable. Equivalent to
+   * `node: { style: { group: (n) => n.type === 'x' ? {…} : undefined } }`,
+   * without the callback.
+   *
+   * Presence is the discriminator, exactly as on `NodeStyle.group` — an empty
+   * object still makes the node a frame.
+   */
+  group?: GroupOptions;
 }
 
 /** Styling for one card slot. */

@@ -79,7 +79,7 @@ export function NodeStylingEditorPanel({
   // Live preview: re-map + emit on every change when `onChange` is supplied.
   useEffect(() => {
     if (!onChange) return;
-    const sub = watch((values) => onChange(formToStyling(values as NodeStylingFormState)));
+    const sub = watch((values) => onChange(formToStyling(values as NodeStylingFormState, defaults)));
     return () => sub.unsubscribe();
   }, [watch, onChange]);
 
@@ -126,7 +126,7 @@ export function NodeStylingEditorPanel({
         )}
 
         <div className="flex justify-end">
-          <Button onClick={() => onSubmit(formToStyling(getValues()))}>{submitLabel}</Button>
+          <Button onClick={() => onSubmit(formToStyling(getValues(), defaults))}>{submitLabel}</Button>
         </div>
       </div>
     </FormProvider>

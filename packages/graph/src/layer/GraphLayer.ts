@@ -659,13 +659,19 @@ export class GraphLayer extends WorldLayer<
   private resolveTypeBinding(node: GraphNode, binding: NodeTypeBinding): Partial<NodeStyle> {
     const struct = this.nodeStructures[binding.structure];
     if (!struct) return {};
-    // Free-form templates are self-contained (own bindings + colour roles), so
-    // they ignore the styling/binding split.
-    if (struct.kind === 'freeform') return compileFreeform(struct, node, this.themePalette);
     const styling = this.nodeStylings[binding.styling];
-    return struct.kind === 'card'
-      ? compileCard(struct, styling, binding.bindings, node, this.themePalette)
-      : compileSimple(struct, styling, binding.bindings, node, this.themePalette);
+    // `group` is applied here rather than inside a compiler so it reaches every
+    // structure kind on the same terms — a frame may be a plain rect, a card, or
+    // a designer-authored freeform, and none of that changes what it means to be
+    // a container. (Freeform templates are otherwise self-contained: own
+    // bindings, own colour roles, no styling/binding split.)
+    const frag: Partial<NodeStyle> =
+      struct.kind === 'freeform'
+        ? compileFreeform(struct, node, this.themePalette)
+        : struct.kind === 'card'
+          ? compileCard(struct, styling, binding.bindings, node, this.themePalette)
+          : compileSimple(struct, styling, binding.bindings, node, this.themePalette);
+    return styling?.group ? { ...frag, group: styling.group } : frag;
   }
 
   protected override onUnmount(): void {

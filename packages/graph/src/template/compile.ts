@@ -99,7 +99,15 @@ export function compileSimple(
   const out: Record<string, unknown> = { shape: struct.shape };
 
   const fill = color(styling?.fillRole, styling?.fill, palette);
-  if (fill !== undefined) out.bgFill = fill;
+  if (fill !== undefined) {
+    // `fillAlpha` goes on the fill layer, never on `bgAlpha` — that one is the
+    // whole shape's opacity and would fade the border with it, which is how a
+    // tinted frame ends up looking borderless.
+    out.bgFill =
+      styling?.fillAlpha !== undefined
+        ? { kind: 'solid', color: fill, alpha: styling.fillAlpha }
+        : fill;
+  }
   const stroke = color(styling?.strokeRole, styling?.stroke, palette);
   if (stroke !== undefined) {
     out.bgStrokeColor = stroke;
@@ -107,6 +115,7 @@ export function compileSimple(
   } else if (styling?.strokeWidth !== undefined) {
     out.bgStrokeWidth = styling.strokeWidth;
   }
+  if (styling?.strokeAlpha !== undefined) out.bgStrokeAlpha = styling.strokeAlpha;
 
   // Label
   const labelPath = bindings.label;
