@@ -22,17 +22,18 @@ relations:
 | **Root cause** | `sym:GraphLayer.nodeSpec` emits a group frame as an ordinary shape spec; nothing in the spec or the picking index marks it unpickable. `file:packages/graph/src/layer/types.ts#L872-L876` documents the opposite ("non-hittable"), and that promise was never implemented. |
 | **Defect rows** | `F1` `F2` (serialisable exclusion on the two behaviours) · `F3` `F4` (their editors) · `F8` (the edge-type half) · `F6` (the story) — **landed** |
 | **Dressing rows** | `F7` — the story-local `enable` predicate, landed 2026-09-21 and **superseded** by `F6` the same day |
-| **Still open** | `F5` — the two false contracts in `file:packages/graph/src/layer/types.ts` are untouched and now contradict the TSDoc added by `F1` |
+| **Still open** | Nothing in the fix table. `V1`–`V6` are unverified: they are pointer-position checks against a WebGL canvas and no browser automation exists in this repo |
 | **Open decisions** | `D2` (brush / lasso) — deliberately out of scope, they have their own selection paths |
-| **Row status** | proposed 0 · accepted 0 · implemented 0 · landed 6 · deferred 1 · superseded 1 |
+| **Row status** | proposed 0 · accepted 0 · implemented 0 · landed 7 · deferred 0 · superseded 1 — every row resolved; the RFC is `landed` once `V1`–`V6` are checked |
 
 **How it went, 2026-09-21.** Approved in two steps. First the story alone, which could
 only be done with the pre-existing `enable` callback (`F7`) — that shipped, then the
 maintainer reopened the engine change asking for the serialisable option on **both node
-and edge types**. `F1`–`F4` + `F8` landed and `F6` replaced the callback with JSON. `F5`
-was never approved and is the one thing left: `file:packages/graph/src/layer/types.ts#L872-L876`
-still claims an expanded frame is non-hittable, and `#L186-L190` still declares a
-`disabled` state nothing honours.
+and edge types**. `F1`–`F4` + `F8` landed and `F6` replaced the callback with JSON. `F5` was approved later the same day and landed with them: the expanded-group
+bullet no longer claims the frame is non-hittable (it states that the frame *is*
+picked, that this is what makes drag / resize / collapse work, and that scenery
+opts out per behaviour), and the `disabled` state now says outright that nothing
+enforces it.
 
 Design constraint set by the maintainer, and the reason `D1` resolves the way it does:
 **everything that is a setting is JSON in the story's config.** No callback options, no
@@ -102,7 +103,7 @@ serialisable way to say "these are scenery". No behaviour learns what a group is
 | F2 | defect | landed | `file:packages/graph/src/behaviours/ClickSelectBehaviour.ts` | Same option, same default, gate at `#L528` | Listed types are unselectable by click | low — additive | — |
 | F3 | defect | landed | `file:packages/canvas-ui/src/editors/behaviours/hover-activate/` | `excludeNodeTypes` through `types.ts` + `fields.ts` + `mapping.ts` as a string-list field | Root rule 12: the new setting is editable in `sym:CanvasSettingsEditorPanel` | low | F1 |
 | F4 | defect | landed | `file:packages/canvas-ui/src/editors/behaviours/click-select/` | Same | Same | low | F2 |
-| F5 | defect | deferred | `file:packages/graph/src/layer/types.ts#L872-L876` | Rewrite the "non-hittable" paragraph to state what is true: an expanded frame **is** picked like any node (which is what makes drag / resize / double-click-collapse work), and scenery opts out per-behaviour via `excludeNodeTypes` | The documented contract stops being a lie | low | F1, F2 |
+| F5 | defect | landed | `file:packages/graph/src/layer/types.ts#L872-L876` | Rewrite the "non-hittable" paragraph to state what is true: an expanded frame **is** picked like any node (which is what makes drag / resize / double-click-collapse work), and scenery opts out per-behaviour via `excludeNodeTypes` | The documented contract stops being a lie | low | F1, F2 |
 | F6 | defect | landed | `file:apps/storybook/stories/usecases/by-casestudies/code-explainability/CodeExplainability.stories.tsx` | `excludeNodeTypes: ['package']` in **both** `CARD_CONFIG` and `DOT_CONFIG` under `hover` and `click-select` — four JSON lines, no code | The reported symptom is gone in the story that reported it | low | F1, F2 |
 
 | F7 | **dressing** | superseded by `F6` | `file:apps/storybook/stories/usecases/by-casestudies/code-explainability/CodeExplainability.stories.tsx` | A `notAFrame` predicate passed as `enable` to `hover` and `click-select` in **both** `CARD_CONFIG` and `DOT_CONFIG`. Keys off `data.symbol !== 'package'` — the callback receives `{ id, type, data }` with `data = node.data`, so `sym:GraphNode.type` is out of scope (`file:packages/graph/src/behaviours/HoverActivateBehaviour.ts#L825-L834`) | The reported symptom is gone in this story | low in blast radius, **high in honesty cost** — it is a callback where the maintainer asked for JSON, it is duplicated across two configs, and it leaves `S4` (the false contract) standing | — |
@@ -174,7 +175,8 @@ it. Per-behaviour exclusion keeps all three.
 | 2026-09-21 | `F7` implemented; `tsc --noEmit` on `pkg:@canvas/storybook` clean | accepted | `V1`–`V5` await a visual pass in Storybook |
 | 2026-09-21 | Maintainer reopened the engine change, asking for **node *and* edge** type lists on both behaviours | accepted | `F1`–`F4` un-deferred; `F8` opened for the edge half |
 | 2026-09-21 | `F1`–`F4`, `F8` implemented; `F6` replaced the `F7` callback with `excludeNodeTypes: ['package']` | accepted | `F7` → `superseded`. `V7` + `V8` pass (build · check-types · lint · boundaries · api-surface) |
-| 2026-09-21 | `F5` left unapproved and open | accepted | The RFC cannot reach `landed` until it is resolved one way or the other |
+| 2026-09-21 | `F5` approved and landed — both false contracts in `file:packages/graph/src/layer/types.ts` rewritten to match the code | accepted | Every fix row is now `landed` or `superseded`. The RFC stays `accepted` rather than `landed` only because `V1`–`V6` are unverified |
+| 2026-09-21 | All rows shipped in `edd0a133` | accepted | Status corrected 2026-09-21: `F5` had been left reading `deferred` after it landed |
 
 ## 9. What the implementation taught
 
