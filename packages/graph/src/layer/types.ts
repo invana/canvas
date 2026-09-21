@@ -171,12 +171,22 @@ export interface GraphData {
  * ### Data-driven — `disabled`
  *
  * Sticky and owned by the data feed (not by an interaction behaviour).
- * `disabled` is "this node isn't interactive — don't let the user pick
- * it". Visually overlaps `dimmed` but they're semantically distinct:
+ * `disabled` means "this node isn't interactive". Visually overlaps
+ * `dimmed` but they're semantically distinct:
  * - `dimmed` says *"you're focusing elsewhere"* (transient, behaviour).
  * - `disabled` says *"you can't interact with me"* (sticky, data).
  * Conflating them would couple interaction code to data code — keep them
  * separate even if the visual treatment is similar.
+ *
+ * **Today `disabled` is a visual state only — nothing enforces it.** Naming
+ * it in `states[]` applies whatever `state.disabled` overlay you author and
+ * nothing more: the node stays pickable, hoverable and selectable. No
+ * behaviour consults it, and no picking path filters on it. To actually stop
+ * interaction, exclude the node's `type` on the behaviours that shouldn't
+ * respond to it (`excludeNodeTypes` on `HoverActivateBehaviour` /
+ * `ClickSelectBehaviour`), or veto it with their `enable` predicate. Making
+ * this state load-bearing would mean routing it through the same behaviours —
+ * a change worth its own RFC, not an assumption to build on.
  */
 export type CanonicalStateName =
   /** Mouse / touch pointer is over the node. Transient; one node at a time. */
@@ -870,10 +880,27 @@ export interface EdgeEffects {
  * and `state.collapsed` overlays describe how it looks in that condition.
  *
  * - **Expanded** (the `collapsed` state absent):
- *   - The node renders behind its children (z-index pushed underneath when
- *     `behindChildren !== false`) and is **non-hittable** — pointer events
- *     pass through the frame to the canvas background. The frame is a pure
- *     drawing, not an interactive node.
+ *   - The node renders behind its children — z-index pushed underneath when
+ *     `behindChildren !== false`, and into the `'backdrop'` paint plane so the
+ *     frame sits below its members' connectors too
+ *     (`docs/rfcs/fix/2026-08-05-group-frame-occludes-edges.md`).
+ *   - **It is still hit-tested like any other node.** `plane` and `zIndex`
+ *     govern painting, not picking (`BaseShapeSpec.plane` says so outright),
+ *     and the frame is indexed by `PickingIndex` on the same terms as a card.
+ *     That is deliberate — it is what lets `DragNodeBehaviour` translate a
+ *     group by its frame, `NodeResizeBehaviour` mount handles on it, and
+ *     `CollapseExpandBehaviour` close it on a double-click.
+ *
+ *     The cost is that with `autoFit` most of a frame's area is *uncovered*,
+ *     so a pointer in the padding or between two children resolves to the
+ *     frame — which reads wrong for a backdrop, and with an `inactiveState`
+ *     lets a stray hover dim the whole graph. A frame that should be pure
+ *     scenery opts out per behaviour, by type:
+ *     `HoverActivateBehaviourOptions.excludeNodeTypes` /
+ *     `ClickSelectBehaviourOptions.excludeNodeTypes`. Opting out of *input*
+ *     rather than out of *picking* is what keeps drag / resize / collapse
+ *     working. See
+ *     `docs/rfcs/fix/2026-09-21-group-frames-hover-and-select-as-nodes.md`.
  *   - With `autoFit: true`, the layer recomputes `width` / `height` (rect)
  *     or `radius` (circle) every flush from the children's bounding box,
  *     plus `padding` and optional `headerHeight`. The declared `width` /

@@ -19,6 +19,8 @@ export type HoverDirection = 'in' | 'out' | 'both';
  */
 export interface HoverActivateOptions {
   hoverEdges?: boolean;
+  excludeNodeTypes?: string[];
+  excludeEdgeTypes?: string[];
   state?: string;
   inactiveState?: string;
   raiseActive?: boolean;
@@ -37,6 +39,10 @@ export interface HoverActivateOptions {
  */
 export interface HoverActivateFields {
   hoverEdges?: boolean;
+  /** Comma-separated `GraphNode.type` list — encoded, see `mapping.ts`. */
+  excludeNodeTypes?: string;
+  /** Comma-separated `GraphEdge.type` list — encoded, see `mapping.ts`. */
+  excludeEdgeTypes?: string;
   state?: string;
   inactiveState?: string;
   raiseActive?: boolean;

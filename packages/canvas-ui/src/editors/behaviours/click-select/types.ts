@@ -24,6 +24,8 @@ export type ClickSelectDirection = 'in' | 'out' | 'both';
  * `SelectModifierKey[]` encoding.
  */
 export interface ClickSelectOptions {
+  excludeNodeTypes?: string[];
+  excludeEdgeTypes?: string[];
   multiple?: boolean;
   trigger?: ClickSelectModifierKey[];
   degree?: number;
@@ -41,6 +43,10 @@ export interface ClickSelectOptions {
  * combos and they're rarely used (see `mapping.ts`).
  */
 export interface ClickSelectFields {
+  /** Comma-separated `GraphNode.type` list — encoded, see `mapping.ts`. */
+  excludeNodeTypes?: string;
+  /** Comma-separated `GraphEdge.type` list — encoded, see `mapping.ts`. */
+  excludeEdgeTypes?: string;
   multiple?: boolean;
   /** Single modifier gate. `'none'` maps to the engine's empty `trigger` array. */
   trigger?: 'none' | ClickSelectModifierKey;

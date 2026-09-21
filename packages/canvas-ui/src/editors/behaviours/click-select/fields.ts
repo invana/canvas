@@ -7,6 +7,19 @@ import type { FieldConfig } from '@invana/forms';
  */
 export const clickSelectFields: FieldConfig[] = [
   {
+    name: 'excludeNodeTypes',
+    type: 'text',
+    label: 'Exclude node types',
+    description:
+      'Comma-separated node types a click can never select — scenery such as group frames. A click on one leaves the selection untouched.',
+  },
+  {
+    name: 'excludeEdgeTypes',
+    type: 'text',
+    label: 'Exclude edge types',
+    description: 'Comma-separated edge types a click can never select.',
+  },
+  {
     name: 'multiple',
     type: 'boolean',
     label: 'Multi-select',

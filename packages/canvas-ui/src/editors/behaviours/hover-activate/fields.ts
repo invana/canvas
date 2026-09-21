@@ -14,6 +14,20 @@ export const hoverActivateFields: FieldConfig[] = [
       'Whether hovering directly over an edge activates it. Off = nodes only (a hovered node’s connecting edges still light up via degree).',
   },
   {
+    name: 'excludeNodeTypes',
+    type: 'text',
+    label: 'Exclude node types',
+    description:
+      'Comma-separated node types that never become the focal hover — scenery such as group frames. Neighbour highlighting is unaffected.',
+  },
+  {
+    name: 'excludeEdgeTypes',
+    type: 'text',
+    label: 'Exclude edge types',
+    description:
+      'Comma-separated edge types that never become the focal hover. Only bites when "Hover edges" is on.',
+  },
+  {
     name: 'state',
     type: 'text',
     label: 'Active state',

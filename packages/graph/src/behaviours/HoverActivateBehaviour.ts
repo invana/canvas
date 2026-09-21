@@ -80,6 +80,50 @@ export interface HoverActivateBehaviourOptions extends BehaviourOptions {
   hoverEdges?: boolean;
 
   /**
+   * Node types that never become the focal hover. A node whose
+   * `GraphNode.type` appears here is ignored on `shape:pointerover` — the
+   * pointer passes over it without activating anything, and without dimming
+   * the rest of the graph.
+   *
+   * The serialisable counterpart of {@link enable}: same veto, expressed as
+   * data so it round-trips through a saved `CanvasConfig` and shows up in the
+   * settings editor. Prefer it; reach for `enable` only when the predicate
+   * needs something no list can say.
+   *
+   * The motivating case is **scenery** — a node that is drawn but isn't
+   * content. An expanded group frame is the archetype: it is picked like any
+   * other shape (`plane: 'backdrop'` moves only where it *paints*), and with
+   * `autoFit` it is mostly uncovered area, so grazing its padding hovers the
+   * frame and — since a frame carries no edges for `degree` to expand into —
+   * an `inactiveState` dims the entire graph.
+   *
+   * Scoped to the **focal** element only, exactly like {@link hoverEdges}.
+   * Neighbour highlighting is untouched: if a hovered node's `degree`
+   * expansion reaches an excluded node, that node still lights up as a
+   * neighbour. This option says "don't hover *at* me", not "never show me as
+   * related".
+   *
+   * Matching is by exact string, and applies whatever the node's condition —
+   * a collapsed group frame of an excluded type is excluded too. Default `[]`
+   * (nothing excluded). Removing a type while its node is hovered does not
+   * retro-activate it; adding one releases an in-flight hover immediately.
+   *
+   * @example `excludeNodeTypes: ['package']` — package frames are scenery.
+   */
+  excludeNodeTypes?: string[];
+
+  /**
+   * Edge types that never become the focal hover. The {@link excludeNodeTypes}
+   * sibling, keyed on `GraphEdge.type`.
+   *
+   * Only meaningful when {@link hoverEdges} is `true` — with edge hover off,
+   * no edge is ever focal and this list has nothing to veto. As with nodes,
+   * the veto is focal-only: an excluded edge still highlights as a hovered
+   * node's neighbour when `degree > 0`. Default `[]`.
+   */
+  excludeEdgeTypes?: string[];
+
+  /**
    * State name applied to the hovered focal element (and its N-hop
    * neighbours when `degree > 0`). Default `'hovered'` — matches the
    * canonical state catalogue auto-merged into every `GraphLayer`. Pass
@@ -173,6 +217,8 @@ export interface HoverActivateBehaviourOptions extends BehaviourOptions {
 interface ResolvedOptions {
   enable: boolean | ((element: HoverableElement) => boolean);
   hoverEdges: boolean;
+  excludeNodeTypes: readonly string[];
+  excludeEdgeTypes: readonly string[];
   state: string;
   inactiveState: string | undefined;
   raiseActive: boolean;
@@ -193,6 +239,8 @@ function resolveOptions(
   const base: ResolvedOptions = prev ?? {
     enable: true,
     hoverEdges: false,
+    excludeNodeTypes: [],
+    excludeEdgeTypes: [],
     state: 'hovered',
     inactiveState: undefined,
     raiseActive: true,
@@ -208,6 +256,8 @@ function resolveOptions(
   return {
     enable: patch.enable ?? base.enable,
     hoverEdges: patch.hoverEdges ?? base.hoverEdges,
+    excludeNodeTypes: patch.excludeNodeTypes ?? base.excludeNodeTypes,
+    excludeEdgeTypes: patch.excludeEdgeTypes ?? base.excludeEdgeTypes,
     state: patch.state ?? base.state,
     inactiveState: 'inactiveState' in patch ? patch.inactiveState : base.inactiveState,
     raiseActive: patch.raiseActive ?? base.raiseActive,
@@ -404,6 +454,10 @@ export class HoverActivateBehaviour extends Behaviour {
     // Turning edge-hover off mid-hover on an edge releases it right away; the
     // guards below then see no `current` and no-op.
     if (!this.opts.hoverEdges && this.current?.type === 'connector') this.clearHover();
+    // Same for a type list that grew to cover whatever is hovered right now —
+    // a settings-panel edit should take effect on the live hover, not only on
+    // the next one.
+    if (this.current && this.isExcluded(this.current.id, this.current.type)) this.clearHover();
     // Re-pick states / scale if the threshold or scale moved while a hover
     // is active — runtime knob changes (GUI sliders) should swap immediately.
     if (this.current) this.handleCameraZoom();
@@ -489,6 +543,9 @@ export class HoverActivateBehaviour extends Behaviour {
     // before any resolution work. Node hover (and neighbour-edge highlighting
     // via `degree`) is untouched.
     if (type === 'connector' && !this.opts.hoverEdges) return;
+    // Scenery opt-out — cheap string check before any resolution work, same
+    // position in the pipeline as the `hoverEdges` gate above.
+    if (this.isExcluded(id, type)) return;
     const target = this.resolveElement(id, type);
     if (!target) return;
 
@@ -820,6 +877,28 @@ export class HoverActivateBehaviour extends Behaviour {
       layer.store.setEdgeState(edge.id, inactive, true);
       this.inactiveIds.add(edge.id);
     }
+  }
+
+  /**
+   * Is this element's `type` on the matching exclusion list?
+   *
+   * Reads `GraphNode.type` / `GraphEdge.type` off the store rather than the
+   * {@link HoverableElement} payload, because that struct carries the *render*
+   * kind (`'shape'` / `'connector'`), not the record's domain type. An id the
+   * store no longer knows is not excluded — the `resolveElement` call that
+   * follows will drop it anyway.
+   */
+  private isExcluded(id: string, type: HoverableElementType): boolean {
+    const layer = this.layer;
+    if (!layer) return false;
+    if (type === 'shape') {
+      if (this.opts.excludeNodeTypes.length === 0) return false;
+      const node = layer.store.getNode(id);
+      return node ? this.opts.excludeNodeTypes.includes(node.type) : false;
+    }
+    if (this.opts.excludeEdgeTypes.length === 0) return false;
+    const edge = layer.store.getEdge(id);
+    return edge ? this.opts.excludeEdgeTypes.includes(edge.type) : false;
   }
 
   private resolveElement(id: string, type: HoverableElementType): HoverableElement | null {

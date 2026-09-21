@@ -319,11 +319,32 @@ const CARD_CONFIG: CanvasConfig = {
     // Colour-by-type is off: the card styling owns the fill, and a `bgFill`
     // resolver would fight it.
     color: { enabled: false },
-    hover: { enabled: true, state: 'highlighted', inactiveState: 'dimmed', degree: 1, direction: 'both' },
+    // A package frame is scenery, not content. It is picked like any other
+    // shape (`plane: 'backdrop'` moves only where it *paints*), and with
+    // `autoFit` most of its area is uncovered — so grazing its padding used to
+    // hover the frame, and since a frame carries no edges for `degree` to
+    // expand into, `inactiveState` dimmed all 42 cards at once.
+    //
+    // `excludeNodeTypes` takes the frames out of the focal hover by data, not
+    // by callback: it is plain JSON, so it survives a saved config and shows up
+    // in the Settings panel. Only the *focal* element is vetoed — a package
+    // reached as a neighbour would still highlight — and the frame stays
+    // pickable, which is what keeps `drag-node` and `collapse-expand` working
+    // on it.
+    hover: {
+      enabled: true,
+      state: 'highlighted',
+      // inactiveState: 'dimmed',
+      degree: 1,
+      direction: 'both',
+      excludeNodeTypes: ['package']
+    },
     pan: { enabled: true },
     wheel: { enabled: true },
     'drag-node': { enabled: true },
-    'click-select': { enabled: true, multiple: true },
+    // Same veto for clicks. A click on an excluded node is a no-op rather than
+    // a clear, so aiming at a gap never costs you the selection.
+    'click-select': { enabled: true, multiple: true, excludeNodeTypes: ['package'] },
     // Registered disarmed — the toolbar's select-mode picker arms one at a time.
     'brush-select': { enabled: false },
     'lasso-select': { enabled: false },
@@ -387,11 +408,19 @@ const DOT_CONFIG: CanvasConfig = {
   // colour-by-type, which is on here because nothing competes for the fill.
   behaviours: {
     color: { enabled: true },
-    hover: { enabled: true, state: 'highlighted', inactiveState: 'dimmed', degree: 1, direction: 'both' },
+    // Same frame veto as CARD_CONFIG — see the note there.
+    hover: {
+      enabled: true,
+      state: 'highlighted',
+      inactiveState: 'dimmed',
+      degree: 1,
+      direction: 'both',
+      excludeNodeTypes: ['package']
+    },
     pan: { enabled: true },
     wheel: { enabled: true },
     'drag-node': { enabled: true },
-    'click-select': { enabled: true, multiple: true },
+    'click-select': { enabled: true, multiple: true, excludeNodeTypes: ['package'] },
     'brush-select': { enabled: false },
     'lasso-select': { enabled: false },
     'collapse-expand': { enabled: true },

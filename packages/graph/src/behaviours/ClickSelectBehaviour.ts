@@ -79,6 +79,44 @@ export interface ClickSelectBehaviourOptions extends BehaviourOptions {
   enable?: boolean | ((element: SelectableElement) => boolean);
 
   /**
+   * Node types that can never be selected by a click. A click landing on a
+   * node whose `GraphNode.type` appears here is a no-op: the selection is left
+   * exactly as it was — **not** cleared, so clicking scenery never costs the
+   * user their selection.
+   *
+   * The serialisable counterpart of {@link enable}: same veto, expressed as
+   * data so it round-trips through a saved `CanvasConfig` and shows up in the
+   * settings editor. Prefer it; reach for `enable` only when the predicate
+   * needs something no list can say.
+   *
+   * The motivating case is **scenery** — a node that is drawn but isn't
+   * content, an expanded group frame above all: it is picked like any other
+   * shape, and with `autoFit` most of its area is uncovered, so a click aimed
+   * at the gap between two cards selects the frame.
+   *
+   * Scoped to the **clicked** element. Neighbour expansion is untouched: with
+   * `degree > 0`, an excluded node reached from a legitimate seed is still
+   * selected as a neighbour. This option says "don't seed a selection at me".
+   *
+   * Applies to clicks only — it never revises a selection already made, so
+   * adding a type here leaves anything currently selected selected.
+   * `selectAll` / `selectNeighbourhood` and the rubber-band behaviours
+   * (`BrushSelectBehaviour` / `LassoSelectBehaviour`) have their own paths and
+   * do not consult this list. Default `[]`.
+   *
+   * @example `excludeNodeTypes: ['package']` — package frames are scenery.
+   */
+  excludeNodeTypes?: string[];
+
+  /**
+   * Edge types that can never be selected by a click. The
+   * {@link excludeNodeTypes} sibling, keyed on `GraphEdge.type`, with the same
+   * focal-only scope and the same "leaves the existing selection alone"
+   * semantics. Default `[]`.
+   */
+  excludeEdgeTypes?: string[];
+
+  /**
    * Allow more than one element selected at a time. When `true`, a qualifying
    * click (see `trigger`) toggles the element in/out of the selection; when
    * `false` it replaces the selection with the clicked element. Default `false`.
@@ -136,6 +174,8 @@ export interface ClickSelectBehaviourOptions extends BehaviourOptions {
 
 interface ResolvedOptions {
   enable: boolean | ((element: SelectableElement) => boolean);
+  excludeNodeTypes: readonly string[];
+  excludeEdgeTypes: readonly string[];
   multiple: boolean;
   trigger: SelectModifierKey[];
   degree: number;
@@ -155,6 +195,8 @@ function resolveOptions(
 ): ResolvedOptions {
   const base: ResolvedOptions = prev ?? {
     enable: true,
+    excludeNodeTypes: [],
+    excludeEdgeTypes: [],
     multiple: false,
     trigger: [],
     degree: 0,
@@ -169,6 +211,8 @@ function resolveOptions(
   };
   return {
     enable: patch.enable ?? base.enable,
+    excludeNodeTypes: patch.excludeNodeTypes ?? base.excludeNodeTypes,
+    excludeEdgeTypes: patch.excludeEdgeTypes ?? base.excludeEdgeTypes,
     multiple: patch.multiple ?? base.multiple,
     trigger: patch.trigger ?? base.trigger,
     degree: patch.degree ?? base.degree,
@@ -521,6 +565,11 @@ export class ClickSelectBehaviour extends Behaviour {
 
   private handleElementClick(id: string, type: SelectableElementType): void {
     if (!this._enabled) return;
+    // Scenery opt-out. Returning here (rather than falling through to the
+    // selection paths) is what makes a click on an excluded node a no-op
+    // instead of a clear — `clearOnBackground` is the only thing that empties
+    // a selection by clicking, and a frame is not the background.
+    if (this.isExcluded(id, type)) return;
     const target = this.resolveElement(id, type);
     if (!target) return;
     const { enable } = this.opts;
@@ -688,6 +737,27 @@ export class ClickSelectBehaviour extends Behaviour {
       this.layer.store.setEdgeState(edge.id, unsel, true);
       this.unselectedIds.add(edge.id);
     }
+  }
+
+  /**
+   * Is this element's `type` on the matching exclusion list?
+   *
+   * Reads `GraphNode.type` / `GraphEdge.type` off the store rather than the
+   * {@link SelectableElement} payload, because that struct carries the
+   * *render* kind (`'shape'` / `'connector'`), not the record's domain type.
+   * An id the store no longer knows is not excluded — the `resolveElement`
+   * call that follows will drop it anyway.
+   */
+  private isExcluded(id: string, type: SelectableElementType): boolean {
+    if (!this.layer) return false;
+    if (type === 'shape') {
+      if (this.opts.excludeNodeTypes.length === 0) return false;
+      const node = this.layer.store.getNode(id);
+      return node ? this.opts.excludeNodeTypes.includes(node.type) : false;
+    }
+    if (this.opts.excludeEdgeTypes.length === 0) return false;
+    const edge = this.layer.store.getEdge(id);
+    return edge ? this.opts.excludeEdgeTypes.includes(edge.type) : false;
   }
 
   private resolveElement(id: string, type: SelectableElementType): SelectableElement | null {
