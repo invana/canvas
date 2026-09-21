@@ -894,13 +894,26 @@ export interface EdgeEffects {
  *     The cost is that with `autoFit` most of a frame's area is *uncovered*,
  *     so a pointer in the padding or between two children resolves to the
  *     frame — which reads wrong for a backdrop, and with an `inactiveState`
- *     lets a stray hover dim the whole graph. A frame that should be pure
- *     scenery opts out per behaviour, by type:
+ *     lets a stray hover dim the whole graph.
+ *
+ *     **So hover and click-select decline an expanded frame by default**
+ *     (`excludeGroups: 'expanded'` on both). A frame is scenery in every graph
+ *     that draws one, and the layer already knows which nodes are frames, so
+ *     no graph has to name its own. Set `excludeGroups: 'never'` on either
+ *     behaviour to opt a diagram back in — hovering a frame to raise its
+ *     members is a real design, and that is how to ask for it. Scenery that
+ *     *isn't* a group still opts out by type, via
  *     `HoverActivateBehaviourOptions.excludeNodeTypes` /
- *     `ClickSelectBehaviourOptions.excludeNodeTypes`. Opting out of *input*
- *     rather than out of *picking* is what keeps drag / resize / collapse
- *     working. See
- *     `docs/rfcs/fix/2026-09-21-group-frames-hover-and-select-as-nodes.md`.
+ *     `ClickSelectBehaviourOptions.excludeNodeTypes`.
+ *
+ *     Either way the frame stays **picked**: declining *input* rather than
+ *     removing it from *picking* is what keeps drag / resize / collapse
+ *     working, and it is why no other behaviour is affected. A **collapsed**
+ *     frame is excluded by neither default — it is the only visible stand-in
+ *     for the members it hides. See
+ *     `docs/rfcs/fix/2026-09-21-group-frames-hover-and-select-as-nodes.md`
+ *     and
+ *     `docs/rfcs/feat/2026-09-22-a-group-frame-is-scenery-but-every-graph-must-say-so.md`.
  *   - With `autoFit: true`, the layer recomputes `width` / `height` (rect)
  *     or `radius` (circle) every flush from the children's bounding box,
  *     plus `padding` and optional `headerHeight`. The declared `width` /

@@ -35,7 +35,9 @@
  *   - **Regions → group nodes.** LOOP / LLM OPS / MEMORY / HARNESS carry
  *     `style.group: { autoFit: true }` over their `parentId` members (HARNESS
  *     nests the other frames). The dashed HARNESS border is just
- *     `bgStrokeDashArray` on that node.
+ *     `bgStrokeDashArray` on that node. They are **scenery**: hover declines an
+ *     expanded frame by default, so a pointer crossing HARNESS's padding does
+ *     nothing rather than highlighting the enclosure and dimming the drawing.
  *   - **Exact curves → authored `waypoints`.** The return arc and the two
  *     right-hand drops are `rounded` routes through fixed waypoints — the
  *     rounded-corner arc the drawing has. The "each turn" bow is a `quadratic`
@@ -437,6 +439,10 @@ export const ArchitectureStory: Story = {
       },
       behaviours: {
         // The drawing owns its palette; hovering a box lifts its neighbourhood.
+        // The region frames are inert under the engine default
+        // (`excludeGroups: 'expanded'`), which is what stops a pointer in
+        // HARNESS's padding from highlighting the whole enclosure — no config
+        // here says so, and none needs to.
         color: { enabled: false },
         hover: { enabled: true, state: 'highlighted', degree: 1 },
       },

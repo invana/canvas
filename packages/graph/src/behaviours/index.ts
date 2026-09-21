@@ -6,6 +6,7 @@
 
 export { HoverActivateBehaviour } from './HoverActivateBehaviour';
 export type {
+  GroupExclusion,
   HoverActivateBehaviourOptions,
   HoverableElement,
   HoverableElementType,

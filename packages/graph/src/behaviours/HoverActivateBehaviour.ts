@@ -46,6 +46,29 @@ export type HoverableElementType = 'shape' | 'connector';
 /** Edge-traversal direction filter for neighbour expansion. */
 export type HoverDirection = 'in' | 'out' | 'both';
 
+/**
+ * Which group frames a pointer behaviour declines to act on, keyed on what a
+ * frame *is* rather than on what its `GraphNode.type` is called.
+ *
+ * - `'expanded'` — **the default.** An expanded frame is scenery: it is drawn,
+ *   it is picked (drag / resize / collapse all need that), but hover and
+ *   click-select pass it by. A *collapsed* frame stays interactive — it is the
+ *   only visible stand-in for the members it hides, so making it inert would
+ *   leave a collapsed group with no interaction at all.
+ * - `'always'` — every frame, open or closed.
+ * - `'never'` — no structural exclusion; a frame hovers and selects like any
+ *   other node. This is the pre-2026-09-22 behaviour, and what a graph that
+ *   *uses* frame interaction (e.g. hovering a frame to raise its contents)
+ *   asks for.
+ *
+ * Resolved through {@link GraphLayer.getGroupRole}, so it needs nothing from
+ * the data: a group is a node whose resolved style carries `group`.
+ *
+ * Orthogonal to {@link HoverActivateBehaviourOptions.excludeNodeTypes}, which
+ * stays the answer for scenery that isn't a group — either list vetoes.
+ */
+export type GroupExclusion = 'expanded' | 'always' | 'never';
+
 /** Element handed to hover callbacks. */
 export interface HoverableElement {
   readonly id: string;
@@ -111,6 +134,31 @@ export interface HoverActivateBehaviourOptions extends BehaviourOptions {
    * @example `excludeNodeTypes: ['package']` — package frames are scenery.
    */
   excludeNodeTypes?: string[];
+
+  /**
+   * Which group frames never become the focal hover — the **structural**
+   * counterpart of {@link excludeNodeTypes}, which keys on a domain string.
+   *
+   * Default `'expanded'`: an expanded frame is inert, a collapsed one behaves
+   * like an ordinary node. That is a change of behaviour from before
+   * 2026-09-22, when a frame hovered like any other shape unless the graph
+   * named its type — see `rfc:feat-2026-09-22-a-group-frame-is-scenery-but-every-graph-must-say-so`.
+   *
+   * Why a default rather than a recipe: a frame is scenery in *every* graph
+   * that draws one, the property is structural (`style.group`), and with
+   * `autoFit` most of a frame's area is uncovered — so grazing its padding
+   * hovers the frame, and since a frame carries no edges for `degree` to
+   * expand into, an {@link inactiveState} then dims the entire graph.
+   *
+   * Scoped to the **focal** element, exactly like {@link excludeNodeTypes}: a
+   * frame reached by `degree` expansion still highlights as a neighbour. Set
+   * `'never'` to opt a graph back in — {@link raiseActive} on an expanded
+   * frame lifts its members and their internal edges, which is a real design
+   * and the reason `'never'` exists.
+   *
+   * @example `excludeGroups: 'never'` — this diagram hovers its frames on purpose.
+   */
+  excludeGroups?: GroupExclusion;
 
   /**
    * Edge types that never become the focal hover. The {@link excludeNodeTypes}
@@ -218,6 +266,7 @@ interface ResolvedOptions {
   enable: boolean | ((element: HoverableElement) => boolean);
   hoverEdges: boolean;
   excludeNodeTypes: readonly string[];
+  excludeGroups: GroupExclusion;
   excludeEdgeTypes: readonly string[];
   state: string;
   inactiveState: string | undefined;
@@ -240,6 +289,7 @@ function resolveOptions(
     enable: true,
     hoverEdges: false,
     excludeNodeTypes: [],
+    excludeGroups: 'expanded',
     excludeEdgeTypes: [],
     state: 'hovered',
     inactiveState: undefined,
@@ -257,6 +307,7 @@ function resolveOptions(
     enable: patch.enable ?? base.enable,
     hoverEdges: patch.hoverEdges ?? base.hoverEdges,
     excludeNodeTypes: patch.excludeNodeTypes ?? base.excludeNodeTypes,
+    excludeGroups: patch.excludeGroups ?? base.excludeGroups,
     excludeEdgeTypes: patch.excludeEdgeTypes ?? base.excludeEdgeTypes,
     state: patch.state ?? base.state,
     inactiveState: 'inactiveState' in patch ? patch.inactiveState : base.inactiveState,
@@ -892,6 +943,14 @@ export class HoverActivateBehaviour extends Behaviour {
     const layer = this.layer;
     if (!layer) return false;
     if (type === 'shape') {
+      // Structural veto first — it is the one with a non-empty default, so the
+      // type-list check below stays a no-op in the common case. `getGroupRole`
+      // costs one `resolveNodeStyle` merge, paid once per `pointerover`.
+      if (this.opts.excludeGroups !== 'never') {
+        const role = layer.getGroupRole(id);
+        if (role === 'expanded') return true;
+        if (role === 'collapsed' && this.opts.excludeGroups === 'always') return true;
+      }
       if (this.opts.excludeNodeTypes.length === 0) return false;
       const node = layer.store.getNode(id);
       return node ? this.opts.excludeNodeTypes.includes(node.type) : false;

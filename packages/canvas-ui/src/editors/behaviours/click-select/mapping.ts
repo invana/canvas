@@ -24,6 +24,7 @@ function parseTypeList(text: string | undefined): string[] | undefined {
 export function optionsToForm(o: ClickSelectOptions = {}): ClickSelectFields {
   return {
     excludeNodeTypes: o.excludeNodeTypes?.join(', '),
+    excludeGroups: o.excludeGroups,
     excludeEdgeTypes: o.excludeEdgeTypes?.join(', '),
     multiple: o.multiple,
     trigger: o.trigger === undefined ? undefined : (o.trigger[0] ?? 'none'),
@@ -47,6 +48,7 @@ export function formToOptions(f: ClickSelectFields): ClickSelectOptions {
   const out: ClickSelectOptions = {};
   const excludeNodeTypes = parseTypeList(f.excludeNodeTypes);
   if (excludeNodeTypes !== undefined) out.excludeNodeTypes = excludeNodeTypes;
+  if (f.excludeGroups !== undefined) out.excludeGroups = f.excludeGroups;
   const excludeEdgeTypes = parseTypeList(f.excludeEdgeTypes);
   if (excludeEdgeTypes !== undefined) out.excludeEdgeTypes = excludeEdgeTypes;
   if (f.multiple !== undefined) out.multiple = f.multiple;

@@ -12,7 +12,20 @@ relations:
   - { predicate: caused-by, object: file:packages/graph/src/layer/types.ts#L872-L876 }
   - { predicate: manifests-in, object: story:usecases/by-casestudies/code-explainability/CodeExplainability }
   - { predicate: relates-to, object: rfc:fix-2026-08-05-group-frame-occludes-edges }
+  - { predicate: superseded-by, object: rfc:feat-2026-09-22-a-group-frame-is-scenery-but-every-graph-must-say-so }
 ---
+
+> **Partly superseded, 2026-09-22**, by
+> `rfc:feat-2026-09-22-a-group-frame-is-scenery-but-every-graph-must-say-so`.
+> What still holds: `F1`–`F4`/`F8` — the `excludeNodeTypes` / `excludeEdgeTypes`
+> lists remain the axis for scenery that **isn't** a group, and they compose with
+> the new structural veto. What was reversed: `D1`, which rejected a group-aware
+> option under the constraint *"no group-specific code path in a behaviour"* —
+> lifted for groups only, so both behaviours now call
+> `sym:GraphLayer.getGroupRole`; and `D3`, whose answer (a collapsed frame is
+> excluded too) was right for a `type`-keyed list and is wrong for a structural
+> one, where a collapsed frame stays interactive. `C2` was also wrong: none of
+> the nine `story:graph/Groups/*` stories mounts either behaviour.
 
 ## Summary
 
@@ -177,6 +190,7 @@ it. Per-behaviour exclusion keeps all three.
 | 2026-09-21 | `F1`–`F4`, `F8` implemented; `F6` replaced the `F7` callback with `excludeNodeTypes: ['package']` | accepted | `F7` → `superseded`. `V7` + `V8` pass (build · check-types · lint · boundaries · api-surface) |
 | 2026-09-21 | `F5` approved and landed — both false contracts in `file:packages/graph/src/layer/types.ts` rewritten to match the code | accepted | Every fix row is now `landed` or `superseded`. The RFC stays `accepted` rather than `landed` only because `V1`–`V6` are unverified |
 | 2026-09-21 | All rows shipped in `edd0a133` | accepted | Status corrected 2026-09-21: `F5` had been left reading `deferred` after it landed |
+| 2026-09-22 | Partly superseded — the maintainer asked for the exclusion to be the **default**, keyed structurally rather than on `type` | accepted | `D1` and `D3` reversed in `rfc:feat-2026-09-22-a-group-frame-is-scenery-but-every-graph-must-say-so`; `F1`–`F4`/`F8` survive as the non-group escape hatch |
 
 ## 9. What the implementation taught
 

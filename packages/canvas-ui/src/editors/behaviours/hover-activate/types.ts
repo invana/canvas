@@ -12,6 +12,13 @@
 export type HoverDirection = 'in' | 'out' | 'both';
 
 /**
+ * Which group frames never become the focal hover (mirrors the engine enum).
+ * `'expanded'` is the engine default: an expanded frame is scenery, a
+ * collapsed one behaves like an ordinary node.
+ */
+export type GroupExclusion = 'expanded' | 'always' | 'never';
+
+/**
  * The serialisable subset of `HoverActivateBehaviourOptions` this editor
  * produces. Function options (`enable`, `onHover`, `onHoverEnd`) and the base
  * `id` / `targetLayerId` / `enabled` / `shortcuts` fields are out of scope —
@@ -20,6 +27,7 @@ export type HoverDirection = 'in' | 'out' | 'both';
 export interface HoverActivateOptions {
   hoverEdges?: boolean;
   excludeNodeTypes?: string[];
+  excludeGroups?: GroupExclusion;
   excludeEdgeTypes?: string[];
   state?: string;
   inactiveState?: string;
@@ -41,6 +49,8 @@ export interface HoverActivateFields {
   hoverEdges?: boolean;
   /** Comma-separated `GraphNode.type` list — encoded, see `mapping.ts`. */
   excludeNodeTypes?: string;
+  /** Structural group veto — a plain enum, no encoding. */
+  excludeGroups?: GroupExclusion;
   /** Comma-separated `GraphEdge.type` list — encoded, see `mapping.ts`. */
   excludeEdgeTypes?: string;
   state?: string;

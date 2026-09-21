@@ -31,7 +31,7 @@ import { Behaviour, EventEmitter, type BehaviourOptions, type CanvasContext } fr
 
 import { GraphLayer } from '../layer/GraphLayer';
 import { ModifierTracker, type ModifierKey } from './ModifierTracker';
-import type { HoverableElementType, HoverDirection } from './HoverActivateBehaviour';
+import type { GroupExclusion, HoverableElementType, HoverDirection } from './HoverActivateBehaviour';
 
 /** Element kind for selection targets. */
 export type SelectableElementType = HoverableElementType;
@@ -109,6 +109,32 @@ export interface ClickSelectBehaviourOptions extends BehaviourOptions {
   excludeNodeTypes?: string[];
 
   /**
+   * Which group frames can never be selected by a click — the **structural**
+   * counterpart of {@link excludeNodeTypes}, which keys on a domain string.
+   * See {@link GroupExclusion}.
+   *
+   * Default `'expanded'`: a click on an expanded frame is a no-op that leaves
+   * the selection exactly as it was — clicking scenery never costs the user
+   * their selection — while a collapsed frame selects like an ordinary node.
+   * That is a change of behaviour from before 2026-09-22, when a frame was
+   * selectable unless the graph named its type; see
+   * `rfc:feat-2026-09-22-a-group-frame-is-scenery-but-every-graph-must-say-so`.
+   *
+   * With `autoFit`, most of a frame's area is uncovered, so a click aimed at
+   * the gap between two cards used to select the frame. Scoped to the
+   * **clicked** element: with `degree > 0`, a frame reached from a legitimate
+   * seed is still selected as a neighbour. Set `'never'` to opt back in.
+   *
+   * Unaffected paths, as with the type lists: `selectAll` /
+   * `selectNeighbourhood`, and `sym:BrushSelectBehaviour` /
+   * `sym:LassoSelectBehaviour`, which select by geometry through their own
+   * code and do not consult this.
+   *
+   * @example `excludeGroups: 'never'` — frames are selectable content here.
+   */
+  excludeGroups?: GroupExclusion;
+
+  /**
    * Edge types that can never be selected by a click. The
    * {@link excludeNodeTypes} sibling, keyed on `GraphEdge.type`, with the same
    * focal-only scope and the same "leaves the existing selection alone"
@@ -175,6 +201,7 @@ export interface ClickSelectBehaviourOptions extends BehaviourOptions {
 interface ResolvedOptions {
   enable: boolean | ((element: SelectableElement) => boolean);
   excludeNodeTypes: readonly string[];
+  excludeGroups: GroupExclusion;
   excludeEdgeTypes: readonly string[];
   multiple: boolean;
   trigger: SelectModifierKey[];
@@ -196,6 +223,7 @@ function resolveOptions(
   const base: ResolvedOptions = prev ?? {
     enable: true,
     excludeNodeTypes: [],
+    excludeGroups: 'expanded',
     excludeEdgeTypes: [],
     multiple: false,
     trigger: [],
@@ -212,6 +240,7 @@ function resolveOptions(
   return {
     enable: patch.enable ?? base.enable,
     excludeNodeTypes: patch.excludeNodeTypes ?? base.excludeNodeTypes,
+    excludeGroups: patch.excludeGroups ?? base.excludeGroups,
     excludeEdgeTypes: patch.excludeEdgeTypes ?? base.excludeEdgeTypes,
     multiple: patch.multiple ?? base.multiple,
     trigger: patch.trigger ?? base.trigger,
@@ -751,6 +780,14 @@ export class ClickSelectBehaviour extends Behaviour {
   private isExcluded(id: string, type: SelectableElementType): boolean {
     if (!this.layer) return false;
     if (type === 'shape') {
+      // Structural veto first — it is the one with a non-empty default, so the
+      // type-list check below stays a no-op in the common case. `getGroupRole`
+      // costs one `resolveNodeStyle` merge, paid once per click.
+      if (this.opts.excludeGroups !== 'never') {
+        const role = this.layer.getGroupRole(id);
+        if (role === 'expanded') return true;
+        if (role === 'collapsed' && this.opts.excludeGroups === 'always') return true;
+      }
       if (this.opts.excludeNodeTypes.length === 0) return false;
       const node = this.layer.store.getNode(id);
       return node ? this.opts.excludeNodeTypes.includes(node.type) : false;

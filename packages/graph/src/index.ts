@@ -136,6 +136,7 @@ export {
 
 export {
   HoverActivateBehaviour,
+  type GroupExclusion,
   type HoverActivateBehaviourOptions,
   type HoverableElement,
   type HoverableElementType,

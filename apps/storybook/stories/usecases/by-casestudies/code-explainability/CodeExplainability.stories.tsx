@@ -427,26 +427,28 @@ const CARD_CONFIG: CanvasConfig = {
     // hover the frame, and since a frame carries no edges for `degree` to
     // expand into, `inactiveState` dimmed all 42 cards at once.
     //
-    // `excludeNodeTypes` takes the frames out of the focal hover by data, not
-    // by callback: it is plain JSON, so it survives a saved config and shows up
-    // in the Settings panel. Only the *focal* element is vetoed — a package
-    // reached as a neighbour would still highlight — and the frame stays
+    // Nothing here says so any more. Since 2026-09-22 hover and click-select
+    // decline an expanded group frame by default (`excludeGroups: 'expanded'`),
+    // keyed on what the node *is* rather than on its type — so this config
+    // carried `excludeNodeTypes: ['package']` twice for a veto the engine now
+    // applies on its own. Only the *focal* element is vetoed either way (a
+    // package reached as a neighbour still highlights), and the frame stays
     // pickable, which is what keeps `drag-node` and `collapse-expand` working
-    // on it.
+    // on it. `excludeNodeTypes` remains the lever for scenery that is **not**
+    // a frame — `story:graph/Behaviours/ExcludeNodeTypes` is the worked case.
     hover: {
       enabled: true,
       state: 'highlighted',
       // inactiveState: 'dimmed',
       degree: 1,
-      direction: 'both',
-      excludeNodeTypes: ['package']
+      direction: 'both'
     },
     pan: { enabled: true },
     wheel: { enabled: true },
     'drag-node': { enabled: true },
-    // Same veto for clicks. A click on an excluded node is a no-op rather than
-    // a clear, so aiming at a gap never costs you the selection.
-    'click-select': { enabled: true, multiple: true, excludeNodeTypes: ['package'] },
+    // Clicks get the same default. A click on an excluded node is a no-op
+    // rather than a clear, so aiming at a gap never costs you the selection.
+    'click-select': { enabled: true, multiple: true },
     // Registered disarmed — the toolbar's select-mode picker arms one at a time.
     'brush-select': { enabled: false },
     'lasso-select': { enabled: false },
@@ -531,19 +533,20 @@ const DOT_CONFIG: CanvasConfig = {
   // colour-by-type, which is on here because nothing competes for the fill.
   behaviours: {
     color: { enabled: true },
-    // Same frame veto as CARD_CONFIG — see the note there.
+    // Frames are scenery here too, by the same engine default — see the note
+    // in CARD_CONFIG. `inactiveState: 'dimmed'` is on in this look, which is
+    // what made the stray frame hover so loud before the default landed.
     hover: {
       enabled: true,
       state: 'highlighted',
       inactiveState: 'dimmed',
       degree: 1,
-      direction: 'both',
-      excludeNodeTypes: ['package']
+      direction: 'both'
     },
     pan: { enabled: true },
     wheel: { enabled: true },
     'drag-node': { enabled: true },
-    'click-select': { enabled: true, multiple: true, excludeNodeTypes: ['package'] },
+    'click-select': { enabled: true, multiple: true },
     'brush-select': { enabled: false },
     'lasso-select': { enabled: false },
     'collapse-expand': { enabled: true },

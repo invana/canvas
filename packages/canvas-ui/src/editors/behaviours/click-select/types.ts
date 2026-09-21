@@ -16,6 +16,13 @@ export type ClickSelectModifierKey = 'shift' | 'control' | 'alt' | 'meta';
 export type ClickSelectDirection = 'in' | 'out' | 'both';
 
 /**
+ * Which group frames a click can never select (mirrors the engine enum).
+ * `'expanded'` is the engine default: an open frame is scenery, a collapsed
+ * one selects like an ordinary node.
+ */
+export type ClickSelectGroupExclusion = 'expanded' | 'always' | 'never';
+
+/**
  * The subset of `ClickSelectBehaviourOptions` this editor produces — a
  * serialisable patch. Callback options (`onSelect` / `onDeselect` /
  * `onSelectionChange`), the `enable` predicate, and base fields
@@ -25,6 +32,7 @@ export type ClickSelectDirection = 'in' | 'out' | 'both';
  */
 export interface ClickSelectOptions {
   excludeNodeTypes?: string[];
+  excludeGroups?: ClickSelectGroupExclusion;
   excludeEdgeTypes?: string[];
   multiple?: boolean;
   trigger?: ClickSelectModifierKey[];
@@ -45,6 +53,8 @@ export interface ClickSelectOptions {
 export interface ClickSelectFields {
   /** Comma-separated `GraphNode.type` list — encoded, see `mapping.ts`. */
   excludeNodeTypes?: string;
+  /** Structural group veto — a plain enum, no encoding. */
+  excludeGroups?: ClickSelectGroupExclusion;
   /** Comma-separated `GraphEdge.type` list — encoded, see `mapping.ts`. */
   excludeEdgeTypes?: string;
   multiple?: boolean;

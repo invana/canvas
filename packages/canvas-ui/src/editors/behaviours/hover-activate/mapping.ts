@@ -26,6 +26,7 @@ export function optionsToForm(o: HoverActivateOptions = {}): HoverActivateFields
   return {
     hoverEdges: o.hoverEdges,
     excludeNodeTypes: o.excludeNodeTypes?.join(', '),
+    excludeGroups: o.excludeGroups,
     excludeEdgeTypes: o.excludeEdgeTypes?.join(', '),
     state: o.state,
     inactiveState: o.inactiveState,
@@ -50,6 +51,7 @@ export function formToOptions(f: HoverActivateFields): HoverActivateOptions {
   if (f.hoverEdges !== undefined) out.hoverEdges = f.hoverEdges;
   const excludeNodeTypes = parseTypeList(f.excludeNodeTypes);
   if (excludeNodeTypes !== undefined) out.excludeNodeTypes = excludeNodeTypes;
+  if (f.excludeGroups !== undefined) out.excludeGroups = f.excludeGroups;
   const excludeEdgeTypes = parseTypeList(f.excludeEdgeTypes);
   if (excludeEdgeTypes !== undefined) out.excludeEdgeTypes = excludeEdgeTypes;
   if (f.state !== undefined) out.state = f.state;

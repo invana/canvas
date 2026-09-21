@@ -71,6 +71,14 @@
  * as the single node the renderer draws, and its hidden members keep their frozen
  * positions instead of reserving empty space inside the box.
  *
+ * **Hovering a stage raises its contents, and that is opt-in.** Since 2026-09-22
+ * hover and click-select decline an expanded group frame by default
+ * (`excludeGroups: 'expanded'`) — an `autoFit` frame is mostly uncovered area, so
+ * in most graphs grazing its padding is a stray hover that dims everything. Here
+ * the frames are the subject, so the config sets `hover.excludeGroups: 'never'`
+ * and the lift comes back. A **collapsed** stage is interactive under either
+ * setting: it is the only visible stand-in for the members it hides. See
+ * `docs/rfcs/feat/2026-09-22-a-group-frame-is-scenery-but-every-graph-must-say-so.md`.
  *
  * **Light / dark comes from the theme, in two halves.** `GraphCanvasApp` already
  * mounts the sole theme publisher (`ThemeBehaviour`) plus `CanvasThemeSync`, so
@@ -384,7 +392,13 @@ export const EndToEndStory: Story = {
           // arrows between them — above the neighbouring stages. That's the
           // behaviour's own `raiseActive` doing the right thing for a group:
           // the frame is a backdrop, so it lifts its contents, not itself.
-          hover: { enabled: true, state: 'highlighted', degree: 1 },
+          //
+          // `excludeGroups: 'never'` is what asks for that. Since 2026-09-22 an
+          // expanded frame is scenery by default — hover declines it, because in
+          // most graphs an `autoFit` frame is a large dead area that dims
+          // everything on a stray pointer. This diagram is the exception: the
+          // frames *are* the subject, so it opts back in.
+          hover: { enabled: true, state: 'highlighted', degree: 1, excludeGroups: 'never' },
           // `collapse` and `click-select` both claim the `pointer+click` gesture
           // and the engine refuses the second claimant, so selection stands down
           // for the +/− toggles.

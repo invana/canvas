@@ -14,6 +14,18 @@ export const clickSelectFields: FieldConfig[] = [
       'Comma-separated node types a click can never select — scenery such as group frames. A click on one leaves the selection untouched.',
   },
   {
+    name: 'excludeGroups',
+    type: 'select',
+    label: 'Exclude groups',
+    description:
+      'Which group frames a click can never select, by what they are rather than by type. "Expanded" (the default) makes an open frame scenery and leaves a collapsed one selectable.',
+    options: [
+      { value: 'expanded', label: 'Expanded frames' },
+      { value: 'always', label: 'Every frame' },
+      { value: 'never', label: 'Never — frames select' },
+    ],
+  },
+  {
     name: 'excludeEdgeTypes',
     type: 'text',
     label: 'Exclude edge types',

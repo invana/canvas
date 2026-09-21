@@ -21,6 +21,18 @@ export const hoverActivateFields: FieldConfig[] = [
       'Comma-separated node types that never become the focal hover — scenery such as group frames. Neighbour highlighting is unaffected.',
   },
   {
+    name: 'excludeGroups',
+    type: 'select',
+    label: 'Exclude groups',
+    description:
+      'Which group frames never become the focal hover, by what they are rather than by type. "Expanded" (the default) makes an open frame scenery and leaves a collapsed one interactive.',
+    options: [
+      { value: 'expanded', label: 'Expanded frames' },
+      { value: 'always', label: 'Every frame' },
+      { value: 'never', label: 'Never — frames hover' },
+    ],
+  },
+  {
     name: 'excludeEdgeTypes',
     type: 'text',
     label: 'Exclude edge types',
