@@ -71,6 +71,7 @@
  * as the single node the renderer draws, and its hidden members keep their frozen
  * positions instead of reserving empty space inside the box.
  *
+ *
  * **Light / dark comes from the theme, in two halves.** `GraphCanvasApp` already
  * mounts the sole theme publisher (`ThemeBehaviour`) plus `CanvasThemeSync`, so
  * the header's sun/moon toggle publishes the `default` palette's light **or**
@@ -95,25 +96,85 @@
  * One more engine detail, easy to trip over: `bgFill` always wins over a shape's
  * own `fill`, so the box fill is set as `bgFill` on the layer template —
  * otherwise `GraphCanvasApp`'s default slate `bgFill: 0x94a3b8` paints every box.
+ *
+ * **The header's four dock toggles open the visualisation's own state.** Three
+ * panels share the app's resizable `right` region (one at a time, `useSidePanels`
+ * activity-bar style), and a fourth drives the `bottom` region:
+ *
+ *   - **Settings** (`CanvasSettingsEditorPanel`) — every mounted layer,
+ *     behaviour and layout, schema-driven and live. That includes the Force and
+ *     ELK option bags registered in `onReady`, so both solvers the Layout picker
+ *     runs are tunable here rather than by editing this file.
+ *   - **Node styling** (`StylingViewPanel`) — one row per node type (`stage` ·
+ *     `box`): colour, size, label key, held as a serialisable `TypeStylingPatch`
+ *     in story state (the stand-in for Invana's persisted canvas record). It
+ *     writes **template field resolvers**, which sit *below* the stage tint
+ *     overlays — so the `stage` row is inert by design and `box` is the row that
+ *     moves the diagram.
+ *   - **Node structure** (`NodeStructureEditorPanel`) — the `nodeTypes.box`
+ *     binding: which structure + styling template, and the slot → field map. A
+ *     type binding resolves **above** the layer template, so applying one takes
+ *     the boxes away from the `shape` resolver and gives them the structure's own
+ *     geometry. It is bound to `box` alone: binding `stage` would override its
+ *     `tabbed-rect` + `group` and the eleven frames would disappear.
+ *   - **Graph data** — a read-only JSON view of the `invanaArchitecture` dataset
+ *     as `@invana/graph-datasets` ships it, *before* the story maps the edges.
+ *     It is the evidence for the claim above that the nodes arrive engine-ready.
+ *
+ * Precedence is the thing to hold on to while using them, because all four write
+ * the same node: layer template → **type binding** → per-node `style` → state
+ * overlays. The Styling panel writes the first tier, Structure the second, the
+ * dataset the third, the stage tints the fourth.
+ *
+ * Two writers share `bgFill` — the theme handler patches it flat (which is what
+ * paints the boxes while the Styling panel is closed) and the panel replaces it
+ * with a resolver. `applyThemeKind` re-seeds the patch on every flip so they
+ * agree; the cost is that a hand-picked box colour is reset by a theme switch,
+ * while a size or label key chosen in the panel survives it.
  */
 
 import { useCallback, useMemo, useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import type {
-  GraphCanvas,
-  GraphData,
-  GraphEdge,
-  GraphLayer,
-  GraphNode,
-  NodeShapeOptions,
-  ThemeBehaviour
+import {
+  BUILT_IN_STRUCTURES,
+  BUILT_IN_STYLINGS,
+  type GraphCanvas,
+  type GraphData,
+  type GraphEdge,
+  type GraphLayer,
+  type GraphNode,
+  type NodeShapeOptions,
+  type NodeTypeBinding,
+  type ThemeBehaviour
 } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { invanaArchitecture } from '@invana/graph-datasets/usecase-demos';
 import { CollapseExpandBehaviour, MiniMapLayer } from '@invana/canvas-react';
-import { CanvasMessageBar, GraphCanvasApp, GraphControlsToolbar, GraphStatusBar, ToolbarItems } from '@invana/canvas-ui';
-import { Atom, LayoutDashboard, Moon, Network, Sun } from 'lucide-react';
+import {
+  CanvasMessageBar,
+  CanvasSettingsEditorPanel,
+  GraphCanvasApp,
+  GraphControlsToolbar,
+  GraphStatusBar,
+  NodeStructureEditorPanel,
+  StylingViewPanel,
+  ToolbarItems,
+  useSidePanels,
+  type TypeStylingPatch
+} from '@invana/canvas-ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@invana/ui';
+import {
+  Atom,
+  Braces,
+  LayoutDashboard,
+  LayoutTemplate,
+  Moon,
+  Network,
+  Paintbrush,
+  Settings,
+  Sun
+} from 'lucide-react';
 
 const meta: Meta = { title: 'usecases/by-casestudies/invana-architecture/EndToEnd' };
 export default meta;
@@ -121,7 +182,9 @@ type Story = StoryObj;
 
 export const EndToEndStory: Story = {
   name: 'EndToEnd',
-  render: () => {
+  // A named function, not an arrow: this render holds hooks, and the
+  // rules-of-hooks lint only recognises a component by its capitalised name.
+  render: function EndToEndRender() {
     // Which layout the header picker is on. `'authored'` isn't a registered
     // layout — it's the absence of one (`activeLayout: ''`) plus a rewrite of the
     // positions the data shipped with, held in `authoredRef` below.
@@ -133,6 +196,14 @@ export const EndToEndStory: Story = {
     // them. Without this, "Authored" could only mean "stop laying out", which
     // would leave the graph wherever ELK or the force sim happened to end.
     const authoredRef = useRef<{ ids: string[]; xy: Float32Array } | null>(null);
+    // What the **Node styling** panel holds — the stand-in for Invana's persisted
+    // canvas record, since that panel is controlled for persistence and live for
+    // painting. Seeded with the light box fill so the panel's `bgFill` resolver
+    // agrees with the theme handler's flat patch the moment it mounts; the
+    // handler re-seeds it on every flip (see `onReady`).
+    const [styling, setStyling] = useState<TypeStylingPatch>({
+      nodeTypes: { box: { color: '#ffffff' } }
+    });
 
     const applyLayout = useCallback((next: 'authored' | 'force' | 'elk') => {
       const canvas = canvasRef.current;
@@ -326,6 +397,124 @@ export const EndToEndStory: Story = {
       };
     }, []);
 
+    // ── The right dock: what this visualisation *is*, as editable state ──────
+    // The structure picker offers the engine's registered template names; the
+    // binding below is what the panel opens on. Nothing applies it until Apply
+    // is pressed — the story's `config` ships no `nodeTypes`, so the diagram is
+    // the layer template alone until you choose otherwise.
+    const structureNames = useMemo(() => Object.keys(BUILT_IN_STRUCTURES), []);
+    const stylingNames = useMemo(() => Object.keys(BUILT_IN_STYLINGS), []);
+    // What the Structure panel opens on. `styling` is a required half of a
+    // binding and the built-in registry pairs only `circle` and `idCard`, so the
+    // card is the coherent default — and the honest demo, since swapping a box
+    // for a card is exactly what this tier does. The caption is a per-node
+    // `style.labelText`, so the `title` slot binds to that path rather than to a
+    // `data.*` field.
+    const boxBinding = useMemo<NodeTypeBinding>(
+      () => ({ structure: 'idCard', styling: 'idCard', bindings: { title: 'style.labelText' } }),
+      [],
+    );
+
+    // Three panels, one at a time, in the app's resizable `right` region — the
+    // `useSidePanels` activity-bar (its `items` are spread into the single
+    // header toolbar below, its `region` handed straight to `right`).
+    const dock = useSidePanels(
+      [
+        {
+          id: 'settings',
+          icon: Settings,
+          label: 'Settings',
+          // Every mounted layer / behaviour / layout, schema-driven and live —
+          // including the Force and ELK option bags registered in `onReady`, so
+          // the two solvers the header picker runs are tunable without a reload.
+          render: (c) => (
+            <CanvasSettingsEditorPanel canvas={c} className="border-0 bg-transparent shadow-none" />
+          )
+        },
+        {
+          id: 'styling',
+          icon: Paintbrush,
+          label: 'Node styling',
+          // One row per node type (`stage` · `box`) — colour, size, label key.
+          // It writes **template field resolvers** (`useApplyTypeStyling`), which
+          // sit below the stage tint overlays, so recolouring `stage` here has no
+          // visible effect: a state overlay out-ranks the template
+          // (`GraphLayer.ts:1077`). `box` is the row that moves the diagram.
+          render: (c) => (
+            <StylingViewPanel canvas={c} layerId="graph" value={styling} onChange={setStyling} />
+          )
+        },
+        {
+          id: 'structure',
+          icon: LayoutTemplate,
+          label: 'Node structure',
+          // A per-type binding sits **above** the layer template
+          // (`GraphLayer.ts:1074`), so applying one replaces the `shape` resolver
+          // for boxes: every box takes the chosen structure's geometry and loses
+          // its authored `data.width` / `data.height`. That is the demo — it is
+          // also why only `box` is bound. Binding `stage` would override its
+          // `tabbed-rect` + `group`, and the eleven frames would vanish.
+          render: (c) => (
+            <Card className="m-3">
+              <CardHeader className="py-3">
+                <CardTitle className="text-sm">box binding</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <NodeStructureEditorPanel
+                  defaults={boxBinding}
+                  structures={structureNames}
+                  stylings={stylingNames}
+                  onSubmit={(binding) =>
+                    c?.update({ layers: { graph: { nodeTypes: { box: binding } } } })
+                  }
+                />
+              </CardContent>
+            </Card>
+          )
+        },
+      ],
+      { section: { defaultSize: '380px', maxSize: '560px' } },
+    );
+
+    // ── The bottom dock: the data the picture is made of ─────────────────────
+    // Serialised once — the dataset is a module constant, so this never changes.
+    const datasetJson = useMemo(
+      () => JSON.stringify({ nodes: invanaArchitecture.nodes, edges: invanaArchitecture.edges }, null, 2),
+      [],
+    );
+    // A second `useSidePanels` drives the app's `bottom` region (the hook returns
+    // a section config, and both regions take the same shape). `bottomSpan`
+    // defaults to `'main-right'`, so the table underlaps the canvas *and* the
+    // right dock, leaving no panel stranded.
+    const dataDock = useSidePanels(
+      [
+        {
+          id: 'data',
+          icon: Braces,
+          label: 'Graph data',
+          // Read-only on purpose: this is what `@invana/graph-datasets` ships,
+          // *before* the story maps the edges. Every node arrives engine-ready
+          // (position · parentId · caption · the `stage` tint state), which is
+          // the point the JSON makes better than prose.
+          render: () => (
+            <div className="flex h-full flex-col gap-2 p-3">
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">invanaArchitecture</span>
+                <span className="tabular-nums">
+                  {invanaArchitecture.nodes.length} nodes · {invanaArchitecture.edges.length} edges
+                </span>
+                <span className="font-mono">@invana/graph-datasets/usecase-demos</span>
+              </div>
+              <pre className="min-h-0 flex-1 overflow-auto rounded-md bg-muted/40 p-3 font-mono text-xs leading-relaxed text-foreground">
+                {datasetJson}
+              </pre>
+            </div>
+          )
+        },
+      ],
+      { section: { defaultSize: 34, minSize: 12 } },
+    );
+
     const onReady = useCallback((canvas: GraphCanvas | null) => {
       if (!canvas) return;
       const graph = canvas.layers.get('graph') as GraphLayer | undefined;
@@ -374,6 +563,21 @@ export const EndToEndStory: Story = {
           if (node.type !== 'stage') continue;
           graph.store.updateNode(node.id, { states: [want] });
         }
+        // Two writers, one field. The patch above sets `bgFill` flat, which is
+        // what paints the boxes while the Styling panel is closed; the panel,
+        // once open, replaces that field with a per-type *resolver*
+        // (`useApplyTypeStyling`) and would keep the old mode's fill across a
+        // flip. So hand it the new fill too — its effect is keyed on the patch's
+        // content, so this re-applies it. A merge, not a reset: a size or label
+        // key chosen in the panel survives the flip; a hand-picked box colour
+        // does not, because the mode owns that one.
+        setStyling((cur) => ({
+          ...cur,
+          nodeTypes: {
+            ...cur.nodeTypes,
+            box: { ...cur.nodeTypes?.box, color: dark ? '#18181b' : '#ffffff' }
+          }
+        }));
       };
       // Authored `states` are separate from the runtime hover/selection states,
       // so re-writing them can't clear a live hover. The layer subscribed at
@@ -438,7 +642,9 @@ export const EndToEndStory: Story = {
         layout.events.on('end', () => canvas.fitView(60));
       }
 
-      canvas.showMessage('Hover a stage to raise it · click − to collapse it · switch Layout in the header');
+      canvas.showMessage(
+        'Hover a stage to raise it · click − to collapse it · Layout, Settings, Styling, Structure and Data are in the header',
+      );
     }, []);
 
     return (
@@ -466,6 +672,10 @@ export const EndToEndStory: Story = {
                   icons: { authored: LayoutDashboard, force: Atom, elk: Network },
                   onChange: (v) => applyLayout(v as 'authored' | 'force' | 'elk')
                 },
+                // One toolbar for both docks — the activity-bar convention is a
+                // single `ToolbarItems`, not a bar per region.
+                ...dock.items,
+                ...dataDock.items,
                 {
                   type: 'toggle',
                   key: 'theme',
@@ -481,6 +691,11 @@ export const EndToEndStory: Story = {
           )
         }}
         footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
+        // Settings / Node styling / Node structure — one at a time; toggling the
+        // open one off drops the region and the canvas reclaims the width.
+        right={dock.region}
+        // The dataset JSON. Same hook, the app's other resizable region.
+        bottom={dataDock.region}
       >
         <CollapseExpandBehaviour id="collapse" targetLayerId="graph" />
         <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />
