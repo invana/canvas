@@ -70,6 +70,7 @@ import {
   GraphLayer,
   HoverActivateBehaviour,
   LassoSelectBehaviour,
+  TextResolutionLODBehaviour,
   ThemeBehaviour,
   WheelZoomBehaviour
 } from '@invana/canvas-react';
@@ -86,7 +87,6 @@ import { canvasDataflow } from '@invana/graph-datasets';
 import type { CanvasConfig } from '@invana/canvas';
 import type {
   GraphCanvas,
-  GraphNode,
   NodeStructureRegistry,
   NodeStylingRegistry,
   NodeTypeRegistry
@@ -125,7 +125,17 @@ const structures: NodeStructureRegistry = {
 };
 
 /**
- * One styling shape, four accents.
+ * Four stylings, grouped by **side of the stack** rather than by the twelve
+ * `type` layers — the accent works as a legend, and twelve accents would be
+ * noise. Roles carry the theme; only `accent` is a literal, because the palette
+ * exposes one accent role and this card wants four.
+ *
+ * Written out rather than built by a helper. Four near-identical literals are
+ * more text than one factory called four times, but a template registry is
+ * **data** — it has to survive being saved, reloaded and edited in the settings
+ * panel, and a reader comparing two accents should see the difference on the
+ * page rather than reconstruct it from a call. This is also what Storybook's
+ * "Show code" tab shows.
  *
  * The hairline border is doing real work, not decoration: a card's `cardBg` sits
  * one step off the frame it's drawn on, and at a zoom where the text stops being
@@ -133,60 +143,211 @@ const structures: NodeStructureRegistry = {
  * is what keeps 42 cards countable. It goes through `strokeRole` rather than a
  * literal so it still tracks the palette in light mode.
  */
-const card = (accent: number) => ({
-  name: 'symbolCard',
-  bgRole: 'cardBg' as const,
-  strokeRole: 'stroke' as const,
-  strokeWidth: 1,
-  accent,
-  slots: {
-    symbol: { color: accent, fontSize: 10, fontWeight: 700, uppercase: true },
-    package: { colorRole: 'muted' as const, fontSize: 10 },
-    name: { colorRole: 'heading' as const, fontSize: 15, fontWeight: 700 },
-    purpose: { colorRole: 'foreground' as const, fontSize: 11 },
-    divider: { colorRole: 'divider' as const }
-  }
-});
-
-/**
- * Four stylings, grouped by **side of the stack** rather than by the twelve
- * `type` layers — the accent works as a legend, and twelve accents would be
- * noise. Roles carry the theme; only `accent` is a literal, because the palette
- * exposes one accent role and this card wants four.
- */
 const stylings: NodeStylingRegistry = {
-  appCard: card(0x8b5cf6), // React + facade — where a consumer starts
-  dataCard: card(0x10b981), // records, styles, stores — the data lanes
-  engineCard: card(0xf59e0b), // engine, layer, behaviour, interface
-  renderCard: card(0xf43f5e), // spec, instance, renderer — canvas-side
+  // React + facade — where a consumer starts
+  appCard: {
+    name: 'appCard',
+    bgRole: 'cardBg',
+    strokeRole: 'stroke',
+    strokeWidth: 1,
+    accent: 0x8b5cf6,
+    slots: {
+      symbol: { color: 0x8b5cf6, fontSize: 10, fontWeight: 700, uppercase: true },
+      package: { colorRole: 'muted', fontSize: 10 },
+      name: { colorRole: 'heading', fontSize: 15, fontWeight: 700 },
+      purpose: { colorRole: 'foreground', fontSize: 11 },
+      divider: { colorRole: 'divider' }
+    }
+  },
+  // records, styles, stores — the data lanes
+  dataCard: {
+    name: 'dataCard',
+    bgRole: 'cardBg',
+    strokeRole: 'stroke',
+    strokeWidth: 1,
+    accent: 0x10b981,
+    slots: {
+      symbol: { color: 0x10b981, fontSize: 10, fontWeight: 700, uppercase: true },
+      package: { colorRole: 'muted', fontSize: 10 },
+      name: { colorRole: 'heading', fontSize: 15, fontWeight: 700 },
+      purpose: { colorRole: 'foreground', fontSize: 11 },
+      divider: { colorRole: 'divider' }
+    }
+  },
+  // engine, layer, behaviour, interface
+  engineCard: {
+    name: 'engineCard',
+    bgRole: 'cardBg',
+    strokeRole: 'stroke',
+    strokeWidth: 1,
+    accent: 0xf59e0b,
+    slots: {
+      symbol: { color: 0xf59e0b, fontSize: 10, fontWeight: 700, uppercase: true },
+      package: { colorRole: 'muted', fontSize: 10 },
+      name: { colorRole: 'heading', fontSize: 15, fontWeight: 700 },
+      purpose: { colorRole: 'foreground', fontSize: 11 },
+      divider: { colorRole: 'divider' }
+    }
+  },
+  // spec, instance, renderer — canvas-side
+  renderCard: {
+    name: 'renderCard',
+    bgRole: 'cardBg',
+    strokeRole: 'stroke',
+    strokeWidth: 1,
+    accent: 0xf43f5e,
+    slots: {
+      symbol: { color: 0xf43f5e, fontSize: 10, fontWeight: 700, uppercase: true },
+      package: { colorRole: 'muted', fontSize: 10 },
+      name: { colorRole: 'heading', fontSize: 15, fontWeight: 700 },
+      purpose: { colorRole: 'foreground', fontSize: 11 },
+      divider: { colorRole: 'divider' }
+    }
+  },
 };
 
-/** Bindings are dotted paths into the payload — one path per slot, verbatim. */
-const bind = (styling: string) => ({
-  structure: 'symbolCard',
-  styling,
-  bindings: {
-    symbol: 'data.symbol',
-    package: 'data.package',
-    name: 'data.name',
-    purpose: 'data.purpose'
+/**
+ * The package frame — a type like any other, declared the same way.
+ *
+ * `group` is what makes a node a container (`GraphLayer.isGroupNode`), and it
+ * sits on the **styling** template because that is what it is: the dataset
+ * states the hierarchy (`parentId` → package), and whether that hierarchy
+ * *renders* as a frame is presentation. Declaring it per type is what keeps it
+ * out of a `node.style` resolver, so this whole config stays JSON.
+ *
+ * `autoFit` is REQUIRED, not decoration: it defaults to `false`, and without it
+ * the frame ignores its children and draws at its declared size.
+ *
+ * The declared `rect` does double duty and both halves matter: expanded it is
+ * the *floor* auto-fit raises to the children bbox + padding, and **collapsed
+ * it is the size the frame keeps** — auto-fit is skipped and a rect has no
+ * `collapsedOf` minimal form. Declaring `0 × 0` frames correctly but closes to
+ * a 0×0 rect: an invisible node you can't double-click to re-open. So:
+ * card-width, one header tall. Without any shape at all it would fall to the
+ * engine default (`circle radius:10`) and auto-fit would grow that into a vast
+ * enclosing circle.
+ */
+const FRAME_STRUCTURES: NodeStructureRegistry = {
+  packageFrame: {
+    name: 'packageFrame',
+    kind: 'simple',
+    shape: { kind: 'rect', width: CARD.width, height: 52, cornerRadius: 14 },
+    slots: { label: true }
   }
-});
+};
 
-/** Every stack layer binds to the same structure, styled by its side. */
+/**
+ * **A group node is just a node, so it takes ordinary node styling.** There is
+ * no group-specific fill channel and none is needed.
+ *
+ * Three surfaces, and the frame has to sit *between* the backdrop and the card
+ * so the card still reads as the raised thing. The cards' colours go through
+ * roles, so they follow the theme — but a raw colour is a plain number with no
+ * role channel, so a literal picked for dark mode would be wrong the moment the
+ * header's theme toggle flips to light.
+ *
+ * The way out is a **neutral tinted with alpha rather than a chosen colour**:
+ * mid-slate at 14% composites *against whatever backdrop is behind it*. Over the
+ * dark backdrop it lands near 0x1b2436 — a step up from the background, a step
+ * below `cardBg`. Over the light one it lands near 0xe9ecf0 — a step *down*,
+ * with the near-white card still the raised surface. The ordering that makes a
+ * card read as raised survives either way, from one pair of values.
+ *
+ * `fillAlpha` tints the **fill only**. The whole-shape `bgAlpha` would multiply
+ * the border too — a 0.75 border under a 0.14 shape opacity paints at 0.1,
+ * which is why these frames once looked borderless.
+ */
+const FRAME_STYLINGS: NodeStylingRegistry = {
+  packageFrame: {
+    name: 'packageFrame',
+    group: { autoFit: true, padding: 28, headerHeight: 26 },
+    fill: 0x64748b,
+    fillAlpha: 0.14,
+    stroke: 0x94a3b8,
+    strokeAlpha: 0.75,
+    strokeWidth: 1.5
+  }
+};
+
+/**
+ * Every node type, bound to a structure + styling + its slot→data paths.
+ *
+ * `bindings` values are **dotted paths into the record**, read verbatim — so
+ * `label: 'id'` on the frame reads `node.id`, and `name: 'data.name'` reads the
+ * payload. That is how a label's *content* stays declarative: no accessor, no
+ * `labelText` resolver.
+ *
+ * Twelve entries repeating one structure is deliberate. A `bind(styling)` helper
+ * was shorter, but this registry is data the settings panel loads, edits and
+ * saves; a factory call is not something a saved config can contain, and it
+ * hides which types share a styling behind a function name. Grouped by side of
+ * the stack, the repetition *is* the legend.
+ */
 const nodeTypes: NodeTypeRegistry = {
-  react: bind('appCard'),
-  facade: bind('appCard'),
-  engine: bind('engineCard'),
-  layer: bind('engineCard'),
-  behaviour: bind('engineCard'),
-  interface: bind('engineCard'),
-  store: bind('dataCard'),
-  record: bind('dataCard'),
-  style: bind('dataCard'),
-  spec: bind('renderCard'),
-  instance: bind('renderCard'),
-  renderer: bind('renderCard')
+  // The frame is a type binding like any other — this entry is what replaced
+  // seven `node.style` resolvers.
+  package: { structure: 'packageFrame', styling: 'packageFrame', bindings: { label: 'id' } },
+
+  react: {
+    structure: 'symbolCard',
+    styling: 'appCard',
+    bindings: { symbol: 'data.symbol', package: 'data.package', name: 'data.name', purpose: 'data.purpose' }
+  },
+  facade: {
+    structure: 'symbolCard',
+    styling: 'appCard',
+    bindings: { symbol: 'data.symbol', package: 'data.package', name: 'data.name', purpose: 'data.purpose' }
+  },
+  engine: {
+    structure: 'symbolCard',
+    styling: 'engineCard',
+    bindings: { symbol: 'data.symbol', package: 'data.package', name: 'data.name', purpose: 'data.purpose' }
+  },
+  layer: {
+    structure: 'symbolCard',
+    styling: 'engineCard',
+    bindings: { symbol: 'data.symbol', package: 'data.package', name: 'data.name', purpose: 'data.purpose' }
+  },
+  behaviour: {
+    structure: 'symbolCard',
+    styling: 'engineCard',
+    bindings: { symbol: 'data.symbol', package: 'data.package', name: 'data.name', purpose: 'data.purpose' }
+  },
+  interface: {
+    structure: 'symbolCard',
+    styling: 'engineCard',
+    bindings: { symbol: 'data.symbol', package: 'data.package', name: 'data.name', purpose: 'data.purpose' }
+  },
+  store: {
+    structure: 'symbolCard',
+    styling: 'dataCard',
+    bindings: { symbol: 'data.symbol', package: 'data.package', name: 'data.name', purpose: 'data.purpose' }
+  },
+  record: {
+    structure: 'symbolCard',
+    styling: 'dataCard',
+    bindings: { symbol: 'data.symbol', package: 'data.package', name: 'data.name', purpose: 'data.purpose' }
+  },
+  style: {
+    structure: 'symbolCard',
+    styling: 'dataCard',
+    bindings: { symbol: 'data.symbol', package: 'data.package', name: 'data.name', purpose: 'data.purpose' }
+  },
+  spec: {
+    structure: 'symbolCard',
+    styling: 'renderCard',
+    bindings: { symbol: 'data.symbol', package: 'data.package', name: 'data.name', purpose: 'data.purpose' }
+  },
+  instance: {
+    structure: 'symbolCard',
+    styling: 'renderCard',
+    bindings: { symbol: 'data.symbol', package: 'data.package', name: 'data.name', purpose: 'data.purpose' }
+  },
+  renderer: {
+    structure: 'symbolCard',
+    styling: 'renderCard',
+    bindings: { symbol: 'data.symbol', package: 'data.package', name: 'data.name', purpose: 'data.purpose' }
+  },
 };
 
 /**
@@ -210,73 +371,11 @@ const CARD_CONFIG: CanvasConfig = {
     // registers under.
     background: { type: 'pattern', patternType: 'grid', alpha: 0.5 },
     graph: {
-      nodeStructureTemplates: structures,
-      nodeStylingTemplates: stylings,
+      // The frame's structure + styling join the card ones — one registry each,
+      // no per-node branching anywhere.
+      nodeStructureTemplates: { ...structures, ...FRAME_STRUCTURES },
+      nodeStylingTemplates: { ...stylings, ...FRAME_STYLINGS },
       nodeTypes,
-      node: {
-        style: {
-          // The dataset states the hierarchy (`parentId` → package); whether it
-          // *renders* as a frame is presentation, so the resolver lives here.
-          // `style.group` is what makes a node a container — see
-          // `GraphLayer.isGroupNode`.
-          //
-          // `autoFit` is REQUIRED, not decoration: it defaults to `false`, and
-          // without it the frame ignores its children and draws at its declared
-          // size. A package node carries no `style.shape`, so that size is the
-          // engine fallback (`{ kind: 'circle', radius: 10 }`) — a 10px dot that
-          // reads as "collapsed" no matter how many symbols it holds.
-          group: (node: GraphNode) =>
-            node.type === 'package' ? { autoFit: true, padding: 28, headerHeight: 26 } : undefined,
-          // A package declares no shape of its own, so without this it falls to
-          // the engine default (`circle radius:10`) and autoFit grows that into
-          // a vast enclosing circle. A frame around a dozen cards wants a rect.
-          //
-          // The declared size does double duty and both halves matter: expanded
-          // it is the *floor* autoFit raises to the children bbox + padding, and
-          // **collapsed it is the size the frame keeps** — autoFit is skipped and
-          // a rect has no `collapsedOf` minimal form. Declaring `0 × 0` framed
-          // correctly but closed to a 0×0 rect: an invisible node you can't
-          // double-click to re-open. So: card-width, one header tall.
-          shape: (node: GraphNode) =>
-            node.type === 'package'
-              ? { kind: 'rect' as const, width: CARD.width, height: 52, cornerRadius: 14 }
-              : undefined,
-          // **A group node is just a node, so it takes ordinary node styling.**
-          // There is no group-specific fill channel and none is needed — `fill`
-          // and `stroke` come off the resolved style with no special-casing for
-          // frames (`GraphLayer.ts:1526`). Left unset (the default), a package
-          // has no fill at all and the frame, its cards and the backdrop read as
-          // one flat slab.
-          //
-          // Three surfaces, and the frame has to sit *between* the backdrop and
-          // the card so the card still reads as the raised thing. The card's own
-          // colours go through roles (`bgRole: 'cardBg'`, `strokeRole`), so they
-          // follow the theme — but a raw `NodeStyle` colour is a plain number
-          // with no role channel, so a literal picked for dark mode would be
-          // wrong the moment the header's theme toggle flips to light.
-          //
-          // The way out is a **neutral tinted with alpha rather than a chosen
-          // colour**: mid-slate at 14% composites *against whatever backdrop is
-          // behind it*. Over the dark backdrop it lands near 0x1b2436 — a step
-          // up from the background, a step below `cardBg`. Over the light one it
-          // lands near 0xe9ecf0 — a step *down* from the background, with the
-          // near-white card still the raised surface. The ordering that makes a
-          // card read as raised survives either way, from one pair of values.
-          //
-          // The alpha goes on the **fill layer**, not on `bgAlpha`: `bgAlpha` is
-          // the whole shape's opacity (`GraphLayer.ts:1518` — it becomes
-          // `spec.alpha`), so it multiplies the border too. A 0.5 border under
-          // `bgAlpha: 0.14` paints at 0.07 — which is why these frames looked
-          // borderless. `{ kind: 'solid', … alpha }` tints only the fill and
-          // leaves the outline at full strength.
-          bgFill: (node: GraphNode) =>
-            node.type === 'package' ? { kind: 'solid' as const, color: 0x64748b, alpha: 0.14 } : undefined,
-          bgStrokeColor: (node: GraphNode) => (node.type === 'package' ? 0x94a3b8 : undefined),
-          bgStrokeAlpha: (node: GraphNode) => (node.type === 'package' ? 0.75 : undefined),
-          bgStrokeWidth: (node: GraphNode) => (node.type === 'package' ? 1.5 : undefined),
-          labelText: (node: GraphNode) => (node.type === 'package' ? node.id : undefined)
-        }
-      },
       edge: {
         style: {
           strokeColor: 0x94a3b8,
@@ -312,7 +411,10 @@ const CARD_CONFIG: CanvasConfig = {
       layerSpacing: 140,
       edgeNodeSpacing: 24,
       edgeSpacing: 14,
-      padding: 40
+      padding: 40,
+      // Fallback only — used when a node's shape can't be measured, which for
+      // this look means a card, so these are the card's own numbers.
+      defaultNodeSize: { width: CARD.width, height: CARD.height }
     }
   },
   behaviours: {
@@ -348,6 +450,20 @@ const CARD_CONFIG: CanvasConfig = {
     // Registered disarmed — the toolbar's select-mode picker arms one at a time.
     'brush-select': { enabled: false },
     'lasso-select': { enabled: false },
+    // Re-rasterise glyphs as the camera zooms in. Pixi rasterises each text to
+    // a glyph texture once at the renderer's DPR, so a card read at 3× is that
+    // same texture upsampled 3× — legible but soft, which is the wrong failure
+    // mode for a story whose whole payload is a sentence per card. This reaches
+    // the card text, not just the frame titles: composite `label` parts aren't
+    // decorations, so `setLabelsResolution` pushes into them directly
+    // (`PrimitivesRenderer.ts:1544`).
+    //
+    // Tiers are left at the default ladder — four widely-spaced bands whose
+    // multipliers are derived in the source (`DEFAULT_LEVELS`) to hold sampling
+    // at ≥ ~1 glyph-pixel per screen pixel. Each boundary crossed costs one GPU
+    // re-raster of every label, which is why the bands are wide; at 47 labels
+    // here it is imperceptible either way.
+    'label-resolution': { enabled: true },
     // A package frame's +/- toggle and double-click-to-collapse.
     'collapse-expand': { enabled: true },
     // The sole theme publisher; `<CanvasThemeSync>` pins its mode + family to
@@ -367,32 +483,30 @@ const DOT_CONFIG: CanvasConfig = {
   layers: {
     background: { type: 'pattern', patternType: 'grid', alpha: 0.5 },
     graph: {
+      // The dot look shares the frame templates; only the frame's own geometry
+      // differs, so it gets its own structure and reuses the styling verbatim.
+      nodeStructureTemplates: {
+        packageFrame: {
+          name: 'packageFrame',
+          kind: 'simple',
+          shape: { kind: 'rect', width: 168, height: 40, cornerRadius: 12 },
+          slots: { label: true }
+        }
+      },
+      nodeStylingTemplates: {
+        packageFrame: { ...FRAME_STYLINGS.packageFrame!, group: { autoFit: true, padding: 20, headerHeight: 22 } }
+      },
+      nodeTypes: { package: { structure: 'packageFrame', styling: 'packageFrame', bindings: { label: 'id' } } },
       node: {
         style: {
-          // `autoFit` + the rect frame for the same reasons as CARD_CONFIG —
-          // see the notes there. Here the dot shape is set for every node, so
-          // the package has to override it rather than fill a gap.
-          group: (node: GraphNode) =>
-            node.type === 'package' ? { autoFit: true, padding: 20, headerHeight: 22 } : undefined,
-          shape: (node: GraphNode) =>
-            node.type === 'package'
-              ? { kind: 'rect' as const, width: 168, height: 40, cornerRadius: 12 }
-              : { kind: 'circle' as const, radius: 8 },
-          // The same theme-agnostic tinted neutral as CARD_CONFIG, and the same
-          // reason the tint lives on the fill layer rather than `bgAlpha` (which
-          // would fade the border with it) — see the notes there. The frame
-          // takes the muted border and the dot keeps a brighter rim, or a 168×40
-          // ringed pill would read as the loudest thing on screen. The dot's rim
-          // is a role-free literal too, so it gets the same treatment: slate
-          // reads against both backdrops where white disappears into the light
-          // one.
-          bgFill: (node: GraphNode) =>
-            node.type === 'package' ? { kind: 'solid' as const, color: 0x64748b, alpha: 0.14 } : undefined,
+          // Every non-package node is a dot. The frame overrides this through
+          // its own type binding, which wins over the layer template.
+          shape: { kind: 'circle' as const, radius: 8 },
           bgStrokeColor: 0x94a3b8,
-          bgStrokeAlpha: (node: GraphNode) => (node.type === 'package' ? 0.75 : 0.9),
+          bgStrokeAlpha: 0.9,
           bgStrokeWidth: 1.5,
           labelFontSize: 10,
-          labelPlacement: 'bottom',
+          labelPlacement: 'bottom' as const,
           labelOffsetY: 4
         }
       },
@@ -402,7 +516,16 @@ const DOT_CONFIG: CanvasConfig = {
     }
   },
   layouts: {
-    elk: { algorithm: 'layered', direction: 'RIGHT', nodeSpacing: 18, layerSpacing: 90, padding: 30 }
+    elk: {
+      algorithm: 'layered',
+      direction: 'RIGHT',
+      nodeSpacing: 18,
+      layerSpacing: 90,
+      padding: 30,
+      // Fallback only — see CARD_CONFIG. A dot is 8px of radius, so 20 square
+      // is the same "about one node" box the callback used to hand over.
+      defaultNodeSize: { width: 20, height: 20 }
+    }
   },
   // Same hand-rolled bundle as CARD_CONFIG (see the note there) — except
   // colour-by-type, which is on here because nothing competes for the fill.
@@ -424,6 +547,10 @@ const DOT_CONFIG: CanvasConfig = {
     'brush-select': { enabled: false },
     'lasso-select': { enabled: false },
     'collapse-expand': { enabled: true },
+    // Same as CARD_CONFIG — see the note there. The dot look's labels are
+    // ordinary label decorations rather than composite parts, and at 10px they
+    // are the first thing to go soft on a zoom-in.
+    'label-resolution': { enabled: true },
     theme: { enabled: true, mode: 'system', active: 'default', accent: 'css-var' }
   }
 };
@@ -551,32 +678,34 @@ export const CodeExplainabilityStory: Story = {
         <ClickSelectBehaviour id="click-select" targetLayerId="graph" />
         <BrushSelectBehaviour id="brush-select" targetLayerId="graph" />
         <LassoSelectBehaviour id="lasso-select" targetLayerId="graph" />
-        {/* The one layout, named by `config.activeLayout`. `nodeSize` is a
-            function, so it rides the `options` prop rather than the
-            serialisable config — without it ELK lays out around points and the
-            cards overlap. `direction` is deliberately *not* here: it lives in
-            `config.layouts.elk`, so the Settings panel can drive it (wrapper
-            options are init-only; config wins by id). */}
-        <ElkLayout
-          id="elk"
-          targetLayerId="graph"
-          fitPadding={60}
-          options={{
-            // Containers are sized by their children, so only leaves get a
-            // fixed box — handing ELK a card-sized package would reserve room
-            // twice.
-            nodeSize: (node) =>
-              node.type === 'package'
-                ? { width: 0, height: 0 }
-                : look === 'cards'
-                  ? { width: CARD.width, height: CARD.height }
-                  : { width: 20, height: 20 }
-          }}
-        />
+        {/* The one layout, named by `config.activeLayout`. Every option it takes
+            now lives in `config.layouts.elk` — nothing rides the `options` prop,
+            so the Settings panel drives all of it (wrapper options are
+            init-only; config wins by id).
+
+            No `nodeSize` callback. It used to hand ELK a per-node box, but each
+            of its three branches is now answered without a function:
+
+            - **Containers** never needed it. `ElkLayout` discards a container's
+              own box and sizes it from its children (or from the declared floor
+              via `groupSizeFloor`), so the `{ 0, 0 }` branch was dead code.
+            - **Leaves** are measured from their resolved shape — a card
+              structure declares `264 × 132`, a dot `radius: 8`.
+            - The **fallback**, for a node whose shape can't be measured, is
+              `defaultNodeSize` in `config.layouts.elk` — the same numbers, as
+              JSON. It is consulted only when resolution fails, so it can't
+              override a correct measurement.
+
+            `direction` / spacing / sizing all live in `config.layouts.elk` now,
+            which is also what lets the Settings panel drive them. */}
+        <ElkLayout id="elk" targetLayerId="graph" fitPadding={60} />
         {/* A package frame's +/- toggle has no listener until this is mounted —
             and neither does double-click, which `doubleClickToToggle` already
             enables by default. Behaviours never auto-enable (root rule 7). */}
         <CollapseExpandBehaviour id="collapse-expand" targetLayerId="graph" enabled />
+        {/* Crisp text on zoom-in. The wrapper's default id is `label-lod`; this
+            one is named for the id `config.behaviours` keys it under. */}
+        <TextResolutionLODBehaviour id="label-resolution" targetLayerId="graph" />
       </GraphCanvasApp>
     );
   }
