@@ -132,10 +132,17 @@ export const ArchitectureStory: Story = {
     // ── The drawing ─────────────────────────────────────────────────────────────
     /**
      * Every node carries the coordinate it has in the source drawing. Cards are
-     * centre-positioned and carry their whole composite on `style.shape` — with
-     * the 1px rim on the node's own `bgStroke*` fields rather than inside the
-     * shape, because only a node-level stroke can ask for `'outside'` alignment
-     * (a composite root stroke has no alignment field and paints centred); frames
+     * centre-positioned and carry their whole composite on `style.shape`.
+     *
+     * ⚠️ **A card's fill and rim live on the node, not inside the shape.**
+     * `GraphCanvasApp` deep-merges this config over its `BASE_CONFIG`, which
+     * pins a neutral `bgFill` on the layer template — and `nodeSpec` only falls
+     * back to a composite's own `fill` when `bgFill` is undefined, so a colour
+     * authored inside the shape is silently replaced by the app default. (This
+     * is why `compileFreeform` re-asserts `bgFill` at node level for the cards
+     * it compiles.) The rim is here for a second reason: only a node-level
+     * stroke can ask for `'outside'` alignment — a composite root stroke has no
+     * alignment field and paints centred. Frames
      * carry their inset geometry on `style.group` and their colours on the `look`
      * overlay (the one seat a theme publish can't reach — see the header).
      */
@@ -154,9 +161,9 @@ export const ArchitectureStory: Story = {
                            bgStrokeDashArray: [5, 5] } } },
 
         { id: 'gateway', type: 'box', parentId: 'harness', position: { x: 115, y: 159 },
-          style: { bgStrokeColor: 0x272834, bgStrokeWidth: 1, bgStrokeAlignment: 'outside',
+          style: { bgFill: 0x1d1a33, bgStrokeColor: 0x272834, bgStrokeWidth: 1,
+                   bgStrokeAlignment: 'outside',
                    shape: { kind: 'composite', width: 130, height: 54, cornerRadius: 7,
-                            fill: 0x191728,
                             parts: [
                               { part: 'label', x: 14, y: 9, text: 'Gateway',
                                 fontSize: 11, fontWeight: 600, fill: 0xe9e9f0 },
@@ -164,9 +171,9 @@ export const ArchitectureStory: Story = {
                                 fontSize: 9, fill: 0x7b7f93 },
                             ] } } },
         { id: 'working-memory', type: 'box', parentId: 'harness', position: { x: 272, y: 159 },
-          style: { bgStrokeColor: 0x272834, bgStrokeWidth: 1, bgStrokeAlignment: 'outside',
+          style: { bgFill: 0x1d1a33, bgStrokeColor: 0x272834, bgStrokeWidth: 1,
+                   bgStrokeAlignment: 'outside',
                    shape: { kind: 'composite', width: 140, height: 54, cornerRadius: 7,
-                            fill: 0x191728,
                             parts: [
                               { part: 'label', x: 14, y: 9, text: 'Working memory',
                                 fontSize: 11, fontWeight: 600, fill: 0xe9e9f0 },
@@ -174,9 +181,9 @@ export const ArchitectureStory: Story = {
                                 fontSize: 9, fill: 0x7b7f93 },
                             ] } } },
         { id: 'reply', type: 'box', parentId: 'harness', position: { x: 595, y: 164 },
-          style: { bgStrokeColor: 0x272834, bgStrokeWidth: 1, bgStrokeAlignment: 'outside',
+          style: { bgFill: 0x1d1a33, bgStrokeColor: 0x272834, bgStrokeWidth: 1,
+                   bgStrokeAlignment: 'outside',
                    shape: { kind: 'composite', width: 100, height: 52, cornerRadius: 7,
-                            fill: 0x191728,
                             parts: [
                               { part: 'label', x: 14, y: 9, text: 'Reply',
                                 fontSize: 11, fontWeight: 600, fill: 0xe9e9f0 },
@@ -189,9 +196,9 @@ export const ArchitectureStory: Story = {
           style: { group: { autoFit: true, behindChildren: true, padding: 16, headerHeight: 4 } },
           state: { look: { bgFill: 0x0e0e17, bgStrokeColor: 0x5a54c4, bgStrokeWidth: 1.2 } } },
         { id: 'llm-agent', type: 'box', parentId: 'loop', position: { x: 446, y: 159 },
-          style: { bgStrokeColor: 0x272834, bgStrokeWidth: 1, bgStrokeAlignment: 'outside',
+          style: { bgFill: 0x1d1a33, bgStrokeColor: 0x272834, bgStrokeWidth: 1,
+                   bgStrokeAlignment: 'outside',
                    shape: { kind: 'composite', width: 135, height: 54, cornerRadius: 7,
-                            fill: 0x191728,
                             parts: [
                               { part: 'label', x: 14, y: 9, text: 'LLM agent',
                                 fontSize: 11, fontWeight: 600, fill: 0xe9e9f0 },
@@ -199,9 +206,9 @@ export const ArchitectureStory: Story = {
                                 fontSize: 9, fill: 0x7b7f93 },
                             ] } } },
         { id: 'tools', type: 'box', parentId: 'loop', position: { x: 446, y: 232 },
-          style: { bgStrokeColor: 0x272834, bgStrokeWidth: 1, bgStrokeAlignment: 'outside',
+          style: { bgFill: 0x1d1a33, bgStrokeColor: 0x272834, bgStrokeWidth: 1,
+                   bgStrokeAlignment: 'outside',
                    shape: { kind: 'composite', width: 135, height: 50, cornerRadius: 7,
-                            fill: 0x191728,
                             parts: [
                               { part: 'label', x: 14, y: 9, text: 'Tools',
                                 fontSize: 11, fontWeight: 600, fill: 0xe9e9f0 },
@@ -221,9 +228,9 @@ export const ArchitectureStory: Story = {
                    labelFontSize: 10, labelLetterSpacing: 1, labelColor: 0x6e7183 },
           state: { look: { bgFill: 0x0e0e15, bgStrokeColor: 0x2b2b36, bgStrokeWidth: 1.2 } } },
         { id: 'procedural', type: 'box', parentId: 'memory', position: { x: 155, y: 506 },
-          style: { bgStrokeColor: 0x272834, bgStrokeWidth: 1, bgStrokeAlignment: 'outside',
+          style: { bgFill: 0x1d1a33, bgStrokeColor: 0x272834, bgStrokeWidth: 1,
+                   bgStrokeAlignment: 'outside',
                    shape: { kind: 'composite', width: 171, height: 56, cornerRadius: 7,
-                            fill: 0x191728,
                             parts: [
                               { part: 'label', x: 14, y: 9, text: 'Procedural',
                                 fontSize: 11, fontWeight: 600, fill: 0xe9e9f0 },
@@ -231,9 +238,9 @@ export const ArchitectureStory: Story = {
                                 fontSize: 9, fill: 0x7b7f93 },
                             ] } } },
         { id: 'semantic', type: 'box', parentId: 'memory', position: { x: 357, y: 506 },
-          style: { bgStrokeColor: 0x272834, bgStrokeWidth: 1, bgStrokeAlignment: 'outside',
+          style: { bgFill: 0x1d1a33, bgStrokeColor: 0x272834, bgStrokeWidth: 1,
+                   bgStrokeAlignment: 'outside',
                    shape: { kind: 'composite', width: 174, height: 56, cornerRadius: 7,
-                            fill: 0x191728,
                             parts: [
                               { part: 'label', x: 14, y: 9, text: 'Semantic · FTS5',
                                 fontSize: 11, fontWeight: 600, fill: 0xe9e9f0 },
@@ -241,9 +248,9 @@ export const ArchitectureStory: Story = {
                                 fontSize: 9, fill: 0x7b7f93 },
                             ] } } },
         { id: 'episodic', type: 'box', parentId: 'memory', position: { x: 522, y: 506 },
-          style: { bgStrokeColor: 0x272834, bgStrokeWidth: 1, bgStrokeAlignment: 'outside',
+          style: { bgFill: 0x1d1a33, bgStrokeColor: 0x272834, bgStrokeWidth: 1,
+                   bgStrokeAlignment: 'outside',
                    shape: { kind: 'composite', width: 126, height: 56, cornerRadius: 7,
-                            fill: 0x191728,
                             parts: [
                               { part: 'label', x: 14, y: 9, text: 'Episodic',
                                 fontSize: 11, fontWeight: 600, fill: 0xe9e9f0 },
@@ -252,9 +259,9 @@ export const ArchitectureStory: Story = {
                             ] } } },
 
         { id: 'consolidation', type: 'box', parentId: 'harness', position: { x: 247, y: 621 },
-          style: { bgStrokeColor: 0x272834, bgStrokeWidth: 1, bgStrokeAlignment: 'outside',
+          style: { bgFill: 0x1d1a33, bgStrokeColor: 0x272834, bgStrokeWidth: 1,
+                   bgStrokeAlignment: 'outside',
                    shape: { kind: 'composite', width: 356, height: 54, cornerRadius: 7,
-                            fill: 0x191728,
                             parts: [
                               { part: 'label', x: 14, y: 9, text: 'Consolidation · every 6 exchanges',
                                 fontSize: 11, fontWeight: 600, fill: 0xe9e9f0 },
@@ -267,9 +274,9 @@ export const ArchitectureStory: Story = {
           style: { group: { autoFit: true, behindChildren: true, padding: 17, headerHeight: 25 } },
           state: { look: { bgFill: 0x0f0f18, bgStrokeColor: 0x5a54c4, bgStrokeWidth: 1.2 } } },
         { id: 'trace', type: 'box', parentId: 'llm-ops', position: { x: 831, y: 168 },
-          style: { bgStrokeColor: 0x272834, bgStrokeWidth: 1, bgStrokeAlignment: 'outside',
+          style: { bgFill: 0x1d1a33, bgStrokeColor: 0x272834, bgStrokeWidth: 1,
+                   bgStrokeAlignment: 'outside',
                    shape: { kind: 'composite', width: 228, height: 48, cornerRadius: 7,
-                            fill: 0x191728,
                             parts: [
                               { part: 'label', x: 14, y: 9, text: 'Trace',
                                 fontSize: 11, fontWeight: 600, fill: 0xe9e9f0 },
@@ -277,9 +284,9 @@ export const ArchitectureStory: Story = {
                                 fontSize: 9, fill: 0x7b7f93 },
                             ] } } },
         { id: 'eval', type: 'box', parentId: 'llm-ops', position: { x: 831, y: 241 },
-          style: { bgStrokeColor: 0x272834, bgStrokeWidth: 1, bgStrokeAlignment: 'outside',
+          style: { bgFill: 0x1d1a33, bgStrokeColor: 0x272834, bgStrokeWidth: 1,
+                   bgStrokeAlignment: 'outside',
                    shape: { kind: 'composite', width: 228, height: 44, cornerRadius: 7,
-                            fill: 0x191728,
                             parts: [
                               { part: 'label', x: 14, y: 9, text: 'Eval',
                                 fontSize: 11, fontWeight: 600, fill: 0xe9e9f0 },
@@ -287,9 +294,9 @@ export const ArchitectureStory: Story = {
                                 fontSize: 9, fill: 0x7b7f93 },
                             ] } } },
         { id: 'release-gate', type: 'box', parentId: 'llm-ops', position: { x: 831, y: 309 },
-          style: { bgStrokeColor: 0x272834, bgStrokeWidth: 1, bgStrokeAlignment: 'outside',
+          style: { bgFill: 0x1d1a33, bgStrokeColor: 0x272834, bgStrokeWidth: 1,
+                   bgStrokeAlignment: 'outside',
                    shape: { kind: 'composite', width: 228, height: 48, cornerRadius: 7,
-                            fill: 0x191728,
                             parts: [
                               { part: 'label', x: 14, y: 9, text: 'Release gate',
                                 fontSize: 11, fontWeight: 600, fill: 0xe9e9f0 },
@@ -297,9 +304,9 @@ export const ArchitectureStory: Story = {
                                 fontSize: 9, fill: 0x7b7f93 },
                             ] } } },
         { id: 'release', type: 'box', parentId: 'llm-ops', position: { x: 831, y: 378 },
-          style: { bgStrokeColor: 0x272834, bgStrokeWidth: 1, bgStrokeAlignment: 'outside',
+          style: { bgFill: 0x1d1a33, bgStrokeColor: 0x272834, bgStrokeWidth: 1,
+                   bgStrokeAlignment: 'outside',
                    shape: { kind: 'composite', width: 228, height: 48, cornerRadius: 7,
-                            fill: 0x191728,
                             parts: [
                               { part: 'label', x: 14, y: 9, text: 'Release',
                                 fontSize: 11, fontWeight: 600, fill: 0xe9e9f0 },
