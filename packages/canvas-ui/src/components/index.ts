@@ -65,6 +65,11 @@ export {
 export type { PropertyRenderer, PropertyRenderContext, PropertyKind } from './propertyRenderers';
 export { CanvasMessageBar } from './CanvasMessageBar';
 export type { CanvasMessageBarProps } from './CanvasMessageBar';
+export { RendererCapabilityBanner } from './RendererCapabilityBanner';
+export type {
+  RendererCapabilities,
+  RendererCapabilityBannerProps,
+} from './RendererCapabilityBanner';
 export { GraphStatusBar } from './GraphStatusBar';
 export type { GraphStatusBarProps } from './GraphStatusBar';
 export { ContextMenuOverlay } from './ContextMenuOverlay';

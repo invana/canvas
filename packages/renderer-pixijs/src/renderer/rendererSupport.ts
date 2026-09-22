@@ -33,23 +33,34 @@ export function hasWebGPUApi(): boolean {
   return typeof navigator !== 'undefined' && 'gpu' in navigator;
 }
 
+/** {@link hasWebGL}'s answer, probed once per page. */
+let webglProbe: boolean | null = null;
+
 /**
  * Whether a WebGL (`webgl2`/`webgl`) context can be created — the floor for
  * rendering. If this is false and WebGPU is unusable too, the canvas can't
  * initialise on this browser at all.
+ *
+ * **Probed once, and the probe's context is released.** Answering means creating
+ * a real context, and browsers cap live contexts (~16 in Chrome) by evicting the
+ * oldest — a live canvas's own among them. A consumer calling this from a React
+ * render (a capability notice) used to create one per render. The answer cannot
+ * change within a page, so it is memoised.
  */
 export function hasWebGL(): boolean {
+  if (webglProbe !== null) return webglProbe;
   if (typeof document === 'undefined') return false;
   try {
     const el = document.createElement('canvas');
-    return !!(
-      el.getContext('webgl2') ||
+    const gl = (el.getContext('webgl2') ||
       el.getContext('webgl') ||
-      (el.getContext('experimental-webgl') as RenderingContext | null)
-    );
+      el.getContext('experimental-webgl')) as WebGLRenderingContext | null;
+    gl?.getExtension('WEBGL_lose_context')?.loseContext();
+    webglProbe = !!gl;
   } catch {
-    return false;
+    webglProbe = false;
   }
+  return webglProbe;
 }
 
 /**
