@@ -331,8 +331,8 @@ importers:
         specifier: ^18.3.1
         version: 18.3.7(@types/react@18.3.29)
       pixi.js:
-        specifier: ^8.20.1
-        version: 8.20.1
+        specifier: ^8.21.0
+        version: 8.21.0
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -599,8 +599,8 @@ importers:
         specifier: workspace:*
         version: link:../typescript-config
       pixi.js:
-        specifier: ^8.20.1
-        version: 8.20.1
+        specifier: ^8.21.0
+        version: 8.21.0
       tsup:
         specifier: ^8.3.5
         version: 8.5.1(jiti@2.7.0)(postcss@8.5.12)(tsx@4.21.0)(typescript@5.9.2)(yaml@2.8.3)
@@ -630,8 +630,8 @@ importers:
         specifier: ^3.0.6
         version: 3.0.6
       pixi.js:
-        specifier: ^8.20.1
-        version: 8.20.1
+        specifier: ^8.21.0
+        version: 8.21.0
       tsup:
         specifier: ^8.3.5
         version: 8.5.1(jiti@2.7.0)(postcss@8.5.12)(tsx@4.21.0)(typescript@5.9.2)(yaml@2.8.3)
@@ -655,8 +655,8 @@ importers:
         specifier: workspace:*
         version: link:../typescript-config
       pixi.js:
-        specifier: ^8.20.1
-        version: 8.20.1
+        specifier: ^8.21.0
+        version: 8.21.0
       tsup:
         specifier: ^8.3.5
         version: 8.5.1(jiti@2.7.0)(postcss@8.5.12)(tsx@4.21.0)(typescript@5.9.2)(yaml@2.8.3)
@@ -812,8 +812,8 @@ importers:
   packages/renderer-pixijs:
     dependencies:
       pixi.js:
-        specifier: ^8.20.1
-        version: 8.20.1
+        specifier: ^8.21.0
+        version: 8.21.0
     devDependencies:
       '@invana/canvas-core':
         specifier: workspace:*
@@ -829,7 +829,7 @@ importers:
         version: link:../typescript-config
       pixi-viewport:
         specifier: ^6.0.3
-        version: 6.0.3(pixi.js@8.20.1)
+        version: 6.0.3(pixi.js@8.21.0)
       tsup:
         specifier: ^8.3.5
         version: 8.5.1(jiti@2.7.0)(postcss@8.5.12)(tsx@4.21.0)(typescript@5.9.2)(yaml@2.8.3)
@@ -4691,8 +4691,8 @@ packages:
     peerDependencies:
       pixi.js: '>=8'
 
-  pixi.js@8.20.1:
-    resolution: {integrity: sha512-akLVBMLvQbaEViqsmVraK0Njer1q4Q4lm4iNKuzvBiFrV8q+6/+HluJN3sWIwO663IBeQtUUS/CaXFJZs6ffXQ==}
+  pixi.js@8.21.0:
+    resolution: {integrity: sha512-GJ/KqBtUuWDBPMQu2D0ZHsRCYOcWRjjKrpyC+3jPQI5JTqHMC5dH8l9sSyvoUT4qJidvRzs1fwFWRWceno2Ltw==}
 
   pkg-types@1.3.1:
     resolution: {integrity: sha512-/Jm5M4RvtBFVkKWRu2BLUTNP8/M2a+UwuAX+ae4770q1qVGtfjG+WTCupoZixokjmHiry8uI+dlY8KXYV5HVVQ==}
@@ -9741,11 +9741,11 @@ snapshots:
 
   pirates@4.0.7: {}
 
-  pixi-viewport@6.0.3(pixi.js@8.20.1):
+  pixi-viewport@6.0.3(pixi.js@8.21.0):
     dependencies:
-      pixi.js: 8.20.1
+      pixi.js: 8.21.0
 
-  pixi.js@8.20.1:
+  pixi.js@8.21.0:
     dependencies:
       '@pixi/colord': 2.9.6
       '@types/earcut': 3.0.0

@@ -25,14 +25,14 @@
   "peerDependencies": {
     "@invana/canvas": "workspace:*",
     "@invana/graph": "workspace:*",
-    "pixi.js": "^8.20.1"
+    "pixi.js": "^8.21.0"
   },
   "devDependencies": {
     "@invana/canvas": "workspace:*",
     "@invana/graph": "workspace:*",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "pixi.js": "^8.20.1",
+    "pixi.js": "^8.21.0",
     "tsup": "^8.3.5",
     "typescript": "5.9.2"
   },
