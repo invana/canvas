@@ -14,6 +14,7 @@ export function optionsToForm(o: CollapseExpandOptions = {}): CollapseExpandFiel
     doubleClickToToggle: o.doubleClickToToggle ?? true,
     centerOnToggle: o.centerOnToggle ?? false,
     centerDurationMs: o.centerDurationMs ?? DEFAULT_CENTER_DURATION_MS,
+    relayoutOnToggle: o.relayoutOnToggle ?? false,
   };
 }
 
@@ -23,5 +24,6 @@ export function formToOptions(f: CollapseExpandFields): CollapseExpandOptions {
     doubleClickToToggle: f.doubleClickToToggle ?? true,
     centerOnToggle: f.centerOnToggle ?? false,
     centerDurationMs: f.centerDurationMs ?? DEFAULT_CENTER_DURATION_MS,
+    relayoutOnToggle: f.relayoutOnToggle ?? false,
   };
 }

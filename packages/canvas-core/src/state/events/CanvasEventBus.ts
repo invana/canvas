@@ -69,14 +69,18 @@ export interface CanvasGlobalEvents {
     nodeCount?: number;
     edgeCount?: number;
     animate?: boolean;
+    /** The run was asked to leave the camera alone (`LayoutRunOptions.preserveCamera`). */
+    preserveCamera?: boolean;
   };
   /** A layout run ended. `reason` distinguishes a natural settle from an external stop / abort. */
   'layout:run:end': {
     id: string;
     layerId: string;
     reason?: 'settled' | 'stopped' | 'cancelled';
+    /** The run was asked to leave the camera alone (`LayoutRunOptions.preserveCamera`). */
+    preserveCamera?: boolean;
   };
-  'layout:run:tick': { id: string; progress?: number };
+  'layout:run:tick': { id: string; progress?: number; preserveCamera?: boolean };
 
   // ── render / canvas — lifecycle (engine/renderer-emitted) ───────────────────
   'canvas:renderer:ready': { backend: string; capabilities?: Record<string, unknown> };

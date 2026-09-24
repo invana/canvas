@@ -181,6 +181,7 @@ export type {
   LayoutEvents,
   LayoutEndReason,
   LayoutOptions,
+  LayoutRunOptions,
   PositionTransition,
   PositionTransitionOptions,
   LayerRegistryOptions,

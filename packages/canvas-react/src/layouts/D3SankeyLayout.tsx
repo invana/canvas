@@ -79,6 +79,9 @@ export function D3SankeyLayout({
         // A `'stopped'` end is a cancelled run (teardown, or a superseding
         // `apply()` that will fit on its own `'completed'`).
         if (reason === 'stopped') return;
+        // A re-flow that asked to leave the camera alone (`preserveCamera` —
+        // e.g. after a group frame opens or closes) is not a framing moment.
+        if (layout.runOptions.preserveCamera) return;
         // The engine's `config.fitOnLoad` fitter is armed, so it already frames
         // on this same run — with the union of *every* world layer's bounds.
         // Two owners writing the transform with different paddings land as an

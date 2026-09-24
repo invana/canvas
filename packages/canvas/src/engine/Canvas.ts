@@ -50,7 +50,7 @@ import { InteractionTracker } from './InteractionTracker';
 import { LayerRegistry } from '@invana/canvas-core';
 import { BehaviourRegistry } from '@invana/canvas-core';
 import { LayoutRegistry } from '@invana/canvas-core';
-import type { CanvasContext } from '@invana/canvas-core';
+import type { CanvasContext, LayoutRunOptions } from '@invana/canvas-core';
 import type { ISurface } from '@invana/canvas-core';
 import { Tween, resolveEasing, type EasingName } from '@invana/canvas-core';
 import { type CanvasConfig, configurable, deepMerge } from './CanvasConfig';
@@ -727,8 +727,10 @@ export class Canvas {
     // listeners re-read `activeLayout()` per event, so late assignment is fine.
     const THROTTLE_MS = 100;
     let lastFit = 0;
-    this.events.on('layout:run:tick', ({ id }) => {
-      if (id !== activeLayout()) return;
+    // A run asked to leave the camera alone (`preserveCamera` — e.g. a re-flow
+    // after a group frame toggles) is not a framing signal.
+    this.events.on('layout:run:tick', ({ id, preserveCamera }) => {
+      if (id !== activeLayout() || preserveCamera) return;
       this._clearAutoFitGrace();
       layoutHasPlaced = true;
       const now = performance.now();
@@ -736,8 +738,8 @@ export class Canvas {
       lastFit = now;
       fit();
     });
-    this.events.on('layout:run:end', ({ id, reason }) => {
-      if (id !== activeLayout() || reason !== 'settled') return;
+    this.events.on('layout:run:end', ({ id, reason, preserveCamera }) => {
+      if (id !== activeLayout() || reason !== 'settled' || preserveCamera) return;
       this._clearAutoFitGrace();
       layoutHasPlaced = true;
       fit();
@@ -983,8 +985,13 @@ export class Canvas {
    * Run a registered layout against the layer named by its `targetLayerId`.
    * No-op if the layout or its target layer isn't found. Layouts run against
    * data, so call this after the target layer has data.
+   *
+   * @param run Per-run behaviour (anchor node, leave the camera alone) — see
+   *            {@link LayoutRunOptions}. Forwarded to `layout.apply`, and
+   *            `preserveCamera` is stamped on this run's `layout:run:*` events
+   *            so the fitters can skip it.
    */
-  runLayout(id: string): Promise<void> {
+  runLayout(id: string, run?: LayoutRunOptions): Promise<void> {
     const layout = this.layouts.get(id);
     const target = layout?.targetLayerId ? this.layers.get(layout.targetLayerId) : undefined;
     if (!layout || !target) return Promise.resolve();
@@ -995,6 +1002,7 @@ export class Canvas {
     // any canvas reference (proposal §2.3). Subscribed before `apply()` —
     // which emits `start` synchronously — and torn down when the run resolves.
     const layerId = layout.targetLayerId ?? '';
+    const preserveCamera = run?.preserveCamera === true;
     const offStart = layout.events.on('start', ({ nodeCount, edgeCount, animate }) => {
       // Reactive run-status (source of truth for any "is a layout running?" UI —
       // toolbars read `runtime.layout.running`), then the bus event.
@@ -1005,6 +1013,7 @@ export class Canvas {
         nodeCount: nodeCount ?? 0,
         edgeCount: edgeCount ?? 0,
         animate: animate ?? false,
+        ...(preserveCamera ? { preserveCamera } : {}),
       });
     });
     const offEnd = layout.events.on('end', ({ reason }) => {
@@ -1013,20 +1022,31 @@ export class Canvas {
         id: layout.id,
         layerId,
         reason: reason === 'completed' ? 'settled' : 'stopped',
+        ...(preserveCamera ? { preserveCamera } : {}),
       });
     });
     // Bridge per-tick progress too, so consumers can follow an animated settle
     // (e.g. fit-on-load re-frames the growing graph). High-frequency for a live
     // sim — subscribe sparingly and throttle.
     const offTick = layout.events.on('tick', () => {
-      this.events.emit('layout:run:tick', { id: layout.id });
+      this.events.emit('layout:run:tick', { id: layout.id, ...(preserveCamera ? { preserveCamera } : {}) });
     });
 
-    return layout.apply(target as never).finally(() => {
+    return layout.apply(target as never, run).finally(() => {
       offStart();
       offEnd();
       offTick();
     });
+  }
+
+  /**
+   * Re-run the **active** layout (`definition.activeLayout`) with per-run
+   * options. The engine side of `CanvasContext.runActiveLayout`; resolves
+   * immediately when no layout is active.
+   */
+  runActiveLayout(run?: LayoutRunOptions): Promise<void> {
+    const activeLayout = this.store.view.getState().definition.activeLayout;
+    return activeLayout ? this.runLayout(activeLayout, run) : Promise.resolve();
   }
 
   /**
@@ -1352,6 +1372,7 @@ export class Canvas {
       createOverlay: (label, space) => renderer.createOverlay(label, space),
       showMessage: (text, timeout) => this.showMessage(text, timeout),
       clearMessage: () => this.clearMessage(),
+      runActiveLayout: (run) => this.runActiveLayout(run),
     };
   }
 

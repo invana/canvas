@@ -30,6 +30,9 @@ export function optionsToForm(o: D3ForceLayoutOptions = {}): D3ForceLayoutFields
     collideStrength: o.collide?.strength,
     collideIterations: o.collide?.iterations,
     clusterStrength: o.cluster?.strength,
+    separateGroups: o.separateGroups !== undefined,
+    separateGroupsStrength: o.separateGroups?.strength,
+    separateGroupsPadding: o.separateGroups?.padding,
   };
 }
 
@@ -90,6 +93,15 @@ export function formToOptions(f: D3ForceLayoutFields): D3ForceLayoutOptions {
   // A set strength enables clustering; empty leaves `cluster` undefined (off).
   if (f.clusterStrength !== undefined) {
     out.cluster = { strength: f.clusterStrength };
+  }
+
+  // The toggle enables separation; strength / padding refine it (empty = the
+  // layout's defaults). Off leaves `separateGroups` undefined.
+  if (f.separateGroups) {
+    out.separateGroups = {
+      ...(f.separateGroupsStrength !== undefined ? { strength: f.separateGroupsStrength } : {}),
+      ...(f.separateGroupsPadding !== undefined ? { padding: f.separateGroupsPadding } : {}),
+    };
   }
 
   return out;

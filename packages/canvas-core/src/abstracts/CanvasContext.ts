@@ -23,6 +23,7 @@ import type { GestureArbiter } from './GestureArbiter';
 import type { LayerRegistry } from './registries/LayerRegistry';
 import type { BehaviourRegistry } from './registries/BehaviourRegistry';
 import type { ThemeState } from '../state/theme/types';
+import type { LayoutRunOptions } from './Layout';
 
 export interface CanvasContext {
   /** Layer registry — `add / remove / get<T>(id) / list / byZOrder`. */
@@ -119,4 +120,16 @@ export interface CanvasContext {
 
   /** Clear the current canvas message. */
   clearMessage(): void;
+
+  /**
+   * Re-run the canvas's **active** layout (`definition.activeLayout`) — the
+   * same call as `Canvas.runLayout(activeLayout, run)`. Lets a behaviour ask
+   * for a re-flow without knowing which layout is showing (e.g.
+   * `CollapseExpandBehaviour` after a group frame opens or closes). Resolves
+   * once the run settles; resolves immediately when no layout is active.
+   *
+   * Optional so hand-built contexts (tests, the headless double) need not
+   * provide it — callers use `ctx.runActiveLayout?.(…)`.
+   */
+  runActiveLayout?(run?: LayoutRunOptions): Promise<void>;
 }

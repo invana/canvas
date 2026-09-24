@@ -51,6 +51,8 @@ export interface D3ForceLayoutOptions {
   collide?: { radius?: number; strength?: number; iterations?: number };
   /** Group-clustering pull — keeps `parentId` group members together. */
   cluster?: { strength?: number };
+  /** Group-frame separation — pushes overlapping group frames apart. */
+  separateGroups?: { strength?: number; padding?: number };
 }
 
 /**
@@ -86,6 +88,10 @@ export interface D3ForceLayoutFields {
   collideIterations?: number;
   // cluster (parentId group cohesion)
   clusterStrength?: number;
+  // group-frame separation
+  separateGroups?: boolean;
+  separateGroupsStrength?: number;
+  separateGroupsPadding?: number;
 }
 
 /** react-hook-form state — leaves register under `options.<field>`. */

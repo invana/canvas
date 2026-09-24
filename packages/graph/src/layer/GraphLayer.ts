@@ -541,6 +541,7 @@ export class GraphLayer extends WorldLayer<
         if (name !== COLLAPSED_STATE) return;
         const node = this.store.getNode(nodeId);
         if (!node || !this.isGroupNode(node)) return;
+        if (this.isCollapsedGroup(node)) this.centreCollapsedFrame(node);
         this.dirtyGroups.add(nodeId);
         this.syncGroupCollapse(node);
       }),
@@ -2578,6 +2579,39 @@ export class GraphLayer extends WorldLayer<
    *
    * Idempotent: called with no change, it does nothing.
    */
+  /**
+   * Move a group that has just collapsed so its closed silhouette (the tab)
+   * lands centred on the frame it replaces.
+   *
+   * An expanded auto-fit frame is drawn around its members; its stored
+   * position plays no part in that. A collapsed one is drawn *from* its stored
+   * position — which is wherever a layout last put the group node: the
+   * container centre under ELK, but an arbitrary point under d3-force (often
+   * near the frame's top edge). Without this the tab pops up somewhere other
+   * than where the user just clicked, and a re-layout anchored on it
+   * (`LayoutRunOptions.anchorNodeId`) then holds it there.
+   *
+   * Runs only on a runtime collapse (the `node:state` flip), never for a
+   * document-authored `states: ['collapsed']` at load — there is no drawn
+   * frame to centre on then. Both boxes are measured, not assumed: the frame
+   * from the renderer (still drawn expanded at this point), the tab from its
+   * own spec, because a shape's render origin is its centre for some kinds
+   * and its top-left for others.
+   */
+  private centreCollapsedFrame(node: GraphNode): void {
+    const renderer = this._renderer;
+    const frame = renderer?.getShapeWorldBounds(node.id);
+    if (!renderer || !frame) return;
+    const spec = this.nodeSpec(node) as BaseShapeSpec & { x: number; y: number };
+    const tab = renderer.boundsOfSpec(spec);
+    if (!tab) return;
+    const dx = frame.x + frame.width / 2 - (spec.x + tab.x + tab.width / 2);
+    const dy = frame.y + frame.height / 2 - (spec.y + tab.y + tab.height / 2);
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+    const pos = node.position ?? { x: 0, y: 0 };
+    this.store.setPosition(node.id, { x: pos.x + dx, y: pos.y + dy });
+  }
+
   private syncGroupCollapse(node: GraphNode): void {
     const was = this.lastCollapsedByGroup.get(node.id) === true;
     const now = this.isCollapsedGroup(node);

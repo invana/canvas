@@ -41,7 +41,7 @@ import {
   sankeyRight,
 } from 'd3-sankey';
 
-import { Layout } from '@invana/canvas-core';
+import { Layout, type LayoutRunOptions } from '@invana/canvas-core';
 import type { GraphLayer } from '@invana/graph';
 
 import type {
@@ -81,9 +81,14 @@ export class D3SankeyLayout extends Layout<GraphLayer> {
    * Run the layout against `layer`. Resolves once positions and per-edge
    * hints have been written. Lifecycle events fire in order:
    * `start` → `tick` (once) → `end`.
+   *
+   * `run` is recorded on {@link runOptions}; anchoring is not supported — a
+   * sankey's columns are fixed by the flow, so there is nothing to re-flow
+   * around one node.
    */
-  async apply(layer: GraphLayer): Promise<void> {
+  async apply(layer: GraphLayer, run: LayoutRunOptions = {}): Promise<void> {
     this.stop();
+    this.runOptions = run;
     const store = layer.store;
 
     // 1. Snapshot store → d3-sankey inputs. Sankey expects nodes with an

@@ -5,6 +5,7 @@ import {
   DEFAULT_POSITION_TRANSITION_MS,
   type EasingName,
   type LayoutOptions,
+  type LayoutRunOptions,
   type PositionTransition,
 } from '@invana/canvas';
 
@@ -129,9 +130,26 @@ export abstract class OneShotPositionLayout<
    * per `apply()`. May be async (e.g. ELK). Return `null` / empty `ids` to no-op.
    *
    * Implementations only compute — the base writes the result (snap or tween),
-   * manages cancellation, and fires the lifecycle.
+   * manages cancellation, fires the lifecycle, and applies
+   * {@link LayoutRunOptions.anchorNodeId} (so subclasses never anchor
+   * themselves). `run` is this run's options, for layouts that change *how*
+   * they solve a re-flow (e.g. ELK seeding the current order).
    */
-  protected abstract computeLayout(layer: GraphLayer): LayoutPositions | null | Promise<LayoutPositions | null>;
+  protected abstract computeLayout(
+    layer: GraphLayer,
+    run: Readonly<LayoutRunOptions>,
+  ): LayoutPositions | null | Promise<LayoutPositions | null>;
+
+  /**
+   * Shift a run's `meta` by `(dx, dy)` — called when an anchored run translates
+   * the computed positions, for subclasses whose `meta` holds **absolute**
+   * coordinates that must move with them (e.g. ELK's routed edge bend points).
+   * Default: returns `meta` unchanged, which is right for translation-invariant
+   * payloads (pack radii, sunburst arcs).
+   */
+  protected translateMeta(meta: unknown, _dx: number, _dy: number): unknown {
+    return meta;
+  }
 
   /**
    * Whether a node should be placed by this run. Excludes explicitly-hidden
@@ -165,17 +183,18 @@ export abstract class OneShotPositionLayout<
     return true;
   }
 
-  async apply(layer: GraphLayer): Promise<void> {
+  async apply(layer: GraphLayer, run: LayoutRunOptions = {}): Promise<void> {
     // Cancel any in-flight run/transition first; the new run owns the future.
     this.stop();
     this.lastLayer = layer;
+    this.runOptions = run;
     const token = ++this.runToken;
     this.running = true;
     this.events.emit('start', {});
 
     let result: LayoutPositions | null;
     try {
-      result = await Promise.resolve(this.computeLayout(layer));
+      result = await Promise.resolve(this.computeLayout(layer, run));
     } catch (err) {
       if (token === this.runToken) {
         this.running = false;
@@ -193,7 +212,16 @@ export abstract class OneShotPositionLayout<
       return;
     }
 
-    await this.writePositions(layer, result.ids, result.positions, result.meta, token);
+    let meta = result.meta;
+    if (run.anchorNodeId !== undefined) {
+      const shift = anchorShift(layer, run.anchorNodeId, result.ids, result.positions);
+      if (shift) {
+        translatePositions(result.positions, shift.dx, shift.dy);
+        meta = this.translateMeta(meta, shift.dx, shift.dy);
+      }
+    }
+
+    await this.writePositions(layer, result.ids, result.positions, meta, token);
   }
 
   /** Cancel an in-flight run. Positions already written stay in the store. */
@@ -298,5 +326,51 @@ export abstract class OneShotPositionLayout<
         },
       });
     });
+  }
+}
+
+/**
+ * The translation that keeps `anchorId` where it is on screen: its current box
+ * centre minus the centre this run computed for it. `null` when either end is
+ * unknown (the anchor wasn't placed by this run, or has never been drawn) — the
+ * run is then left as computed.
+ *
+ * Both ends are **box centres**. A layout's computed position is a centre, but
+ * the current end is read from the renderer's world bounds rather than the
+ * stored position: an auto-fit group frame is drawn around its members, and a
+ * collapsed one keeps the position of the frame it used to be, so neither
+ * stored position is the centre of what the user is looking at.
+ */
+function anchorShift(
+  layer: GraphLayer,
+  anchorId: string,
+  ids: readonly string[],
+  positions: Float32Array,
+): { dx: number; dy: number } | null {
+  const i = ids.indexOf(anchorId);
+  if (i < 0) return null;
+  const bounds = layer.getRenderer()?.getShapeWorldBounds(anchorId);
+  let cx: number;
+  let cy: number;
+  if (bounds) {
+    cx = bounds.x + bounds.width / 2;
+    cy = bounds.y + bounds.height / 2;
+  } else if (layer.store.hasPosition(anchorId)) {
+    const p = layer.store.getPosition(anchorId)!;
+    cx = p.x;
+    cy = p.y;
+  } else {
+    return null;
+  }
+  const dx = cx - positions[i * 2]!;
+  const dy = cy - positions[i * 2 + 1]!;
+  return dx === 0 && dy === 0 ? null : { dx, dy };
+}
+
+/** Add `(dx, dy)` to every `x, y` pair of an interleaved position buffer, in place. */
+function translatePositions(positions: Float32Array, dx: number, dy: number): void {
+  for (let j = 0; j < positions.length; j += 2) {
+    positions[j] = positions[j]! + dx;
+    positions[j + 1] = positions[j + 1]! + dy;
   }
 }

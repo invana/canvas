@@ -298,7 +298,7 @@ realistic group counts; explicitly **not** fine for iterative simulation (see Ph
 | `ElkLayout` | **native** (Phase 1) | Keeps its own compound path — `INCLUDE_CHILDREN` beats recursion because it sees cross-boundary edges. Consumes §3 helpers only. |
 | `GeometricLayout` (grid / snake / circular) | **recursive** | The cleanest fit — no topology assumptions to violate. Likely the first wrapper adopter and the best test case. |
 | `D3HierarchyLayout` | **recursive, restricted** | See constraint below. |
-| `D3ForceLayout` | **neither — fix what's there** | Iterative; recursion would mean N nested simulations. Keep the `cluster` force, gate `clusterIndices` (`:210-244`) on `isGroupNode` + §3.1's placeable so it clusters *groups*, not trees, and ignores collapsed members. Document plainly that force gives attraction, not containment. |
+| `D3ForceLayout` | **neither — fix what's there** | Iterative; recursion would mean N nested simulations. Keep the `cluster` force, gate `clusterIndices` (`:210-244`) on `isGroupNode` + §3.1's placeable so it clusters *groups*, not trees, and ignores collapsed members. Document plainly that force gives attraction, not containment. **2026-09-25:** opt-in `separateGroups` now keeps top-level frames from overlapping (still not containment) — `rfc:feat-2026-09-25-force-layout-lets-group-frames-overlap`. |
 | `D3SankeyLayout` | **opt out** | Flow columns have no meaningful containment; leave group-unaware and say so in its `CLAUDE.md`. |
 
 **The d3-hierarchy constraint (unavoidable, state it in the docs):** its per-group

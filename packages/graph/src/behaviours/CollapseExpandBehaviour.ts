@@ -3,7 +3,8 @@
  * collapsed states. Two routes to the same flip: a click on the group's
  * `+` / `−` toggle decoration, and (unless `doubleClickToToggle: false`) a
  * double-click anywhere on the frame itself. The camera stays where it is;
- * opt in to re-centring on the toggled frame with `centerOnToggle`.
+ * opt in to re-flowing the graph around the toggled frame with
+ * `relayoutOnToggle`, and to re-centring on it with `centerOnToggle`.
  *
  * Listens for native DOM `pointerdown` on the canvas element rather than
  * the renderer's `shape:pointerdown` channel. The reason: the toggle
@@ -97,6 +98,20 @@ export interface CollapseExpandBehaviourOptions extends BehaviourOptions {
    * glide cancels it.
    */
   centerDurationMs?: number;
+  /**
+   * Re-run the canvas's active layout after a frame opens or closes. Default
+   * `false`.
+   *
+   * A toggle on its own only swaps the frame's geometry: closing one leaves its
+   * old footprint empty, and opening one whose neighbours have since moved in
+   * lands its members on top of them. With this on, the graph re-flows with
+   * the layout's own transition, **anchored on the toggled frame** — it stays
+   * where the user clicked it and everything else moves around it — and the
+   * camera is left alone (the run carries `preserveCamera`, so no fitter
+   * re-frames the view). Off by default because it moves nodes the user may
+   * have placed by hand.
+   */
+  relayoutOnToggle?: boolean;
 }
 
 /** Default {@link CollapseExpandBehaviourOptions.centerDurationMs}. */
@@ -274,7 +289,7 @@ export class CollapseExpandBehaviour extends Behaviour<CollapseExpandBehaviourOp
     const open = layer.isCollapsedGroup(node);
     // Armed *before* the write: with a synchronous store the flush happens
     // inside `setNodeState`, so a subscription taken afterwards would miss it.
-    if (this._options.centerOnToggle === true) this.centerAfterReproject(nodeId);
+    this.afterReproject(nodeId);
     layer.store.setNodeState(nodeId, COLLAPSED_STATE, !open, { actor: this.id });
     if (open && node.states?.includes(COLLAPSED_STATE)) {
       layer.store.updateNode(nodeId, {
@@ -284,33 +299,59 @@ export class CollapseExpandBehaviour extends Behaviour<CollapseExpandBehaviourOp
   }
 
   /**
-   * Centre the camera on `nodeId` once the frame has re-projected.
+   * Follow up on a toggle once the frame has re-projected: re-flow the graph
+   * ({@link CollapseExpandBehaviourOptions.relayoutOnToggle}), then centre the
+   * camera on the frame ({@link CollapseExpandBehaviourOptions.centerOnToggle}).
+   * Each is opt-in; with neither on this is a no-op.
    *
    * Timing is the whole point of the indirection. The toggle only writes
    * state; the frame's new geometry — collapsed silhouette or re-fitted body —
    * lands when `GraphLayer` drains its dirty groups during the store flush,
-   * which with the default frame-coalesced store is the next rAF. Centring
-   * inline would aim at the geometry the user is leaving, overshooting by
-   * exactly the amount the frame is about to change by. So we take a one-shot
-   * `data:changed` subscription (emitted at the *end* of the flush, after the
-   * group drain) and read the renderer's world bounds then.
+   * which with the default frame-coalesced store is the next rAF. Acting
+   * inline would measure the geometry the user is leaving — a re-flow would
+   * anchor on the old frame, a re-centre would overshoot by exactly the amount
+   * the frame is about to change by. So we take a one-shot `data:changed`
+   * subscription (emitted at the *end* of the flush, after the group drain).
+   *
+   * When both are on, the centre waits for the re-flow to settle, so it aims
+   * at where the frame finally lands.
+   */
+  private afterReproject(nodeId: string): void {
+    const layer = this.layer;
+    const ctx = this.ctxRef;
+    if (!layer || !ctx) return;
+    const relayout = this._options.relayoutOnToggle === true;
+    const center = this._options.centerOnToggle === true;
+    if (!relayout && !center) return;
+    const off = layer.events.on('data:changed', () => {
+      off();
+      if (!relayout) {
+        this.centerOn(nodeId);
+        return;
+      }
+      const run = ctx.runActiveLayout?.({ anchorNodeId: nodeId, preserveCamera: true }) ?? Promise.resolve();
+      run.then(
+        () => {
+          if (center) this.centerOn(nodeId);
+        },
+        (err: unknown) => console.warn(`CollapseExpandBehaviour "${this.id}": re-layout failed`, err),
+      );
+    });
+  }
+
+  /**
+   * Glide the camera to centre `nodeId`'s frame.
    *
    * Bounds rather than `node.position`: an auto-fit frame's stored position is
    * its top-left, and a collapsed one keeps the position of the frame it used
    * to be — neither is the centre of what's on screen.
    */
-  private centerAfterReproject(nodeId: string): void {
-    const layer = this.layer;
-    const ctx = this.ctxRef;
-    if (!layer || !ctx) return;
-    const off = layer.events.on('data:changed', () => {
-      off();
-      const bounds = layer.getRenderer()?.getShapeWorldBounds(nodeId);
-      if (!bounds) return;
-      ctx.camera.centerOn(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2, {
-        durationMs: this._options.centerDurationMs ?? DEFAULT_CENTER_DURATION_MS,
-        easing: 'easeOutCubic',
-      });
+  private centerOn(nodeId: string): void {
+    const bounds = this.layer?.getRenderer()?.getShapeWorldBounds(nodeId);
+    if (!bounds || !this.ctxRef) return;
+    this.ctxRef.camera.centerOn(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2, {
+      durationMs: this._options.centerDurationMs ?? DEFAULT_CENTER_DURATION_MS,
+      easing: 'easeOutCubic',
     });
   }
 }

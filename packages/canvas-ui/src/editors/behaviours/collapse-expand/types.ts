@@ -3,7 +3,8 @@
  *
  * Engine-agnostic: the editable option shape is mirrored **structurally** here.
  * Of `CollapseExpandBehaviourOptions`, `doubleClickToToggle`,
- * `centerOnToggle` and `centerDurationMs` are the tunable visualisation state — the base fields
+ * `centerOnToggle`, `centerDurationMs` and `relayoutOnToggle` are the tunable
+ * visualisation state — the base fields
  * (`id` / `targetLayerId` / `enabled` / `shortcuts`) are out of scope for the
  * state editor.
  */
@@ -28,6 +29,11 @@ export interface CollapseExpandOptions {
    * `300`.
    */
   readonly centerDurationMs?: number;
+  /**
+   * Re-run the active layout after a frame opens or closes, anchored on the
+   * toggled frame, leaving the camera alone. Engine default `false`.
+   */
+  readonly relayoutOnToggle?: boolean;
 }
 
 /**
@@ -38,6 +44,7 @@ export interface CollapseExpandFields {
   doubleClickToToggle?: boolean;
   centerOnToggle?: boolean;
   centerDurationMs?: number;
+  relayoutOnToggle?: boolean;
 }
 
 /**

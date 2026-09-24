@@ -42,6 +42,29 @@ export interface D3ForceLayoutOptions {
   cluster?: { strength?: number };
 
   /**
+   * Keep **group frames** apart. Each tick, every group is treated as one box —
+   * its members' bounds plus the frame's padding and header, the box
+   * `GraphLayer` draws — and overlapping boxes are pushed apart along the axis
+   * of least overlap. Every member of a group gets the same push, so the group
+   * moves as one and its inner arrangement is left to the other forces. A loose
+   * node sitting inside another group's frame is pushed out the same way (two
+   * loose nodes are left to {@link collide}). Only top-level frames separate; a
+   * nested group moves with its parent.
+   *
+   * Complements {@link cluster}: `cluster` pulls a group's members together,
+   * this keeps different groups from overlapping. Still not containment —
+   * members can stray outside their own frame's neighbourhood; for true nested
+   * boxes use ELK.
+   *
+   * Omit to disable (default). `strength` is the fraction of an overlap
+   * resolved per tick (default `0.8`; like `collide`, not alpha-scaled — it is
+   * a constraint, so it must not fade as the sim cools); `padding` is the extra gap kept between
+   * boxes, in world units (default `24`). `O(B²)` per tick for `B` boxes —
+   * meant for tens of groups, not thousands of loose nodes.
+   */
+  separateGroups?: { strength?: number; padding?: number };
+
+  /**
    * When `true` (default), positions are written back to the store on
    * every d3-force tick — the renderer animates the simulation as it
    * settles.
@@ -63,7 +86,7 @@ export interface D3ForceLayoutOptions {
   animate?: boolean;
 
   /**
-   * Only with `animate: false`. Alpha the simulation reheats to when a run
+   * Alpha the simulation reheats to when an `animate: false` run
    * starts from a graph that **already has settled positions** (i.e. an
    * incremental streaming add: most nodes are positioned, a few are new).
    * A low value keeps the existing layout stable — placed nodes barely move
@@ -71,6 +94,11 @@ export interface D3ForceLayoutOptions {
    * full `alpha = 1` re-layout on every chunk. The first run (no positioned
    * nodes) ignores this and uses {@link alpha} (or d3's default of `1`).
    * Default `0.5`.
+   *
+   * Also used by the live (`animate: true`) simulation for a **re-flow** — a
+   * run carrying `LayoutRunOptions.anchorNodeId`, such as the re-layout after
+   * a group frame opens or closes — where it defaults to `0.3` so the graph
+   * eases into place instead of restarting at full energy.
    */
   reheatAlpha?: number;
 

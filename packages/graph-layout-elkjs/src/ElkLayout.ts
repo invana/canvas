@@ -50,6 +50,7 @@ import ELK, {
   type ElkNode,
   type LayoutOptions,
 } from 'elkjs/lib/elk-api.js';
+import type { LayoutRunOptions } from '@invana/canvas-core';
 
 import {
   OneShotPositionLayout,
@@ -144,7 +145,10 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
    * by the base (emits `end`, rejects the awaited `apply()`); a run superseded
    * while ELK was in flight is dropped by the base's staleness check.
    */
-  protected async computeLayout(layer: GraphLayer): Promise<LayoutPositions<ElkRouteMeta | null> | null> {
+  protected async computeLayout(
+    layer: GraphLayer,
+    run: Readonly<LayoutRunOptions> = {},
+  ): Promise<LayoutPositions<ElkRouteMeta | null> | null> {
     const store = layer.store;
     const fallback = this.opts.defaultNodeSize ?? FALLBACK_NODE_SIZE;
     const sizeOf = (n: GraphNode): NodeSize =>
@@ -194,6 +198,17 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
     // 4. Build the ELK graph + merge convenience options with the free-form
     //    passthrough (passthrough wins).
     const graph: ElkNode = { id: 'root', layoutOptions: buildLayoutOptions(this.opts, nests), children, edges };
+
+    // 4b. A re-flow (an anchored run — e.g. after a group frame toggles) keeps
+    //     the current order instead of re-solving from scratch: seed every box
+    //     at its current place and switch the layered phases that would
+    //     otherwise reorder (cycle breaking, layering, crossing minimisation) to
+    //     their INTERACTIVE strategies, which read those seeds. Without it one
+    //     frame shrinking can swap unrelated frames round.
+    if (run.anchorNodeId !== undefined && (this.opts.algorithm ?? 'layered') === 'layered') {
+      seedCurrentPositions(layer, graph, 0, 0);
+      applyInteractive(graph);
+    }
 
     // 5. Dispatch ELK (async; runs in a worker — see class docs).
     const elk = await this.getElk();
@@ -294,6 +309,33 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
       delete elkNode.height;
     }
     return elkNode;
+  }
+
+  /**
+   * Shift the routed geometry with an anchored run's translation — the edge
+   * sections (start / bend / end points) and the node boxes the feedback router
+   * clears are absolute coordinates, so they must move with the positions.
+   */
+  protected override translateMeta(meta: unknown, dx: number, dy: number): unknown {
+    const route = meta as ElkRouteMeta | null;
+    if (!route) return route;
+    const shift = (p: { x: number; y: number }) => ({ ...p, x: p.x + dx, y: p.y + dy });
+    const edges = route.edges.map((e) => ({
+      ...e,
+      ...(e.sections
+        ? {
+            sections: e.sections.map((sec) => ({
+              ...sec,
+              startPoint: shift(sec.startPoint),
+              endPoint: shift(sec.endPoint),
+              ...(sec.bendPoints ? { bendPoints: sec.bendPoints.map(shift) } : {}),
+            })),
+          }
+        : {}),
+    }));
+    const rects = new Map<string, ElkNodeRect>();
+    for (const [id, r] of route.rects) rects.set(id, { ...r, cx: r.cx + dx, cy: r.cy + dy });
+    return { ...route, edges, rects };
   }
 
   /**
@@ -521,4 +563,55 @@ function formatPadding(p: ElkPadding): string {
   const bottom = p.bottom ?? 0;
   const left = p.left ?? 0;
   return `[top=${top},right=${right},bottom=${bottom},left=${left}]`;
+}
+
+/** The layered phases switched to `INTERACTIVE` for a re-flow — see {@link applyInteractive}. */
+const INTERACTIVE_KEYS = [
+  'elk.layered.cycleBreaking.strategy',
+  'elk.layered.layering.strategy',
+  'elk.layered.crossingMinimization.strategy',
+] as const;
+
+/**
+ * Give `node` and every nested container ELK's `INTERACTIVE` strategies for
+ * the phases that decide order, so they follow the seeded coordinates. Applied
+ * per container because ELK does not inherit `layoutOptions` from a parent
+ * that declares its own (see {@link nestedLayoutOptions}).
+ */
+function applyInteractive(node: ElkNode): void {
+  if (node.layoutOptions) {
+    for (const key of INTERACTIVE_KEYS) node.layoutOptions[key] = 'INTERACTIVE';
+  }
+  for (const child of node.children ?? []) {
+    if (child.children?.length) applyInteractive(child);
+  }
+}
+
+/**
+ * Seed each ELK box with where it is drawn now, as ELK expects it: top-left,
+ * **relative to its parent box**. Read from the renderer's world bounds (the
+ * box the user sees — for a group, the frame drawn around its members); a node
+ * never drawn falls back to its stored centre and ELK size, and a node with
+ * neither is left unseeded for ELK to place.
+ */
+function seedCurrentPositions(layer: GraphLayer, node: ElkNode, parentX: number, parentY: number): void {
+  for (const child of node.children ?? []) {
+    const box = currentBox(layer, child);
+    if (box) {
+      child.x = box.x - parentX;
+      child.y = box.y - parentY;
+    }
+    if (child.children?.length) {
+      seedCurrentPositions(layer, child, box ? box.x : parentX, box ? box.y : parentY);
+    }
+  }
+}
+
+/** The absolute top-left of `node`'s current box, or `null` when unknown. */
+function currentBox(layer: GraphLayer, node: ElkNode): { x: number; y: number } | null {
+  const bounds = layer.getRenderer()?.getShapeWorldBounds(node.id);
+  if (bounds) return { x: bounds.x, y: bounds.y };
+  if (!layer.store.hasPosition(node.id)) return null;
+  const p = layer.store.getPosition(node.id)!;
+  return { x: p.x - (node.width ?? 0) / 2, y: p.y - (node.height ?? 0) / 2 };
 }

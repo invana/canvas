@@ -36,14 +36,18 @@ import {
   type SimulationNodeDatum,
 } from 'd3-force';
 
-import { Layout, type LayoutOptions } from '@invana/canvas-core';
-import { isPlaceableNode, type GraphLayer, type GraphNode } from '@invana/graph';
+import { Layout, type LayoutOptions, type LayoutRunOptions } from '@invana/canvas-core';
+import { collectLayoutEdges, groupInsets, isPlaceableNode, type GraphLayer, type GraphNode } from '@invana/graph';
 
 import type { D3ForceLayoutOptions } from './types';
 import {
   solveForces,
   makeClusterForce,
+  makeGroupSeparationForce,
   DEFAULT_CLUSTER_STRENGTH,
+  DEFAULT_SEPARATION_PADDING,
+  DEFAULT_SEPARATION_STRENGTH,
+  type GroupSeparationInput,
   type ForceSolveInput,
   type ForceSolveParams,
   type ForceSolveRequest,
@@ -85,6 +89,14 @@ export class D3ForceLayout extends Layout<GraphLayer> {
    *  never mutates user-data semantics — pin-on-release is opt-in via a
    *  separate behaviour. */
   private draggedIds = new Set<string>();
+  /**
+   * The live run's anchor ({@link LayoutRunOptions.anchorNodeId}): indices of
+   * the sim nodes that stand for it and the centroid they must keep. `null`
+   * when the run is not anchored, or anchoring is off because the run has
+   * pinned nodes (they already hold the picture in place — shifting the free
+   * nodes around them would pull the two apart).
+   */
+  private anchor: { indices: number[]; cx: number; cy: number } | null = null;
   private buffer = new Float32Array(0);
   /** True while our own bulk write is in-flight, so the `node:update`
    *  events it triggers don't bounce back into the sim. Relies on the
@@ -142,9 +154,10 @@ export class D3ForceLayout extends Layout<GraphLayer> {
    * naturally OR is cancelled via `stop()` / a second `apply()` call.
    * Lifecycle events (`start` / `tick` / `end`) fire around the run.
    */
-  apply(layer: GraphLayer): Promise<void> {
+  apply(layer: GraphLayer, run: LayoutRunOptions = {}): Promise<void> {
     this.stop();
     this.lastLayer = layer;
+    this.runOptions = run;
     return this.opts.animate === false ? this.runStatic(layer) : this.runLive(layer);
   }
 
@@ -190,12 +203,34 @@ export class D3ForceLayout extends Layout<GraphLayer> {
       animate: false,
     });
 
+    // Anchored run: the centroid the anchor starts at, from the seeds. Skipped
+    // when anything is fixed: pins already hold the picture, and moving the
+    // free nodes would pull away from them.
+    const anchorId = this.runOptions.anchorNodeId;
+    const anchorIdx =
+      anchorId !== undefined && !input.fixed.includes(1) ? anchorIndices(layer, anchorId, ids) : [];
+    const before = centroid(input.positions, anchorIdx, input.seeded);
+
     const token = ++this.solveToken;
     const positions = await this.dispatchSolve(input, token);
 
     // A newer `apply()` / `stop()` superseded this run while the worker solved
     // (it bumped `solveToken` and emitted its own `end`) — drop the result.
     if (token !== this.solveToken) return;
+
+    // Shift the settled result so the anchor's centroid lands back where it
+    // started.
+    if (before) {
+      const after = centroid(positions, anchorIdx);
+      if (after) {
+        const dx = before.x - after.x;
+        const dy = before.y - after.y;
+        for (let j = 0; j < positions.length; j += 2) {
+          positions[j] = positions[j]! + dx;
+          positions[j + 1] = positions[j + 1]! + dy;
+        }
+      }
+    }
 
     this.writing = true;
     store.setPositionsBulk(ids, positions);
@@ -297,7 +332,11 @@ export class D3ForceLayout extends Layout<GraphLayer> {
       }
     }
 
-    const edges = [...store.edges()];
+    // Layout edges, not raw store edges: an edge into a collapsed group's
+    // (unplaced) members is re-pointed at the frame standing in for them, so a
+    // collapsed frame keeps its links instead of floating away on repulsion
+    // alone. Parallel results are merged, so a frame isn't yanked N times.
+    const edges = collectLayoutEdges(layer, new Set(ids));
     const linkPairs = new Uint32Array(edges.length * 2);
     let w = 0;
     for (const e of edges) {
@@ -345,6 +384,7 @@ export class D3ForceLayout extends Layout<GraphLayer> {
       y: this.opts.y,
       radial: this.opts.radial,
       cluster: this.opts.cluster,
+      separateGroups: this.opts.separateGroups,
       alpha,
       alphaMin: this.opts.alphaMin,
       alphaDecay: this.opts.alphaDecay,
@@ -362,6 +402,7 @@ export class D3ForceLayout extends Layout<GraphLayer> {
         links: w === linkPairs.length ? linkPairs : linkPairs.slice(0, w),
         radii,
         clusters,
+        separation: this.separationInput(layer, ids),
         params,
       },
     };
@@ -431,17 +472,37 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     }
 
     const links: SimLink[] = [];
-    for (const e of store.edges()) {
-      // Drop links to excluded (hidden) nodes — d3-force errors on a link that
-      // references an id absent from the node set.
+    // Layout edges, not raw store edges — see `snapshotStatic`: edges into a
+    // collapsed group are re-pointed at its frame rather than dropped.
+    for (const e of collectLayoutEdges(layer, new Set(this.nodeById.keys()))) {
+      // Defensive: d3-force errors on a link that references an id absent from
+      // the node set (collectLayoutEdges already filters to it).
       if (!this.nodeById.has(e.source) || !this.nodeById.has(e.target)) continue;
       links.push({ source: e.source, target: e.target });
     }
 
+    // Anchored run: remember the centroid the anchor's nodes start at, so each
+    // tick can hold it there. Needs every anchor node seeded (a real position).
+    this.anchor = null;
+    const anchorId = this.runOptions.anchorNodeId;
+    if (anchorId !== undefined && this.pinnedIds.size === 0) {
+      const indices = anchorIndices(layer, anchorId, this.ids);
+      const seeded = indices.every((i) => this.nodes[i]!.x !== undefined);
+      if (indices.length > 0 && seeded) {
+        const c = simCentroid(this.nodes, indices);
+        this.anchor = { indices, cx: c.x, cy: c.y };
+      }
+    }
+
     // 2. Build the live (`animate: true`) simulation — d3 owns the tick loop.
     const sim = forceSimulation<SimNode, SimLink>(this.nodes);
-    this.configureForces(sim, links);
+    this.configureForces(sim, links, this.separationInput(layer, this.ids));
     this.configureSimulation(sim);
+    // A re-flow (an anchored run — e.g. after a group frame toggles) starts from
+    // a settled picture, so it eases in at a low α rather than d3's full-energy
+    // `1`, which would briefly compact the graph and overlap cards before it
+    // settled again.
+    if (this.runOptions.anchorNodeId !== undefined) sim.alpha(this.opts.reheatAlpha ?? REHEAT_ALPHA);
     this.sim = sim;
 
     // 3. Each d3 tick → optionally bulk write to store + emit lifecycle
@@ -451,6 +512,7 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     //    `D3ForceLayoutOptions.animate` for the rationale.
     const animate = this.opts.animate ?? true;
     sim.on('tick', () => {
+      this.holdAnchor();
       if (animate) this.writeBack(store);
       this.events.emit('tick', {});
     });
@@ -593,6 +655,7 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     this.offDragStart = null;
     this.offDragEnd?.();
     this.offDragEnd = null;
+    this.anchor = null;
     this.nodes = [];
     this.ids = [];
     this.nodeById.clear();
@@ -657,8 +720,12 @@ export class D3ForceLayout extends Layout<GraphLayer> {
 
   // ─── Configuration ─────────────────────────────────────────────────────
 
-  private configureForces(sim: Simulation<SimNode, SimLink>, links: SimLink[]): void {
-    const { link, charge, center, collide, x, y, radial, cluster } = this.opts;
+  private configureForces(
+    sim: Simulation<SimNode, SimLink>,
+    links: SimLink[],
+    separation: GroupSeparationInput | null,
+  ): void {
+    const { link, charge, center, collide, x, y, radial, cluster, separateGroups } = this.opts;
 
     if (link !== undefined) {
       const force = forceLink<SimNode, SimLink>(links).id((d) => d.id);
@@ -749,6 +816,103 @@ export class D3ForceLayout extends Layout<GraphLayer> {
         ),
       );
     }
+
+    // Group-frame separation — keyed by d3's `node.index`, which matches the
+    // order of `this.nodes` / `this.ids` the membership was built from.
+    if (separation && separateGroups !== undefined) {
+      sim.force(
+        'separateGroups',
+        makeGroupSeparationForce<SimNode>(
+          separation,
+          separateGroups.strength ?? DEFAULT_SEPARATION_STRENGTH,
+          separateGroups.padding ?? DEFAULT_SEPARATION_PADDING,
+        ),
+      );
+    }
+  }
+
+  /**
+   * Build the box membership for the `separateGroups` force over the placed
+   * nodes `ids` (in sim order). Each node's box is its **outermost** placed
+   * group ancestor, or itself when it has none; a group frame whose members are
+   * placed is a box sized from those members plus the frame's insets
+   * (`groupInsets` — the helper ELK sizes containers with), and its own node
+   * does not count toward the bounds. Returns `null` when the option is off or
+   * no box is a group.
+   *
+   * Nested frames are approximated: the outer box is sized from all its placed
+   * descendants plus the **outer** insets only, so an inner frame's padding is
+   * not added. Fine for separation between top-level frames, which is all this
+   * force does.
+   */
+  private separationInput(layer: GraphLayer, ids: readonly string[]): GroupSeparationInput | null {
+    if (!this.opts.separateGroups) return null;
+    const store = layer.store;
+    const placed = new Set(ids);
+    const isGroup = (id: string): boolean => {
+      const node = store.getNode(id);
+      return node ? layer.isGroupNode(node) : false;
+    };
+    const hasPlacedChild = (id: string): boolean => {
+      for (const child of store.childrenOf(id)) if (placed.has(child)) return true;
+      return false;
+    };
+    /** Outermost placed group ancestor of `id`, or `id` itself. */
+    const ownerOf = (id: string): string => {
+      let owner = id;
+      let cur = store.getNode(id);
+      const seen = new Set<string>([id]);
+      while (cur?.parentId && !seen.has(cur.parentId)) {
+        seen.add(cur.parentId);
+        if (placed.has(cur.parentId) && isGroup(cur.parentId)) owner = cur.parentId;
+        cur = store.getNode(cur.parentId);
+      }
+      return owner;
+    };
+
+    const count = ids.length;
+    const boxIndex = new Map<string, number>();
+    const boxOf = new Int32Array(count);
+    const halfSize = new Float32Array(count * 2);
+    const counts = new Uint8Array(count);
+    const owners: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const id = ids[i]!;
+      const owner = ownerOf(id);
+      let b = boxIndex.get(owner);
+      if (b === undefined) {
+        b = owners.length;
+        boxIndex.set(owner, b);
+        owners.push(owner);
+      }
+      boxOf[i] = b;
+      // An expanded frame is drawn around its members — its own node's position
+      // is not where the frame is, so it doesn't size the box.
+      const frame = isGroup(id) && hasPlacedChild(id);
+      counts[i] = frame ? 0 : 1;
+      const node = store.getNode(id);
+      const bounds = node ? (layer.boundsOfNode(node) ?? node.boundingBox) : undefined;
+      halfSize[i * 2] = (bounds?.width ?? 0) / 2;
+      halfSize[i * 2 + 1] = (bounds?.height ?? 0) / 2;
+    }
+
+    const boxCount = owners.length;
+    const insets = new Float32Array(boxCount * 4);
+    const groupFlags = new Uint8Array(boxCount);
+    let anyGroup = false;
+    for (let b = 0; b < boxCount; b++) {
+      const owner = owners[b]!;
+      const node = store.getNode(owner);
+      if (!node || !isGroup(owner) || !hasPlacedChild(owner)) continue;
+      const inset = groupInsets(layer, node);
+      insets[b * 4] = inset.top;
+      insets[b * 4 + 1] = inset.right;
+      insets[b * 4 + 2] = inset.bottom;
+      insets[b * 4 + 3] = inset.left;
+      groupFlags[b] = 1;
+      anyGroup = true;
+    }
+    return anyGroup ? { boxCount, boxOf, halfSize, counts, insets, isGroup: groupFlags } : null;
   }
 
   private configureSimulation(sim: Simulation<SimNode, SimLink>): void {
@@ -758,6 +922,26 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     if (alphaDecay !== undefined) sim.alphaDecay(alphaDecay);
     if (alphaTarget !== undefined) sim.alphaTarget(alphaTarget);
     if (velocityDecay !== undefined) sim.velocityDecay(velocityDecay);
+  }
+
+  /**
+   * Translate every free sim node so the anchor's centroid is back where the
+   * run started — the per-tick half of {@link LayoutRunOptions.anchorNodeId}.
+   * Paused while a node is being dragged: the dragged node is held by `fx/fy`,
+   * and shifting the rest would slide them out from under the cursor.
+   */
+  private holdAnchor(): void {
+    const anchor = this.anchor;
+    if (!anchor || this.draggedIds.size > 0) return;
+    const c = simCentroid(this.nodes, anchor.indices);
+    const dx = anchor.cx - c.x;
+    const dy = anchor.cy - c.y;
+    if (dx === 0 && dy === 0) return;
+    for (const n of this.nodes) {
+      if (n.fx != null) continue;
+      n.x = (n.x ?? 0) + dx;
+      n.y = (n.y ?? 0) + dy;
+    }
   }
 
   private writeBack(store: GraphLayer['store']): void {
@@ -796,4 +980,55 @@ function mergeDeep<T>(base: T, patch: Partial<T>): T {
     out[k] = isObj(v) && isObj(out[k]) ? mergeDeep(out[k], v) : v;
   }
   return out as T;
+}
+
+/**
+ * Indices (into `ids`) of the nodes that stand for `anchorId` in this run: an
+ * expanded group's placed descendants — its frame is drawn around them, so
+ * their centroid is where the frame sits — or the anchor itself when it has
+ * none placed (a collapsed group, or a plain node).
+ */
+function anchorIndices(layer: GraphLayer, anchorId: string, ids: readonly string[]): number[] {
+  const indexOf = new Map<string, number>();
+  ids.forEach((id, i) => indexOf.set(id, i));
+  const members: number[] = [];
+  for (const id of layer.store.descendantsOf(anchorId)) {
+    const i = indexOf.get(id);
+    if (i !== undefined) members.push(i);
+  }
+  if (members.length > 0) return members;
+  const self = indexOf.get(anchorId);
+  return self === undefined ? [] : [self];
+}
+
+/**
+ * Centroid of `indices` in an interleaved position buffer. `null` when there
+ * is nothing to average, or (with `seeded`) when any of them has no real
+ * position yet.
+ */
+function centroid(
+  positions: Float32Array,
+  indices: readonly number[],
+  seeded?: Uint8Array,
+): { x: number; y: number } | null {
+  if (indices.length === 0) return null;
+  let x = 0;
+  let y = 0;
+  for (const i of indices) {
+    if (seeded && seeded[i] !== 1) return null;
+    x += positions[i * 2]!;
+    y += positions[i * 2 + 1]!;
+  }
+  return { x: x / indices.length, y: y / indices.length };
+}
+
+/** Centroid of the sim nodes at `indices` (all assumed positioned). */
+function simCentroid(nodes: readonly SimNode[], indices: readonly number[]): { x: number; y: number } {
+  let x = 0;
+  let y = 0;
+  for (const i of indices) {
+    x += nodes[i]!.x ?? 0;
+    y += nodes[i]!.y ?? 0;
+  }
+  return { x: x / indices.length, y: y / indices.length };
 }

@@ -3,8 +3,8 @@ import type { FieldConfig } from '@invana/forms';
 /**
  * `@invana/forms` field schema for the CollapseExpandBehaviour editor.
  *
- * `doubleClickToToggle`, `centerOnToggle` and `centerDurationMs` are the
- * editable visualisation state — the rest of `CollapseExpandBehaviourOptions` is base wiring
+ * `doubleClickToToggle`, `relayoutOnToggle`, `centerOnToggle` and
+ * `centerDurationMs` are the editable visualisation state — the rest of `CollapseExpandBehaviourOptions` is base wiring
  * (`id` / `targetLayerId` / `enabled` / `shortcuts`), which the settings editor
  * doesn't own.
  */
@@ -15,6 +15,13 @@ export const collapseExpandFields: FieldConfig[] = [
     label: 'Double-click to toggle',
     description:
       'Double-clicking a group frame opens or closes it, alongside its +/− button. A double-click that lands on a member node is left to that node.',
+  },
+  {
+    name: 'relayoutOnToggle',
+    type: 'boolean',
+    label: 'Re-layout on toggle',
+    description:
+      'Re-run the active layout after a frame opens or closes, so neighbours close the gap or make room. The toggled frame stays where it is and the camera is left alone.',
   },
   {
     name: 'centerOnToggle',

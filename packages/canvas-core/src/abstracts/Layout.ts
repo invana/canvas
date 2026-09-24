@@ -72,6 +72,31 @@ export type LayoutEvents = {
   end: { reason: LayoutEndReason };
 };
 
+/**
+ * How one layout run should behave — passed per call to {@link Layout.apply}
+ * (and `Canvas.runLayout`), as opposed to {@link LayoutOptions}, which are the
+ * layout's standing configuration.
+ *
+ * Both fields describe a **re-flow** the user did not ask for directly — e.g.
+ * `CollapseExpandBehaviour` re-running the active layout after a group frame
+ * opens or closes — where the point is to keep the picture steady.
+ */
+export interface LayoutRunOptions {
+  /**
+   * Keep this node where it is on screen. The run computes positions as usual,
+   * then shifts the whole result so this node's box centre stays where it was;
+   * everything else re-flows around it. Honoured by layouts that support it
+   * (the one-shot layouts and `D3ForceLayout`); ignored by the rest.
+   */
+  anchorNodeId?: string;
+  /**
+   * Leave the camera alone for this run. Fitters that normally re-frame the
+   * view when a layout ends (the `fitOnLoad` auto-fitter, the React layout
+   * wrappers' `fitPadding`) skip a run carrying this flag.
+   */
+  preserveCamera?: boolean;
+}
+
 /** Construction options every layout shares (for the `LayoutRegistry`). */
 export interface LayoutOptions {
   /** Stable id, used to address the layout in a `LayoutRegistry` / config. Default `'layout'`. */
@@ -105,6 +130,14 @@ export abstract class Layout<TLayer extends Layer<any, any, any, any> = Layer<an
    */
   readonly events: EventEmitter<LayoutEvents> = new EventEmitter<LayoutEvents>();
 
+  /**
+   * Options of the run in flight, or of the last one once it has ended.
+   * Implementations record them at the top of {@link apply}, so an `end`
+   * listener can tell what kind of run just finished — e.g. a fitter skipping
+   * a {@link LayoutRunOptions.preserveCamera} run.
+   */
+  runOptions: Readonly<LayoutRunOptions> = {};
+
   constructor(opts: LayoutOptions = {}) {
     this.id = opts.id ?? 'layout';
     this.targetLayerId = opts.targetLayerId;
@@ -135,7 +168,10 @@ export abstract class Layout<TLayer extends Layer<any, any, any, any> = Layer<an
    * (either a natural settle or an external `stop()`).
    *
    * Calling `apply()` again on the same instance must cancel any in-flight
-   * run first.
+   * run first, and must record `run` on {@link runOptions} before emitting
+   * `start`.
+   *
+   * @param run How this particular run should behave; see {@link LayoutRunOptions}.
    */
-  abstract apply(layer: TLayer): Promise<void>;
+  abstract apply(layer: TLayer, run?: LayoutRunOptions): Promise<void>;
 }

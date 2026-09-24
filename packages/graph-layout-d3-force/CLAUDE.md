@@ -19,6 +19,13 @@ loose and can drift outside the frame. For true nested boxes use `ElkLayout`
 (native compound) or a `SubgraphPositionLayout` with `includeGroups` — this layout
 is iterative, so laying each group out separately would mean N nested simulations.
 
+`separateGroups: { strength?, padding? }` (opt-in) keeps **top-level frames apart**:
+each tick every group is one box (members' bounds + `groupInsets`), and overlapping
+boxes are pushed apart with the same velocity on every member, so a group moves as
+one. Not alpha-scaled — like `collide`, it's a constraint. `O(B²)` per tick; one
+implementation in `forceSolver.ts` serves the live sim and the worker. Still not
+containment. See `docs/rfcs/feat/2026-09-25-force-layout-lets-group-frames-overlap.md`.
+
 Two rules it shares with the rest of the layouts:
 
 - **Only real groups cluster.** A group is a node whose resolved style carries

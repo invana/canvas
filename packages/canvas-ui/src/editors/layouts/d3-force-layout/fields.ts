@@ -64,6 +64,12 @@ const CLUSTER_FIELDS: FieldConfig[] = [
   { name: 'clusterStrength', type: 'number', label: 'Strength', min: 0, max: 1, step: 0.01, description: 'Pull `parentId` group members toward their centroid so group frames stay compact. Empty = off. Default 0.2.' },
 ];
 
+const SEPARATION_FIELDS: FieldConfig[] = [
+  { name: 'separateGroups', type: 'boolean', label: 'Separate groups', description: 'Push overlapping group frames apart (each group moves as one). Loose nodes inside another group\'s frame are pushed out too.' },
+  { name: 'separateGroupsStrength', type: 'number', label: 'Strength', min: 0, max: 2, step: 0.05, description: 'How hard overlapping frames are pushed apart. Empty = 0.8.' },
+  { name: 'separateGroupsPadding', type: 'number', label: 'Gap', min: 0, max: 400, step: 4, description: 'Extra space kept between frames, in world units. Empty = 24.' },
+];
+
 /**
  * The full D3ForceLayout field set as one grouped `FieldConfig[]` — the default
  * `fields` for `<D3ForceLayoutEditorPanel>`.
@@ -75,4 +81,5 @@ export const d3ForceLayoutFields: FieldConfig[] = [
   ...CENTER_FIELDS.map(withGroup('Center force')),
   ...COLLIDE_FIELDS.map(withGroup('Collide force')),
   ...CLUSTER_FIELDS.map(withGroup('Group cluster')),
+  ...SEPARATION_FIELDS.map(withGroup('Group separation')),
 ];

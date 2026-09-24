@@ -61,7 +61,7 @@ export { Behaviour } from './abstracts/Behaviour';
 export type { IBehaviour, BehaviourOptions } from './abstracts/Behaviour';
 
 export { Layout } from './abstracts/Layout';
-export type { LayoutEvents, LayoutEndReason, LayoutOptions } from './abstracts/Layout';
+export type { LayoutEvents, LayoutEndReason, LayoutOptions, LayoutRunOptions } from './abstracts/Layout';
 
 // The shared service surface every Layer / Behaviour / Layout receives at
 // mount/register time. An interface — the engine builds the concrete object.
