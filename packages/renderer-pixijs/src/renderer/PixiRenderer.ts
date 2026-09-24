@@ -418,6 +418,11 @@ export class PixiRenderer implements IRenderer {
       // The engine owns the tick loop; don't auto-register on the global pixi
       // Ticker. `Camera.tick` forwards `deltaMS` into the binding.
       noTicker: true,
+      // A passive listener can't `preventDefault`, so a wheel/pinch that zooms
+      // the graph also scrolls (or rubber-bands) the host page. Non-passive,
+      // pixi-viewport cancels only wheels it consumed — `requireCtrl` embeds
+      // still let plain scroll through.
+      passiveWheel: false,
     });
     viewport.label = 'world';
     this._world = viewport;
