@@ -542,6 +542,7 @@ export class GraphLayer extends WorldLayer<
         const node = this.store.getNode(nodeId);
         if (!node || !this.isGroupNode(node)) return;
         if (this.isCollapsedGroup(node)) this.centreCollapsedFrame(node);
+        else if (this.lastCollapsedByGroup.get(nodeId) === true) this.centreOpeningMembers(node);
         this.dirtyGroups.add(nodeId);
         this.syncGroupCollapse(node);
       }),
@@ -2612,6 +2613,52 @@ export class GraphLayer extends WorldLayer<
     this.store.setPosition(node.id, { x: pos.x + dx, y: pos.y + dy });
   }
 
+  /**
+   * Move a group that is opening so its members land centred on the tab being
+   * replaced — the expand-side mirror of {@link centreCollapsedFrame}.
+   *
+   * While a group is closed its members are hidden and frozen: no layout
+   * places them. If a layout ran in the meantime (a Detail or Layout switch),
+   * the tab moved and the members did not, so the frame would re-open around
+   * positions from a different picture — possibly far off-screen — and a
+   * re-flow anchored on it (`LayoutRunOptions.anchorNodeId`) would drag the
+   * whole graph there. Shifting the members as one block keeps their inner
+   * arrangement and opens the frame where the user double-clicked.
+   *
+   * Runs only on a runtime expand (the `node:state` flip). Members that have
+   * never been placed are left alone. After a plain collapse → expand the
+   * shift is ~0, because {@link centreCollapsedFrame} centred the tab on the
+   * frame it replaced.
+   */
+  private centreOpeningMembers(node: GraphNode): void {
+    const renderer = this._renderer;
+    const tab = renderer?.getShapeWorldBounds(node.id);
+    if (!renderer || !tab) return;
+    // The group is already marked open, so its spec is the expanded frame the
+    // layer is about to draw — auto-fit around the members where they are now,
+    // with padding, header and any declared size floor applied. Measuring that
+    // (rather than re-deriving it from the members) is what makes a collapse →
+    // expand round trip land exactly where it started.
+    const spec = this.nodeSpec(node) as BaseShapeSpec & { x: number; y: number };
+    const frame = renderer.boundsOfSpec(spec);
+    if (!frame) return;
+    const dx = tab.x + tab.width / 2 - (spec.x + frame.x + frame.width / 2);
+    const dy = tab.y + tab.height / 2 - (spec.y + frame.y + frame.height / 2);
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+    const ids: string[] = [];
+    for (const id of this.store.descendantsOf(node.id)) {
+      if (this.store.hasPosition(id)) ids.push(id);
+    }
+    if (ids.length === 0) return;
+    const xy = new Float32Array(ids.length * 2);
+    ids.forEach((id, i) => {
+      const p = this.store.getPosition(id)!;
+      xy[i * 2] = p.x + dx;
+      xy[i * 2 + 1] = p.y + dy;
+    });
+    this.store.setPositionsBulk(ids, xy);
+  }
+
   private syncGroupCollapse(node: GraphNode): void {
     const was = this.lastCollapsedByGroup.get(node.id) === true;
     const now = this.isCollapsedGroup(node);
@@ -3045,11 +3092,14 @@ export class GraphLayer extends WorldLayer<
       });
     }
     // Hidden-descendant count — opt-in (`showCollapsedCount`). Off by default
-    // because `inside-center` routes into a `tabbed-rect`'s tab, landing the
-    // number on top of the group's own title.
-    if (isCollapsed && group.showCollapsedCount === true) {
-      let count = 0;
-      for (const _ of this.store.descendantsOf(id)) count++;
+    // because the centred form routes into a `tabbed-rect`'s tab, landing the
+    // number on top of the group's own title; `collapsedCountDisplay: 'badge'`
+    // draws it on the corner instead. Whichever form isn't in use is cleared, so
+    // switching between them (or expanding) leaves nothing stale.
+    const showCount = isCollapsed && group.showCollapsedCount === true;
+    const asBadge = showCount && group.collapsedCountDisplay === 'badge';
+    const count = showCount ? this.countDescendants(id) : 0;
+    if (showCount && !asBadge) {
       this._renderer.setDecoration(id, 'group-count', {
         kind: 'label',
         style: {
@@ -3066,6 +3116,43 @@ export class GraphLayer extends WorldLayer<
     } else {
       this._renderer.setDecoration(id, 'group-count', null);
     }
+    if (asBadge) {
+      this._renderer.setBadge(id, 'group-count', nodeBadgeToCanvasOptions(this.collapsedCountBadge(count)));
+    } else {
+      this._renderer.removeBadge(id, 'group-count');
+    }
+  }
+
+  /** Number of descendants beneath `id` (the collapsed-count value). */
+  private countDescendants(id: string): number {
+    let count = 0;
+    for (const _ of this.store.descendantsOf(id)) count++;
+    return count;
+  }
+
+  /**
+   * The `collapsedCountDisplay: 'badge'` pill: a rounded rect sized to the
+   * digits, centred on the collapsed frame's top-right corner, in theme
+   * colours. Mounted under the synthetic slot `group-count`, which
+   * `syncNodeBadges` never touches — it only diffs the slots it mounted from
+   * `NodeStyle.badges`.
+   */
+  private collapsedCountBadge(count: number): NodeBadge {
+    const text = String(count);
+    const fontSize = 11;
+    const height = 18;
+    const width = Math.max(height, Math.round(text.length * fontSize * 0.62) + 12);
+    return {
+      placement: 'top-right',
+      origin: 'center',
+      shape: { kind: 'rect', width, height, cornerRadius: height / 2 },
+      fill: this.themePalette.accent,
+      strokeColor: this.themePalette.cardBg,
+      strokeWidth: 1.5,
+      labelText: text,
+      labelColor: this.themePalette.surface,
+      labelFontSize: fontSize,
+    };
   }
 
   private updateEdgeConnector(edge: GraphEdge, _patch: Partial<GraphEdge>): void {

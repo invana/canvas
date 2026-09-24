@@ -114,6 +114,13 @@ export interface CollapseExpandBehaviourOptions extends BehaviourOptions {
   relayoutOnToggle?: boolean;
 }
 
+/**
+ * How far past a frame's edge a double-click on one of its badges may land and
+ * still count as the frame — a badge centred on a corner overhangs it by half
+ * its size. World units.
+ */
+const BADGE_REACH = 16;
+
 /** Default {@link CollapseExpandBehaviourOptions.centerDurationMs}. */
 const DEFAULT_CENTER_DURATION_MS = 300;
 
@@ -210,6 +217,12 @@ export class CollapseExpandBehaviour extends Behaviour<CollapseExpandBehaviourOp
   /**
    * The group frame under the pointer, or `null` when the topmost element
    * there is a regular node, a connector, or nothing at all.
+   *
+   * Shapes that aren't nodes — a badge (e.g. the collapsed count,
+   * `collapsedCountDisplay: 'badge'`) is its own small shape on top of its
+   * host — are looked through: the hit test runs again excluding them, so a
+   * double-click on a frame's badge reaches the frame. Member cards are nodes,
+   * so a double-click on one still belongs to the card.
    */
   private groupUnder(e: MouseEvent): string | null {
     const layer = this.layer;
@@ -221,12 +234,49 @@ export class CollapseExpandBehaviour extends Behaviour<CollapseExpandBehaviourOp
 
     const rect = canvasEl.getBoundingClientRect();
     const world = ctx.camera.toWorld(e.clientX - rect.left, e.clientY - rect.top);
-    const hit = renderer.hitTest(world.x, world.y);
+    const exclude = new Set<string>();
+    let hit = renderer.hitTest(world.x, world.y);
+    // Bounded: each pass excludes one more non-node shape.
+    while (hit && hit.kind === 'shape' && !layer.store.getNode(hit.id) && exclude.size < 8) {
+      exclude.add(hit.id);
+      hit = renderer.hitTest(world.x, world.y, exclude);
+    }
+    // A badge half-overhangs its host's edge, so under the part outside the
+    // frame there may be nothing at all. Fall back to the frame it belongs to:
+    // the smallest group whose box, grown by a badge's reach, holds the point.
+    if (exclude.size > 0 && (!hit || hit.kind !== 'shape')) return this.groupNear(world.x, world.y);
     if (!hit || hit.kind !== 'shape') return null;
     // `'none'` = a regular node, `undefined` = unknown id; only a frame
     // (expanded or collapsed) is a valid double-click target.
     const role = layer.getGroupRole(hit.id);
     return role === 'expanded' || role === 'collapsed' ? hit.id : null;
+  }
+
+  /**
+   * The smallest group frame whose on-screen box, grown by
+   * {@link BADGE_REACH}, contains `(x, y)` — how a double-click on the part of
+   * a badge hanging outside its frame finds that frame. `null` when none does.
+   */
+  private groupNear(x: number, y: number): string | null {
+    const layer = this.layer;
+    const renderer = layer?.getRenderer();
+    if (!layer || !renderer) return null;
+    let best: string | null = null;
+    let bestArea = Infinity;
+    for (const node of layer.store.nodes()) {
+      if (!layer.isGroupNode(node) || !layer.store.isNodeVisible(node.id)) continue;
+      const b = renderer.getShapeWorldBounds(node.id);
+      if (!b) continue;
+      const inside =
+        x >= b.x - BADGE_REACH && x <= b.x + b.width + BADGE_REACH &&
+        y >= b.y - BADGE_REACH && y <= b.y + b.height + BADGE_REACH;
+      const area = b.width * b.height;
+      if (inside && area < bestArea) {
+        best = node.id;
+        bestArea = area;
+      }
+    }
+    return best;
   }
 
   /**

@@ -6094,6 +6094,7 @@
             "headerHeight": 28,
             "tabSkew": 12,
             "showCollapsedCount": true,
+            "collapsedCountDisplay": "badge",
             "showToggle": false
           },
           "fillRole": "muted",

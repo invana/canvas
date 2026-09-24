@@ -966,9 +966,22 @@ export interface GroupOptions {
    * Off by default because the badge is placed `inside-center`, and on a
    * `tabbed-rect` inside placements route into the **tab** — so the count
    * lands on top of the group's own title. Turn it on for frames whose title
-   * is elsewhere (or absent).
+   * is elsewhere (or absent), or draw it as a corner badge instead with
+   * {@link collapsedCountDisplay}.
    */
   readonly showCollapsedCount?: boolean;
+  /**
+   * How the {@link showCollapsedCount} number is drawn. Default `'center'`.
+   *
+   * - `'center'` — white bold text in the middle of the collapsed frame.
+   * - `'badge'` — a small pill on the collapsed frame's **top-right** corner,
+   *   half over the edge, like a notification count. Coloured from the theme
+   *   (`accent` fill, `surface` text, `cardBg` ring), so it follows light and
+   *   dark. Keeps the number clear of a `tabbed-rect`'s title.
+   *
+   * Has no effect unless `showCollapsedCount` is `true`.
+   */
+  readonly collapsedCountDisplay?: 'center' | 'badge';
   /**
    * Frame renders at `style.zIndex − 1` so descendants paint on top. Set to
    * `false` to keep the frame at its declared z-index (and let descendants

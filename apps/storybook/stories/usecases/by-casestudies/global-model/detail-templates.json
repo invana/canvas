@@ -10,7 +10,9 @@
               "padding": 28,
               "headerHeight": 28,
               "tabSkew": 12,
-              "showCollapsedCount": true
+              "showCollapsedCount": true,
+              "collapsedCountDisplay": "badge",
+              "showToggle": false
             },
             "fillRole": "muted",
             "fillAlpha": 0.08,
@@ -141,7 +143,9 @@
               "padding": 30,
               "headerHeight": 28,
               "tabSkew": 12,
-              "showCollapsedCount": true
+              "showCollapsedCount": true,
+              "collapsedCountDisplay": "badge",
+              "showToggle": false
             },
             "fillRole": "muted",
             "fillAlpha": 0.08,
@@ -272,7 +276,9 @@
               "padding": 32,
               "headerHeight": 28,
               "tabSkew": 12,
-              "showCollapsedCount": true
+              "showCollapsedCount": true,
+              "collapsedCountDisplay": "badge",
+              "showToggle": false
             },
             "fillRole": "muted",
             "fillAlpha": 0.08,
