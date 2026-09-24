@@ -434,6 +434,11 @@ export class GraphLayer extends WorldLayer<
     // children. Drain now to re-fit those frames against the freshly-mounted
     // descendants.
     this.drainDirtyGroups();
+    // A group authored closed (`states: ['collapsed']`) hides its members from
+    // the first paint.
+    for (const node of this.store.nodes()) {
+      if (this.isGroupNode(node)) this.syncGroupCollapse(node);
+    }
 
     // Subscribe to fine-grained store events.
     const s = this.store.events;
@@ -458,7 +463,12 @@ export class GraphLayer extends WorldLayer<
         // bbox; mark the parent chain for recompute. Also re-mark this
         // node if it is itself a group, so its initial frame projects with
         // whatever children landed first.
-        if (this.isGroupNode(node)) this.dirtyGroups.add(node.id);
+        if (this.isGroupNode(node)) {
+          this.dirtyGroups.add(node.id);
+          // A group added closed hides its members. The store already holds
+          // the whole batch, so members added in the same flush are covered.
+          this.syncGroupCollapse(node);
+        }
         if (node.parentId) this.markGroupAncestorsDirty(node.parentId);
       }),
       s.on('node:update', ({ nodeId, patch }) => {
@@ -3065,8 +3075,11 @@ export class GraphLayer extends WorldLayer<
       this.lastCollapsedByGroup.delete(id);
       return;
     }
+    // Read-only on the collapsed state: recording it in `lastCollapsedByGroup`
+    // is `syncGroupCollapse`'s job alone. A re-render that ran first (a style
+    // patch in the same flush as the flip) would otherwise mark the flip as
+    // already applied, and the members would never be hidden.
     const isCollapsed = this.isCollapsedGroup(node);
-    this.lastCollapsedByGroup.set(id, isCollapsed);
     // Toggle button — present on every group, glyph mirrors collapsed state.
     // Placement is configurable via `group.togglePlacement`: a keyword
     // (`'bottom'`, `'inside-bottom'`, …) resolves against the host AABB,
