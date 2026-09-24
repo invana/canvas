@@ -1047,6 +1047,16 @@ export interface GroupOptions {
    * position falls inside or outside the host's hit area.
    */
   readonly togglePlacement?: TogglePlacement | { readonly x: number; readonly y: number };
+  /**
+   * Draw the `+` / `−` toggle button on this frame. Default `true`.
+   *
+   * `false` mounts no button, so the frame shows no expand / collapse
+   * affordance — it reads as a plain container. The group can still be
+   * toggled another way: a double-click on the frame
+   * (`CollapseExpandBehaviour.doubleClickToToggle`) or the store API. To make
+   * a frame not collapsible at all, disable the behaviour instead.
+   */
+  readonly showToggle?: boolean;
 }
 
 // ─── NodeStyle ─────────────────────────────────────────────────────────────

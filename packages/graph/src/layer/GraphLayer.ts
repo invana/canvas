@@ -3025,19 +3025,25 @@ export class GraphLayer extends WorldLayer<
     // the "small bubble attached to the rim" pattern in the reference UI.
     // The behaviour does its own canvas-level hit math, so outside-
     // silhouette placements remain fully clickable.
-    const tp = group.togglePlacement;
-    const placementStyle =
-      typeof tp === 'object' && tp !== null
-        ? { position: tp }
-        : { placement: tp ?? 'bottom' };
-    this._renderer.setDecoration(id, 'group-toggle', {
-      kind: 'toggle',
-      style: {
-        state: isCollapsed ? 'plus' : 'minus',
-        radius: 10,
-        ...placementStyle,
-      },
-    });
+    // `showToggle: false` opts the frame out of the button entirely — clear the
+    // slot so a previously mounted one disposes.
+    if (group.showToggle === false) {
+      this._renderer.setDecoration(id, 'group-toggle', null);
+    } else {
+      const tp = group.togglePlacement;
+      const placementStyle =
+        typeof tp === 'object' && tp !== null
+          ? { position: tp }
+          : { placement: tp ?? 'bottom' };
+      this._renderer.setDecoration(id, 'group-toggle', {
+        kind: 'toggle',
+        style: {
+          state: isCollapsed ? 'plus' : 'minus',
+          radius: 10,
+          ...placementStyle,
+        },
+      });
+    }
     // Hidden-descendant count — opt-in (`showCollapsedCount`). Off by default
     // because `inside-center` routes into a `tabbed-rect`'s tab, landing the
     // number on top of the group's own title.

@@ -6093,7 +6093,8 @@
             "padding": 30,
             "headerHeight": 28,
             "tabSkew": 12,
-            "showCollapsedCount": true
+            "showCollapsedCount": true,
+            "showToggle": false
           },
           "fillRole": "muted",
           "fillAlpha": 0.08,
