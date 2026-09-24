@@ -284,6 +284,25 @@ export type CardElement =
       shape?: 'circle' | 'rounded';
       /** Dotted data path for the image source (rendered as a placeholder today). */
       bind?: string;
+    })
+  | (CardElementCommon & {
+      type: 'icon';
+      /** Side of the square box the glyph scales into. */
+      size: number;
+      /**
+       * Dotted data path to an **iconify id** (`lucide/plane`), so one
+       * structure draws a different glyph per record. Wins over {@link icon}
+       * when it resolves.
+       */
+      bind?: string;
+      /** Literal iconify id — the glyph every record gets, or the fallback. */
+      icon?: string;
+      colorRole?: ColorRole;
+      color?: number;
+      /** Glyph colour read off the record; wins over the pair above. */
+      colorLookup?: ValueLookup<TemplateColor>;
+      /** Stroke width for outline icon sets (Lucide draws at `2`). */
+      strokeWidth?: number;
     });
 
 /**

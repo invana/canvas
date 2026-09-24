@@ -423,9 +423,13 @@ export function compileCard(
     width,
     height,
     cornerRadius: 10,
-    ...(struct.frame ? { root: frameToRoot(struct.frame, width, height, 10, bg, rootStroke) } : {}),
+    // `root` and `stroke` are always stated, `undefined` when absent: the
+    // renderer merges a shape update over the previous spec, so a key left out
+    // keeps the last template's value (a rebind from a framed card to a plain
+    // one would keep the old silhouette).
+    root: struct.frame ? frameToRoot(struct.frame, width, height, 10, bg, rootStroke) : undefined,
     fill: bg,
-    ...(rootStroke ? { stroke: rootStroke } : {}),
+    stroke: rootStroke,
     parts,
   };
   // Express the card background as the node's `bgFill` too (not only the
@@ -616,11 +620,12 @@ export function compileFreeform(
     width: struct.width,
     height: struct.height,
     cornerRadius: struct.cornerRadius ?? 10,
-    ...(struct.frame
-      ? { root: frameToRoot(struct.frame, struct.width, struct.height, struct.cornerRadius ?? 10, bg, rootStroke) }
-      : {}),
+    // Always stated, `undefined` when absent — see `compileCard`.
+    root: struct.frame
+      ? frameToRoot(struct.frame, struct.width, struct.height, struct.cornerRadius ?? 10, bg, rootStroke)
+      : undefined,
     fill: bg,
-    ...(rootStroke ? { stroke: rootStroke } : {}),
+    stroke: rootStroke,
     parts,
   };
   // Assert the card background at the node level too — styling owns the colour
@@ -728,6 +733,30 @@ function elementToParts(el: CardElement, node: GraphNode, palette: RolePalette):
       }
       const r = el.size / 2;
       return [{ part: 'circle', x: el.x + r, y: el.y + r, radius: r, fill }];
+    }
+    case 'icon': {
+      // An iconify id, read off the record or fixed; nothing to draw without one.
+      const bound = el.bind ? resolvePath(node, el.bind) : undefined;
+      const id = typeof bound === 'string' && bound !== '' ? bound : el.icon;
+      if (!id) return [];
+      const fill =
+        lookupColor(el.colorLookup, el.colorRole, el.color, node, palette) ??
+        palette.foreground ??
+        0x111111;
+      return [
+        {
+          part: 'icon',
+          x: el.x,
+          y: el.y,
+          size: el.size,
+          icon: {
+            kind: 'svg-url',
+            url: `https://api.iconify.design/${id}.svg`,
+            color: fill,
+            ...(el.strokeWidth !== undefined ? { strokeWidth: el.strokeWidth } : {}),
+          },
+        },
+      ];
     }
     default:
       return [];

@@ -139,3 +139,38 @@ describe('compileFreeform', () => {
     expect(shape.parts.some((p) => p.part === 'circle')).toBe(true); // image placeholder
   });
 });
+
+describe('compileFreeform — icon element', () => {
+  const tpl: FreeformStructure = {
+    name: 'labelDot',
+    kind: 'freeform',
+    width: 60,
+    height: 60,
+    elements: [{ id: 'icon', type: 'icon', x: 16, y: 16, size: 28, bind: 'data.icon', colorRole: 'accent' }],
+  };
+  const partsOf = (node: GraphNode) =>
+    (compileFreeform(tpl, node, PALETTE).shape as unknown as { parts: Array<Record<string, unknown>> }).parts;
+
+  it('binds the iconify id off the record into an svg-url icon part', () => {
+    const [icon] = partsOf({ id: 't', type: 'Tweet', data: { icon: 'lucide/hash' } } as GraphNode);
+    expect(icon).toMatchObject({
+      part: 'icon',
+      x: 16,
+      size: 28,
+      icon: { kind: 'svg-url', url: 'https://api.iconify.design/lucide/hash.svg', color: PALETTE.accent },
+    });
+  });
+
+  it('draws nothing when neither the binding nor a literal names an icon', () => {
+    expect(partsOf({ id: 't', type: 'Tweet', data: {} } as GraphNode)).toEqual([]);
+  });
+});
+
+describe('compileFreeform — rebinding', () => {
+  it('states an absent frame and border, so a merged update clears the previous ones', () => {
+    const plain: FreeformStructure = { name: 'plain', kind: 'freeform', width: 100, height: 40, elements: [] };
+    const shape = compileFreeform(plain, { id: 'n', type: 't' } as GraphNode, PALETTE).shape as object;
+    expect(shape).toHaveProperty('root', undefined);
+    expect(shape).toHaveProperty('stroke', undefined);
+  });
+});

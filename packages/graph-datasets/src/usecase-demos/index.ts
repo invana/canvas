@@ -22,6 +22,7 @@
 //  - computingPioneers   → usecases/SimpleAndCompositeNodes
 //  - modellerSeed        → usecases/tools/GraphModeller
 //  - paperCitations      → usecases/by-casestudies/paper-citations/{CitationNetwork,SubjectBundle}
+//  - airwaysGlobalModel  → usecases/by-casestudies/global-model/GlobalModel
 
 // ── settings — one recommended look per dataset ──────────────────────────────
 export { settings as agentTraceSettings } from './agent-trace/data';
@@ -49,3 +50,4 @@ export { invanaArchitecture } from './invana-architecture/data';
 export { modellerSeed } from './modeller-seed/data';
 export { starSchema } from './star-schema/data';
 export { invanaCodeKg } from './invana-code-kg/data';
+export { airwaysGlobalModel } from './airways-global-model/data';

@@ -1,0 +1,1239 @@
+{
+  "nodes": [
+    {
+      "id": "AirRoutes",
+      "type": "model",
+      "data": {
+        "name": "AirRoutes",
+        "packageId": "invana.dataset.air-routes",
+        "version": "1.0.0",
+        "description": "Airports, the countries and continents that contain them, and the flights between them."
+      }
+    },
+    {
+      "id": "AirRoutes.airport",
+      "type": "AirRoutes.airport",
+      "parentId": "AirRoutes",
+      "data": {
+        "label": "airport",
+        "model": "AirRoutes",
+        "description": "An airport, with its codes and where it is.",
+        "icon": "lucide/plane-takeoff",
+        "identity": "code",
+        "propertyCount": 12,
+        "stitchCount": 5,
+        "properties": [
+          {
+            "name": "type",
+            "type": "string",
+            "description": "The kind of thing, as the source file spells it."
+          },
+          {
+            "name": "code",
+            "type": "string",
+            "description": "IATA code on an airport, two-letter code on a country or continent.",
+            "identity": true,
+            "stitches": [
+              "R1",
+              "R2",
+              "R3",
+              "R4",
+              "R7"
+            ]
+          },
+          {
+            "name": "icao",
+            "type": "string",
+            "description": "Four-letter ICAO airport code."
+          },
+          {
+            "name": "desc",
+            "type": "string",
+            "description": "The long name."
+          },
+          {
+            "name": "region",
+            "type": "string",
+            "description": "ISO 3166-2 region."
+          },
+          {
+            "name": "runways",
+            "type": "integer",
+            "description": "Number of runways."
+          },
+          {
+            "name": "longest",
+            "type": "integer",
+            "description": "Longest runway, in feet."
+          },
+          {
+            "name": "elev",
+            "type": "integer",
+            "description": "Elevation, in feet."
+          },
+          {
+            "name": "country",
+            "type": "string",
+            "description": "Two-letter country code the airport sits in."
+          },
+          {
+            "name": "city",
+            "type": "string",
+            "description": "The city served."
+          },
+          {
+            "name": "lat",
+            "type": "float",
+            "description": "Latitude."
+          },
+          {
+            "name": "lon",
+            "type": "float",
+            "description": "Longitude."
+          }
+        ]
+      }
+    },
+    {
+      "id": "AirRoutes.country",
+      "type": "AirRoutes.country",
+      "parentId": "AirRoutes",
+      "data": {
+        "label": "country",
+        "model": "AirRoutes",
+        "description": "A country, by two-letter code.",
+        "icon": "lucide/flag",
+        "identity": "code",
+        "propertyCount": 3,
+        "stitchCount": 1,
+        "properties": [
+          {
+            "name": "type",
+            "type": "string",
+            "description": "The kind of thing, as the source file spells it."
+          },
+          {
+            "name": "code",
+            "type": "string",
+            "description": "IATA code on an airport, two-letter code on a country or continent.",
+            "identity": true,
+            "stitches": [
+              "A1"
+            ]
+          },
+          {
+            "name": "desc",
+            "type": "string",
+            "description": "The long name."
+          }
+        ],
+        "anchored": true
+      }
+    },
+    {
+      "id": "AirRoutes.continent",
+      "type": "AirRoutes.continent",
+      "parentId": "AirRoutes",
+      "data": {
+        "label": "continent",
+        "model": "AirRoutes",
+        "description": "A continent, by two-letter code.",
+        "icon": "lucide/globe",
+        "identity": "code",
+        "propertyCount": 3,
+        "stitchCount": 0,
+        "properties": [
+          {
+            "name": "type",
+            "type": "string",
+            "description": "The kind of thing, as the source file spells it."
+          },
+          {
+            "name": "code",
+            "type": "string",
+            "description": "IATA code on an airport, two-letter code on a country or continent.",
+            "identity": true
+          },
+          {
+            "name": "desc",
+            "type": "string",
+            "description": "The long name."
+          }
+        ]
+      }
+    },
+    {
+      "id": "AirRoutes.version",
+      "type": "AirRoutes.version",
+      "parentId": "AirRoutes",
+      "data": {
+        "label": "version",
+        "model": "AirRoutes",
+        "description": "The edition of the source data this graph was built from.",
+        "icon": "lucide/history",
+        "propertyCount": 5,
+        "stitchCount": 0,
+        "properties": [
+          {
+            "name": "type",
+            "type": "string",
+            "description": "The kind of thing, as the source file spells it."
+          },
+          {
+            "name": "code",
+            "type": "string",
+            "description": "IATA code on an airport, two-letter code on a country or continent."
+          },
+          {
+            "name": "desc",
+            "type": "string",
+            "description": "The long name."
+          },
+          {
+            "name": "author",
+            "type": "string",
+            "description": "Who compiled this edition of the data."
+          },
+          {
+            "name": "date",
+            "type": "string",
+            "description": "When the edition was generated."
+          }
+        ]
+      }
+    },
+    {
+      "id": "NewsArticles",
+      "type": "model",
+      "data": {
+        "name": "NewsArticles",
+        "packageId": "invana.dataset.news-articles",
+        "version": "1.0.0",
+        "description": "Aviation coverage — articles, the outlets that ran them, and the carriers, routes, cities and countries they name."
+      }
+    },
+    {
+      "id": "NewsArticles.Article",
+      "type": "NewsArticles.Article",
+      "parentId": "NewsArticles",
+      "data": {
+        "label": "Article",
+        "model": "NewsArticles",
+        "description": "One published piece of aviation coverage.",
+        "icon": "lucide/newspaper",
+        "identity": "article_id",
+        "propertyCount": 8,
+        "stitchCount": 2,
+        "properties": [
+          {
+            "name": "article_id",
+            "type": "string",
+            "description": "Stable id of the article at its publisher.",
+            "identity": true,
+            "stitches": [
+              "R9"
+            ]
+          },
+          {
+            "name": "headline",
+            "type": "string",
+            "description": "What the article is called."
+          },
+          {
+            "name": "url",
+            "type": "string",
+            "description": "Where the article lives.",
+            "stitches": [
+              "R8"
+            ]
+          },
+          {
+            "name": "summary",
+            "type": "string",
+            "description": "One line of what it says."
+          },
+          {
+            "name": "published_at",
+            "type": "datetime",
+            "description": "When it went out."
+          },
+          {
+            "name": "sentiment",
+            "type": "enum",
+            "description": "How the piece reads about its subject."
+          },
+          {
+            "name": "word_count",
+            "type": "integer",
+            "description": "Length of the body."
+          },
+          {
+            "name": "language",
+            "type": "string",
+            "description": "BCP-47 language tag."
+          }
+        ]
+      }
+    },
+    {
+      "id": "NewsArticles.Publisher",
+      "type": "NewsArticles.Publisher",
+      "parentId": "NewsArticles",
+      "data": {
+        "label": "Publisher",
+        "model": "NewsArticles",
+        "description": "The outlet that ran it.",
+        "icon": "lucide/building-2",
+        "identity": "domain",
+        "propertyCount": 4,
+        "stitchCount": 2,
+        "properties": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "What to call it."
+          },
+          {
+            "name": "domain",
+            "type": "string",
+            "description": "The publisher's own domain — the key a social account shares.",
+            "identity": true,
+            "stitches": [
+              "R5",
+              "A3"
+            ]
+          },
+          {
+            "name": "country_code",
+            "type": "string",
+            "description": "Two-letter country code, as air-routes spells it."
+          },
+          {
+            "name": "kind",
+            "type": "enum",
+            "description": "What sort of outlet this is."
+          }
+        ],
+        "anchored": true
+      }
+    },
+    {
+      "id": "NewsArticles.Airline",
+      "type": "NewsArticles.Airline",
+      "parentId": "NewsArticles",
+      "data": {
+        "label": "Airline",
+        "model": "NewsArticles",
+        "description": "A carrier the coverage is about.",
+        "icon": "lucide/plane",
+        "identity": "iata",
+        "propertyCount": 8,
+        "stitchCount": 3,
+        "properties": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "What to call it."
+          },
+          {
+            "name": "iata",
+            "type": "string",
+            "description": "Two-letter IATA airline designator.",
+            "identity": true,
+            "stitches": [
+              "R6",
+              "R10"
+            ]
+          },
+          {
+            "name": "icao",
+            "type": "string",
+            "description": "Three-letter ICAO airline designator."
+          },
+          {
+            "name": "callsign",
+            "type": "string",
+            "description": "Radio callsign."
+          },
+          {
+            "name": "country_code",
+            "type": "string",
+            "description": "Two-letter country code, as air-routes spells it."
+          },
+          {
+            "name": "hub_code",
+            "type": "string",
+            "description": "IATA code of the airline's main hub — an air-routes airport code.",
+            "stitches": [
+              "R2"
+            ]
+          },
+          {
+            "name": "alliance",
+            "type": "enum",
+            "description": "Global alliance membership."
+          },
+          {
+            "name": "fleet_size",
+            "type": "integer",
+            "description": "Aircraft in service."
+          }
+        ]
+      }
+    },
+    {
+      "id": "NewsArticles.City",
+      "type": "NewsArticles.City",
+      "parentId": "NewsArticles",
+      "data": {
+        "label": "City",
+        "model": "NewsArticles",
+        "description": "A city the coverage names.",
+        "icon": "lucide/landmark",
+        "identity": "code",
+        "propertyCount": 5,
+        "stitchCount": 1,
+        "properties": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "What to call it."
+          },
+          {
+            "name": "code",
+            "type": "string",
+            "description": "IATA code of the city's main airport.",
+            "identity": true,
+            "stitches": [
+              "R1"
+            ]
+          },
+          {
+            "name": "country_code",
+            "type": "string",
+            "description": "Two-letter country code, as air-routes spells it."
+          },
+          {
+            "name": "lat",
+            "type": "float",
+            "description": "Latitude."
+          },
+          {
+            "name": "lon",
+            "type": "float",
+            "description": "Longitude."
+          }
+        ]
+      }
+    },
+    {
+      "id": "NewsArticles.Country",
+      "type": "NewsArticles.Country",
+      "parentId": "NewsArticles",
+      "data": {
+        "label": "Country",
+        "model": "NewsArticles",
+        "description": "A country the coverage names.",
+        "icon": "lucide/flag",
+        "identity": "iso_code",
+        "propertyCount": 2,
+        "stitchCount": 1,
+        "properties": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "What to call it."
+          },
+          {
+            "name": "iso_code",
+            "type": "string",
+            "description": "Two-letter country code. air-routes calls the same fact `code` — the W1 case.",
+            "identity": true,
+            "stitches": [
+              "A1"
+            ]
+          }
+        ],
+        "anchored": true
+      }
+    },
+    {
+      "id": "NewsArticles.Route",
+      "type": "NewsArticles.Route",
+      "parentId": "NewsArticles",
+      "data": {
+        "label": "Route",
+        "model": "NewsArticles",
+        "description": "A city pair a carrier flies, or says it will.",
+        "icon": "lucide/route",
+        "identity": "route_id",
+        "propertyCount": 6,
+        "stitchCount": 2,
+        "properties": [
+          {
+            "name": "route_id",
+            "type": "string",
+            "description": "Airline and endpoints, as one key.",
+            "identity": true
+          },
+          {
+            "name": "origin_code",
+            "type": "string",
+            "description": "IATA code the route leaves from.",
+            "stitches": [
+              "R3"
+            ]
+          },
+          {
+            "name": "destination_code",
+            "type": "string",
+            "description": "IATA code the route arrives at.",
+            "stitches": [
+              "R4"
+            ]
+          },
+          {
+            "name": "status",
+            "type": "enum",
+            "description": "Where the route stands."
+          },
+          {
+            "name": "starts_on",
+            "type": "date",
+            "description": "First day of service."
+          },
+          {
+            "name": "frequency_weekly",
+            "type": "integer",
+            "description": "Departures a week."
+          }
+        ]
+      }
+    },
+    {
+      "id": "NewsArticles.Topic",
+      "type": "NewsArticles.Topic",
+      "parentId": "NewsArticles",
+      "data": {
+        "label": "Topic",
+        "model": "NewsArticles",
+        "description": "What a piece is about.",
+        "icon": "lucide/tag",
+        "identity": "tag",
+        "propertyCount": 2,
+        "stitchCount": 1,
+        "properties": [
+          {
+            "name": "tag",
+            "type": "string",
+            "description": "Topic slug — the key a hashtag shares, case aside.",
+            "identity": true,
+            "stitches": [
+              "A2"
+            ]
+          },
+          {
+            "name": "label",
+            "type": "string",
+            "description": "The topic, written out."
+          }
+        ],
+        "anchored": true
+      }
+    },
+    {
+      "id": "Twitter",
+      "type": "model",
+      "data": {
+        "name": "Twitter",
+        "packageId": "invana.dataset.twitter",
+        "version": "1.0.0",
+        "description": "Aviation chatter — posts, the accounts behind them and the tags they carry."
+      }
+    },
+    {
+      "id": "Twitter.Tweet",
+      "type": "Twitter.Tweet",
+      "parentId": "Twitter",
+      "data": {
+        "label": "Tweet",
+        "model": "Twitter",
+        "description": "One post.",
+        "icon": "lucide/message-square",
+        "identity": "tweet_id",
+        "propertyCount": 10,
+        "stitchCount": 3,
+        "properties": [
+          {
+            "name": "tweet_id",
+            "type": "string",
+            "description": "The post's own id.",
+            "identity": true,
+            "stitches": [
+              "R9"
+            ]
+          },
+          {
+            "name": "text",
+            "type": "string",
+            "description": "What was posted."
+          },
+          {
+            "name": "created_at",
+            "type": "datetime",
+            "description": "When it was posted."
+          },
+          {
+            "name": "lang",
+            "type": "string",
+            "description": "BCP-47 language tag."
+          },
+          {
+            "name": "retweets",
+            "type": "integer",
+            "description": "Reposts."
+          },
+          {
+            "name": "likes",
+            "type": "integer",
+            "description": "Likes."
+          },
+          {
+            "name": "replies",
+            "type": "integer",
+            "description": "Replies."
+          },
+          {
+            "name": "sentiment",
+            "type": "enum",
+            "description": "How the post reads."
+          },
+          {
+            "name": "linked_url",
+            "type": "string",
+            "description": "The article the post links to — the key an Article's url matches.",
+            "stitches": [
+              "R8"
+            ]
+          },
+          {
+            "name": "airport_code",
+            "type": "string",
+            "description": "IATA code the post was tagged at — an air-routes airport code.",
+            "stitches": [
+              "R7"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "Twitter.Account",
+      "type": "Twitter.Account",
+      "parentId": "Twitter",
+      "data": {
+        "label": "Account",
+        "model": "Twitter",
+        "description": "Who posted it — a carrier, an outlet, a watcher or a passenger.",
+        "icon": "lucide/at-sign",
+        "identity": "handle",
+        "propertyCount": 8,
+        "stitchCount": 2,
+        "properties": [
+          {
+            "name": "handle",
+            "type": "string",
+            "description": "The @name, without the @.",
+            "identity": true
+          },
+          {
+            "name": "display_name",
+            "type": "string",
+            "description": "The name on the profile."
+          },
+          {
+            "name": "followers",
+            "type": "integer",
+            "description": "Follower count."
+          },
+          {
+            "name": "verified",
+            "type": "boolean",
+            "description": "Whether the account carries a check."
+          },
+          {
+            "name": "kind",
+            "type": "enum",
+            "description": "What sort of account this is."
+          },
+          {
+            "name": "airline_iata",
+            "type": "string",
+            "description": "For an airline account, its IATA designator — the key an Airline's iata matches.",
+            "stitches": [
+              "R6"
+            ]
+          },
+          {
+            "name": "domain",
+            "type": "string",
+            "description": "For a news account, the outlet's domain — the key a Publisher's domain matches.",
+            "stitches": [
+              "R5"
+            ]
+          },
+          {
+            "name": "country_code",
+            "type": "string",
+            "description": "Two-letter country code, as air-routes spells it."
+          }
+        ]
+      }
+    },
+    {
+      "id": "Twitter.Hashtag",
+      "type": "Twitter.Hashtag",
+      "parentId": "Twitter",
+      "data": {
+        "label": "Hashtag",
+        "model": "Twitter",
+        "description": "A tag carried by posts.",
+        "icon": "lucide/hash",
+        "identity": "tag",
+        "propertyCount": 1,
+        "stitchCount": 1,
+        "properties": [
+          {
+            "name": "tag",
+            "type": "string",
+            "description": "The hashtag, without the # — a Topic's tag, cased differently.",
+            "identity": true,
+            "stitches": [
+              "A2"
+            ]
+          }
+        ],
+        "anchored": true
+      }
+    },
+    {
+      "id": "Deals",
+      "type": "model",
+      "data": {
+        "name": "Deals",
+        "packageId": "invana.dataset.deals",
+        "version": "1.0.0",
+        "description": "Sponsorship agreements between carriers and the companies that back them."
+      }
+    },
+    {
+      "id": "Deals.Deal",
+      "type": "Deals.Deal",
+      "parentId": "Deals",
+      "data": {
+        "label": "Deal",
+        "model": "Deals",
+        "description": "One sponsorship agreement.",
+        "icon": "lucide/handshake",
+        "identity": "deal_id",
+        "propertyCount": 12,
+        "stitchCount": 1,
+        "properties": [
+          {
+            "name": "deal_id",
+            "type": "string",
+            "description": "The sponsorship agreement's own reference.",
+            "identity": true
+          },
+          {
+            "name": "carrier_iata",
+            "type": "string",
+            "description": "IATA code of the airline the deal is with — the key FOR_CARRIER resolves on.",
+            "stitches": [
+              "R10"
+            ]
+          },
+          {
+            "name": "sponsor_id",
+            "type": "string",
+            "description": "The sponsor's reference in this model."
+          },
+          {
+            "name": "country_iso",
+            "type": "string",
+            "description": "The carrier's country, ISO 3166-1 alpha-2. The geo axis."
+          },
+          {
+            "name": "stage",
+            "type": "string",
+            "description": "prospect · negotiating · signed · renewed · lapsed."
+          },
+          {
+            "name": "channel",
+            "type": "string",
+            "description": "How it was sold — direct · agency · programmatic."
+          },
+          {
+            "name": "segment",
+            "type": "string",
+            "description": "enterprise · mid-market · regional."
+          },
+          {
+            "name": "contract_value",
+            "type": "integer",
+            "description": "The whole commitment, in minor-unit-free EUR. Commercially sensitive."
+          },
+          {
+            "name": "revenue",
+            "type": "integer",
+            "description": "What has been recognised against the contract so far. Commercially sensitive."
+          },
+          {
+            "name": "currency",
+            "type": "string",
+            "description": "Always EUR in this dataset; kept so the number is never a bare integer."
+          },
+          {
+            "name": "signed_at",
+            "type": "string",
+            "description": "ISO date the agreement was signed. The valid-time axis."
+          },
+          {
+            "name": "term_months",
+            "type": "integer",
+            "description": "How long it runs."
+          }
+        ]
+      }
+    },
+    {
+      "id": "Deals.Sponsor",
+      "type": "Deals.Sponsor",
+      "parentId": "Deals",
+      "data": {
+        "label": "Sponsor",
+        "model": "Deals",
+        "description": "A company backing a carrier.",
+        "icon": "lucide/briefcase",
+        "identity": "domain",
+        "propertyCount": 4,
+        "stitchCount": 1,
+        "properties": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The sponsoring company."
+          },
+          {
+            "name": "domain",
+            "type": "string",
+            "description": "Its web domain — the key the Publisher anchor resolves on.",
+            "identity": true,
+            "stitches": [
+              "A3"
+            ]
+          },
+          {
+            "name": "country_iso",
+            "type": "string",
+            "description": "The carrier's country, ISO 3166-1 alpha-2. The geo axis."
+          },
+          {
+            "name": "sector",
+            "type": "string",
+            "description": "media · financial · hospitality · telecom · energy."
+          }
+        ],
+        "anchored": true
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "AirRoutes.route:airport->airport",
+      "type": "route",
+      "source": "AirRoutes.airport",
+      "target": "AirRoutes.airport",
+      "data": {
+        "kind": "edge",
+        "model": "AirRoutes",
+        "description": "A flight between two airports.",
+        "multiplicity": "MULTI"
+      }
+    },
+    {
+      "id": "AirRoutes.contains:country->airport",
+      "type": "contains",
+      "source": "AirRoutes.country",
+      "target": "AirRoutes.airport",
+      "data": {
+        "kind": "edge",
+        "model": "AirRoutes",
+        "description": "The country and the continent an airport sits in.",
+        "multiplicity": "MULTI"
+      }
+    },
+    {
+      "id": "AirRoutes.contains:continent->airport",
+      "type": "contains",
+      "source": "AirRoutes.continent",
+      "target": "AirRoutes.airport",
+      "data": {
+        "kind": "edge",
+        "model": "AirRoutes",
+        "description": "The country and the continent an airport sits in.",
+        "multiplicity": "MULTI"
+      }
+    },
+    {
+      "id": "NewsArticles.PUBLISHED_BY:Article->Publisher",
+      "type": "PUBLISHED_BY",
+      "source": "NewsArticles.Article",
+      "target": "NewsArticles.Publisher",
+      "data": {
+        "kind": "edge",
+        "model": "NewsArticles",
+        "description": "The outlet that ran the article.",
+        "multiplicity": "MANY2ONE"
+      }
+    },
+    {
+      "id": "NewsArticles.MENTIONS_AIRLINE:Article->Airline",
+      "type": "MENTIONS_AIRLINE",
+      "source": "NewsArticles.Article",
+      "target": "NewsArticles.Airline",
+      "data": {
+        "kind": "edge",
+        "model": "NewsArticles",
+        "description": "A carrier named in the piece.",
+        "multiplicity": "MULTI"
+      }
+    },
+    {
+      "id": "NewsArticles.MENTIONS_CITY:Article->City",
+      "type": "MENTIONS_CITY",
+      "source": "NewsArticles.Article",
+      "target": "NewsArticles.City",
+      "data": {
+        "kind": "edge",
+        "model": "NewsArticles",
+        "description": "A city named in the piece.",
+        "multiplicity": "MULTI"
+      }
+    },
+    {
+      "id": "NewsArticles.MENTIONS_COUNTRY:Article->Country",
+      "type": "MENTIONS_COUNTRY",
+      "source": "NewsArticles.Article",
+      "target": "NewsArticles.Country",
+      "data": {
+        "kind": "edge",
+        "model": "NewsArticles",
+        "description": "A country named in the piece.",
+        "multiplicity": "MULTI"
+      }
+    },
+    {
+      "id": "NewsArticles.REPORTS_ON:Article->Route",
+      "type": "REPORTS_ON",
+      "source": "NewsArticles.Article",
+      "target": "NewsArticles.Route",
+      "data": {
+        "kind": "edge",
+        "model": "NewsArticles",
+        "description": "The route the piece is about.",
+        "multiplicity": "MULTI"
+      }
+    },
+    {
+      "id": "NewsArticles.TAGGED:Article->Topic",
+      "type": "TAGGED",
+      "source": "NewsArticles.Article",
+      "target": "NewsArticles.Topic",
+      "data": {
+        "kind": "edge",
+        "model": "NewsArticles",
+        "description": "The topic the piece was filed under.",
+        "multiplicity": "MULTI"
+      }
+    },
+    {
+      "id": "NewsArticles.OPERATED_BY:Route->Airline",
+      "type": "OPERATED_BY",
+      "source": "NewsArticles.Route",
+      "target": "NewsArticles.Airline",
+      "data": {
+        "kind": "edge",
+        "model": "NewsArticles",
+        "description": "The carrier flying the route.",
+        "multiplicity": "MANY2ONE"
+      }
+    },
+    {
+      "id": "NewsArticles.BASED_IN:Airline->Country",
+      "type": "BASED_IN",
+      "source": "NewsArticles.Airline",
+      "target": "NewsArticles.Country",
+      "data": {
+        "kind": "edge",
+        "model": "NewsArticles",
+        "description": "Where the carrier is registered.",
+        "multiplicity": "MANY2ONE"
+      }
+    },
+    {
+      "id": "NewsArticles.LOCATED_IN:City->Country",
+      "type": "LOCATED_IN",
+      "source": "NewsArticles.City",
+      "target": "NewsArticles.Country",
+      "data": {
+        "kind": "edge",
+        "model": "NewsArticles",
+        "description": "The country the city sits in.",
+        "multiplicity": "MANY2ONE"
+      }
+    },
+    {
+      "id": "Twitter.POSTED:Account->Tweet",
+      "type": "POSTED",
+      "source": "Twitter.Account",
+      "target": "Twitter.Tweet",
+      "data": {
+        "kind": "edge",
+        "model": "Twitter",
+        "description": "The account that wrote the post.",
+        "multiplicity": "ONE2MANY"
+      }
+    },
+    {
+      "id": "Twitter.TAGS:Tweet->Hashtag",
+      "type": "TAGS",
+      "source": "Twitter.Tweet",
+      "target": "Twitter.Hashtag",
+      "data": {
+        "kind": "edge",
+        "model": "Twitter",
+        "description": "A hashtag the post carries.",
+        "multiplicity": "MULTI"
+      }
+    },
+    {
+      "id": "Twitter.MENTIONS:Tweet->Account",
+      "type": "MENTIONS",
+      "source": "Twitter.Tweet",
+      "target": "Twitter.Account",
+      "data": {
+        "kind": "edge",
+        "model": "Twitter",
+        "description": "An account the post names.",
+        "multiplicity": "MULTI"
+      }
+    },
+    {
+      "id": "Twitter.REPLIES_TO:Tweet->Tweet",
+      "type": "REPLIES_TO",
+      "source": "Twitter.Tweet",
+      "target": "Twitter.Tweet",
+      "data": {
+        "kind": "edge",
+        "model": "Twitter",
+        "description": "The post this one answers.",
+        "multiplicity": "MANY2ONE"
+      }
+    },
+    {
+      "id": "Twitter.RETWEETS:Tweet->Tweet",
+      "type": "RETWEETS",
+      "source": "Twitter.Tweet",
+      "target": "Twitter.Tweet",
+      "data": {
+        "kind": "edge",
+        "model": "Twitter",
+        "description": "The post this one reposts.",
+        "multiplicity": "MANY2ONE"
+      }
+    },
+    {
+      "id": "Twitter.QUOTES:Tweet->Tweet",
+      "type": "QUOTES",
+      "source": "Twitter.Tweet",
+      "target": "Twitter.Tweet",
+      "data": {
+        "kind": "edge",
+        "model": "Twitter",
+        "description": "The post this one quotes.",
+        "multiplicity": "MANY2ONE"
+      }
+    },
+    {
+      "id": "Deals.SPONSORED_BY:Deal->Sponsor",
+      "type": "SPONSORED_BY",
+      "source": "Deals.Deal",
+      "target": "Deals.Sponsor",
+      "data": {
+        "kind": "edge",
+        "model": "Deals",
+        "description": "The company behind the agreement.",
+        "multiplicity": "MANY2ONE"
+      }
+    },
+    {
+      "id": "stitch:A1",
+      "type": "SAME_AS",
+      "source": "NewsArticles.Country",
+      "target": "AirRoutes.country",
+      "data": {
+        "kind": "anchor",
+        "stitch": "A1",
+        "rule": "NewsArticles.Country.iso_code ≡ AirRoutes.country.code",
+        "match": "exact",
+        "description": "A country is a country in both models; the two teams spelled the key differently (W1)."
+      }
+    },
+    {
+      "id": "stitch:A2",
+      "type": "SAME_AS",
+      "source": "Twitter.Hashtag",
+      "target": "NewsArticles.Topic",
+      "data": {
+        "kind": "anchor",
+        "stitch": "A2",
+        "rule": "Twitter.Hashtag.tag ≡ NewsArticles.Topic.tag",
+        "match": "case_insensitive",
+        "partial": true,
+        "description": "RouteLaunch is routelaunch. Six hashtags have no topic behind them, on purpose."
+      }
+    },
+    {
+      "id": "stitch:R1",
+      "type": "SERVED_BY",
+      "source": "NewsArticles.City",
+      "target": "AirRoutes.airport",
+      "data": {
+        "kind": "relationship",
+        "stitch": "R1",
+        "rule": "NewsArticles.City.code → AirRoutes.airport.code",
+        "description": "A city is not an airport — it is served by one."
+      }
+    },
+    {
+      "id": "stitch:R2",
+      "type": "HUBS_AT",
+      "source": "NewsArticles.Airline",
+      "target": "AirRoutes.airport",
+      "data": {
+        "kind": "relationship",
+        "stitch": "R2",
+        "rule": "NewsArticles.Airline.hub_code → AirRoutes.airport.code",
+        "description": "A foreign key the records already carry (W2)."
+      }
+    },
+    {
+      "id": "stitch:R3",
+      "type": "DEPARTS_FROM",
+      "source": "NewsArticles.Route",
+      "target": "AirRoutes.airport",
+      "data": {
+        "kind": "relationship",
+        "stitch": "R3",
+        "rule": "NewsArticles.Route.origin_code → AirRoutes.airport.code"
+      }
+    },
+    {
+      "id": "stitch:R4",
+      "type": "ARRIVES_AT",
+      "source": "NewsArticles.Route",
+      "target": "AirRoutes.airport",
+      "data": {
+        "kind": "relationship",
+        "stitch": "R4",
+        "rule": "NewsArticles.Route.destination_code → AirRoutes.airport.code"
+      }
+    },
+    {
+      "id": "stitch:R5",
+      "type": "SPEAKS_FOR",
+      "source": "Twitter.Account",
+      "target": "NewsArticles.Publisher",
+      "data": {
+        "kind": "relationship",
+        "stitch": "R5",
+        "rule": "Twitter.Account.domain → NewsArticles.Publisher.domain",
+        "description": "An account posts on behalf of an outlet; it is not the outlet."
+      }
+    },
+    {
+      "id": "stitch:R6",
+      "type": "SPEAKS_FOR",
+      "source": "Twitter.Account",
+      "target": "NewsArticles.Airline",
+      "data": {
+        "kind": "relationship",
+        "stitch": "R6",
+        "rule": "Twitter.Account.airline_iata → NewsArticles.Airline.iata",
+        "description": "Same relation, the other kind of organisation."
+      }
+    },
+    {
+      "id": "stitch:R7",
+      "type": "POSTED_NEAR",
+      "source": "Twitter.Tweet",
+      "target": "AirRoutes.airport",
+      "data": {
+        "kind": "relationship",
+        "stitch": "R7",
+        "rule": "Twitter.Tweet.airport_code → AirRoutes.airport.code"
+      }
+    },
+    {
+      "id": "stitch:R8",
+      "type": "LINKS_TO",
+      "source": "Twitter.Tweet",
+      "target": "NewsArticles.Article",
+      "data": {
+        "kind": "relationship",
+        "stitch": "R8",
+        "rule": "Twitter.Tweet.linked_url → NewsArticles.Article.url"
+      }
+    },
+    {
+      "id": "stitch:R9",
+      "type": "ABOUT",
+      "source": "Twitter.Tweet",
+      "target": "NewsArticles.Article",
+      "data": {
+        "kind": "relationship",
+        "stitch": "R9",
+        "rule": "Twitter.Tweet.tweet_id → NewsArticles.Article.article_id",
+        "endpoints": "rows",
+        "description": "Endpoints are their own fact, one row per edge (W3)."
+      }
+    },
+    {
+      "id": "stitch:A3",
+      "type": "SAME_AS",
+      "source": "Deals.Sponsor",
+      "target": "NewsArticles.Publisher",
+      "data": {
+        "kind": "anchor",
+        "stitch": "A3",
+        "rule": "Deals.Sponsor.domain ≡ NewsArticles.Publisher.domain",
+        "match": "exact",
+        "partial": true,
+        "description": "A sponsor that is also a newsroom is one company, said twice. Seven of the twelve overlap; the other five sponsor flights and write nothing, which is why this is partial."
+      }
+    },
+    {
+      "id": "stitch:R10",
+      "type": "FOR_CARRIER",
+      "source": "Deals.Deal",
+      "target": "NewsArticles.Airline",
+      "data": {
+        "kind": "relationship",
+        "stitch": "R10",
+        "rule": "Deals.Deal.carrier_iata → NewsArticles.Airline.iata",
+        "description": "A deal is with an airline. The commercial model knows the IATA code and nothing else about it."
+      }
+    }
+  ]
+}

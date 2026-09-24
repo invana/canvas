@@ -124,6 +124,35 @@ export function CardElementView({ el, palette, text = '', selected, onPointerDow
       </div>
     );
   }
+  if (el.type === 'icon') {
+    // A bound glyph differs per record, so show the binding the way `image`
+    // does; a fixed one is drawn as an outlined box labelled with its id.
+    const slot = el.bind ? `{${el.bind.split('.').pop()}}` : (el.icon?.split('/').pop() ?? 'ICON');
+    return (
+      <div
+        onPointerDown={onPointerDown}
+        title={el.icon}
+        style={{
+          ...common,
+          left: el.x,
+          top: el.y,
+          width: el.size,
+          height: el.size,
+          borderRadius: 4,
+          border: `1px dashed ${previewColor(el.colorRole, el.color, palette, 0x64748b)}`,
+          color: previewColor(el.colorRole, el.color, palette, 0x64748b),
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 8,
+          overflow: 'hidden',
+          boxSizing: 'border-box',
+        }}
+      >
+        {slot}
+      </div>
+    );
+  }
   // line
   const dx = el.x2 - el.x;
   const dy = el.y2 - el.y;

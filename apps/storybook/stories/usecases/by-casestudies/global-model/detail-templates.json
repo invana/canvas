@@ -1,0 +1,395 @@
+{
+  "high": {
+    "layers": {
+      "graph": {
+        "nodeStylingTemplates": {
+          "modelFrame": {
+            "name": "modelFrame",
+            "group": {
+              "autoFit": true,
+              "padding": 28,
+              "headerHeight": 28,
+              "tabSkew": 12,
+              "showCollapsedCount": true
+            },
+            "fillRole": "muted",
+            "fillAlpha": 0.08,
+            "strokeRole": "stroke",
+            "strokeWidth": 1.5,
+            "label": {
+              "fontSize": 13,
+              "fontWeight": 700,
+              "colorRole": "heading",
+              "placement": "inside-center"
+            }
+          }
+        },
+        "nodeTypes": {
+          "AirRoutes.airport": {
+            "structure": "labelDot",
+            "styling": "label",
+            "bindings": {}
+          },
+          "AirRoutes.country": {
+            "structure": "labelDot",
+            "styling": "label",
+            "bindings": {}
+          },
+          "AirRoutes.continent": {
+            "structure": "labelDot",
+            "styling": "label",
+            "bindings": {}
+          },
+          "AirRoutes.version": {
+            "structure": "labelDot",
+            "styling": "label",
+            "bindings": {}
+          },
+          "NewsArticles.Article": {
+            "structure": "labelDot",
+            "styling": "label",
+            "bindings": {}
+          },
+          "NewsArticles.Publisher": {
+            "structure": "labelDot",
+            "styling": "label",
+            "bindings": {}
+          },
+          "NewsArticles.Airline": {
+            "structure": "labelDot",
+            "styling": "label",
+            "bindings": {}
+          },
+          "NewsArticles.City": {
+            "structure": "labelDot",
+            "styling": "label",
+            "bindings": {}
+          },
+          "NewsArticles.Country": {
+            "structure": "labelDot",
+            "styling": "label",
+            "bindings": {}
+          },
+          "NewsArticles.Route": {
+            "structure": "labelDot",
+            "styling": "label",
+            "bindings": {}
+          },
+          "NewsArticles.Topic": {
+            "structure": "labelDot",
+            "styling": "label",
+            "bindings": {}
+          },
+          "Twitter.Tweet": {
+            "structure": "labelDot",
+            "styling": "label",
+            "bindings": {}
+          },
+          "Twitter.Account": {
+            "structure": "labelDot",
+            "styling": "label",
+            "bindings": {}
+          },
+          "Twitter.Hashtag": {
+            "structure": "labelDot",
+            "styling": "label",
+            "bindings": {}
+          },
+          "Deals.Deal": {
+            "structure": "labelDot",
+            "styling": "label",
+            "bindings": {}
+          },
+          "Deals.Sponsor": {
+            "structure": "labelDot",
+            "styling": "label",
+            "bindings": {}
+          }
+        }
+      }
+    },
+    "layouts": {
+      "elk": {
+        "defaultNodeSize": {
+          "width": 60,
+          "height": 84
+        },
+        "nodeSpacing": 80,
+        "layerSpacing": 120
+      },
+      "force": {
+        "link": {
+          "distance": 140
+        },
+        "charge": {
+          "strength": -1400
+        },
+        "collide": {
+          "radius": 64
+        }
+      }
+    }
+  },
+  "medium": {
+    "layers": {
+      "graph": {
+        "nodeStylingTemplates": {
+          "modelFrame": {
+            "name": "modelFrame",
+            "group": {
+              "autoFit": true,
+              "padding": 30,
+              "headerHeight": 28,
+              "tabSkew": 12,
+              "showCollapsedCount": true
+            },
+            "fillRole": "muted",
+            "fillAlpha": 0.08,
+            "strokeRole": "stroke",
+            "strokeWidth": 1.5,
+            "label": {
+              "fontSize": 13,
+              "fontWeight": 700,
+              "colorRole": "heading",
+              "placement": "inside-center"
+            }
+          }
+        },
+        "nodeTypes": {
+          "AirRoutes.airport": {
+            "structure": "labelCard",
+            "styling": "label",
+            "bindings": {}
+          },
+          "AirRoutes.country": {
+            "structure": "labelCard",
+            "styling": "label",
+            "bindings": {}
+          },
+          "AirRoutes.continent": {
+            "structure": "labelCard",
+            "styling": "label",
+            "bindings": {}
+          },
+          "AirRoutes.version": {
+            "structure": "labelCard",
+            "styling": "label",
+            "bindings": {}
+          },
+          "NewsArticles.Article": {
+            "structure": "labelCard",
+            "styling": "label",
+            "bindings": {}
+          },
+          "NewsArticles.Publisher": {
+            "structure": "labelCard",
+            "styling": "label",
+            "bindings": {}
+          },
+          "NewsArticles.Airline": {
+            "structure": "labelCard",
+            "styling": "label",
+            "bindings": {}
+          },
+          "NewsArticles.City": {
+            "structure": "labelCard",
+            "styling": "label",
+            "bindings": {}
+          },
+          "NewsArticles.Country": {
+            "structure": "labelCard",
+            "styling": "label",
+            "bindings": {}
+          },
+          "NewsArticles.Route": {
+            "structure": "labelCard",
+            "styling": "label",
+            "bindings": {}
+          },
+          "NewsArticles.Topic": {
+            "structure": "labelCard",
+            "styling": "label",
+            "bindings": {}
+          },
+          "Twitter.Tweet": {
+            "structure": "labelCard",
+            "styling": "label",
+            "bindings": {}
+          },
+          "Twitter.Account": {
+            "structure": "labelCard",
+            "styling": "label",
+            "bindings": {}
+          },
+          "Twitter.Hashtag": {
+            "structure": "labelCard",
+            "styling": "label",
+            "bindings": {}
+          },
+          "Deals.Deal": {
+            "structure": "labelCard",
+            "styling": "label",
+            "bindings": {}
+          },
+          "Deals.Sponsor": {
+            "structure": "labelCard",
+            "styling": "label",
+            "bindings": {}
+          }
+        }
+      }
+    },
+    "layouts": {
+      "elk": {
+        "defaultNodeSize": {
+          "width": 264,
+          "height": 116
+        },
+        "nodeSpacing": 40,
+        "layerSpacing": 120
+      },
+      "force": {
+        "link": {
+          "distance": 300
+        },
+        "charge": {
+          "strength": -2600
+        },
+        "collide": {
+          "radius": 160
+        }
+      }
+    }
+  },
+  "low": {
+    "layers": {
+      "graph": {
+        "nodeStylingTemplates": {
+          "modelFrame": {
+            "name": "modelFrame",
+            "group": {
+              "autoFit": true,
+              "padding": 32,
+              "headerHeight": 28,
+              "tabSkew": 12,
+              "showCollapsedCount": true
+            },
+            "fillRole": "muted",
+            "fillAlpha": 0.08,
+            "strokeRole": "stroke",
+            "strokeWidth": 1.5,
+            "label": {
+              "fontSize": 13,
+              "fontWeight": 700,
+              "colorRole": "heading",
+              "placement": "inside-center"
+            }
+          }
+        },
+        "nodeTypes": {
+          "AirRoutes.airport": {
+            "structure": "schema:AirRoutes.airport",
+            "styling": "label",
+            "bindings": {}
+          },
+          "AirRoutes.country": {
+            "structure": "schema:AirRoutes.country",
+            "styling": "label",
+            "bindings": {}
+          },
+          "AirRoutes.continent": {
+            "structure": "schema:AirRoutes.continent",
+            "styling": "label",
+            "bindings": {}
+          },
+          "AirRoutes.version": {
+            "structure": "schema:AirRoutes.version",
+            "styling": "label",
+            "bindings": {}
+          },
+          "NewsArticles.Article": {
+            "structure": "schema:NewsArticles.Article",
+            "styling": "label",
+            "bindings": {}
+          },
+          "NewsArticles.Publisher": {
+            "structure": "schema:NewsArticles.Publisher",
+            "styling": "label",
+            "bindings": {}
+          },
+          "NewsArticles.Airline": {
+            "structure": "schema:NewsArticles.Airline",
+            "styling": "label",
+            "bindings": {}
+          },
+          "NewsArticles.City": {
+            "structure": "schema:NewsArticles.City",
+            "styling": "label",
+            "bindings": {}
+          },
+          "NewsArticles.Country": {
+            "structure": "schema:NewsArticles.Country",
+            "styling": "label",
+            "bindings": {}
+          },
+          "NewsArticles.Route": {
+            "structure": "schema:NewsArticles.Route",
+            "styling": "label",
+            "bindings": {}
+          },
+          "NewsArticles.Topic": {
+            "structure": "schema:NewsArticles.Topic",
+            "styling": "label",
+            "bindings": {}
+          },
+          "Twitter.Tweet": {
+            "structure": "schema:Twitter.Tweet",
+            "styling": "label",
+            "bindings": {}
+          },
+          "Twitter.Account": {
+            "structure": "schema:Twitter.Account",
+            "styling": "label",
+            "bindings": {}
+          },
+          "Twitter.Hashtag": {
+            "structure": "schema:Twitter.Hashtag",
+            "styling": "label",
+            "bindings": {}
+          },
+          "Deals.Deal": {
+            "structure": "schema:Deals.Deal",
+            "styling": "label",
+            "bindings": {}
+          },
+          "Deals.Sponsor": {
+            "structure": "schema:Deals.Sponsor",
+            "styling": "label",
+            "bindings": {}
+          }
+        }
+      }
+    },
+    "layouts": {
+      "elk": {
+        "defaultNodeSize": {
+          "width": 300,
+          "height": 240
+        },
+        "nodeSpacing": 44,
+        "layerSpacing": 140
+      },
+      "force": {
+        "link": {
+          "distance": 420
+        },
+        "charge": {
+          "strength": -4200
+        },
+        "collide": {
+          "radius": 220
+        }
+      }
+    }
+  }
+}
