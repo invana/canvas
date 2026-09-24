@@ -2,8 +2,8 @@
  * Types for the CollapseExpandBehaviour editor.
  *
  * Engine-agnostic: the editable option shape is mirrored **structurally** here.
- * Of `CollapseExpandBehaviourOptions`, `doubleClickToToggle` and
- * `centerOnToggle` are the tunable visualisation state — the base fields
+ * Of `CollapseExpandBehaviourOptions`, `doubleClickToToggle`,
+ * `centerOnToggle` and `centerDurationMs` are the tunable visualisation state — the base fields
  * (`id` / `targetLayerId` / `enabled` / `shortcuts`) are out of scope for the
  * state editor.
  */
@@ -20,9 +20,14 @@ export interface CollapseExpandOptions {
   readonly doubleClickToToggle?: boolean;
   /**
    * Pan the camera to centre a frame after it opens or closes. Engine default
-   * `true`.
+   * `false`.
    */
   readonly centerOnToggle?: boolean;
+  /**
+   * Length of the re-centre glide, in milliseconds; `0` jumps. Engine default
+   * `300`.
+   */
+  readonly centerDurationMs?: number;
 }
 
 /**
@@ -32,6 +37,7 @@ export interface CollapseExpandOptions {
 export interface CollapseExpandFields {
   doubleClickToToggle?: boolean;
   centerOnToggle?: boolean;
+  centerDurationMs?: number;
 }
 
 /**

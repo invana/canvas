@@ -2,8 +2,8 @@
  * `CollapseExpandBehaviour` — flips a group frame between its expanded and
  * collapsed states. Two routes to the same flip: a click on the group's
  * `+` / `−` toggle decoration, and (unless `doubleClickToToggle: false`) a
- * double-click anywhere on the frame itself. Either way the camera re-centres
- * on the frame once it has re-projected (`centerOnToggle`).
+ * double-click anywhere on the frame itself. The camera stays where it is;
+ * opt in to re-centring on the toggled frame with `centerOnToggle`.
  *
  * Listens for native DOM `pointerdown` on the canvas element rather than
  * the renderer's `shape:pointerdown` channel. The reason: the toggle
@@ -78,15 +78,29 @@ export interface CollapseExpandBehaviourOptions extends BehaviourOptions {
   doubleClickToToggle?: boolean;
   /**
    * Pan the camera to centre the frame after it opens or closes. Default
-   * `true`.
+   * `false` — the camera stays put, so the frame stays where the user
+   * clicked it.
    *
-   * Both directions move a lot of pixels — closing pulls a large frame down to
-   * a tab, opening pushes it back out — and the toggle the user just clicked
-   * ends up somewhere other than where they left it. Re-centring keeps the
-   * frame under the eye instead. Zoom is untouched; this is a pan only.
+   * Opt in when frames are large enough that closing one pulls its toggle far
+   * from where the user left it; the pan then glides over
+   * {@link centerDurationMs}. Zoom is untouched; this is a pan only.
    */
   centerOnToggle?: boolean;
+  /**
+   * How long the {@link centerOnToggle} pan glides for, in milliseconds.
+   * Default `300`, eased out. `0` jumps straight to the frame.
+   *
+   * The frame itself changes size in a single frame, so an instant re-centre
+   * lands in that same frame and the whole scene jumps with it — hundreds of
+   * pixels when the frame sat near the edge of the view. Gliding lets the eye
+   * follow the frame to the centre. Any pan or zoom by the user during the
+   * glide cancels it.
+   */
+  centerDurationMs?: number;
 }
+
+/** Default {@link CollapseExpandBehaviourOptions.centerDurationMs}. */
+const DEFAULT_CENTER_DURATION_MS = 300;
 
 export class CollapseExpandBehaviour extends Behaviour<CollapseExpandBehaviourOptions> {
   override readonly kind = 'collapse-expand';
@@ -260,7 +274,7 @@ export class CollapseExpandBehaviour extends Behaviour<CollapseExpandBehaviourOp
     const open = layer.isCollapsedGroup(node);
     // Armed *before* the write: with a synchronous store the flush happens
     // inside `setNodeState`, so a subscription taken afterwards would miss it.
-    if (this._options.centerOnToggle !== false) this.centerAfterReproject(nodeId);
+    if (this._options.centerOnToggle === true) this.centerAfterReproject(nodeId);
     layer.store.setNodeState(nodeId, COLLAPSED_STATE, !open, { actor: this.id });
     if (open && node.states?.includes(COLLAPSED_STATE)) {
       layer.store.updateNode(nodeId, {
@@ -293,7 +307,10 @@ export class CollapseExpandBehaviour extends Behaviour<CollapseExpandBehaviourOp
       off();
       const bounds = layer.getRenderer()?.getShapeWorldBounds(nodeId);
       if (!bounds) return;
-      ctx.camera.centerOn(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+      ctx.camera.centerOn(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2, {
+        durationMs: this._options.centerDurationMs ?? DEFAULT_CENTER_DURATION_MS,
+        easing: 'easeOutCubic',
+      });
     });
   }
 }

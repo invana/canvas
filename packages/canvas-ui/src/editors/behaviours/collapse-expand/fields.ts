@@ -3,8 +3,8 @@ import type { FieldConfig } from '@invana/forms';
 /**
  * `@invana/forms` field schema for the CollapseExpandBehaviour editor.
  *
- * `doubleClickToToggle` and `centerOnToggle` are the editable visualisation
- * state — the rest of `CollapseExpandBehaviourOptions` is base wiring
+ * `doubleClickToToggle`, `centerOnToggle` and `centerDurationMs` are the
+ * editable visualisation state — the rest of `CollapseExpandBehaviourOptions` is base wiring
  * (`id` / `targetLayerId` / `enabled` / `shortcuts`), which the settings editor
  * doesn't own.
  */
@@ -21,6 +21,16 @@ export const collapseExpandFields: FieldConfig[] = [
     type: 'boolean',
     label: 'Centre on toggle',
     description:
-      'Pan the camera to centre a frame after it opens or closes, so it stays under the eye as it changes size. Zoom is left alone.',
+      'Pan the camera to centre a frame after it opens or closes. Off by default — the camera stays put. Zoom is left alone.',
+  },
+  {
+    name: 'centerDurationMs',
+    type: 'number',
+    label: 'Centre glide (ms)',
+    description:
+      'How long the re-centre pan glides for. 0 jumps straight to the frame. A pan or zoom during the glide cancels it.',
+    min: 0,
+    max: 1000,
+    step: 50,
   },
 ];

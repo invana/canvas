@@ -145,6 +145,10 @@ export class Camera {
     // those mutations bypass Camera's typed mutators. Changes Camera itself
     // makes are not reported back, so there's no double-emit.
     this._offBindingChange = this.binding.onTransformChange((kind) => {
+      // A user gesture owns the camera from its first frame — drop any glide.
+      // Without this an `animateTo` keeps overwriting the gesture until it
+      // lands, and drag-pan momentum then inherits the glide's velocity.
+      this.cancelAnimation();
       const t = this.binding.getTransform();
       if (kind === 'zoom') {
         this.bus?.emit('input:camera:zoom', {
@@ -376,16 +380,38 @@ export class Camera {
    * maps to the screen centre, keeping the current zoom. The pan-only
    * counterpart to {@link fitContent}: use it for "focus" / "go to" actions
    * that should locate a target without rescaling the view.
+   *
+   * By default the pan is applied at once. Pass a positive `durationMs` to
+   * glide there instead — the move then runs through {@link animateTo}, so it
+   * follows the same rules: eased, and cancelled by any other camera write.
+   *
+   * @param durationMs Length of the glide. Absent or `<= 0` pans immediately.
+   * @param easing     Named curve for the glide; defaults to `'easeOutCubic'`.
+   * @param onDone     Called once the camera is on target (immediately when
+   *                   not gliding; never when a glide is cancelled).
    */
-  centerOn(worldX: number, worldY: number): void {
-    // Whoever writes the transform last owns the camera — drop any glide.
-    this.cancelAnimation();
+  centerOn(
+    worldX: number,
+    worldY: number,
+    { durationMs = 0, easing, onDone }:
+      { durationMs?: number; easing?: EasingName; onDone?: () => void } = {},
+  ): void {
     const scale = this.scale;
     const tx = this._screenWidth / 2 - worldX * scale;
     const ty = this._screenHeight / 2 - worldY * scale;
+    if (durationMs > 0) {
+      this.animateTo(
+        { x: tx, y: ty, zoom: scale },
+        { durationMs, ...(easing ? { easing } : {}), ...(onDone ? { onDone } : {}) },
+      );
+      return;
+    }
+    // Whoever writes the transform last owns the camera — drop any glide.
+    this.cancelAnimation();
     this.binding.setTransform({ x: tx, y: ty, zoom: scale });
     this.bus?.emit('input:camera:pan', { x: tx, y: ty });
     this.pushToStore();
+    onDone?.();
   }
 
   /** Update on viewport resize. Forwarded so the binding's own math stays correct. */

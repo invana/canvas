@@ -1,15 +1,19 @@
 import type { CollapseExpandFields, CollapseExpandOptions } from './types';
 
+/** The engine's `centerDurationMs` default — mirrored, as the editor is engine-agnostic. */
+const DEFAULT_CENTER_DURATION_MS = 300;
+
 /**
  * Map a `CollapseExpandBehaviourOptions`-shaped patch to the flat
- * {@link CollapseExpandFields}. Both options are plain booleans, so this is a
- * straight copy — each falls back to the engine's `true` default so an unset
- * option still renders its checkbox in the effective state.
+ * {@link CollapseExpandFields}. The options are plain values, so this is a
+ * straight copy — each falls back to the engine's default so an unset option
+ * still renders in its effective state.
  */
 export function optionsToForm(o: CollapseExpandOptions = {}): CollapseExpandFields {
   return {
     doubleClickToToggle: o.doubleClickToToggle ?? true,
-    centerOnToggle: o.centerOnToggle ?? true,
+    centerOnToggle: o.centerOnToggle ?? false,
+    centerDurationMs: o.centerDurationMs ?? DEFAULT_CENTER_DURATION_MS,
   };
 }
 
@@ -17,6 +21,7 @@ export function optionsToForm(o: CollapseExpandOptions = {}): CollapseExpandFiel
 export function formToOptions(f: CollapseExpandFields): CollapseExpandOptions {
   return {
     doubleClickToToggle: f.doubleClickToToggle ?? true,
-    centerOnToggle: f.centerOnToggle ?? true,
+    centerOnToggle: f.centerOnToggle ?? false,
+    centerDurationMs: f.centerDurationMs ?? DEFAULT_CENTER_DURATION_MS,
   };
 }
