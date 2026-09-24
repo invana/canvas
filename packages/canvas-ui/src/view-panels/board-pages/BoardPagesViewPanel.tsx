@@ -7,7 +7,8 @@
 // which is why nothing here knows which it is holding. The active tab exposes a **dropdown of
 // developer-supplied actions** (rename / duplicate / remove / …) via a caret,
 // instead of a fixed set of inline icons — the consumer decides what a page can
-// do by passing `pageMenuItems`.
+// do by passing `pageMenuItems`. A page marked `closable` carries an inline `×`
+// (calling `onClose`) in place of the caret, on every tab.
 //
 // The strip itself is `@invana/ui`'s `NavItems` in its `folder` variant, with
 // `selectionMode="tabs"` and `menuTrigger="caret"` — the same renderer that
@@ -55,6 +56,10 @@ export interface BoardPage {
   tabClassName?: string;
   /** Inline styles for *this* tab button — e.g. a custom brand colour. */
   tabStyle?: CSSProperties;
+  /** Draw an inline `×` on this tab (active or not) that calls the view's
+   *  `onClose`, in place of the caret menu — for a page with nothing to manage
+   *  but its own closing. Needs `onClose`. */
+  closable?: boolean;
 }
 
 /**
@@ -117,6 +122,8 @@ export interface BoardPagesViewPanelProps {
   /** Actions offered on the **active** tab via a caret dropdown. Omit (or pass an
    *  empty list) to hide the caret entirely. */
   pageMenuItems?: BoardPageMenuItem[];
+  /** Close a page — invoked by the `×` on a `closable` page. */
+  onClose?: (id: string) => void;
   /** Tooltip / aria label for the add button. */
   addLabel?: string;
   /**
@@ -230,6 +237,7 @@ export function BoardPagesViewPanel({
   pagerPosition = 'end',
   headerActions,
   pageMenuItems,
+  onClose,
   addLabel = 'New page',
   overflow = true,
   overflowLabel = 'More pages',
@@ -254,8 +262,10 @@ export function BoardPagesViewPanel({
     () =>
       pages.map((page) => {
         const active = page.id === activeId;
+        // A closable page carries the `×` instead of the caret, on every tab.
+        const closable = Boolean(page.closable && onClose);
         const menuItems: NavMenuItem[] | undefined =
-          active && pageMenuItems && pageMenuItems.length > 0
+          active && !closable && pageMenuItems && pageMenuItems.length > 0
             ? pageMenuItems.map((item) => ({
                 id: item.id,
                 label: item.label,
@@ -277,6 +287,7 @@ export function BoardPagesViewPanel({
           style: page.tabStyle,
           menuItems,
           menuTrigger: 'caret',
+          onClose: closable ? () => onClose?.(page.id) : undefined,
           // Ordered so consumer overrides win via tailwind-merge, exactly as the
           // hand-rolled tab did: the strip's own text treatment, then view-level
           // classes (every tab), then per-page, then the active-only view class.
@@ -291,7 +302,7 @@ export function BoardPagesViewPanel({
           ),
         };
       }),
-    [pages, activeId, pageMenuItems, tabClassName, activeTabClassName],
+    [pages, activeId, pageMenuItems, onClose, tabClassName, activeTabClassName],
   );
 
   // Pager — step the selection to the previous / next tab (disabled at the ends).
