@@ -3,8 +3,9 @@ import type { FieldConfig } from '@invana/forms';
 /**
  * `@invana/forms` field schema for the CollapseExpandBehaviour editor.
  *
- * `doubleClickToToggle`, `relayoutOnToggle`, `centerOnToggle` and
- * `centerDurationMs` are the editable visualisation state — the rest of `CollapseExpandBehaviourOptions` is base wiring
+ * `doubleClickToToggle`, `relayoutOnToggle`, `centerOnToggle`,
+ * `centerDurationMs`, `countBadge` and `countBadgePlacement` are the editable
+ * visualisation state — the rest of `CollapseExpandBehaviourOptions` is base wiring
  * (`id` / `targetLayerId` / `enabled` / `shortcuts`), which the settings editor
  * doesn't own.
  */
@@ -39,5 +40,28 @@ export const collapseExpandFields: FieldConfig[] = [
     min: 0,
     max: 1000,
     step: 50,
+  },
+  {
+    name: 'countBadge',
+    type: 'boolean',
+    label: 'Count badge',
+    description:
+      'Mark each collapsed frame with a small pill showing how many nodes it hides. Coloured from the theme; gone when the frame opens.',
+  },
+  {
+    name: 'countBadgePlacement',
+    type: 'select',
+    label: 'Count badge placement',
+    description: 'Which corner or edge of the collapsed frame the count badge sits on, centred on that point.',
+    options: [
+      { value: 'top-right', label: 'Top right' },
+      { value: 'top-left', label: 'Top left' },
+      { value: 'bottom-right', label: 'Bottom right' },
+      { value: 'bottom-left', label: 'Bottom left' },
+      { value: 'top', label: 'Top' },
+      { value: 'bottom', label: 'Bottom' },
+      { value: 'left', label: 'Left' },
+      { value: 'right', label: 'Right' },
+    ],
   },
 ];

@@ -133,6 +133,18 @@ Per `architecture-proposal.md` §2.1:
 
 Sugar methods that affect interaction → `state.update(recipe, 'action-name')`. Sugar methods that change positions/attrs → `data.nodes.setX(...)` / etc. Both feed the same `DirtyBatcher`; one `flush()` projects to the renderer. Name the action — it is what history and telemetry label the change with.
 
+### Only `.data` is the graph's — behaviours may write derived presentation
+
+A node's **`.data` is the only field persisted to the graph backend.** `style`, `states`, badges and decorations are presentation. So a behaviour **may write derived presentation into a node's `style`** (a badge, a tint, a label) instead of `GraphLayer` growing a special case for it — `CollapseExpandBehaviour`'s `countBadge` is the reference. The conditions:
+
+- **Own a named slot** (e.g. a `NodeBadge.id`) and touch nothing else in `style` — merge, never replace the user's own badges.
+- **Derive from state, not from your own gestures.** Reconcile on the layer's `data:changed` (and `theme:change` if colours are themed), so a change made by the dataset, by code or by another behaviour is covered too.
+- **Converge.** Skip the write when the slot already matches, so the flush it causes finds nothing more to change.
+- **Clean up** in `onDisable` / `onDestroy`, and treat an imported record's stale slot as something to reconcile away.
+- **Never write `.data`.** That is the user's graph.
+
+See `docs/rfcs/feat/2026-09-25-collapsed-count-badge-is-hardcoded-in-graphlayer.md`.
+
 ## Decoration sugar convention
 
 `@invana/canvas` exposes one generic decoration method: `renderer.setDecoration(id, slot, spec)`. `GraphLayer` adds discoverable, typed shortcuts on top — graph-domain method names that mutate **state** (never the renderer directly), so the state-as-truth contract holds and devtools / time-travel / telemetry catch every change.

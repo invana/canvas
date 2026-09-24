@@ -10,8 +10,6 @@
               "padding": 28,
               "headerHeight": 28,
               "tabSkew": 12,
-              "showCollapsedCount": true,
-              "collapsedCountDisplay": "badge",
               "showToggle": false
             },
             "fillRole": "muted",
@@ -143,8 +141,6 @@
               "padding": 30,
               "headerHeight": 28,
               "tabSkew": 12,
-              "showCollapsedCount": true,
-              "collapsedCountDisplay": "badge",
               "showToggle": false
             },
             "fillRole": "muted",
@@ -276,8 +272,6 @@
               "padding": 32,
               "headerHeight": 28,
               "tabSkew": 12,
-              "showCollapsedCount": true,
-              "collapsedCountDisplay": "badge",
               "showToggle": false
             },
             "fillRole": "muted",

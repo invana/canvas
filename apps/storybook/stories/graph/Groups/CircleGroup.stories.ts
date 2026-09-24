@@ -23,7 +23,7 @@ type Story = StoryObj;
  * cheap, monotonic, and good enough for most cluster overlays.
  *
  * Collapse it (double-click the frame or its `+` / `−`) to see the hidden-
- * member count as a corner badge (`collapsedCountDisplay: 'badge'`); switch
+ * member count as a corner badge (`CollapseExpandBehaviour`'s `countBadge`); switch
  * the GUI to `'center'` for the centred label — white text, so it reads on a
  * dark frame and not on the light theme's.
  */
@@ -36,7 +36,7 @@ export const CircleGroupStory: Story = {
       autoFit: true,
       padding: 28,
       showCollapsedCount: true,
-      collapsedCountDisplay: 'badge' as 'center' | 'badge'
+      countDisplay: 'badge' as 'center' | 'badge'
     };
 
     const nodes: GraphNode[] = [
@@ -54,8 +54,7 @@ export const CircleGroupStory: Story = {
           group: {
             autoFit: settings.autoFit,
             padding: settings.padding,
-            showCollapsedCount: settings.showCollapsedCount,
-            collapsedCountDisplay: settings.collapsedCountDisplay
+            showCollapsedCount: settings.showCollapsedCount && settings.countDisplay === 'center'
           }
         }
       },
@@ -127,7 +126,10 @@ export const CircleGroupStory: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         drag: { enabled: true },
-        'collapse-expand': { enabled: true }
+        'collapse-expand': {
+          enabled: true,
+          countBadge: settings.showCollapsedCount && settings.countDisplay === 'badge'
+        }
       }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
@@ -148,15 +150,24 @@ export const CircleGroupStory: Story = {
             ...priorGroup,
             autoFit: settings.autoFit,
             padding: settings.padding,
-            showCollapsedCount: settings.showCollapsedCount,
-            collapsedCountDisplay: settings.collapsedCountDisplay
+            showCollapsedCount: settings.showCollapsedCount && settings.countDisplay === 'center'
           }
         }
       });
     };
     gui.add(settings, 'autoFit').onChange(apply);
     gui.add(settings, 'padding', 0, 60, 1).onChange(apply);
-    gui.add(settings, 'showCollapsedCount').onChange(apply);
-    gui.add(settings, 'collapsedCountDisplay', ['center', 'badge']).onChange(apply);
+    // The count is the frame's centred label or the behaviour's corner badge;
+    // one apply keeps both in step so exactly one form shows.
+    const applyCount = (): void => {
+      apply();
+      canvas.update({
+        behaviours: {
+          'collapse-expand': { countBadge: settings.showCollapsedCount && settings.countDisplay === 'badge' }
+        }
+      });
+    };
+    gui.add(settings, 'showCollapsedCount').onChange(applyCount);
+    gui.add(settings, 'countDisplay', ['center', 'badge']).name('count display').onChange(applyCount);
   }
 };

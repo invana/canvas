@@ -23,7 +23,7 @@ type Story = StoryObj;
  * AABB half-diagonal + padding.
  *
  * Collapsed circles show their hidden-member count as a corner badge
- * (`showCollapsedCount` + `collapsedCountDisplay: 'badge'`): collapse the
+ * (`CollapseExpandBehaviour`'s `countBadge`): collapse the
  * inner circle (2), then the outer one (4 — every descendant, the inner
  * circle included).
  */
@@ -44,7 +44,7 @@ export const CircleNestedGroupsStory: Story = {
           // No frame colour: an unset `bgFill` / `bgStrokeColor` resolves from
           // the theme (`cardBg` / `divider`) and re-resolves on every switch.
           bgStrokeWidth: 1,
-          group: { autoFit: true, padding: 36, showCollapsedCount: true, collapsedCountDisplay: 'badge' }
+          group: { autoFit: true, padding: 36 }
         }
       },
       { type: 'node',
@@ -59,7 +59,7 @@ export const CircleNestedGroupsStory: Story = {
           // survives every publish and works in both kinds.
           bgAlpha: 0.55,
           bgStrokeWidth: 1,
-          group: { autoFit: true, padding: 22, showCollapsedCount: true, collapsedCountDisplay: 'badge' }
+          group: { autoFit: true, padding: 22 }
         }
       },
       { type: 'node',
@@ -130,7 +130,7 @@ export const CircleNestedGroupsStory: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         drag: { enabled: true },
-        'collapse-expand': { enabled: true }
+        'collapse-expand': { enabled: true, countBadge: true }
       }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });

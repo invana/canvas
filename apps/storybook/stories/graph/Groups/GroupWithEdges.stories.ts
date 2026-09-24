@@ -31,8 +31,8 @@ type Story = StoryObj;
  * `CollapseExpandBehaviour` is wired up so you can collapse either
  * group and watch the cross edge re-route to the surviving super-node.
  * A collapsed frame shows its hidden-member count as a corner badge
- * (`collapsedCountDisplay: 'badge'`); the GUI switches it to the centred
- * label and hides / shows the `+` / `−` button (`showToggle`) — with it
+ * (`CollapseExpandBehaviour`'s `countBadge`); the GUI switches it to the
+ * centred label (`group.showCollapsedCount`) and hides / shows the `+` / `−` button (`showToggle`) — with it
  * hidden, double-click a frame to toggle it.
  */
 export const GroupWithEdgesStory: Story = {
@@ -71,7 +71,7 @@ export const GroupWithEdgesStory: Story = {
           bgAlpha: 0.18,
           bgStrokeColor: 0x6b7fff,
           bgStrokeWidth: 1.5,
-          group: { autoFit: true, padding: 20, showCollapsedCount: true, collapsedCountDisplay: 'badge' },
+          group: { autoFit: true, padding: 20 },
           labelText: 'Service A',
           labelColor: 0x6b7fff,
           labelFontSize: 11,
@@ -100,7 +100,7 @@ export const GroupWithEdgesStory: Story = {
           bgAlpha: 0.18,
           bgStrokeColor: 0xc026d3,
           bgStrokeWidth: 1.5,
-          group: { autoFit: true, padding: 20, showCollapsedCount: true, collapsedCountDisplay: 'badge' },
+          group: { autoFit: true, padding: 20 },
           labelText: 'Service B',
           labelColor: 0xc026d3,
           labelFontSize: 11,
@@ -157,7 +157,7 @@ export const GroupWithEdgesStory: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         drag: { enabled: true },
-        'collapse-expand': { enabled: true }
+        'collapse-expand': { enabled: true, countBadge: true }
       }
     };
 
@@ -187,7 +187,9 @@ export const GroupWithEdgesStory: Story = {
       });
 
     // Collapse chrome — the `+` / `−` button and the collapsed count, on both frames.
-    const groupChrome = { showToggle: true, collapsedCountDisplay: 'badge' as 'center' | 'badge' };
+    // The count is either the behaviour's corner badge or the frame's centred
+    // label — the select switches both together so exactly one shows.
+    const groupChrome = { showToggle: true, countDisplay: 'badge' as 'center' | 'badge' };
     const applyGroupChrome = (): void => {
       for (const id of ['group-a', 'group-b']) {
         const node = graph.store.getNode(id);
@@ -199,13 +201,14 @@ export const GroupWithEdgesStory: Story = {
             group: {
               ...(priorStyle.group ?? {}),
               showToggle: groupChrome.showToggle,
-              collapsedCountDisplay: groupChrome.collapsedCountDisplay
+              showCollapsedCount: groupChrome.countDisplay === 'center'
             }
           }
         });
       }
+      canvas.update({ behaviours: { 'collapse-expand': { countBadge: groupChrome.countDisplay === 'badge' } } });
     };
     gui.add(groupChrome, 'showToggle').name('showToggle (off = double-click only)').onChange(applyGroupChrome);
-    gui.add(groupChrome, 'collapsedCountDisplay', ['center', 'badge']).onChange(applyGroupChrome);
+    gui.add(groupChrome, 'countDisplay', ['center', 'badge']).name('count display').onChange(applyGroupChrome);
   }
 };

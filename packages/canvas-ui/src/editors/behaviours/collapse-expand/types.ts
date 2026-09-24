@@ -3,11 +3,25 @@
  *
  * Engine-agnostic: the editable option shape is mirrored **structurally** here.
  * Of `CollapseExpandBehaviourOptions`, `doubleClickToToggle`,
- * `centerOnToggle`, `centerDurationMs` and `relayoutOnToggle` are the tunable
- * visualisation state — the base fields
+ * `centerOnToggle`, `centerDurationMs`, `relayoutOnToggle`, `countBadge` and
+ * `countBadgePlacement` are the tunable visualisation state — the base fields
  * (`id` / `targetLayerId` / `enabled` / `shortcuts`) are out of scope for the
  * state editor.
  */
+
+/**
+ * The named `BadgePlacement`s the editor offers for the count badge. The
+ * engine also accepts an `{ x, y }` point, which this form does not edit.
+ */
+export type CountBadgePlacement =
+  | 'top-right'
+  | 'top-left'
+  | 'bottom-right'
+  | 'bottom-left'
+  | 'top'
+  | 'bottom'
+  | 'left'
+  | 'right';
 
 /**
  * The serialisable subset of `CollapseExpandBehaviourOptions` this editor
@@ -34,6 +48,13 @@ export interface CollapseExpandOptions {
    * toggled frame, leaving the camera alone. Engine default `false`.
    */
   readonly relayoutOnToggle?: boolean;
+  /**
+   * Mark each collapsed frame with a pill showing how many nodes it hides.
+   * Engine default `false`.
+   */
+  readonly countBadge?: boolean;
+  /** Where the count badge sits on the frame. Engine default `'top-right'`. */
+  readonly countBadgePlacement?: CountBadgePlacement;
 }
 
 /**
@@ -45,6 +66,8 @@ export interface CollapseExpandFields {
   centerOnToggle?: boolean;
   centerDurationMs?: number;
   relayoutOnToggle?: boolean;
+  countBadge?: boolean;
+  countBadgePlacement?: CountBadgePlacement;
 }
 
 /**

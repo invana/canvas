@@ -31,7 +31,7 @@ type Story = StoryObj;
  * switch the layout, then open it).
  *
  * Collapsed frames show their hidden-member count as a corner badge
- * (`collapsedCountDisplay: 'badge'`). Under d3-force, `separateGroups` keeps
+ * (`CollapseExpandBehaviour`'s `countBadge`). Under d3-force, `separateGroups` keeps
  * the frames from overlapping each other — turn it off in the GUI to see them
  * pile up. Turn `relayoutOnToggle` off to compare with a plain toggle, where
  * only the frame changes and its neighbours stay put.
@@ -138,8 +138,7 @@ export const RelayoutOnToggleStory: Story = {
                 padding: 20,
                 headerHeight: 22,
                 showToggle: true,
-                showCollapsedCount: true,
-                collapsedCountDisplay: 'badge'
+                showCollapsedCount: false
               },
               strokeRole: 'divider',
               strokeWidth: 1,
@@ -162,7 +161,7 @@ export const RelayoutOnToggleStory: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         drag: { enabled: true },
-        'collapse-expand': { enabled: true, relayoutOnToggle: true }
+        'collapse-expand': { enabled: true, relayoutOnToggle: true, countBadge: true }
       },
       layouts: {
         elk: { algorithm: 'layered', direction: 'RIGHT', nodeSpacing: 30, layerSpacing: 60, padding: 30 },
@@ -189,7 +188,9 @@ export const RelayoutOnToggleStory: Story = {
       relayoutOnToggle: canvasOptions.behaviours['collapse-expand'].relayoutOnToggle,
       separateGroups: true,
       showToggle: canvasOptions.layers.graph.nodeStylingTemplates.frame.group.showToggle,
-      collapsedCountDisplay: canvasOptions.layers.graph.nodeStylingTemplates.frame.group.collapsedCountDisplay as
+      // The count is the behaviour's corner badge or the frame's centred
+      // label; the select switches both together so exactly one shows.
+      countDisplay: (canvasOptions.behaviours['collapse-expand'].countBadge ? 'badge' : 'center') as
         | 'center'
         | 'badge'
     };
@@ -218,15 +219,16 @@ export const RelayoutOnToggleStory: Story = {
                 group: {
                   ...frame.group,
                   showToggle: settings.showToggle,
-                  collapsedCountDisplay: settings.collapsedCountDisplay
+                  showCollapsedCount: settings.countDisplay === 'center'
                 }
               }
             }
           }
-        }
+        },
+        behaviours: { 'collapse-expand': { countBadge: settings.countDisplay === 'badge' } }
       });
     };
     gui.add(settings, 'showToggle').name('showToggle (off = double-click only)').onChange(pushFrameGroup);
-    gui.add(settings, 'collapsedCountDisplay', ['center', 'badge']).onChange(pushFrameGroup);
+    gui.add(settings, 'countDisplay', ['center', 'badge']).name('count display').onChange(pushFrameGroup);
   }
 };

@@ -62,7 +62,7 @@ const LABEL_PLACEMENTS: ShapeLabelPlacement[] = [
  * is exposed in the lil-gui: shape kind + size, the full
  * {@link GroupOptions} surface (incl. hiding the `+` / `−` button with
  * `showToggle` and the collapsed count as a centred label or a corner badge
- * via `showCollapsedCount` / `collapsedCountDisplay`), the flat paint fields
+ * via `showCollapsedCount` / `CollapseExpandBehaviour`'s `countBadge`), the flat paint fields
  * on `NodeStyle.bg*`, the label fields, live enable/disable for the three
  * group-related behaviours (drag, collapse/expand, resize), and the
  * collapse/expand behaviour's own options (double-click to toggle, glide the
@@ -95,7 +95,7 @@ export const AllOptionsStory: Story = {
       togglePosY: 60,
       showToggle: true,
       showCollapsedCount: true,
-      collapsedCountDisplay: 'badge' as 'center' | 'badge',
+      countDisplay: 'badge' as 'center' | 'badge',
       // ─── Frame paint ────────────────────────────────────────────
       bgFill: 0xf5f7ff,
       bgAlpha: 1,
@@ -209,7 +209,10 @@ export const AllOptionsStory: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         drag: { enabled: settings.dragEnabled },
-        'collapse-expand': { enabled: settings.collapseEnabled },
+        'collapse-expand': {
+          enabled: settings.collapseEnabled,
+          countBadge: settings.showCollapsedCount && settings.countDisplay === 'badge'
+        },
         resize: { enabled: settings.resizeEnabled }
       }
     };
@@ -231,8 +234,7 @@ export const AllOptionsStory: Story = {
         userResizable: settings.userResizable,
         togglePlacement,
         showToggle: settings.showToggle,
-        showCollapsedCount: settings.showCollapsedCount,
-        collapsedCountDisplay: settings.collapsedCountDisplay,
+        showCollapsedCount: settings.showCollapsedCount && settings.countDisplay === 'center',
         ...(settings.shapeKind === 'rect'
           ? { width: settings.width, height: settings.height }
           : { radius: settings.radius })
@@ -296,8 +298,18 @@ export const AllOptionsStory: Story = {
     toggle.add(settings, 'showToggle').name('showToggle (off = double-click only)').onChange(apply);
 
     const count = gui.addFolder('Collapsed count');
-    count.add(settings, 'showCollapsedCount').onChange(apply);
-    count.add(settings, 'collapsedCountDisplay', ['center', 'badge']).onChange(apply);
+    // The count is the frame's centred label or the behaviour's corner badge;
+    // one apply keeps both in step so exactly one form shows.
+    const applyCount = (): void => {
+      apply();
+      canvas.update({
+        behaviours: {
+          'collapse-expand': { countBadge: settings.showCollapsedCount && settings.countDisplay === 'badge' }
+        }
+      });
+    };
+    count.add(settings, 'showCollapsedCount').onChange(applyCount);
+    count.add(settings, 'countDisplay', ['center', 'badge']).name('count display').onChange(applyCount);
 
     const paint = gui.addFolder('Frame paint');
     paint.addColor(settings, 'bgFill').onChange(apply);

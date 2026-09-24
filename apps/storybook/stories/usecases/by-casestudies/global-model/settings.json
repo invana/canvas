@@ -6093,8 +6093,6 @@
             "padding": 30,
             "headerHeight": 28,
             "tabSkew": 12,
-            "showCollapsedCount": true,
-            "collapsedCountDisplay": "badge",
             "showToggle": false
           },
           "fillRole": "muted",
@@ -6262,7 +6260,8 @@
     },
     "collapse-expand": {
       "enabled": true,
-      "relayoutOnToggle": true
+      "relayoutOnToggle": true,
+      "countBadge": true
     },
     "label-resolution": {
       "enabled": true

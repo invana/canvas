@@ -2335,7 +2335,10 @@ export class GraphLayer extends WorldLayer<
     if (!this._renderer) return;
     const node = this.store.getNode(id);
     if (!node) return;
-    const next = this.resolveNodeBadges(node);
+    // A badge is its own shape, not a child of its host, so it does not hide
+    // with it: a hidden node (explicitly, or beneath a collapsed frame) mounts
+    // no badges, and re-showing it re-renders and mounts them again.
+    const next = this.store.isNodeVisible(id) ? this.resolveNodeBadges(node) : new Map<string, NodeBadge>();
     const prev = this.nodeBadgeSlots.get(id);
 
     if (prev) {
@@ -3092,25 +3095,16 @@ export class GraphLayer extends WorldLayer<
       });
     }
     // Hidden-descendant count — opt-in (`showCollapsedCount`). Off by default
-    // because the centred form routes into a `tabbed-rect`'s tab, landing the
-    // number on top of the group's own title; `collapsedCountDisplay: 'badge'`
-    // draws it on the corner instead. Whichever form isn't in use is cleared, so
-    // switching between them (or expanding) leaves nothing stale.
-    const showCount = isCollapsed && group.showCollapsedCount === true;
-    // A badge is a separate shape, not a child of its host, so it does not
-    // hide with it: a collapsed frame nested inside another collapsed (or
-    // hidden) frame must drop its badge explicitly. The centred label is a
-    // decoration and hides with the host on its own.
-    const asBadge =
-      showCount && group.collapsedCountDisplay === 'badge' && this.store.isNodeVisible(id);
-    const count = showCount ? this.countDescendants(id) : 0;
-    if (showCount && !asBadge) {
+    // because it routes into a `tabbed-rect`'s tab, landing the number on top
+    // of the group's own title. (The corner-badge form is written into the
+    // node's `style.badges` by `CollapseExpandBehaviour`'s `countBadge`.)
+    if (isCollapsed && group.showCollapsedCount === true) {
       this._renderer.setDecoration(id, 'group-count', {
         kind: 'label',
         style: {
           content: {
             kind: 'text',
-            text: String(count),
+            text: String(this.countDescendants(id)),
             fill: 0xffffff,
             fontSize: 14,
             fontWeight: 700,
@@ -3121,11 +3115,6 @@ export class GraphLayer extends WorldLayer<
     } else {
       this._renderer.setDecoration(id, 'group-count', null);
     }
-    if (asBadge) {
-      this._renderer.setBadge(id, 'group-count', nodeBadgeToCanvasOptions(this.collapsedCountBadge(count)));
-    } else {
-      this._renderer.removeBadge(id, 'group-count');
-    }
   }
 
   /** Number of descendants beneath `id` (the collapsed-count value). */
@@ -3133,31 +3122,6 @@ export class GraphLayer extends WorldLayer<
     let count = 0;
     for (const _ of this.store.descendantsOf(id)) count++;
     return count;
-  }
-
-  /**
-   * The `collapsedCountDisplay: 'badge'` pill: a rounded rect sized to the
-   * digits, centred on the collapsed frame's top-right corner, in theme
-   * colours. Mounted under the synthetic slot `group-count`, which
-   * `syncNodeBadges` never touches — it only diffs the slots it mounted from
-   * `NodeStyle.badges`.
-   */
-  private collapsedCountBadge(count: number): NodeBadge {
-    const text = String(count);
-    const fontSize = 11;
-    const height = 18;
-    const width = Math.max(height, Math.round(text.length * fontSize * 0.62) + 12);
-    return {
-      placement: 'top-right',
-      origin: 'center',
-      shape: { kind: 'rect', width, height, cornerRadius: height / 2 },
-      fill: this.themePalette.accent,
-      strokeColor: this.themePalette.cardBg,
-      strokeWidth: 1.5,
-      labelText: text,
-      labelColor: this.themePalette.surface,
-      labelFontSize: fontSize,
-    };
   }
 
   private updateEdgeConnector(edge: GraphEdge, _patch: Partial<GraphEdge>): void {

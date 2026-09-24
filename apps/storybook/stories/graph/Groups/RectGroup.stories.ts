@@ -43,7 +43,7 @@ const TOGGLE_PLACEMENTS: TogglePlacement[] = [
  * behindChildren z-order, collapsed state, frame bg variant, the
  * `+`/`−` toggle placement (keyword + custom coords) or hiding it
  * (`showToggle`), and the collapsed count — a centred label or a corner
- * badge (`showCollapsedCount` / `collapsedCountDisplay`).
+ * badge (`showCollapsedCount` / `CollapseExpandBehaviour`'s `countBadge`).
  *
  * `CollapseExpandBehaviour` and `NodeResizeBehaviour` are registered so
  * the GUI's `userResizable` flag actually mounts the selection-frame
@@ -73,7 +73,7 @@ export const RectGroupStory: Story = {
       showToggle: true,
       // Collapsed count
       showCollapsedCount: true,
-      collapsedCountDisplay: 'badge' as 'center' | 'badge',
+      countDisplay: 'badge' as 'center' | 'badge',
       // Frame paint
       bgVariant: 'filled' as 'filled' | 'stroke-only' | 'ghost'
     };
@@ -108,8 +108,7 @@ export const RectGroupStory: Story = {
             behindChildren: settings.behindChildren,
             userResizable: settings.userResizable,
             showToggle: settings.showToggle,
-            showCollapsedCount: settings.showCollapsedCount,
-            collapsedCountDisplay: settings.collapsedCountDisplay
+            showCollapsedCount: settings.showCollapsedCount && settings.countDisplay === 'center'
           },
           labelText: 'Group A',
           labelFontSize: 11,
@@ -186,7 +185,10 @@ export const RectGroupStory: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         drag: { enabled: true },
-        'collapse-expand': { enabled: true },
+        'collapse-expand': {
+          enabled: true,
+          countBadge: settings.showCollapsedCount && settings.countDisplay === 'badge'
+        },
         resize: { enabled: true }
       }
     };
@@ -220,8 +222,7 @@ export const RectGroupStory: Story = {
         height: settings.height,
         togglePlacement,
         showToggle: settings.showToggle,
-        showCollapsedCount: settings.showCollapsedCount,
-        collapsedCountDisplay: settings.collapsedCountDisplay
+        showCollapsedCount: settings.showCollapsedCount && settings.countDisplay === 'center'
       };
       graph.store.updateNode('group-a', {
         style: {
@@ -276,8 +277,18 @@ export const RectGroupStory: Story = {
     toggle.add(settings, 'showToggle').name('showToggle (off = double-click only)').onChange(apply);
 
     const count = gui.addFolder('Collapsed count');
-    count.add(settings, 'showCollapsedCount').onChange(apply);
-    count.add(settings, 'collapsedCountDisplay', ['center', 'badge']).onChange(apply);
+    // The count is the frame's centred label or the behaviour's corner badge;
+    // one apply keeps both in step so exactly one form shows.
+    const applyCount = (): void => {
+      apply();
+      canvas.update({
+        behaviours: {
+          'collapse-expand': { countBadge: settings.showCollapsedCount && settings.countDisplay === 'badge' }
+        }
+      });
+    };
+    count.add(settings, 'showCollapsedCount').onChange(applyCount);
+    count.add(settings, 'countDisplay', ['center', 'badge']).name('count display').onChange(applyCount);
 
     const frame = gui.addFolder('Frame paint');
     frame.add(settings, 'bgVariant', ['filled', 'stroke-only', 'ghost']).onChange(apply);

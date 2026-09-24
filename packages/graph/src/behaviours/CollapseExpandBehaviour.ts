@@ -6,6 +6,13 @@
  * opt in to re-flowing the graph around the toggled frame with
  * `relayoutOnToggle`, and to re-centring on it with `centerOnToggle`.
  *
+ * With `countBadge` on, the behaviour also marks every collapsed frame with a
+ * small pill showing how many nodes it hides. It writes that badge into the
+ * frame's own `style.badges` (slot {@link COLLAPSED_COUNT_BADGE_ID}) — a node's
+ * `style` is presentation, never persisted to the graph backend (only `.data`
+ * is), so a behaviour may keep derived presentation there as long as it owns
+ * the slot, keeps it in step, and removes it when switched off.
+ *
  * Listens for native DOM `pointerdown` on the canvas element rather than
  * the renderer's `shape:pointerdown` channel. The reason: the toggle
  * decoration is typically anchored to (or *outside*) the host's
@@ -33,7 +40,10 @@ import { Behaviour, type BehaviourOptions, type CanvasContext } from '@invana/ca
 import type { ToggleHitGeometry } from '@invana/canvas';
 
 import { GraphLayer } from '../layer/GraphLayer';
-import { COLLAPSED_STATE } from '../layer/types';
+import { COLLAPSED_STATE, type BadgePlacement, type NodeBadge, type NodeStyle } from '../layer/types';
+import type { GraphNode } from '../store/types';
+import type { RolePalette } from '../theme/roles';
+import { DEFAULT_THEME } from '../theme/themes';
 
 /**
  * Duck-typed gate for the toggle decoration instance — checks for the
@@ -61,6 +71,13 @@ function asToggleDecoration(
  * decoration; most callers shouldn't need it.
  */
 export const GROUP_TOGGLE_SLOT = 'group-toggle';
+
+/**
+ * `NodeBadge.id` of the collapsed-count badge this behaviour writes into a
+ * collapsed frame's `style.badges` when `countBadge` is on. Other badges on
+ * the same node are never touched.
+ */
+export const COLLAPSED_COUNT_BADGE_ID = 'collapsed-count';
 
 export interface CollapseExpandBehaviourOptions extends BehaviourOptions {
   /** Required — the `GraphLayer` id this behaviour drives. */
@@ -112,6 +129,29 @@ export interface CollapseExpandBehaviourOptions extends BehaviourOptions {
    * have placed by hand.
    */
   relayoutOnToggle?: boolean;
+  /**
+   * Mark each collapsed frame with a small pill showing how many nodes it
+   * hides, like a notification count. Default `false`.
+   *
+   * Coloured from the active theme (`accent` fill, `surface` text, `cardBg`
+   * ring) and re-coloured on every theme change. Applies to every group frame
+   * in the target layer, however it was collapsed — by this behaviour, by a
+   * dataset's `states: ['collapsed']`, or by code — and disappears when the
+   * frame opens, when the frame is itself hidden inside a collapsed parent,
+   * or when the behaviour is disabled.
+   *
+   * The pill is written into the frame's `style.badges` under
+   * {@link COLLAPSED_COUNT_BADGE_ID}, next to any badges the frame already
+   * declares. For the count as centred text instead, use
+   * `GroupOptions.showCollapsedCount`.
+   */
+  countBadge?: boolean;
+  /**
+   * Which corner or edge of the collapsed frame the {@link countBadge} pill
+   * sits on. The pill is centred on that point, so it hangs half over the
+   * frame's edge. Default `'top-right'`.
+   */
+  countBadgePlacement?: BadgePlacement;
 }
 
 /**
@@ -124,11 +164,18 @@ const BADGE_REACH = 16;
 /** Default {@link CollapseExpandBehaviourOptions.centerDurationMs}. */
 const DEFAULT_CENTER_DURATION_MS = 300;
 
+/** Colours used for the count badge until a theme is published. */
+const { categorical: _fallbackCategorical, ...FALLBACK_PALETTE } = DEFAULT_THEME.light;
+
 export class CollapseExpandBehaviour extends Behaviour<CollapseExpandBehaviourOptions> {
   override readonly kind = 'collapse-expand';
   private layer: GraphLayer | null = null;
   private ctxRef: CanvasContext | null = null;
   private canvasEl: HTMLCanvasElement | null = null;
+  /** Unsubscribers for the layer / canvas events the count badge follows. */
+  private subs: (() => void)[] = [];
+  /** Active theme roles for the count badge, over {@link FALLBACK_PALETTE}. */
+  private palette: RolePalette = FALLBACK_PALETTE;
 
   constructor(opts: CollapseExpandBehaviourOptions) {
     super({ ...opts, shortcuts: opts.shortcuts ?? ['pointer+click'] });
@@ -165,9 +212,39 @@ export class CollapseExpandBehaviour extends Behaviour<CollapseExpandBehaviourOp
     // tolerance, and it fires on the canvas element the same way the toggle's
     // `pointerdown` does.
     this.canvasEl.addEventListener('dblclick', this.onDoubleClick, true);
+
+    // The count badge follows the collapsed state, whatever changed it:
+    // `data:changed` fires after every store flush (a toggle, a dataset
+    // `states` entry, a member added or removed, a re-import), and
+    // `theme:change` re-colours it.
+    this.palette = { ...FALLBACK_PALETTE, ...ctx.theme.current()?.palette };
+    this.subs.push(
+      layer.events.on('data:changed', () => this.syncCountBadges()),
+      ctx.events.on('theme:change', (theme) => {
+        this.palette = { ...FALLBACK_PALETTE, ...theme.palette };
+        this.syncCountBadges();
+      }),
+    );
+  }
+
+  protected override onEnable(): void {
+    this.syncCountBadges();
+  }
+
+  protected override onDisable(): void {
+    this.syncCountBadges();
+  }
+
+  protected override onOptionsChanged(): void {
+    this.syncCountBadges();
   }
 
   protected override onDestroy(): void {
+    // `destroy()` clears `enabled` before calling us, so this removes every
+    // count badge the behaviour wrote.
+    this.syncCountBadges();
+    for (const off of this.subs) off();
+    this.subs = [];
     if (this.canvasEl) {
       this.canvasEl.removeEventListener('pointerdown', this.onPointerDown, true);
       this.canvasEl.removeEventListener('dblclick', this.onDoubleClick, true);
@@ -218,9 +295,9 @@ export class CollapseExpandBehaviour extends Behaviour<CollapseExpandBehaviourOp
    * The group frame under the pointer, or `null` when the topmost element
    * there is a regular node, a connector, or nothing at all.
    *
-   * Shapes that aren't nodes — a badge (e.g. the collapsed count,
-   * `collapsedCountDisplay: 'badge'`) is its own small shape on top of its
-   * host — are looked through: the hit test runs again excluding them, so a
+   * Shapes that aren't nodes — a badge (e.g. the {@link
+   * CollapseExpandBehaviourOptions.countBadge} pill) is its own small shape on
+   * top of its host — are looked through: the hit test runs again excluding them, so a
    * double-click on a frame's badge reaches the frame. Member cards are nodes,
    * so a double-click on one still belongs to the card.
    */
@@ -404,4 +481,76 @@ export class CollapseExpandBehaviour extends Behaviour<CollapseExpandBehaviourOp
       easing: 'easeOutCubic',
     });
   }
+
+  /**
+   * Bring every group frame's {@link COLLAPSED_COUNT_BADGE_ID} badge in line
+   * with the current state: present, with the hidden-node count, on each
+   * collapsed frame while the behaviour is enabled with `countBadge` on;
+   * absent everywhere else.
+   *
+   * Idempotent and convergent: a frame whose badge already matches is not
+   * written, so the flush a write causes finds nothing more to change. That
+   * is also what clears a stale badge carried in by an import (the frame
+   * comes back open, so its badge is removed on the first flush).
+   */
+  private syncCountBadges(): void {
+    const layer = this.layer;
+    if (!layer) return;
+    const on = this.isEnabled && this._options.countBadge === true;
+    layer.store.batch(() => {
+      for (const node of layer.store.nodes()) {
+        if (!layer.isGroupNode(node) && !hasCountBadge(node)) continue;
+        const badge =
+          on && layer.isCollapsedGroup(node) ? this.countBadgeFor(node.id) : undefined;
+        this.writeCountBadge(node, badge);
+      }
+    });
+  }
+
+  /**
+   * The count pill for frame `id`: a rounded rect sized to the digits, centred
+   * on {@link CollapseExpandBehaviourOptions.countBadgePlacement}, in theme
+   * colours.
+   */
+  private countBadgeFor(id: string): NodeBadge {
+    let count = 0;
+    for (const _ of this.layer!.store.descendantsOf(id)) count++;
+    const text = String(count);
+    const fontSize = 11;
+    const height = 18;
+    const width = Math.max(height, Math.round(text.length * fontSize * 0.62) + 12);
+    return {
+      id: COLLAPSED_COUNT_BADGE_ID,
+      placement: this._options.countBadgePlacement ?? 'top-right',
+      origin: 'center',
+      shape: { kind: 'rect', width, height, cornerRadius: height / 2 },
+      fill: this.palette.accent,
+      strokeColor: this.palette.cardBg,
+      strokeWidth: 1.5,
+      labelText: text,
+      labelColor: this.palette.surface,
+      labelFontSize: fontSize,
+    };
+  }
+
+  /**
+   * Put `badge` in `node.style.badges` under {@link COLLAPSED_COUNT_BADGE_ID}
+   * (or remove that entry when `badge` is `undefined`), leaving the node's
+   * other badges alone. Skips the write when nothing would change.
+   */
+  private writeCountBadge(node: GraphNode, badge: NodeBadge | undefined): void {
+    const style = (node.style ?? {}) as NodeStyle;
+    const current = style.badges?.find((b) => b.id === COLLAPSED_COUNT_BADGE_ID);
+    if (JSON.stringify(current) === JSON.stringify(badge)) return;
+    const others = (style.badges ?? []).filter((b) => b.id !== COLLAPSED_COUNT_BADGE_ID);
+    const badges = badge ? [...others, badge] : others;
+    const { badges: _prev, ...rest } = style;
+    const next: NodeStyle = badges.length > 0 ? { ...rest, badges } : rest;
+    this.layer!.store.updateNode(node.id, { style: next });
+  }
+}
+
+/** Whether `node` carries a collapsed-count badge written by this behaviour. */
+function hasCountBadge(node: GraphNode): boolean {
+  return ((node.style ?? {}) as NodeStyle).badges?.some((b) => b.id === COLLAPSED_COUNT_BADGE_ID) === true;
 }

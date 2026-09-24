@@ -101,7 +101,11 @@ export type { DrawEdgeBehaviourOptions } from './DrawEdgeBehaviour';
 export { EraseBehaviour } from './EraseBehaviour';
 export type { EraseBehaviourOptions, EraseTargetKind, ErasedElement } from './EraseBehaviour';
 
-export { CollapseExpandBehaviour, GROUP_TOGGLE_SLOT } from './CollapseExpandBehaviour';
+export {
+  CollapseExpandBehaviour,
+  COLLAPSED_COUNT_BADGE_ID,
+  GROUP_TOGGLE_SLOT,
+} from './CollapseExpandBehaviour';
 export type { CollapseExpandBehaviourOptions } from './CollapseExpandBehaviour';
 
 export { NodeResizeBehaviour } from './NodeResizeBehaviour';

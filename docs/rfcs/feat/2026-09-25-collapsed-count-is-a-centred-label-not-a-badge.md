@@ -2,7 +2,7 @@
 id: feat-2026-09-25-collapsed-count-is-a-centred-label-not-a-badge
 type: feat
 title: A collapsed group's hidden-member count is a label in its centre, not a badge
-status: accepted
+status: superseded
 opened: 2026-09-25
 decided: 2026-09-25
 landed: null
@@ -10,8 +10,11 @@ packages: [pkg:@invana/graph, pkg:@canvas/storybook]
 design_of_record: null
 relations:
   - { predicate: relates-to, object: "rfc:feat-2026-09-25-group-frame-toggle-cannot-be-hidden" }
+  - { predicate: superseded-by, object: "rfc:feat-2026-09-25-collapsed-count-badge-is-hardcoded-in-graphlayer" }
   - { predicate: manifests-in, object: "story:usecases/by-casestudies/global-model/GlobalModel" }
 ---
+
+> **Superseded (badge half)** by `rfc:feat-2026-09-25-collapsed-count-badge-is-hardcoded-in-graphlayer`: the badge is now `CollapseExpandBehaviour`'s `countBadge`, written into the frame's `style.badges`. Still holds: `showCollapsedCount` + its centred label, F4's badge hit-through, and the pill's look.
 
 ## Summary
 
@@ -19,7 +22,7 @@ relations:
 |---|---|
 | **What's wrong** | `GroupOptions.showCollapsedCount` draws the number as a white text **label** at `inside-center` — on a `tabbed-rect` folder that routes into the tab, on top of the folder's own title (its TSDoc already warns about this, which is why it's off by default). |
 | **Proposal** (revised) | Keep `showCollapsedCount` as the on/off switch and its centred label as the default. Add **`collapsedCountDisplay?: 'center' \| 'badge'`** (default `'center'`). `'badge'` draws the count as a small pill on the collapsed frame's top-right corner, half-overhanging it (`origin: 'center'`), coloured from the theme (`accent` fill, `surface` text, `cardBg` ring). GlobalModel switches to `'badge'`. |
-| **Row status** | proposed 0 · accepted 0 · implemented 5 · landed 0 · deferred 0 · rejected 0 · superseded 0 |
+| **Row status** | proposed 0 · accepted 0 · implemented 1 · landed 0 · deferred 0 · rejected 0 · superseded 4 |
 
 ## 1. Motivation
 
@@ -33,10 +36,10 @@ relations:
 
 | ID | Kind | Status | File/target | Change | Effect | Risk | Depends on |
 |---|---|---|---|---|---|---|---|
-| F1 | feature | implemented | `file:packages/graph/src/layer/types.ts` (`GroupOptions`) | New `readonly collapsedCountDisplay?: 'center' \| 'badge'` next to `showCollapsedCount`; default `'center'` (today) | Chooses how the count is drawn; `showCollapsedCount` still turns it on/off | Low: additive, optional; existing configs unchanged | — |
-| F1b | feature | implemented | `file:packages/graph/src/layer/GraphLayer.ts` (`syncGroupSyntheticDecorations`) | `'center'` → today's `group-count` label decoration. `'badge'` → `renderer.setBadge(id, 'group-count', nodeBadgeToCanvasOptions({ placement: 'top-right', origin: 'center', shape: pill sized to the digits, fill: accent, stroke: cardBg, labelText: count, labelColor: surface }))`. Whichever form isn't in use (or both, when expanded / off) is cleared, so switching at runtime leaves nothing stale | Count reads as a notification badge on the corner, never over the title | Medium: synthetic badge slot must not collide with `NodeStyle.badges` diffing — `syncNodeBadges` only touches slots it mounted (`nodeBadgeSlots`), and `group-count` isn't one of its generated ids | F1 |
-| F2 | docs | implemented | `file:packages/graph/src/layer/types.ts#L963-L971` (`showCollapsedCount` TSDoc) | Point to `collapsedCountDisplay: 'badge'` as the way to keep the count off a `tabbed-rect`'s title | Doc matches behaviour | Low | F1 |
-| F3 | feature | implemented | `file:apps/storybook/stories/usecases/by-casestudies/global-model/settings.json` (group style) | `"collapsedCountDisplay": "badge"` — in `settings.json` **and** each of the three levels in `detail-templates.json` (each level carries its own copy of the folder's group style; `"showToggle": false` from `rfc:feat-2026-09-25-group-frame-toggle-cannot-be-hidden` was missing from them too and is added alongside) | GlobalModel shows the badge at every Detail level | Low — requested | F1b |
+| F1 | feature | superseded | `file:packages/graph/src/layer/types.ts` (`GroupOptions`) | New `readonly collapsedCountDisplay?: 'center' \| 'badge'` next to `showCollapsedCount`; default `'center'` (today) | Chooses how the count is drawn; `showCollapsedCount` still turns it on/off | Low: additive, optional; existing configs unchanged | — |
+| F1b | feature | superseded | `file:packages/graph/src/layer/GraphLayer.ts` (`syncGroupSyntheticDecorations`) | `'center'` → today's `group-count` label decoration. `'badge'` → `renderer.setBadge(id, 'group-count', nodeBadgeToCanvasOptions({ placement: 'top-right', origin: 'center', shape: pill sized to the digits, fill: accent, stroke: cardBg, labelText: count, labelColor: surface }))`. Whichever form isn't in use (or both, when expanded / off) is cleared, so switching at runtime leaves nothing stale | Count reads as a notification badge on the corner, never over the title | Medium: synthetic badge slot must not collide with `NodeStyle.badges` diffing — `syncNodeBadges` only touches slots it mounted (`nodeBadgeSlots`), and `group-count` isn't one of its generated ids | F1 |
+| F2 | docs | superseded | `file:packages/graph/src/layer/types.ts#L963-L971` (`showCollapsedCount` TSDoc) | Point to `collapsedCountDisplay: 'badge'` as the way to keep the count off a `tabbed-rect`'s title | Doc matches behaviour | Low | F1 |
+| F3 | feature | superseded | `file:apps/storybook/stories/usecases/by-casestudies/global-model/settings.json` (group style) | `"collapsedCountDisplay": "badge"` — in `settings.json` **and** each of the three levels in `detail-templates.json` (each level carries its own copy of the folder's group style; `"showToggle": false` from `rfc:feat-2026-09-25-group-frame-toggle-cannot-be-hidden` was missing from them too and is added alongside) | GlobalModel shows the badge at every Detail level | Low — requested | F1b |
 | F4 | defect | implemented | `file:packages/graph/src/behaviours/CollapseExpandBehaviour.ts` (`groupUnder`) | If the double-click's hit is not a store node (a badge — its own small shape), hit-test again excluding it (the `exclude` set `IElementRenderer.hitTest` already takes), until a node or nothing is hit. As built, when nothing is left under the point (a corner badge half-overhangs its frame), fall back to the smallest group whose box grown by `BADGE_REACH` (16 world units) contains it | Double-clicking the count badge opens / closes its frame, like the tab around it. Member cards are nodes, so a double-click on one still belongs to the card | Low: behaviour-local; no renderer-id format assumed | F1b |
 
 
@@ -76,3 +79,4 @@ relations:
 | 2026-09-25 | Approved; F1–F3 implemented | implemented | Maintainer: "approve". Collapsed AirRoutes shows a pill badge on the tab's top-right; expand removes it; dark theme follows; Detail → High keeps it and keeps the toggle hidden. Types, graph tests (193) green. **V3 fails for the badge itself**: a double-click on it hits the badge shape (`AirRoutes:group-count`), not the group, so nothing toggles — `F4` proposed. At 36 % zoom the pill is small (world-sized, like every badge) |
 | 2026-09-25 | F4 approved and implemented | implemented | Maintainer: "yes". First version (exclude-and-retry only) still failed: at the badge's centre half of it hangs outside the tab, so nothing is underneath — added the `BADGE_REACH` fallback. Double-clicking the badge now expands the folder. Found while verifying (not this RFC's defect): after collapse → Detail switch → expand, the frame re-opens around its members' stale pre-switch positions and the anchored re-flow drags the graph there — recorded on `rfc:feat-2026-09-24-toggling-a-group-leaves-the-layout-stale` |
 | 2026-09-25 | Badge leaks from a hidden frame — fixed under F1b | implemented | Found while updating `story:graph/Groups/CircleNestedGroups`: collapse the inner circle, then the outer — the inner's `2` badge stayed on screen, floating over the empty canvas. A badge is its own shape, not a child of its host, so it does not hide with it. The badge form now also requires `store.isNodeVisible(id)`; the centred label (a decoration) was never affected. Re-verified: outer collapsed shows only `4`; re-opening restores the inner's `2`. Same gap likely applies to authored `NodeStyle.badges` on hidden nodes — not investigated |
+| 2026-09-25 | F1, F1b, F2, F3 superseded | superseded | Maintainer: "why is there asBadge added on GraphLayer, why cant we just use badge on node by the groupbehaviour" → only `.data` is persisted to the graph backend, so a behaviour may write presentation. `collapsedCountDisplay` removed; the badge moved to `CollapseExpandBehaviour.countBadge` — `rfc:feat-2026-09-25-collapsed-count-badge-is-hardcoded-in-graphlayer`. F4 stays |

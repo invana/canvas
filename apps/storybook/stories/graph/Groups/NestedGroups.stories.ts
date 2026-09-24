@@ -24,7 +24,7 @@ type Story = StoryObj;
  * in one pass.
  *
  * Both frames show their hidden-member count as a corner badge while
- * collapsed (`collapsedCountDisplay: 'badge'`): collapse the inner one (2),
+ * collapsed (`CollapseExpandBehaviour`'s `countBadge`): collapse the inner one (2),
  * then the outer (4 — every descendant, the inner frame included). A frame
  * re-opens exactly where it closed.
  */
@@ -45,7 +45,7 @@ export const NestedGroupsStory: Story = {
           // No frame colour: an unset `bgFill` / `bgStrokeColor` resolves from
           // the theme (`cardBg` / `divider`) and re-resolves on every switch.
           bgStrokeWidth: 1,
-          group: { autoFit: true, padding: 28, showCollapsedCount: true, collapsedCountDisplay: 'badge' }
+          group: { autoFit: true, padding: 28 }
         }
       },
       { type: 'node',
@@ -59,7 +59,7 @@ export const NestedGroupsStory: Story = {
           // every publish and reads in both light and dark.
           bgAlpha: 0.55,
           bgStrokeWidth: 1,
-          group: { autoFit: true, padding: 18, showCollapsedCount: true, collapsedCountDisplay: 'badge' }
+          group: { autoFit: true, padding: 18 }
         }
       },
       { type: 'node',
@@ -130,7 +130,7 @@ export const NestedGroupsStory: Story = {
         pan: { enabled: true },
         zoom: { enabled: true },
         drag: { enabled: true },
-        'collapse-expand': { enabled: true }
+        'collapse-expand': { enabled: true, countBadge: true }
       }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });

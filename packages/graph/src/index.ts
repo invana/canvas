@@ -207,6 +207,7 @@ export {
   type EraseTargetKind,
   type ErasedElement,
   CollapseExpandBehaviour,
+  COLLAPSED_COUNT_BADGE_ID,
   GROUP_TOGGLE_SLOT,
   type CollapseExpandBehaviourOptions,
   NodeResizeBehaviour,
