@@ -21,6 +21,11 @@ type Story = StoryObj;
  * the outer ring. The same nested-group machinery as the rect variant,
  * but the auto-fit math reaches the smallest enclosing circle via the
  * AABB half-diagonal + padding.
+ *
+ * Collapsed circles show their hidden-member count as a corner badge
+ * (`showCollapsedCount` + `collapsedCountDisplay: 'badge'`): collapse the
+ * inner circle (2), then the outer one (4 — every descendant, the inner
+ * circle included).
  */
 export const CircleNestedGroupsStory: Story = {
   name: 'CircleNestedGroups',
@@ -39,7 +44,7 @@ export const CircleNestedGroupsStory: Story = {
           // No frame colour: an unset `bgFill` / `bgStrokeColor` resolves from
           // the theme (`cardBg` / `divider`) and re-resolves on every switch.
           bgStrokeWidth: 1,
-          group: { autoFit: true, padding: 36 }
+          group: { autoFit: true, padding: 36, showCollapsedCount: true, collapsedCountDisplay: 'badge' }
         }
       },
       { type: 'node',
@@ -54,7 +59,7 @@ export const CircleNestedGroupsStory: Story = {
           // survives every publish and works in both kinds.
           bgAlpha: 0.55,
           bgStrokeWidth: 1,
-          group: { autoFit: true, padding: 22 }
+          group: { autoFit: true, padding: 22, showCollapsedCount: true, collapsedCountDisplay: 'badge' }
         }
       },
       { type: 'node',

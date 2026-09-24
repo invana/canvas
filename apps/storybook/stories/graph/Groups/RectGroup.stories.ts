@@ -40,8 +40,10 @@ const TOGGLE_PLACEMENTS: TogglePlacement[] = [
  * Comprehensive rectangular group demo. Every field on {@link GroupOptions}
  * is wired to the lil-gui panel so you can flip behaviours live and watch
  * the layer react: autoFit / fixed-size, padding, headerHeight,
- * behindChildren z-order, collapsed state, frame bg variant, and the
- * `+`/`−` toggle placement (keyword + custom coords).
+ * behindChildren z-order, collapsed state, frame bg variant, the
+ * `+`/`−` toggle placement (keyword + custom coords) or hiding it
+ * (`showToggle`), and the collapsed count — a centred label or a corner
+ * badge (`showCollapsedCount` / `collapsedCountDisplay`).
  *
  * `CollapseExpandBehaviour` and `NodeResizeBehaviour` are registered so
  * the GUI's `userResizable` flag actually mounts the selection-frame
@@ -68,6 +70,10 @@ export const RectGroupStory: Story = {
       togglePlacement: 'bottom' as TogglePlacement | 'custom',
       togglePosX: 0,
       togglePosY: 0,
+      showToggle: true,
+      // Collapsed count
+      showCollapsedCount: true,
+      collapsedCountDisplay: 'badge' as 'center' | 'badge',
       // Frame paint
       bgVariant: 'filled' as 'filled' | 'stroke-only' | 'ghost'
     };
@@ -100,7 +106,10 @@ export const RectGroupStory: Story = {
             padding: settings.padding,
             headerHeight: settings.headerHeight,
             behindChildren: settings.behindChildren,
-            userResizable: settings.userResizable
+            userResizable: settings.userResizable,
+            showToggle: settings.showToggle,
+            showCollapsedCount: settings.showCollapsedCount,
+            collapsedCountDisplay: settings.collapsedCountDisplay
           },
           labelText: 'Group A',
           labelFontSize: 11,
@@ -209,7 +218,10 @@ export const RectGroupStory: Story = {
         userResizable: settings.userResizable,
         width: settings.width,
         height: settings.height,
-        togglePlacement
+        togglePlacement,
+        showToggle: settings.showToggle,
+        showCollapsedCount: settings.showCollapsedCount,
+        collapsedCountDisplay: settings.collapsedCountDisplay
       };
       graph.store.updateNode('group-a', {
         style: {
@@ -261,6 +273,11 @@ export const RectGroupStory: Story = {
       .add(settings, 'togglePosY', -200, 200, 1)
       .name('custom posY (when custom)')
       .onChange(apply);
+    toggle.add(settings, 'showToggle').name('showToggle (off = double-click only)').onChange(apply);
+
+    const count = gui.addFolder('Collapsed count');
+    count.add(settings, 'showCollapsedCount').onChange(apply);
+    count.add(settings, 'collapsedCountDisplay', ['center', 'badge']).onChange(apply);
 
     const frame = gui.addFolder('Frame paint');
     frame.add(settings, 'bgVariant', ['filled', 'stroke-only', 'ghost']).onChange(apply);

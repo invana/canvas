@@ -3097,7 +3097,12 @@ export class GraphLayer extends WorldLayer<
     // draws it on the corner instead. Whichever form isn't in use is cleared, so
     // switching between them (or expanding) leaves nothing stale.
     const showCount = isCollapsed && group.showCollapsedCount === true;
-    const asBadge = showCount && group.collapsedCountDisplay === 'badge';
+    // A badge is a separate shape, not a child of its host, so it does not
+    // hide with it: a collapsed frame nested inside another collapsed (or
+    // hidden) frame must drop its badge explicitly. The centred label is a
+    // decoration and hides with the host on its own.
+    const asBadge =
+      showCount && group.collapsedCountDisplay === 'badge' && this.store.isNodeVisible(id);
     const count = showCount ? this.countDescendants(id) : 0;
     if (showCount && !asBadge) {
       this._renderer.setDecoration(id, 'group-count', {

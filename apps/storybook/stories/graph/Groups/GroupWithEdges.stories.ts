@@ -30,6 +30,10 @@ type Story = StoryObj;
  *
  * `CollapseExpandBehaviour` is wired up so you can collapse either
  * group and watch the cross edge re-route to the surviving super-node.
+ * A collapsed frame shows its hidden-member count as a corner badge
+ * (`collapsedCountDisplay: 'badge'`); the GUI switches it to the centred
+ * label and hides / shows the `+` / `−` button (`showToggle`) — with it
+ * hidden, double-click a frame to toggle it.
  */
 export const GroupWithEdgesStory: Story = {
   name: 'GroupWithEdges',
@@ -67,7 +71,7 @@ export const GroupWithEdgesStory: Story = {
           bgAlpha: 0.18,
           bgStrokeColor: 0x6b7fff,
           bgStrokeWidth: 1.5,
-          group: { autoFit: true, padding: 20 },
+          group: { autoFit: true, padding: 20, showCollapsedCount: true, collapsedCountDisplay: 'badge' },
           labelText: 'Service A',
           labelColor: 0x6b7fff,
           labelFontSize: 11,
@@ -96,7 +100,7 @@ export const GroupWithEdgesStory: Story = {
           bgAlpha: 0.18,
           bgStrokeColor: 0xc026d3,
           bgStrokeWidth: 1.5,
-          group: { autoFit: true, padding: 20 },
+          group: { autoFit: true, padding: 20, showCollapsedCount: true, collapsedCountDisplay: 'badge' },
           labelText: 'Service B',
           labelColor: 0xc026d3,
           labelFontSize: 11,
@@ -181,5 +185,27 @@ export const GroupWithEdgesStory: Story = {
           });
         }
       });
+
+    // Collapse chrome — the `+` / `−` button and the collapsed count, on both frames.
+    const groupChrome = { showToggle: true, collapsedCountDisplay: 'badge' as 'center' | 'badge' };
+    const applyGroupChrome = (): void => {
+      for (const id of ['group-a', 'group-b']) {
+        const node = graph.store.getNode(id);
+        if (!node) continue;
+        const priorStyle = (node.style ?? {}) as NodeStyle;
+        graph.store.updateNode(id, {
+          style: {
+            ...priorStyle,
+            group: {
+              ...(priorStyle.group ?? {}),
+              showToggle: groupChrome.showToggle,
+              collapsedCountDisplay: groupChrome.collapsedCountDisplay
+            }
+          }
+        });
+      }
+    };
+    gui.add(groupChrome, 'showToggle').name('showToggle (off = double-click only)').onChange(applyGroupChrome);
+    gui.add(groupChrome, 'collapsedCountDisplay', ['center', 'badge']).onChange(applyGroupChrome);
   }
 };

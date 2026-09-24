@@ -23,6 +23,10 @@ type Story = StoryObj;
  * around them, so dragging `node1` outward correctly grows both frames
  * in one pass.
  *
+ * Both frames show their hidden-member count as a corner badge while
+ * collapsed (`collapsedCountDisplay: 'badge'`): collapse the inner one (2),
+ * then the outer (4 — every descendant, the inner frame included). A frame
+ * re-opens exactly where it closed.
  */
 export const NestedGroupsStory: Story = {
   name: 'NestedGroups',
@@ -41,7 +45,7 @@ export const NestedGroupsStory: Story = {
           // No frame colour: an unset `bgFill` / `bgStrokeColor` resolves from
           // the theme (`cardBg` / `divider`) and re-resolves on every switch.
           bgStrokeWidth: 1,
-          group: { autoFit: true, padding: 28 }
+          group: { autoFit: true, padding: 28, showCollapsedCount: true, collapsedCountDisplay: 'badge' }
         }
       },
       { type: 'node',
@@ -55,7 +59,7 @@ export const NestedGroupsStory: Story = {
           // every publish and reads in both light and dark.
           bgAlpha: 0.55,
           bgStrokeWidth: 1,
-          group: { autoFit: true, padding: 18 }
+          group: { autoFit: true, padding: 18, showCollapsedCount: true, collapsedCountDisplay: 'badge' }
         }
       },
       { type: 'node',

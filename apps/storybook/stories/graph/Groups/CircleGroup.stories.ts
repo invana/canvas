@@ -21,13 +21,23 @@ type Story = StoryObj;
  * Same group concept, circular frame. Auto-fit math computes the smallest
  * enclosing radius via half-diagonal of the children AABB + padding —
  * cheap, monotonic, and good enough for most cluster overlays.
+ *
+ * Collapse it (double-click the frame or its `+` / `−`) to see the hidden-
+ * member count as a corner badge (`collapsedCountDisplay: 'badge'`); switch
+ * the GUI to `'center'` for the centred label — white text, so it reads on a
+ * dark frame and not on the light theme's.
  */
 export const CircleGroupStory: Story = {
   name: 'CircleGroup',
   render: () => createContainer({ id: 'graph-circle-group' }),
 
   play: async ({ canvasElement }) => {
-    const settings = { autoFit: true, padding: 28 };
+    const settings = {
+      autoFit: true,
+      padding: 28,
+      showCollapsedCount: true,
+      collapsedCountDisplay: 'badge' as 'center' | 'badge'
+    };
 
     const nodes: GraphNode[] = [
       { type: 'node',
@@ -41,7 +51,12 @@ export const CircleGroupStory: Story = {
           // No frame colour: an unset `bgFill` / `bgStrokeColor` resolves from
           // the theme (`cardBg` / `divider`) and re-resolves on every switch.
           bgStrokeWidth: 1,
-          group: { autoFit: settings.autoFit, padding: settings.padding }
+          group: {
+            autoFit: settings.autoFit,
+            padding: settings.padding,
+            showCollapsedCount: settings.showCollapsedCount,
+            collapsedCountDisplay: settings.collapsedCountDisplay
+          }
         }
       },
       { type: 'node',
@@ -129,11 +144,19 @@ export const CircleGroupStory: Story = {
       graph.store.updateNode('group-c', {
         style: {
           ...priorStyle,
-          group: { ...priorGroup, autoFit: settings.autoFit, padding: settings.padding }
+          group: {
+            ...priorGroup,
+            autoFit: settings.autoFit,
+            padding: settings.padding,
+            showCollapsedCount: settings.showCollapsedCount,
+            collapsedCountDisplay: settings.collapsedCountDisplay
+          }
         }
       });
     };
     gui.add(settings, 'autoFit').onChange(apply);
     gui.add(settings, 'padding', 0, 60, 1).onChange(apply);
+    gui.add(settings, 'showCollapsedCount').onChange(apply);
+    gui.add(settings, 'collapsedCountDisplay', ['center', 'badge']).onChange(apply);
   }
 };

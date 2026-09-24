@@ -636,6 +636,12 @@ export class Canvas {
     let lastFlushFit = 0;
     /** One rAF in flight — see {@link requestFit}. */
     let fitQueued = false;
+    /**
+     * Bumped when a `preserveCamera` run starts; a queued fit from before that
+     * checks it and stands down, so a fit requested by an earlier run can't
+     * land in the middle of a re-flow that asked to leave the camera alone.
+     */
+    let fitGeneration = 0;
     /** True once the active layout has reported a tick or a settle. */
     let layoutHasPlaced = false;
 
@@ -652,8 +658,10 @@ export class Canvas {
     const requestFit = (): void => {
       if (fitQueued) return;
       fitQueued = true;
+      const generation = fitGeneration;
       requestAnimationFrame(() => {
         fitQueued = false;
+        if (generation !== fitGeneration) return;
         // `config.fitAnimation` eases the **first** fit only. Easing the
         // follow-fits too would turn a settling layout into a chase, each glide
         // retargeting before the last finished.
@@ -727,6 +735,15 @@ export class Canvas {
     // listeners re-read `activeLayout()` per event, so late assignment is fine.
     const THROTTLE_MS = 100;
     let lastFit = 0;
+    // A run that asked to leave the camera alone (`preserveCamera` — e.g. a
+    // re-flow after a group frame toggles) supersedes whatever run was framing
+    // before it: close that run's flush-watch window and drop its queued fit,
+    // or the re-flow's own flushes would be fitted as if they were that run's.
+    this.events.on('layout:run:start', ({ id, preserveCamera }) => {
+      if (!preserveCamera || id !== activeLayout()) return;
+      watchUntil = 0;
+      fitGeneration++;
+    });
     // A run asked to leave the camera alone (`preserveCamera` — e.g. a re-flow
     // after a group frame toggles) is not a framing signal.
     this.events.on('layout:run:tick', ({ id, preserveCamera }) => {

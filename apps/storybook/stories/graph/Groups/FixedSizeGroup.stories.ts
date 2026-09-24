@@ -23,6 +23,10 @@ type Story = StoryObj;
  * Try dragging `node3` outside the rect — the frame stays put. Pair this
  * mode with `GroupResizeBehaviour` (see `Graph/Behaviours/GroupResize`)
  * to give the developer manual sizing handles instead.
+ *
+ * The frame also has **no `+` / `−` button** (`showToggle: false`) — it reads
+ * as a plain background. It still opens and closes: double-click the frame
+ * (`CollapseExpandBehaviour.doubleClickToToggle`, on by default).
  */
 export const FixedSizeGroupStory: Story = {
   name: 'FixedSizeGroup',
@@ -43,7 +47,7 @@ export const FixedSizeGroupStory: Story = {
           bgStrokeColor: 0xeab308,
           bgStrokeWidth: 1,
           // autoFit explicitly off → declared 240×200 is final.
-          group: { autoFit: false, padding: 16 },
+          group: { autoFit: false, padding: 16, showToggle: false },
           labelText: 'Fixed-size frame',
           labelColor: 0xa16207,
           labelFontSize: 11,

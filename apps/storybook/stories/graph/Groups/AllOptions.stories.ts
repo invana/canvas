@@ -60,9 +60,13 @@ const LABEL_PLACEMENTS: ShapeLabelPlacement[] = [
 /**
  * Single-group playground. Every option that affects how a group renders
  * is exposed in the lil-gui: shape kind + size, the full
- * {@link GroupOptions} surface, the flat paint fields on
- * `NodeStyle.bg*`, the label fields, and live enable/disable for the
- * three group-related behaviours (drag, collapse/expand, resize).
+ * {@link GroupOptions} surface (incl. hiding the `+` / `−` button with
+ * `showToggle` and the collapsed count as a centred label or a corner badge
+ * via `showCollapsedCount` / `collapsedCountDisplay`), the flat paint fields
+ * on `NodeStyle.bg*`, the label fields, live enable/disable for the three
+ * group-related behaviours (drag, collapse/expand, resize), and the
+ * collapse/expand behaviour's own options (double-click to toggle, glide the
+ * camera to the frame).
  *
  * Three child circles live inside the group so autoFit, collapse, and
  * resize all have something visible to act on.
@@ -89,6 +93,9 @@ export const AllOptionsStory: Story = {
       togglePlacement: 'bottom' as TogglePlacement | 'custom',
       togglePosX: 0,
       togglePosY: 60,
+      showToggle: true,
+      showCollapsedCount: true,
+      collapsedCountDisplay: 'badge' as 'center' | 'badge',
       // ─── Frame paint ────────────────────────────────────────────
       bgFill: 0xf5f7ff,
       bgAlpha: 1,
@@ -109,7 +116,11 @@ export const AllOptionsStory: Story = {
       // ─── Behaviours ─────────────────────────────────────────────
       dragEnabled: true,
       collapseEnabled: true,
-      resizeEnabled: true
+      resizeEnabled: true,
+      // ─── CollapseExpandBehaviour options ────────────────────────
+      doubleClickToToggle: true,
+      centerOnToggle: false,
+      centerDurationMs: 300
     };
 
     const nodes: GraphNode[] = [
@@ -219,6 +230,9 @@ export const AllOptionsStory: Story = {
         behindChildren: settings.behindChildren,
         userResizable: settings.userResizable,
         togglePlacement,
+        showToggle: settings.showToggle,
+        showCollapsedCount: settings.showCollapsedCount,
+        collapsedCountDisplay: settings.collapsedCountDisplay,
         ...(settings.shapeKind === 'rect'
           ? { width: settings.width, height: settings.height }
           : { radius: settings.radius })
@@ -279,6 +293,11 @@ export const AllOptionsStory: Story = {
       .onChange(apply);
     toggle.add(settings, 'togglePosX', -200, 200, 1).name('custom posX').onChange(apply);
     toggle.add(settings, 'togglePosY', -200, 200, 1).name('custom posY').onChange(apply);
+    toggle.add(settings, 'showToggle').name('showToggle (off = double-click only)').onChange(apply);
+
+    const count = gui.addFolder('Collapsed count');
+    count.add(settings, 'showCollapsedCount').onChange(apply);
+    count.add(settings, 'collapsedCountDisplay', ['center', 'badge']).onChange(apply);
 
     const paint = gui.addFolder('Frame paint');
     paint.addColor(settings, 'bgFill').onChange(apply);
@@ -326,6 +345,18 @@ export const AllOptionsStory: Story = {
     beh.add(settings, 'dragEnabled').name('DragNode enabled').onChange((on: boolean) => (on ? dragBehaviour.enable() : dragBehaviour.disable()));
     beh.add(settings, 'collapseEnabled').name('CollapseExpand enabled').onChange((on: boolean) => (on ? collapseBehaviour.enable() : collapseBehaviour.disable()));
     beh.add(settings, 'resizeEnabled').name('NodeResize enabled').onChange((on: boolean) => (on ? resizeBehaviour.enable() : resizeBehaviour.disable()));
+
+    // The collapse/expand behaviour's own options, applied live.
+    const applyCollapseOptions = (): void =>
+      collapseBehaviour.setOptions({
+        doubleClickToToggle: settings.doubleClickToToggle,
+        centerOnToggle: settings.centerOnToggle,
+        centerDurationMs: settings.centerDurationMs
+      });
+    const collapseOpts = gui.addFolder('CollapseExpand options');
+    collapseOpts.add(settings, 'doubleClickToToggle').onChange(applyCollapseOptions);
+    collapseOpts.add(settings, 'centerOnToggle').name('centerOnToggle (glide camera)').onChange(applyCollapseOptions);
+    collapseOpts.add(settings, 'centerDurationMs', 0, 1000, 50).onChange(applyCollapseOptions);
 
     // Apply once on load so any settings defaults that diverged from the
     // initial GraphNode declaration take effect immediately.

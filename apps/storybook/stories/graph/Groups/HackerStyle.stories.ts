@@ -34,6 +34,11 @@ type Story = StoryObj;
  * care which palette you hand it. That is only shown by a palette the theme
  * did *not* pick — so this story stays dark under a light toolbar, on
  * purpose. Don't "fix" it to follow the theme.
+ *
+ * Collapsed frames show their hidden-member count as the centred label
+ * (`showCollapsedCount`) — white bold text, which reads on the pinned dark
+ * backdrop. The corner-badge form takes its colours from the live theme,
+ * and this story mounts none.
  */
 export const HackerStyleStory: Story = {
   name: 'HackerStyle',
@@ -57,7 +62,7 @@ export const HackerStyleStory: Story = {
           bgStrokeColor: NEON_GREEN,
           bgStrokeWidth: 1.5,
           bgStrokeDashArray: [4, 3],
-          group: { autoFit: true, padding: 22 },
+          group: { autoFit: true, padding: 22, showCollapsedCount: true },
           labelText: 'frontend',
           labelColor: NEON_GREEN,
           labelFontSize: 11,
@@ -85,7 +90,7 @@ export const HackerStyleStory: Story = {
           bgStrokeColor: NEON_CYAN,
           bgStrokeWidth: 1.5,
           bgStrokeDashArray: [4, 3],
-          group: { autoFit: true, padding: 22 },
+          group: { autoFit: true, padding: 22, showCollapsedCount: true },
           labelText: 'services',
           labelColor: NEON_CYAN,
           labelFontSize: 11,
@@ -113,7 +118,7 @@ export const HackerStyleStory: Story = {
           bgStrokeColor: NEON_MAGENTA,
           bgStrokeWidth: 1.5,
           bgStrokeDashArray: [4, 3],
-          group: { autoFit: true, padding: 22 },
+          group: { autoFit: true, padding: 22, showCollapsedCount: true },
           labelText: 'data',
           labelColor: NEON_MAGENTA,
           labelFontSize: 11,
