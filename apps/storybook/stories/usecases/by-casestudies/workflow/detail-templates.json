@@ -1,0 +1,90 @@
+{
+  "circles": {
+    "layers": {
+      "graph": {
+        "nodeTypes": {
+          "task.llm": {
+            "structure": "taskDot",
+            "styling": "label",
+            "bindings": {}
+          },
+          "task.graph_read": {
+            "structure": "taskDot",
+            "styling": "label",
+            "bindings": {}
+          },
+          "task.none": {
+            "structure": "taskDot",
+            "styling": "label",
+            "bindings": {}
+          }
+        }
+      }
+    },
+    "layouts": {
+      "elk": {
+        "defaultNodeSize": {
+          "width": 60,
+          "height": 84
+        },
+        "nodeSpacing": 60,
+        "layerSpacing": 100
+      },
+      "force": {
+        "link": {
+          "distance": 140
+        },
+        "charge": {
+          "strength": -1400
+        },
+        "collide": {
+          "radius": 64
+        }
+      }
+    }
+  },
+  "cards": {
+    "layers": {
+      "graph": {
+        "nodeTypes": {
+          "task.llm": {
+            "structure": "taskCard",
+            "styling": "label",
+            "bindings": {}
+          },
+          "task.graph_read": {
+            "structure": "taskCard",
+            "styling": "label",
+            "bindings": {}
+          },
+          "task.none": {
+            "structure": "taskCard",
+            "styling": "label",
+            "bindings": {}
+          }
+        }
+      }
+    },
+    "layouts": {
+      "elk": {
+        "defaultNodeSize": {
+          "width": 264,
+          "height": 116
+        },
+        "nodeSpacing": 60,
+        "layerSpacing": 120
+      },
+      "force": {
+        "link": {
+          "distance": 300
+        },
+        "charge": {
+          "strength": -2600
+        },
+        "collide": {
+          "radius": 160
+        }
+      }
+    }
+  }
+}

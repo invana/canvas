@@ -1,0 +1,283 @@
+{
+  "plan": {
+    "key": "nl-compare",
+    "version": 1,
+    "kind": "ask",
+    "origin": "builtin",
+    "description": "Two readings of the graph, compared, with the difference charted."
+  },
+  "nodes": [
+    {
+      "id": "translate_a",
+      "type": "task.llm",
+      "data": {
+        "key": "translate_a",
+        "title": "Translate A",
+        "stepKey": "translate_thought",
+        "form": "callable",
+        "bound": "llm",
+        "icon": "lucide/sparkles",
+        "summary": "Translate a natural-language ask into a grounded query.",
+        "ordinal": 0,
+        "args": {},
+        "dependsOn": []
+      }
+    },
+    {
+      "id": "validate_a",
+      "type": "task.none",
+      "data": {
+        "key": "validate_a",
+        "title": "Validate A",
+        "stepKey": "validate_query",
+        "form": "callable",
+        "bound": "none",
+        "icon": "lucide/square-function",
+        "summary": "Check a query is read-only and name the labels it touches, before it runs.",
+        "ordinal": 1,
+        "args": {
+          "query": "${steps.translate_a.query}"
+        },
+        "dependsOn": [
+          {
+            "key": "translate_a",
+            "kind": "binding"
+          }
+        ]
+      }
+    },
+    {
+      "id": "execute_a",
+      "type": "task.graph_read",
+      "data": {
+        "key": "execute_a",
+        "title": "Execute A",
+        "stepKey": "execute_graph_query",
+        "form": "callable",
+        "bound": "graph_read",
+        "icon": "lucide/database",
+        "summary": "Run a validated query against the graph, under the run's lens.",
+        "ordinal": 2,
+        "args": {
+          "query": "${steps.translate_a.query}",
+          "read_only": true
+        },
+        "dependsOn": [
+          {
+            "key": "translate_a",
+            "kind": "binding"
+          },
+          {
+            "key": "validate_a",
+            "kind": "require"
+          }
+        ]
+      }
+    },
+    {
+      "id": "translate_b",
+      "type": "task.llm",
+      "data": {
+        "key": "translate_b",
+        "title": "Translate B",
+        "stepKey": "translate_thought",
+        "form": "callable",
+        "bound": "llm",
+        "icon": "lucide/sparkles",
+        "summary": "Translate a natural-language ask into a grounded query.",
+        "ordinal": 3,
+        "args": {},
+        "dependsOn": []
+      }
+    },
+    {
+      "id": "validate_b",
+      "type": "task.none",
+      "data": {
+        "key": "validate_b",
+        "title": "Validate B",
+        "stepKey": "validate_query",
+        "form": "callable",
+        "bound": "none",
+        "icon": "lucide/square-function",
+        "summary": "Check a query is read-only and name the labels it touches, before it runs.",
+        "ordinal": 4,
+        "args": {
+          "query": "${steps.translate_b.query}"
+        },
+        "dependsOn": [
+          {
+            "key": "translate_b",
+            "kind": "binding"
+          }
+        ]
+      }
+    },
+    {
+      "id": "execute_b",
+      "type": "task.graph_read",
+      "data": {
+        "key": "execute_b",
+        "title": "Execute B",
+        "stepKey": "execute_graph_query",
+        "form": "callable",
+        "bound": "graph_read",
+        "icon": "lucide/database",
+        "summary": "Run a validated query against the graph, under the run's lens.",
+        "ordinal": 5,
+        "args": {
+          "query": "${steps.translate_b.query}",
+          "read_only": true
+        },
+        "dependsOn": [
+          {
+            "key": "translate_b",
+            "kind": "binding"
+          },
+          {
+            "key": "validate_b",
+            "kind": "require"
+          }
+        ]
+      }
+    },
+    {
+      "id": "shape_for_canvas",
+      "type": "task.none",
+      "data": {
+        "key": "shape_for_canvas",
+        "title": "Project",
+        "stepKey": "shape_for_canvas",
+        "form": "callable",
+        "bound": "none",
+        "icon": "lucide/square-function",
+        "summary": "Turn query records into an emission for the canvas, through a template.",
+        "ordinal": 6,
+        "args": {},
+        "dependsOn": [
+          {
+            "key": "execute_a",
+            "kind": "require"
+          },
+          {
+            "key": "execute_b",
+            "kind": "require"
+          }
+        ]
+      }
+    },
+    {
+      "id": "verify_result",
+      "type": "task.none",
+      "data": {
+        "key": "verify_result",
+        "title": "Verify",
+        "stepKey": "verify_result",
+        "form": "callable",
+        "bound": "none",
+        "icon": "lucide/square-function",
+        "summary": "Decide whether the plan served the intent — deterministic checks first.",
+        "ordinal": 7,
+        "args": {},
+        "dependsOn": [
+          {
+            "key": "shape_for_canvas",
+            "kind": "sequence"
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "translate_a->validate_a",
+      "type": "binding",
+      "source": "translate_a",
+      "target": "validate_a",
+      "data": {
+        "kind": "binding",
+        "description": "binds an output of the earlier task into its args"
+      }
+    },
+    {
+      "id": "translate_a->execute_a",
+      "type": "binding",
+      "source": "translate_a",
+      "target": "execute_a",
+      "data": {
+        "kind": "binding",
+        "description": "binds an output of the earlier task into its args"
+      }
+    },
+    {
+      "id": "validate_a->execute_a",
+      "type": "require",
+      "source": "validate_a",
+      "target": "execute_a",
+      "data": {
+        "kind": "require",
+        "description": "must settle first"
+      }
+    },
+    {
+      "id": "translate_b->validate_b",
+      "type": "binding",
+      "source": "translate_b",
+      "target": "validate_b",
+      "data": {
+        "kind": "binding",
+        "description": "binds an output of the earlier task into its args"
+      }
+    },
+    {
+      "id": "translate_b->execute_b",
+      "type": "binding",
+      "source": "translate_b",
+      "target": "execute_b",
+      "data": {
+        "kind": "binding",
+        "description": "binds an output of the earlier task into its args"
+      }
+    },
+    {
+      "id": "validate_b->execute_b",
+      "type": "require",
+      "source": "validate_b",
+      "target": "execute_b",
+      "data": {
+        "kind": "require",
+        "description": "must settle first"
+      }
+    },
+    {
+      "id": "execute_a->shape_for_canvas",
+      "type": "require",
+      "source": "execute_a",
+      "target": "shape_for_canvas",
+      "data": {
+        "kind": "require",
+        "description": "must settle first"
+      }
+    },
+    {
+      "id": "execute_b->shape_for_canvas",
+      "type": "require",
+      "source": "execute_b",
+      "target": "shape_for_canvas",
+      "data": {
+        "kind": "require",
+        "description": "must settle first"
+      }
+    },
+    {
+      "id": "shape_for_canvas->verify_result",
+      "type": "sequence",
+      "source": "shape_for_canvas",
+      "target": "verify_result",
+      "data": {
+        "kind": "sequence",
+        "description": "runs after it, nothing bound"
+      }
+    }
+  ]
+}
