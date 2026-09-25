@@ -165,8 +165,17 @@ export class GraphHistory {
       const node = this.store.getNode(id);
       if (!node) return;
       const edges = this.incidentEdges(id);
+      // `store.removeNode` clears `parentId` on every surviving child, so a
+      // member removed *after* its group is journaled already unlinked — record
+      // the children now, or undo restores the group empty.
+      const orphanedChildIds = [...this.store.childrenOf(id)];
       this.store.removeNode(id, { cascade: true });
-      this.record({ kind: 'removeNode', node, edges });
+      this.record({
+        kind: 'removeNode',
+        node,
+        edges,
+        ...(orphanedChildIds.length > 0 ? { orphanedChildIds } : {}),
+      });
     },
     updateNode: (id, patch) => {
       const before = this.captureNodeBefore(id, patch);
@@ -272,6 +281,7 @@ export class GraphHistory {
       case 'removeNode':
         if (!this.store.hasNode(op.node.id)) this.store.addNode(op.node);
         this.readdEdges(op.edges);
+        this.relinkChildren(op.node.id, op.orphanedChildIds);
         break;
       case 'updateNode':
         this.store.updateNode(op.id, op.before);
@@ -288,6 +298,20 @@ export class GraphHistory {
       case 'updateEdge':
         this.store.updateEdge(op.id, op.before);
         break;
+    }
+  }
+
+  /**
+   * Restore `parentId` on the children a `removeNode` unlinked. Inverses run in
+   * reverse, so by the time a group is re-added its members (removed after it)
+   * are already back — parentless. Children that are gone, or that picked up
+   * another parent since, are left alone.
+   */
+  private relinkChildren(parentId: string, childIds: string[] | undefined): void {
+    if (!childIds) return;
+    for (const childId of childIds) {
+      if (!this.store.hasNode(childId) || this.store.parentOf(childId) !== undefined) continue;
+      this.store.updateNode(childId, { parentId });
     }
   }
 

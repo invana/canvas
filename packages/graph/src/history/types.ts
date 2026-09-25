@@ -18,12 +18,14 @@ import type { GraphEdge, GraphNode, Vec2 } from '../store';
 
 /**
  * A single invertible store mutation. `removeNode` carries the cascade-removed
- * incident `edges` so undo can restore them alongside the node. `update*` ops
+ * incident `edges` so undo can restore them alongside the node, and the
+ * `orphanedChildIds` whose `parentId` the store cleared when the node went
+ * (removing a group unlinks its surviving members), so undo re-links them. `update*` ops
  * carry both `before` (for undo) and `after` (for redo) partial states.
  */
 export type HistoryOp =
   | { kind: 'addNode'; node: GraphNode }
-  | { kind: 'removeNode'; node: GraphNode; edges: GraphEdge[] }
+  | { kind: 'removeNode'; node: GraphNode; edges: GraphEdge[]; orphanedChildIds?: string[] }
   | { kind: 'updateNode'; id: string; before: Partial<GraphNode>; after: Partial<GraphNode> }
   | { kind: 'moveNode'; id: string; before: Vec2; after: Vec2 }
   | { kind: 'addEdge'; edge: GraphEdge }
