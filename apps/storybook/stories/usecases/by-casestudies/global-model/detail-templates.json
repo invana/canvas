@@ -245,8 +245,8 @@
           "width": 264,
           "height": 116
         },
-        "nodeSpacing": 40,
-        "layerSpacing": 120
+        "nodeSpacing": 90,
+        "layerSpacing": 200
       },
       "force": {
         "link": {
@@ -376,8 +376,8 @@
           "width": 300,
           "height": 240
         },
-        "nodeSpacing": 44,
-        "layerSpacing": 140
+        "nodeSpacing": 110,
+        "layerSpacing": 240
       },
       "force": {
         "link": {
