@@ -167,7 +167,9 @@ export const GlobalModelStory: Story = {
         ...(prev.detail !== detail ? DETAIL_TEMPLATES[detail] : {}),
         ...(prev.layout !== layout ? { activeLayout: layout } : {})
       });
-      void canvas.runLayout(layout).then(() => canvas.fitView(60));
+      // `fitCamera` moves the camera with the nodes' glide, so the picture
+      // stays framed on the way instead of drifting and then snapping back.
+      void canvas.runLayout(layout, { fitCamera: { padding: 60 } });
     }, [canvas, detail, layout]);
 
     return (

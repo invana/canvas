@@ -21,8 +21,12 @@ export interface PositionTransitionOptions {
    * Called once per frame with the interpolated buffer — write it straight to
    * the store (e.g. `store.setPositionsBulk(ids, xy)`). The SAME buffer is
    * reused every frame; copy it if you need to retain it.
+   *
+   * `progress` is the **eased** fraction of the transition, `0..1` — the same
+   * factor the buffer was interpolated with — and is exactly `1` on the final
+   * frame. Lets a caller move something else in lock-step (e.g. the camera).
    */
-  onFrame: (xy: Float32Array) => void;
+  onFrame: (xy: Float32Array, progress: number) => void;
   /** Fires once when the transition finishes naturally. NOT called on `cancel()`. */
   onComplete?: () => void;
 }
@@ -77,7 +81,7 @@ export function animatePositions(opts: PositionTransitionOptions): PositionTrans
 
   const finish = (): void => {
     done = true;
-    onFrame(to); // land on the exact target, free of float drift
+    onFrame(to, 1); // land on the exact target, free of float drift
     onComplete?.();
   };
 
@@ -101,7 +105,7 @@ export function animatePositions(opts: PositionTransitionOptions): PositionTrans
     }
     const t = tween.value;
     for (let i = 0; i < n; i++) buffer[i] = from[i]! + (to[i]! - from[i]!) * t;
-    onFrame(buffer);
+    onFrame(buffer, t);
     rafId = raf(step);
   };
   rafId = raf(step);

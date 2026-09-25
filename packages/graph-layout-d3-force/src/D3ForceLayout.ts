@@ -375,10 +375,18 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     }
 
     const alpha = seededCount === 0 ? this.opts.alpha ?? 1 : this.opts.reheatAlpha ?? 0.5;
+    // Default centre = where the graph already is — the same rule as the live
+    // path (`configureForces`), handed to the solver as an explicit `center`.
+    const { center, x, y, radial } = this.opts;
+    let effectiveCenter = center;
+    if (center === undefined && x === undefined && y === undefined && radial === undefined) {
+      const placed = seededCentroid(positions, seeded);
+      if (placed) effectiveCenter = { x: placed.x, y: placed.y };
+    }
     const params: ForceSolveParams = {
       link: this.opts.link,
       charge: this.opts.charge,
-      center: this.opts.center,
+      center: effectiveCenter,
       collide: collide ? { strength: collide.strength, iterations: collide.iterations } : undefined,
       x: this.opts.x,
       y: this.opts.y,
@@ -496,7 +504,12 @@ export class D3ForceLayout extends Layout<GraphLayer> {
 
     // 2. Build the live (`animate: true`) simulation — d3 owns the tick loop.
     const sim = forceSimulation<SimNode, SimLink>(this.nodes);
-    this.configureForces(sim, links, this.separationInput(layer, this.ids));
+    this.configureForces(
+      sim,
+      links,
+      this.separationInput(layer, this.ids),
+      placedCentroid(this.nodes),
+    );
     this.configureSimulation(sim);
     // A re-flow (an anchored run — e.g. after a group frame toggles) starts from
     // a settled picture, so it eases in at a low α rather than d3's full-energy
@@ -724,6 +737,7 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     sim: Simulation<SimNode, SimLink>,
     links: SimLink[],
     separation: GroupSeparationInput | null,
+    placed: { x: number; y: number } | null,
   ): void {
     const { link, charge, center, collide, x, y, radial, cluster, separateGroups } = this.opts;
 
@@ -745,18 +759,25 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     }
 
     // Centering. An explicit `center` wins. Otherwise, when the config gives no
-    // positional anchor at all (`center`/`x`/`y`/`radial`), default to a
-    // `forceCenter` at the origin: it recentres the centroid every tick, so the
-    // simulation can't translate off-screen. Without it, disconnected
-    // components and asymmetric forces impart a net momentum that (with
-    // `velocityDecay < 1`) drifts the whole graph steadily along an axis — the
-    // classic "the layout slides sideways while it animates" artifact.
+    // positional anchor at all (`center`/`x`/`y`/`radial`), add a default
+    // `forceCenter`: it recentres the centroid every tick, so the simulation
+    // can't translate off-screen. Without it, disconnected components and
+    // asymmetric forces impart a net momentum that (with `velocityDecay < 1`)
+    // drifts the whole graph steadily along an axis — the classic "the layout
+    // slides sideways while it animates" artifact.
+    //
+    // The default sits where the graph **already is** (`placed`, the centroid
+    // of the positioned nodes), and at the origin only when nothing is placed
+    // yet. d3's `forceCenter` moves the whole graph by the full offset on its
+    // first tick, so an origin centre threw a graph laid out elsewhere (ELK
+    // places from a top-left origin) half its width aside on every layout
+    // switch. See rfc:fix-2026-09-26-layout-rerun-glides-under-a-stale-camera F7.
     if (center !== undefined) {
       const force = forceCenter<SimNode>(center.x ?? 0, center.y ?? 0);
       if (center.strength !== undefined) force.strength(center.strength);
       sim.force('center', force);
     } else if (x === undefined && y === undefined && radial === undefined) {
-      sim.force('center', forceCenter<SimNode>(0, 0));
+      sim.force('center', forceCenter<SimNode>(placed?.x ?? 0, placed?.y ?? 0));
     }
 
     if (collide !== undefined) {
@@ -1020,6 +1041,40 @@ function centroid(
     y += positions[i * 2 + 1]!;
   }
   return { x: x / indices.length, y: y / indices.length };
+}
+
+/**
+ * Centroid of the seeded (positioned) entries of a flat `[x0,y0,…]` buffer, or
+ * `null` when none is seeded — the static path's default `forceCenter`.
+ */
+function seededCentroid(positions: Float32Array, seeded: Uint8Array): { x: number; y: number } | null {
+  let x = 0;
+  let y = 0;
+  let n = 0;
+  for (let i = 0; i < seeded.length; i++) {
+    if (seeded[i] !== 1) continue;
+    x += positions[i * 2]!;
+    y += positions[i * 2 + 1]!;
+    n++;
+  }
+  return n === 0 ? null : { x: x / n, y: y / n };
+}
+
+/**
+ * Centroid of the sim nodes that start with a position, or `null` when none
+ * does (a first load) — the live path's default `forceCenter`.
+ */
+function placedCentroid(nodes: readonly SimNode[]): { x: number; y: number } | null {
+  let x = 0;
+  let y = 0;
+  let n = 0;
+  for (const node of nodes) {
+    if (node.x === undefined || node.y === undefined) continue;
+    x += node.x;
+    y += node.y;
+    n++;
+  }
+  return n === 0 ? null : { x: x / n, y: y / n };
 }
 
 /** Centroid of the sim nodes at `indices` (all assumed positioned). */

@@ -316,7 +316,12 @@ export abstract class OneShotPositionLayout<
         to: target,
         duration,
         easing: resolveEasing(this.transitionEase),
-        onFrame: (xy) => store.setPositionsBulk(ids, xy),
+        onFrame: (xy, progress) => {
+          store.setPositionsBulk(ids, xy);
+          // Per-frame glide progress — what a `fitCamera` run moves the
+          // camera by, so the frame follows the nodes instead of trailing them.
+          if (token === this.runToken) this.events.emit('transition', { progress });
+        },
         onComplete: () => {
           this.activeTransition = null;
           this.transitionResolve = null;

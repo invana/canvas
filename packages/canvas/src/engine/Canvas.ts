@@ -539,19 +539,109 @@ export class Canvas {
   ): void {
     const rect = this._contentBounds();
     if (!rect) return;
+    this.camera.animateTo(
+      this._fitTransform(rect, padding),
+      {
+        ...(opts.durationMs !== undefined ? { durationMs: opts.durationMs } : {}),
+        ...(opts.easing !== undefined ? { easing: opts.easing } : {}),
+      },
+    );
+  }
+
+  /**
+   * The camera transform `Camera.fitContent(rect, padding)` would write:
+   * the zoom that fits `rect` inside the padded viewport, centred on it. Not
+   * clamped — `Camera.setTransform` / `animateTo` clamp on write.
+   */
+  private _fitTransform(rect: Rect, padding: number): { x: number; y: number; zoom: number } {
     const cam = this.camera;
     const availW = Math.max(1, cam.screenWidth - padding * 2);
     const availH = Math.max(1, cam.screenHeight - padding * 2);
     const zoom = Math.min(availW / Math.max(1, rect.width), availH / Math.max(1, rect.height));
     const cx = rect.x + rect.width / 2;
     const cy = rect.y + rect.height / 2;
-    cam.animateTo(
-      { x: cam.screenWidth / 2 - cx * zoom, y: cam.screenHeight / 2 - cy * zoom, zoom },
-      {
-        ...(opts.durationMs !== undefined ? { durationMs: opts.durationMs } : {}),
-        ...(opts.easing !== undefined ? { easing: opts.easing } : {}),
-      },
-    );
+    return { x: cam.screenWidth / 2 - cx * zoom, y: cam.screenHeight / 2 - cy * zoom, zoom };
+  }
+
+  /**
+   * Start following one layout run with the camera — the engine side of
+   * {@link LayoutRunOptions.fitCamera}. Returns a per-frame step to call with
+   * the transition's eased `progress`, and a `settle` for when the run ends.
+   *
+   * Each step blends from the transform the camera had when the run started
+   * toward a fit of the content **as it is on that frame**, by `progress`:
+   * the world point at the screen centre moves linearly and the zoom moves in
+   * log space (so a 4× zoom-out reads as evenly paced as a 4× zoom-in). At
+   * `progress` 0 that is exactly the starting camera — no jump when the run's
+   * new node sizes landed before it — and at `1` it is exactly the fit, so the
+   * glide ends framed without a second write.
+   *
+   * Bounds are read from the store (`GraphLayer.getBounds` is store-derived),
+   * so a step sees the positions the transition wrote this same frame.
+   *
+   * A user gesture takes the camera: if the transform no longer matches the
+   * one this follow last wrote, the follow stands down for the rest of the
+   * run and `settle` does nothing.
+   */
+  private _followRun(padding: number): {
+    step: (progress: number) => void;
+    settle: () => void;
+  } {
+    const cam = this.camera;
+    const W = cam.screenWidth;
+    const H = cam.screenHeight;
+    const z0 = cam.scale;
+    // World point under the screen centre when the run started.
+    const c0x = (W / 2 - cam.x) / z0;
+    const c0y = (H / 2 - cam.y) / z0;
+    let last: { x: number; y: number; zoom: number } | null = null;
+    let active = true;
+    let stepped = false;
+
+    /** The user moved the camera since our last write. */
+    const taken = (): boolean => {
+      if (!last) return false;
+      return (
+        Math.abs(cam.x - last.x) > 0.5 ||
+        Math.abs(cam.y - last.y) > 0.5 ||
+        Math.abs(cam.scale - last.zoom) > 1e-6 * Math.max(1, last.zoom)
+      );
+    };
+
+    const step = (progress: number): void => {
+      if (!active) return;
+      if (taken()) {
+        active = false;
+        return;
+      }
+      const rect = this._contentBounds();
+      if (!rect) return;
+      stepped = true;
+      const fit = this._fitTransform(rect, padding);
+      const p = Math.min(1, Math.max(0, progress));
+      const zoom = Math.exp(Math.log(z0) + (Math.log(Math.max(1e-9, fit.zoom)) - Math.log(z0)) * p);
+      const c1x = (W / 2 - fit.x) / fit.zoom;
+      const c1y = (H / 2 - fit.y) / fit.zoom;
+      const cx = c0x + (c1x - c0x) * p;
+      const cy = c0y + (c1y - c0y) * p;
+      cam.setTransform({ x: W / 2 - cx * zoom, y: H / 2 - cy * zoom, zoom });
+      // Read back what landed (the zoom clamp may have adjusted it), so the
+      // gesture check compares like with like.
+      last = { x: cam.x, y: cam.y, zoom: cam.scale };
+    };
+
+    const settle = (): void => {
+      if (!active || taken()) return;
+      active = false;
+      // A followed glide already ended on the exact fit (`progress` 1). A run
+      // that snapped never stepped: fit once, a frame later — `end` fires as
+      // the positions are written, and edge geometry reaches the renderer on
+      // the next flush.
+      if (stepped) return;
+      requestAnimationFrame(() => this.fitView(padding));
+    };
+
+    return { step, settle };
   }
 
   /**
@@ -739,15 +829,16 @@ export class Canvas {
     // re-flow after a group frame toggles) supersedes whatever run was framing
     // before it: close that run's flush-watch window and drop its queued fit,
     // or the re-flow's own flushes would be fitted as if they were that run's.
-    this.events.on('layout:run:start', ({ id, preserveCamera }) => {
-      if (!preserveCamera || id !== activeLayout()) return;
+    // A `fitCamera` run frames itself, so it is treated the same way.
+    this.events.on('layout:run:start', ({ id, preserveCamera, fitCamera }) => {
+      if (!(preserveCamera || fitCamera) || id !== activeLayout()) return;
       watchUntil = 0;
       fitGeneration++;
     });
     // A run asked to leave the camera alone (`preserveCamera` — e.g. a re-flow
     // after a group frame toggles) is not a framing signal.
-    this.events.on('layout:run:tick', ({ id, preserveCamera }) => {
-      if (id !== activeLayout() || preserveCamera) return;
+    this.events.on('layout:run:tick', ({ id, preserveCamera, fitCamera }) => {
+      if (id !== activeLayout() || preserveCamera || fitCamera) return;
       this._clearAutoFitGrace();
       layoutHasPlaced = true;
       const now = performance.now();
@@ -755,8 +846,16 @@ export class Canvas {
       lastFit = now;
       fit();
     });
-    this.events.on('layout:run:end', ({ id, reason, preserveCamera }) => {
-      if (id !== activeLayout() || reason !== 'settled' || preserveCamera) return;
+    this.events.on('layout:run:end', ({ id, reason, preserveCamera, fitCamera }) => {
+      if (id !== activeLayout() || reason !== 'settled' || preserveCamera || fitCamera) {
+        // The run owned (or declined) the camera, but it did place the graph —
+        // don't let the grace timer re-frame it afterwards.
+        if (id === activeLayout() && fitCamera) {
+          this._clearAutoFitGrace();
+          layoutHasPlaced = true;
+        }
+        return;
+      }
       this._clearAutoFitGrace();
       layoutHasPlaced = true;
       fit();
@@ -1005,8 +1104,10 @@ export class Canvas {
    *
    * @param run Per-run behaviour (anchor node, leave the camera alone) — see
    *            {@link LayoutRunOptions}. Forwarded to `layout.apply`, and
-   *            `preserveCamera` is stamped on this run's `layout:run:*` events
-   *            so the fitters can skip it.
+   *            `preserveCamera` / `fitCamera` are stamped on this run's
+   *            `layout:run:*` events so the other fitters can skip it. With
+   *            `fitCamera`, this method itself moves the camera with the run's
+   *            position transition (see `LayoutRunOptions.fitCamera`).
    */
   runLayout(id: string, run?: LayoutRunOptions): Promise<void> {
     const layout = this.layouts.get(id);
@@ -1020,7 +1121,21 @@ export class Canvas {
     // which emits `start` synchronously — and torn down when the run resolves.
     const layerId = layout.targetLayerId ?? '';
     const preserveCamera = run?.preserveCamera === true;
+    // `fitCamera` — this run frames itself, moving the camera with the glide.
+    // `preserveCamera` wins when both are set.
+    const fitCamera = !preserveCamera && run?.fitCamera != null && run.fitCamera !== false;
+    const fitPadding =
+      typeof run?.fitCamera === 'object' && run.fitCamera.padding !== undefined
+        ? run.fitCamera.padding
+        : 80;
+    const cameraFlags = {
+      ...(preserveCamera ? { preserveCamera } : {}),
+      ...(fitCamera ? { fitCamera } : {}),
+    };
+    let follow: ReturnType<Canvas['_followRun']> | null = null;
     const offStart = layout.events.on('start', ({ nodeCount, edgeCount, animate }) => {
+      // Capture the camera the follow blends *from* at the moment the run starts.
+      if (fitCamera) follow = this._followRun(fitPadding);
       // Reactive run-status (source of truth for any "is a layout running?" UI —
       // toolbars read `runtime.layout.running`), then the bus event.
       this.store.actions.layoutStatus.begin(layout.id, animate ?? false);
@@ -1030,29 +1145,35 @@ export class Canvas {
         nodeCount: nodeCount ?? 0,
         edgeCount: edgeCount ?? 0,
         animate: animate ?? false,
-        ...(preserveCamera ? { preserveCamera } : {}),
+        ...cameraFlags,
       });
     });
     const offEnd = layout.events.on('end', ({ reason }) => {
       this.store.actions.layoutStatus.end();
+      if (reason === 'completed') follow?.settle();
       this.events.emit('layout:run:end', {
         id: layout.id,
         layerId,
         reason: reason === 'completed' ? 'settled' : 'stopped',
-        ...(preserveCamera ? { preserveCamera } : {}),
+        ...cameraFlags,
       });
+    });
+    // Move the camera in lock-step with a one-shot layout's position glide.
+    const offTransition = layout.events.on('transition', ({ progress }) => {
+      follow?.step(progress);
     });
     // Bridge per-tick progress too, so consumers can follow an animated settle
     // (e.g. fit-on-load re-frames the growing graph). High-frequency for a live
     // sim — subscribe sparingly and throttle.
     const offTick = layout.events.on('tick', () => {
-      this.events.emit('layout:run:tick', { id: layout.id, ...(preserveCamera ? { preserveCamera } : {}) });
+      this.events.emit('layout:run:tick', { id: layout.id, ...cameraFlags });
     });
 
     return layout.apply(target as never, run).finally(() => {
       offStart();
       offEnd();
       offTick();
+      offTransition();
     });
   }
 

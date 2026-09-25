@@ -71,6 +71,8 @@ export interface CanvasGlobalEvents {
     animate?: boolean;
     /** The run was asked to leave the camera alone (`LayoutRunOptions.preserveCamera`). */
     preserveCamera?: boolean;
+    /** The run frames itself (`LayoutRunOptions.fitCamera`) — other fitters stand down. */
+    fitCamera?: boolean;
   };
   /** A layout run ended. `reason` distinguishes a natural settle from an external stop / abort. */
   'layout:run:end': {
@@ -79,8 +81,10 @@ export interface CanvasGlobalEvents {
     reason?: 'settled' | 'stopped' | 'cancelled';
     /** The run was asked to leave the camera alone (`LayoutRunOptions.preserveCamera`). */
     preserveCamera?: boolean;
+    /** The run frames itself (`LayoutRunOptions.fitCamera`) — other fitters stand down. */
+    fitCamera?: boolean;
   };
-  'layout:run:tick': { id: string; progress?: number; preserveCamera?: boolean };
+  'layout:run:tick': { id: string; progress?: number; preserveCamera?: boolean; fitCamera?: boolean };
 
   // ── render / canvas — lifecycle (engine/renderer-emitted) ───────────────────
   'canvas:renderer:ready': { backend: string; capabilities?: Record<string, unknown> };

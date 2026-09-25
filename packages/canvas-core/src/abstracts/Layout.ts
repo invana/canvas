@@ -69,6 +69,17 @@ export type LayoutEvents = {
    */
   start: { nodeCount?: number; edgeCount?: number; animate?: boolean };
   tick: Record<string, never>;
+  /**
+   * A position **transition** advanced one frame — a one-shot layout gliding
+   * nodes from where they were to where the run put them. `progress` is the
+   * **eased** fraction of the glide, `0..1`, and reaches exactly `1` on the
+   * last frame (before `end`). A run that snaps emits none.
+   *
+   * Separate from `tick` on purpose: `tick` means "the layout placed nodes",
+   * and fitters react to it as such; this is per-frame motion, which a
+   * {@link LayoutRunOptions.fitCamera} run follows with the camera.
+   */
+  transition: { progress: number };
   end: { reason: LayoutEndReason };
 };
 
@@ -95,6 +106,22 @@ export interface LayoutRunOptions {
    * wrappers' `fitPadding`) skip a run carrying this flag.
    */
   preserveCamera?: boolean;
+  /**
+   * Frame the result, moving the camera **together with** the nodes. While
+   * the run's position transition plays, `Canvas.runLayout` blends the camera
+   * from where it started toward a fit of the content as it is on that frame
+   * (by the transition's eased progress), so the picture stays framed the
+   * whole way and ends exactly fitted — no glide under a stale camera
+   * followed by a snap. A run that snaps (or a layout that reports no
+   * `transition`) gets one fit when it ends. A user pan / zoom mid-run takes
+   * the camera and stops the follow.
+   *
+   * `true` fits with the default padding (80 screen px); `{ padding }` sets
+   * it. Fitters that would otherwise frame on `end` (the `fitOnLoad`
+   * auto-fitter, the React layout wrappers' `fitPadding`) skip such a run —
+   * it already owns the camera. Ignored when {@link preserveCamera} is set.
+   */
+  fitCamera?: boolean | { padding?: number };
 }
 
 /** Construction options every layout shares (for the `LayoutRegistry`). */

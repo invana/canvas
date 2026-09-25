@@ -370,7 +370,9 @@ function configureForces(
   // configured (`center`/`x`/`y`/`radial`), default to a `forceCenter` at the
   // origin so the centroid stays put and the layout can't drift off-axis.
   // Mirrors the live path in D3ForceLayout so animate:true / animate:false
-  // produce the same anchored result.
+  // produce the same anchored result. `D3ForceLayout.snapshotStatic` already
+  // turns "no centre configured, graph already placed" into an explicit
+  // `center` at the placed centroid, so the origin here is the first-load case.
   if (center !== undefined) {
     const force = forceCenter<SolveNode>(center.x ?? 0, center.y ?? 0);
     if (center.strength !== undefined) force.strength(center.strength);
