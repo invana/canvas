@@ -6266,6 +6266,10 @@
     "label-resolution": {
       "enabled": true
     },
+    "text-lod": {
+      "enabled": true,
+      "minZoom": 0.3
+    },
     "theme": {
       "enabled": true,
       "mode": "system",
