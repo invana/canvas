@@ -54,7 +54,7 @@ import { AppLayoutV2, useTheme, type BottomSpan, type SectionConfig } from '@inv
 // Aliased: the engine type `GraphCanvas` (from `@invana/graph`) is used in this
 // file's public signatures (`onReady`), so the React root component takes a
 // distinct local name.
-import { CanvasThemeSync, GraphCanvas as GraphCanvasRoot } from '@invana/canvas-react';
+import { CanvasThemeSync, GraphCanvas as GraphCanvasRoot, type RenderPreference } from '@invana/canvas-react';
 import { CanvasContext } from '@invana/canvas-react';
 import { GraphCanvasContext, useGraphCanvas } from '@invana/canvas-react';
 import { BackgroundLayer } from '@invana/canvas-react';
@@ -314,6 +314,7 @@ function GraphCanvasAppMain({
   instanceKey,
   onReady,
   telemetry,
+  preference,
   children,
 }: {
   data: GraphData;
@@ -322,13 +323,20 @@ function GraphCanvasAppMain({
   instanceKey?: string | number;
   onReady: (canvas: GraphCanvas | null) => void;
   telemetry?: CanvasTelemetryConfig;
+  preference?: RenderPreference;
   children?: ReactNode;
 }) {
   return (
     // The `<Canvas>` host fills its parent (`100%/100%`); the layout's main cell
     // bounds it. Keyed on instanceKey so a reset remounts the engine. The render
-    // backend is the engine's own setting — auto-resolved unless set in `config`.
-    <GraphCanvasRoot key={instanceKey} autoResize config={config} telemetry={telemetry}>
+    // backend is auto-resolved unless `preference` pins it.
+    <GraphCanvasRoot
+      key={instanceKey}
+      autoResize
+      config={config}
+      telemetry={telemetry}
+      {...(preference ? { preference } : {})}
+    >
       {bundle ? (
         <>
           {/* Every class registers by id; ALL its options come from `config`
@@ -411,6 +419,12 @@ export interface GraphCanvasAppProps {
    */
   telemetry?: CanvasTelemetryConfig;
   /**
+   * Pin the render backend (`'webgl'` where WebGPU is known to crash, e.g.
+   * WebKit). Read once at init — re-key with {@link instanceKey} to change it.
+   * Default: auto-resolved (WebGPU, falling back to WebGL).
+   */
+  preference?: RenderPreference;
+  /**
    * Debug shortcut: `true` turns on **console** performance metrics — equivalent
    * to `telemetry={{ metrics: true }}`. An explicit {@link telemetry} always wins,
    * so pass that (e.g. an OTLP meter) to ship the same metrics to a backend.
@@ -484,6 +498,7 @@ export function GraphCanvasApp({
   instanceKey,
   onReady,
   telemetry: telemetryProp,
+  preference,
   debug,
   showHeader = true,
   showFooter,
@@ -561,6 +576,7 @@ export function GraphCanvasApp({
       instanceKey={instanceKey}
       onReady={handleReady}
       telemetry={telemetry}
+      preference={preference}
     >
       {children}
     </GraphCanvasAppMain>
