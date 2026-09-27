@@ -1,5 +1,7 @@
 import type { FieldConfig } from '@invana/forms';
 
+import { modesField } from '../../_shared/modes';
+
 /**
  * `@invana/forms` field schema for the EraseBehaviour editor. The `target` enum
  * (`'node' | 'edge' | 'both'`) renders as a select; the name matches
@@ -18,4 +20,5 @@ export const eraseFields: FieldConfig[] = [
       { label: 'Edges only', value: 'edge' },
     ],
   },
+  modesField(),
 ];

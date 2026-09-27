@@ -2,7 +2,8 @@ import type { Canvas } from '@invana/canvas';
 
 import { ToolbarItems, applyIconOverrides } from '../components';
 import type { ToolbarIcon } from '../components';
-import { useViewSection } from '@invana/canvas-react';
+import { useControlItems } from '../control-panels/ControlItems';
+import { fitSpec, lockSpec, zoomSpecs } from './controlSpecs';
 
 export interface ViewToolbarProps {
   /** Override the baked icons, by item key. */
@@ -21,10 +22,10 @@ export interface ViewToolbarProps {
 }
 
 /**
- * View bar — zoom in / zoom out / fit-to-content / lock view (the
- * {@link useViewSection} section). Zoom + fit ride the camera hooks; lock
- * disables pan + node drag by default while leaving zoom available. Icons are
- * baked in (lucide).
+ * View bar — zoom in / zoom out / fit-to-content / lock view, drawn from
+ * control specs (`camera.zoomIn` / `camera.zoomOut` / `camera.fit` /
+ * `view.lock`) — the same commands a saved control panel runs. Lock disables
+ * pan + node drag by default while leaving zoom available.
  */
 export function ViewToolbar({
   icons,
@@ -35,13 +36,8 @@ export function ViewToolbar({
   canvas,
   className,
 }: ViewToolbarProps) {
-  const items = useViewSection({
-    showLock,
-    layerId,
-    ...(lockBehaviourIds ? { lockBehaviourIds } : {}),
-    canvas,
-  });
-
+  const specs = [...zoomSpecs(), fitSpec(layerId), ...(showLock ? [lockSpec(lockBehaviourIds)] : [])];
+  const items = useControlItems(specs, { canvas });
   return (
     <ToolbarItems items={applyIconOverrides(items, icons)} orientation={orientation} className={className} />
   );

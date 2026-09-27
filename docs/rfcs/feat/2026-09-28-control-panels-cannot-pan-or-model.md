@@ -19,7 +19,7 @@ relations:
 |---|---|
 | **Motivation** | Saved panels can zoom / fit / lock, but can't **pan**, jump to a **zoom level**, **reset** the camera, toggle **input** behaviours, switch the **modeller tool**, or flip the **theme** outside `GraphCanvasApp`. No preset maps to an app mode (canvas / explorer / modeller), and the canvas-react stories show two hand-written panels only |
 | **Design** | 4 new engine commands (`camera.pan`, `camera.zoomTo`, `camera.reset`, `behaviour.toggle`); canvas-react registers `tool.*` and `theme.toggle`; canvas-ui adds a `pan-pad` widget and 9 presets; canvas-react/ControlPanel stories split into one-story folders (Canvas/* and GraphCanvas/*), one per preset |
-| **Row status** | proposed 0 · accepted 0 · implemented 16 · landed 0 · deferred 0 · rejected 1 · superseded 1 |
+| **Row status** | proposed 0 · accepted 0 · implemented 15 · landed 0 · deferred 0 · rejected 1 · superseded 2 |
 | **Open decisions** | none — D1–D5 accepted as recommended |
 
 ## 1. Motivation
@@ -98,7 +98,7 @@ relations:
 | C2 | defect | implemented | same | `camera.zoomTo` (button + choice) | zoom levels / 100% | low | — |
 | C3 | defect | implemented | same | `camera.reset` | home button | low | D2 |
 | C4 | defect | implemented | same | `behaviour.toggle { id }` | input toggles | low | — |
-| R1 | defect | implemented | `pkg:@invana/canvas-react` `sym:GraphCanvas` (+ new internal `ToolCommands`) | registers `tool.active` / `tool.nodeKind` when a `ToolContext` is present | modeller preset | medium — new registration inside every `<GraphCanvas>` (no-op without the provider) | D4 |
+| R1 | defect | superseded | `pkg:@invana/canvas-react` `sym:GraphCanvas` (+ new internal `ToolCommands`) | registers `tool.active` / `tool.nodeKind` when a `ToolContext` is present — superseded by `rfc:feat-2026-09-28-the-modeller-tool-lives-outside-the-canvas` G1 / R1 (commands over `interaction.viewMode`; the bridge is gone) | modeller preset | medium — new registration inside every `<GraphCanvas>` (no-op without the provider) | D4 |
 | R2 | defect | implemented | `sym:CanvasThemeSync` | registers `theme.toggle` | theme preset on bare roots | low | — |
 | R3 | defect | implemented | `sym:GraphCanvasApp` | drop its own `theme.toggle` (it mounts `CanvasThemeSync`) | one registration | low — stacking would hide a duplicate anyway | R2 |
 | U1 | defect | implemented | `file:packages/canvas-ui/src/control-panels/icons.ts` | arrow-up / down / left / right, locate, mouse, spline / pointer / plus / eraser tool glyphs | preset icons | low | — |
@@ -162,3 +162,4 @@ relations:
 | 2026-09-28 | Opened after the maintainer asked for canvas + canvas-react preset stories (canvas = the canvas-react `<Canvas>` root) and PAN + ZOOM, CANVAS + EXPLORER, MODELLER, THEME presets | proposed | awaiting approval |
 | 2026-09-28 | Approved whole; D1–D5 accepted as recommended | accepted | |
 | 2026-09-28 | 16 rows implemented on `feat/control-panels`; U3 superseded, A1 rejected, U5 added | accepted | V1: build, check-types, lint (boundaries + api surface unchanged), tests pass. V2–V5 driven in headless Chromium: 2× pan-left + pan-up moves the content right 160 / down 80, reset recentres; zoom picker 200% → readout 200%, 100% button restores; wheel-zoom toggle off stops wheel zoom; grid + theme toggle; modeller Add drops a node, undo removes it, Esc returns the picker to Select and greys Shape; Explorer shows layout / select / edge pickers; GraphModeller, FullFeatured, EmbeddedWidget load clean. Learned: (1) U3 already existed: `ControlChoiceOption.icon` shipped with the prior RFC, so it's superseded by that RFC. (2) A1: canvas-ui has no API snapshot, so there's nothing to regenerate. (3) The zoom picker fell back to its first option (25%) between levels, so `camera.zoomTo.options` now also lists the current zoom. (4) The icon registry had no `spline`, so Connect rendered as text; added. (5) Choice items ignored `enabled`, so U5 was added |
+| 2026-09-28 | R1 superseded by `rfc:feat-2026-09-28-the-modeller-tool-lives-outside-the-canvas` | accepted | The tool moved into `view.interaction.viewMode`; `tool.*` are graph commands now and `ToolCommands` is deleted. Command names and `MODELLER_CONTROL_ITEMS` are unchanged |

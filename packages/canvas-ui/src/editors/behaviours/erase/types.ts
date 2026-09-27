@@ -14,18 +14,22 @@ export type EraseTargetKind = 'node' | 'edge' | 'both';
 /**
  * The serialisable subset of `EraseBehaviourOptions` this editor produces. The
  * `onErase` **callback** and the base `targetLayerId` / `enabled` / `shortcuts`
- * are out of scope; only the `target` enum round-trips.
+ * are out of scope; the `target` enum and the `modes` gate round-trip.
  */
 export interface EraseOptions {
   target?: EraseTargetKind;
+  /** Interaction modes the eraser is live in (`BehaviourOptions.modes`); `undefined` = every mode. */
+  modes?: string[];
 }
 
 /**
- * Flat form-field shape the `@invana/forms` generator renders — one `target`
- * select. 1:1 with {@link EraseOptions} (no nesting to flatten).
+ * Flat form-field shape the `@invana/forms` generator renders — a `target`
+ * select and a `modes` checkbox group. 1:1 with {@link EraseOptions}.
  */
 export interface EraseFields {
   target?: EraseTargetKind;
+  /** Ticked modes; empty = every mode. */
+  modes?: string[];
 }
 
 /**

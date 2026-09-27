@@ -82,8 +82,21 @@ export interface CanvasView {
      * permanent, synced user flag); these are ephemeral and never synced.
      */
     transientPins: ReadonlySet<string>;
-    /** Active interaction mode. */
+    /**
+     * Active interaction mode — the modeller "tool" (`'select'`, `'add'`,
+     * `'connect'`, `'delete'`, or any string a host defines). Per-user and
+     * ephemeral like the rest of `interaction`. Behaviours opt into following it
+     * through `BehaviourOptions.modes`; commands switch it (`tool.active`).
+     * Seeded from `definition.canvas.defaultViewMode` when a canvas starts.
+     */
     viewMode: string;
+    /**
+     * Parameters of the active mode, as plain strings keyed by name — e.g.
+     * `{ nodeKind: 'circle' }` for an "add node" tool. A bag rather than typed
+     * fields so the kernel stays domain-free: what a key means is the
+     * business of whoever reads it (the graph's `tool.nodeKind` command).
+     */
+    viewModeArgs: Readonly<Record<string, string>>;
   };
   /** Small observable transient status — reactive (UIs react) but **never synced**. */
   runtime: {
@@ -173,6 +186,7 @@ export function defaultCanvasView(): CanvasView {
       focus: null,
       transientPins: new Set<string>(),
       viewMode: 'select',
+      viewModeArgs: {},
     },
     runtime: {
       layout: { running: false, activeId: null, animate: false, progress: null },

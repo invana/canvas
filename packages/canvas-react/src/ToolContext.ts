@@ -1,4 +1,5 @@
 import { createContext } from 'react';
+import type { Canvas } from '@invana/canvas';
 
 /**
  * The active modelling tool. `'select'` is the neutral pointer (drag / select);
@@ -8,7 +9,12 @@ import { createContext } from 'react';
  */
 export type GraphTool = 'select' | 'add' | 'connect' | 'delete';
 
-/** Shared modeller state surfaced by {@link GraphToolProvider}. */
+/**
+ * Shared modeller state surfaced by {@link GraphToolProvider} and `useTool`.
+ * Backed by the canvas store (`view.interaction.viewMode` + `viewModeArgs.nodeKind`)
+ * whenever a canvas is reachable; a provider with no canvas below it yet holds
+ * the values locally until one mounts.
+ */
 export interface ToolContextValue {
   /** The currently active tool. */
   tool: GraphTool;
@@ -25,9 +31,17 @@ export interface ToolContextValue {
 }
 
 /**
- * Holds the active {@link GraphTool} + node kind for a modeller, set by a
- * `<GraphToolProvider>` and read by `useTool` / `<ModellerToolbar>`. `null` when
- * no provider is present — `useTool` throws in that case (a modeller toolbar
- * without a provider is a wiring bug, not a graceful-degrade case).
+ * The tool value a `<GraphToolProvider>` exposes to `useTool` / `<ModellerToolbar>`.
+ * `null` when no provider is present — `useTool` then reads the enclosing
+ * canvas's store directly.
  */
 export const ToolContext = createContext<ToolContextValue | null>(null);
+
+/**
+ * Lets a `<GraphCanvas>` below a `<GraphToolProvider>` hand the provider its
+ * canvas, so the provider can apply its defaults to that canvas's store and
+ * mirror the store's mode from then on. Returns the release function.
+ *
+ * @internal
+ */
+export const ToolBindingContext = createContext<((canvas: Canvas) => () => void) | null>(null);

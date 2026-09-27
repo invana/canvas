@@ -14,8 +14,9 @@
  *
  * Default `enabled: false` — register, then explicitly enable (e.g. a "Delete"
  * tool mode toggles it on). Don't run it enabled alongside `ClickSelect` /
- * `DragNode` on the same layer: all three react to a node press, so a tool-mode
- * switch should leave exactly one on.
+ * `DragNode` on the same layer: all three react to a node press. Enable it with
+ * `modes: ['delete']` (the others with `modes: ['select']`) so the modeller tool
+ * leaves exactly one live.
  */
 
 import { Behaviour, type BehaviourOptions, type CanvasContext } from '@invana/canvas';

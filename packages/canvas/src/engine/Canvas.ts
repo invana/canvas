@@ -263,6 +263,9 @@ export class Canvas {
   /** Guards {@link _armAutoFit} against attaching duplicate follow listeners
    *  when `config.fitOnLoad: true` is applied more than once. */
   private _autoFitArmed = false;
+  /** Set once `config.defaultViewMode` has seeded the live mode — later configs
+   *  only update the stored default. */
+  private _viewModeSeeded = false;
   /** Pending grace timer from {@link _armAutoFit} — fires only if the declared
    *  `activeLayout` never reports a run. Cleared on the first run and on destroy. */
   private _autoFitGrace: ReturnType<typeof setTimeout> | undefined;
@@ -1055,6 +1058,10 @@ export class Canvas {
       // toggle — the engine applies it here so `update` is authoritative.
       const enabled = (options as { enabled?: boolean }).enabled;
       if (enabled !== undefined) this.behaviours.setEnabled(id, enabled);
+      // Same reason for `modes` (interaction-mode gating, see `BehaviourOptions.modes`).
+      if ('modes' in options) {
+        this.behaviours.get(id)?.setModes?.((options as { modes?: readonly string[] }).modes);
+      }
     }
     for (const [id, options] of Object.entries(patch.layouts ?? {})) {
       this.layouts.get(id)?.setOptions(options);
@@ -1085,7 +1092,12 @@ export class Canvas {
       if (patch.fitOnLoad !== undefined) s.definition.canvas.fitOnLoad = patch.fitOnLoad;
       if (patch.fitAnimation !== undefined) s.definition.canvas.fitAnimation = patch.fitAnimation;
       if (patch.entrance !== undefined) s.definition.canvas.entrance = patch.entrance;
+      if (patch.defaultViewMode !== undefined) {
+        s.definition.canvas.defaultViewMode = patch.defaultViewMode;
+        if (!this._viewModeSeeded) s.interaction.viewMode = patch.defaultViewMode;
+      }
     }, 'canvas:update');
+    if (patch.defaultViewMode !== undefined) this._viewModeSeeded = true;
 
     // Fit-on-load is a config setting applied here (works whether config arrives at
     // `init` or via a later `update` — the React root does the latter). `true` arms
@@ -1112,6 +1124,7 @@ export class Canvas {
       ...(d.canvas.fitOnLoad !== undefined ? { fitOnLoad: d.canvas.fitOnLoad } : {}),
       ...(d.canvas.fitAnimation !== undefined ? { fitAnimation: d.canvas.fitAnimation } : {}),
       ...(d.canvas.entrance !== undefined ? { entrance: d.canvas.entrance } : {}),
+      ...(d.canvas.defaultViewMode !== undefined ? { defaultViewMode: d.canvas.defaultViewMode } : {}),
     };
   }
 

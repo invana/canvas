@@ -19,6 +19,7 @@ import { useStore } from '@invana/canvas-react';
 import type { CanvasConfig, CanvasView } from '@invana/canvas';
 import type { GraphCanvas } from '@invana/graph';
 
+import { ControlPanelsEditor } from '../control-panels/ControlPanelsEditor';
 import { DEFAULT_CANVAS_SETTINGS_SCHEMAS, type SettingsSchemaEntry } from './registry';
 import type { CanvasSettingsDefinition, CanvasSettingsInstance, SettingsSection } from './types';
 
@@ -62,6 +63,9 @@ const defaultResolveKind = (instance: unknown): string | undefined =>
   (instance as { constructor?: { name?: string } }).constructor?.name;
 
 // ─── Rendering helpers ───────────────────────────────────────────────────────
+
+/** Title of the optional control-panel section. */
+const CONTROL_PANELS_LABEL = 'Control panels';
 
 /** The sections rendered, in order. */
 const SECTIONS: { id: SettingsSection; label: string }[] = [
@@ -267,6 +271,11 @@ export interface CanvasSettingsEditorPanelProps {
   applyMode?: 'live' | 'manual';
   /** Panel heading. Default `'Canvas Settings'`; pass `null` to omit. */
   title?: ReactNode;
+  /**
+   * Add a **Control panels** section (the `ControlPanelsEditor`: the floating
+   * panels in `definition.controlPanels`) after Layouts. Default `true`.
+   */
+  showControlPanels?: boolean;
 }
 
 /**
@@ -323,6 +332,7 @@ function CanvasSettingsEditorPanelContent({
   schemas = DEFAULT_CANVAS_SETTINGS_SCHEMAS,
   applyMode = 'live',
   title = 'Canvas Settings',
+  showControlPanels = true,
 }: CanvasSettingsEditorPanelProps & { canvas: GraphCanvas }) {
   // The source of truth: `store.view.definition`, read reactively. Plain
   // `useStore` — the guard above guarantees a non-null canvas here.
@@ -405,8 +415,11 @@ function CanvasSettingsEditorPanelContent({
     layouts: definition.layouts ?? [],
   };
 
+  // The control-panel section matches by its title only (its body is one editor, not a list).
+  const controlPanelsMatch = showControlPanels && (q === '' || CONTROL_PANELS_LABEL.toLowerCase().includes(q));
   const noMatches =
     q !== '' &&
+    !controlPanelsMatch &&
     !SECTIONS.some(
       (s) =>
         s.label.toLowerCase().includes(q) ||
@@ -534,6 +547,20 @@ function CanvasSettingsEditorPanelContent({
       ),
       content: renderSectionItems(section.id, items),
     }));
+  if (controlPanelsMatch) {
+    sections.push({
+      id: 'controlPanels',
+      title: (
+        <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {CONTROL_PANELS_LABEL}
+          <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
+            {Object.keys(config.controlPanels ?? {}).length}
+          </Badge>
+        </span>
+      ),
+      content: <ControlPanelsEditor canvas={canvas} />,
+    });
+  }
 
   return (
     // `PanelStack` fills its parent's height, so the card is a full-height flex

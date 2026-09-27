@@ -4,7 +4,8 @@ import { Lock, LockOpen } from 'lucide-react';
 
 import { ToolbarItems, applyIconOverrides } from '../components';
 import type { ToolbarIcon, ToolbarItem } from '../components';
-import { useViewSection } from '@invana/canvas-react';
+import { useControlItems } from '../control-panels/ControlItems';
+import { fitSpec, zoomSpecs } from './controlSpecs';
 
 export interface CanvasControlsToolbarProps {
   /** Override the baked icons, by item key. */
@@ -33,9 +34,9 @@ export interface CanvasControlsToolbarProps {
 
 /**
  * Turnkey view controls — the canvas equivalent of React Flow's `<Controls>`.
- * Zoom +/- and fit ride the {@link useViewSection} section (its auto-lock is
- * off); lock stays **controlled** (pass `locked` + `onToggleLock`). Append extra
- * controls as `children`. Icons are baked in (lucide).
+ * Zoom +/- and fit are control specs (`camera.zoomIn` / `camera.zoomOut` /
+ * `camera.fit`); lock stays **controlled** (pass `locked` + `onToggleLock`). Append extra
+ * controls as `children`.
  *
  * @example
  * // in a header slot
@@ -56,11 +57,9 @@ export function CanvasControlsToolbar({
   className,
 }: CanvasControlsToolbarProps) {
   // Zoom + fit only (no auto-lock — this overlay's lock is controlled).
-  const base = useViewSection({ showLock: false, layerId: fitLayerId, canvas });
-  const items: ToolbarItem[] = base.filter(
-    (i) => (showZoom || (i.key !== 'zoom-in' && i.key !== 'zoom-out')) && (showFit || i.key !== 'fit'),
-  );
-
+  const specs = [...(showZoom ? zoomSpecs() : []), ...(showFit ? [fitSpec(fitLayerId)] : [])];
+  const items: ToolbarItem[] = [...useControlItems(specs, { canvas })];
+  // The lock is the host's state (`locked` + `onToggleLock`), not a command.
   if (locked !== undefined && onToggleLock) {
     items.push({
       type: 'toggle',
@@ -76,7 +75,6 @@ export function CanvasControlsToolbar({
   if (children) {
     items.push({ type: 'custom', key: 'children', render: () => children });
   }
-
   return (
     <ToolbarItems items={applyIconOverrides(items, icons)} orientation={orientation} className={className} />
   );

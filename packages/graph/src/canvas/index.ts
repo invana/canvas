@@ -5,4 +5,4 @@
  */
 
 export { GraphCanvas } from './GraphCanvas';
-export { DEFAULT_EDGE_TYPES, DEFAULT_EDGE_TYPE_LABELS } from './graphCommands';
+export { DEFAULT_EDGE_TYPES, DEFAULT_EDGE_TYPE_LABELS, eraseCommand } from './graphCommands';

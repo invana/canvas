@@ -138,6 +138,22 @@ export type {
 // `SchemaEditorPanel` — a titled list of typed fields (ER / table-card schema).
 // Edits a `NodeSchema` (label + header colour + fields[{name,type}]) and emits
 // it on Apply; the consumer writes it back to a node's data + redraws.
+// Control panels — edit `definition.controlPanels` (panel position / chrome +
+// items). `ControlPanelsEditorPanel` is the pure form; `ControlPanelsEditor`
+// the connected wrapper that applies through `canvas.update({ controlPanels })`.
+export {
+  ControlPanelsEditorPanel,
+  ControlPanelsEditor,
+  DEFAULT_CONTROL_PRESETS,
+  panelToForm,
+  formToPanel,
+} from './editor-panels/control-panels';
+export type {
+  ControlPanelsEditorPanelProps,
+  ControlPanelsEditorProps,
+  ControlPanelFormState,
+  ControlPanelFormError,
+} from './editor-panels/control-panels';
 export {
   SchemaEditorPanel,
   SCHEMA_TYPES,
@@ -960,6 +976,8 @@ export { numberToHex, hexToNumber } from './shared/color';
 // panels with canvas-react's headless `<ControlPanel>`; GraphCanvasApp mounts this).
 export {
   ControlPanels,
+  ControlItems,
+  useControlItems,
   DEFAULT_CONTROL_ICONS,
   DEFAULT_CONTROL_WIDGETS,
   CANVAS_CONTROL_ITEMS,
@@ -981,6 +999,8 @@ export {
   ZOOM_CONTROL_ITEMS,
   ZOOM_LEVEL_CONTROL_ITEMS,
   type ControlPanelsProps,
+  type ControlItemsProps,
+  type UseControlItemsOptions,
   type ControlWidget,
   type ControlWidgetProps,
 } from './control-panels';

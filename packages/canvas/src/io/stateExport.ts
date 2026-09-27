@@ -60,6 +60,8 @@ export interface CanvasInteractionSnapshot {
   focus: { ids: string[]; dim: boolean } | null;
   transientPins: string[];
   viewMode: string;
+  /** Parameters of {@link viewMode}. Absent in snapshots from before it existed. */
+  viewModeArgs?: Record<string, string>;
 }
 
 /**
@@ -204,6 +206,7 @@ export function exportCanvasState(canvas: Canvas): CanvasStateSnapshot {
           : null,
         transientPins: [...interaction.transientPins],
         viewMode: interaction.viewMode,
+        viewModeArgs: { ...interaction.viewModeArgs },
       },
     },
     data,
@@ -298,6 +301,7 @@ export function importCanvasState(
         : null;
       s.interaction.transientPins = new Set(interaction.transientPins);
       s.interaction.viewMode = interaction.viewMode;
+      s.interaction.viewModeArgs = { ...(interaction.viewModeArgs ?? {}) };
     }, 'canvas:importState:interaction');
     canvas.store.actions.camera.set({ ...interaction.camera });
   }

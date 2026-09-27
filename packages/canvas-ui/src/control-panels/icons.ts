@@ -46,7 +46,14 @@ import {
   ZoomOut,
 } from 'lucide-react';
 
+import { createElement } from 'react';
+import { cn } from '@invana/ui';
+
 import type { ToolbarIcon } from '../components';
+
+/** A solid square — the Stop glyph, filled so it reads as "stop", not "checkbox". */
+const StopIcon: ToolbarIcon = ({ className, ...props }) =>
+  createElement(Square, { ...props, className: cn('fill-current', className) });
 
 /**
  * The default **icon registry** for control panels: the names a serialised
@@ -64,7 +71,7 @@ export const DEFAULT_CONTROL_ICONS: Readonly<Record<string, ToolbarIcon>> = {
   lock: Lock,
   'lock-open': LockOpen,
   play: Play,
-  stop: Square,
+  stop: StopIcon,
   refresh: RefreshCw,
   undo: Undo2,
   redo: Redo2,

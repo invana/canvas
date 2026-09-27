@@ -1,10 +1,9 @@
-import type { Canvas } from '@invana/canvas';
-import { RefreshCw } from 'lucide-react';
+import type { Canvas, ControlItemSpec } from '@invana/canvas';
 
 import { ToolbarItems, applyIconOverrides } from '../components';
-import type { ToolbarIcon, ToolbarItem } from '../components';
-import { useHistorySection } from '@invana/canvas-react';
-import { useHistory } from '@invana/canvas-react';
+import type { ToolbarIcon } from '../components';
+import { useControlItems } from '../control-panels/ControlItems';
+import { historySpecs } from './controlSpecs';
 
 export interface HistoryToolbarProps {
   /** Override the baked icons, by item key. */
@@ -21,9 +20,9 @@ export interface HistoryToolbarProps {
 }
 
 /**
- * History bar — undo / redo (the {@link useHistorySection} section) plus an
- * optional redraw button. Requires a `<GraphHistoryProvider>` ancestor for
- * undo/redo (redraw works regardless). Icons are baked in (lucide).
+ * History bar — undo / redo (`history.*`) plus an optional redraw button
+ * (`graph.redraw`), drawn from control specs like a saved panel. Requires a
+ * `<GraphHistoryProvider>` ancestor for undo/redo (redraw works regardless).
  */
 export function HistoryToolbar({
   icons,
@@ -33,11 +32,12 @@ export function HistoryToolbar({
   canvas,
   className,
 }: HistoryToolbarProps) {
-  const section = useHistorySection({ ...(layerId ? { layerId } : {}), canvas });
-  const { redraw } = useHistory(layerId ? { layerId } : {}, canvas);
-  const items: ToolbarItem[] = showRedraw
-    ? [...section, { type: 'button', key: 'redraw', icon: RefreshCw, label: 'Redraw', onClick: redraw }]
-    : section;
-
+  const specs: ControlItemSpec[] = [
+    ...historySpecs(),
+    ...(showRedraw
+      ? [{ type: 'command', key: 'redraw', command: 'graph.redraw', ...(layerId ? { args: { layerId } } : {}), icon: 'refresh', label: 'Redraw' } as ControlItemSpec]
+      : []),
+  ];
+  const items = useControlItems(specs, { canvas });
   return <ToolbarItems items={applyIconOverrides(items, icons)} orientation={orientation} className={className} />;
 }

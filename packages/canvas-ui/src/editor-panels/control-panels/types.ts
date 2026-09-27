@@ -1,0 +1,81 @@
+/**
+ * Form shapes for the control-panel editor ({@link ControlPanelsEditorPanel}).
+ *
+ * The engine shape is `ControlPanelSpec` (`@invana/canvas`, types only): a
+ * position, a few presentation flags and an `items` list whose entries are a
+ * discriminated union. The form flattens both — a panel's position becomes an
+ * anchor-or-insets pair of fields, and every item becomes one flat row whose
+ * visible fields depend on its `type`. JSON-valued bits a field can't express
+ * (command `args`, a choice's static `options`, a widget's `options`) are
+ * edited as JSON text. `mapping.ts` is the bridge both ways.
+ */
+
+import type { ControlItemSpec } from '@invana/canvas';
+
+/** How a panel is positioned: a 9-point anchor, or explicit CSS insets. */
+export type PanelPositionMode = 'anchor' | 'insets';
+
+/** Flat form fields for one panel's own settings (everything but `items`). */
+export interface ControlPanelFields {
+  positionMode: PanelPositionMode;
+  /** One of the nine `ControlPanelAnchor`s (used when `positionMode` is `'anchor'`). */
+  anchor: string;
+  /** CSS insets (numbers as px, or any CSS length) — used when `positionMode` is `'insets'`. Empty = unset. */
+  insetTop: string;
+  insetRight: string;
+  insetBottom: string;
+  insetLeft: string;
+  /** Gap from the anchored edge(s), px. */
+  offsetX?: number;
+  offsetY?: number;
+  /** `'auto'` = the renderer's default for the anchor. */
+  orientation: 'auto' | 'horizontal' | 'vertical';
+  stretch: boolean;
+  surface: boolean;
+  visible: boolean;
+}
+
+/**
+ * One item as a flat form row. Only the fields for its `type` are shown; the
+ * rest stay empty and are dropped on the way back. Icon selects use
+ * {@link NO_ICON} for "none" (the select chrome forbids an empty value).
+ */
+export interface ControlItemFields {
+  type: ControlItemSpec['type'];
+  key: string;
+  command: string;
+  /** `args` as JSON text (empty = none). */
+  argsJson: string;
+  label: string;
+  activeLabel: string;
+  text: string;
+  activeText: string;
+  icon: string;
+  activeIcon: string;
+  /** Choice display — `'dropdown'` or `'segmented'`. */
+  display: string;
+  /** A choice's static `options` as JSON text (empty = the command's own). */
+  choiceOptionsJson: string;
+  widget: string;
+  /** A widget's `options` as JSON text (empty = none). */
+  widgetOptionsJson: string;
+  /** A slot's name — read-only (its content is runtime React, owned by `<ControlPanel>`). */
+  slot: string;
+}
+
+/** react-hook-form state for one panel. */
+export interface ControlPanelFormState {
+  panel: ControlPanelFields;
+  items: ControlItemFields[];
+}
+
+/** Sentinel for "no icon" / "not set" in a select. */
+export const NO_ICON = '__none__';
+
+/** A JSON field that failed to parse, reported instead of submitting. */
+export interface ControlPanelFormError {
+  /** Item index, or `null` for a panel-level field. */
+  item: number | null;
+  field: string;
+  message: string;
+}

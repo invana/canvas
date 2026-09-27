@@ -1,9 +1,9 @@
 import type { Canvas, BackgroundLayerOptions } from '@invana/canvas';
-import { Grid3x3 } from 'lucide-react';
 
 import { ToolbarItems, applyIconOverrides } from '../components';
-import type { ToolbarIcon, ToolbarItem } from '../components';
-import { useGrid } from '@invana/canvas-react';
+import type { ToolbarIcon } from '../components';
+import { useControlItems } from '../control-panels/ControlItems';
+import { gridSpec } from './controlSpecs';
 
 type PatternType = NonNullable<BackgroundLayerOptions['patternType']>;
 
@@ -22,9 +22,8 @@ export interface GridToolbarProps {
 }
 
 /**
- * Grid toggle bar — shows/hides a `BackgroundLayer`'s pattern. Built inline off
- * {@link useGrid} (grid isn't one of the five named toolbar sections). Icon is
- * baked in (lucide).
+ * Grid toggle bar — shows/hides a `BackgroundLayer`'s pattern through the
+ * `background.grid` command, like a saved panel's grid toggle.
  */
 export function GridToolbar({
   icons,
@@ -34,17 +33,8 @@ export function GridToolbar({
   canvas,
   className,
 }: GridToolbarProps) {
-  const { showGrid, toggleGrid } = useGrid(
-    {
-      ...(backgroundLayerId ? { backgroundLayerId } : {}),
-      ...(patternType ? { patternType } : {}),
-    },
-    canvas,
-  );
-  const items: ToolbarItem[] = [
-    { type: 'toggle', key: 'grid', icon: Grid3x3, label: 'Toggle grid', active: showGrid, onToggle: toggleGrid },
-  ];
-
+  const specs = [gridSpec({ ...(backgroundLayerId ? { layerId: backgroundLayerId } : {}), ...(patternType ? { patternType } : {}) })];
+  const items = useControlItems(specs, { canvas });
   return (
     <ToolbarItems items={applyIconOverrides(items, icons)} orientation={orientation} className={className} />
   );

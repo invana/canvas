@@ -14,8 +14,9 @@
  * Pointer-capture + `clientToScreen` lifecycle mirrors `DragNodeBehaviour`.
  *
  * Default `enabled: false`. Don't run this and `DragNodeBehaviour` enabled at
- * the same time — both start on `shape:pointerdown` (a tool mode toggle should
- * pick one).
+ * the same time — both start on `shape:pointerdown`. Enable it with
+ * `modes: ['connect']` (and `DragNodeBehaviour` with `modes: ['select']`) so the
+ * modeller tool picks exactly one.
  */
 
 import { Behaviour, type BehaviourOptions, type CanvasContext } from '@invana/canvas';

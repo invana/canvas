@@ -14,16 +14,21 @@
  * `CreateNodeBehaviour` exposes no user-tunable scalars: its only options are
  * the `createNode` / `onNodeCreate` **callbacks** (out of scope — not
  * serialisable) plus the base `targetLayerId` / `enabled` / `shortcuts` (owned
- * by the host). So this patch is empty. The editor exists for parity (root
+ * by the host) — and the base `modes` gate, which is what ties it to the
+ * modeller's Add tool. The editor exists for parity (root
  * `CLAUDE.md` rule 12 — every behaviour ships an editor) and as the seam where a
  * future scalar option (e.g. a default node `type`) would land.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface CreateNodeOptions {}
+export interface CreateNodeOptions {
+  /** Interaction modes the behaviour is live in (`BehaviourOptions.modes`); `undefined` = every mode. */
+  modes?: string[];
+}
 
-/** Flat form-field shape — empty, mirroring {@link CreateNodeOptions}. */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface CreateNodeFields {}
+/** Flat form-field shape, mirroring {@link CreateNodeOptions}. */
+export interface CreateNodeFields {
+  /** Ticked modes; empty = every mode. */
+  modes?: string[];
+}
 
 /**
  * react-hook-form state shape. `<ObjectField name="options" …>` registers each

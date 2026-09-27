@@ -9,13 +9,20 @@
  * | `select.mode` | `{ modes?, labels?, value }` — `modes` maps mode → behaviour id (`''` = no behaviour) | choice |
  * | `graph.edgeType` | `{ layerId?, types?, value }` (default `'graph'`, {@link DEFAULT_EDGE_TYPES}) | choice |
  * | `graph.clear` | `{ layerId? }` (default `'graph'`) | button — the history provider overrides it with an undoable form |
+ * | `graph.redraw` | `{ layerId? }` (default `'graph'`) | button — re-project the layer |
+ * | `graph.erase` | `{ layerId?, clickSelectId? }` (default `'graph'` / `'click-select'`) | button — deletes the click-selection when there is one (active), else clears the layer via `graph.clear`; history / clipboard providers override it with an undoable form |
  * | `layout.activate` | `{ value }` | choice — overrides the engine's so the facade's auto-run is the only run |
+ * | `tool.active` | `{ tools?, value }` — the modeller tool = `view.interaction.viewMode` | choice; also a per-tool toggle (active while the mode is `args.value`) |
+ * | `tool.nodeKind` | `{ kinds?, value }` — `viewModeArgs.nodeKind`; `kinds` maps key → label | choice, enabled while the tool is `add` |
  *
  * Names are public API (`namespace.verb`): renaming one breaks saved panels.
  */
 
 import type { Canvas, CanvasCommand, CommandOption, CommandRegistry } from '@invana/canvas';
 
+import type { ClickSelectBehaviour } from '../behaviours/ClickSelectBehaviour';
+import { GraphClipboard } from '../clipboard/GraphClipboard';
+import type { GraphHistory } from '../history/GraphHistory';
 import type { GraphLayer } from '../layer/GraphLayer';
 import type { EdgePathType, EdgeShapeOptions } from '../layer/types';
 
@@ -63,6 +70,53 @@ function graphLayer(canvas: Canvas, args: unknown): GraphLayer | undefined {
 function edgeShape(layer: GraphLayer): EdgeShapeOptions {
   const shape = (layer.edgeDefaults as { shape?: unknown } | undefined)?.shape;
   return (shape && typeof shape === 'object' ? shape : {}) as EdgeShapeOptions;
+}
+
+/** Every modeller tool, in toolbar order, with its default label + icon name. */
+const TOOL_OPTIONS: Record<string, CommandOption> = {
+  select: { value: 'select', label: 'Select', icon: 'pointer' },
+  add: { value: 'add', label: 'Add node', icon: 'plus' },
+  connect: { value: 'connect', label: 'Connect', icon: 'spline' },
+  delete: { value: 'delete', label: 'Delete', icon: 'eraser' },
+};
+
+/** The live interaction slice (mode + mode args). */
+const interaction = (canvas: Canvas) => canvas.store.view.getState().interaction;
+
+/** The click-select behaviour's current selection (`args.clickSelectId`, default `'click-select'`). */
+function clickSelection(canvas: Canvas, args: unknown): { nodeIds: string[]; edgeIds: string[] } {
+  const b = canvas.behaviours.get<ClickSelectBehaviour>(arg<string>(args, 'clickSelectId') ?? 'click-select');
+  return { nodeIds: b ? b.getSelectedShapeIds() : [], edgeIds: b ? b.getSelectedConnectorIds() : [] };
+}
+
+/**
+ * The `graph.erase` command body: delete the click-selection (as one
+ * transaction, journalled on `history(layerId)` when it returns one), or clear the layer when
+ * nothing is selected — through the registry's `graph.clear`, so an undoable
+ * override applies. Exported for the providers that override `graph.erase`
+ * with their own history / clipboard.
+ */
+export function eraseCommand(
+  history?: (layerId: string) => GraphHistory | null | undefined,
+): CanvasCommand<Canvas> {
+  return {
+    label: 'Erase',
+    isEnabled: (canvas, args) => graphLayer(canvas, args) !== undefined,
+    isActive: (canvas, args) => {
+      const { nodeIds, edgeIds } = clickSelection(canvas, args);
+      return nodeIds.length + edgeIds.length > 0;
+    },
+    run: (canvas, args) => {
+      const layer = graphLayer(canvas, args);
+      if (!layer) return;
+      const { nodeIds, edgeIds } = clickSelection(canvas, args);
+      if (nodeIds.length + edgeIds.length === 0) {
+        canvas.commands.run('graph.clear', args);
+        return;
+      }
+      new GraphClipboard(layer.store).delete(nodeIds, edgeIds, history?.(layer.id) ?? undefined);
+    },
+  };
 }
 
 const selectModes = (args: unknown) => arg<Record<string, string>>(args, 'modes') ?? DEFAULT_SELECT_MODES;
@@ -128,6 +182,45 @@ const GRAPH_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
     label: 'Clear canvas',
     isEnabled: (canvas, args) => graphLayer(canvas, args) !== undefined,
     run: (canvas, args) => graphLayer(canvas, args)?.clear(),
+  },
+  'graph.erase': eraseCommand(),
+  'graph.redraw': {
+    label: 'Redraw',
+    isEnabled: (canvas, args) => graphLayer(canvas, args) !== undefined,
+    run: (canvas, args) => graphLayer(canvas, args)?.redraw(),
+  },
+  // The modeller tool lives in the view store, so these re-read on every mode
+  // write with no `invalidate()`. Behaviours follow it through their `modes`.
+  'tool.active': {
+    label: 'Tool',
+    value: (canvas) => interaction(canvas).viewMode,
+    // As a toggle item (`args: { value: 'add' }`): pressed while that tool is on.
+    isActive: (canvas, args) => interaction(canvas).viewMode === arg<string>(args, 'value'),
+    // `args.tools` narrows / reorders the offered tools.
+    options: (_canvas, args) => {
+      const tools = arg<string[]>(args, 'tools') ?? Object.keys(TOOL_OPTIONS);
+      return tools.filter((t) => t in TOOL_OPTIONS).map((t) => TOOL_OPTIONS[t]!);
+    },
+    run: (canvas, args) => {
+      const value = arg<string>(args, 'value');
+      if (value) canvas.store.actions.viewMode.set(value);
+    },
+  },
+  'tool.nodeKind': {
+    label: 'Shape',
+    value: (canvas) => interaction(canvas).viewModeArgs.nodeKind ?? null,
+    // `args.kinds` (key → label) lists the shapes; without it, only the current one.
+    options: (canvas, args) => {
+      const kinds = arg<Record<string, string>>(args, 'kinds');
+      if (kinds) return Object.entries(kinds).map(([value, label]) => ({ value, label }));
+      const current = interaction(canvas).viewModeArgs.nodeKind;
+      return current ? [{ value: current, label: current }] : [];
+    },
+    isEnabled: (canvas) => interaction(canvas).viewMode === 'add',
+    run: (canvas, args) => {
+      const value = arg<string>(args, 'value');
+      if (value) canvas.store.actions.viewMode.setArgs({ nodeKind: value });
+    },
   },
   'layout.activate': {
     label: 'Layout',

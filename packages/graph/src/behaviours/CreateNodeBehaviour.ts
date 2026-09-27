@@ -11,8 +11,11 @@
  * A pointer-move threshold between `pointerdown` and `click` distinguishes a
  * click from a camera pan.
  *
- * Default `enabled: false` — register, then explicitly enable (e.g. an "Add"
- * tool mode toggles it on).
+ * Default `enabled: false` — register, then explicitly enable. To tie it to the
+ * modeller's Add tool, enable it with `modes: ['add']`: it then runs only while
+ * `view.interaction.viewMode` is `'add'` (the `tool.active` command / `useTool`),
+ * with no host-side gating. The Add tool's node kind is
+ * `viewModeArgs.nodeKind` — read it in `createNode`.
  */
 
 import { Behaviour, type BehaviourOptions, type CanvasContext } from '@invana/canvas';

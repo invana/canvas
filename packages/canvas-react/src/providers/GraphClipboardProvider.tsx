@@ -1,6 +1,7 @@
 import { useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   GraphClipboard,
+  eraseCommand,
   type GraphLayer,
   type Vec2,
 } from '@invana/graph';
@@ -29,7 +30,8 @@ export interface GraphClipboardProviderProps {
  * to make cut/paste/delete undoable.
  *
  * While mounted it also registers the `clipboard.cut` / `.copy` / `.paste` /
- * `.delete` commands on the canvas, for control panels.
+ * `.delete` commands on the canvas, for control panels, and an undoable
+ * `graph.erase` when a `<GraphHistoryProvider>` is above it.
  */
 /** The click-select behaviour a clipboard command reads (`args.clickSelectId`, default `'click-select'`). */
 function clickSelectIdOf(args: unknown): string {
@@ -103,13 +105,15 @@ export function GraphClipboardProvider({
           clipboard.delete(nodeIds, edgeIds, historyRef.current ?? undefined);
         },
       }),
+      // Undoable, selection-aware erase (overrides the graph's plain one).
+      commands.register('graph.erase', eraseCommand((target) => (target === layerId ? historyRef.current : null))),
       // The buffer isn't in the view store: tell bound controls it changed.
       clipboard.events.on('change', () => commands.invalidate()),
     ];
     return () => {
       for (const off of offs) off();
     };
-  }, [clipboard, resolved]);
+  }, [clipboard, resolved, layerId]);
 
   return <ClipboardContext.Provider value={clipboard}>{children}</ClipboardContext.Provider>;
 }

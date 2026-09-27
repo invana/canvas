@@ -1,5 +1,6 @@
 import { hexToNumber, numberToHex } from '../../../shared/color';
 
+import { formToModes, modesToForm } from '../../_shared/modes';
 import type { DrawEdgeFields, DrawEdgeOptions } from './types';
 
 /**
@@ -17,6 +18,7 @@ export function optionsToForm(o: DrawEdgeOptions = {}): DrawEdgeFields {
     draftAlpha: d?.alpha,
     draftDashLength: d?.dash?.[0],
     draftDashGap: d?.dash?.[1],
+    modes: modesToForm(o.modes),
   };
 }
 
@@ -41,5 +43,7 @@ export function formToOptions(f: DrawEdgeFields): DrawEdgeOptions {
   }
   if (Object.keys(draftStyle).length > 0) out.draftStyle = draftStyle;
 
+  const modes = formToModes(f.modes);
+  if (modes !== undefined) out.modes = modes ?? undefined;
   return out;
 }

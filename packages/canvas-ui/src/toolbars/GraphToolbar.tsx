@@ -44,6 +44,11 @@ export interface GraphToolbarProps {
  * selection-mode picker + the self-wiring **Style Editor** edge-routing section
  * ({@link useStyleEditorSection}) + a selection-aware erase action. Compiled by
  * {@link ToolbarItems}. To float it over the canvas, put it in a `<ControlPanel>`.
+ *
+ * @deprecated Callback-driven, with no command behind its controls, so it can't
+ * share the control-spec renderer. Use `GraphControlsToolbar`, or
+ * `<ControlItems items={…}>` with the `*_CONTROL_ITEMS` presets. Kept for
+ * compatibility; see `docs/rfcs/feat/2026-09-28-toolbars-and-control-panels-draw-controls-twice.md` D3.
  */
 export function GraphToolbar({
   layout,

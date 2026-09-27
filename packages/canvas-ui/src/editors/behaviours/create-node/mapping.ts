@@ -1,19 +1,21 @@
+import { formToModes, modesToForm } from '../../_shared/modes';
 import type { CreateNodeFields, CreateNodeOptions } from './types';
 
 /**
  * Map a `CreateNodeBehaviourOptions`-shaped patch to the flat
- * {@link CreateNodeFields}. A no-op: `CreateNodeBehaviour` has no serialisable
- * scalar options (only callbacks + host-owned base fields).
+ * {@link CreateNodeFields}. Only the base `modes` gate is serialisable.
  */
-export function optionsToForm(_o: CreateNodeOptions = {}): CreateNodeFields {
-  return {};
+export function optionsToForm(o: CreateNodeOptions = {}): CreateNodeFields {
+  return { modes: modesToForm(o.modes) };
 }
 
 /**
  * Inverse of {@link optionsToForm}: fold the flat fields back to a serialisable
- * {@link CreateNodeOptions} patch. A no-op — the behaviour has no serialisable
- * scalars to round-trip.
+ * {@link CreateNodeOptions} patch. An empty `modes` group clears the gate.
  */
-export function formToOptions(_f: CreateNodeFields): CreateNodeOptions {
-  return {};
+export function formToOptions(f: CreateNodeFields): CreateNodeOptions {
+  const out: CreateNodeOptions = {};
+  const modes = formToModes(f.modes);
+  if (modes !== undefined) out.modes = modes ?? undefined;
+  return out;
 }

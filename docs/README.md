@@ -98,7 +98,7 @@ working design-of-record documents. Day-to-day API/concept docs live in
     kernel's becomes canonical — noting the one behavioural difference (the canvas copy
     emits `theme:change` without a source descriptor).
   - [feat/2026-08-11-canvas-core-structure.md](./rfcs/feat/2026-08-11-canvas-core-structure.md)
-    — 📋 proposed. **The new `@invana/canvas-core` package**: 47 files / 5 folders
+    — 🚧 implemented on `feat/control-panels`. **The new `@invana/canvas-core` package**: 47 files / 5 folders
     (`contracts/` · `geometry/` · `svg/` · `animation/` · `headless/`), lifted wholesale
     from `@invana/canvas`'s `src/core/` subtree — nothing written fresh at extraction
     time. So a rendering backend depends on a small frozen package rather than the whole
@@ -106,7 +106,7 @@ working design-of-record documents. Day-to-day API/concept docs live in
     the three prerequisites, and a **checkable acceptance test**:
     `grep "@invana/canvas'" packages/renderer-pixijs/src` → 0 hits.
   - [fix/2026-09-10-renderer-preference-canvas-never-reaches-the-backend.md](./rfcs/fix/2026-09-10-renderer-preference-canvas-never-reaches-the-backend.md)
-    — 📋 proposed. **`preference: 'canvas'` is silently rewritten to `'webgl'`** one line
+    — 🚧 implemented on `feat/control-panels`. **`preference: 'canvas'` is silently rewritten to `'webgl'`** one line
     before it crosses the renderer seam (`Canvas.ts#L337`), so pixi's canvas backend is
     unreachable through the engine — including via `bestRenderPreference()`, which the
     TSDoc recommends and which returns `'canvas'` on a device with neither WebGPU nor
@@ -115,13 +115,52 @@ working design-of-record documents. Day-to-day API/concept docs live in
     rewrite was a type-fit, not a decision, and `'auto'` has no producer anywhere. 4 rows,
     2 open decisions (adopt pixi 8.18's array-valued `preference`; drop `'auto'`).
   - [fix/2026-09-10-label-measurement-allocates-a-textstyle-per-call.md](./rfcs/fix/2026-09-10-label-measurement-allocates-a-textstyle-per-call.md)
-    — 📋 proposed. **`measureLabelContent` builds a `TextStyle` per call**, once per
+    — 🚧 implemented on `feat/control-panels`. **`measureLabelContent` builds a `TextStyle` per call**, once per
     fit-to-label node per re-project, against 1–3 distinct styles. A cost defect with no
     visible symptom: pixi's metrics cache is *value*-keyed, so the measuring is already
     free on repeat and only the allocation is wasted. Records why the obvious fix — one
     shared mutable `TextStyle` — is wrong (cached `CanvasTextMetrics` retain the style by
     reference, so mutation would corrupt entries backing real `Text` objects). D2 is open
     on purpose: measure first, and `rejected` is an honest outcome.
+  - [feat/2026-09-27-no-floating-controls-inside-the-canvas.md](./rfcs/feat/2026-09-27-no-floating-controls-inside-the-canvas.md)
+    — 🚧 implemented on `feat/control-panels` (F12 deferred). **Control panels**: floating
+    controls over the canvas stored as JSON in `definition.controlPanels`, so they save,
+    export and undo with the canvas. Items name a command, icon, widget or slot; the
+    engine's `CommandRegistry` runs commands. canvas-react's headless `<ControlPanel>`
+    declares panels and canvas-ui's `<ControlPanels>` draws them. F12 (a Studio editor
+    for panels) is the open follow-up.
+  - [feat/2026-09-27-two-ways-to-float-a-toolbar.md](./rfcs/feat/2026-09-27-two-ways-to-float-a-toolbar.md)
+    — 🚧 implemented on `feat/control-panels`. **Toolbars are content; ControlPanel is how
+    controls float.** Eleven toolbars lose `position` / `bare` and render only their
+    controls. Anything over the canvas goes through `<ControlPanel>`.
+  - [feat/2026-09-28-graph-toolbar-actions-cannot-be-saved.md](./rfcs/feat/2026-09-28-graph-toolbar-actions-cannot-be-saved.md)
+    — 🚧 implemented on `feat/control-panels` (X2 deferred). **Graph toolbar actions become
+    commands**: undo / redo, clipboard, select mode, edge type, grid and layout picking.
+    Adds the `choice` item kind, override-stacking registrations and `invalidate()`, plus
+    one canvas-ui preset per toolbar. X2 (toolbars as thin wrappers over presets) waits
+    on header slots that accept specs.
+  - [feat/2026-09-28-control-panels-cannot-pan-or-model.md](./rfcs/feat/2026-09-28-control-panels-cannot-pan-or-model.md)
+    — 🚧 implemented on `feat/control-panels`. **Presets per mode**: `camera.pan` /
+    `zoomTo` / `reset` and `behaviour.toggle` commands; `tool.*` commands from
+    `<GraphToolProvider>`; `theme.toggle` from `<CanvasThemeSync>`; the PAN, ZOOM_LEVEL,
+    INPUT, NAVIGATION, CANVAS, EXPLORER, MODELLER and THEME presets, and a `pan-pad`
+    widget. Stories: `canvas-react/ControlPanel/{Canvas,GraphCanvas}/*`.
+  - [feat/2026-09-28-control-panels-cannot-be-edited-in-the-studio.md](./rfcs/feat/2026-09-28-control-panels-cannot-be-edited-in-the-studio.md)
+    — 🚧 implemented on `feat/control-panels`. **A Studio editor for control panels** (F12): an aggregate editor in
+    `canvas-ui/editor-panels/control-panels/`, with panel fields and an item list whose
+    pickers read the live command / icon / widget registries. Applies through
+    `canvas.update({ controlPanels })`; also the last section of
+    `CanvasSettingsEditorPanel`.
+  - [feat/2026-09-28-toolbars-and-control-panels-draw-controls-twice.md](./rfcs/feat/2026-09-28-toolbars-and-control-panels-draw-controls-twice.md)
+    — 🚧 implemented on `feat/control-panels`. **Toolbars become presets + props** (X2): one exported `<ControlItems>`
+    renderer; the gaps closed (`layout.toggle`, `history.redraw`, icon classes, section
+    keys; factory layouts ended up as private commands the toolbar registers while
+    mounted). Finding: header slots already take ReactNodes, so the recorded blocker
+    didn't block. Toolbar headers render byte-identical to before.
+  - [feat/2026-09-28-the-modeller-tool-lives-outside-the-canvas.md](./rfcs/feat/2026-09-28-the-modeller-tool-lives-outside-the-canvas.md)
+    — 🚧 implemented on `feat/control-panels`. **The modeller tool moves to `interaction.viewMode`** (+ `viewModeArgs`);
+    behaviours gain a `modes` option and gate themselves; `tool.*` commands move to graph
+    and the React bridge goes.
 
 ## Release
 

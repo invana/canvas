@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import {
   GraphHistory,
+  eraseCommand,
   type GraphLayer,
   type HistoryOp,
   type Vec2,
@@ -134,6 +135,8 @@ export function GraphHistoryProvider({
           clearGraphLayer(c, target, target === layerId ? history : null);
         },
       }),
+      // Deleting the selection journals on this history (its own layer only).
+      commands.register('graph.erase', eraseCommand((target) => (target === layerId ? history : null))),
       // The undo stack isn't in the view store: tell bound controls it moved.
       history.events.on('change', () => commands.invalidate()),
     ];

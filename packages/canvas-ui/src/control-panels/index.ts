@@ -1,5 +1,7 @@
 export { ControlPanels } from './ControlPanels';
 export type { ControlPanelsProps } from './ControlPanels';
+export { ControlItems, useControlItems } from './ControlItems';
+export type { ControlItemsProps, UseControlItemsOptions } from './ControlItems';
 export { DEFAULT_CONTROL_ICONS } from './icons';
 export { DEFAULT_CONTROL_WIDGETS } from './widgets';
 export type { ControlWidget, ControlWidgetProps } from './widgets';

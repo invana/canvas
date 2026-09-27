@@ -39,6 +39,11 @@ export interface GraphLayoutToolbarProps {
  * selection-mode picker (built inline off {@link useSelectMode}), separated by a
  * divider. The consumer supplies the layout factory map and the
  * mode→behaviour-id map (both live in consumer space, so this can't be turnkey).
+ *
+ * @deprecated Callback-driven, with no command behind its controls, so it can't
+ * share the control-spec renderer. Use `GraphControlsToolbar`, or
+ * `<ControlItems items={…}>` with the `*_CONTROL_ITEMS` presets. Kept for
+ * compatibility; see `docs/rfcs/feat/2026-09-28-toolbars-and-control-panels-draw-controls-twice.md` D3.
  */
 export function GraphLayoutToolbar({
   layouts,

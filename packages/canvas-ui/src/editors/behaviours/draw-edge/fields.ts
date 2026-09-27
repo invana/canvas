@@ -1,5 +1,7 @@
 import type { FieldConfig } from '@invana/forms';
 
+import { modesField } from '../../_shared/modes';
+
 /**
  * `@invana/forms` field schema for the DrawEdgeBehaviour editor. Field `name`s
  * match the keys of {@link import('./types').DrawEdgeFields} 1:1 so the
@@ -53,4 +55,5 @@ export const drawEdgeFields: FieldConfig[] = [
     step: 1,
     description: 'Gap between dashes in the preview. Default 4.',
   },
+  modesField(),
 ];

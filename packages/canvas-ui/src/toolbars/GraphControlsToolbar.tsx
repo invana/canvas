@@ -14,11 +14,15 @@
  *     edge-routing style editor, and erase/clear. It self-wraps the
  *     `GraphHistoryProvider` + `GraphClipboardProvider` those sections need.
  *
- * Both share one core, so they never drift. Each item carries its own (lucide)
- * icon inline — there's no parallel icon-set prop. Extend for the other 20% by
+ * Both share one core, so they never drift. The controls are **control specs**
+ * drawn by `useControlItems` — the same commands a saved control panel runs
+ * (`select.mode`, `graph.edgeType`, `history.*`, `graph.erase`, `camera.fit`,
+ * `view.lock`, `background.grid`). The factory-based layout picker has no
+ * serialisable command, so the toolbar registers two private commands for it
+ * while mounted. Extend for the other 20% by
  * toggling sections off (`sections={{ grid: false }}`) or injecting your own
  * items (`extraItems`), where you supply whatever icon you like per item. Need
- * something fully bespoke? Skip these and compose the section hooks yourself.
+ * something fully bespoke? Use `<ControlItems>` with your own specs.
  *
  * **Contract:** render where a live engine is resolvable — inside `<Canvas>`, or
  * under a lifted `GraphCanvasContext` whose value is non-null (gate on it). The
@@ -29,24 +33,17 @@
  * {@link GraphToolbar} for header use.)
  */
 
-import { type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
+import type { ControlItemSpec } from '@invana/canvas';
 import type { GraphCanvas } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
-import { Grid3x3, Lasso, MousePointer2, Play, Square, SquareDashedMousePointer } from 'lucide-react';
 
 import { useGraphCanvas } from '@invana/canvas-react';
 import { GraphClipboardProvider, GraphHistoryProvider } from '@invana/canvas-react';
-import {
-  type LayoutFactory,
-  useEditorSection,
-  useGrid,
-  useHistorySection,
-  useLayout,
-  useSelectMode,
-  useStyleEditorSection,
-  useViewSection,
-} from '@invana/canvas-react';
+import { type LayoutFactory, useLayout } from '@invana/canvas-react';
 import { ToolbarItems, applyIconOverrides, type ToolbarIcon, type ToolbarItem } from '../components';
+import { useControlItems } from '../control-panels/ControlItems';
+import { eraseSpec, fitSpec, gridSpec, historySpecs, joinGroups, lockSpec } from './controlSpecs';
 
 // ─── Defaults ─────────────────────────────────────────────────────────────────
 
@@ -62,13 +59,6 @@ const DEFAULT_LAYOUTS: Record<string, LayoutFactory> = {
 };
 const DEFAULT_LAYOUT_LABEL: Record<string, string> = { 'd3-force': 'Force (d3)' };
 
-/** Select-mode key → registered behaviour id. Click = no drag-select behaviour. */
-const SELECT_MODE_IDS = { click: '', brush: 'brush-select', lasso: 'lasso-select' };
-const SELECT_LABEL: Record<string, string> = {
-  click: 'Click select',
-  brush: 'Brush select',
-  lasso: 'Lasso select',
-};
 
 // ─── Props ──────────────────────────────────────────────────────────────────
 
@@ -135,79 +125,91 @@ export interface GraphControlsToolbarProps {
 // ─── Shared section assembly ──────────────────────────────────────────────────
 
 /**
- * The provider-free control sections (layout · select · style · view · grid) —
- * called by both variants so the common wiring lives in one place. History /
- * edit are added by the full variant only (they need providers + extra hooks).
- * Icons are baked inline on each item.
+ * The factory-based layout picker + Run/Stop, as **commands private to this
+ * toolbar instance** (`toolbar.layout#<id>` / `toolbar.layoutRun#<id>`). Layout
+ * factories are closures, so no saved command can carry them; registering them
+ * for the toolbar's lifetime keeps the picker on the one spec renderer without
+ * writing anything to the canvas definition. The `#` marks a name as private
+ * (editors hide such names). Returns the two specs.
  */
-function useControlSections(props: GraphControlsToolbarProps) {
+function useLayoutSpecs(props: GraphControlsToolbarProps, segmented: boolean): ControlItemSpec[] {
+  const canvas = useGraphCanvas();
   const layerId = props.layerId ?? 'graph';
   const layouts = props.layouts ?? DEFAULT_LAYOUTS;
   const layoutLabel = props.layoutLabel ?? DEFAULT_LAYOUT_LABEL;
-
-  const { layout, layoutOptions, applyLayout, stopLayout, isRunning } = useLayout(layouts, {
+  const lay = useLayout(layouts, {
     layerId,
     labels: layoutLabel,
     initial: Object.keys(layouts)[0],
     applyInitial: props.applyInitialLayout ?? false,
   });
-  const { mode, modeOptions, setMode } = useSelectMode(SELECT_MODE_IDS, {
-    labels: SELECT_LABEL,
-    initial: 'click',
-  });
-  const style = useStyleEditorSection({ layerId });
-  const view = useViewSection({ showZoom: false });
-  const { showGrid, toggleGrid } = useGrid();
+  const ref = useRef(lay);
+  ref.current = lay;
 
-  return {
-    layout: [
-      { type: 'select', key: 'layout', label: 'Layout', value: layout, options: layoutOptions, onChange: applyLayout },
-      // Engine-agnostic run/stop toggle: while any layout is applying (a live
-      // d3-force sim, an async ELK solve, …) the button flips to Stop and
-      // cancels the run via the layout's `stop()`; otherwise it (re-)runs the
-      // selected layout.
-      isRunning
-        ? { type: 'button', key: 'run-layout', icon: Square, iconClass: 'fill-current', label: 'Stop layout', onClick: stopLayout }
-        : { type: 'button', key: 'run-layout', icon: Play, label: 'Run layout', onClick: () => applyLayout(layout) },
-    ] as ToolbarItem[],
-    select: [
-      { type: 'select', key: 'select-mode', label: 'Select', value: mode, options: modeOptions, icons: { click: MousePointer2, brush: SquareDashedMousePointer, lasso: Lasso }, onChange: setMode, triggerLabelOnly: true },
-    ] as ToolbarItem[],
-    style,
-    view,
-    grid: [
-      { type: 'toggle', key: 'grid', icon: Grid3x3, label: 'Toggle grid', active: showGrid, onToggle: toggleGrid },
-    ] as ToolbarItem[],
-  };
+  const uid = useId();
+  const pick = `toolbar.layout#${uid}`;
+  const toggle = `toolbar.layoutRun#${uid}`;
+
+  useEffect(() => {
+    if (!canvas) return;
+    const offPick = canvas.commands.register(pick, {
+      label: 'Layout',
+      value: () => ref.current.layout,
+      options: () => Object.entries(ref.current.layoutOptions).map(([value, label]) => ({ value, label })),
+      run: (_c, args) => {
+        const value = (args as { value?: string } | undefined)?.value;
+        if (value) ref.current.applyLayout(value);
+      },
+    });
+    // Engine-agnostic run/stop: while any layout is applying (a live d3-force
+    // sim, an async ELK solve, …) the button reads Stop and cancels the run;
+    // otherwise it (re-)runs the selected layout.
+    const offToggle = canvas.commands.register(toggle, {
+      label: 'Run layout',
+      isActive: () => ref.current.isRunning,
+      run: () => (ref.current.isRunning ? ref.current.stopLayout() : ref.current.applyLayout(ref.current.layout)),
+    });
+    return () => {
+      offPick();
+      offToggle();
+    };
+  }, [canvas, pick, toggle]);
+
+  // The picker state lives in React, not the view store: tell bound controls.
+  useEffect(() => {
+    canvas?.commands.invalidate();
+  }, [canvas, lay.layout, lay.isRunning, lay.layoutOptions]);
+
+  return [
+    { type: 'choice', key: 'layout', command: pick, label: 'Layout', ...(segmented ? { display: 'segmented' as const } : {}) },
+    { type: 'command', key: 'run-layout', command: toggle, icon: 'play', activeIcon: 'stop', label: 'Run layout', activeLabel: 'Stop layout' },
+  ];
 }
 
-/**
- * Re-render the `select` items in a group as segmented `ToggleGroup`s (leaving
- * any sibling buttons — e.g. layout's "Run" — untouched). The full toolbar uses
- * this so Layout / Select read as always-in-view segmented pickers, while the
- * lite toolbar keeps the compact dropdowns.
- */
-function segmentSelects(items: ToolbarItem[]): ToolbarItem[] {
-  return items.map((it) => (it.type === 'select' ? { ...it, display: 'segmented' as const } : it));
+/** Click / brush / lasso picker (`select.mode`). */
+function selectSpecs(segmented: boolean): ControlItemSpec[] {
+  return [{ type: 'choice', key: 'select-mode', command: 'select.mode', label: 'Select', ...(segmented ? { display: 'segmented' as const } : {}) }];
 }
 
-/** Join non-empty groups with dividers (no leading / trailing / doubled dividers). */
-function assemble(
-  groups: ToolbarItem[][],
-  extraItems: GraphControlsToolbarProps['extraItems'],
-  canvas: GraphCanvas | null,
-): ToolbarItem[] {
-  const extra = typeof extraItems === 'function' ? extraItems(canvas) : (extraItems ?? []);
-  const all = extra.length ? [...groups, extra] : groups;
-  const present = all.filter((g) => g.length > 0);
-  return present.flatMap((g, i) => (i === 0 ? g : [{ type: 'divider', key: `d${i}` } as ToolbarItem, ...g]));
+/** Edge routing (`graph.edgeType`). */
+function styleSpecs(layerId: string): ControlItemSpec[] {
+  return [{ type: 'choice', key: 'edge-type', command: 'graph.edgeType', args: { layerId }, label: 'Edge' }];
+}
+
+/** Draw `specs` plus the host's `extraItems` (their own group) as one bar. */
+function useBar(specs: ControlItemSpec[], props: GraphControlsToolbarProps): ReactNode {
+  const canvas = useGraphCanvas();
+  const items = useControlItems(specs, { canvas });
+  const extra = typeof props.extraItems === 'function' ? props.extraItems(canvas) : (props.extraItems ?? []);
+  const all: ToolbarItem[] =
+    extra.length > 0 ? [...items, ...(items.length > 0 ? [{ type: 'divider', key: 'd-extra' } as ToolbarItem] : []), ...extra] : items;
+  return <ToolbarItems items={applyIconOverrides(all, props.icons)} orientation={props.orientation ?? 'horizontal'} className={props.className} />;
 }
 
 // ─── Lite variant ─────────────────────────────────────────────────────────────
 
 export function GraphControlsToolbarLite(props: GraphControlsToolbarProps): ReactNode {
-  const canvas = useGraphCanvas();
-  const c = useControlSections(props);
+  const layerId = props.layerId ?? 'graph';
   const s: Required<Pick<GraphControlsSections, 'layout' | 'selectMode' | 'view' | 'grid'>> = {
     layout: true,
     selectMode: true,
@@ -215,26 +217,23 @@ export function GraphControlsToolbarLite(props: GraphControlsToolbarProps): Reac
     grid: true,
     ...props.sections,
   };
+  const layout = useLayoutSpecs(props, false);
 
-  const groups: ToolbarItem[][] = [];
-  if (s.selectMode) groups.push(c.select);
-  if (s.view) groups.push(c.view);
-  if (s.grid) groups.push(c.grid);
-  // Layout picker + run sits at the far right of the bar.
-  if (s.layout) groups.push(c.layout);
-
-  const items = applyIconOverrides(assemble(groups, props.extraItems, canvas), props.icons);
-  return <ToolbarItems items={items} orientation={props.orientation ?? 'horizontal'} className={props.className} />;
+  const specs = joinGroups([
+    s.selectMode ? selectSpecs(false) : [],
+    s.view ? [fitSpec(layerId), lockSpec()] : [],
+    s.grid ? [gridSpec()] : [],
+    // Layout picker + run sits at the far right of the bar.
+    s.layout ? layout : [],
+  ]);
+  return useBar(specs, props);
 }
 
 // ─── Full variant ─────────────────────────────────────────────────────────────
 
 /** Inner body — mounted inside the history + clipboard providers the full set needs. */
 function GraphControlsToolbarFullBody(props: GraphControlsToolbarProps): ReactNode {
-  const canvas = useGraphCanvas();
-  const history = useHistorySection();
-  const editor = useEditorSection({ items: ['erase'] });
-  const c = useControlSections(props);
+  const layerId = props.layerId ?? 'graph';
   const s: Required<GraphControlsSections> = {
     history: true,
     layout: true,
@@ -245,24 +244,24 @@ function GraphControlsToolbarFullBody(props: GraphControlsToolbarProps): ReactNo
     grid: true,
     ...props.sections,
   };
+  const layout = useLayoutSpecs(props, true);
 
-  const groups: ToolbarItem[][] = [];
-  if (s.history) groups.push(history);
-  if (s.selectMode) groups.push(segmentSelects(c.select));
-  if (s.style) groups.push(c.style);
-  if (s.edit) groups.push(editor);
-  if (s.view) groups.push(c.view);
-  if (s.grid) groups.push(c.grid);
-  // Layout picker + run sits at the far right of the bar.
-  if (s.layout) groups.push(segmentSelects(c.layout));
-
-  const items = applyIconOverrides(assemble(groups, props.extraItems, canvas), props.icons);
-  return <ToolbarItems items={items} orientation={props.orientation ?? 'horizontal'} className={props.className} />;
+  const specs = joinGroups([
+    s.history ? historySpecs() : [],
+    s.selectMode ? selectSpecs(true) : [],
+    s.style ? styleSpecs(layerId) : [],
+    s.edit ? [eraseSpec({ icon: 'eraser', layerId })] : [],
+    s.view ? [fitSpec(layerId), lockSpec()] : [],
+    s.grid ? [gridSpec()] : [],
+    // Layout picker + run sits at the far right of the bar.
+    s.layout ? layout : [],
+  ]);
+  return useBar(specs, props);
 }
 
 export function GraphControlsToolbar(props: GraphControlsToolbarProps): ReactNode {
   const layerId = props.layerId ?? 'graph';
-  // The history / edit sections read these providers; mount them around the body.
+  // The history / edit commands come from these providers; mount them around the body.
   return (
     <GraphHistoryProvider layerId={layerId}>
       <GraphClipboardProvider layerId={layerId}>

@@ -19,8 +19,8 @@ type CameraInput = Partial<{ x: number; y: number; zoom: number }>;
  * target {@link LayerData}.
  *
  * Group by concern: `node / edge / group / annotation / positions` (data) and
- * `layers / behaviours / layouts / camera / selection / hover / templates / theme /
- * controlPanels` (view).
+ * `layers / behaviours / layouts / camera / selection / hover / viewMode / templates /
+ * theme / controlPanels` (view).
  *
  * ⚠ **Data actions target the default {@link LayerData} store only.** The
  * injected `layer(id)` accessor (see `createCanvasStore`) **throws** for any id
@@ -204,6 +204,23 @@ export function createActions(
           delete next[source];
           s.interaction.raised = next;
         }),
+    },
+
+    // ── VIEW · interaction mode (the modeller "tool") ─────────────────────────
+    viewMode: {
+      /**
+       * Switch the active mode. `args`, when given, **replaces** the mode's
+       * parameters; omit it to keep the current ones (a tool's node kind
+       * survives a trip through Select).
+       */
+      set: (mode: string, args?: Readonly<Record<string, string>>) =>
+        v('view:viewMode:set', (s) => {
+          s.interaction.viewMode = mode;
+          if (args !== undefined) s.interaction.viewModeArgs = { ...args };
+        }),
+      /** Shallow-merge `patch` into the mode parameters. */
+      setArgs: (patch: Readonly<Record<string, string>>) =>
+        v('view:viewMode:setArgs', (s) => void (s.interaction.viewModeArgs = { ...s.interaction.viewModeArgs, ...patch })),
     },
 
     // ── VIEW · templates (e.g. node templates) ────────────────────────────────

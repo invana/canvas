@@ -1,17 +1,11 @@
-import { useMemo, type CSSProperties, type ReactNode } from 'react';
-import type { Canvas, ControlItemSpec, ControlPanelAnchor, ControlPanelSpec } from '@invana/canvas';
+import type { CSSProperties, ReactNode } from 'react';
+import type { Canvas, ControlPanelAnchor, ControlPanelSpec } from '@invana/canvas';
 import { cn } from '@invana/ui';
-import {
-  useCommandStates,
-  useControlPanelSlot,
-  useControlPanels,
-  useResolvedCanvas,
-  type CommandRef,
-} from '@invana/canvas-react';
+import { useControlPanels, useResolvedCanvas } from '@invana/canvas-react';
 
-import { ToolbarItems, type ToolbarIcon, type ToolbarItem, type TooltipSide } from '../components';
-import { DEFAULT_CONTROL_ICONS } from './icons';
-import { DEFAULT_CONTROL_WIDGETS, type ControlWidget } from './widgets';
+import { ToolbarItems, type ToolbarIcon, type TooltipSide } from '../components';
+import { useControlItems } from './ControlItems';
+import type { ControlWidget } from './widgets';
 
 export interface ControlPanelsProps {
   /** Extra / overriding icons by name, merged over {@link DEFAULT_CONTROL_ICONS}. */
@@ -23,9 +17,6 @@ export interface ControlPanelsProps {
   /** Explicit canvas; defaults to the context canvas. */
   canvas?: Canvas | null;
 }
-
-/** Stand-in glyph for an item whose icon name isn't registered — the button shows its text instead. */
-const NoIcon: ToolbarIcon = () => null;
 
 /** Default flow for an anchor: stacked on the side edges, a row everywhere else. */
 function defaultOrientation(position: ControlPanelSpec['position']): 'horizontal' | 'vertical' {
@@ -89,12 +80,7 @@ function placement(spec: ControlPanelSpec): CSSProperties {
   return style;
 }
 
-/** Renders a runtime slot's node (see `ControlPanel` children). */
-function SlotContent({ name, canvas }: { name: string; canvas: Canvas }) {
-  return <>{useControlPanelSlot(name, canvas)}</>;
-}
-
-/** One panel: resolve its items against the command / icon / widget / slot registries and draw them. */
+/** One panel: its specs resolved by {@link useControlItems}, pinned over the canvas. */
 function ControlPanelView({
   spec,
   canvas,
@@ -104,95 +90,11 @@ function ControlPanelView({
 }: {
   spec: ControlPanelSpec;
   canvas: Canvas;
-  icons: Record<string, ToolbarIcon>;
-  widgets: Record<string, ControlWidget>;
+  icons?: Record<string, ToolbarIcon>;
+  widgets?: Record<string, ControlWidget>;
   zIndex: number;
 }) {
-  // One ref per command-bound item (command / toggle / choice), in item order.
-  const refs = useMemo<CommandRef[]>(
-    () =>
-      spec.items.flatMap((it) =>
-        it.type === 'command' || it.type === 'toggle' || it.type === 'choice'
-          ? [{ command: it.command, args: it.args }]
-          : [],
-      ),
-    [spec.items],
-  );
-  const { states, run } = useCommandStates(refs, canvas);
-
-  let c = 0;
-  const items: ToolbarItem[] = spec.items.flatMap((it: ControlItemSpec, i): ToolbarItem[] => {
-    const key = it.key ?? `${it.type}-${i}`;
-    switch (it.type) {
-      case 'command': {
-        const st = states[c++];
-        const icon = it.icon ? icons[it.icon] : undefined;
-        const text = it.text ?? (icon ? undefined : it.label);
-        return [{
-          type: 'button',
-          key,
-          icon: icon ?? NoIcon,
-          label: it.label,
-          ...(text !== undefined ? { text } : {}),
-          disabled: !st?.enabled,
-          onClick: () => void run(it.command, it.args),
-        }];
-      }
-      case 'toggle': {
-        const st = states[c++];
-        const icon = (it.icon ? icons[it.icon] : undefined) ?? NoIcon;
-        const activeIcon = it.activeIcon ? icons[it.activeIcon] : undefined;
-        return [{
-          type: 'toggle',
-          key,
-          icon,
-          ...(activeIcon ? { activeIcon } : {}),
-          label: it.label,
-          ...(it.activeLabel !== undefined ? { activeLabel: it.activeLabel } : {}),
-          active: st?.active ?? false,
-          disabled: !st?.enabled,
-          onToggle: () => void run(it.command, it.args),
-        }];
-      }
-      case 'choice': {
-        const st = states[c++];
-        const options = it.options ?? st?.options ?? [];
-        if (options.length === 0) return [];
-        const optionIcons: Record<string, ToolbarIcon> = {};
-        for (const o of options) {
-          const Icon = o.icon ? icons[o.icon] : undefined;
-          if (Icon) optionIcons[o.value] = Icon;
-        }
-        return [{
-          type: 'select',
-          key,
-          label: it.label,
-          value: st?.value ?? options[0]!.value,
-          options: Object.fromEntries(options.map((o) => [o.value, o.label])),
-          ...(Object.keys(optionIcons).length > 0 ? { icons: optionIcons, triggerLabelOnly: true } : {}),
-          ...(it.display ? { display: it.display } : {}),
-          disabled: !st?.enabled,
-          onChange: (value: string) => void run(it.command, { ...it.args, value }),
-        }];
-      }
-      case 'divider':
-        return [{ type: 'divider', key }];
-      case 'text':
-        return [{
-          type: 'custom',
-          key,
-          render: () => <span className="px-2 text-xs font-semibold whitespace-nowrap text-foreground">{it.text}</span>,
-        }];
-      case 'widget': {
-        const Widget = widgets[it.widget];
-        return Widget ? [{ type: 'custom', key, render: () => <Widget canvas={canvas} {...(it.options ? { options: it.options } : {})} /> }] : [];
-      }
-      case 'slot':
-        return [{ type: 'custom', key, render: () => <SlotContent name={it.slot} canvas={canvas} /> }];
-      default:
-        return [];
-    }
-  });
+  const items = useControlItems(spec.items, { canvas, ...(icons ? { icons } : {}), ...(widgets ? { widgets } : {}) });
 
   const orientation = spec.orientation ?? defaultOrientation(spec.position);
   const surface = spec.surface ?? true;
@@ -229,14 +131,12 @@ function ControlPanelView({
 export function ControlPanels({ icons, widgets, zIndex = 5, canvas }: ControlPanelsProps): ReactNode {
   const resolved = useResolvedCanvas(canvas);
   const panels = useControlPanels(resolved);
-  const iconMap = useMemo(() => ({ ...DEFAULT_CONTROL_ICONS, ...icons }), [icons]);
-  const widgetMap = useMemo(() => ({ ...DEFAULT_CONTROL_WIDGETS, ...widgets }), [widgets]);
 
   return (
     <>
       {Object.entries(panels).map(([id, spec]) =>
         spec.visible === false ? null : (
-          <ControlPanelView key={id} spec={spec} canvas={resolved} icons={iconMap} widgets={widgetMap} zIndex={zIndex} />
+          <ControlPanelView key={id} spec={spec} canvas={resolved} icons={icons} widgets={widgets} zIndex={zIndex} />
         ),
       )}
     </>

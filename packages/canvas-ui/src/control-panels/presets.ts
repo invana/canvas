@@ -10,8 +10,8 @@ import type { ControlItemSpec } from '@invana/canvas';
  * Where a preset's commands come from:
  * - engine (every canvas): `camera.*` (zoom / fit / pan / zoomTo / reset),
  *   `view.lock`, `behaviour.toggle`, `layout.*`, `background.grid`;
- * - `GraphCanvas`: `select.mode`, `graph.edgeType`, `graph.clear`;
- * - a canvas-react `<GraphCanvas>` under `<GraphToolProvider>`: `tool.active`, `tool.nodeKind`;
+ * - `GraphCanvas`: `select.mode`, `graph.edgeType`, `graph.clear`, and the modeller
+ *   tool `tool.active` / `tool.nodeKind` (the store's `interaction.viewMode`);
  * - `<CanvasThemeSync>` under a `<ThemeProvider>`: `theme.toggle`;
  * - `<GraphHistoryProvider>` while mounted: `history.*` (+ an undoable `graph.clear`);
  * - `<GraphClipboardProvider>` while mounted: `clipboard.*`.
@@ -76,14 +76,21 @@ export const EDGE_TYPE_CONTROL_ITEMS: readonly ControlItemSpec[] = [
 ];
 
 /**
- * Pick a **registered** layout (`canvas.layouts`) · run it · stop it. Factory
- * layouts passed to `GraphControlsToolbar` aren't serialisable and stay a
- * toolbar feature.
+ * Pick a **registered** layout (`canvas.layouts`) · Run, which reads Stop while
+ * a layout runs (`layout.toggle`). Factory layouts passed to
+ * `GraphControlsToolbar` aren't serialisable and stay a toolbar feature.
  */
 export const LAYOUT_CONTROL_ITEMS: readonly ControlItemSpec[] = [
   { type: 'choice', key: 'layout', command: 'layout.activate', label: 'Layout' },
-  { type: 'command', key: 'run-layout', command: 'layout.run', icon: 'play', label: 'Run layout' },
-  { type: 'command', key: 'stop-layout', command: 'layout.stop', icon: 'stop', label: 'Stop layout' },
+  {
+    type: 'command',
+    key: 'run-layout',
+    command: 'layout.toggle',
+    icon: 'play',
+    activeIcon: 'stop',
+    label: 'Run layout',
+    activeLabel: 'Stop layout',
+  },
 ];
 
 /** Background grid on/off (the `'background'` layer). The counterpart of `GridToolbar`. */
@@ -218,9 +225,9 @@ export const EXPLORER_CONTROL_ITEMS: readonly ControlItemSpec[] = [
 /**
  * Graph modelling: tool (select / add / connect / delete) · node shape (while
  * adding) · undo / redo · delete selection · clear · fit. The serialisable
- * counterpart of `ModellerToolbar`. Needs `<GraphToolProvider>` around the
- * `<GraphCanvas>`, plus `<GraphHistoryProvider>` / `<GraphClipboardProvider>`
- * for history and delete. Give the shape picker its kinds by copying the item
+ * counterpart of `ModellerToolbar`. The tool works on any `GraphCanvas`; draw
+ * behaviours follow it through their `modes`. History and delete need
+ * `<GraphHistoryProvider>` / `<GraphClipboardProvider>`. Give the shape picker its kinds by copying the item
  * with `args: { kinds: { circle: 'Circle', … } }`.
  */
 export const MODELLER_CONTROL_ITEMS: readonly ControlItemSpec[] = [

@@ -1,8 +1,9 @@
-import type { Canvas } from '@invana/canvas';
+import type { Canvas, ControlItemSpec } from '@invana/canvas';
 
 import { ToolbarItems, applyIconOverrides } from '../components';
 import type { ToolbarIcon } from '../components';
-import { useEditorSection } from '@invana/canvas-react';
+import { useControlItems } from '../control-panels/ControlItems';
+import { eraseSpec } from './controlSpecs';
 
 export interface EditToolbarProps {
   /** Override the baked icons, by item key. */
@@ -21,11 +22,10 @@ export interface EditToolbarProps {
 }
 
 /**
- * Editor bar — cut / copy / paste / erase (the {@link useEditorSection}
- * section). Erase is selection-aware (deletes the selection when something is
+ * Editor bar — cut / copy / paste / erase (`clipboard.*` + `graph.erase`),
+ * drawn from control specs like a saved panel. Erase is selection-aware (deletes the selection when something is
  * selected, otherwise clears the layer). Requires a `<GraphClipboardProvider>` +
  * `ClickSelectBehaviour`; edits are undoable with a `<GraphHistoryProvider>`.
- * Icons are baked in (lucide).
  */
 export function EditToolbar({
   icons,
@@ -36,13 +36,16 @@ export function EditToolbar({
   canvas,
   className,
 }: EditToolbarProps) {
-  const section = useEditorSection({
-    ...(clickSelectId ? { clickSelectId } : {}),
-    ...(layerId ? { layerId } : {}),
-    canvas,
-  });
-  const items = showClear ? section : section.filter((i) => i.key !== 'erase');
-
+  const selection = clickSelectId ? { clickSelectId } : undefined;
+  const specs: ControlItemSpec[] = [
+    { type: 'command', key: 'cut', command: 'clipboard.cut', ...(selection ? { args: selection } : {}), icon: 'scissors', label: 'Cut' },
+    { type: 'command', key: 'copy', command: 'clipboard.copy', ...(selection ? { args: selection } : {}), icon: 'copy', label: 'Copy' },
+    { type: 'command', key: 'paste', command: 'clipboard.paste', ...(selection ? { args: selection } : {}), icon: 'clipboard-paste', label: 'Paste' },
+    ...(showClear
+      ? [eraseSpec({ icon: 'eraser', ...(layerId ? { layerId } : {}), ...(clickSelectId ? { clickSelectId } : {}) })]
+      : []),
+  ];
+  const items = useControlItems(specs, { canvas });
   return (
     <ToolbarItems items={applyIconOverrides(items, icons)} orientation={orientation} className={className} />
   );

@@ -15,6 +15,14 @@
  * conflict warnings when two enabled behaviours claim the same gesture
  * (e.g. lasso vs. pan both wanting `'shift+drag'`). The framework warns;
  * it does not enforce — that's the developer's job.
+ *
+ * **`modes`** ties a behaviour to the canvas's interaction mode
+ * (`view.interaction.viewMode` — the modeller "tool"). An enabled behaviour with
+ * `modes: ['add']` is only *live* while the mode is `'add'`: outside it the base
+ * runs {@link Behaviour.onDisable} (cancelling any gesture) and back inside it
+ * runs {@link Behaviour.onEnable}. `enabled` stays the developer's flag — a mode
+ * switch never changes it, never fires `scene:behaviour:enable`, and never shows
+ * up in {@link Behaviour.getOptions}.
  */
 
 import type { CanvasContext } from './CanvasContext';
@@ -39,6 +47,13 @@ export interface IBehaviour {
    * `canvas.update({ behaviours })` path can retune any behaviour uniformly.
    */
   setOptions(changes: Record<string, unknown>): void;
+  /**
+   * Replace the interaction modes this behaviour is live in (`undefined` = all).
+   * The engine calls it directly for a `modes` patch, like it routes `enabled`
+   * through the registry, because some behaviours override `setOptions`
+   * without calling `super`.
+   */
+  setModes?(modes: readonly string[] | undefined): void;
 }
 
 export interface BehaviourOptions {
@@ -56,6 +71,14 @@ export interface BehaviourOptions {
    * `'wheel+ctrl'`, `'rclick'`); registries match strings as-is.
    */
   shortcuts?: readonly string[];
+  /**
+   * Interaction modes (`view.interaction.viewMode` values) this behaviour is live
+   * in. Omitted = every mode. An enabled behaviour outside its modes is
+   * suspended — its `onDisable` runs, `enabled` is unchanged — and resumes when
+   * the mode comes back. E.g. `modes: ['connect']` on an edge-drawing behaviour
+   * makes the modeller's Connect tool switch it on and off with no host wiring.
+   */
+  modes?: readonly string[];
 }
 
 export abstract class Behaviour<TOptions extends BehaviourOptions = BehaviourOptions>
@@ -82,8 +105,21 @@ export abstract class Behaviour<TOptions extends BehaviourOptions = BehaviourOpt
    */
   readonly scope: 'layer' | 'canvas';
 
+  /**
+   * Whether the behaviour is **live**: the developer's flag ({@link enabled})
+   * *and* the current interaction mode being one of {@link BehaviourOptions.modes}.
+   * Subclasses gate their handlers on this (or {@link isEnabled}); only the base
+   * writes it.
+   */
   protected _enabled: boolean;
   protected ctx?: CanvasContext;
+
+  /** The developer's enable flag — what {@link enabled} reports and snapshots capture. */
+  private _wanted: boolean;
+  /** `false` while the canvas's mode is outside {@link BehaviourOptions.modes}. */
+  private _inMode = true;
+  /** Releases the `viewMode` subscription, or `null` when not watching. */
+  private _modeUnsub: (() => void) | null = null;
 
   /**
    * The construction options, merged in-place by {@link setOptions}. Named
@@ -106,12 +142,14 @@ export abstract class Behaviour<TOptions extends BehaviourOptions = BehaviourOpt
     this.targetLayerId = opts.targetLayerId;
     this.scope = opts.targetLayerId !== undefined ? 'layer' : 'canvas';
     this.shortcuts = opts.shortcuts;
-    this._enabled = opts.enabled ?? false;
+    this._wanted = opts.enabled ?? false;
+    this._enabled = this._wanted;
     this._options = opts;
   }
 
+  /** The developer's enable flag. A behaviour suspended by its `modes` still reports `true`. */
   get enabled(): boolean {
-    return this._enabled;
+    return this._wanted;
   }
 
   get isRegistered(): boolean {
@@ -125,6 +163,8 @@ export abstract class Behaviour<TOptions extends BehaviourOptions = BehaviourOpt
     }
     this.ctx = ctx;
     this.onRegister(ctx);
+    this.watchMode();
+    this._enabled = this._wanted && this._inMode;
     if (this._enabled) this.onEnable();
   }
 
@@ -133,6 +173,8 @@ export abstract class Behaviour<TOptions extends BehaviourOptions = BehaviourOpt
     if (this.ctx === undefined) return;
     const ctx = this.ctx;
     this._enabled = false;
+    this._wanted = false;
+    this.unwatchMode();
     this.onDestroy(ctx);
     // Safety net (see `GestureArbiter`): a claim stranded by an unmount would
     // freeze the camera and every other gesture for the life of the canvas.
@@ -141,18 +183,66 @@ export abstract class Behaviour<TOptions extends BehaviourOptions = BehaviourOpt
   }
 
   enable(): void {
-    if (this._enabled) return;
-    this._enabled = true;
-    this.onEnable();
+    if (this._wanted) return;
+    this._wanted = true;
+    this.syncLive();
   }
 
   disable(): void {
-    if (!this._enabled) return;
-    this._enabled = false;
-    this.onDisable();
-    // Same safety net as `destroy()` — disabling mid-gesture must not strand
-    // the claim, even if the subclass forgot to end its drag.
-    this.releaseGesture();
+    if (!this._wanted) return;
+    this._wanted = false;
+    this.syncLive();
+  }
+
+  /**
+   * Bring {@link _enabled} in line with `_wanted && _inMode`, running the
+   * matching hook on a change. The single place a behaviour goes live or idle.
+   */
+  private syncLive(): void {
+    const live = this._wanted && this._inMode;
+    if (live === this._enabled) return;
+    this._enabled = live;
+    if (live) {
+      this.onEnable();
+    } else {
+      this.onDisable();
+      // Same safety net as `destroy()` — disabling mid-gesture must not strand
+      // the claim, even if the subclass forgot to end its drag.
+      this.releaseGesture();
+    }
+  }
+
+  /** Is `mode` one this behaviour is live in? */
+  private matchesMode(mode: string): boolean {
+    const modes = this._options.modes;
+    return modes === undefined || modes.includes(mode);
+  }
+
+  /**
+   * Follow `view.interaction.viewMode` while registered and `modes` is set;
+   * otherwise stop following and count as in-mode. Idempotent — `setOptions`
+   * calls it again when `modes` changes.
+   */
+  private watchMode(): void {
+    const ctx = this.ctx;
+    if (ctx === undefined || this._options.modes === undefined) {
+      this.unwatchMode();
+      this._inMode = true;
+      return;
+    }
+    const view = ctx.store.view;
+    this._inMode = this.matchesMode(view.getState().interaction.viewMode);
+    if (this._modeUnsub !== null) return;
+    this._modeUnsub = view.subscribe((state, prev) => {
+      if (state.interaction.viewMode === prev.interaction.viewMode) return;
+      this._inMode = this.matchesMode(state.interaction.viewMode);
+      this.syncLive();
+    });
+  }
+
+  private unwatchMode(): void {
+    this._modeUnsub?.();
+    this._modeUnsub = null;
   }
 
   /**
@@ -169,11 +259,22 @@ export abstract class Behaviour<TOptions extends BehaviourOptions = BehaviourOpt
    */
   setOptions(changes: Partial<TOptions>): void {
     this._options = { ...this._options, ...changes };
+    if ('modes' in changes) this.setModes(changes.modes);
     if (changes.enabled !== undefined) {
       if (changes.enabled) this.enable();
       else this.disable();
     }
     this.onOptionsChanged(changes);
+  }
+
+  /**
+   * Replace {@link BehaviourOptions.modes} and re-evaluate liveness against the
+   * current interaction mode. `undefined` = live in every mode.
+   */
+  setModes(modes: readonly string[] | undefined): void {
+    this._options = { ...this._options, modes };
+    this.watchMode();
+    this.syncLive();
   }
 
   /** Snapshot of the current (merged) options — seeds a settings editor. */
@@ -188,7 +289,8 @@ export abstract class Behaviour<TOptions extends BehaviourOptions = BehaviourOpt
    * JSON-serialisable options should override and spread `super.serializeDefinition()`.
    */
   serializeDefinition(): Record<string, unknown> | undefined {
-    return { enabled: this._enabled };
+    const modes = this._options.modes;
+    return modes === undefined ? { enabled: this._wanted } : { enabled: this._wanted, modes: [...modes] };
   }
 
   // ─── Subclass hooks ──────────────────────────────────────────────────────
@@ -225,7 +327,7 @@ export abstract class Behaviour<TOptions extends BehaviourOptions = BehaviourOpt
 
   /**
    * Convenience `if (!enabled) return;` for use inside event handlers
-   * (without rebinding `this` cost).
+   * (without rebinding `this` cost). `false` while suspended by `modes`.
    */
   protected get isEnabled(): boolean {
     return this._enabled;

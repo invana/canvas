@@ -1,13 +1,12 @@
-import type { Canvas } from '@invana/canvas';
-import { Eraser, MousePointer2, Plus, Redo2, Spline, Trash2, Undo2 } from 'lucide-react';
+import { useMemo } from 'react';
+import type { Canvas, ControlItemSpec } from '@invana/canvas';
 
 import { ToolbarItems, applyIconOverrides } from '../components';
-import type { ToolbarIcon, ToolbarItem } from '../components';
+import type { ToolbarIcon } from '../components';
 import { useTool } from '@invana/canvas-react';
-import { useHistory } from '@invana/canvas-react';
-import { useClipboard } from '@invana/canvas-react';
-import { useClearGraph } from '@invana/canvas-react';
 import type { GraphTool } from '@invana/canvas-react';
+import { useControlItems } from '../control-panels/ControlItems';
+import { eraseSpec, historySpecs, joinGroups } from './controlSpecs';
 
 export interface ModellerToolbarProps {
   /** Override the baked tool / undo / redo / erase icons, by item key. */
@@ -43,23 +42,25 @@ const DEFAULT_LABELS: Record<GraphTool, string> = {
   connect: 'Connect',
   delete: 'Delete',
 };
-/** Baked (lucide) icons for the four drawing tools. */
-const TOOL_ICONS: Record<GraphTool, ToolbarIcon> = {
-  select: MousePointer2,
-  add: Plus,
-  connect: Spline,
-  delete: Eraser,
+/** Icon-registry names for the four drawing tools. */
+const TOOL_ICONS: Record<GraphTool, string> = {
+  select: 'pointer',
+  add: 'plus',
+  connect: 'spline',
+  delete: 'eraser',
 };
 
 /**
  * Turnkey **drawing / modeller** toolbar — tool toggles (Select / Add / Connect
  * / Delete) plus an optional Add-tool shape picker, undo/redo, and erase, with
- * dividers between groups. Tool state self-wires through {@link useTool}
- * (requires a `<GraphToolProvider>` ancestor); undo/redo/erase through their own
- * hooks (a `<GraphHistoryProvider>` makes them live). The consumer still
- * declares the drawing behaviours, gating each on the active tool. The tool /
- * undo / redo / erase icons are baked in (lucide); only the per-kind shape-picker
- * icons (`nodeKindIcons`) are consumer-supplied, since those are domain-specific.
+ * dividers between groups. Tool state self-wires through {@link useTool} — the
+ * canvas store's `interaction.viewMode`, reached through a `<GraphToolProvider>`
+ * or the enclosing canvas root. Every control is a control spec (`tool.active`
+ * per tool, `tool.nodeKind`, `history.*`, `graph.erase`) drawn like a saved
+ * panel's (a `<GraphHistoryProvider>` makes undo/redo live). The consumer still
+ * declares the drawing behaviours — give each `modes` (e.g. `modes: ['connect']`)
+ * and they follow the tool on their own. Only the per-kind shape-picker icons
+ * (`nodeKindIcons`) are consumer-supplied, since those are domain-specific.
  */
 export function ModellerToolbar({
   icons,
@@ -74,58 +75,46 @@ export function ModellerToolbar({
   canvas,
   className,
 }: ModellerToolbarProps) {
-  const { tool, setTool, nodeKind, setNodeKind } = useTool();
-  const { undo, redo, canUndo, canRedo } = useHistory({ layerId }, canvas);
-  const { remove, hasSelection } = useClipboard({}, canvas);
-  const { clear } = useClearGraph(layerId, canvas);
+  const { tool } = useTool();
 
-  const toolItems: ToolbarItem[] = tools.map((t) => ({
+  // The node-kind icons are the consumer's components: register them under
+  // private names so the kind options can point at them.
+  const kindIcons = useMemo(
+    () => (nodeKindIcons ? Object.fromEntries(Object.entries(nodeKindIcons).map(([k, Icon]) => [`kind:${k}`, Icon])) : undefined),
+    [nodeKindIcons],
+  );
+
+  const toolSpecs: ControlItemSpec[] = tools.map((t) => ({
     type: 'toggle',
     key: t,
+    command: 'tool.active',
+    args: { value: t },
     icon: TOOL_ICONS[t],
     label: labels?.[t] ?? DEFAULT_LABELS[t],
-    active: tool === t,
-    onToggle: () => setTool(t),
   }));
+  // The shape picker shows only while the Add tool is active.
   if (tool === 'add' && nodeKinds && Object.keys(nodeKinds).length > 0) {
-    toolItems.push({
-      type: 'select',
+    toolSpecs.push({
+      type: 'choice',
       key: 'node-kind',
+      command: 'tool.nodeKind',
       label: 'Shape',
-      value: nodeKind,
-      options: nodeKinds,
-      icons: nodeKindIcons,
-      onChange: setNodeKind,
+      options: Object.entries(nodeKinds).map(([value, label]) => ({
+        value,
+        label,
+        ...(nodeKindIcons?.[value] ? { icon: `kind:${value}` } : {}),
+      })),
     });
   }
 
-  const groups: ToolbarItem[][] = [toolItems];
-  if (showHistory) {
-    groups.push([
-      { type: 'button', key: 'undo', icon: Undo2, label: 'Undo', onClick: undo, disabled: !canUndo },
-      { type: 'button', key: 'redo', icon: Redo2, label: 'Redo', onClick: redo, disabled: !canRedo },
-    ]);
-  }
-  if (showClear) {
-    groups.push([
-      {
-        type: 'button',
-        key: 'erase',
-        icon: Trash2,
-        label: hasSelection ? 'Erase selection' : 'Clear canvas',
-        ...(hasSelection ? { text: 'Selection' } : {}),
-        onClick: hasSelection ? remove : () => clear(),
-      },
-    ]);
-  }
-
-  // Join non-empty groups with dividers.
-  const items: ToolbarItem[] = [];
-  for (const group of groups) {
-    if (group.length === 0) continue;
-    if (items.length > 0) items.push({ type: 'divider', key: `sep-${items.length}` });
-    items.push(...group);
-  }
+  const specs = joinGroups([
+    toolSpecs,
+    showHistory ? historySpecs() : [],
+    showClear ? [eraseSpec({ icon: 'trash', layerId })] : [],
+  ]);
+  const items = useControlItems(specs, { canvas, ...(kindIcons ? { icons: kindIcons } : {}) })
+    // The picker keeps its "Shape: Circle" trigger (the spec renderer drops the value when options carry icons).
+    .map((it) => (it.key === 'node-kind' && it.type === 'select' ? { ...it, triggerLabelOnly: false } : it));
 
   return (
     <ToolbarItems items={applyIconOverrides(items, icons)} orientation={orientation} className={className} />

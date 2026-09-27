@@ -6,7 +6,7 @@
  * | Name | Args | Kind |
  * |---|---|---|
  * | `camera.zoomIn` / `camera.zoomOut` | `{ factor? }` (default `1.2`) | button |
- * | `camera.fit` | `{ padding? }` (default `80`) | button |
+ * | `camera.fit` | `{ padding?, layerId? }` (default `80`; `layerId` fits that layer's bounds instead of all content) | button |
  * | `camera.pan` | `{ dx?, dy? }` screen px — the **content** moves by `(dx, dy)` | button |
  * | `camera.zoomTo` | `{ value?, levels? }` (default `1`) | button (`value` fixed) or choice over `levels` (default 25–400 %, plus the current zoom when it's between levels) |
  * | `camera.reset` | — | button: zoom 1, world origin at the viewport centre |
@@ -14,13 +14,14 @@
  * | `view.lock` | `{ behaviourIds? }` (default `['pan', 'drag-node']`) | toggle |
  * | `layout.run` | `{ id? }` (default: the active layout) | button |
  * | `layout.stop` | — | button, enabled while a layout runs |
+ * | `layout.toggle` | `{ id? }` | button: stops a running layout, else runs `id` / the active one; active while running (a Run ⇄ Stop face) |
  * | `layout.activate` | `{ value }` | choice over the registered layouts; value = `activeLayout` |
  * | `background.grid` | `{ layerId?, patternType? }` (default `'background'`) | toggle, active while the background is a pattern |
  *
  * Names are public API (`namespace.verb`): renaming one breaks saved panels.
  */
 
-import type { CanvasCommand, CommandRegistry } from '@invana/canvas-core';
+import type { CanvasCommand, CommandRegistry, Rect } from '@invana/canvas-core';
 
 import type { BackgroundLayer } from '../layers/BackgroundLayer';
 
@@ -76,7 +77,13 @@ const BUILTIN_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
   },
   'camera.fit': {
     label: 'Fit to content',
-    run: (canvas, args) => canvas.fitView(arg<number>(args, 'padding')),
+    run: (canvas, args) => {
+      const padding = arg<number>(args, 'padding');
+      const layerId = arg<string>(args, 'layerId');
+      if (layerId === undefined) return canvas.fitView(padding);
+      const layer = canvas.layers.get(layerId) as { getBounds?: () => Rect } | undefined;
+      if (typeof layer?.getBounds === 'function') canvas.camera.fitContent(layer.getBounds(), padding ?? 80);
+    },
     isEnabled: whenInitialised,
   },
   'camera.pan': {
@@ -190,6 +197,16 @@ const BUILTIN_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
     label: 'Stop layout',
     run: (canvas) => canvas.stopLayout(),
     isEnabled: (canvas) => canvas.store.view.getState().runtime.layout.running,
+  },
+  'layout.toggle': {
+    label: 'Run layout',
+    isActive: (canvas) => canvas.store.view.getState().runtime.layout.running,
+    isEnabled: (canvas, args) =>
+      canvas.store.view.getState().runtime.layout.running || BUILTIN_COMMANDS['layout.run']!.isEnabled!(canvas, args),
+    run: (canvas, args) => {
+      if (canvas.store.view.getState().runtime.layout.running) canvas.stopLayout();
+      else BUILTIN_COMMANDS['layout.run']!.run(canvas, args);
+    },
   },
 };
 

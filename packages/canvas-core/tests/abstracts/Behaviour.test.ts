@@ -122,3 +122,94 @@ describe('Behaviour — shortcuts', () => {
     expect(b.shortcuts).toEqual(['shift+drag', 'space+drag']);
   });
 });
+
+class LiveProbe extends TestBehaviour {
+  get live(): boolean {
+    return this.isEnabled;
+  }
+}
+
+describe('Behaviour — modes (interaction-mode gating)', () => {
+  it('an enabled behaviour is live only while the view mode is one of its modes', () => {
+    const ctx = makeContext();
+    const b = new LiveProbe({ id: 'draw', enabled: true, modes: ['connect'] });
+    b.register(ctx);
+    expect(b.enabled).toBe(true);
+    expect(b.live).toBe(false);
+    expect(b.enableCount).toBe(0);
+
+    ctx.store.actions.viewMode.set('connect');
+    expect(b.live).toBe(true);
+    expect(b.enableCount).toBe(1);
+
+    ctx.store.actions.viewMode.set('select');
+    expect(b.live).toBe(false);
+    expect(b.disableCount).toBe(1);
+    expect(b.enabled).toBe(true);
+    expect(b.getOptions().enabled).toBe(true);
+  });
+
+  it('enabled: false wins over a matching mode', () => {
+    const ctx = makeContext();
+    const b = new LiveProbe({ id: 'draw', modes: ['connect'] });
+    b.register(ctx);
+    ctx.store.actions.viewMode.set('connect');
+    expect(b.live).toBe(false);
+    expect(b.enableCount).toBe(0);
+    b.enable();
+    expect(b.live).toBe(true);
+    expect(b.enableCount).toBe(1);
+  });
+
+  it('disabling while suspended flips the flag without running a hook', () => {
+    const ctx = makeContext();
+    const b = new LiveProbe({ id: 'draw', enabled: true, modes: ['add'] });
+    b.register(ctx);
+    b.disable();
+    expect(b.enabled).toBe(false);
+    expect(b.disableCount).toBe(0);
+    ctx.store.actions.viewMode.set('add');
+    expect(b.live).toBe(false);
+  });
+
+  it('a mode flip fires no scene:behaviour:enable / disable', () => {
+    const ctx = makeContext();
+    const b = new LiveProbe({ id: 'draw', enabled: true, modes: ['add'] });
+    ctx.behaviours.register(b);
+    const seen: string[] = [];
+    ctx.events.on('scene:behaviour:enable', () => seen.push('enable'));
+    ctx.events.on('scene:behaviour:disable', () => seen.push('disable'));
+    ctx.store.actions.viewMode.set('add');
+    ctx.store.actions.viewMode.set('select');
+    expect(seen).toEqual([]);
+  });
+
+  it('setOptions({ modes }) starts and stops following the mode', () => {
+    const ctx = makeContext();
+    const b = new LiveProbe({ id: 'draw', enabled: true });
+    b.register(ctx);
+    expect(b.live).toBe(true);
+    b.setOptions({ modes: ['add'] });
+    expect(b.live).toBe(false);
+    ctx.store.actions.viewMode.set('add');
+    expect(b.live).toBe(true);
+    b.setOptions({ modes: undefined });
+    ctx.store.actions.viewMode.set('select');
+    expect(b.live).toBe(true);
+  });
+
+  it('serializeDefinition carries the flag and the modes', () => {
+    const b = new LiveProbe({ id: 'draw', enabled: true, modes: ['add'] });
+    expect(b.serializeDefinition()).toEqual({ enabled: true, modes: ['add'] });
+    expect(new LiveProbe({ id: 'x' }).serializeDefinition()).toEqual({ enabled: false });
+  });
+
+  it('destroy stops following the mode', () => {
+    const ctx = makeContext();
+    const b = new LiveProbe({ id: 'draw', enabled: true, modes: ['add'] });
+    b.register(ctx);
+    b.destroy();
+    ctx.store.actions.viewMode.set('add');
+    expect(b.enableCount).toBe(0);
+  });
+});

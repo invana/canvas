@@ -26,6 +26,8 @@ export interface DrawEdgeOptions {
     /** `[dash, gap]` dash pattern. */
     dash?: [number, number];
   };
+  /** Interaction modes the behaviour is live in (`BehaviourOptions.modes`); `undefined` = every mode. */
+  modes?: string[];
 }
 
 /**
@@ -44,6 +46,8 @@ export interface DrawEdgeFields {
   draftDashLength?: number;
   /** Dash gap (`draftStyle.dash[1]`). */
   draftDashGap?: number;
+  /** Ticked modes; empty = every mode. */
+  modes?: string[];
 }
 
 /**

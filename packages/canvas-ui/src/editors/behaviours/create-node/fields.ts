@@ -1,10 +1,10 @@
 import type { FieldConfig } from '@invana/forms';
 
+import { modesField } from '../../_shared/modes';
+
 /**
- * `@invana/forms` field schema for the CreateNodeBehaviour editor. Empty —
- * `CreateNodeBehaviour` has no serialisable scalar options (only the
- * `createNode` / `onNodeCreate` callbacks plus host-owned base fields). Kept as
- * an exported array so the editor renders and a host can override it once a
- * tunable option (e.g. a default node type) is added.
+ * `@invana/forms` field schema for the CreateNodeBehaviour editor. Only the base
+ * `modes` gate — `CreateNodeBehaviour`'s own options are the `createNode` /
+ * `onNodeCreate` callbacks, which aren't serialisable.
  */
-export const createNodeFields: FieldConfig[] = [];
+export const createNodeFields: FieldConfig[] = [modesField()];

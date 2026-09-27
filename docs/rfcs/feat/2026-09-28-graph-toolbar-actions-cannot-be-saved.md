@@ -19,7 +19,7 @@ relations:
 |---|---|
 | **Motivation** | A `ControlPanel` item can only call a registered command, and only camera / lock / layout exist. Undo, clipboard, select mode, edge type, grid and export are closures inside toolbars, so a saved panel can't carry them |
 | **Design** | Commands gain a **value** (for pickers); a `choice` item kind; the registry gains **override stacking** + `invalidate()`; graph + provider-owned actions register as commands; canvas-ui ships a preset per toolbar |
-| **Row status** | proposed 0 · accepted 0 · implemented 14 · landed 0 · deferred 2 · rejected 0 |
+| **Row status** | proposed 0 · accepted 0 · implemented 14 · landed 0 · deferred 0 · rejected 0 · superseded 2 |
 | **Open decisions** | none — D1 A, D2 defer, D3 stack, D4 registered layouts |
 
 ## 1. Motivation
@@ -90,8 +90,8 @@ relations:
 | U3 | defect | implemented | `sym:DEFAULT_CONTROL_WIDGETS` | `export-image`, `export-state`, `minimap-toggle`, `devinfo-toggle` (wrapping the existing components) | UI-rich controls in saved panels | low | — |
 | U4 | defect | implemented | `file:packages/canvas-ui/src/control-panels/presets.ts` | `HISTORY_` · `EDIT_` · `SELECT_MODE_` · `EDGE_TYPE_` · `LAYOUT_` · `GRID_` · `GRAPH_CONTROL_ITEMS` (the `GraphControlsToolbar` set, minus factory layouts) | a saveable equivalent per toolbar | low | U1–U3 |
 | U5 | defect | implemented | `pkg:@invana/canvas-react` | `useSelectMode` / `useEdgeType` / `useGrid` read + write through the commands | one write path; toolbar and panel stay in sync | medium — behaviour of existing hooks | C4, G1 |
-| X1 | defect | deferred | `sym:GraphToolProvider` | modeller tool as a command (D2) | Modeller preset | medium | D2 |
-| X2 | defect | deferred | toolbars → thin wrappers over presets | `<ControlItems items={PRESET}>` replaces toolbar bodies | one renderer | medium | U4 + header slots accept specs |
+| X1 | defect | superseded | `sym:GraphToolProvider` | modeller tool as a command (D2) — superseded by `rfc:feat-2026-09-28-control-panels-cannot-pan-or-model` R1 (`tool.active` / `tool.nodeKind` via a bridge inside `<GraphCanvas>`; the `view.interaction` move stays open) | Modeller preset | medium | D2 |
+| X2 | defect | superseded | toolbars → thin wrappers over presets | `<ControlItems items={PRESET}>` replaces toolbar bodies — superseded by `rfc:feat-2026-09-28-toolbars-and-control-panels-draw-controls-twice` (the blocker below didn't block: header slots already take ReactNodes) | one renderer | medium | U4 + header slots accept specs |
 
 ## 5. Blast radius
 
@@ -140,3 +140,5 @@ relations:
 | 2026-09-28 | Approved whole (except deferred X1, X2); D1–D4 accepted with the recommendations | accepted | order: C1–C3 → C4/G/R → R3/U1/U2 → U3/U4 → U5 |
 | 2026-09-28 | All 14 rows implemented on `feat/control-panels` | accepted | V1 (7 registry tests) + V2 (3 graph command tests) + V3 (build, check-types, lint, 481 tests) + V4 (FullFeatured header: grid toggles, edge type re-routes via `graph.edgeType`; GraphVisualiser clean) pass. V5 waits on a story. Learned: (1) `GraphCanvas` also overrides `layout.activate`, because its `update({ activeLayout })` already runs the layout, so the engine's version would run it twice. (2) Clear / selection / paste logic moved to `canvas-react/src/providers/graphActions.ts`, shared by the hooks and the provider commands so they can't drift. (3) `useSelectMode` needed no change: it already reads the store, which `select.mode` writes. (4) Behaviour change: on a `GraphCanvas`, `useEdgeType` now shows the layer's actual edge type; its `initial` option no longer overrides what's displayed when the two disagree |
 | 2026-09-28 | V5 pass | accepted | Story `canvas-ui/apps/GraphCanvasApp/ControlPanels`, driven in headless Chromium: undo / paste start disabled; selecting a node enables copy / delete; copy enables paste; delete enables undo; undo enables redo; layout picker lists `graph-force` + `layered`; no console errors |
+| 2026-09-28 | X1 superseded by `rfc:feat-2026-09-28-control-panels-cannot-pan-or-model` R1 | accepted | The tool reaches panels through a canvas-react bridge rather than D2's `interaction.viewMode` move, which is still the long-term home. X2 (toolbars as thin wrappers over presets) stays deferred: header slots don't accept specs yet |
+| 2026-09-28 | X2 superseded by `rfc:feat-2026-09-28-toolbars-and-control-panels-draw-controls-twice` | accepted | Toolbars now draw control specs through `useControlItems`; nothing in this RFC is still open |

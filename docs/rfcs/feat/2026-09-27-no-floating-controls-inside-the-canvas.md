@@ -19,7 +19,7 @@ relations:
 |---|---|
 | **Motivation** | `sym:GraphCanvasApp` has header / footer / side rails but no first-class floating chrome over the canvas; floating controls are hand-rolled `sym:Panel` children, invisible to the store, export and the Studio |
 | **Design** | A `ControlPanelSpec` (pure JSON) lives in `view.definition.controlPanels`; items name **commands** / **icons** / **widgets** by string; a `sym:CommandRegistry` on each `Canvas` resolves commands; `@invana/canvas-ui` projects the specs to pixels |
-| **Row status** | proposed 0 · accepted 0 · implemented 10 · landed 0 · deferred 2 · rejected 0 (updated in §8) |
+| **Row status** | proposed 0 · accepted 0 · implemented 10 · landed 0 · deferred 0 · rejected 0 · superseded 2 (updated in §8) |
 | **Open decisions** | none — D1–D3 accepted with the recommendations |
 
 ## 1. Motivation
@@ -73,8 +73,8 @@ relations:
 | F8 | defect | implemented | `pkg:@invana/canvas-ui` | `<ControlPanels>` projection + default icon / widget registries | pixels | medium | F7 |
 | F9 | defect | implemented | `sym:GraphCanvasApp` | Mount `<ControlPanels>`; register `theme.toggle` | zero-wiring in the app | low | F8 |
 | F10 | defect | implemented | `api/*.surface.txt` | Regenerate snapshots | `check-api-surface` green | low | F1–F8 |
-| F11 | defect | deferred | `pkg:@invana/graph` | Domain commands (`history.undo/redo`, `selection.clear`, select mode) | richer panels | low | F4 — unblocked any time |
-| F12 | defect | deferred | `pkg:@invana/canvas-ui` `editors/control-panels/` | Schema editor for panels (Studio authoring) | Studio edits panels | medium | F8 — follow-up round |
+| F11 | defect | superseded | `pkg:@invana/graph` | Domain commands (`history.undo/redo`, `selection.clear`, select mode) — superseded by `rfc:feat-2026-09-28-graph-toolbar-actions-cannot-be-saved` (select mode, history, clipboard, edge type, clear) | richer panels | low | F4 — unblocked any time |
+| F12 | defect | superseded | `pkg:@invana/canvas-ui` `editors/control-panels/` | Schema editor for panels (Studio authoring) — superseded by `rfc:feat-2026-09-28-control-panels-cannot-be-edited-in-the-studio` | Studio edits panels | medium | F8 — follow-up round |
 
 ## 5. Blast radius
 
@@ -103,7 +103,7 @@ relations:
 | V2 | pass | `pnpm build` + `pnpm check-boundaries` | repo | core stays import-free | F1, F3 |
 | V3 | pass | `pnpm check-api-surface` | api snapshots | only additions | F10 |
 | V4 | pass | existing canvas-store / canvas-core tests | `pnpm test` | pass (control) | F1, F2 |
-| V5 | pending | Storybook: `GraphCanvasApp` stories unchanged with no panels; a panel draws + its commands fire | `story:canvas-ui/apps/GraphCanvasApp` | identical (control); panel works | F7, F8, F9 |
+| V5 | pass | Storybook: `GraphCanvasApp` stories unchanged with no panels; a panel draws + its commands fire | `story:canvas-ui/apps/GraphCanvasApp` | identical (control); panel works | F7, F8, F9 |
 | V6 | pass | Node smoke over built `dist`: `controlPanels.add/hide/update/remove`; `CommandRegistry` run / isActive / dispose / notify | scratch script | all true | F2, F3 |
 
 ## 7. Decisions
@@ -121,3 +121,5 @@ relations:
 |---|---|---|---|
 | 2026-09-27 | Opened; approach agreed in chat ("engine also", "write the code") | accepted | F11, F12 deferred |
 | 2026-09-27 | F1–F10 implemented on `feat/control-panels` | accepted | V1–V4, V6 pass; V5 (visual, in Storybook) pending — no story added (rule 11). Learned: `Panel`'s 8 positions can't express centred side anchors, `center`, insets or `{x,y}` offsets, so the projection positions panels itself rather than reusing `sym:Panel` (U1 no longer applies). `CommandRegistry` is exported from core + canvas, not re-exported by canvas-store (matches the other registries) |
+| 2026-09-28 | F11 superseded by `rfc:feat-2026-09-28-graph-toolbar-actions-cannot-be-saved`; V5 pass | accepted | F11: that RFC registers `select.mode`, `history.*`, `clipboard.*`, `graph.edgeType`, `graph.clear` (`selection.clear` wasn't needed: `clipboard.delete` and select mode cover the panels built so far). V5: headless Chromium over the running Storybook — `story:canvas-ui/apps/GraphCanvasApp/FullFeatured` and `story:usecases/tools/GraphModeller` (no panels) load unchanged with no console errors; `story:canvas-react/ControlPanel/Canvas/Basic` and `story:canvas-ui/apps/GraphCanvasApp/ControlPanels` draw their panels and the commands fire. F12 (Studio editor for panels) stays deferred |
+| 2026-09-28 | F12 superseded by `rfc:feat-2026-09-28-control-panels-cannot-be-edited-in-the-studio` | accepted | `ControlPanelsEditorPanel` / `ControlPanelsEditor`, also a section of `CanvasSettingsEditorPanel`. Nothing in this RFC is still open |

@@ -3,8 +3,10 @@
  *
  * A control panel is a small toolbar / widget cluster pinned over the canvas
  * (zoom buttons bottom-right, a brand + mode picker top-left, …). Its spec lives
- * in `CanvasView.definition.controlPanels`, so panels persist, export, undo and
- * (later) sync like every other part of the definition.
+ * in `CanvasView.definition.controlPanels`, so panels persist, export and
+ * (later) sync like every other part of the definition. Edits are ordinary
+ * `view` patches, so a view history would undo them — but none is wired yet
+ * (the modeller's undo, `GraphHistory`, journals graph data only).
  *
  * Specs hold **no closures and no components**: an item names what it does by
  * string — a `command` (resolved by the canvas's `CommandRegistry`), an `icon`
@@ -49,6 +51,12 @@ interface ControlItemBase {
 /**
  * A button that runs a named command on click. Disabled while the command is
  * missing or reports `isEnabled() === false`.
+ *
+ * Unlike a {@link ControlToggleItemSpec} it never shows a pressed state, but it
+ * may still **swap its face** while the command's `isActive(args)` is true — the
+ * `active*` fields below. That's a Run button that turns into Stop while a
+ * layout runs (`layout.toggle`), or an Erase button that reads "Selection"
+ * while something is selected (`graph.erase`).
  */
 export interface ControlCommandItemSpec extends ControlItemBase {
   type: 'command';
@@ -62,6 +70,12 @@ export interface ControlCommandItemSpec extends ControlItemBase {
   label: string;
   /** Optional visible text beside the icon. */
   text?: string;
+  /** Icon name while the command is active. Defaults to {@link icon}. */
+  activeIcon?: string;
+  /** Tooltip + label while the command is active. Defaults to {@link label}. */
+  activeLabel?: string;
+  /** Visible text while the command is active. Defaults to {@link text}. */
+  activeText?: string;
 }
 
 /**

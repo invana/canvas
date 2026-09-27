@@ -34,6 +34,14 @@ export interface CanvasConfig {
    */
   controlPanels?: Record<string, ControlPanelSpec | null>;
   /**
+   * The interaction mode (`view.interaction.viewMode` — the modeller "tool") a
+   * canvas **starts** in. Stored as `definition.canvas.defaultViewMode`, and
+   * applied to the live mode only by the first config that carries it, so a
+   * later `update` never yanks the user out of the tool they picked. Behaviours
+   * with `modes` follow the live mode. Absent = `'select'`.
+   */
+  defaultViewMode?: string;
+  /**
    * Fit the camera to content **once on load**, so the drawing is centred when it
    * first appears — independent of any layout. The engine fits the union of its
    * world layers' bounds once, after the viewport has its real size and (when an
