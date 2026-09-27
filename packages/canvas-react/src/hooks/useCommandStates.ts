@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
-import type { Canvas } from '@invana/canvas';
+import type { Canvas, CommandOption } from '@invana/canvas';
 
 import { useResolvedCanvas } from './useResolvedCanvas';
 
@@ -17,16 +17,21 @@ export interface CommandState {
   enabled: boolean;
   /** Its `isActive` (toggle state). */
   active: boolean;
+  /** Its `value` (pick-one commands), or `null`. */
+  value: string | null;
+  /** Its `options` (pick-one commands), or `[]`. */
+  options: CommandOption[];
 }
 
 /**
  * Live {@link CommandState} for each ref, plus a `run` dispatcher — what a
  * control-panel renderer needs to draw command buttons and toggles.
  *
- * Re-evaluates on view-store changes, command (un)registration and behaviour
- * enable / disable, but **re-renders only when a state actually flips**: the
- * snapshot is a compact string of the states, so pointer-rate view writes
- * (hover, camera) that change nothing here cost one comparison.
+ * Re-evaluates on view-store changes, command (un)registration /
+ * `invalidate()` and behaviour enable / disable, but **re-renders only when a
+ * state actually changes**: the snapshot is the states serialised to a string,
+ * so pointer-rate view writes (hover, camera) that change nothing here cost one
+ * comparison.
  */
 export function useCommandStates(
   refs: readonly CommandRef[],
@@ -50,23 +55,21 @@ export function useCommandStates(
     [resolved],
   );
 
-  const getSnapshot = (): string =>
-    refs
-      .map(({ command, args }) => {
-        const c = resolved.commands;
-        return `${c.has(command) ? 1 : 0}${c.isEnabled(command, args) ? 1 : 0}${c.isActive(command, args) ? 1 : 0}`;
-      })
-      .join('|');
+  const getSnapshot = (): string => {
+    const c = resolved.commands;
+    return JSON.stringify(
+      refs.map(({ command, args }): CommandState => ({
+        available: c.has(command),
+        enabled: c.isEnabled(command, args),
+        active: c.isActive(command, args),
+        value: c.value(command, args),
+        options: c.options(command, args),
+      })),
+    );
+  };
 
   const key = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
-
-  const states = useMemo<CommandState[]>(
-    () =>
-      key === ''
-        ? []
-        : key.split('|').map((s) => ({ available: s[0] === '1', enabled: s[1] === '1', active: s[2] === '1' })),
-    [key],
-  );
+  const states = useMemo(() => JSON.parse(key) as CommandState[], [key]);
   const run = useCallback((command: string, args?: unknown) => resolved.commands.run(command, args), [resolved]);
 
   return { states, run };

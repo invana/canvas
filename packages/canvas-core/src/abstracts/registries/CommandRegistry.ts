@@ -11,6 +11,16 @@
  * its `Canvas`), so the kernel stays free of any engine type.
  */
 
+/** One option of a pick-one command (see {@link CanvasCommand.options}). */
+export interface CommandOption {
+  /** The value passed back to `run` as `args.value` when picked. */
+  value: string;
+  /** Human label. */
+  label: string;
+  /** Icon name, resolved by the UI kit's icon registry. */
+  icon?: string;
+}
+
 /** A named command, run against a context `C`. `args` is whatever the caller's spec carried (JSON). */
 export interface CanvasCommand<C> {
   /** Human label — a default tooltip when a spec doesn't give one. */
@@ -21,6 +31,14 @@ export interface CanvasCommand<C> {
   isActive?(ctx: C, args?: unknown): boolean;
   /** Whether the command can run now. Absent ⇒ always enabled. */
   isEnabled?(ctx: C, args?: unknown): boolean;
+  /**
+   * Current value, for a **pick-one** command (select mode, edge type, active
+   * layout). Picking an option runs the command with `{ ...args, value }`.
+   * `null` when nothing is picked.
+   */
+  value?(ctx: C, args?: unknown): string | null;
+  /** The options a pick-one command offers. A spec's own `options` take precedence. */
+  options?(ctx: C, args?: unknown): CommandOption[];
 }
 
 /** Options for {@link CommandRegistry}. */
@@ -31,12 +49,17 @@ export interface CommandRegistryOptions<C> {
 
 /**
  * Holds {@link CanvasCommand}s by name and runs them against a bound context.
- * Registering a name that already exists **replaces** it (an app may override a
- * built-in); {@link subscribe} listeners hear every register / unregister so a UI
- * can re-resolve late-arriving commands.
+ *
+ * Registrations **stack** per name: registering a name that already exists
+ * overrides it (a provider upgrading `graph.clear` to its undoable form, an app
+ * replacing a built-in), and disposing an override restores whatever is
+ * underneath — in any disposal order. {@link subscribe} listeners hear every
+ * register / unregister and every {@link invalidate}, so a UI can re-read
+ * command state.
  */
 export class CommandRegistry<C> {
-  private readonly commands = new Map<string, CanvasCommand<C>>();
+  /** Per name, the registrations oldest → newest; the last one is live. */
+  private readonly stacks = new Map<string, Array<{ command: CanvasCommand<C> }>>();
   private readonly listeners = new Set<() => void>();
   private readonly getContext: () => C;
 
@@ -45,34 +68,46 @@ export class CommandRegistry<C> {
   }
 
   /**
-   * Register (or replace) `name`. Returns a disposer that unregisters it — but
-   * only if it is still this exact command, so disposing a replaced command
-   * never removes its replacement.
+   * Register `name`, overriding any existing registration. Returns a disposer
+   * that removes **this** registration only: if it is live, the one underneath
+   * becomes live again; if it was already overridden, the override stays.
    */
   register(name: string, command: CanvasCommand<C>): () => void {
-    this.commands.set(name, command);
+    // A fresh wrapper per call, so registering the same command twice still
+    // yields two independently disposable entries.
+    const entry = { command };
+    const stack = this.stacks.get(name) ?? [];
+    stack.push(entry);
+    this.stacks.set(name, stack);
     this.notify();
     return () => {
-      if (this.commands.get(name) === command) this.unregister(name);
+      const current = this.stacks.get(name);
+      const i = current?.indexOf(entry) ?? -1;
+      if (!current || i < 0) return;
+      current.splice(i, 1);
+      if (current.length === 0) this.stacks.delete(name);
+      this.notify();
     };
   }
 
-  /** Remove `name`. No-op when absent. */
+  /** Remove every registration of `name`. No-op when absent. */
   unregister(name: string): void {
-    if (this.commands.delete(name)) this.notify();
+    if (this.stacks.delete(name)) this.notify();
   }
 
   has(name: string): boolean {
-    return this.commands.has(name);
+    return this.stacks.has(name);
   }
 
+  /** The live (most recent) registration of `name`. */
   get(name: string): CanvasCommand<C> | undefined {
-    return this.commands.get(name);
+    const stack = this.stacks.get(name);
+    return stack?.[stack.length - 1]?.command;
   }
 
-  /** Registered command names, in registration order. */
+  /** Registered command names, in first-registration order. */
   list(): string[] {
-    return [...this.commands.keys()];
+    return [...this.stacks.keys()];
   }
 
   /**
@@ -80,7 +115,7 @@ export class CommandRegistry<C> {
    * is missing or disabled.
    */
   run(name: string, args?: unknown): boolean {
-    const cmd = this.commands.get(name);
+    const cmd = this.get(name);
     if (!cmd) return false;
     const ctx = this.getContext();
     if (cmd.isEnabled && !cmd.isEnabled(ctx, args)) return false;
@@ -90,18 +125,39 @@ export class CommandRegistry<C> {
 
   /** `isActive` of `name`; `false` when missing or not a toggle. */
   isActive(name: string, args?: unknown): boolean {
-    const cmd = this.commands.get(name);
+    const cmd = this.get(name);
     return cmd?.isActive ? cmd.isActive(this.getContext(), args) : false;
   }
 
   /** `isEnabled` of `name`; `false` when missing, `true` when it declares no check. */
   isEnabled(name: string, args?: unknown): boolean {
-    const cmd = this.commands.get(name);
+    const cmd = this.get(name);
     if (!cmd) return false;
     return cmd.isEnabled ? cmd.isEnabled(this.getContext(), args) : true;
   }
 
-  /** Hear every register / unregister. Returns an unsubscribe. */
+  /** `value` of a pick-one command; `null` when missing or not a picker. */
+  value(name: string, args?: unknown): string | null {
+    const cmd = this.get(name);
+    return cmd?.value ? cmd.value(this.getContext(), args) : null;
+  }
+
+  /** `options` of a pick-one command; `[]` when missing or it declares none. */
+  options(name: string, args?: unknown): CommandOption[] {
+    const cmd = this.get(name);
+    return cmd?.options ? cmd.options(this.getContext(), args) : [];
+  }
+
+  /**
+   * Tell subscribers that command state changed **outside** anything they
+   * already watch (a history stack, a clipboard buffer, a layer's edge
+   * defaults), so a bound control re-reads `isEnabled` / `isActive` / `value`.
+   */
+  invalidate(): void {
+    this.notify();
+  }
+
+  /** Hear every register / unregister / {@link invalidate}. Returns an unsubscribe. */
   subscribe(listener: () => void): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
@@ -109,7 +165,7 @@ export class CommandRegistry<C> {
 
   /** Drop every command and listener. */
   clear(): void {
-    this.commands.clear();
+    this.stacks.clear();
     this.notify();
     this.listeners.clear();
   }

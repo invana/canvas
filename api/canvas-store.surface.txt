@@ -1,7 +1,7 @@
 # @invana/canvas-store — public API surface (generated; do not hand-edit)
 # Regenerate: pnpm build && node scripts/check-api-surface.mjs --write
 
-## . (305 exports)
+## . (307 exports)
 AnchorCtx
 AnchorShapeRef
 AnchorSpec
@@ -43,6 +43,8 @@ ConnectorHitRecord
 ConnectorLabelPlacement
 ConnectorLabelStyle
 ConnectorPaintStyle
+ControlChoiceItemSpec
+ControlChoiceOption
 ControlCommandItemSpec
 ControlDividerItemSpec
 ControlItemSpec

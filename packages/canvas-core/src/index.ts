@@ -94,7 +94,7 @@ export { LayoutRegistry } from './abstracts/registries/LayoutRegistry';
 export type { LayoutRegistryOptions } from './abstracts/registries/LayoutRegistry';
 
 export { CommandRegistry } from './abstracts/registries/CommandRegistry';
-export type { CanvasCommand, CommandRegistryOptions } from './abstracts/registries/CommandRegistry';
+export type { CanvasCommand, CommandOption, CommandRegistryOptions } from './abstracts/registries/CommandRegistry';
 
 // ─── Headless reference implementation (test double, not a product renderer) ─
 export {
@@ -216,6 +216,8 @@ export type {
   ControlItemSpec,
   ControlCommandItemSpec,
   ControlToggleItemSpec,
+  ControlChoiceItemSpec,
+  ControlChoiceOption,
   ControlWidgetItemSpec,
   ControlDividerItemSpec,
   ControlTextItemSpec,

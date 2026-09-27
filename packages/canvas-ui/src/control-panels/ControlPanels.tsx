@@ -108,11 +108,13 @@ function ControlPanelView({
   widgets: Record<string, ControlWidget>;
   zIndex: number;
 }) {
-  // One ref per command/toggle item, in item order.
+  // One ref per command-bound item (command / toggle / choice), in item order.
   const refs = useMemo<CommandRef[]>(
     () =>
       spec.items.flatMap((it) =>
-        it.type === 'command' || it.type === 'toggle' ? [{ command: it.command, args: it.args }] : [],
+        it.type === 'command' || it.type === 'toggle' || it.type === 'choice'
+          ? [{ command: it.command, args: it.args }]
+          : [],
       ),
     [spec.items],
   );
@@ -150,6 +152,26 @@ function ControlPanelView({
           active: st?.active ?? false,
           disabled: !st?.enabled,
           onToggle: () => void run(it.command, it.args),
+        }];
+      }
+      case 'choice': {
+        const st = states[c++];
+        const options = it.options ?? st?.options ?? [];
+        if (options.length === 0) return [];
+        const optionIcons: Record<string, ToolbarIcon> = {};
+        for (const o of options) {
+          const Icon = o.icon ? icons[o.icon] : undefined;
+          if (Icon) optionIcons[o.value] = Icon;
+        }
+        return [{
+          type: 'select',
+          key,
+          label: it.label,
+          value: st?.value ?? options[0]!.value,
+          options: Object.fromEntries(options.map((o) => [o.value, o.label])),
+          ...(Object.keys(optionIcons).length > 0 ? { icons: optionIcons, triggerLabelOnly: true } : {}),
+          ...(it.display ? { display: it.display } : {}),
+          onChange: (value: string) => void run(it.command, { ...it.args, value }),
         }];
       }
       case 'divider':

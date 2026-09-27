@@ -88,7 +88,7 @@ export {
 // `parts` / `root` without importing `@invana/canvas` directly.
 export type { CompositePart, CompositeRootSpec } from '@invana/canvas';
 
-export { GraphCanvas } from './canvas';
+export { GraphCanvas, DEFAULT_EDGE_TYPES, DEFAULT_EDGE_TYPE_LABELS } from './canvas';
 
 export {
   OneShotPositionLayout,

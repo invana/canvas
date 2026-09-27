@@ -47,6 +47,8 @@ export type {
   ControlItemSpec,
   ControlCommandItemSpec,
   ControlToggleItemSpec,
+  ControlChoiceItemSpec,
+  ControlChoiceOption,
   ControlWidgetItemSpec,
   ControlDividerItemSpec,
   ControlTextItemSpec,

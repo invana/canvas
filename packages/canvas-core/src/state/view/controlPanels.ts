@@ -84,6 +84,35 @@ export interface ControlToggleItemSpec extends ControlItemBase {
   activeLabel?: string;
 }
 
+/** One option of a {@link ControlChoiceItemSpec}. */
+export interface ControlChoiceOption {
+  /** Passed to the command as `args.value` when picked. */
+  value: string;
+  /** Human label. */
+  label: string;
+  /** Icon name, resolved by the UI kit's icon registry. */
+  icon?: string;
+}
+
+/**
+ * A pick-one control (select mode, edge type, active layout) bound to a command
+ * that reports a `value`. Picking an option runs the command with
+ * `{ ...args, value }`.
+ */
+export interface ControlChoiceItemSpec extends ControlItemBase {
+  type: 'choice';
+  /** Command name in the canvas's `CommandRegistry`, e.g. `'select.mode'`. */
+  command: string;
+  /** Arguments passed to the command (plus `value` when picking). Must be JSON. */
+  args?: Record<string, unknown>;
+  /** Trigger label + menu heading. */
+  label: string;
+  /** The options. Default: the command's own `options()`. */
+  options?: ControlChoiceOption[];
+  /** A collapsed dropdown (default) or every option inline as a segmented group. */
+  display?: 'dropdown' | 'segmented';
+}
+
 /** A named widget from the UI kit's widget registry (e.g. `'zoom-readout'`). */
 export interface ControlWidgetItemSpec extends ControlItemBase {
   type: 'widget';
@@ -120,6 +149,7 @@ export interface ControlSlotItemSpec extends ControlItemBase {
 export type ControlItemSpec =
   | ControlCommandItemSpec
   | ControlToggleItemSpec
+  | ControlChoiceItemSpec
   | ControlWidgetItemSpec
   | ControlDividerItemSpec
   | ControlTextItemSpec

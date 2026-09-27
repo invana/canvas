@@ -26,9 +26,16 @@ import { Canvas } from '@invana/canvas';
 import type { Behaviour, CanvasConfig, CanvasOptions, Layer, Layout } from '@invana/canvas';
 
 import { GraphLayer } from '../layer/GraphLayer';
+import { registerGraphCommands } from './graphCommands';
 
 export class GraphCanvas extends Canvas {
   private offActiveLayout: (() => void) | null = null;
+
+  /** Adds the graph commands (`select.mode`, `graph.edgeType`, `graph.clear`, …) to `commands`. */
+  constructor(opts: CanvasOptions = {}) {
+    super(opts);
+    registerGraphCommands(this.commands);
+  }
 
   /** Typed layer lookup; defaults to `GraphLayer`. */
   layer<T extends Layer = GraphLayer>(id: string): T | undefined {

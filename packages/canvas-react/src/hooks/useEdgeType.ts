@@ -1,36 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Canvas } from '@invana/canvas';
+import { DEFAULT_EDGE_TYPES, DEFAULT_EDGE_TYPE_LABELS } from '@invana/graph';
 import type { GraphLayer, EdgePathType, EdgeShapeOptions } from '@invana/graph';
 
+import { useCommandStates } from './useCommandStates';
 import { useResolvedCanvas } from './useResolvedCanvas';
 
-/**
- * Default path types surfaced by an edge-type picker, in display order. A
- * curated subset of {@link EdgePathType} that maps cleanly to the three common
- * routing styles plus their rounded/smooth orthogonal variants.
- */
-export const DEFAULT_EDGE_TYPES: readonly EdgePathType[] = [
-  'straight',
-  'orth',
-  'bezier',
-  'rounded',
-  'smooth',
-];
-
-/** Human labels for the built-in {@link EdgePathType} values (picker display). */
-export const DEFAULT_EDGE_TYPE_LABELS: Record<string, string> = {
-  straight: 'Straight',
-  orth: 'Orthogonal',
-  bezier: 'Curved',
-  quadratic: 'Quadratic',
-  rounded: 'Rounded',
-  smooth: 'Smooth',
-  manhattan: 'Manhattan',
-  'bump-radial': 'Bump (radial)',
-  'bump-horizontal': 'Bump (horizontal)',
-  'step-radial': 'Step (radial)',
-  bundle: 'Bundled',
-};
+// The defaults live with the `graph.edgeType` command in `@invana/graph`;
+// re-exported here so existing imports keep working.
+export { DEFAULT_EDGE_TYPES, DEFAULT_EDGE_TYPE_LABELS };
 
 export interface UseEdgeTypeOptions {
   /** Target `GraphLayer` id. Default `'graph'`. */
@@ -67,8 +45,10 @@ export interface UseEdgeTypeResult {
  * pair (e.g. `'orth'`, `'bezier'`, `'rounded'`).
  *
  * The prior `shape` is spread before patching so anchors / waypoints survive
- * (`setEdgeDefaults` replaces structured fields wholesale). State is owned by
- * the hook and seeded from `layer.edgeDefaults` on mount.
+ * (`setEdgeDefaults` replaces structured fields wholesale). On a `GraphCanvas`
+ * it reads and writes through the `graph.edgeType` command (the value is the
+ * layer's actual edge default); on a plain `Canvas` the hook owns the state,
+ * seeded from `layer.edgeDefaults` on mount.
  */
 export function useEdgeType(
   options: UseEdgeTypeOptions = {},
@@ -77,6 +57,15 @@ export function useEdgeType(
   const { layerId = 'graph', initial, types = DEFAULT_EDGE_TYPES, labels } = options;
   const resolved = useResolvedCanvas(canvas);
   const [edgeType, setEdgeTypeState] = useState<string>(initial ?? types[0] ?? 'straight');
+
+  // On a `GraphCanvas` the `graph.edgeType` command is the source of truth —
+  // the same one a saved control panel binds to — so this picker and a panel
+  // stay in sync. A plain `Canvas` has no such command; fall back to the
+  // hook-local state below.
+  const args = useMemo(() => ({ layerId, types: [...types] }), [layerId, types]);
+  const refs = useMemo(() => [{ command: 'graph.edgeType', args }], [args]);
+  const { states, run } = useCommandStates(refs, resolved);
+  const viaCommand = states[0]?.available === true;
 
   // Seed from the layer's current default once the canvas is resolved, unless an
   // explicit `initial` was given (the background layer emits no option event, so
@@ -109,5 +98,12 @@ export function useEdgeType(
   const edgeTypeOptions =
     labels ?? Object.fromEntries(types.map((t) => [t, DEFAULT_EDGE_TYPE_LABELS[t] ?? t]));
 
+  if (viaCommand) {
+    return {
+      edgeType: states[0]?.value ?? edgeType,
+      edgeTypeOptions,
+      setEdgeType: (next: string) => void run('graph.edgeType', { ...args, value: next }),
+    };
+  }
   return { edgeType, edgeTypeOptions, setEdgeType };
 }

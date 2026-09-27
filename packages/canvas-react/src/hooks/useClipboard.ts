@@ -1,11 +1,11 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
 import type { Canvas } from '@invana/canvas';
-import type { ClickSelectBehaviour } from '@invana/graph';
 
 import { useResolvedCanvas } from './useResolvedCanvas';
 import { useSelection } from './useSelection';
 import { ClipboardContext } from '../ClipboardContext';
 import { HistoryContext } from '../HistoryContext';
+import { pasteAndSelect } from '../providers/graphActions';
 
 export interface UseClipboardOptions {
   /** Id of the `ClickSelectBehaviour` selection is read from / re-applied to. Default `'click-select'`. */
@@ -73,13 +73,7 @@ export function useClipboard(
   }, [clipboard, history, selectedNodeIds, selectedEdgeIds]);
 
   const paste = useCallback(() => {
-    if (!clipboard) return;
-    const { nodeIds, edgeIds } = clipboard.paste(history ?? undefined);
-    const behaviour = resolved.behaviours.get<ClickSelectBehaviour>(clickSelectId);
-    behaviour?.selectMultiple([
-      ...nodeIds.map((id) => ({ id, type: 'shape' as const })),
-      ...edgeIds.map((id) => ({ id, type: 'connector' as const })),
-    ]);
+    if (clipboard) pasteAndSelect(resolved, clipboard, history, clickSelectId);
   }, [clipboard, history, resolved, clickSelectId]);
 
   return { cut, copy, paste, remove, canPaste, hasSelection: count > 0 };

@@ -9,6 +9,7 @@ import type { Canvas } from '@invana/canvas';
 
 import { useResolvedCanvas } from '../hooks/useResolvedCanvas';
 import { HistoryContext } from '../HistoryContext';
+import { clearGraphLayer } from './graphActions';
 
 export interface GraphHistoryProviderProps {
   /** Id of the `GraphLayer` whose store the history journals. Default `'graph'`. */
@@ -31,9 +32,18 @@ export interface GraphHistoryProviderProps {
  * at `node:drag-start`, net change pushed at `node:drag-end`) — reusing
  * `history.push`, so per-frame writes and layout sim ticks never enter the stack.
  *
+ * While mounted it also registers the `history.undo` / `history.redo` commands
+ * and an undoable `graph.clear` on the canvas, for control panels.
+ *
  * The history is rebuilt (and its stacks cleared) if `layerId`, `limit`, or the
  * resolved canvas change.
  */
+/** The layer a `graph.clear` targets (`args.layerId`, default `'graph'`). */
+function targetLayer(args: unknown): string {
+  const id = args && typeof args === 'object' ? (args as { layerId?: unknown }).layerId : undefined;
+  return typeof id === 'string' ? id : 'graph';
+}
+
 export function GraphHistoryProvider({
   layerId = 'graph',
   limit,
@@ -97,6 +107,40 @@ export function GraphHistoryProvider({
       offEnd();
     };
   }, [resolved, layerId, history]);
+
+  // While mounted, undo / redo and an undoable `graph.clear` are canvas
+  // commands, so a saved control panel can bind to them. `graph.clear` overrides
+  // the graph's plain built-in and hands it back on unmount; a clear aimed at a
+  // layer this history doesn't journal falls back to the plain clear.
+  useEffect(() => {
+    if (!history) return;
+    const commands = resolved.commands;
+    const offs = [
+      commands.register('history.undo', {
+        label: 'Undo',
+        run: () => history.undo(),
+        isEnabled: () => history.canUndo,
+      }),
+      commands.register('history.redo', {
+        label: 'Redo',
+        run: () => history.redo(),
+        isEnabled: () => history.canRedo,
+      }),
+      commands.register('graph.clear', {
+        label: 'Clear canvas',
+        isEnabled: (c, args) => c.layers.has(targetLayer(args)),
+        run: (c, args) => {
+          const target = targetLayer(args);
+          clearGraphLayer(c, target, target === layerId ? history : null);
+        },
+      }),
+      // The undo stack isn't in the view store: tell bound controls it moved.
+      history.events.on('change', () => commands.invalidate()),
+    ];
+    return () => {
+      for (const off of offs) off();
+    };
+  }, [history, resolved, layerId]);
 
   return <HistoryContext.Provider value={history}>{children}</HistoryContext.Provider>;
 }

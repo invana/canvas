@@ -10,11 +10,15 @@
  * | `view.lock` | `{ behaviourIds? }` (default `['pan', 'drag-node']`) | toggle |
  * | `layout.run` | `{ id? }` (default: the active layout) | button |
  * | `layout.stop` | — | button, enabled while a layout runs |
+ * | `layout.activate` | `{ value }` | choice over the registered layouts; value = `activeLayout` |
+ * | `background.grid` | `{ layerId?, patternType? }` (default `'background'`) | toggle, active while the background is a pattern |
  *
  * Names are public API (`namespace.verb`): renaming one breaks saved panels.
  */
 
 import type { CanvasCommand, CommandRegistry } from '@invana/canvas-core';
+
+import type { BackgroundLayer } from '../layers/BackgroundLayer';
 
 import type { Canvas } from './Canvas';
 
@@ -31,6 +35,11 @@ function arg<T>(args: unknown, key: string): T | undefined {
 /** The ids `view.lock` targets that are actually registered. */
 function lockIds(canvas: Canvas, args: unknown): string[] {
   return (arg<string[]>(args, 'behaviourIds') ?? DEFAULT_LOCK_IDS).filter((id) => canvas.behaviours.has(id));
+}
+
+/** The background layer `background.grid` targets. */
+function backgroundId(args: unknown): string {
+  return arg<string>(args, 'layerId') ?? 'background';
 }
 
 /** Enabled only once the engine has a camera. */
@@ -76,6 +85,38 @@ const BUILTIN_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
     isEnabled: (canvas, args) => {
       const id = arg<string>(args, 'id');
       return id ? canvas.layouts.has(id) : canvas.store.view.getState().definition.activeLayout !== null;
+    },
+  },
+  'layout.activate': {
+    label: 'Layout',
+    value: (canvas) => canvas.store.view.getState().definition.activeLayout,
+    options: (canvas) => canvas.layouts.list().map((l) => ({ value: l.id, label: l.id })),
+    isEnabled: (canvas) => canvas.layouts.list().length > 0,
+    // Record it, then run it. A domain facade that auto-runs `activeLayout`
+    // (`GraphCanvas`) overrides this to skip the second run.
+    run: (canvas, args) => {
+      const id = arg<string>(args, 'value');
+      if (!id || !canvas.layouts.has(id)) return;
+      canvas.update({ activeLayout: id });
+      void canvas.runLayout(id);
+    },
+  },
+  'background.grid': {
+    label: 'Toggle grid',
+    // Read the definition first — `canvas.update` writes it, so the toggle
+    // follows every write path — falling back to the layer's own options.
+    isActive: (canvas, args) => {
+      const id = backgroundId(args);
+      const fromDefinition = canvas.store.view.getState().definition.layers[id]?.type;
+      const type = fromDefinition ?? canvas.layers.get<BackgroundLayer>(id)?.getOptions().type;
+      return type === 'pattern';
+    },
+    isEnabled: (canvas, args) => canvas.layers.has(backgroundId(args)),
+    run: (canvas, args) => {
+      const id = backgroundId(args);
+      const on = !BUILTIN_COMMANDS['background.grid']!.isActive!(canvas, args);
+      const patternType = arg<string>(args, 'patternType');
+      canvas.update({ layers: { [id]: { type: on ? 'pattern' : 'solid', ...(on && patternType ? { patternType } : {}) } } });
     },
   },
   'layout.stop': {

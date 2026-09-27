@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
-import type { Canvas, BackgroundLayer, BackgroundLayerOptions } from '@invana/canvas';
+import { useCallback, useMemo } from 'react';
+import type { Canvas, BackgroundLayerOptions } from '@invana/canvas';
 
+import { useCommandStates } from './useCommandStates';
 import { useResolvedCanvas } from './useResolvedCanvas';
 
 type PatternType = NonNullable<BackgroundLayerOptions['patternType']>;
@@ -25,13 +26,9 @@ export interface UseGridResult {
 }
 
 /**
- * Toggle a `BackgroundLayer`'s pattern on/off. "Grid shown" maps to
- * `type: 'pattern'`, "hidden" to `type: 'solid'`. Pass `patternType` to force a
- * specific pattern (e.g. `'grid'`) when turning it on; otherwise the layer's
- * configured pattern is kept.
- *
- * State is owned by the hook (the background layer emits no option-change event)
- * and seeded from `getOptions()` on mount.
+ * Background grid toggle, through the `background.grid` command — the same
+ * command a saved control panel binds to, so a toolbar and a panel always agree.
+ * `showGrid` follows the definition (every write path), not hook-local state.
  */
 export function useGrid(
   options: UseGridOptions = {},
@@ -39,26 +36,22 @@ export function useGrid(
 ): UseGridResult {
   const { backgroundLayerId = 'background', patternType } = options;
   const resolved = useResolvedCanvas(canvas);
-  const [showGrid, setShowGrid] = useState(false);
-
-  useEffect(() => {
-    const layer = resolved.layers.get<BackgroundLayer>(backgroundLayerId);
-    if (layer) setShowGrid(layer.getOptions().type === 'pattern');
-  }, [resolved, backgroundLayerId]);
+  const args = useMemo(
+    () => ({ layerId: backgroundLayerId, ...(patternType ? { patternType } : {}) }),
+    [backgroundLayerId, patternType],
+  );
+  const refs = useMemo(() => [{ command: 'background.grid', args }], [args]);
+  const { states, run } = useCommandStates(refs, resolved);
+  const showGrid = states[0]?.active ?? false;
 
   const setGrid = useCallback(
     (on: boolean) => {
-      const layer = resolved.layers.get<BackgroundLayer>(backgroundLayerId);
-      if (!layer) return;
-      const next: Partial<BackgroundLayerOptions> = { type: on ? 'pattern' : 'solid' };
-      if (on && patternType) next.patternType = patternType;
-      layer.setOptions(next);
-      setShowGrid(on);
+      // The command toggles; only run it when the state would change.
+      if (resolved.commands.isActive('background.grid', args) !== on) run('background.grid', args);
     },
-    [resolved, backgroundLayerId, patternType],
+    [resolved, run, args],
   );
-
-  const toggleGrid = useCallback(() => setGrid(!showGrid), [setGrid, showGrid]);
+  const toggleGrid = useCallback(() => void run('background.grid', args), [run, args]);
 
   return { showGrid, toggleGrid, setGrid };
 }
