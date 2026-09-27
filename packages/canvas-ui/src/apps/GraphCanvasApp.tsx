@@ -552,18 +552,6 @@ export function GraphCanvasApp({
   const { isDark, toggleMode } = theme;
   const themeKind: ThemeKind = isDark ? 'dark' : 'light';
 
-  // `theme.toggle` flips the **host** theme (the engine follows via
-  // <CanvasThemeSync>), so a control panel can carry the theme switch. Re-
-  // registered when the mode flips so bound toggles re-read `isActive`.
-  useEffect(() => {
-    if (!canvas) return;
-    return canvas.commands.register('theme.toggle', {
-      label: 'Toggle theme',
-      run: () => toggleMode(),
-      isActive: () => isDark,
-    });
-  }, [canvas, toggleMode, isDark]);
-
   const handleReady = useCallback(
     (c: GraphCanvas | null) => {
       setCanvas(c);

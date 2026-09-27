@@ -7,31 +7,33 @@ import {
   DragPanBehaviour,
   WheelZoomBehaviour,
   DragNodeBehaviour,
+  ClickSelectBehaviour,
+  BrushSelectBehaviour,
+  LassoSelectBehaviour,
   D3ForceLayout,
+  ElkLayout,
   type GraphLayerProps
 } from '@invana/canvas-react';
-import { ControlPanels } from '@invana/canvas-ui';
+import { ControlPanels, EXPLORER_CONTROL_ITEMS, ZOOM_CONTROL_ITEMS } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphData } from '@invana/graph';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 /**
- * `canvas-react/ControlPanel/GraphCanvas` — **control panels on `<GraphCanvas>`,
- * declared two ways.**
+ * `canvas-react/ControlPanel/GraphCanvas/Explorer` — **the read-only explorer
+ * preset.** `EXPLORER_CONTROL_ITEMS` (top) is layout picker · run · stop ·
+ * select mode · edge routing · fit · lock. Nothing in it edits the graph, so
+ * there's no undo or delete. `ZOOM_CONTROL_ITEMS` sits bottom-right.
  *
- * - **As config.** `config.controlPanels` is plain JSON (the layout panel on
- *   the left). That is what a saved visualisation carries, and what the Studio
- *   will edit. A spec replaces the whole panel, and `null` removes it.
- * - **As a child.** `<ControlPanel>` (the view panel, bottom-right) writes the
- *   same kind of spec on mount and removes it on unmount.
+ * - **Layout** lists the registered layouts (`force`, `layered`). Picking one
+ *   records it as `activeLayout` and runs it.
+ * - **Select** switches click / brush / lasso by enabling the matching
+ *   behaviour (`brush-select` / `lasso-select`; click needs none).
+ * - **Edges** re-routes the `graph` layer's edges.
  *
- * Both land in `store.view.definition.controlPanels`, and `<ControlPanels/>`
- * draws both the same way. The layout panel drives the `layout.run` /
- * `layout.stop` commands. Stop is enabled only while the force simulation is
- * running, and so is its button. `view.lock` targets `pan` + `drag-node` by
- * default, so locking freezes both panning and node drag.
+ * All of these are `GraphCanvas` commands, so the panel needs no providers.
  */
-const meta: Meta = { title: 'canvas-react/ControlPanel/GraphCanvas' };
+const meta: Meta = { title: 'canvas-react/ControlPanel/GraphCanvas/Explorer' };
 export default meta;
 type Story = StoryObj;
 
@@ -72,46 +74,29 @@ const CONFIG: CanvasConfig = {
       collide: { radius: 22 },
       animate: true
     }
-  },
-  // A panel declared as data. It round-trips through export / import unchanged.
-  controlPanels: {
-    layout: {
-      kind: 'control-panel',
-      position: 'left',
-      items: [
-        { type: 'command', command: 'layout.run', icon: 'play', label: 'Re-run layout' },
-        { type: 'command', command: 'layout.stop', icon: 'stop', label: 'Stop layout' },
-      ]
-    }
   }
 };
 
-export const Basic: Story = {
+export const Explorer: Story = {
   render: () => (
     <div style={{ width: '100%', height: '100vh' }}>
       <GraphCanvas autoResize config={CONFIG}>
-        <BackgroundLayer id="bg" type="pattern" patternType="dots" />
+        <BackgroundLayer id="background" type="pattern" patternType="dots" />
         <ThemeBehaviour id="theme" mode="document" />
         <GraphLayer id="graph" data={DATA} node={NODE} />
         <D3ForceLayout id="force" targetLayerId="graph" />
+        {/* A second registered layout, so the layout picker has a choice. */}
+        <ElkLayout id="layered" targetLayerId="graph" />
         <DragPanBehaviour id="pan" />
-        <WheelZoomBehaviour id="wheel" />
+        <WheelZoomBehaviour id="zoom" />
         <DragNodeBehaviour id="drag-node" targetLayerId="graph" />
+        <ClickSelectBehaviour targetLayerId="graph" />
+        {/* Off until the Select picker turns one on. */}
+        <BrushSelectBehaviour targetLayerId="graph" enabled={false} />
+        <LassoSelectBehaviour targetLayerId="graph" enabled={false} />
 
-        {/* A panel declared as a child. */}
-        <ControlPanel
-          id="view"
-          position="bottom-right"
-          offset={{ x: 16, y: 16 }}
-          items={[
-            { type: 'command', command: 'camera.zoomOut', icon: 'zoom-out', label: 'Zoom out' },
-            { type: 'widget', widget: 'zoom-readout' },
-            { type: 'command', command: 'camera.zoomIn', icon: 'zoom-in', label: 'Zoom in' },
-            { type: 'divider' },
-            { type: 'command', command: 'camera.fit', icon: 'maximize', label: 'Fit to content' },
-            { type: 'toggle', command: 'view.lock', icon: 'lock-open', activeIcon: 'lock', label: 'Lock view', activeLabel: 'Unlock view' },
-          ]}
-        />
+        <ControlPanel id="explorer" position="top" items={EXPLORER_CONTROL_ITEMS} />
+        <ControlPanel id="zoom" position="bottom-right" items={ZOOM_CONTROL_ITEMS} />
 
         <ControlPanels />
       </GraphCanvas>

@@ -171,6 +171,7 @@ function ControlPanelView({
           options: Object.fromEntries(options.map((o) => [o.value, o.label])),
           ...(Object.keys(optionIcons).length > 0 ? { icons: optionIcons, triggerLabelOnly: true } : {}),
           ...(it.display ? { display: it.display } : {}),
+          disabled: !st?.enabled,
           onChange: (value: string) => void run(it.command, { ...it.args, value }),
         }];
       }

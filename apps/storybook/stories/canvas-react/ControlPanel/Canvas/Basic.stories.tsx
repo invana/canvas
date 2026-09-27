@@ -13,7 +13,7 @@ import type { GraphData } from '@invana/graph';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 /**
- * `canvas-react/ControlPanel/Canvas` — **control panels on the base `<Canvas>`.**
+ * `canvas-react/ControlPanel/Canvas/Basic` — **control panels on the base `<Canvas>`.**
  * A control panel is floating chrome pinned over the canvas, declared as a child
  * exactly like a behaviour. `<ControlPanel>` is headless: it writes a pure-JSON
  * spec into `store.view.definition.controlPanels` and renders nothing.
@@ -32,7 +32,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
  * (`{ top: 16, left: 16 }`), and an edge-centre anchor with no card surface
  * (`bottom`).
  */
-const meta: Meta = { title: 'canvas-react/ControlPanel/Canvas' };
+const meta: Meta = { title: 'canvas-react/ControlPanel/Canvas/Basic' };
 export default meta;
 type Story = StoryObj;
 

@@ -40,6 +40,9 @@ export interface CanvasThemeSyncProps {
  * Syncs the context canvas's `ThemeBehaviour` to the host `@invana/themes` theme
  * (resolved light/dark kind + theme family). Renders `null`. Place it inside the
  * canvas whose theme should follow the host toggle.
+ *
+ * While a `<ThemeProvider>` is present it also registers the `theme.toggle`
+ * command (active while dark), so a control panel can flip the host theme.
  */
 export function CanvasThemeSync({ behaviourId = 'theme' }: CanvasThemeSyncProps) {
   const canvas = useCanvas();
@@ -52,5 +55,20 @@ export function CanvasThemeSync({ behaviourId = 'theme' }: CanvasThemeSyncProps)
     // theme behaviour's `setOptions`, which republishes the palette.
     canvas.update({ behaviours: { [behaviourId]: { mode, active } } });
   }, [canvas, behaviourId, mode, active]);
+
+  // `theme.toggle` flips the **host** theme (the engine follows through the
+  // effect above), so a saved control panel can carry the theme switch on any
+  // root that mounts this bridge. Re-registered when the mode flips, so a bound
+  // toggle re-reads `isActive`.
+  const toggleMode = theme?.toggleMode;
+  const isDark = theme?.isDark ?? false;
+  useEffect(() => {
+    if (!toggleMode) return;
+    return canvas.commands.register('theme.toggle', {
+      label: 'Toggle theme',
+      run: () => toggleMode(),
+      isActive: () => isDark,
+    });
+  }, [canvas, toggleMode, isDark]);
   return null;
 }

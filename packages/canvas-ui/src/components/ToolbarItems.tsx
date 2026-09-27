@@ -55,7 +55,7 @@ function renderButton(
 
 /** Render a `select` item as a design-kit `RichSelect` (was `OptionPicker`). */
 function renderSelect(key: string, item: ToolbarSelectItem, tipSide: TooltipSide): ReactNode {
-  const { label, value, options, icons, onChange, align = 'start', tooltip, renderTrigger, triggerLabelOnly } = item;
+  const { label, value, options, icons, onChange, align = 'start', tooltip, renderTrigger, triggerLabelOnly, disabled } = item;
   const richOptions: RichSelectOption[] = Object.keys(options).map((k) => ({
     value: k,
     label: options[k] ?? k,
@@ -71,6 +71,7 @@ function renderSelect(key: string, item: ToolbarSelectItem, tipSide: TooltipSide
       align={align}
       tooltip={tooltip ?? label}
       tooltipSide={item.tooltipSide ?? tipSide}
+      disabled={disabled}
       renderValue={
         renderTrigger
           ? () => renderTrigger()
@@ -106,7 +107,7 @@ function renderSelect(key: string, item: ToolbarSelectItem, tipSide: TooltipSide
  * segment carries the design-kit toggle's own on-state styling.
  */
 function renderSegmented(key: string, item: ToolbarSelectItem, tipSide: TooltipSide): ReactNode {
-  const { label, value, options, icons, onChange, tooltip } = item;
+  const { label, value, options, icons, onChange, tooltip, disabled } = item;
   const side = item.tooltipSide ?? tipSide;
   return (
     <ToggleGroup
@@ -116,6 +117,7 @@ function renderSegmented(key: string, item: ToolbarSelectItem, tipSide: TooltipS
       // Ignore the empty deselect emitted when clicking the active segment.
       onValueChange={(v) => v && onChange(v)}
       size="sm"
+      disabled={disabled}
       aria-label={tooltip ?? label}
       className={item.className}
     >

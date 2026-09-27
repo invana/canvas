@@ -3,6 +3,7 @@ import { GraphCanvas as EngineGraphCanvas } from '@invana/graph';
 
 import { CanvasContext } from './CanvasContext';
 import { GraphCanvasContext } from './GraphCanvasContext';
+import { ToolCommands } from './control-panels/ToolCommands';
 import { CanvasHost, useCanvasEngine, type CanvasRootProps } from './useCanvasEngine';
 
 /** Props for {@link GraphCanvas} — identical to {@link CanvasRootProps}. */
@@ -15,6 +16,8 @@ export type GraphCanvasProps = CanvasRootProps;
  * {@link GraphCanvasContext} — so base wrappers (`useCanvas`) **and** the graph
  * hooks/toolbars (`useGraphCanvas` / `useGraphCanvasUpdate` /
  * `useGraphCanvasOptions`) work under it, and `config.activeLayout` auto-runs.
+ * Under a `<GraphToolProvider>` it also registers the `tool.active` /
+ * `tool.nodeKind` commands, so a control panel can switch the modeller tool.
  *
  * This is the root for graph visualisations; `GraphCanvasApp` builds on it.
  * `forwardRef`'d — `ref.current` is the underlying `GraphCanvas` (or `null`
@@ -44,7 +47,11 @@ export const GraphCanvas = forwardRef<EngineGraphCanvas, GraphCanvasProps>(funct
     <CanvasHost hostRef={hostRef} className={className} style={style}>
       {canvas && (
         <CanvasContext.Provider value={canvas}>
-          <GraphCanvasContext.Provider value={canvas}>{children}</GraphCanvasContext.Provider>
+          <GraphCanvasContext.Provider value={canvas}>
+            {/* `tool.*` commands, live while a <GraphToolProvider> wraps this root. */}
+            <ToolCommands />
+            {children}
+          </GraphCanvasContext.Provider>
         </CanvasContext.Provider>
       )}
     </CanvasHost>

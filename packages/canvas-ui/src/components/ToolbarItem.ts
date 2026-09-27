@@ -81,6 +81,8 @@ export interface ToolbarSelectItem extends ToolbarItemBase {
   /** Optional className applied to the trigger icon. */
   iconClass?: string;
   onChange: (value: string) => void;
+  /** Grey out the picker and ignore input. Default `false`. */
+  disabled?: boolean;
   /**
    * How to render the picker. `'dropdown'` (default) is the collapsed
    * `RichSelect` trigger + menu. `'segmented'` lays every option out inline as a

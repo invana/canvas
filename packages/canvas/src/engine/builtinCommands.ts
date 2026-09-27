@@ -7,6 +7,10 @@
  * |---|---|---|
  * | `camera.zoomIn` / `camera.zoomOut` | `{ factor? }` (default `1.2`) | button |
  * | `camera.fit` | `{ padding? }` (default `80`) | button |
+ * | `camera.pan` | `{ dx?, dy? }` screen px — the **content** moves by `(dx, dy)` | button |
+ * | `camera.zoomTo` | `{ value?, levels? }` (default `1`) | button (`value` fixed) or choice over `levels` (default 25–400 %, plus the current zoom when it's between levels) |
+ * | `camera.reset` | — | button: zoom 1, world origin at the viewport centre |
+ * | `behaviour.toggle` | `{ id }` | toggle, active while behaviour `id` is enabled |
  * | `view.lock` | `{ behaviourIds? }` (default `['pan', 'drag-node']`) | toggle |
  * | `layout.run` | `{ id? }` (default: the active layout) | button |
  * | `layout.stop` | — | button, enabled while a layout runs |
@@ -24,6 +28,8 @@ import type { Canvas } from './Canvas';
 
 /** Default zoom step for `camera.zoomIn` / `camera.zoomOut`. */
 const ZOOM_STEP = 1.2;
+/** Default `camera.zoomTo` levels, as scale factors. */
+const ZOOM_LEVELS = [0.25, 0.5, 1, 2, 4];
 /** Behaviours `view.lock` disables by default — pan + node drag; zoom stays live. */
 const DEFAULT_LOCK_IDS = ['pan', 'drag-node'];
 
@@ -41,6 +47,18 @@ function lockIds(canvas: Canvas, args: unknown): string[] {
 function backgroundId(args: unknown): string {
   return arg<string>(args, 'layerId') ?? 'background';
 }
+
+/** A zoom level as a `camera.zoomTo` option value (`'1'`, `'0.5'`). */
+const levelValue = (zoom: number): string => String(zoom);
+
+/** The levels `camera.zoomTo` offers — `args.levels` or {@link ZOOM_LEVELS}. */
+function zoomLevels(args: unknown): number[] {
+  const levels = arg<number[]>(args, 'levels');
+  return Array.isArray(levels) && levels.length > 0 ? levels : ZOOM_LEVELS;
+}
+
+/** The camera's zoom rounded to 2 dp, so a level it just landed on matches exactly. */
+const currentLevel = (canvas: Canvas): number => Math.round(canvas.camera.scale * 100) / 100;
 
 /** Enabled only once the engine has a camera. */
 const whenInitialised = (canvas: Canvas): boolean => canvas.isInitialised;
@@ -60,6 +78,55 @@ const BUILTIN_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
     label: 'Fit to content',
     run: (canvas, args) => canvas.fitView(arg<number>(args, 'padding')),
     isEnabled: whenInitialised,
+  },
+  'camera.pan': {
+    label: 'Pan',
+    run: (canvas, args) => canvas.camera.pan(arg<number>(args, 'dx') ?? 0, arg<number>(args, 'dy') ?? 0),
+    isEnabled: whenInitialised,
+  },
+  'camera.zoomTo': {
+    label: 'Zoom to',
+    // A picker's `value` arrives as a string; a fixed-level button passes a number.
+    run: (canvas, args) => {
+      const zoom = Number(arg<number | string>(args, 'value') ?? 1);
+      if (Number.isFinite(zoom) && zoom > 0) canvas.camera.setZoom(zoom);
+    },
+    isEnabled: whenInitialised,
+    // The current zoom, to 2 dp. When it sits between levels `options` adds it,
+    // so the picker reads "137%" rather than a wrong level.
+    value: (canvas) => (canvas.isInitialised ? levelValue(currentLevel(canvas)) : null),
+    options: (canvas, args) => {
+      const levels = zoomLevels(args);
+      const current = canvas.isInitialised ? currentLevel(canvas) : null;
+      const all = current === null || levels.includes(current) ? levels : [...levels, current].sort((a, b) => a - b);
+      return all.map((l) => ({ value: levelValue(l), label: `${Math.round(l * 100)}%` }));
+    },
+  },
+  'camera.reset': {
+    label: 'Reset view',
+    run: (canvas) => {
+      const cam = canvas.camera;
+      cam.setTransform({ x: cam.screenWidth / 2, y: cam.screenHeight / 2, zoom: 1 });
+    },
+    isEnabled: whenInitialised,
+  },
+  'behaviour.toggle': {
+    label: 'Toggle behaviour',
+    isActive: (canvas, args) => {
+      const id = arg<string>(args, 'id');
+      return id ? canvas.behaviours.get(id)?.enabled === true : false;
+    },
+    isEnabled: (canvas, args) => {
+      const id = arg<string>(args, 'id');
+      return !!id && canvas.behaviours.has(id);
+    },
+    // Through the registry, so `scene:behaviour:enable`/`disable` fire and a
+    // bound toggle re-renders.
+    run: (canvas, args) => {
+      const id = arg<string>(args, 'id');
+      const b = id ? canvas.behaviours.get(id) : undefined;
+      if (id && b) canvas.behaviours.setEnabled(id, !b.enabled);
+    },
   },
   'view.lock': {
     label: 'Lock view',
