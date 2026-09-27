@@ -2,10 +2,10 @@
 id: feat-2026-09-27-two-ways-to-float-a-toolbar
 type: feat
 title: Toolbars are content; floating over the canvas is a ControlPanel's job
-status: accepted
+status: landed
 opened: 2026-09-27
 decided: 2026-09-27
-landed: null
+landed: 2026-09-28
 packages: [pkg:@invana/canvas-ui]
 design_of_record: null
 relations:
@@ -56,12 +56,12 @@ relations:
 
 | ID | Kind | Status | File/target | Change | Effect | Risk | Depends on |
 |---|---|---|---|---|---|---|---|
-| T1 | defect | implemented | `sym:CanvasControlsToolbar` `sym:ClearCanvasToolbar` `sym:EditToolbar` `sym:ExportStateToolbar` `sym:ExportImageToolbar` `sym:HistoryToolbar` `sym:GraphToolbar` `sym:GridToolbar` `sym:GraphLayoutToolbar` `sym:ModellerToolbar` `sym:ViewToolbar` | Drop `position`, `bare`, the `Panel` wrapper | toolbars are content | medium — breaking props on 11 public components | — |
-| T2 | defect | implemented | `file:packages/canvas-ui/src/control-panels/presets.ts` | `VIEW_CONTROL_ITEMS`, `ZOOM_CONTROL_ITEMS` | serialisable replacement for a floating view bar | low | — |
-| T3 | defect | implemented | `sym:SchemaViewPanel` | Its floating `SchemaToolbar` + zoom bar become `<ControlPanel>`s on its own canvas (+ `<ControlPanels/>`) | one mechanism internally too | medium — visible surface | T1, T2 |
-| T4 | defect | implemented | `story:canvas-ui/apps/GraphCanvasApp/EmbeddedWidget` | Floating `CanvasControlsToolbar` → `<ControlPanel items={ZOOM_CONTROL_ITEMS}>` | story matches the API | low | T2 |
-| T5 | defect | implemented | 5 story call sites | Remove `bare` | compiles | low | T1 |
-| T6 | defect | implemented | `file:packages/canvas-ui/CLAUDE.md`, `file:apps/storybook/CLAUDE.md`, toolbar TSDoc | Toolbars = content; float with ControlPanel; the canvas-react ControlPanel story exception | docs match | low | T1 |
+| T1 | defect | landed | `sym:CanvasControlsToolbar` `sym:ClearCanvasToolbar` `sym:EditToolbar` `sym:ExportStateToolbar` `sym:ExportImageToolbar` `sym:HistoryToolbar` `sym:GraphToolbar` `sym:GridToolbar` `sym:GraphLayoutToolbar` `sym:ModellerToolbar` `sym:ViewToolbar` | Drop `position`, `bare`, the `Panel` wrapper | toolbars are content | medium — breaking props on 11 public components | — |
+| T2 | defect | landed | `file:packages/canvas-ui/src/control-panels/presets.ts` | `VIEW_CONTROL_ITEMS`, `ZOOM_CONTROL_ITEMS` | serialisable replacement for a floating view bar | low | — |
+| T3 | defect | landed | `sym:SchemaViewPanel` | Its floating `SchemaToolbar` + zoom bar become `<ControlPanel>`s on its own canvas (+ `<ControlPanels/>`) | one mechanism internally too | medium — visible surface | T1, T2 |
+| T4 | defect | landed | `story:canvas-ui/apps/GraphCanvasApp/EmbeddedWidget` | Floating `CanvasControlsToolbar` → `<ControlPanel items={ZOOM_CONTROL_ITEMS}>` | story matches the API | low | T2 |
+| T5 | defect | landed | 5 story call sites | Remove `bare` | compiles | low | T1 |
+| T6 | defect | landed | `file:packages/canvas-ui/CLAUDE.md`, `file:apps/storybook/CLAUDE.md`, toolbar TSDoc | Toolbars = content; float with ControlPanel; the canvas-react ControlPanel story exception | docs match | low | T1 |
 | T7 | defect | superseded | `pkg:@invana/graph` commands + presets | History / select-mode / modeller as commands so graph toolbars get serialisable presets — superseded by `rfc:feat-2026-09-28-graph-toolbar-actions-cannot-be-saved` (history, select mode) and `rfc:feat-2026-09-28-control-panels-cannot-pan-or-model` R1 (modeller tool) | graph panels persist | medium | `rfc:feat-2026-09-27-no-floating-controls-inside-the-canvas` F11 |
 
 ## 5. Blast radius
@@ -106,3 +106,4 @@ relations:
 | 2026-09-27 | Opened on maintainer's "ok clean up" | accepted | T7 deferred to the graph-commands work |
 | 2026-09-27 | T1–T6 implemented on `feat/control-panels` | accepted | V1–V4 pass (headless Chromium over the running Storybook: EmbeddedWidget + SchemaViewPanel/CanvasDerived zoom fires, FullFeatured / GraphModeller / ExportState / ExportImage unchanged, no console errors). Each toolbar keeps its old default `orientation`. `ControlPanel.items` widened to `readonly` so presets assign. `SchemaViewPanel` keeps its old look via `surface={false}` |
 | 2026-09-28 | T7 superseded | accepted | History / select mode landed as commands + presets in `rfc:feat-2026-09-28-graph-toolbar-actions-cannot-be-saved`; the modeller tool in `rfc:feat-2026-09-28-control-panels-cannot-pan-or-model` (R1, `MODELLER_CONTROL_ITEMS`). Nothing in this RFC is still open |
+| 2026-09-28 | `feat/control-panels` merged to `main` | landed | Every implemented row → landed (build, check-types, lint, test green at merge) |

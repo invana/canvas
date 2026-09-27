@@ -65,17 +65,17 @@ relations:
 
 | ID | Kind | Status | File/target | Change | Effect | Risk | Depends on |
 |---|---|---|---|---|---|---|---|
-| K1 | defect | implemented | `file:packages/canvas-core/src/state/view/CanvasView.ts` | `interaction.viewModeArgs` + default | a home for the node kind | medium — core type grows; API snapshots | D1 |
-| K2 | defect | implemented | `file:packages/canvas-core/src/state/view/createActions.ts` | `viewMode.set` / `setArgs` | one write path | low | K1 |
-| K3 | defect | implemented | `sym:Behaviour` (`canvas-core`) | `modes` option + effective-active gating | declarative tool gating | **high** — base class of every behaviour; enable / disable timing changes for behaviours that set `modes` (none do today) | D2 |
-| K4 | defect | implemented | `sym:Canvas` | apply `defaultViewMode` at init | saved mode restored | low | K2 |
-| K5 | defect | implemented | `file:packages/canvas/src/io/stateExport.ts` | export / import `viewModeArgs` | round-trip | low | K1 |
-| G1 | defect | implemented | `file:packages/graph/src/canvas/graphCommands.ts` | `tool.active` / `tool.nodeKind` over the store | commands without React | low | K2 |
-| G2 | defect | implemented | `sym:CreateNodeBehaviour`, `sym:DrawEdgeBehaviour`, `sym:EraseBehaviour` | TSDoc: recommend `modes`; no default change (rule 7) | discoverable | low | K3 |
-| R1 | defect | implemented | `file:packages/canvas-react/src/control-panels/ToolCommands.tsx`, `sym:GraphCanvas` | delete the bridge; `<GraphCanvas>` applies provider config (K4-style) + the Esc listener | one source of truth | medium — every `<GraphCanvas>` | G1, D3 |
-| R2 | defect | implemented | `sym:useTool`, `sym:GraphToolProvider` | store-backed, with the provider fallback outside a canvas | API unchanged | medium — published hooks change their source of truth | K2, D3 |
-| U1 | defect | implemented | `sym:ModellerToolbar` | none if R2 keeps `useTool`'s shape; listed as the control | | low | R2 |
-| E1 | defect | implemented | `pkg:@invana/canvas-ui` editors for the three draw behaviours | a `modes` field (multi-select over known modes), per rule 12 | studio can set gating | low | K3 |
+| K1 | defect | landed | `file:packages/canvas-core/src/state/view/CanvasView.ts` | `interaction.viewModeArgs` + default | a home for the node kind | medium — core type grows; API snapshots | D1 |
+| K2 | defect | landed | `file:packages/canvas-core/src/state/view/createActions.ts` | `viewMode.set` / `setArgs` | one write path | low | K1 |
+| K3 | defect | landed | `sym:Behaviour` (`canvas-core`) | `modes` option + effective-active gating | declarative tool gating | **high** — base class of every behaviour; enable / disable timing changes for behaviours that set `modes` (none do today) | D2 |
+| K4 | defect | landed | `sym:Canvas` | apply `defaultViewMode` at init | saved mode restored | low | K2 |
+| K5 | defect | landed | `file:packages/canvas/src/io/stateExport.ts` | export / import `viewModeArgs` | round-trip | low | K1 |
+| G1 | defect | landed | `file:packages/graph/src/canvas/graphCommands.ts` | `tool.active` / `tool.nodeKind` over the store | commands without React | low | K2 |
+| G2 | defect | landed | `sym:CreateNodeBehaviour`, `sym:DrawEdgeBehaviour`, `sym:EraseBehaviour` | TSDoc: recommend `modes`; no default change (rule 7) | discoverable | low | K3 |
+| R1 | defect | landed | `file:packages/canvas-react/src/control-panels/ToolCommands.tsx`, `sym:GraphCanvas` | delete the bridge; `<GraphCanvas>` applies provider config (K4-style) + the Esc listener | one source of truth | medium — every `<GraphCanvas>` | G1, D3 |
+| R2 | defect | landed | `sym:useTool`, `sym:GraphToolProvider` | store-backed, with the provider fallback outside a canvas | API unchanged | medium — published hooks change their source of truth | K2, D3 |
+| U1 | defect | landed | `sym:ModellerToolbar` | none if R2 keeps `useTool`'s shape; listed as the control | | low | R2 |
+| E1 | defect | landed | `pkg:@invana/canvas-ui` editors for the three draw behaviours | a `modes` field (multi-select over known modes), per rule 12 | studio can set gating | low | K3 |
 | S1 | defect | deferred | `story:usecases/tools/GraphModeller`, `story:canvas-react/ControlPanel/GraphCanvas/Modeller` | replace `enabled={tool === …}` with `modes`, **only if you ask** (rule 11); both keep working without it | stories show the new way | low | K3 |
 
 ## 5. Blast radius
@@ -126,3 +126,4 @@ relations:
 | 2026-09-28 | Opened: the long-term move named by D2 of `rfc:feat-2026-09-28-graph-toolbar-actions-cannot-be-saved` and R1 / D4 of `rfc:feat-2026-09-28-control-panels-cannot-pan-or-model`, on the maintainer's "finish all" | proposed | awaiting approval |
 | 2026-09-28 | Approved whole ("sure that order works" after "finish all"); D1–D4 as recommended; D5 / S1 deferred until stories are asked for (rule 11) | accepted | |
 | 2026-09-28 | K1–K5, G1, G2, R1, R2, U1, E1 implemented on `feat/control-panels` | accepted | V1: build, check-types, lint (API surfaces unchanged: only type members grew), tests pass (core 157, graph 206). V2: 7 new `Behaviour` tests. V3: headless Chromium — `story:canvas-react/ControlPanel/GraphCanvas/Modeller` (Add → Shape enables, drop → Undo, Esc → Select + Shape greys, Undo → Redo) and `story:usecases/tools/GraphModeller` (ModellerToolbar: shape picker only in Add, drop → Undo, Esc) work with no console errors. V4: graph test round-trips mode + node kind and imports an older snapshot. V5: FullFeatured, GraphCanvasApp/ControlPanels, Explorer load clean. Learned: (1) 12 behaviours override `setOptions` without `super`, so a runtime `modes` patch goes through a new `setModes` that `Canvas.update` calls directly, like `enabled`. (2) `_enabled` stays the *live* flag subclasses read (14 files read it directly); the developer's flag moved to a private field behind `enabled`. (3) The provider can't reach a canvas from `wrap`, so `<GraphCanvas>` hands it one (`ToolBindingContext`); the provider seeds that store and mirrors it, so consumers above the canvas still re-render. (4) `config.defaultViewMode` seeds the live mode only on the first config that carries it. (5) E1 is a shared `modes` checkbox group (`editors/_shared/modes.ts`) on create-node / draw-edge / erase |
+| 2026-09-28 | `feat/control-panels` merged to `main` | accepted | Every implemented row → landed (build, check-types, lint, test green at merge). S1 stays deferred until a story is asked for (rule 11), so the RFC stays accepted |

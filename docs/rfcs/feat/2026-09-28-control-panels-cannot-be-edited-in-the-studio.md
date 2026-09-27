@@ -64,14 +64,14 @@ relations:
 
 | ID | Kind | Status | File/target | Change | Effect | Risk | Depends on |
 |---|---|---|---|---|---|---|---|
-| E1 | defect | implemented | `packages/canvas-ui/src/editor-panels/control-panels/{types,fields,mapping}.ts` | panel-level form types + fields + mapping (spec ⇄ flat form) | panel settings editable | low | — |
-| E2 | defect | implemented | `…/control-panels/ControlItemsField.tsx` | `useFieldArray` item list with per-type fields and add / remove / move | items editable | medium — the largest hand-written form in canvas-ui | E1 |
-| E3 | defect | implemented | `…/control-panels/ControlPanelsEditorPanel.tsx` | controlled editor: panel list + selected panel form + Apply | Studio-ready form | low | E1, E2 |
-| E4 | defect | implemented | `…/control-panels/ControlPanelsEditor.tsx` | connected wrapper (resolve canvas, registries, `canvas.update`) | zero-wiring drop-in | low | E3 |
-| E5 | defect | implemented | `packages/canvas-ui/src/index.ts` (+ `editor-panels/index.ts`) | export E3 + E4 + types | public | low — surface grows | E3, E4 |
-| E6 | defect | implemented | `sym:CanvasSettingsEditorPanel` (was: `sym:GraphCanvasApp` settings) | a last "Control panels" `PanelStack` section hosting `sym:ControlPanelsEditor`; `showControlPanels={false}` opts out (D1) | editable wherever the settings surface is mounted | medium — every story that mounts the settings panel shows a new section | E4, D1 |
-| E7 | defect | implemented | `file:packages/canvas-core/src/state/view/controlPanels.ts#L6` | drop "undo" from the TSDoc until a view history exists | the doc stops over-promising | low | D4 |
-| E8 | defect | implemented | `doc:packages/canvas-ui/CLAUDE.md` | name the new editor in the editor-panels list | docs match | low | E3 |
+| E1 | defect | landed | `packages/canvas-ui/src/editor-panels/control-panels/{types,fields,mapping}.ts` | panel-level form types + fields + mapping (spec ⇄ flat form) | panel settings editable | low | — |
+| E2 | defect | landed | `…/control-panels/ControlItemsField.tsx` | `useFieldArray` item list with per-type fields and add / remove / move | items editable | medium — the largest hand-written form in canvas-ui | E1 |
+| E3 | defect | landed | `…/control-panels/ControlPanelsEditorPanel.tsx` | controlled editor: panel list + selected panel form + Apply | Studio-ready form | low | E1, E2 |
+| E4 | defect | landed | `…/control-panels/ControlPanelsEditor.tsx` | connected wrapper (resolve canvas, registries, `canvas.update`) | zero-wiring drop-in | low | E3 |
+| E5 | defect | landed | `packages/canvas-ui/src/index.ts` (+ `editor-panels/index.ts`) | export E3 + E4 + types | public | low — surface grows | E3, E4 |
+| E6 | defect | landed | `sym:CanvasSettingsEditorPanel` (was: `sym:GraphCanvasApp` settings) | a last "Control panels" `PanelStack` section hosting `sym:ControlPanelsEditor`; `showControlPanels={false}` opts out (D1) | editable wherever the settings surface is mounted | medium — every story that mounts the settings panel shows a new section | E4, D1 |
+| E7 | defect | landed | `file:packages/canvas-core/src/state/view/controlPanels.ts#L6` | drop "undo" from the TSDoc until a view history exists | the doc stops over-promising | low | D4 |
+| E8 | defect | landed | `doc:packages/canvas-ui/CLAUDE.md` | name the new editor in the editor-panels list | docs match | low | E3 |
 | E9 | defect | deferred | `story:canvas-ui/editor-panels/ControlPanelsEditor` | a story with a canvas + the editor, **only if you ask** (rule 11) | V3 has a target | low | D5 |
 
 ## 5. Blast radius
@@ -119,3 +119,4 @@ relations:
 | 2026-09-28 | Opened from F12 of `rfc:feat-2026-09-27-no-floating-controls-inside-the-canvas` on the maintainer's "finish all" | proposed | awaiting approval |
 | 2026-09-28 | Approved whole ("sure that order works" after "finish all"); D1–D4 as recommended; D5 / E9 deferred until a story is asked for (rule 11) | accepted | |
 | 2026-09-28 | E1–E8 implemented on `feat/control-panels` | accepted | V1: build, check-types, lint (API surfaces unchanged), tests. V2: 54 round-trips (18 presets × 3 positions, plus slot / unregistered command / choice options / widget options) come back identical. V3 (in `story:canvas-ui/editors/CanvasSettingsEditorPanel`, since E9 is deferred): New panel → Insert "Zoom" → Apply draws the panel top-left; Anchor → bottom-right moves it; bad args JSON lists "Item 1 · argsJson" and submits nothing; Remove deletes it. V4: the six stories hosting the settings panel load with no console errors. Learned: (1) `GraphCanvasApp` has no settings rail — the settings surface is `CanvasSettingsEditorPanel`, which hosts mount themselves — so D1-B became a section there. (2) A slot's name rides along in the form row (RHF keeps unregistered values), which survives reorders; the first cut matched it by index and wouldn't have. (3) Commands named `name#…` are private to a mounted component (the toolbars' factory-layout commands, `rfc:feat-2026-09-28-toolbars-and-control-panels-draw-controls-twice`); the pickers hide them. (4) Zoom buttons look dead in that story because its auto-fitter re-frames while the force layout runs (the wheel is equally ineffective) — a story trait, not the editor |
+| 2026-09-28 | `feat/control-panels` merged to `main` | accepted | Every implemented row → landed (build, check-types, lint, test green at merge). E9 stays deferred until a story is asked for (rule 11), so the RFC stays accepted |

@@ -123,42 +123,42 @@ working design-of-record documents. Day-to-day API/concept docs live in
     reference, so mutation would corrupt entries backing real `Text` objects). D2 is open
     on purpose: measure first, and `rejected` is an honest outcome.
   - [feat/2026-09-27-no-floating-controls-inside-the-canvas.md](./rfcs/feat/2026-09-27-no-floating-controls-inside-the-canvas.md)
-    — 🚧 implemented on `feat/control-panels` (F12 deferred). **Control panels**: floating
+    — ✅ landed. **Control panels**: floating
     controls over the canvas stored as JSON in `definition.controlPanels`, so they save,
     export and undo with the canvas. Items name a command, icon, widget or slot; the
     engine's `CommandRegistry` runs commands. canvas-react's headless `<ControlPanel>`
     declares panels and canvas-ui's `<ControlPanels>` draws them. F12 (a Studio editor
     for panels) is the open follow-up.
   - [feat/2026-09-27-two-ways-to-float-a-toolbar.md](./rfcs/feat/2026-09-27-two-ways-to-float-a-toolbar.md)
-    — 🚧 implemented on `feat/control-panels`. **Toolbars are content; ControlPanel is how
+    — ✅ landed. **Toolbars are content; ControlPanel is how
     controls float.** Eleven toolbars lose `position` / `bare` and render only their
     controls. Anything over the canvas goes through `<ControlPanel>`.
   - [feat/2026-09-28-graph-toolbar-actions-cannot-be-saved.md](./rfcs/feat/2026-09-28-graph-toolbar-actions-cannot-be-saved.md)
-    — 🚧 implemented on `feat/control-panels` (X2 deferred). **Graph toolbar actions become
+    — ✅ landed. **Graph toolbar actions become
     commands**: undo / redo, clipboard, select mode, edge type, grid and layout picking.
     Adds the `choice` item kind, override-stacking registrations and `invalidate()`, plus
     one canvas-ui preset per toolbar. X2 (toolbars as thin wrappers over presets) waits
     on header slots that accept specs.
   - [feat/2026-09-28-control-panels-cannot-pan-or-model.md](./rfcs/feat/2026-09-28-control-panels-cannot-pan-or-model.md)
-    — 🚧 implemented on `feat/control-panels`. **Presets per mode**: `camera.pan` /
+    — ✅ landed. **Presets per mode**: `camera.pan` /
     `zoomTo` / `reset` and `behaviour.toggle` commands; `tool.*` commands from
     `<GraphToolProvider>`; `theme.toggle` from `<CanvasThemeSync>`; the PAN, ZOOM_LEVEL,
     INPUT, NAVIGATION, CANVAS, EXPLORER, MODELLER and THEME presets, and a `pan-pad`
     widget. Stories: `canvas-react/ControlPanel/{Canvas,GraphCanvas}/*`.
   - [feat/2026-09-28-control-panels-cannot-be-edited-in-the-studio.md](./rfcs/feat/2026-09-28-control-panels-cannot-be-edited-in-the-studio.md)
-    — 🚧 implemented on `feat/control-panels`. **A Studio editor for control panels** (F12): an aggregate editor in
+    — ✅ landed (E9 deferred — story only if asked). **A Studio editor for control panels** (F12): an aggregate editor in
     `canvas-ui/editor-panels/control-panels/`, with panel fields and an item list whose
     pickers read the live command / icon / widget registries. Applies through
     `canvas.update({ controlPanels })`; also the last section of
     `CanvasSettingsEditorPanel`.
   - [feat/2026-09-28-toolbars-and-control-panels-draw-controls-twice.md](./rfcs/feat/2026-09-28-toolbars-and-control-panels-draw-controls-twice.md)
-    — 🚧 implemented on `feat/control-panels`. **Toolbars become presets + props** (X2): one exported `<ControlItems>`
+    — ✅ landed. **Toolbars become presets + props** (X2): one exported `<ControlItems>`
     renderer; the gaps closed (`layout.toggle`, `history.redraw`, icon classes, section
     keys; factory layouts ended up as private commands the toolbar registers while
     mounted). Finding: header slots already take ReactNodes, so the recorded blocker
     didn't block. Toolbar headers render byte-identical to before.
   - [feat/2026-09-28-the-modeller-tool-lives-outside-the-canvas.md](./rfcs/feat/2026-09-28-the-modeller-tool-lives-outside-the-canvas.md)
-    — 🚧 implemented on `feat/control-panels`. **The modeller tool moves to `interaction.viewMode`** (+ `viewModeArgs`);
+    — ✅ landed (S1 deferred — story only if asked). **The modeller tool moves to `interaction.viewMode`** (+ `viewModeArgs`);
     behaviours gain a `modes` option and gate themselves; `tool.*` commands move to graph
     and the React bridge goes.
 

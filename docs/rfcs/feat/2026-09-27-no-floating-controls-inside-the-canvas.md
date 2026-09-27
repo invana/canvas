@@ -2,10 +2,10 @@
 id: feat-2026-09-27-no-floating-controls-inside-the-canvas
 type: feat
 title: ControlPanels — serialisable floating UI inside the canvas, declared as children
-status: accepted
+status: landed
 opened: 2026-09-27
 decided: 2026-09-27
-landed: null
+landed: 2026-09-28
 packages: [pkg:@invana/canvas-core, pkg:@invana/canvas-store, pkg:@invana/canvas, pkg:@invana/canvas-react, pkg:@invana/canvas-ui]
 design_of_record: doc:docs/graph-canvas-apps-plan.md
 relations:
@@ -63,16 +63,16 @@ relations:
 
 | ID | Kind | Status | File/target | Change | Effect | Risk | Depends on |
 |---|---|---|---|---|---|---|---|
-| F1 | defect | implemented | `file:packages/canvas-core/src/state/view/controlPanels.ts`, `sym:CanvasView` | Spec types; `definition.controlPanels`, default `{}` | panels are state | medium — public `CanvasView` shape | — |
-| F2 | defect | implemented | `sym:createActions` | `controlPanels.{add,update,show,hide,remove}` labelled `view:controlPanel:*` | named, undoable writes | low | F1 |
-| F3 | defect | implemented | `sym:CommandRegistry` | Dependency-free registry bound to a context getter; `subscribe` for late registration | name → behaviour | low | — |
-| F4 | defect | implemented | `sym:Canvas.commands` | Registry on `Canvas` + built-in camera / view / layout commands | panels usable out of the box | medium — command names become public API | F3 |
-| F5 | defect | implemented | `sym:CanvasConfig`, `sym:Canvas.update`, `sym:Canvas.get` | `controlPanels` in config (whole-spec replace per id; `null` removes) | JSON-config path | low | F1 |
-| F6 | defect | implemented | `file:packages/canvas/src/io/stateExport.ts` | Import restores `definition.controlPanels` (older snapshots → `{}`) | round-trip | low | F1 |
-| F7 | defect | implemented | `pkg:@invana/canvas-react` | `<ControlPanel>`, slot registry, `useControlPanels`, `useCommandStates` | declarative children | medium — new public components | F2, F4 |
-| F8 | defect | implemented | `pkg:@invana/canvas-ui` | `<ControlPanels>` projection + default icon / widget registries | pixels | medium | F7 |
-| F9 | defect | implemented | `sym:GraphCanvasApp` | Mount `<ControlPanels>`; register `theme.toggle` | zero-wiring in the app | low | F8 |
-| F10 | defect | implemented | `api/*.surface.txt` | Regenerate snapshots | `check-api-surface` green | low | F1–F8 |
+| F1 | defect | landed | `file:packages/canvas-core/src/state/view/controlPanels.ts`, `sym:CanvasView` | Spec types; `definition.controlPanels`, default `{}` | panels are state | medium — public `CanvasView` shape | — |
+| F2 | defect | landed | `sym:createActions` | `controlPanels.{add,update,show,hide,remove}` labelled `view:controlPanel:*` | named, undoable writes | low | F1 |
+| F3 | defect | landed | `sym:CommandRegistry` | Dependency-free registry bound to a context getter; `subscribe` for late registration | name → behaviour | low | — |
+| F4 | defect | landed | `sym:Canvas.commands` | Registry on `Canvas` + built-in camera / view / layout commands | panels usable out of the box | medium — command names become public API | F3 |
+| F5 | defect | landed | `sym:CanvasConfig`, `sym:Canvas.update`, `sym:Canvas.get` | `controlPanels` in config (whole-spec replace per id; `null` removes) | JSON-config path | low | F1 |
+| F6 | defect | landed | `file:packages/canvas/src/io/stateExport.ts` | Import restores `definition.controlPanels` (older snapshots → `{}`) | round-trip | low | F1 |
+| F7 | defect | landed | `pkg:@invana/canvas-react` | `<ControlPanel>`, slot registry, `useControlPanels`, `useCommandStates` | declarative children | medium — new public components | F2, F4 |
+| F8 | defect | landed | `pkg:@invana/canvas-ui` | `<ControlPanels>` projection + default icon / widget registries | pixels | medium | F7 |
+| F9 | defect | landed | `sym:GraphCanvasApp` | Mount `<ControlPanels>`; register `theme.toggle` | zero-wiring in the app | low | F8 |
+| F10 | defect | landed | `api/*.surface.txt` | Regenerate snapshots | `check-api-surface` green | low | F1–F8 |
 | F11 | defect | superseded | `pkg:@invana/graph` | Domain commands (`history.undo/redo`, `selection.clear`, select mode) — superseded by `rfc:feat-2026-09-28-graph-toolbar-actions-cannot-be-saved` (select mode, history, clipboard, edge type, clear) | richer panels | low | F4 — unblocked any time |
 | F12 | defect | superseded | `pkg:@invana/canvas-ui` `editors/control-panels/` | Schema editor for panels (Studio authoring) — superseded by `rfc:feat-2026-09-28-control-panels-cannot-be-edited-in-the-studio` | Studio edits panels | medium | F8 — follow-up round |
 
@@ -123,3 +123,4 @@ relations:
 | 2026-09-27 | F1–F10 implemented on `feat/control-panels` | accepted | V1–V4, V6 pass; V5 (visual, in Storybook) pending — no story added (rule 11). Learned: `Panel`'s 8 positions can't express centred side anchors, `center`, insets or `{x,y}` offsets, so the projection positions panels itself rather than reusing `sym:Panel` (U1 no longer applies). `CommandRegistry` is exported from core + canvas, not re-exported by canvas-store (matches the other registries) |
 | 2026-09-28 | F11 superseded by `rfc:feat-2026-09-28-graph-toolbar-actions-cannot-be-saved`; V5 pass | accepted | F11: that RFC registers `select.mode`, `history.*`, `clipboard.*`, `graph.edgeType`, `graph.clear` (`selection.clear` wasn't needed: `clipboard.delete` and select mode cover the panels built so far). V5: headless Chromium over the running Storybook — `story:canvas-ui/apps/GraphCanvasApp/FullFeatured` and `story:usecases/tools/GraphModeller` (no panels) load unchanged with no console errors; `story:canvas-react/ControlPanel/Canvas/Basic` and `story:canvas-ui/apps/GraphCanvasApp/ControlPanels` draw their panels and the commands fire. F12 (Studio editor for panels) stays deferred |
 | 2026-09-28 | F12 superseded by `rfc:feat-2026-09-28-control-panels-cannot-be-edited-in-the-studio` | accepted | `ControlPanelsEditorPanel` / `ControlPanelsEditor`, also a section of `CanvasSettingsEditorPanel`. Nothing in this RFC is still open |
+| 2026-09-28 | `feat/control-panels` merged to `main` | landed | Every implemented row → landed (build, check-types, lint, test green at merge) |

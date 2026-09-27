@@ -2,10 +2,10 @@
 id: feat-2026-09-28-graph-toolbar-actions-cannot-be-saved
 type: feat
 title: Graph toolbar actions become commands, so their controls can be saved as presets
-status: accepted
+status: landed
 opened: 2026-09-28
 decided: 2026-09-28
-landed: null
+landed: 2026-09-28
 packages: [pkg:@invana/canvas-core, pkg:@invana/canvas, pkg:@invana/graph, pkg:@invana/canvas-react, pkg:@invana/canvas-ui]
 design_of_record: null
 relations:
@@ -76,20 +76,20 @@ relations:
 
 | ID | Kind | Status | File/target | Change | Effect | Risk | Depends on |
 |---|---|---|---|---|---|---|---|
-| C1 | defect | implemented | `sym:CanvasCommand` | optional `value()` + `options()` | pickers | low — additive | — |
-| C2 | defect | implemented | `sym:ControlItemSpec` | `ControlChoiceItemSpec` | pickers as data | medium — union grows; exhaustive switches must handle it | C1 |
-| C3 | defect | implemented | `sym:CommandRegistry` | override stack on `register` / dispose; `invalidate()` | provider overrides + external state | medium — changes dispose semantics | — |
-| C4 | defect | implemented | `file:packages/canvas/src/engine/builtinCommands.ts` | `layout.activate`, `background.grid` (writes via `canvas.update`, so the store sees it) | layout + grid presets | low | C1 |
-| G1 | defect | implemented | `sym:GraphCanvas` | registers `select.mode`, `graph.edgeType`, `graph.clear` | graph pickers headless-capable | medium — cross-package | C1, C3 |
-| G2 | defect | implemented | `pkg:@invana/graph` | move `DEFAULT_EDGE_TYPES` / labels from canvas-react into graph, re-export from canvas-react | command owns its defaults | low | G1 |
-| R1 | defect | implemented | `sym:GraphHistoryProvider` | registers `history.undo/redo` + undoable `graph.clear`; `invalidate()` on history `change` | undo in panels | medium | C3 |
-| R2 | defect | implemented | `sym:GraphClipboardProvider` | registers `clipboard.*` (selection from `interaction.selection`, split by layer store); `invalidate()` on buffer `change` | edit in panels | medium — duplicates `useClipboard` logic unless shared | C3 |
-| R3 | defect | implemented | `sym:useCommandStates` | also reports `value` (in the snapshot) + resolved `options` | renderer draws pickers | low | C1 |
-| U1 | defect | implemented | `sym:ControlPanels` | `choice` → dropdown / segmented `ToolbarSelectItem` | pickers render | low | C2, R3 |
-| U2 | defect | implemented | `sym:DEFAULT_CONTROL_ICONS` | undo / redo / cut / copy / paste / trash / eraser / lasso / brush / edge-type glyphs | presets have icons | low | — |
-| U3 | defect | implemented | `sym:DEFAULT_CONTROL_WIDGETS` | `export-image`, `export-state`, `minimap-toggle`, `devinfo-toggle` (wrapping the existing components) | UI-rich controls in saved panels | low | — |
-| U4 | defect | implemented | `file:packages/canvas-ui/src/control-panels/presets.ts` | `HISTORY_` · `EDIT_` · `SELECT_MODE_` · `EDGE_TYPE_` · `LAYOUT_` · `GRID_` · `GRAPH_CONTROL_ITEMS` (the `GraphControlsToolbar` set, minus factory layouts) | a saveable equivalent per toolbar | low | U1–U3 |
-| U5 | defect | implemented | `pkg:@invana/canvas-react` | `useSelectMode` / `useEdgeType` / `useGrid` read + write through the commands | one write path; toolbar and panel stay in sync | medium — behaviour of existing hooks | C4, G1 |
+| C1 | defect | landed | `sym:CanvasCommand` | optional `value()` + `options()` | pickers | low — additive | — |
+| C2 | defect | landed | `sym:ControlItemSpec` | `ControlChoiceItemSpec` | pickers as data | medium — union grows; exhaustive switches must handle it | C1 |
+| C3 | defect | landed | `sym:CommandRegistry` | override stack on `register` / dispose; `invalidate()` | provider overrides + external state | medium — changes dispose semantics | — |
+| C4 | defect | landed | `file:packages/canvas/src/engine/builtinCommands.ts` | `layout.activate`, `background.grid` (writes via `canvas.update`, so the store sees it) | layout + grid presets | low | C1 |
+| G1 | defect | landed | `sym:GraphCanvas` | registers `select.mode`, `graph.edgeType`, `graph.clear` | graph pickers headless-capable | medium — cross-package | C1, C3 |
+| G2 | defect | landed | `pkg:@invana/graph` | move `DEFAULT_EDGE_TYPES` / labels from canvas-react into graph, re-export from canvas-react | command owns its defaults | low | G1 |
+| R1 | defect | landed | `sym:GraphHistoryProvider` | registers `history.undo/redo` + undoable `graph.clear`; `invalidate()` on history `change` | undo in panels | medium | C3 |
+| R2 | defect | landed | `sym:GraphClipboardProvider` | registers `clipboard.*` (selection from `interaction.selection`, split by layer store); `invalidate()` on buffer `change` | edit in panels | medium — duplicates `useClipboard` logic unless shared | C3 |
+| R3 | defect | landed | `sym:useCommandStates` | also reports `value` (in the snapshot) + resolved `options` | renderer draws pickers | low | C1 |
+| U1 | defect | landed | `sym:ControlPanels` | `choice` → dropdown / segmented `ToolbarSelectItem` | pickers render | low | C2, R3 |
+| U2 | defect | landed | `sym:DEFAULT_CONTROL_ICONS` | undo / redo / cut / copy / paste / trash / eraser / lasso / brush / edge-type glyphs | presets have icons | low | — |
+| U3 | defect | landed | `sym:DEFAULT_CONTROL_WIDGETS` | `export-image`, `export-state`, `minimap-toggle`, `devinfo-toggle` (wrapping the existing components) | UI-rich controls in saved panels | low | — |
+| U4 | defect | landed | `file:packages/canvas-ui/src/control-panels/presets.ts` | `HISTORY_` · `EDIT_` · `SELECT_MODE_` · `EDGE_TYPE_` · `LAYOUT_` · `GRID_` · `GRAPH_CONTROL_ITEMS` (the `GraphControlsToolbar` set, minus factory layouts) | a saveable equivalent per toolbar | low | U1–U3 |
+| U5 | defect | landed | `pkg:@invana/canvas-react` | `useSelectMode` / `useEdgeType` / `useGrid` read + write through the commands | one write path; toolbar and panel stay in sync | medium — behaviour of existing hooks | C4, G1 |
 | X1 | defect | superseded | `sym:GraphToolProvider` | modeller tool as a command (D2) — superseded by `rfc:feat-2026-09-28-control-panels-cannot-pan-or-model` R1 (`tool.active` / `tool.nodeKind` via a bridge inside `<GraphCanvas>`; the `view.interaction` move stays open) | Modeller preset | medium | D2 |
 | X2 | defect | superseded | toolbars → thin wrappers over presets | `<ControlItems items={PRESET}>` replaces toolbar bodies — superseded by `rfc:feat-2026-09-28-toolbars-and-control-panels-draw-controls-twice` (the blocker below didn't block: header slots already take ReactNodes) | one renderer | medium | U4 + header slots accept specs |
 
@@ -142,3 +142,4 @@ relations:
 | 2026-09-28 | V5 pass | accepted | Story `canvas-ui/apps/GraphCanvasApp/ControlPanels`, driven in headless Chromium: undo / paste start disabled; selecting a node enables copy / delete; copy enables paste; delete enables undo; undo enables redo; layout picker lists `graph-force` + `layered`; no console errors |
 | 2026-09-28 | X1 superseded by `rfc:feat-2026-09-28-control-panels-cannot-pan-or-model` R1 | accepted | The tool reaches panels through a canvas-react bridge rather than D2's `interaction.viewMode` move, which is still the long-term home. X2 (toolbars as thin wrappers over presets) stays deferred: header slots don't accept specs yet |
 | 2026-09-28 | X2 superseded by `rfc:feat-2026-09-28-toolbars-and-control-panels-draw-controls-twice` | accepted | Toolbars now draw control specs through `useControlItems`; nothing in this RFC is still open |
+| 2026-09-28 | `feat/control-panels` merged to `main` | landed | Every implemented row → landed (build, check-types, lint, test green at merge) |

@@ -2,10 +2,10 @@
 id: feat-2026-09-28-control-panels-cannot-pan-or-model
 type: feat
 title: Control-panel presets for pan, zoom, canvas, explorer, modeller and theme, shown in canvas-react stories
-status: accepted
+status: landed
 opened: 2026-09-28
 decided: 2026-09-28
-landed: null
+landed: 2026-09-28
 packages: [pkg:@invana/canvas, pkg:@invana/canvas-react, pkg:@invana/canvas-ui, pkg:@canvas/storybook]
 design_of_record: null
 relations:
@@ -94,24 +94,24 @@ relations:
 
 | ID | Kind | Status | File/target | Change | Effect | Risk | Depends on |
 |---|---|---|---|---|---|---|---|
-| C1 | defect | implemented | `file:packages/canvas/src/engine/builtinCommands.ts` | `camera.pan` | pan buttons | low | — |
-| C2 | defect | implemented | same | `camera.zoomTo` (button + choice) | zoom levels / 100% | low | — |
-| C3 | defect | implemented | same | `camera.reset` | home button | low | D2 |
-| C4 | defect | implemented | same | `behaviour.toggle { id }` | input toggles | low | — |
+| C1 | defect | landed | `file:packages/canvas/src/engine/builtinCommands.ts` | `camera.pan` | pan buttons | low | — |
+| C2 | defect | landed | same | `camera.zoomTo` (button + choice) | zoom levels / 100% | low | — |
+| C3 | defect | landed | same | `camera.reset` | home button | low | D2 |
+| C4 | defect | landed | same | `behaviour.toggle { id }` | input toggles | low | — |
 | R1 | defect | superseded | `pkg:@invana/canvas-react` `sym:GraphCanvas` (+ new internal `ToolCommands`) | registers `tool.active` / `tool.nodeKind` when a `ToolContext` is present — superseded by `rfc:feat-2026-09-28-the-modeller-tool-lives-outside-the-canvas` G1 / R1 (commands over `interaction.viewMode`; the bridge is gone) | modeller preset | medium — new registration inside every `<GraphCanvas>` (no-op without the provider) | D4 |
-| R2 | defect | implemented | `sym:CanvasThemeSync` | registers `theme.toggle` | theme preset on bare roots | low | — |
-| R3 | defect | implemented | `sym:GraphCanvasApp` | drop its own `theme.toggle` (it mounts `CanvasThemeSync`) | one registration | low — stacking would hide a duplicate anyway | R2 |
-| U1 | defect | implemented | `file:packages/canvas-ui/src/control-panels/icons.ts` | arrow-up / down / left / right, locate, mouse, spline / pointer / plus / eraser tool glyphs | preset icons | low | — |
-| U2 | defect | implemented | `file:packages/canvas-ui/src/control-panels/widgets.tsx` | `pan-pad` widget | d-pad in one item | low | C1, C3, D3 |
+| R2 | defect | landed | `sym:CanvasThemeSync` | registers `theme.toggle` | theme preset on bare roots | low | — |
+| R3 | defect | landed | `sym:GraphCanvasApp` | drop its own `theme.toggle` (it mounts `CanvasThemeSync`) | one registration | low — stacking would hide a duplicate anyway | R2 |
+| U1 | defect | landed | `file:packages/canvas-ui/src/control-panels/icons.ts` | arrow-up / down / left / right, locate, mouse, spline / pointer / plus / eraser tool glyphs | preset icons | low | — |
+| U2 | defect | landed | `file:packages/canvas-ui/src/control-panels/widgets.tsx` | `pan-pad` widget | d-pad in one item | low | C1, C3, D3 |
 | U3 | defect | superseded | `file:packages/canvas-ui/src/control-panels/ControlPanels.tsx` | `choice` options may carry an `icon` (tool picker shows glyphs) | modeller tool picker reads like the toolbar | medium — `ControlChoiceOption` type grows | — |
-| U4 | defect | implemented | `file:packages/canvas-ui/src/control-panels/presets.ts` + `index.ts` | the 9 presets above | one-line panels per mode | low | C1–C4, R1, R2, U1–U3 |
-| S1 | defect | implemented | `doc:apps/storybook/CLAUDE.md` | exception also allows canvas-ui `*_CONTROL_ITEMS` presets in `canvas-react/ControlPanel/*` | presets demoed where the user asked | low | D5 |
-| S2 | defect | implemented | `apps/storybook/stories/canvas-react/ControlPanel/Canvas/` | split `Canvas.stories.tsx` → `Basic`; add Pan, Zoom, Input, Navigation, CanvasPreset | | low — story URL of the old `Canvas` story changes | U4, S1 |
-| S3 | defect | implemented | `apps/storybook/stories/canvas-react/ControlPanel/GraphCanvas/` | split → `Basic`; add Explorer, Modeller | | low — story URL changes | U4, S1 |
-| S4 | defect | implemented | `doc:packages/canvas-ui/CLAUDE.md` | preset list in the "Toolbars are content" paragraph | | low | U4 |
+| U4 | defect | landed | `file:packages/canvas-ui/src/control-panels/presets.ts` + `index.ts` | the 9 presets above | one-line panels per mode | low | C1–C4, R1, R2, U1–U3 |
+| S1 | defect | landed | `doc:apps/storybook/CLAUDE.md` | exception also allows canvas-ui `*_CONTROL_ITEMS` presets in `canvas-react/ControlPanel/*` | presets demoed where the user asked | low | D5 |
+| S2 | defect | landed | `apps/storybook/stories/canvas-react/ControlPanel/Canvas/` | split `Canvas.stories.tsx` → `Basic`; add Pan, Zoom, Input, Navigation, CanvasPreset | | low — story URL of the old `Canvas` story changes | U4, S1 |
+| S3 | defect | landed | `apps/storybook/stories/canvas-react/ControlPanel/GraphCanvas/` | split → `Basic`; add Explorer, Modeller | | low — story URL changes | U4, S1 |
+| S4 | defect | landed | `doc:packages/canvas-ui/CLAUDE.md` | preset list in the "Toolbars are content" paragraph | | low | U4 |
 | A1 | defect | rejected | `api/canvas-ui.surface.txt` (if snapshotted) | regenerate for new preset exports | | low | U4 |
-| T1 | defect | implemented | `sym:ModellerToolbar` | no change — keeps its own `useTool` path; listed so it stays the control | | low | — |
-| U5 | defect | implemented | `sym:ToolbarSelectItem`, `sym:ControlPanels` | `disabled` on select items (dropdown + segmented); a `choice` item is disabled while its command is | `tool.nodeKind` greys out outside Add, as §2 step 5 promised | low — additive prop | R1 |
+| T1 | defect | landed | `sym:ModellerToolbar` | no change — keeps its own `useTool` path; listed so it stays the control | | low | — |
+| U5 | defect | landed | `sym:ToolbarSelectItem`, `sym:ControlPanels` | `disabled` on select items (dropdown + segmented); a `choice` item is disabled while its command is | `tool.nodeKind` greys out outside Add, as §2 step 5 promised | low — additive prop | R1 |
 
 ## 5. Blast radius
 
@@ -163,3 +163,4 @@ relations:
 | 2026-09-28 | Approved whole; D1–D5 accepted as recommended | accepted | |
 | 2026-09-28 | 16 rows implemented on `feat/control-panels`; U3 superseded, A1 rejected, U5 added | accepted | V1: build, check-types, lint (boundaries + api surface unchanged), tests pass. V2–V5 driven in headless Chromium: 2× pan-left + pan-up moves the content right 160 / down 80, reset recentres; zoom picker 200% → readout 200%, 100% button restores; wheel-zoom toggle off stops wheel zoom; grid + theme toggle; modeller Add drops a node, undo removes it, Esc returns the picker to Select and greys Shape; Explorer shows layout / select / edge pickers; GraphModeller, FullFeatured, EmbeddedWidget load clean. Learned: (1) U3 already existed: `ControlChoiceOption.icon` shipped with the prior RFC, so it's superseded by that RFC. (2) A1: canvas-ui has no API snapshot, so there's nothing to regenerate. (3) The zoom picker fell back to its first option (25%) between levels, so `camera.zoomTo.options` now also lists the current zoom. (4) The icon registry had no `spline`, so Connect rendered as text; added. (5) Choice items ignored `enabled`, so U5 was added |
 | 2026-09-28 | R1 superseded by `rfc:feat-2026-09-28-the-modeller-tool-lives-outside-the-canvas` | accepted | The tool moved into `view.interaction.viewMode`; `tool.*` are graph commands now and `ToolCommands` is deleted. Command names and `MODELLER_CONTROL_ITEMS` are unchanged |
+| 2026-09-28 | `feat/control-panels` merged to `main` | landed | Every implemented row → landed (build, check-types, lint, test green at merge); U4 rests on V6 (skipped — covered by V5 of `rfc:feat-2026-09-28-graph-toolbar-actions-cannot-be-saved`) |

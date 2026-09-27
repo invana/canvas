@@ -2,10 +2,10 @@
 id: feat-2026-09-28-toolbars-and-control-panels-draw-controls-twice
 type: feat
 title: Toolbars render control-panel presets through one shared item renderer
-status: accepted
+status: landed
 opened: 2026-09-28
 decided: 2026-09-28
-landed: null
+landed: 2026-09-28
 packages: [pkg:@invana/canvas-core, pkg:@invana/canvas, pkg:@invana/graph, pkg:@invana/canvas-react, pkg:@invana/canvas-ui]
 design_of_record: null
 relations:
@@ -74,24 +74,24 @@ relations:
 
 | ID | Kind | Status | File/target | Change | Effect | Risk | Depends on |
 |---|---|---|---|---|---|---|---|
-| E1 | defect | implemented | `file:packages/canvas-ui/src/control-panels/ControlItems.tsx` (+ `ControlPanels.tsx`) | extract + export `<ControlItems>`; `ControlPanelView` uses it | one renderer; a pure refactor for panels | low | — |
-| E2 | defect | implemented | `file:packages/canvas/src/engine/builtinCommands.ts` | `layout.toggle` | Run / Stop as one item | low — additive command name | — |
-| E3 | defect | implemented | `sym:DEFAULT_CONTROL_ICONS` + renderer | icon entries may carry `className` | Stop keeps `fill-current` | low | E1 |
-| E4 | defect | implemented | `file:packages/canvas-ui/src/control-panels/presets.ts` | stable section-grouped `key`s; `LAYOUT_` / `GRAPH_` use `layout.toggle` | toolbars can filter; presets match toolbars | medium — saved panels built from the old presets keep their old items (harmless) | E2 |
+| E1 | defect | landed | `file:packages/canvas-ui/src/control-panels/ControlItems.tsx` (+ `ControlPanels.tsx`) | extract + export `<ControlItems>`; `ControlPanelView` uses it | one renderer; a pure refactor for panels | low | — |
+| E2 | defect | landed | `file:packages/canvas/src/engine/builtinCommands.ts` | `layout.toggle` | Run / Stop as one item | low — additive command name | — |
+| E3 | defect | landed | `sym:DEFAULT_CONTROL_ICONS` + renderer | icon entries may carry `className` | Stop keeps `fill-current` | low | E1 |
+| E4 | defect | landed | `file:packages/canvas-ui/src/control-panels/presets.ts` | stable section-grouped `key`s; `LAYOUT_` / `GRAPH_` use `layout.toggle` | toolbars can filter; presets match toolbars | medium — saved panels built from the old presets keep their old items (harmless) | E2 |
 | E5 | defect | superseded | `sym:GraphHistoryProvider` | register `history.redraw` — superseded by N4 (`graph.redraw` on every `GraphCanvas`: redraw never needed history) | redraw as data | low | — |
-| E6 | defect | implemented | `sym:ControlItems` | `extra` pass-through | `extraItems` / `children` | low | E1 |
-| T1 | defect | implemented | `sym:GraphControlsToolbar` | body → `<ControlItems items={filter(GRAPH_…, sections)} extra icons>`; factory layouts registered while mounted (D1) | the most-used toolbar is on the command path | **high** — 36 stories render it; layout picker contents and button order must stay identical | E1–E6, D1 |
-| T2 | defect | implemented | `sym:GraphControlsToolbarLite` | same | | medium | T1 |
-| T3 | defect | implemented | `sym:CanvasControlsToolbar` | same; `onToggleLock` override (D2) | | medium | E1, D2 |
-| T4 | defect | implemented | `sym:ViewToolbar`, `sym:HistoryToolbar`, `sym:EditToolbar`, `sym:GridToolbar` | same | | low — no JSX usages | E1, E5 |
-| T5 | defect | implemented | `sym:ModellerToolbar` | same; `nodeKinds` → `args.kinds` | | medium — depends on where the tool lives (`rfc:feat-2026-09-28-the-modeller-tool-lives-outside-the-canvas`) | E1 |
-| T6 | defect | implemented | `doc:packages/canvas-ui/CLAUDE.md`, toolbar TSDoc | "a toolbar is a preset + props" | docs match | low | T1–T5 |
-| N1 | defect | implemented | `sym:ControlCommandItemSpec` (`canvas-core`) | optional `activeIcon` / `activeLabel` / `activeText`, shown while the command `isActive` — a button that swaps its face without a pressed state | Run ⇄ Stop and Erase ⇄ Erase selection as data | medium — core spec type grows (additive; API snapshot unchanged: member-level) | — |
-| N2 | defect | implemented | `file:packages/canvas/src/engine/builtinCommands.ts` | `camera.fit { layerId }` fits one layer's bounds (the toolbars' `fitContent(layerId)`) | toolbars keep their fit target | low | — |
-| N3 | defect | implemented | `file:packages/graph/src/canvas/graphCommands.ts`, `sym:GraphHistoryProvider`, `sym:GraphClipboardProvider` | `graph.erase` (+ exported `sym:eraseCommand`): delete the click-selection, else `graph.clear`; history / clipboard providers override it undoably | selection-aware erase as data | medium — fixes a latent bug (D-6) | N1 |
-| N4 | defect | implemented | same | `graph.redraw { layerId }` | `HistoryToolbar` redraw as data | low | — |
-| N5 | defect | implemented | same | `tool.active` gains `isActive` (pressed while the mode is `args.value`) | `ModellerToolbar`'s per-tool toggles as data | low | `rfc:feat-2026-09-28-the-modeller-tool-lives-outside-the-canvas` |
-| N6 | dressing | implemented | `sym:GraphToolbar`, `sym:GraphLayoutToolbar` | `@deprecated` TSDoc (D3) | steers new code to the spec path | low | — |
+| E6 | defect | landed | `sym:ControlItems` | `extra` pass-through | `extraItems` / `children` | low | E1 |
+| T1 | defect | landed | `sym:GraphControlsToolbar` | body → `<ControlItems items={filter(GRAPH_…, sections)} extra icons>`; factory layouts registered while mounted (D1) | the most-used toolbar is on the command path | **high** — 36 stories render it; layout picker contents and button order must stay identical | E1–E6, D1 |
+| T2 | defect | landed | `sym:GraphControlsToolbarLite` | same | | medium | T1 |
+| T3 | defect | landed | `sym:CanvasControlsToolbar` | same; `onToggleLock` override (D2) | | medium | E1, D2 |
+| T4 | defect | landed | `sym:ViewToolbar`, `sym:HistoryToolbar`, `sym:EditToolbar`, `sym:GridToolbar` | same | | low — no JSX usages | E1, E5 |
+| T5 | defect | landed | `sym:ModellerToolbar` | same; `nodeKinds` → `args.kinds` | | medium — depends on where the tool lives (`rfc:feat-2026-09-28-the-modeller-tool-lives-outside-the-canvas`) | E1 |
+| T6 | defect | landed | `doc:packages/canvas-ui/CLAUDE.md`, toolbar TSDoc | "a toolbar is a preset + props" | docs match | low | T1–T5 |
+| N1 | defect | landed | `sym:ControlCommandItemSpec` (`canvas-core`) | optional `activeIcon` / `activeLabel` / `activeText`, shown while the command `isActive` — a button that swaps its face without a pressed state | Run ⇄ Stop and Erase ⇄ Erase selection as data | medium — core spec type grows (additive; API snapshot unchanged: member-level) | — |
+| N2 | defect | landed | `file:packages/canvas/src/engine/builtinCommands.ts` | `camera.fit { layerId }` fits one layer's bounds (the toolbars' `fitContent(layerId)`) | toolbars keep their fit target | low | — |
+| N3 | defect | landed | `file:packages/graph/src/canvas/graphCommands.ts`, `sym:GraphHistoryProvider`, `sym:GraphClipboardProvider` | `graph.erase` (+ exported `sym:eraseCommand`): delete the click-selection, else `graph.clear`; history / clipboard providers override it undoably | selection-aware erase as data | medium — fixes a latent bug (D-6) | N1 |
+| N4 | defect | landed | same | `graph.redraw { layerId }` | `HistoryToolbar` redraw as data | low | — |
+| N5 | defect | landed | same | `tool.active` gains `isActive` (pressed while the mode is `args.value`) | `ModellerToolbar`'s per-tool toggles as data | low | `rfc:feat-2026-09-28-the-modeller-tool-lives-outside-the-canvas` |
+| N6 | dressing | landed | `sym:GraphToolbar`, `sym:GraphLayoutToolbar` | `@deprecated` TSDoc (D3) | steers new code to the spec path | low | — |
 
 ## 5. Blast radius
 
@@ -140,3 +140,4 @@ relations:
 | 2026-09-28 | Opened from X2 of `rfc:feat-2026-09-28-graph-toolbar-actions-cannot-be-saved` on the maintainer's "finish all" | proposed | Finding: the recorded blocker ("header slots don't accept specs") doesn't block X2 (R1) |
 | 2026-09-28 | Approved whole ("sure that order works" after "finish all"); D2–D4 as recommended | accepted | |
 | 2026-09-28 | E1–E4, E6, T1–T6, N1–N6 implemented on `feat/control-panels`; E5 superseded by N4 | accepted | V1: build, check-types, lint (API surfaces unchanged), tests (graph +1: `graph.erase` selection / clear / undo). V2–V5: headless Chromium, baseline taken from the pre-conversion build — button labels + enabled / pressed states identical on FullFeatured, GraphVisualiser, GraphModeller, EmbeddedWidget, SchemaViewPanel/CanvasDerived, AppLayoutV2, and their header strips byte-identical in screenshots; only `story:canvas-ui/apps/GraphCanvasApp/ControlPanels` changed (D-7). Run ⇄ Stop swaps while a layout runs and Stop cancels mid-run; lasso / grid switch; Erase reads "Erase selection · Selection" with a node selected. Learned: (1) **D1 → C**: toolbars aren't saved, so factory layouts don't need `canvas.layouts` — the toolbar registers two private commands (`toolbar.layout#<id>` / `toolbar.layoutRun#<id>`) over `useLayout` while mounted; the picker keeps its exact entries and nothing reaches `definition.layouts`. (2) E1 is a hook, `useControlItems`, returning `ToolbarItem`s, plus `<ControlItems>` on top — so toolbars keep `applyIconOverrides`, `extraItems`, `children` and the controlled lock with no new props (E6's `extra` is on `<ControlItems>` only). (3) E3 needed no type change: the registry's `stop` glyph is a filled square. (4) E4's section keys were unnecessary: each toolbar composes its specs per section itself (`toolbars/controlSpecs.ts`). (5) The toolbars used closures the commands didn't cover: selection-aware erase, fit-to-layer, redraw, per-tool toggles, a swapping button face → N1–N5. (6) N3 surfaced D-6. (7) The node-kind picker keeps its "Shape: Circle" trigger by post-processing one `ToolbarItem` |
+| 2026-09-28 | `feat/control-panels` merged to `main` | landed | Every implemented row → landed (build, check-types, lint, test green at merge) |

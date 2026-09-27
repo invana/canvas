@@ -132,11 +132,11 @@ Legend: ✅ shipped · 🚧 in progress · 📋 planned
 | Declarative `<Canvas>` + child wrappers | ✅ |
 | Hooks — camera / zoom / fit / events, `useGraphCanvasUpdate` / `useGraphCanvasOptions` | ✅ |
 | Components + assembled toolbars | ✅ |
-| Control panels — saved controls over the canvas (`<ControlPanel>` / `<ControlPanels>`, named commands) | 🚧 on `feat/control-panels` |
-| Control-panel presets — pan / zoom / navigation / input / canvas / explorer / modeller / theme | 🚧 on `feat/control-panels` |
-| Control-panel editor for the Studio (`ControlPanelsEditor`, also in `CanvasSettingsEditorPanel`) | 🚧 on `feat/control-panels` |
-| Toolbars drawn from control specs (one renderer: `useControlItems` / `<ControlItems>`) | 🚧 on `feat/control-panels` |
-| Modeller tool in the kernel (`interaction.viewMode`) — behaviours follow it via `modes` | 🚧 on `feat/control-panels` |
+| Control panels — saved controls over the canvas (`<ControlPanel>` / `<ControlPanels>`, named commands) | ✅ |
+| Control-panel presets — pan / zoom / navigation / input / canvas / explorer / modeller / theme | ✅ |
+| Control-panel editor for the Studio (`ControlPanelsEditor`, also in `CanvasSettingsEditorPanel`) | ✅ |
+| Toolbars drawn from control specs (one renderer: `useControlItems` / `<ControlItems>`) | ✅ |
+| Modeller tool in the kernel (`interaction.viewMode`) — behaviours follow it via `modes` | ✅ |
 | `GraphCanvasApp` compound app | ✅ |
 
 ### Editors & template authoring
