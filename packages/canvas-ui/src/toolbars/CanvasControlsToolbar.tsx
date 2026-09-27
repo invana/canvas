@@ -2,15 +2,13 @@ import type { ReactNode } from 'react';
 import type { Canvas } from '@invana/canvas';
 import { Lock, LockOpen } from 'lucide-react';
 
-import { Panel, ToolbarItems, applyIconOverrides } from '../components';
-import type { PanelPosition, ToolbarIcon, ToolbarItem } from '../components';
+import { ToolbarItems, applyIconOverrides } from '../components';
+import type { ToolbarIcon, ToolbarItem } from '../components';
 import { useViewSection } from '@invana/canvas-react';
 
 export interface CanvasControlsToolbarProps {
   /** Override the baked icons, by item key. */
   icons?: Partial<Record<'zoom-in' | 'zoom-out' | 'fit' | 'lock', ToolbarIcon>>;
-  /** Where the controls pin within the canvas host. Default `'bottom-left'`. */
-  position?: PanelPosition;
   /** Stack direction. Default `'vertical'`. */
   orientation?: 'horizontal' | 'vertical';
   /** Layer id the fit-to-content button targets. Default `'graph'`. */
@@ -26,11 +24,6 @@ export interface CanvasControlsToolbarProps {
    */
   locked?: boolean;
   onToggleLock?: () => void;
-  /**
-   * Render **without** the self-positioning `<Panel>` — just the bare nav
-   * component — so it composes into consumer chrome. Default `false`.
-   */
-  bare?: boolean;
   /** Explicit canvas instance; forwarded to each smart control. Defaults to context canvas. */
   canvas?: Canvas | null;
   /** Extra controls appended after the presets — any React node. */
@@ -39,27 +32,25 @@ export interface CanvasControlsToolbarProps {
 }
 
 /**
- * Turnkey controls overlay — the canvas equivalent of React Flow's `<Controls>`.
+ * Turnkey view controls — the canvas equivalent of React Flow's `<Controls>`.
  * Zoom +/- and fit ride the {@link useViewSection} section (its auto-lock is
  * off); lock stays **controlled** (pass `locked` + `onToggleLock`). Append extra
  * controls as `children`. Icons are baked in (lucide).
  *
  * @example
- * <Canvas>
- *   <GraphLayer id="graph" data={data} />
- *   <CanvasControlsToolbar />
- * </Canvas>
+ * // in a header slot
+ * header={{ right: <CanvasControlsToolbar orientation="horizontal" /> }}
+ * // floating over the canvas
+ * <ControlPanel id="controls" position="bottom-left"><CanvasControlsToolbar /></ControlPanel>
  */
 export function CanvasControlsToolbar({
   icons,
-  position = 'bottom-left',
   orientation = 'vertical',
   fitLayerId = 'graph',
   showZoom = true,
   showFit = true,
   locked,
   onToggleLock,
-  bare = false,
   canvas,
   children,
   className,
@@ -86,13 +77,7 @@ export function CanvasControlsToolbar({
     items.push({ type: 'custom', key: 'children', render: () => children });
   }
 
-  const nav = (
-    <ToolbarItems items={applyIconOverrides(items, icons)} orientation={orientation} className={className} />
-  );
-  if (bare) return nav;
   return (
-    <Panel position={position} orientation={orientation}>
-      {nav}
-    </Panel>
+    <ToolbarItems items={applyIconOverrides(items, icons)} orientation={orientation} className={className} />
   );
 }

@@ -12,7 +12,8 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { CanvasControlsToolbar, CanvasMessageBar, GraphCanvasApp, GraphStatusBar } from '@invana/canvas-ui';
+import { ControlPanel } from '@invana/canvas-react';
+import { CanvasMessageBar, GraphCanvasApp, GraphStatusBar, ZOOM_CONTROL_ITEMS } from '@invana/canvas-ui';
 import { lesMiserables } from '@invana/graph-datasets';
 
 const meta: Meta = { title: 'canvas-ui/apps/GraphCanvasApp/EmbeddedWidget' };
@@ -57,9 +58,19 @@ export const EmbeddedWidgetStory: Story = {
           footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
           onReady={(c) => c?.showMessage('An embedded, bounded widget — try panning inside it')}
         >
-          {/* The self-wiring canvas controls overlay (React Flow's <Controls>):
-              zoom +/- and a fit-to-content button, pinned bottom-left. */}
-          <CanvasControlsToolbar position="bottom-left" />
+          {/* Floating view controls (React Flow's <Controls>): the zoom preset
+              plus fit, pinned bottom-left. Declared as data, so they are saved
+              with the canvas; the app draws them. */}
+          <ControlPanel
+            id="controls"
+            position="bottom-left"
+            orientation="vertical"
+            items={[
+              ...ZOOM_CONTROL_ITEMS,
+              { type: 'divider' },
+              { type: 'command', command: 'camera.fit', icon: 'maximize', label: 'Fit to content' }
+            ]}
+          />
         </GraphCanvasApp>
 
         <p style={{ opacity: 0.75, lineHeight: 1.6, marginTop: 28 }}>

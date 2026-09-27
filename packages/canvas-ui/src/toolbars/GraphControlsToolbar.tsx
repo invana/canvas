@@ -24,9 +24,9 @@
  * under a lifted `GraphCanvasContext` whose value is non-null (gate on it). The
  * header apps render the toolbar only once `canvas` exists.
  *
- * Unlike the floating, `Panel`-wrapped toolbars (`ViewToolbar`, `GridToolbar`,
- * …), this renders a **bare** `<ToolbarItems>` meant to be dropped into a header
- * slot. (Supersedes the callback-driven {@link GraphToolbar} for header use.)
+ * Like every toolbar it renders its `<ToolbarItems>` content only, for a header
+ * slot; float it with a `<ControlPanel>`. (Supersedes the callback-driven
+ * {@link GraphToolbar} for header use.)
  */
 
 import { type ReactNode } from 'react';

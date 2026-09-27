@@ -80,16 +80,15 @@ export const ExportStateStory: Story = {
         header={{
           title: 'State Save / Load Demo',
           // The header rail sits outside the `<Canvas>` context, so hand the
-          // toolbar the live engine from the control context. `bare` renders
-          // just the hover-card trigger (no floating `<Panel>`), so it drops
-          // straight into the header as a nav item.
-          // Two `bare` nav items side by side: clear the canvas, then reload a
+          // toolbar the live engine from the control context. Each toolbar is
+          // just its trigger, so it drops straight into the header as a nav item.
+          // Two nav items side by side: clear the canvas, then reload a
           // saved document from file. `<ClearCanvasToolbar>` wipes the graph
           // layer; `<ExportStateToolbar>` saves / loads the full state JSON.
           right: (ctx) => (
             <>
-              <ClearCanvasToolbar bare targetLayerId="graph" canvas={ctx.canvas} />
-              <ExportStateToolbar bare filename="my-scene" canvas={ctx.canvas} />
+              <ClearCanvasToolbar targetLayerId="graph" canvas={ctx.canvas} />
+              <ExportStateToolbar filename="my-scene" canvas={ctx.canvas} />
             </>
           )
         }}

@@ -2,8 +2,8 @@ import type { Canvas } from '@invana/canvas';
 import { Button } from '@invana/ui';
 import { Trash2 } from 'lucide-react';
 
-import { Panel, Tooltipped } from '../components';
-import type { PanelPosition, ToolbarIcon, TooltipSide } from '../components';
+import { Tooltipped } from '../components';
+import type { ToolbarIcon, TooltipSide } from '../components';
 import { useClearGraph } from '@invana/canvas-react';
 
 export interface ClearCanvasToolbarProps {
@@ -17,14 +17,6 @@ export interface ClearCanvasToolbarProps {
   triggerIcon?: ToolbarIcon;
   /** Side the tooltip is placed on. Default `'bottom'`. */
   tooltipSide?: TooltipSide;
-  /** Where the toolbar pins (when not `bare`). Default `'top-right'`. */
-  position?: PanelPosition;
-  /**
-   * Render just the button (no `<Panel>` wrapper) so it can be dropped into
-   * external chrome — e.g. a header rail alongside other nav items. Default
-   * `false`.
-   */
-  bare?: boolean;
   /** Explicit canvas instance; defaults to the `<Canvas>` context canvas. */
   canvas?: Canvas | null;
   className?: string;
@@ -38,8 +30,8 @@ export interface ClearCanvasToolbarProps {
  *
  * Self-wiring: pulls the engine from the `<Canvas>` context (or an explicit
  * `canvas` prop). Pairs naturally with `ExportStateToolbar` — clear the scene,
- * then **Load JSON…** to restore a saved document. Pass `bare` to embed the
- * button in your own toolbar chrome instead of the built-in `<Panel>`.
+ * then **Load JSON…** to restore a saved document. Drop the button into
+ * any toolbar chrome; to float it over the canvas, put it in a `<ControlPanel>`.
  */
 export function ClearCanvasToolbar({
   targetLayerId = 'graph',
@@ -47,14 +39,12 @@ export function ClearCanvasToolbar({
   triggerText,
   triggerIcon: TriggerIcon = Trash2,
   tooltipSide = 'bottom',
-  position = 'top-right',
-  bare = false,
   canvas,
   className,
 }: ClearCanvasToolbarProps) {
   const { clear } = useClearGraph(targetLayerId, canvas);
 
-  const button = (
+  return (
     <Tooltipped label={label} side={tooltipSide}>
       <Button
         variant="ghost"
@@ -68,7 +58,4 @@ export function ClearCanvasToolbar({
       </Button>
     </Tooltipped>
   );
-
-  if (bare) return button;
-  return <Panel position={position}>{button}</Panel>;
 }

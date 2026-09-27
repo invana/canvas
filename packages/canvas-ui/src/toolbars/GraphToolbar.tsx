@@ -1,8 +1,8 @@
 import type { Canvas } from '@invana/canvas';
 import type { EdgePathType } from '@invana/graph';
 
-import { Panel, ToolbarItems } from '../components';
-import type { PanelPosition, ToolbarIcon, ToolbarItem } from '../components';
+import { ToolbarItems } from '../components';
+import type { ToolbarIcon, ToolbarItem } from '../components';
 import { useStyleEditorSection } from '@invana/canvas-react';
 import { useClipboard } from '@invana/canvas-react';
 import { useClearGraph } from '@invana/canvas-react';
@@ -36,9 +36,6 @@ export interface GraphToolbarProps {
   clearIcon: ToolbarIcon;
   /** Explicit canvas instance; forwarded to the self-wiring erase action. Defaults to context canvas. */
   canvas?: Canvas | null;
-
-  /** Where the toolbar pins within the canvas host. Default `'top-center'`. */
-  position?: PanelPosition;
   className?: string;
 }
 
@@ -46,7 +43,7 @@ export interface GraphToolbarProps {
  * Turnkey **horizontal** graph toolbar: a callback-driven layout picker +
  * selection-mode picker + the self-wiring **Style Editor** edge-routing section
  * ({@link useStyleEditorSection}) + a selection-aware erase action. Compiled by
- * {@link ToolbarItems} and pinned with a {@link Panel}.
+ * {@link ToolbarItems}. To float it over the canvas, put it in a `<ControlPanel>`.
  */
 export function GraphToolbar({
   layout,
@@ -62,7 +59,6 @@ export function GraphToolbar({
   clearLayerId = 'graph',
   clearIcon,
   canvas,
-  position = 'top-center',
   className,
 }: GraphToolbarProps) {
   // Always call the section hook (rules of hooks); include its item only when
@@ -91,9 +87,5 @@ export function GraphToolbar({
     },
   ];
 
-  return (
-    <Panel position={position} orientation="horizontal">
-      <ToolbarItems items={items} orientation="horizontal" className={className} />
-    </Panel>
-  );
+  return <ToolbarItems items={items} orientation="horizontal" className={className} />;
 }

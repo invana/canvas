@@ -3,11 +3,10 @@ import type { Canvas } from '@invana/canvas';
 import { Button, HoverCard, HoverCardContent, HoverCardTrigger } from '@invana/ui';
 import { Download, ImageDown } from 'lucide-react';
 
-import { EXPORT_IMAGE_FORMAT_OPTIONS, ExportImagePanel, Panel } from '../components';
+import { EXPORT_IMAGE_FORMAT_OPTIONS, ExportImagePanel } from '../components';
 import type {
   ExportImageFormatKey,
   ExportImagePanelValue,
-  PanelPosition,
   ToolbarIcon,
 } from '../components';
 import { useCanvasImageExport } from '@invana/canvas-react';
@@ -39,20 +38,12 @@ export interface ExportImageToolbarProps {
   triggerText?: string;
   /** Override the trigger icon (lucide by default). */
   triggerIcon?: ToolbarIcon;
-  /** Where the toolbar pins (when not `bare`). Default `'top-right'`. */
-  position?: PanelPosition;
   /** Hover-card alignment relative to the trigger. Default `'end'`. */
   align?: 'start' | 'center' | 'end';
   /** ms before the card opens on hover. Default `120`. */
   openDelay?: number;
   /** ms before it closes after the pointer leaves. Default `200`. */
   closeDelay?: number;
-  /**
-   * Render just the hover-card trigger (no `<Panel>` wrapper) so it can be
-   * dropped into external chrome — e.g. as a `custom` {@link ToolbarItem} inside
-   * a `NavHorizontal` / `ToolbarItems`. Default `false`.
-   */
-  bare?: boolean;
   /** Explicit canvas instance; defaults to the `<Canvas>` context canvas. */
   canvas?: Canvas | null;
   className?: string;
@@ -67,8 +58,8 @@ export interface ExportImageToolbarProps {
  *
  * Self-wiring: pulls the engine from the `<Canvas>` context (or an explicit
  * `canvas` prop). Raster formats capture through the renderer; `'svg'` emits a
- * true vector document. Pass `bare` to embed the trigger in your own toolbar
- * chrome instead of the built-in `<Panel>`.
+ * true vector document. Drop the trigger into any toolbar
+ * chrome; to float it over the canvas, put it in a `<ControlPanel>`.
  */
 export function ExportImageToolbar({
   formats,
@@ -77,11 +68,9 @@ export function ExportImageToolbar({
   label = 'Export',
   triggerText,
   triggerIcon: TriggerIcon = Download,
-  position = 'top-right',
   align = 'end',
   openDelay = 120,
   closeDelay = 200,
-  bare = false,
   canvas,
   className,
 }: ExportImageToolbarProps) {
@@ -106,7 +95,7 @@ export function ExportImageToolbar({
     ? EXPORT_IMAGE_FORMAT_OPTIONS.filter((f) => formats.includes(f.value))
     : undefined;
 
-  const menu = (
+  return (
     <HoverCard openDelay={openDelay} closeDelay={closeDelay}>
       <HoverCardTrigger asChild>
         <Button
@@ -131,7 +120,4 @@ export function ExportImageToolbar({
       </HoverCardContent>
     </HoverCard>
   );
-
-  if (bare) return menu;
-  return <Panel position={position}>{menu}</Panel>;
 }

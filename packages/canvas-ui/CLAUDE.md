@@ -20,6 +20,7 @@
 ```
 src/
 ├─ components/   dumb building blocks — Panel, ToolbarItems, Tooltipped, ControlButton, OptionPicker…
+├─ control-panels/  `<ControlPanels>` — UI projection of `definition.controlPanels` + default icon/widget registries (panels are declared with canvas-react's headless `<ControlPanel>`)
 ├─ toolbars/     assembled *Toolbar (CanvasControlsToolbar, GraphToolbar, InspectorPanel…)
 ├─ menus/        context menus (GraphNodeContextMenu…)
 ├─ editors/      per-instance schema state-editors — ONE folder per editable engine surface
@@ -48,6 +49,8 @@ src/
 One barrel (`index.ts`), sectioned. The folder split is internal organisation — **no subpath exports**; consumers import from the package root, so internal moves don't change the public surface.
 
 **Naming standard — `view-panels/` surfaces carry the `*ViewPanel` suffix.** Every presentational / store-connected view in `view-panels/` is a `*ViewPanel` (`SchemaViewPanel`, `LayersViewPanel`, `CanvasFiltersViewPanel`, `CanvasPagesViewPanel`), one folder per surface, with matching `*ViewPanelProps`. It's the counterpart to the `*Toolbar` / `*EditorPanel` suffixes — a stable, greppable name for "a dockable content surface". (`preview-cards.tsx` is the exception: `NodePreviewCard` / `EdgePreviewCard` are render-prop *content*, not dockable panels.)
+
+**Toolbars are content; ControlPanels float.** A `*Toolbar` renders its controls and nothing else — no `position`, no `bare`, no `Panel` wrapper — so it drops into a header / footer slot or a side region. To put controls *over the canvas*, declare a `<ControlPanel>` (canvas-react): `items` for serialisable specs (`VIEW_CONTROL_ITEMS` / `ZOOM_CONTROL_ITEMS` presets, saved with the canvas) or a toolbar as `children` (drawn, not saved). `<ControlPanels>` draws them; `GraphCanvasApp` mounts it. `Panel` stays the internal positioner for docks and banners (`InspectorPanel`, `RendererCapabilityBanner`), never for a toolbar. See `docs/rfcs/feat/2026-09-27-two-ways-to-float-a-toolbar.md`.
 
 **Two inspectors, two jobs — don't merge them.** `sym:InspectorPanel` (`toolbars/`) is the **edit** path: a floating `Panel` holding a `PropertiesEditor`, targeted by `ClickInspectBehaviour` via `useEntityEditor`, committing changes to the store. `sym:ElementInspectorViewPanel` (`view-panels/element-inspector/`) is the **look** path: read-only, docked, following the *kernel selection* (`view.interaction.selection`). They differ in source, chrome and direction of data flow; a `readOnly` flag on the first would not produce the second. See `docs/rfcs/feat/2026-09-11-selected-element-properties-are-invisible.md` R1.
 

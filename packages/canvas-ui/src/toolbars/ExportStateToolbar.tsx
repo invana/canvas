@@ -3,8 +3,8 @@ import type { Canvas } from '@invana/canvas';
 import { Button, HoverCard, HoverCardContent, HoverCardTrigger } from '@invana/ui';
 import { Download, FileJson, Upload } from 'lucide-react';
 
-import { ExportStatePanel, Panel } from '../components';
-import type { PanelPosition, ToolbarIcon } from '../components';
+import { ExportStatePanel } from '../components';
+import type { ToolbarIcon } from '../components';
 import { useCanvasStateJson } from '@invana/canvas-react';
 
 export interface ExportStateToolbarProps {
@@ -25,20 +25,12 @@ export interface ExportStateToolbarProps {
   triggerText?: string;
   /** Override the trigger icon (lucide `FileJson` by default). */
   triggerIcon?: ToolbarIcon;
-  /** Where the toolbar pins (when not `bare`). Default `'top-right'`. */
-  position?: PanelPosition;
   /** Hover-card alignment relative to the trigger. Default `'end'`. */
   align?: 'start' | 'center' | 'end';
   /** ms before the card opens on hover. Default `120`. */
   openDelay?: number;
   /** ms before it closes after the pointer leaves. Default `200`. */
   closeDelay?: number;
-  /**
-   * Render just the hover-card trigger (no `<Panel>` wrapper) so it can be
-   * dropped into external chrome — e.g. as a `custom` `ToolbarItem` inside a
-   * `NavHorizontal` / header rail. Default `false`.
-   */
-  bare?: boolean;
   /** Explicit canvas instance; defaults to the `<Canvas>` context canvas. */
   canvas?: Canvas | null;
   className?: string;
@@ -56,8 +48,8 @@ export interface ExportStateToolbarProps {
  * Self-wiring: pulls the engine from the `<Canvas>` context (or an explicit
  * `canvas` prop) via {@link useCanvasStateJson}. Restore applies onto the
  * canvas's already-registered layers/behaviours/layouts (import addresses
- * instances by id — it doesn't create them). Pass `bare` to embed the trigger in
- * your own toolbar chrome instead of the built-in `<Panel>`.
+ * instances by id — it doesn't create them). Drop the trigger into
+ * any toolbar chrome; to float it over the canvas, put it in a `<ControlPanel>`.
  */
 export function ExportStateToolbar({
   filename = 'canvas-state',
@@ -66,11 +58,9 @@ export function ExportStateToolbar({
   showRestoreToggle = true,
   triggerText,
   triggerIcon: TriggerIcon = FileJson,
-  position = 'top-right',
   align = 'end',
   openDelay = 120,
   closeDelay = 200,
-  bare = false,
   canvas,
   className,
 }: ExportStateToolbarProps) {
@@ -80,7 +70,7 @@ export function ExportStateToolbar({
   const onExport = () => download(`${filename}.json`);
   const onImport = (file: File) => void importState(file, { skipInteraction: !restore });
 
-  const menu = (
+  return (
     <HoverCard openDelay={openDelay} closeDelay={closeDelay}>
       <HoverCardTrigger asChild>
         <Button
@@ -107,7 +97,4 @@ export function ExportStateToolbar({
       </HoverCardContent>
     </HoverCard>
   );
-
-  if (bare) return menu;
-  return <Panel position={position}>{menu}</Panel>;
 }

@@ -22,6 +22,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { GraphCanvas as GraphCanvasInstance, GraphData, GraphSchema } from '@invana/graph';
 import {
   BackgroundLayer,
+  ControlPanel,
   DragNodeBehaviour,
   DragPanBehaviour,
   GraphCanvas,
@@ -36,9 +37,8 @@ import {
 } from '@invana/canvas-react';
 import { CanvasThemeSync } from '@invana/canvas-react';
 
-import { Panel } from '../../components';
 import type { ToolbarIcon } from '../../components';
-import { CanvasControlsToolbar } from '../../toolbars/CanvasControlsToolbar';
+import { ControlPanels } from '../../control-panels';
 import { SchemaToolbar } from '../../toolbars/SchemaToolbar';
 import { useDerivedSchema, type UseDerivedSchemaOptions } from './useDerivedSchema';
 import {
@@ -230,8 +230,10 @@ export function SchemaViewPanel({
           />
         ) : null}
 
+        {/* The schema toolbar carries view-local callbacks, so it floats as a
+            ControlPanel slot (drawn, not persisted). */}
         {showToolbar ? (
-          <Panel position="top-left">
+          <ControlPanel id="schema-toolbar" position="top-left" surface={false}>
             <SchemaToolbar
               nodeMode={nodeMode}
               onNodeModeChange={setNodeMode}
@@ -243,11 +245,22 @@ export function SchemaViewPanel({
               onEdgeRoutingChange={setEdgeRouting}
               layerId={SCHEMA_METAGRAPH_LAYER_ID}
             />
-          </Panel>
+          </ControlPanel>
         ) : null}
 
         {/* Standard zoom controls (fit lives in the SchemaToolbar). */}
-        <CanvasControlsToolbar position="bottom-left" showFit={false} fitLayerId={SCHEMA_METAGRAPH_LAYER_ID} />
+        <ControlPanel
+          id="schema-zoom"
+          position="bottom-left"
+          orientation="vertical"
+          surface={false}
+          items={[
+            { type: 'command', command: 'camera.zoomIn', icon: 'zoom-in', label: 'Zoom in' },
+            { type: 'command', command: 'camera.zoomOut', icon: 'zoom-out', label: 'Zoom out' },
+          ]}
+        />
+        {/* This viewer is its own canvas, so it draws its own panels. */}
+        <ControlPanels />
       </GraphCanvas>
     </div>
   );

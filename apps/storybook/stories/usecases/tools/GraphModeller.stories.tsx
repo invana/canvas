@@ -185,7 +185,7 @@ function HistoryBridge({ onReady }: { onReady: (history: GraphHistory | null) =>
  */
 function HeaderToolbar() {
   return (
-    <ModellerToolbar bare nodeKinds={SHAPE_LABELS} nodeKindIcons={SHAPE_ICONS} />
+    <ModellerToolbar nodeKinds={SHAPE_LABELS} nodeKindIcons={SHAPE_ICONS} />
   );
 }
 

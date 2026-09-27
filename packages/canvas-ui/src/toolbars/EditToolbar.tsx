@@ -1,14 +1,12 @@
 import type { Canvas } from '@invana/canvas';
 
-import { Panel, ToolbarItems, applyIconOverrides } from '../components';
-import type { PanelPosition, ToolbarIcon } from '../components';
+import { ToolbarItems, applyIconOverrides } from '../components';
+import type { ToolbarIcon } from '../components';
 import { useEditorSection } from '@invana/canvas-react';
 
 export interface EditToolbarProps {
   /** Override the baked icons, by item key. */
   icons?: Partial<Record<'cut' | 'copy' | 'paste' | 'erase', ToolbarIcon>>;
-  /** Where the toolbar pins. Default `'top-left'`. */
-  position?: PanelPosition;
   /** Stack direction. Default `'horizontal'`. */
   orientation?: 'horizontal' | 'vertical';
   /** Show the erase button. Default `true`. */
@@ -17,8 +15,6 @@ export interface EditToolbarProps {
   clickSelectId?: string;
   /** Layer that erase / clipboard target. Default `'graph'`. */
   layerId?: string;
-  /** Render without the `<Panel>` wrapper. Default `false`. */
-  bare?: boolean;
   /** Explicit canvas instance; defaults to the context canvas. */
   canvas?: Canvas | null;
   className?: string;
@@ -33,12 +29,10 @@ export interface EditToolbarProps {
  */
 export function EditToolbar({
   icons,
-  position = 'top-left',
   orientation = 'horizontal',
   showClear = true,
   clickSelectId,
   layerId,
-  bare = false,
   canvas,
   className,
 }: EditToolbarProps) {
@@ -49,13 +43,7 @@ export function EditToolbar({
   });
   const items = showClear ? section : section.filter((i) => i.key !== 'erase');
 
-  const nav = (
-    <ToolbarItems items={applyIconOverrides(items, icons)} orientation={orientation} className={className} />
-  );
-  if (bare) return nav;
   return (
-    <Panel position={position} orientation={orientation}>
-      {nav}
-    </Panel>
+    <ToolbarItems items={applyIconOverrides(items, icons)} orientation={orientation} className={className} />
   );
 }

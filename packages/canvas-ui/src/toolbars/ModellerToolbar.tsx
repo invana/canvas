@@ -1,8 +1,8 @@
 import type { Canvas } from '@invana/canvas';
 import { Eraser, MousePointer2, Plus, Redo2, Spline, Trash2, Undo2 } from 'lucide-react';
 
-import { Panel, ToolbarItems, applyIconOverrides } from '../components';
-import type { PanelPosition, ToolbarIcon, ToolbarItem } from '../components';
+import { ToolbarItems, applyIconOverrides } from '../components';
+import type { ToolbarIcon, ToolbarItem } from '../components';
 import { useTool } from '@invana/canvas-react';
 import { useHistory } from '@invana/canvas-react';
 import { useClipboard } from '@invana/canvas-react';
@@ -29,12 +29,8 @@ export interface ModellerToolbarProps {
   showClear?: boolean;
   /** Layer the erase / history actions target. Default `'graph'`. */
   layerId?: string;
-  /** Where the toolbar pins. Default `'top-center'`. */
-  position?: PanelPosition;
   /** Stack direction. Default `'horizontal'`. */
   orientation?: 'horizontal' | 'vertical';
-  /** Render without the `<Panel>` wrapper (embed in external chrome). Default `false`. */
-  bare?: boolean;
   /** Explicit canvas instance; defaults to the context canvas. */
   canvas?: Canvas | null;
   className?: string;
@@ -74,9 +70,7 @@ export function ModellerToolbar({
   showHistory = true,
   showClear = true,
   layerId = 'graph',
-  position = 'top-center',
   orientation = 'horizontal',
-  bare = false,
   canvas,
   className,
 }: ModellerToolbarProps) {
@@ -133,13 +127,7 @@ export function ModellerToolbar({
     items.push(...group);
   }
 
-  const nav = (
-    <ToolbarItems items={applyIconOverrides(items, icons)} orientation={orientation} className={className} />
-  );
-  if (bare) return nav;
   return (
-    <Panel position={position} orientation={orientation}>
-      {nav}
-    </Panel>
+    <ToolbarItems items={applyIconOverrides(items, icons)} orientation={orientation} className={className} />
   );
 }

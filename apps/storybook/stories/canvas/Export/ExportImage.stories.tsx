@@ -84,12 +84,11 @@ export const ExportImageStory: Story = {
         header={{
           title: 'Export Demo',
           // The header rail sits outside the `<Canvas>` context, so hand the
-          // exporter the live engine from the control context. `bare` renders
-          // just the hover-card trigger (no floating `<Panel>`), so it drops
-          // straight into the header as a nav item.
+          // exporter the live engine from the control context. The toolbar is
+          // just its hover-card trigger, so it drops straight into the header
+          // as a nav item.
           right: (ctx) => (
             <ExportImageToolbar
-              bare
               filename="export"
               defaultValue={{ area: 'content', scale: 2 }}
               canvas={ctx.canvas}

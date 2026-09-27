@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import type { Canvas } from '@invana/canvas';
 
-import { Panel, ToolbarItems } from '../components';
-import type { PanelPosition, ToolbarIcon, ToolbarItem } from '../components';
+import { ToolbarItems } from '../components';
+import type { ToolbarIcon, ToolbarItem } from '../components';
 import { useLayoutsSection } from '@invana/canvas-react';
 import { useSelectMode } from '@invana/canvas-react';
 import type { LayoutFactory } from '@invana/canvas-react';
@@ -29,10 +29,6 @@ export interface GraphLayoutToolbarProps {
   onSelectModeChange?: (mode: string) => void;
   /** Target `GraphLayer` id. Default `'graph'`. */
   layerId?: string;
-  /** Where the toolbar pins. Default `'top-center'`. */
-  position?: PanelPosition;
-  /** Render without the `<Panel>` wrapper (embed in external chrome). Default `false`. */
-  bare?: boolean;
   /** Explicit canvas instance; defaults to the context canvas. */
   canvas?: Canvas | null;
   className?: string;
@@ -54,8 +50,6 @@ export function GraphLayoutToolbar({
   initialSelectMode,
   onSelectModeChange,
   layerId,
-  position = 'top-center',
-  bare = false,
   canvas,
   className,
 }: GraphLayoutToolbarProps) {
@@ -82,11 +76,5 @@ export function GraphLayoutToolbar({
     { type: 'select', key: 'select-mode', label: 'Select', value: mode, options: modeOptions, icons: selectModeIcons, onChange: setMode },
   ];
 
-  const nav = <ToolbarItems items={items} orientation="horizontal" className={className} />;
-  if (bare) return nav;
-  return (
-    <Panel position={position} orientation="horizontal">
-      {nav}
-    </Panel>
-  );
+  return <ToolbarItems items={items} orientation="horizontal" className={className} />;
 }
