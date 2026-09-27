@@ -956,6 +956,19 @@ export { numberToHex, hexToNumber } from './shared/color';
 // ═══════════════════════════════════════════════════════════════════════════
 // Application UI (moved from @invana/canvas-react)
 // ═══════════════════════════════════════════════════════════════════════════
+// Control panels — the UI projection of `definition.controlPanels` (declare
+// panels with canvas-react's headless `<ControlPanel>`; GraphCanvasApp mounts this).
+export {
+  ControlPanels,
+  DEFAULT_CONTROL_ICONS,
+  DEFAULT_CONTROL_WIDGETS,
+  VIEW_CONTROL_ITEMS,
+  ZOOM_CONTROL_ITEMS,
+  type ControlPanelsProps,
+  type ControlWidget,
+  type ControlWidgetProps,
+} from './control-panels';
+
 // The pixels: the `GraphCanvasApp` shell, assembled toolbars, dumb building-block
 // components, context menus, and the two turnkey UI hooks. All built on
 // `@invana/canvas-react`'s headless hooks/context.

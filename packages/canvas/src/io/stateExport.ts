@@ -276,12 +276,14 @@ export function importCanvasState(
     ...(scene.entrance !== undefined ? { entrance: scene.entrance } : {}),
   });
 
-  // 2b. Scene / templates / theme aren't part of `CanvasConfig` — write them to
+  // 2b. Scene / templates / theme / control panels aren't part of `CanvasConfig` — write them to
   //     the definition directly. Deep-cloned so the store owns fresh objects.
   canvas.store.view.update((s) => {
     s.definition.canvas = jsonClone(definition.canvas);
     s.definition.templates = jsonClone(definition.templates);
     s.definition.theme = jsonClone(definition.theme);
+    // Snapshots from before control panels existed carry none.
+    s.definition.controlPanels = jsonClone(definition.controlPanels ?? {});
   }, 'canvas:importState:scene');
 
   // 3. Interaction (ephemeral live view). Camera goes through the action so the

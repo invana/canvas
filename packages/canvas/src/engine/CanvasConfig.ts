@@ -10,7 +10,7 @@
  * See `unified-canvas-options-plan.md`.
  */
 
-import type { EasingName } from '@invana/canvas-core';
+import type { ControlPanelSpec, EasingName } from '@invana/canvas-core';
 
 /** Per-instance options keyed by id. Each value is the instance's own option bag. */
 export interface CanvasConfig {
@@ -26,6 +26,13 @@ export interface CanvasConfig {
    * auto-runs it when the target layer's data changes.
    */
   activeLayout?: string;
+  /**
+   * Floating control panels over the canvas, keyed by panel id. Each spec
+   * **replaces** that panel whole (items don't merge); `null` removes it. Pure
+   * JSON — items name commands / icons / widgets by string. See
+   * `ControlPanelSpec` and `Canvas.commands`.
+   */
+  controlPanels?: Record<string, ControlPanelSpec | null>;
   /**
    * Fit the camera to content **once on load**, so the drawing is centred when it
    * first appears — independent of any layout. The engine fits the union of its

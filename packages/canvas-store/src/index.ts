@@ -38,6 +38,20 @@ export {
   createActions,
   type CanvasActions,
 } from '@invana/canvas-core';
+// Control panels — the floating-chrome spec vocabulary
+export type {
+  ControlPanelSpec,
+  ControlPanelAnchor,
+  ControlPanelInsets,
+  ControlPanelPosition,
+  ControlItemSpec,
+  ControlCommandItemSpec,
+  ControlToggleItemSpec,
+  ControlWidgetItemSpec,
+  ControlDividerItemSpec,
+  ControlTextItemSpec,
+  ControlSlotItemSpec,
+} from '@invana/canvas-core';
 // Data primitives
 export {
   scheduleFlush,

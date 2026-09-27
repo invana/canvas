@@ -1,7 +1,7 @@
 # @invana/canvas — public API surface (generated; do not hand-edit)
 # Regenerate: pnpm build && node scripts/check-api-surface.mjs --write
 
-## . (396 exports)
+## . (410 exports)
 AnchorCtx
 AnchorShapeRef
 AnchorSpec
@@ -31,6 +31,7 @@ CameraOptions
 CameraTransform
 CameraTransformValue
 Canvas
+CanvasCommand
 CanvasConfig
 CanvasContext
 CanvasEvent
@@ -50,6 +51,8 @@ ColumnStore
 ColumnStoreOptions
 ColumnType
 ColumnValue
+CommandRegistry
+CommandRegistryOptions
 CompositePart
 CompositePartFill
 CompositePartStroke
@@ -61,6 +64,17 @@ ConnectorHitRecord
 ConnectorLabelPlacement
 ConnectorLabelStyle
 ConnectorPaintStyle
+ControlCommandItemSpec
+ControlDividerItemSpec
+ControlItemSpec
+ControlPanelAnchor
+ControlPanelInsets
+ControlPanelPosition
+ControlPanelSpec
+ControlSlotItemSpec
+ControlTextItemSpec
+ControlToggleItemSpec
+ControlWidgetItemSpec
 CustomElementCtor
 DEFAULT_ENDPOINT_BADGE_GAP_PX
 DEFAULT_POSITION_TRANSITION_MS

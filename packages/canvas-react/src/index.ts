@@ -75,6 +75,12 @@ export type { MapLayerProps } from './layers/MapLayer';
 
 // ─── Behaviours ──────────────────────────────────────────────────────────
 // Camera / canvas-scoped
+// Control panels — headless registrar (the UI kit's <ControlPanels> draws them)
+export { ControlPanel } from './control-panels/ControlPanel';
+export type { ControlPanelProps } from './control-panels/ControlPanel';
+export { controlPanelSlots } from './control-panels/slots';
+export type { ControlPanelSlots } from './control-panels/slots';
+
 export { DragPanBehaviour } from './behaviours/DragPanBehaviour';
 export type { DragPanBehaviourProps } from './behaviours/DragPanBehaviour';
 
@@ -219,8 +225,13 @@ export {
   useCanvasStateJson,
   useResolvedCanvas,
   useCanvasMessage,
+  useControlPanels,
+  useControlPanelSlot,
+  useCommandStates,
 } from './hooks';
 export type {
+  CommandRef,
+  CommandState,
   GraphEventMap,
   UseGraphEventOptions,
   UseCameraResult,

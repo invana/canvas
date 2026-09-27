@@ -58,6 +58,17 @@ export {
   type Recipe,
   type DeepPartial,
   type CanvasView,
+  type ControlPanelSpec,
+  type ControlPanelAnchor,
+  type ControlPanelInsets,
+  type ControlPanelPosition,
+  type ControlItemSpec,
+  type ControlCommandItemSpec,
+  type ControlToggleItemSpec,
+  type ControlWidgetItemSpec,
+  type ControlDividerItemSpec,
+  type ControlTextItemSpec,
+  type ControlSlotItemSpec,
 } from '@invana/canvas-store';
 
 // ─── Spec vocabulary ─────────────────────────────────────────────────────────
@@ -96,6 +107,7 @@ export {
   LayerRegistry,
   BehaviourRegistry,
   LayoutRegistry,
+  CommandRegistry,
   // Connector geometry — anchors, routers, path styles, sampling
   centerAnchor,
   boundaryAnchor,
@@ -187,6 +199,8 @@ export type {
   LayerRegistryOptions,
   BehaviourRegistryOptions,
   LayoutRegistryOptions,
+  CanvasCommand,
+  CommandRegistryOptions,
   LoopCurvePresetName,
   BadgeOptions,
   BadgePlacement,

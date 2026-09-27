@@ -2,6 +2,7 @@ import type { LayerData, NodeRecord, EdgeRecord, GroupRecord, AnnotationRecord }
 import type { CanvasEventBus } from '../events/CanvasEventBus';
 import type { ReactiveStore } from '../port/types';
 import type { CanvasSceneOptions, CanvasView } from './CanvasView';
+import type { ControlPanelSpec } from './controlPanels';
 
 /** Loose option/patch bag for the view's per-instance config. */
 type Bag = Record<string, unknown>;
@@ -18,8 +19,8 @@ type CameraInput = Partial<{ x: number; y: number; zoom: number }>;
  * target {@link LayerData}.
  *
  * Group by concern: `node / edge / group / annotation / positions` (data) and
- * `layers / behaviours / layouts / camera / selection / hover / templates / theme`
- * (view).
+ * `layers / behaviours / layouts / camera / selection / hover / templates / theme /
+ * controlPanels` (view).
  *
  * ⚠ **Data actions target the default {@link LayerData} store only.** The
  * injected `layer(id)` accessor (see `createCanvasStore`) **throws** for any id
@@ -217,6 +218,30 @@ export function createActions(
         }),
       remove: (id: string) =>
         v('view:template:remove', (s) => void (s.definition.templates = s.definition.templates.filter((t) => (t as { id?: string }).id !== id))),
+    },
+
+    // ── VIEW · control panels (floating chrome over the canvas) ───────────────
+    controlPanels: {
+      /** Add (or replace) the panel `id`. */
+      add: (id: string, spec: ControlPanelSpec) =>
+        v('view:controlPanel:add', (s) => void (s.definition.controlPanels[id] = spec)),
+      /** Shallow-merge `patch` into panel `id` (`items` replaces). No-op when absent. */
+      update: (id: string, patch: Partial<ControlPanelSpec>) =>
+        v('view:controlPanel:update', (s) => {
+          const cur = s.definition.controlPanels[id];
+          if (cur) s.definition.controlPanels[id] = { ...cur, ...patch };
+        }),
+      show: (id: string) =>
+        v('view:controlPanel:show', (s) => {
+          const cur = s.definition.controlPanels[id];
+          if (cur) s.definition.controlPanels[id] = { ...cur, visible: true };
+        }),
+      hide: (id: string) =>
+        v('view:controlPanel:hide', (s) => {
+          const cur = s.definition.controlPanels[id];
+          if (cur) s.definition.controlPanels[id] = { ...cur, visible: false };
+        }),
+      remove: (id: string) => v('view:controlPanel:remove', (s) => void delete s.definition.controlPanels[id]),
     },
 
     // ── VIEW · theme ──────────────────────────────────────────────────────────

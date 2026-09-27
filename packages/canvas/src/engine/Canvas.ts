@@ -50,6 +50,8 @@ import { InteractionTracker } from './InteractionTracker';
 import { LayerRegistry } from '@invana/canvas-core';
 import { BehaviourRegistry } from '@invana/canvas-core';
 import { LayoutRegistry } from '@invana/canvas-core';
+import { CommandRegistry } from '@invana/canvas-core';
+import { registerBuiltinCommands } from './builtinCommands';
 import type { CanvasContext, LayoutRunOptions } from '@invana/canvas-core';
 import type { ISurface } from '@invana/canvas-core';
 import { Tween, resolveEasing, type EasingName } from '@invana/canvas-core';
@@ -218,6 +220,13 @@ export class Canvas {
   readonly layers: LayerRegistry;
   readonly behaviours: BehaviourRegistry;
   readonly layouts: LayoutRegistry;
+  /**
+   * Named commands (`'camera.fit'`, `'view.lock'`, …) run against this canvas —
+   * what serialised UI such as control panels dispatches through. Holds the
+   * engine built-ins from construction (see `builtinCommands.ts`); domain
+   * packages and apps register their own.
+   */
+  readonly commands: CommandRegistry<Canvas>;
   context!: CanvasContext;
 
   /**
@@ -310,6 +319,8 @@ export class Canvas {
     this.layers = new LayerRegistry({ getContext: () => this.context, bus: this.events });
     this.behaviours = new BehaviourRegistry({ getContext: () => this.context, bus: this.events });
     this.layouts = new LayoutRegistry({ bus: this.events });
+    this.commands = new CommandRegistry<Canvas>({ getContext: () => this });
+    registerBuiltinCommands(this.commands);
 
     // A layer registered *after* config was already pushed (e.g. a React-mounted
     // `<MiniMapLayer>` that lands after `<SystemTheme>` has already called
@@ -1063,6 +1074,12 @@ export class Canvas {
         s.definition.layouts[id] = deepMerge(s.definition.layouts[id] ?? {}, o) as Record<string, unknown>;
       }
       if (patch.activeLayout !== undefined) s.definition.activeLayout = patch.activeLayout;
+      // A panel spec replaces whole (its `items` list has no per-field merge);
+      // `null` removes the panel.
+      for (const [id, spec] of Object.entries(patch.controlPanels ?? {})) {
+        if (spec === null) delete s.definition.controlPanels[id];
+        else s.definition.controlPanels[id] = spec;
+      }
       // Load behaviour is authored config like any other: it belongs in the
       // definition, or `canvas.get()` and export/import silently lose it.
       if (patch.fitOnLoad !== undefined) s.definition.canvas.fitOnLoad = patch.fitOnLoad;
@@ -1091,6 +1108,7 @@ export class Canvas {
       behaviours: d.behaviours,
       layouts: d.layouts,
       ...(d.activeLayout !== null ? { activeLayout: d.activeLayout } : {}),
+      ...(Object.keys(d.controlPanels).length > 0 ? { controlPanels: d.controlPanels } : {}),
       ...(d.canvas.fitOnLoad !== undefined ? { fitOnLoad: d.canvas.fitOnLoad } : {}),
       ...(d.canvas.fitAnimation !== undefined ? { fitAnimation: d.canvas.fitAnimation } : {}),
       ...(d.canvas.entrance !== undefined ? { entrance: d.canvas.entrance } : {}),

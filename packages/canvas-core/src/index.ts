@@ -93,6 +93,9 @@ export type { BehaviourRegistryOptions } from './abstracts/registries/BehaviourR
 export { LayoutRegistry } from './abstracts/registries/LayoutRegistry';
 export type { LayoutRegistryOptions } from './abstracts/registries/LayoutRegistry';
 
+export { CommandRegistry } from './abstracts/registries/CommandRegistry';
+export type { CanvasCommand, CommandRegistryOptions } from './abstracts/registries/CommandRegistry';
+
 // ─── Headless reference implementation (test double, not a product renderer) ─
 export {
   HeadlessRenderer,
@@ -205,6 +208,19 @@ export { select, shallowEqual, defaultEqual, type Selected } from './state/port/
 // ─── View: the state shape + the named command API over it ───────────────────
 export { defaultCanvasView, type CanvasView, type CanvasSceneOptions } from './state/view/CanvasView';
 export { createActions, type CanvasActions } from './state/view/createActions';
+export type {
+  ControlPanelSpec,
+  ControlPanelAnchor,
+  ControlPanelInsets,
+  ControlPanelPosition,
+  ControlItemSpec,
+  ControlCommandItemSpec,
+  ControlToggleItemSpec,
+  ControlWidgetItemSpec,
+  ControlDividerItemSpec,
+  ControlTextItemSpec,
+  ControlSlotItemSpec,
+} from './state/view/controlPanels';
 
 // ─── Events: the bus + emitters (instantiated by the store) ──────────────────
 export { EventEmitter, type Listener, type EventMap } from './state/events/EventEmitter';

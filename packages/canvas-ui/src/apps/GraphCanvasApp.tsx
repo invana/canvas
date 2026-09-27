@@ -72,6 +72,7 @@ import { ColorByBehaviour } from '@invana/canvas-react';
 import { ThemeBehaviour } from '@invana/canvas-react';
 import { buildHeaderNav, type GraphCanvasAppHeaderOptions } from './GraphCanvasAppHeader';
 import { buildFooterNav, type GraphCanvasAppFooterOptions } from './GraphCanvasAppFooter';
+import { ControlPanels, type ControlPanelsProps } from '../control-panels';
 
 // Re-export the layout's bottom-span union so consumers can type the `bottomSpan`
 // prop without reaching into `@invana/themes` directly.
@@ -315,6 +316,7 @@ function GraphCanvasAppMain({
   onReady,
   telemetry,
   preference,
+  controlPanels,
   children,
 }: {
   data: GraphData;
@@ -324,6 +326,7 @@ function GraphCanvasAppMain({
   onReady: (canvas: GraphCanvas | null) => void;
   telemetry?: CanvasTelemetryConfig;
   preference?: RenderPreference;
+  controlPanels?: Pick<ControlPanelsProps, 'icons' | 'widgets'>;
   children?: ReactNode;
 }) {
   return (
@@ -375,6 +378,11 @@ function GraphCanvasAppMain({
           whole replacement graph). A dev overlay is just `<DevInfoLayer/>` dropped
           in here, like any other layer. */}
       {children}
+
+      {/* Draws every `definition.controlPanels` spec (from <ControlPanel>
+          children, config, an import, …) over the canvas host. Nothing
+          renders while there are none. */}
+      <ControlPanels {...controlPanels} />
 
       {/* Last child: publishes the live engine to the lifted context. */}
       <CanvasReady onReady={onReady} />
@@ -489,6 +497,12 @@ export interface GraphCanvasAppProps {
    * `bundle={false}` they're the replacement graph.
    */
   children?: ReactNode;
+  /**
+   * Extra icons / widgets the control panels may name (merged over the
+   * defaults). Declare panels as `<ControlPanel>` children or via
+   * `config.controlPanels`; the app draws them over the canvas.
+   */
+  controlPanels?: Pick<ControlPanelsProps, 'icons' | 'widgets'>;
 }
 
 export function GraphCanvasApp({
@@ -512,6 +526,7 @@ export function GraphCanvasApp({
   bottom,
   bottomSpan = 'main-right',
   wrap,
+  controlPanels,
   children,
 }: GraphCanvasAppProps) {
   // Live engine, lifted out of <Canvas> by Main's ready-bridge.
@@ -536,6 +551,18 @@ export function GraphCanvasApp({
   }
   const { isDark, toggleMode } = theme;
   const themeKind: ThemeKind = isDark ? 'dark' : 'light';
+
+  // `theme.toggle` flips the **host** theme (the engine follows via
+  // <CanvasThemeSync>), so a control panel can carry the theme switch. Re-
+  // registered when the mode flips so bound toggles re-read `isActive`.
+  useEffect(() => {
+    if (!canvas) return;
+    return canvas.commands.register('theme.toggle', {
+      label: 'Toggle theme',
+      run: () => toggleMode(),
+      isActive: () => isDark,
+    });
+  }, [canvas, toggleMode, isDark]);
 
   const handleReady = useCallback(
     (c: GraphCanvas | null) => {
@@ -577,6 +604,7 @@ export function GraphCanvasApp({
       onReady={handleReady}
       telemetry={telemetry}
       preference={preference}
+      {...(controlPanels ? { controlPanels } : {})}
     >
       {children}
     </GraphCanvasAppMain>

@@ -83,3 +83,6 @@ export { useLayoutsSection } from './useLayoutsSection';
 export type { UseLayoutsSectionOptions } from './useLayoutsSection';
 export { useStyleEditorSection } from './useStyleEditorSection';
 export type { UseStyleEditorSectionOptions } from './useStyleEditorSection';
+export { useControlPanels, useControlPanelSlot } from './useControlPanels';
+export { useCommandStates } from './useCommandStates';
+export type { CommandRef, CommandState } from './useCommandStates';

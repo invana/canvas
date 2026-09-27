@@ -1,0 +1,91 @@
+/**
+ * The engine's built-in {@link CanvasCommand}s — registered on every `Canvas`'s
+ * `commands` registry at construction, so a serialised control panel can drive
+ * the camera, lock the view and run layouts with zero app code.
+ *
+ * | Name | Args | Kind |
+ * |---|---|---|
+ * | `camera.zoomIn` / `camera.zoomOut` | `{ factor? }` (default `1.2`) | button |
+ * | `camera.fit` | `{ padding? }` (default `80`) | button |
+ * | `view.lock` | `{ behaviourIds? }` (default `['pan', 'drag-node']`) | toggle |
+ * | `layout.run` | `{ id? }` (default: the active layout) | button |
+ * | `layout.stop` | — | button, enabled while a layout runs |
+ *
+ * Names are public API (`namespace.verb`): renaming one breaks saved panels.
+ */
+
+import type { CanvasCommand, CommandRegistry } from '@invana/canvas-core';
+
+import type { Canvas } from './Canvas';
+
+/** Default zoom step for `camera.zoomIn` / `camera.zoomOut`. */
+const ZOOM_STEP = 1.2;
+/** Behaviours `view.lock` disables by default — pan + node drag; zoom stays live. */
+const DEFAULT_LOCK_IDS = ['pan', 'drag-node'];
+
+/** Read a field off a JSON `args` bag, or `undefined`. */
+function arg<T>(args: unknown, key: string): T | undefined {
+  return args && typeof args === 'object' ? ((args as Record<string, unknown>)[key] as T | undefined) : undefined;
+}
+
+/** The ids `view.lock` targets that are actually registered. */
+function lockIds(canvas: Canvas, args: unknown): string[] {
+  return (arg<string[]>(args, 'behaviourIds') ?? DEFAULT_LOCK_IDS).filter((id) => canvas.behaviours.has(id));
+}
+
+/** Enabled only once the engine has a camera. */
+const whenInitialised = (canvas: Canvas): boolean => canvas.isInitialised;
+
+const BUILTIN_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
+  'camera.zoomIn': {
+    label: 'Zoom in',
+    run: (canvas, args) => canvas.camera.zoomAt(arg<number>(args, 'factor') ?? ZOOM_STEP),
+    isEnabled: whenInitialised,
+  },
+  'camera.zoomOut': {
+    label: 'Zoom out',
+    run: (canvas, args) => canvas.camera.zoomAt(1 / (arg<number>(args, 'factor') ?? ZOOM_STEP)),
+    isEnabled: whenInitialised,
+  },
+  'camera.fit': {
+    label: 'Fit to content',
+    run: (canvas, args) => canvas.fitView(arg<number>(args, 'padding')),
+    isEnabled: whenInitialised,
+  },
+  'view.lock': {
+    label: 'Lock view',
+    // Locked ⇔ every targeted behaviour that exists is disabled.
+    isActive: (canvas, args) => {
+      const ids = lockIds(canvas, args);
+      return ids.length > 0 && ids.every((id) => !canvas.behaviours.get(id)?.enabled);
+    },
+    isEnabled: (canvas, args) => lockIds(canvas, args).length > 0,
+    // Through the registry, so `scene:behaviour:enable`/`disable` fire and a
+    // bound toggle re-renders.
+    run: (canvas, args) => {
+      const lock = !BUILTIN_COMMANDS['view.lock']!.isActive!(canvas, args);
+      for (const id of lockIds(canvas, args)) canvas.behaviours.setEnabled(id, !lock);
+    },
+  },
+  'layout.run': {
+    label: 'Run layout',
+    run: (canvas, args) => {
+      const id = arg<string>(args, 'id');
+      void (id ? canvas.runLayout(id) : canvas.runActiveLayout());
+    },
+    isEnabled: (canvas, args) => {
+      const id = arg<string>(args, 'id');
+      return id ? canvas.layouts.has(id) : canvas.store.view.getState().definition.activeLayout !== null;
+    },
+  },
+  'layout.stop': {
+    label: 'Stop layout',
+    run: (canvas) => canvas.stopLayout(),
+    isEnabled: (canvas) => canvas.store.view.getState().runtime.layout.running,
+  },
+};
+
+/** Register every built-in command on `registry`. */
+export function registerBuiltinCommands(registry: CommandRegistry<Canvas>): void {
+  for (const [name, command] of Object.entries(BUILTIN_COMMANDS)) registry.register(name, command);
+}

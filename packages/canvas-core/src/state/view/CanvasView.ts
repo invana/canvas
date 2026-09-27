@@ -1,5 +1,6 @@
 import type { EasingName } from '../../lib/animation/easings';
 import type { CameraTransform, Rect } from '../../specs/geom';
+import type { ControlPanelSpec } from './controlPanels';
 
 /**
  * `CanvasView` — the reactive, observable, syncable half of `CanvasStore`: how a
@@ -35,6 +36,11 @@ export interface CanvasView {
     templates: unknown[];
     /** Theme **config** (registry + active family + mode + accent). The *resolved* theme is derived. */
     theme: Record<string, unknown>;
+    /**
+     * Floating control panels over the canvas, keyed by panel id. Pure JSON —
+     * items name commands / icons / widgets by string (see {@link ControlPanelSpec}).
+     */
+    controlPanels: Record<string, ControlPanelSpec>;
   };
   /** "The live view onto it" — mostly ephemeral / per-user (Awareness later). */
   interaction: {
@@ -156,6 +162,7 @@ export function defaultCanvasView(): CanvasView {
       activeLayout: null,
       templates: [],
       theme: {},
+      controlPanels: {},
     },
     interaction: {
       selection: new Set<string>(),
