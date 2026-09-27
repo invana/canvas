@@ -44,9 +44,6 @@ storybook-static/
 **/.vitepress/dist/
 **/.vitepress/.temp/
 
-# Graphify output
-graphify-out/
-.graphify/
 
 
 debug-storybook.log

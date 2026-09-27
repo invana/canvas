@@ -258,15 +258,3 @@ The renderer-free kernel **`@invana/canvas-store`** owns all canvas state **and*
   "compilerOptions": { "outDir": "./dist", "rootDir": "./src", "paths": { "@/*": ["./src/*"] } }
 }
 ```
-
----
-
-## graphify
-
-Knowledge graph at `graphify-out/`.
-
-- Before answering architecture questions, read `graphify-out/GRAPH_REPORT.md`.
-- If `graphify-out/wiki/index.md` exists, navigate it instead of reading raw files.
-- For "how does X relate to Y", prefer `graphify query/path/explain` over grep.
-- After modifying source files, run `graphify update .` (AST-only, no API cost).
-- Note: the existing graphify output indexed the pre-rewrite codebase. Treat it as stale until a fresh `graphify update .` runs against the new active packages.
