@@ -7,8 +7,10 @@ export type { ControlItemsFieldProps } from './ControlItemsField';
 export { controlItemFields, controlPanelFields, ITEM_TYPE_OPTIONS } from './fields';
 export type { ControlItemChoices } from './fields';
 export { emptyItemFields, formToItem, formToPanel, itemToForm, newPanelSpec, panelToForm } from './mapping';
-export { NO_ICON } from './types';
+export { ARG_DEFAULT, NO_ICON } from './types';
 export type {
+  ArgFieldValue,
+  CommandArgDescriptors,
   ControlItemFields,
   ControlPanelFields,
   ControlPanelFormError,

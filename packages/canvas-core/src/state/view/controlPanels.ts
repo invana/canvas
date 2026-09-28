@@ -5,8 +5,9 @@
  * (zoom buttons bottom-right, a brand + mode picker top-left, …). Its spec lives
  * in `CanvasView.definition.controlPanels`, so panels persist, export and
  * (later) sync like every other part of the definition. Edits are ordinary
- * `view` patches, so a view history would undo them — but none is wired yet
- * (the modeller's undo, `GraphHistory`, journals graph data only).
+ * `view` patches: a Studio edit (`canvas.update(…, 'edit:control-panels')`) is
+ * recorded by `Canvas.history` and undone by the `history.undo` command, while a
+ * programmatic write (a `<ControlPanel>` mount) is not.
  *
  * Specs hold **no closures and no components**: an item names what it does by
  * string — a `command` (resolved by the canvas's `CommandRegistry`), an `icon`
@@ -170,17 +171,35 @@ export type ControlItemSpec =
   | ControlSlotItemSpec;
 
 /**
- * A floating control panel over the canvas — pure JSON, stored in
- * `CanvasView.definition.controlPanels` keyed by panel id.
+ * Which surface draws a panel. `'canvas'` floats it over the canvas (the
+ * `position` / `offset` / `stretch` fields place it there). The `header-*`
+ * placements put it in a region of the app shell's header rail instead —
+ * `GraphCanvasApp`'s left / centre / right — where it flows inline after that
+ * region's own content: `position`, `offset` and `stretch` are ignored, it is
+ * always a row, and `surface` defaults to `false`.
+ */
+export type ControlPanelPlacement = 'canvas' | 'header-left' | 'header-center' | 'header-right';
+
+/**
+ * A control panel — pure JSON, stored in `CanvasView.definition.controlPanels`
+ * keyed by panel id. Floats over the canvas by default; {@link placement} can
+ * put it in the app header instead.
  */
 export interface ControlPanelSpec {
   /** Stable discriminator for tooling (the Studio's editor lookup). */
   kind: 'control-panel';
-  /** Where the panel sits. Default `'top-left'`. */
+  /**
+   * The surface that draws the panel. Default `'canvas'`. A header placement is
+   * drawn by a host that renders header regions (`GraphCanvasApp`, or
+   * `<HeaderControlPanels>` in a custom shell); `<ControlPanels>` skips it.
+   */
+  placement?: ControlPanelPlacement;
+  /** Where the panel sits over the canvas. Default `'top-left'`. Ignored for a header placement. */
   position?: ControlPanelPosition;
   /**
    * Distance from the anchored edges for a preset {@link position}, in px —
-   * one number for both axes or `{ x, y }`. Ignored for insets. Default `8`.
+   * one number for both axes or `{ x, y }`. Ignored for insets and header
+   * placements. Default `8`.
    */
   offset?: number | { x: number; y: number };
   /**
@@ -194,7 +213,7 @@ export interface ControlPanelSpec {
    * Default `false`.
    */
   stretch?: boolean;
-  /** Draw the card surface (background, border, shadow). Default `true`. */
+  /** Draw the card surface (background, border, shadow). Default `true` over the canvas, `false` in the header. */
   surface?: boolean;
   /** Show the panel. Default `true`. */
   visible?: boolean;

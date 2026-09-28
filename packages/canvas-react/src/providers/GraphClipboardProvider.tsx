@@ -5,7 +5,7 @@ import {
   type GraphLayer,
   type Vec2,
 } from '@invana/graph';
-import type { Canvas } from '@invana/canvas';
+import type { Canvas, CommandArgSpec } from '@invana/canvas';
 
 import { useResolvedCanvas } from '../hooks/useResolvedCanvas';
 import { ClipboardContext } from '../ClipboardContext';
@@ -38,6 +38,11 @@ function clickSelectIdOf(args: unknown): string {
   const id = args && typeof args === 'object' ? (args as { clickSelectId?: unknown }).clickSelectId : undefined;
   return typeof id === 'string' ? id : 'click-select';
 }
+
+/** `clipboard.*` args, described for the Studio's control-panel editor. */
+const SELECTION_ARGS: Readonly<Record<string, CommandArgSpec>> = {
+  clickSelectId: { kind: 'behaviour', label: 'Selection', default: 'click-select', description: 'The click-select behaviour to read' },
+};
 
 export function GraphClipboardProvider({
   layerId = 'graph',
@@ -77,6 +82,7 @@ export function GraphClipboardProvider({
     };
     const offs = [
       commands.register('clipboard.cut', {
+        args: SELECTION_ARGS,
         label: 'Cut',
         isEnabled: (_c, args) => hasSelection(args),
         run: (_c, args) => {
@@ -85,6 +91,7 @@ export function GraphClipboardProvider({
         },
       }),
       commands.register('clipboard.copy', {
+        args: SELECTION_ARGS,
         label: 'Copy',
         isEnabled: (_c, args) => hasSelection(args),
         run: (_c, args) => {
@@ -93,11 +100,13 @@ export function GraphClipboardProvider({
         },
       }),
       commands.register('clipboard.paste', {
+        args: SELECTION_ARGS,
         label: 'Paste',
         isEnabled: () => clipboard.hasContent,
         run: (c, args) => pasteAndSelect(c, clipboard, historyRef.current, clickSelectIdOf(args)),
       }),
       commands.register('clipboard.delete', {
+        args: SELECTION_ARGS,
         label: 'Delete',
         isEnabled: (_c, args) => hasSelection(args),
         run: (_c, args) => {

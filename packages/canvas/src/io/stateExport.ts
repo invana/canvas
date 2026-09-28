@@ -289,6 +289,10 @@ export function importCanvasState(
     s.definition.controlPanels = jsonClone(definition.controlPanels ?? {});
   }, 'canvas:importState:scene');
 
+  // An import replaces the definition wholesale; undoing an edit made before it
+  // would patch a definition that no longer exists.
+  canvas.history.clear();
+
   // 3. Interaction (ephemeral live view). Camera goes through the action so the
   //    Camera adapter applies it to the renderer viewport.
   if (!opts.skipInteraction) {

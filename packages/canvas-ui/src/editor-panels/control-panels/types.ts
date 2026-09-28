@@ -5,18 +5,33 @@
  * position, a few presentation flags and an `items` list whose entries are a
  * discriminated union. The form flattens both — a panel's position becomes an
  * anchor-or-insets pair of fields, and every item becomes one flat row whose
- * visible fields depend on its `type`. JSON-valued bits a field can't express
- * (command `args`, a choice's static `options`, a widget's `options`) are
- * edited as JSON text. `mapping.ts` is the bridge both ways.
+ * visible fields depend on its `type`. A command's `args` get one field per key
+ * its `CanvasCommand.args` descriptor names (`args.<key>`); keys it doesn't name
+ * — and every key of an undescribed command — stay JSON text (`argsJson`), as do
+ * a choice's static `options` and a widget's `options`. `mapping.ts` is the
+ * bridge both ways.
  */
 
-import type { ControlItemSpec } from '@invana/canvas';
+import type { CommandArgSpec, ControlItemSpec, ControlPanelPlacement } from '@invana/canvas';
+
+/** Each command's argument descriptor, by command name (`CanvasCommand.args`). */
+export type CommandArgDescriptors = Readonly<Record<string, Readonly<Record<string, CommandArgSpec>>>>;
+
+/**
+ * A described argument's form value: text for text-like kinds (a `strings` list
+ * is comma-separated, `json` is JSON text), a number for `number`, and a select
+ * value — {@link ARG_DEFAULT} for "not set" — for `enum` / `boolean` / the
+ * registry-id kinds.
+ */
+export type ArgFieldValue = string | number | undefined;
 
 /** How a panel is positioned: a 9-point anchor, or explicit CSS insets. */
 export type PanelPositionMode = 'anchor' | 'insets';
 
 /** Flat form fields for one panel's own settings (everything but `items`). */
 export interface ControlPanelFields {
+  /** Which surface draws the panel — `ControlPanelPlacement`. */
+  placement: ControlPanelPlacement;
   positionMode: PanelPositionMode;
   /** One of the nine `ControlPanelAnchor`s (used when `positionMode` is `'anchor'`). */
   anchor: string;
@@ -44,7 +59,9 @@ export interface ControlItemFields {
   type: ControlItemSpec['type'];
   key: string;
   command: string;
-  /** `args` as JSON text (empty = none). */
+  /** Described args, one form value per key (see {@link ArgFieldValue}). */
+  args: Record<string, ArgFieldValue>;
+  /** The args the command's descriptor doesn't name — or all of them when it has none — as JSON text (empty = none). */
   argsJson: string;
   label: string;
   activeLabel: string;
@@ -71,6 +88,9 @@ export interface ControlPanelFormState {
 
 /** Sentinel for "no icon" / "not set" in a select. */
 export const NO_ICON = '__none__';
+
+/** Sentinel for "not set — the command's default" in an argument select. */
+export const ARG_DEFAULT = '__default__';
 
 /** A JSON field that failed to parse, reported instead of submitting. */
 export interface ControlPanelFormError {

@@ -117,9 +117,12 @@ function ControlPanelView({
 }
 
 /**
- * Draws every **control panel** in the canvas's `definition.controlPanels` —
- * the UI projection of the panel specs, however they got there (`<ControlPanel>`
- * children, `canvas.update({ controlPanels })`, an imported state, the Studio).
+ * Draws every **canvas-placed control panel** in the canvas's
+ * `definition.controlPanels` — the UI projection of the panel specs, however
+ * they got there (`<ControlPanel>` children, `canvas.update({ controlPanels })`,
+ * an imported state, the Studio). Panels with a `header-*` placement are left to
+ * {@link HeaderControlPanels}; a custom shell that doesn't mount it won't show
+ * them.
  *
  * Mount it once **inside** the `<Canvas>` / `<GraphCanvas>` (whose host is the
  * positioned ancestor the panels pin to). `GraphCanvasApp` mounts it for you.
@@ -135,7 +138,7 @@ export function ControlPanels({ icons, widgets, zIndex = 5, canvas }: ControlPan
   return (
     <>
       {Object.entries(panels).map(([id, spec]) =>
-        spec.visible === false ? null : (
+        spec.visible === false || (spec.placement ?? 'canvas') !== 'canvas' ? null : (
           <ControlPanelView key={id} spec={spec} canvas={resolved} icons={icons} widgets={widgets} zIndex={zIndex} />
         ),
       )}

@@ -1,5 +1,7 @@
 export { ControlPanels } from './ControlPanels';
 export type { ControlPanelsProps } from './ControlPanels';
+export { HeaderControlPanels } from './HeaderControlPanels';
+export type { HeaderControlPanelsProps, HeaderRegion } from './HeaderControlPanels';
 export { ControlItems, useControlItems } from './ControlItems';
 export type { ControlItemsProps, UseControlItemsOptions } from './ControlItems';
 export { DEFAULT_CONTROL_ICONS } from './icons';

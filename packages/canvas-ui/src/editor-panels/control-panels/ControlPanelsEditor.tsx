@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
-import type { Canvas, ControlItemSpec, ControlPanelSpec } from '@invana/canvas';
+import type { Canvas, CommandArgSpec, ControlItemSpec, ControlPanelSpec } from '@invana/canvas';
 import { useControlPanels, useResolvedCanvas } from '@invana/canvas-react';
 
 import type { ToolbarIcon } from '../../components';
@@ -49,6 +49,39 @@ export const DEFAULT_CONTROL_PRESETS: Readonly<Record<string, readonly ControlIt
   Theme: THEME_CONTROL_ITEMS,
 };
 
+/** Snapshot of the canvas's layer / behaviour / layout ids, refreshed on (un)registration. */
+function useRegistryIds(canvas: Canvas): { layers: string[]; behaviours: string[]; layouts: string[] } {
+  const subscribe = useCallback(
+    (onChange: () => void) => {
+      // The registries' bus events (behaviours announce registration only).
+      const offs = [
+        canvas.events.on('scene:layer:add', onChange),
+        canvas.events.on('scene:layer:remove', onChange),
+        canvas.events.on('scene:behaviour:register', onChange),
+        canvas.events.on('scene:layout:add', onChange),
+        canvas.events.on('scene:layout:remove', onChange),
+      ];
+      return () => {
+        for (const off of offs) off();
+      };
+    },
+    [canvas],
+  );
+  const read = useCallback(
+    () =>
+      [canvas.layers.list(), canvas.behaviours.list(), canvas.layouts.list()]
+        .map((list) => list.map((i) => i.id).join(','))
+        .join('|'),
+    [canvas],
+  );
+  const key = useSyncExternalStore(subscribe, read, read);
+  return useMemo(() => {
+    const [layers = '', behaviours = '', layouts = ''] = key.split('|');
+    const split = (s: string) => (s ? s.split(',') : []);
+    return { layers: split(layers), behaviours: split(behaviours), layouts: split(layouts) };
+  }, [key]);
+}
+
 export interface ControlPanelsEditorProps {
   /** Extra icons the host's `<ControlPanels icons>` registers, so the pickers offer them. */
   icons?: Record<string, ToolbarIcon>;
@@ -64,8 +97,9 @@ export interface ControlPanelsEditorProps {
 /**
  * The **connected** control-panel editor: reads `definition.controlPanels` and
  * the live command registry from the canvas, and applies every edit with
- * `canvas.update({ controlPanels })` — so it undoes, exports and syncs like any
- * other definition change, and `<ControlPanels>` redraws at once. Drop it in
+ * `canvas.update({ controlPanels }, 'edit:control-panels')` — so `canvas.history`
+ * (and the `history.undo` command) can undo it, and it exports like any other
+ * definition change, and `<ControlPanels>` redraws at once. Drop it in
  * anywhere under a canvas root (or pass `canvas`).
  *
  * A panel declared by a mounted `<ControlPanel>` is re-declared when that
@@ -81,11 +115,23 @@ export function ControlPanelsEditor({ icons, widgets, presets = DEFAULT_CONTROL_
   const getNames = useCallback(() => resolved.commands.list().join('\n'), [resolved]);
   const names = useSyncExternalStore(subscribe, getNames, getNames);
   const commands = useMemo(() => (names ? names.split('\n') : []), [names]);
+  // Each command's arg descriptor — re-read with the names, so an override
+  // (the undoable `graph.clear`) shows its own.
+  const commandArgs = useMemo(() => {
+    const out: Record<string, Readonly<Record<string, CommandArgSpec>>> = {};
+    for (const name of commands) {
+      const args = resolved.commands.get(name)?.args;
+      if (args) out[name] = args;
+    }
+    return out;
+  }, [resolved, commands]);
+  // Registry ids for the layer / behaviour / layout argument pickers.
+  const ids = useRegistryIds(resolved);
 
   const iconNames = useMemo(() => Object.keys({ ...DEFAULT_CONTROL_ICONS, ...icons }), [icons]);
   const widgetNames = useMemo(() => Object.keys({ ...DEFAULT_CONTROL_WIDGETS, ...widgets }), [widgets]);
   const apply = useCallback(
-    (patch: Record<string, ControlPanelSpec | null>) => resolved.update({ controlPanels: patch }),
+    (patch: Record<string, ControlPanelSpec | null>) => resolved.update({ controlPanels: patch }, 'edit:control-panels'),
     [resolved],
   );
 
@@ -95,6 +141,10 @@ export function ControlPanelsEditor({ icons, widgets, presets = DEFAULT_CONTROL_
       commands={commands}
       icons={iconNames}
       widgets={widgetNames}
+      commandArgs={commandArgs}
+      layers={ids.layers}
+      behaviours={ids.behaviours}
+      layouts={ids.layouts}
       presets={presets}
       onSubmit={apply}
       {...(className ? { className } : {})}

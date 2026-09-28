@@ -153,6 +153,7 @@ export type {
   ControlPanelsEditorProps,
   ControlPanelFormState,
   ControlPanelFormError,
+  CommandArgDescriptors,
 } from './editor-panels/control-panels';
 export {
   SchemaEditorPanel,
@@ -976,6 +977,7 @@ export { numberToHex, hexToNumber } from './shared/color';
 // panels with canvas-react's headless `<ControlPanel>`; GraphCanvasApp mounts this).
 export {
   ControlPanels,
+  HeaderControlPanels,
   ControlItems,
   useControlItems,
   DEFAULT_CONTROL_ICONS,
@@ -999,6 +1001,8 @@ export {
   ZOOM_CONTROL_ITEMS,
   ZOOM_LEVEL_CONTROL_ITEMS,
   type ControlPanelsProps,
+  type HeaderControlPanelsProps,
+  type HeaderRegion,
   type ControlItemsProps,
   type UseControlItemsOptions,
   type ControlWidget,

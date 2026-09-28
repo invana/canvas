@@ -339,7 +339,9 @@ function CanvasSettingsEditorPanelContent({
   const config = useStore(canvas.store.view, selectDefinition);
 
   // Write path → the store.
-  const update = useCallback((patch: CanvasConfig) => canvas.update(patch), [canvas]);
+  // Every apply is a user edit (`edit:*`), so `canvas.history` can undo it; the
+  // action names the instance, so a burst of live edits to one merges into one step.
+  const update = useCallback((patch: CanvasConfig, action: string) => canvas.update(patch, action), [canvas]);
 
   // Keep the resolver in a ref so an inline `resolveKind` prop doesn't re-run the
   // introspection effect every render.
@@ -397,10 +399,10 @@ function CanvasSettingsEditorPanelContent({
 
   // Apply paths → the store.
   const applyChange = (section: SettingsSection, id: string, patch: Record<string, unknown>) =>
-    update({ [section]: { [id]: patch } });
+    update({ [section]: { [id]: patch } }, `edit:settings:${section}:${id}`);
   const applyToggle = (section: SettingsSection, id: string, enabled: boolean) =>
-    update({ [section]: { [id]: { enabled } } });
-  const applyActiveLayout = (id: string) => update({ activeLayout: id });
+    update({ [section]: { [id]: { enabled } } }, `edit:settings:${section}:${id}:enabled`);
+  const applyActiveLayout = (id: string) => update({ activeLayout: id }, 'edit:settings:active-layout');
 
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();

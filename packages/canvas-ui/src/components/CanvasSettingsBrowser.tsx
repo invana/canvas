@@ -257,7 +257,7 @@ export function CanvasSettingsBrowser({
                               id: row.id,
                               section,
                               options: readOptions(row.instance, row.descriptor),
-                              apply: (patch) => update({ [section]: { [row.id]: patch } }),
+                              apply: (patch) => update({ [section]: { [row.id]: patch } }, `edit:settings:${section}:${row.id}`),
                             })
                           ) : (
                             <p className="px-3 py-2 text-xs italic text-muted-foreground">

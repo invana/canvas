@@ -12,13 +12,18 @@
  * want into the slots (a toolbar in `center`, a theme toggle in `right`, …). A
  * slot may be a node or a render-fn handed the live
  * {@link GraphCanvasAppControlContext}, so a control built in a slot can drive the
- * app. `title` is a convenience default for `left`. Shared types are imported
+ * app. `title` is a convenience default for `left`. After each region's slot come
+ * the control panels saved into that region (`ControlPanelSpec.placement`
+ * `'header-left' | 'header-center' | 'header-right'`), drawn by
+ * {@link HeaderControlPanels} — so header controls authored in the Studio save
+ * and restore with the canvas. Shared types are imported
  * **type-only** from `./GraphCanvasApp` (erased at runtime → no import cycle).
  */
 
 import { type ReactNode } from 'react';
 import type { NavHorizontalProps } from '@invana/ui';
 
+import { HeaderControlPanels, type HeaderRegion } from '../control-panels/HeaderControlPanels';
 import type { GraphCanvasAppControlContext, RegionSlot } from './GraphCanvasApp';
 
 /** Resolve a {@link RegionSlot} against the control context. */
@@ -61,14 +66,32 @@ export function buildHeaderNav(
   // once the engine is live; `left` (the brand) shows immediately.
   const live = ctx.canvas != null;
 
-  const leftNode =
-    left !== undefined ? (
-      renderSlot(left, ctx)
-    ) : (
-      <span className="text-[13px] font-semibold whitespace-nowrap">{title}</span>
-    );
-  const centerNode = center !== undefined && live ? renderSlot(center, ctx) : null;
-  const rightNode = right !== undefined && live ? renderSlot(right, ctx) : null;
+  // Each region: its code slot first, then the control panels saved into it
+  // (`placement: 'header-<region>'`) — so the Studio can add to an app's header
+  // without the app giving up its own content.
+  const saved = (region: HeaderRegion) => (live ? <HeaderControlPanels region={region} canvas={ctx.canvas} /> : null);
+  const leftNode = (
+    <>
+      {left !== undefined ? (
+        renderSlot(left, ctx)
+      ) : (
+        <span className="text-[13px] font-semibold whitespace-nowrap">{title}</span>
+      )}
+      {saved('left')}
+    </>
+  );
+  const centerNode = (
+    <>
+      {center !== undefined && live ? renderSlot(center, ctx) : null}
+      {saved('center')}
+    </>
+  );
+  const rightNode = (
+    <>
+      {right !== undefined && live ? renderSlot(right, ctx) : null}
+      {saved('right')}
+    </>
+  );
 
   // `NavHorizontal`'s own `center` slot centers within the *leftover* space between
   // its left/right slots, so a wide toolbar drifts off-true-centre when the brand

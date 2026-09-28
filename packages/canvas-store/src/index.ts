@@ -44,6 +44,7 @@ export type {
   ControlPanelAnchor,
   ControlPanelInsets,
   ControlPanelPosition,
+  ControlPanelPlacement,
   ControlItemSpec,
   ControlCommandItemSpec,
   ControlToggleItemSpec,
@@ -130,7 +131,7 @@ export { createReactiveStore } from './adapters/zustand';
 export { createMemoryStore } from './port/createMemoryStore';
 
 // ─── History ──────────────────────────────────────────────────────────────────
-export { createHistory, type History } from './port/createHistory';
+export { createHistory, type History, type HistoryOptions, type HistoryStepInfo } from './port/createHistory';
 
 // ─── Picking (rbush spatial index + narrow phase over core's geometry) ────────
 export { PickingIndex, connectorHitBoxes } from './hit/PickingIndex';

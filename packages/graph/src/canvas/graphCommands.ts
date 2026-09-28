@@ -18,7 +18,7 @@
  * Names are public API (`namespace.verb`): renaming one breaks saved panels.
  */
 
-import type { Canvas, CanvasCommand, CommandOption, CommandRegistry } from '@invana/canvas';
+import type { Canvas, CanvasCommand, CommandArgSpec, CommandOption, CommandRegistry } from '@invana/canvas';
 
 import type { ClickSelectBehaviour } from '../behaviours/ClickSelectBehaviour';
 import { GraphClipboard } from '../clipboard/GraphClipboard';
@@ -72,6 +72,16 @@ function edgeShape(layer: GraphLayer): EdgeShapeOptions {
   return (shape && typeof shape === 'object' ? shape : {}) as EdgeShapeOptions;
 }
 
+/** `{ layerId? }` — the graph layer a command targets (default `'graph'`). */
+const LAYER_ARG: Record<string, CommandArgSpec> = {
+  layerId: { kind: 'layer', label: 'Layer', default: 'graph' },
+};
+/** `graph.erase`'s args (the providers' overrides reuse {@link eraseCommand}, so they carry them too). */
+const ERASE_ARGS: Readonly<Record<string, CommandArgSpec>> = {
+  ...LAYER_ARG,
+  clickSelectId: { kind: 'behaviour', label: 'Selection', default: 'click-select', description: 'The click-select behaviour to read' },
+};
+
 /** Every modeller tool, in toolbar order, with its default label + icon name. */
 const TOOL_OPTIONS: Record<string, CommandOption> = {
   select: { value: 'select', label: 'Select', icon: 'pointer' },
@@ -101,6 +111,7 @@ export function eraseCommand(
 ): CanvasCommand<Canvas> {
   return {
     label: 'Erase',
+    args: ERASE_ARGS,
     isEnabled: (canvas, args) => graphLayer(canvas, args) !== undefined,
     isActive: (canvas, args) => {
       const { nodeIds, edgeIds } = clickSelection(canvas, args);
@@ -124,6 +135,11 @@ const selectModes = (args: unknown) => arg<Record<string, string>>(args, 'modes'
 const GRAPH_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
   'select.mode': {
     label: 'Select',
+    args: {
+      value: { kind: 'string', label: 'Mode', pick: true },
+      modes: { kind: 'json', label: 'Modes', default: DEFAULT_SELECT_MODES, description: 'Mode → behaviour id' },
+      labels: { kind: 'json', label: 'Labels', default: DEFAULT_SELECT_LABELS, description: 'Mode → label' },
+    },
     // The first mode whose behaviour is enabled, else the behaviour-less mode
     // (`click`), else the first — the same rule as `useSelectMode`.
     value: (canvas, args) => {
@@ -155,6 +171,11 @@ const GRAPH_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
   },
   'graph.edgeType': {
     label: 'Edges',
+    args: {
+      ...LAYER_ARG,
+      value: { kind: 'string', label: 'Edge type', pick: true },
+      types: { kind: 'strings', label: 'Types', default: DEFAULT_EDGE_TYPES },
+    },
     value: (canvas, args) => {
       const layer = graphLayer(canvas, args);
       if (!layer) return null;
@@ -180,12 +201,14 @@ const GRAPH_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
   },
   'graph.clear': {
     label: 'Clear canvas',
+    args: LAYER_ARG,
     isEnabled: (canvas, args) => graphLayer(canvas, args) !== undefined,
     run: (canvas, args) => graphLayer(canvas, args)?.clear(),
   },
   'graph.erase': eraseCommand(),
   'graph.redraw': {
     label: 'Redraw',
+    args: LAYER_ARG,
     isEnabled: (canvas, args) => graphLayer(canvas, args) !== undefined,
     run: (canvas, args) => graphLayer(canvas, args)?.redraw(),
   },
@@ -193,6 +216,10 @@ const GRAPH_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
   // write with no `invalidate()`. Behaviours follow it through their `modes`.
   'tool.active': {
     label: 'Tool',
+    args: {
+      value: { kind: 'enum', label: 'Tool', pick: true, options: Object.values(TOOL_OPTIONS) },
+      tools: { kind: 'strings', label: 'Tools', default: Object.keys(TOOL_OPTIONS), description: 'Tools the picker offers, in order' },
+    },
     value: (canvas) => interaction(canvas).viewMode,
     // As a toggle item (`args: { value: 'add' }`): pressed while that tool is on.
     isActive: (canvas, args) => interaction(canvas).viewMode === arg<string>(args, 'value'),
@@ -208,6 +235,10 @@ const GRAPH_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
   },
   'tool.nodeKind': {
     label: 'Shape',
+    args: {
+      value: { kind: 'string', label: 'Shape', pick: true },
+      kinds: { kind: 'json', label: 'Shapes', description: 'Shape key → label' },
+    },
     value: (canvas) => interaction(canvas).viewModeArgs.nodeKind ?? null,
     // `args.kinds` (key → label) lists the shapes; without it, only the current one.
     options: (canvas, args) => {
@@ -224,6 +255,7 @@ const GRAPH_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
   },
   'layout.activate': {
     label: 'Layout',
+    args: { value: { kind: 'layout', label: 'Layout', pick: true } },
     value: (canvas) => canvas.store.view.getState().definition.activeLayout,
     options: (canvas) => canvas.layouts.list().map((l) => ({ value: l.id, label: l.id })),
     isEnabled: (canvas) => canvas.layouts.list().length > 0,

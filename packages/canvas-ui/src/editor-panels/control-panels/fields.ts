@@ -1,16 +1,33 @@
+import type { CommandArgSpec } from '@invana/canvas';
 import type { FieldConfig } from '@invana/forms';
 
-import { NO_ICON, type ControlItemFields } from './types';
+import { ARG_DEFAULT, NO_ICON, type CommandArgDescriptors, type ControlItemFields } from './types';
 
 /** The nine anchors, in reading order. */
 const ANCHORS = ['top-left', 'top', 'top-right', 'left', 'center', 'right', 'bottom-left', 'bottom', 'bottom-right'];
 
+/** Where a panel can be drawn. */
+const PLACEMENTS = [
+  { label: 'Over the canvas', value: 'canvas' },
+  { label: 'Header · left', value: 'header-left' },
+  { label: 'Header · centre', value: 'header-center' },
+  { label: 'Header · right', value: 'header-right' },
+];
+
 /**
- * Panel-level fields: position (anchor or insets), offset, flow and chrome.
- * A function of the current values so only the active position mode's fields
- * show.
+ * Panel-level fields: placement, position (anchor or insets), offset, flow and
+ * chrome. A function of the current values so only the fields that apply show
+ * — a header-placed panel has no position, offset, flow or stretch.
  */
-export function controlPanelFields(positionMode: string): FieldConfig[] {
+export function controlPanelFields(positionMode: string, placement = 'canvas'): FieldConfig[] {
+  const placementField: FieldConfig = { name: 'placement', type: 'select', label: 'Placement', options: PLACEMENTS };
+  if (placement !== 'canvas') {
+    return [
+      placementField,
+      { name: 'surface', type: 'boolean', label: 'Card surface', control: 'checkbox' },
+      { name: 'visible', type: 'boolean', label: 'Visible', control: 'checkbox' },
+    ];
+  }
   const position: FieldConfig[] =
     positionMode === 'insets'
       ? [
@@ -25,6 +42,7 @@ export function controlPanelFields(positionMode: string): FieldConfig[] {
           { name: 'offsetY', type: 'number', label: 'Offset Y', min: 0, step: 1 },
         ];
   return [
+    placementField,
     {
       name: 'positionMode',
       type: 'select',
@@ -70,6 +88,14 @@ export interface ControlItemChoices {
   icons: readonly string[];
   /** Widget registry names. */
   widgets: readonly string[];
+  /** Each command's argument descriptor (`CanvasCommand.args`), by name — a field per described key. */
+  commandArgs?: CommandArgDescriptors;
+  /** Registered layer ids, for `layer` arguments. */
+  layers?: readonly string[];
+  /** Registered behaviour ids, for `behaviour` arguments. */
+  behaviours?: readonly string[];
+  /** Registered layout ids, for `layout` arguments. */
+  layouts?: readonly string[];
 }
 
 /** `select` options for `names`, keeping `current` (flagged) when it isn't one of them. */
@@ -82,6 +108,67 @@ function namesOptions(names: readonly string[], current: string, missing: string
 function iconField(name: string, label: string, icons: readonly string[], current: string): FieldConfig {
   const known = current && current !== NO_ICON ? namesOptions(icons, current, 'not registered') : icons.map((n) => ({ label: n, value: n }));
   return { name, type: 'select', label, options: [{ label: '(none)', value: NO_ICON }, ...known] };
+}
+
+/** A described argument's default, as the hint a field shows. */
+function defaultHint(spec: CommandArgSpec): string | undefined {
+  if (spec.default === undefined) return undefined;
+  return Array.isArray(spec.default) ? spec.default.join(', ') : typeof spec.default === 'object' ? JSON.stringify(spec.default) : String(spec.default);
+}
+
+/**
+ * One field per argument `described` names, for a row whose item is `type`.
+ * A `pick` argument is left out of a `choice` item (picking supplies it). Ids
+ * the registries don't hold stay selectable, flagged, like command names.
+ */
+function argFields(
+  described: Readonly<Record<string, CommandArgSpec>>,
+  row: ControlItemFields,
+  choices: ControlItemChoices,
+): FieldConfig[] {
+  const refs: Partial<Record<CommandArgSpec['kind'], readonly string[]>> = {
+    layer: choices.layers ?? [],
+    behaviour: choices.behaviours ?? [],
+    layout: choices.layouts ?? [],
+  };
+  const fields: FieldConfig[] = [];
+  for (const [key, spec] of Object.entries(described)) {
+    if (spec.pick && row.type === 'choice') continue;
+    const hint = defaultHint(spec);
+    const base = {
+      name: `args.${key}`,
+      label: spec.label ?? key,
+      ...(spec.description ? { description: spec.description } : {}),
+    };
+    const unset = { label: hint !== undefined ? `(default: ${hint})` : '(not set)', value: ARG_DEFAULT };
+    const current = row.args?.[key];
+    const currentText = typeof current === 'string' && current !== ARG_DEFAULT ? current : '';
+    switch (spec.kind) {
+      case 'number':
+        fields.push({ ...base, type: 'number', ...(hint !== undefined ? { placeholder: hint } : {}) });
+        break;
+      case 'boolean':
+        fields.push({ ...base, type: 'select', options: [unset, { label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }] });
+        break;
+      case 'enum':
+        fields.push({ ...base, type: 'select', options: [unset, ...(spec.options ?? []).map((o) => ({ label: o.label, value: o.value }))] });
+        break;
+      case 'layer':
+      case 'behaviour':
+      case 'layout':
+        fields.push({ ...base, type: 'select', options: [unset, ...namesOptions(refs[spec.kind] ?? [], currentText, 'not registered')] });
+        break;
+      case 'json':
+        fields.push({ ...base, type: 'textarea', rows: 2, colSpan: 2, ...(hint !== undefined ? { placeholder: hint } : {}) });
+        break;
+      case 'strings':
+        fields.push({ ...base, type: 'text', placeholder: hint ?? 'a, b, c' });
+        break;
+      default:
+        fields.push({ ...base, type: 'text', ...(hint !== undefined ? { placeholder: hint } : {}) });
+    }
+  }
+  return fields;
 }
 
 /**
@@ -99,7 +186,20 @@ export function controlItemFields(row: ControlItemFields, choices: ControlItemCh
     label: 'Command',
     options: namesOptions(choices.commands, row.command, 'not registered'),
   };
-  const argsField: FieldConfig = { name: 'argsJson', type: 'textarea', label: 'Args (JSON)', rows: 2, colSpan: 2, placeholder: '{ }' };
+  // Described args get a field each; whatever the descriptor doesn't name — or
+  // everything, for an undescribed command — stays JSON.
+  const described = choices.commandArgs?.[row.command];
+  const argsFields: FieldConfig[] = [
+    ...(described ? argFields(described, row, choices) : []),
+    {
+      name: 'argsJson',
+      type: 'textarea',
+      label: described ? 'More args (JSON)' : 'Args (JSON)',
+      rows: 2,
+      colSpan: 2,
+      placeholder: '{ }',
+    },
+  ];
 
   switch (row.type) {
     case 'command':
@@ -113,7 +213,7 @@ export function controlItemFields(row: ControlItemFields, choices: ControlItemCh
         iconField('activeIcon', 'Icon while active', choices.icons, row.activeIcon),
         { name: 'activeLabel', type: 'text', label: 'Label while active' },
         { name: 'activeText', type: 'text', label: 'Text while active' },
-        argsField,
+        ...argsFields,
       ];
     case 'toggle':
       return [
@@ -124,7 +224,7 @@ export function controlItemFields(row: ControlItemFields, choices: ControlItemCh
         iconField('icon', 'Icon', choices.icons, row.icon),
         iconField('activeIcon', 'Icon while on', choices.icons, row.activeIcon),
         { name: 'activeLabel', type: 'text', label: 'Label while on' },
-        argsField,
+        ...argsFields,
       ];
     case 'choice':
       return [
@@ -141,7 +241,7 @@ export function controlItemFields(row: ControlItemFields, choices: ControlItemCh
             { label: 'Segmented', value: 'segmented' },
           ],
         },
-        argsField,
+        ...argsFields,
         {
           name: 'choiceOptionsJson',
           type: 'textarea',

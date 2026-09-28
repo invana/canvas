@@ -10,8 +10,12 @@ import { useCanvas } from '../CanvasContext';
  * on a `GraphCanvas`). The serialisable counterpart to driving the engine
  * imperatively; use it for live edits (theme toggle, GUI controls) over a
  * `<Canvas config={…}>`.
+ *
+ * Pass an `action` starting with `edit:` (e.g. `'edit:settings:layers:background'`)
+ * to mark the write as a **user edit**, which `canvas.history` records so it can
+ * be undone. Without one the write is programmatic config and isn't recorded.
  */
-export function useGraphCanvasUpdate(): (patch: CanvasConfig) => void {
+export function useGraphCanvasUpdate(): (patch: CanvasConfig, action?: string) => void {
   const canvas = useCanvas();
-  return useCallback((patch: CanvasConfig) => canvas.update(patch), [canvas]);
+  return useCallback((patch: CanvasConfig, action?: string) => canvas.update(patch, action), [canvas]);
 }

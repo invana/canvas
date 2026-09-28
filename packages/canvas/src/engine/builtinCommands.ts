@@ -17,11 +17,16 @@
  * | `layout.toggle` | `{ id? }` | button: stops a running layout, else runs `id` / the active one; active while running (a Run ⇄ Stop face) |
  * | `layout.activate` | `{ value }` | choice over the registered layouts; value = `activeLayout` |
  * | `background.grid` | `{ layerId?, patternType? }` (default `'background'`) | toggle, active while the background is a pattern |
+ * | `layer.visible` | `{ id }` | toggle, active while layer `id` is visible |
+ * | `history.undo` / `history.redo` | — | button over `canvas.history` (definition edits); `GraphHistoryProvider` overrides both to also cover graph edits |
+ *
+ * Each command also describes its args as data (`CanvasCommand.args`), so the
+ * Studio's control-panel editor draws a field per key.
  *
  * Names are public API (`namespace.verb`): renaming one breaks saved panels.
  */
 
-import type { CanvasCommand, CommandRegistry, Rect } from '@invana/canvas-core';
+import type { CanvasCommand, CommandArgSpec, CommandRegistry, Rect } from '@invana/canvas-core';
 
 import type { BackgroundLayer } from '../layers/BackgroundLayer';
 
@@ -64,19 +69,29 @@ const currentLevel = (canvas: Canvas): number => Math.round(canvas.camera.scale 
 /** Enabled only once the engine has a camera. */
 const whenInitialised = (canvas: Canvas): boolean => canvas.isInitialised;
 
+const FACTOR_ARG: Record<string, CommandArgSpec> = {
+  factor: { kind: 'number', label: 'Factor', default: ZOOM_STEP, description: 'Zoom step per click' },
+};
+
 const BUILTIN_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
   'camera.zoomIn': {
     label: 'Zoom in',
+    args: FACTOR_ARG,
     run: (canvas, args) => canvas.camera.zoomAt(arg<number>(args, 'factor') ?? ZOOM_STEP),
     isEnabled: whenInitialised,
   },
   'camera.zoomOut': {
     label: 'Zoom out',
+    args: FACTOR_ARG,
     run: (canvas, args) => canvas.camera.zoomAt(1 / (arg<number>(args, 'factor') ?? ZOOM_STEP)),
     isEnabled: whenInitialised,
   },
   'camera.fit': {
     label: 'Fit to content',
+    args: {
+      padding: { kind: 'number', label: 'Padding', default: 80 },
+      layerId: { kind: 'layer', label: 'Layer', description: 'Fit this layer instead of all content' },
+    },
     run: (canvas, args) => {
       const padding = arg<number>(args, 'padding');
       const layerId = arg<string>(args, 'layerId');
@@ -88,11 +103,19 @@ const BUILTIN_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
   },
   'camera.pan': {
     label: 'Pan',
+    args: {
+      dx: { kind: 'number', label: 'Δx (px)', default: 0 },
+      dy: { kind: 'number', label: 'Δy (px)', default: 0 },
+    },
     run: (canvas, args) => canvas.camera.pan(arg<number>(args, 'dx') ?? 0, arg<number>(args, 'dy') ?? 0),
     isEnabled: whenInitialised,
   },
   'camera.zoomTo': {
     label: 'Zoom to',
+    args: {
+      value: { kind: 'number', label: 'Zoom', default: 1, pick: true },
+      levels: { kind: 'json', label: 'Levels', default: ZOOM_LEVELS, description: 'Zoom factors the picker offers' },
+    },
     // A picker's `value` arrives as a string; a fixed-level button passes a number.
     run: (canvas, args) => {
       const zoom = Number(arg<number | string>(args, 'value') ?? 1);
@@ -119,6 +142,7 @@ const BUILTIN_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
   },
   'behaviour.toggle': {
     label: 'Toggle behaviour',
+    args: { id: { kind: 'behaviour', label: 'Behaviour' } },
     isActive: (canvas, args) => {
       const id = arg<string>(args, 'id');
       return id ? canvas.behaviours.get(id)?.enabled === true : false;
@@ -137,6 +161,7 @@ const BUILTIN_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
   },
   'view.lock': {
     label: 'Lock view',
+    args: { behaviourIds: { kind: 'strings', label: 'Behaviours', default: DEFAULT_LOCK_IDS } },
     // Locked ⇔ every targeted behaviour that exists is disabled.
     isActive: (canvas, args) => {
       const ids = lockIds(canvas, args);
@@ -152,6 +177,7 @@ const BUILTIN_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
   },
   'layout.run': {
     label: 'Run layout',
+    args: { id: { kind: 'layout', label: 'Layout', description: 'Default: the active layout' } },
     run: (canvas, args) => {
       const id = arg<string>(args, 'id');
       void (id ? canvas.runLayout(id) : canvas.runActiveLayout());
@@ -163,6 +189,7 @@ const BUILTIN_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
   },
   'layout.activate': {
     label: 'Layout',
+    args: { value: { kind: 'layout', label: 'Layout', pick: true } },
     value: (canvas) => canvas.store.view.getState().definition.activeLayout,
     options: (canvas) => canvas.layouts.list().map((l) => ({ value: l.id, label: l.id })),
     isEnabled: (canvas) => canvas.layouts.list().length > 0,
@@ -177,6 +204,18 @@ const BUILTIN_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
   },
   'background.grid': {
     label: 'Toggle grid',
+    args: {
+      layerId: { kind: 'layer', label: 'Layer', default: 'background' },
+      patternType: {
+        kind: 'enum',
+        label: 'Pattern',
+        options: [
+          { value: 'dots', label: 'Dots' },
+          { value: 'grid', label: 'Grid' },
+          { value: 'lines', label: 'Lines' },
+        ],
+      },
+    },
     // Read the definition first — `canvas.update` writes it, so the toggle
     // follows every write path — falling back to the layer's own options.
     isActive: (canvas, args) => {
@@ -198,8 +237,39 @@ const BUILTIN_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
     run: (canvas) => canvas.stopLayout(),
     isEnabled: (canvas) => canvas.store.view.getState().runtime.layout.running,
   },
+  'history.undo': {
+    label: 'Undo',
+    isEnabled: (canvas) => canvas.history.canUndo(),
+    run: (canvas) => canvas.history.undo(),
+  },
+  'history.redo': {
+    label: 'Redo',
+    isEnabled: (canvas) => canvas.history.canRedo(),
+    run: (canvas) => canvas.history.redo(),
+  },
+  'layer.visible': {
+    label: 'Show layer',
+    args: { id: { kind: 'layer', label: 'Layer' } },
+    isActive: (canvas, args) => {
+      const id = arg<string>(args, 'id');
+      return id ? canvas.layers.get(id)?.visible === true : false;
+    },
+    isEnabled: (canvas, args) => {
+      const id = arg<string>(args, 'id');
+      return !!id && canvas.layers.has(id);
+    },
+    run: (canvas, args) => {
+      const id = arg<string>(args, 'id');
+      const layer = id ? canvas.layers.get(id) : undefined;
+      if (!layer) return;
+      layer.setVisible(!layer.visible);
+      // Visibility isn't store state: tell bound toggles to re-read.
+      canvas.commands.invalidate();
+    },
+  },
   'layout.toggle': {
     label: 'Run layout',
+    args: { id: { kind: 'layout', label: 'Layout', description: 'Default: the active layout' } },
     isActive: (canvas) => canvas.store.view.getState().runtime.layout.running,
     isEnabled: (canvas, args) =>
       canvas.store.view.getState().runtime.layout.running || BUILTIN_COMMANDS['layout.run']!.isEnabled!(canvas, args),

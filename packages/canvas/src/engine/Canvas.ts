@@ -31,7 +31,7 @@
  *     / behaviour / state pipeline against a renderer that draws nothing.
  */
 
-import type { IRenderer, RenderPreference } from '@invana/canvas-core';
+import type { CanvasView, IRenderer, RenderPreference } from '@invana/canvas-core';
 import {
   CanvasEventBus,
   createCanvasStore,
@@ -41,7 +41,7 @@ import {
 } from '@invana/canvas-store';
 import { createDefaultRenderer } from '@invana/renderer-pixijs';
 
-import { CanvasThemeState } from '@invana/canvas-store';
+import { CanvasThemeState, createHistory, type History } from '@invana/canvas-store';
 import { Camera } from '@invana/canvas-core';
 import { DefaultGestureArbiter, type GestureArbiter } from '@invana/canvas-core';
 import type { Rect } from '@invana/canvas-store';
@@ -55,7 +55,7 @@ import { registerBuiltinCommands } from './builtinCommands';
 import type { CanvasContext, LayoutRunOptions } from '@invana/canvas-core';
 import type { ISurface } from '@invana/canvas-core';
 import { Tween, resolveEasing, type EasingName } from '@invana/canvas-core';
-import { type CanvasConfig, configurable, deepMerge } from './CanvasConfig';
+import { type CanvasConfig, configurable, currentOption, deepMerge } from './CanvasConfig';
 import {
   exportImage,
   exportImageDataURL,
@@ -68,6 +68,7 @@ import {
   canvasStateToJSON,
   downloadCanvasState,
   importCanvasStateFromFile,
+  jsonSafe,
   type CanvasStateSnapshot,
   type CanvasStateSource,
   type ImportCanvasStateOptions,
@@ -186,6 +187,16 @@ export interface CanvasOptions {
 
 // ─── Canvas ────────────────────────────────────────────────────────────────
 
+/** Actions starting with this are user edits, recorded by `Canvas.history`. */
+const EDIT_ACTION_PREFIX = 'edit:';
+/** Same-action edits closer together than this merge into one undo step. */
+const EDIT_MERGE_MS = 600;
+/** A `Canvas.history` undo / redo of a user edit (see `createHistory`'s action names). */
+const HISTORY_EDIT_ACTION = /^(undo|redo):edit:/;
+/** The definition slices whose values live on registered instances. */
+const DEFINITION_SECTIONS = ['layers', 'behaviours', 'layouts'] as const;
+type DefinitionSection = (typeof DEFINITION_SECTIONS)[number];
+
 export class Canvas {
   readonly id: string;
   readonly options: CanvasOptions;
@@ -197,9 +208,24 @@ export class Canvas {
    * parallel `this.config`). Readers subscribe to slices via `useStore`/`select`.
    *
    * The store owns `view`, `data`, `events` (the one canvas-wide bus — {@link events}
-   * *is* `store.events`), `theme`, and `history`.
+   * *is* `store.events`) and `theme`. Undo for the definition is {@link history}.
    */
   readonly store: CanvasStore;
+
+  /**
+   * Undo / redo for **user edits to the definition** — the Studio editors'
+   * applies. Records only {@link update} calls whose action starts with `edit:`
+   * (`canvas.update(patch, 'edit:control-panels')`), and only their
+   * `definition/*` patches: programmatic config (a React root's `config` prop, a
+   * `<ControlPanel>` mount), camera, hover, selection and layout progress are
+   * never recorded.
+   *
+   * Undo and redo re-apply the reverted `layers` / `behaviours` / `layouts`
+   * slices to the live instances, so what's drawn follows the store. Graph data
+   * has its own history (`GraphHistory`); the `history.undo` / `history.redo`
+   * commands pick whichever of the two holds the newer step.
+   */
+  readonly history: History;
 
   /**
    * Public surface — populated by `init()` / `initWithRenderer()`. Accessing
@@ -310,6 +336,18 @@ export class Canvas {
     // (no separate engine bus). `canvas.events` *is* `store.events`.
     this.store = createCanvasStore(opts.telemetry ? { telemetry: opts.telemetry } : {});
     this.events = this.store.events;
+    this.history = createHistory(this.store.view, {
+      filter: (change) => change.action?.startsWith(EDIT_ACTION_PREFIX) ?? false,
+      patchFilter: (patch) => patch.path[0] === 'definition',
+      // Live editors write per keystroke / drag frame: one step per burst.
+      mergeWithinMs: EDIT_MERGE_MS,
+    });
+    // Undo / redo revert the store; push the reverted slices to the instances.
+    this.store.view.subscribeChanges((change) => {
+      if (HISTORY_EDIT_ACTION.test(change.action ?? '')) {
+        this._reconcileDefinition(change.prev.definition, change.state.definition);
+      }
+    });
     this.themeState = new CanvasThemeState(this.events);
     this.gestures = new DefaultGestureArbiter();
     // Frame attribution reads the same bus; the meter (a field initialiser) is
@@ -324,6 +362,8 @@ export class Canvas {
     this.layouts = new LayoutRegistry({ bus: this.events });
     this.commands = new CommandRegistry<Canvas>({ getContext: () => this });
     registerBuiltinCommands(this.commands);
+    // The history's stack isn't store state: tell bound controls it moved.
+    this.history.subscribe(() => this.commands.invalidate());
 
     // A layer registered *after* config was already pushed (e.g. a React-mounted
     // `<MiniMapLayer>` that lands after `<SystemTheme>` has already called
@@ -1043,29 +1083,15 @@ export class Canvas {
    *
    * The config is pure JSON keyed by id — instances themselves are registered
    * imperatively (`canvas.layers.add(new XLayer({ id }))`).
+   *
+   * @param action Names the write on the store's change stream. An action that
+   *   starts with `edit:` marks a **user edit** (a Studio editor's apply), which
+   *   {@link history} records so it can be undone; the default
+   *   `'canvas:update'` is programmatic config and is not recorded.
    */
-  update(patch: CanvasConfig): void {
-    for (const [id, options] of Object.entries(patch.layers ?? {})) {
-      configurable(this.layers.get(id))?.setOptions(options);
-    }
-    for (const [id, options] of Object.entries(patch.behaviours ?? {})) {
-      configurable(this.behaviours.get(id))?.setOptions(options);
-      // Honour a runtime `enabled` toggle explicitly: route it through the
-      // registry (fires `scene:behaviour:enable`/`disable` + gesture-conflict
-      // bookkeeping), mirroring `_activate`. The base `Behaviour.setOptions`
-      // seam applies `enabled` too, but several behaviours override `setOptions`
-      // without calling `super`, so relying on that alone silently drops the
-      // toggle — the engine applies it here so `update` is authoritative.
-      const enabled = (options as { enabled?: boolean }).enabled;
-      if (enabled !== undefined) this.behaviours.setEnabled(id, enabled);
-      // Same reason for `modes` (interaction-mode gating, see `BehaviourOptions.modes`).
-      if ('modes' in options) {
-        this.behaviours.get(id)?.setModes?.((options as { modes?: readonly string[] }).modes);
-      }
-    }
-    for (const [id, options] of Object.entries(patch.layouts ?? {})) {
-      this.layouts.get(id)?.setOptions(options);
-    }
+  update(patch: CanvasConfig, action = 'canvas:update'): void {
+    if (action.startsWith(EDIT_ACTION_PREFIX)) this._writeBaseline(patch);
+    this._applyToInstances(patch);
 
     // `store.view.definition` is the single source of truth for serialisable
     // config (no parallel `this.config`). Per-id deep-merge so untouched slices
@@ -1096,7 +1122,7 @@ export class Canvas {
         s.definition.canvas.defaultViewMode = patch.defaultViewMode;
         if (!this._viewModeSeeded) s.interaction.viewMode = patch.defaultViewMode;
       }
-    }, 'canvas:update');
+    }, action);
     if (patch.defaultViewMode !== undefined) this._viewModeSeeded = true;
 
     // Fit-on-load is a config setting applied here (works whether config arrives at
@@ -1107,6 +1133,106 @@ export class Canvas {
     if (patch.fitAnimation !== undefined) this._fitAnimation = patch.fitAnimation;
     if (patch.entrance !== undefined) this._armEntrance(patch.entrance);
     if (patch.fitOnLoad === true) this._armAutoFit();
+  }
+
+  /**
+   * Push the `layers` / `behaviours` / `layouts` slices of a config patch to the
+   * live instances (no store write). Shared by {@link update} and the undo
+   * reconciler.
+   */
+  private _applyToInstances(patch: Pick<CanvasConfig, 'layers' | 'behaviours' | 'layouts'>): void {
+    for (const [id, options] of Object.entries(patch.layers ?? {})) {
+      configurable(this.layers.get(id))?.setOptions(options);
+    }
+    for (const [id, options] of Object.entries(patch.behaviours ?? {})) {
+      configurable(this.behaviours.get(id))?.setOptions(options);
+      // Honour a runtime `enabled` toggle explicitly: route it through the
+      // registry (fires `scene:behaviour:enable`/`disable` + gesture-conflict
+      // bookkeeping), mirroring `_activate`. The base `Behaviour.setOptions`
+      // seam applies `enabled` too, but several behaviours override `setOptions`
+      // without calling `super`, so relying on that alone silently drops the
+      // toggle — the engine applies it here so `update` is authoritative.
+      const enabled = (options as { enabled?: boolean }).enabled;
+      if (enabled !== undefined) this.behaviours.setEnabled(id, enabled);
+      // Same reason for `modes` (interaction-mode gating, see `BehaviourOptions.modes`).
+      if ('modes' in options) {
+        this.behaviours.get(id)?.setModes?.((options as { modes?: readonly string[] }).modes);
+      }
+    }
+    for (const [id, options] of Object.entries(patch.layouts ?? {})) {
+      this.layouts.get(id)?.setOptions(options);
+    }
+  }
+
+  /**
+   * Before an `edit:` write, copy the instance's **current** value of every key
+   * the edit sets but the definition doesn't hold yet into the definition — an
+   * unrecorded write. The recorded edit then *changes* those keys from their real
+   * old value instead of adding them, so undo restores the old value rather than
+   * removing the key (which would leave the instance on the new one). Values that
+   * aren't JSON (resolver functions) are skipped.
+   */
+  private _writeBaseline(patch: CanvasConfig): void {
+    const def = this.store.view.getState().definition;
+    const fills: Array<[DefinitionSection, string, string, unknown]> = [];
+    for (const section of DEFINITION_SECTIONS) {
+      for (const [id, o] of Object.entries(patch[section] ?? {})) {
+        const inst = this._instance(section, id);
+        if (!inst) continue;
+        const held = def[section][id] ?? {};
+        for (const key of Object.keys(o)) {
+          if (key in held) continue;
+          const value = jsonSafe(currentOption(inst, key));
+          if (value !== undefined) fills.push([section, id, key, value]);
+        }
+      }
+    }
+    if (fills.length === 0) return;
+    this.store.view.update((s) => {
+      for (const [section, id, key, value] of fills) {
+        (s.definition[section][id] ??= {})[key] = value;
+      }
+    }, 'canvas:update:baseline');
+  }
+
+  /**
+   * After a {@link history} undo / redo: diff the definition's `layers` /
+   * `behaviours` / `layouts` slices before and after, and push each changed key to
+   * its instance — the new value, or `undefined` for a key the step removed (most
+   * `setOptions` read that as "back to the default"). `fitAnimation` and
+   * `activeLayout` follow too.
+   */
+  private _reconcileDefinition(prev: CanvasView['definition'], next: CanvasView['definition']): void {
+    const patch: Pick<CanvasConfig, 'layers' | 'behaviours' | 'layouts'> = {};
+    for (const section of DEFINITION_SECTIONS) {
+      if (prev[section] === next[section]) continue;
+      const out: Record<string, Record<string, unknown>> = {};
+      for (const id of new Set([...Object.keys(prev[section]), ...Object.keys(next[section])])) {
+        const before = prev[section][id] ?? {};
+        const after = next[section][id] ?? {};
+        if (before === after) continue;
+        const diff: Record<string, unknown> = {};
+        for (const key of new Set([...Object.keys(before), ...Object.keys(after)])) {
+          if (before[key] !== after[key]) diff[key] = after[key];
+        }
+        if (Object.keys(diff).length > 0) out[id] = diff;
+      }
+      if (Object.keys(out).length > 0) patch[section] = out;
+    }
+    this._applyToInstances(patch);
+    if (prev.canvas.fitAnimation !== next.canvas.fitAnimation) this._fitAnimation = next.canvas.fitAnimation;
+    // Re-announce a reverted active layout through `update` (a same-value store
+    // write, unrecorded), so a subclass that wires it — `GraphCanvas` — re-wires.
+    if (prev.activeLayout !== next.activeLayout && next.activeLayout !== null) {
+      this.update({ activeLayout: next.activeLayout }, 'canvas:update:reconcile');
+    }
+  }
+
+  /** The registered instance behind a definition slice, if any. */
+  private _instance(section: DefinitionSection, id: string): unknown {
+    if (section === 'layers') return this.layers.get(id);
+    if (section === 'behaviours') return this.behaviours.get(id);
+    return this.layouts.get(id);
   }
 
   /**
@@ -1432,6 +1558,7 @@ export class Canvas {
     this.behaviours?.clear();
     this.layouts?.clear();
     this.camera?.dispose();
+    this.history.clear();
     this.events.clearTaps();
     this.events.removeAllListeners();
     // The renderer owns the scene root, the `Application`, the drawing surface,

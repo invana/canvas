@@ -57,8 +57,8 @@ export class GraphCanvas extends Canvas {
     this.wireActiveLayout();
   }
 
-  override update(patch: CanvasConfig): void {
-    super.update(patch);
+  override update(patch: CanvasConfig, action?: string): void {
+    super.update(patch, action);
     if (patch.activeLayout !== undefined) this.wireActiveLayout();
   }
 

@@ -59,3 +59,24 @@ describe('GraphHistory — group membership', () => {
     expect(store.hasEdge('e1')).toBe(true);
   });
 });
+
+describe('GraphHistory — peek + timestamps', () => {
+  it('stamps entries with `at`, peeks the tops, and re-stamps a redone entry', () => {
+    const store = new GraphStore();
+    const history = new GraphHistory(store);
+    expect(history.peekUndo()).toBeUndefined();
+
+    history.transaction('add a', (rec) => rec.addNode({ type: 'node', id: 'a' }));
+    const first = history.peekUndo();
+    expect(first?.label).toBe('add a');
+    expect(typeof first?.at).toBe('number');
+
+    history.undo();
+    expect(history.peekUndo()).toBeUndefined();
+    expect(history.peekRedo()).toEqual(first);
+
+    history.redo();
+    expect(history.peekUndo()!.at!).toBeGreaterThanOrEqual(first!.at!);
+    expect(history.peekRedo()).toBeUndefined();
+  });
+});

@@ -38,6 +38,12 @@ export interface HistoryEntry {
   ops: HistoryOp[];
   /** Human label for the change (e.g. `'delete selection'`, `'paste'`). */
   label?: string;
+  /**
+   * When the entry was recorded (or last redone), in `performance.now()` ms —
+   * stamped by `GraphHistory`. Lets one Undo button pick the newer step between
+   * this history and the canvas's definition history.
+   */
+  at?: number;
 }
 
 /**

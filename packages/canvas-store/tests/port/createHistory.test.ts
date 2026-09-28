@@ -65,3 +65,78 @@ describe('createHistory', () => {
     expect(history.canRedo()).toBe(false);
   });
 });
+
+describe('createHistory — scoping, merging, observing', () => {
+  const make = () => createMemoryStore<S>({ count: 0, nested: { a: 1 } });
+
+  it('filter keeps unmatched changes off the stack', () => {
+    const store = make();
+    const history = createHistory(store, { filter: (c) => c.action?.startsWith('edit:') ?? false });
+    store.update((d) => {
+      d.count = 1;
+    }, 'camera');
+    store.update((d) => {
+      d.count = 2;
+    }, 'edit:count');
+    history.undo();
+    expect(store.getState().count).toBe(1);
+    expect(history.canUndo()).toBe(false);
+  });
+
+  it('patchFilter strips patches outside the kept paths', () => {
+    const store = make();
+    const history = createHistory(store, { patchFilter: (p) => p.path[0] === 'nested' });
+    store.update((d) => {
+      d.count = 7;
+      d.nested.a = 2;
+    }, 'both');
+    store.update((d) => {
+      d.count = 8;
+    }, 'count-only'); // no kept patches → not recorded
+    history.undo();
+    expect(store.getState()).toEqual({ count: 8, nested: { a: 1 } });
+    expect(history.canUndo()).toBe(false);
+  });
+
+  it('merges same-action changes inside the window into one step', () => {
+    let t = 0;
+    const store = make();
+    const history = createHistory(store, { mergeWithinMs: 100, now: () => t });
+    for (const n of [1, 2, 3]) {
+      t += 50;
+      store.update((d) => {
+        d.count = n;
+      }, 'edit:count');
+    }
+    t += 500;
+    store.update((d) => {
+      d.count = 4;
+    }, 'edit:count');
+    history.undo();
+    expect(store.getState().count).toBe(3);
+    history.undo();
+    expect(store.getState().count).toBe(0);
+    history.redo();
+    expect(store.getState().count).toBe(3);
+  });
+
+  it('peek reports action + time; subscribe hears every stack change', () => {
+    let t = 10;
+    const store = make();
+    const history = createHistory(store, { now: () => t });
+    let heard = 0;
+    history.subscribe(() => heard++);
+    store.update((d) => {
+      d.count = 1;
+    }, 'edit:a');
+    expect(history.peekUndo()).toEqual({ action: 'edit:a', at: 10 });
+    t = 20;
+    history.undo();
+    expect(history.peekUndo()).toBeUndefined();
+    expect(history.peekRedo()).toEqual({ action: 'edit:a', at: 10 });
+    history.redo();
+    expect(history.peekUndo()?.at).toBe(20);
+    history.clear();
+    expect(heard).toBe(4);
+  });
+});

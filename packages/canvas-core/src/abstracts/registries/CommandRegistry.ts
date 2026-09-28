@@ -21,10 +21,57 @@ export interface CommandOption {
   icon?: string;
 }
 
+/**
+ * The value kinds a {@link CommandArgSpec} can describe. The first five are
+ * plain JSON values; `layer` / `behaviour` / `layout` are the **id** of a
+ * registered instance (an editor offers the live registry as choices); `json`
+ * is any JSON value the editor can only take as text (maps, number lists).
+ */
+export type CommandArgKind =
+  | 'string'
+  | 'number'
+  | 'boolean'
+  | 'enum'
+  | 'strings'
+  | 'layer'
+  | 'behaviour'
+  | 'layout'
+  | 'json';
+
+/**
+ * Describes one key of a command's `args` bag — plain data, so the kernel stays
+ * UI-free; the UI kit maps it to a form field. Optional on every command: an
+ * undescribed command (or key) is still editable as raw JSON.
+ */
+export interface CommandArgSpec {
+  /** The value's kind. */
+  kind: CommandArgKind;
+  /** Field label. Default: the key. */
+  label?: string;
+  /** One-line help shown under the field. */
+  description?: string;
+  /** The value the command uses when the key is absent — shown as a hint, never written. */
+  default?: unknown;
+  /** The allowed values, for `kind: 'enum'`. */
+  options?: readonly CommandOption[];
+  /**
+   * The key a **pick-one** control supplies itself (`value` — see
+   * {@link CanvasCommand.value}). An editor hides it on a `choice` item, where
+   * picking sets it, and shows it on a button / toggle, where it's fixed.
+   */
+  pick?: boolean;
+}
+
 /** A named command, run against a context `C`. `args` is whatever the caller's spec carried (JSON). */
 export interface CanvasCommand<C> {
   /** Human label — a default tooltip when a spec doesn't give one. */
   label?: string;
+  /**
+   * The keys `args` may carry, described for editors (the Studio's control-panel
+   * editor draws a field per key). Documentation as data: it isn't validated at
+   * run time, and keys it doesn't name still pass through.
+   */
+  args?: Readonly<Record<string, CommandArgSpec>>;
   /** Perform the command. */
   run(ctx: C, args?: unknown): void;
   /** Toggle state for toggle-style controls. Absent ⇒ never active. */

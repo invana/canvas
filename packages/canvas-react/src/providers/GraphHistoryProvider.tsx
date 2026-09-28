@@ -34,7 +34,10 @@ export interface GraphHistoryProviderProps {
  * `history.push`, so per-frame writes and layout sim ticks never enter the stack.
  *
  * While mounted it also registers the `history.undo` / `history.redo` commands
- * and an undoable `graph.clear` on the canvas, for control panels.
+ * and an undoable `graph.clear` on the canvas, for control panels. Those
+ * `history.*` commands also cover the canvas's definition edits
+ * (`canvas.history`): each undoes / redoes whichever of the two stacks holds the
+ * newer step.
  *
  * The history is rebuilt (and its stacks cleared) if `layerId`, `limit`, or the
  * resolved canvas change.
@@ -43,6 +46,22 @@ export interface GraphHistoryProviderProps {
 function targetLayer(args: unknown): string {
   const id = args && typeof args === 'object' ? (args as { layerId?: unknown }).layerId : undefined;
   return typeof id === 'string' ? id : 'graph';
+}
+
+/**
+ * Whether the graph stack's step goes first. Undo takes the **newer** top (the
+ * most recent edit). Redo takes the **older** top: undo walked back newest →
+ * oldest, so the step undone last — the one to redo first — is the older one.
+ */
+function graphGoesFirst(
+  graph: { at?: number } | undefined,
+  view: { at: number } | undefined,
+  redo = false,
+): boolean {
+  if (!view) return true;
+  if (!graph) return false;
+  const at = graph.at ?? 0;
+  return redo ? at <= view.at : at >= view.at;
 }
 
 export function GraphHistoryProvider({
@@ -117,18 +136,21 @@ export function GraphHistoryProvider({
     if (!history) return;
     const commands = resolved.commands;
     const offs = [
+      // One Undo button for two stacks: graph edits (this history) and definition
+      // edits (`canvas.history`). Each command acts on whichever top is newer.
       commands.register('history.undo', {
         label: 'Undo',
-        run: () => history.undo(),
-        isEnabled: () => history.canUndo,
+        run: (c) => (graphGoesFirst(history.peekUndo(), c.history.peekUndo()) ? history.undo() : c.history.undo()),
+        isEnabled: (c) => history.canUndo || c.history.canUndo(),
       }),
       commands.register('history.redo', {
         label: 'Redo',
-        run: () => history.redo(),
-        isEnabled: () => history.canRedo,
+        run: (c) => (graphGoesFirst(history.peekRedo(), c.history.peekRedo(), true) ? history.redo() : c.history.redo()),
+        isEnabled: (c) => history.canRedo || c.history.canRedo(),
       }),
       commands.register('graph.clear', {
         label: 'Clear canvas',
+        args: { layerId: { kind: 'layer', label: 'Layer', default: 'graph' } },
         isEnabled: (c, args) => c.layers.has(targetLayer(args)),
         run: (c, args) => {
           const target = targetLayer(args);

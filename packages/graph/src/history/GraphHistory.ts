@@ -31,6 +31,10 @@ import type {
 
 const DEFAULT_LIMIT = 100;
 
+/** The clock entries are stamped with — the same one `createHistory` uses. */
+const now = (): number =>
+  typeof performance !== 'undefined' && typeof performance.now === 'function' ? performance.now() : Date.now();
+
 export class GraphHistory {
   /** Fires `change` after every mutation so observers can re-read undo/redo state. */
   readonly events = new EventEmitter<GraphHistoryEventMap>();
@@ -61,6 +65,18 @@ export class GraphHistory {
   /** True iff there is at least one undone entry that can be redone. */
   get canRedo(): boolean {
     return this.redoStack.length > 0;
+  }
+
+  /** The entry {@link undo} would revert (label + `at`), or `undefined`. */
+  peekUndo(): Pick<HistoryEntry, 'label' | 'at'> | undefined {
+    const e = this.undoStack[this.undoStack.length - 1];
+    return e ? { label: e.label, at: e.at } : undefined;
+  }
+
+  /** The entry {@link redo} would re-apply (label + `at`), or `undefined`. */
+  peekRedo(): Pick<HistoryEntry, 'label' | 'at'> | undefined {
+    const e = this.redoStack[this.redoStack.length - 1];
+    return e ? { label: e.label, at: e.at } : undefined;
   }
 
   // ─── Recording ────────────────────────────────────────────────────────────
@@ -121,6 +137,7 @@ export class GraphHistory {
     this.store.batch(() => {
       for (const op of entry.ops) this.applyForward(op);
     });
+    entry.at = now();
     this.undoStack.push(entry);
     this.emitChange();
   }
@@ -135,7 +152,7 @@ export class GraphHistory {
   // ─── Internals ────────────────────────────────────────────────────────────
 
   private commit(entry: HistoryEntry): void {
-    this.undoStack.push(entry);
+    this.undoStack.push({ ...entry, at: now() });
     if (this.undoStack.length > this.limit) this.undoStack.shift();
     // Any new recorded change invalidates the redo branch.
     this.redoStack.length = 0;

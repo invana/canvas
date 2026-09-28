@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ControlItemSpec, ControlPanelSpec } from '@invana/canvas';
 import { FormField } from '@invana/forms';
 import { Alert, AlertDescription, Badge, Button, cn } from '@invana/ui';
@@ -50,9 +50,19 @@ function ControlPanelForm({
   submitLabel: string;
   onApply: (spec: ControlPanelSpec) => void;
 }) {
-  const form = useForm<ControlPanelFormState>({ defaultValues: panelToForm(spec) });
-  const { control, getValues, setValue } = form;
+  const descriptors = choices.commandArgs;
+  const form = useForm<ControlPanelFormState>({ defaultValues: panelToForm(spec, descriptors) });
+  const { control, getValues, setValue, setError, clearErrors } = form;
   const positionMode = useWatch({ control, name: 'panel.positionMode' });
+  const placement = useWatch({ control, name: 'panel.placement' });
+  // Moving a panel between the canvas and the header takes that surface's
+  // card default (on over the canvas, off in the header).
+  const lastPlacement = useRef(placement);
+  useEffect(() => {
+    const from = lastPlacement.current;
+    lastPlacement.current = placement;
+    if ((from === 'canvas') !== (placement === 'canvas')) setValue('panel.surface', placement === 'canvas');
+  }, [placement, setValue]);
   const [errors, setErrors] = useState<ControlPanelFormError[]>([]);
 
   // The preset picker is its own tiny form: its value isn't part of the panel.
@@ -74,12 +84,18 @@ function ControlPanelForm({
   const insertPreset = () => {
     const items = presets?.[presetForm.getValues('pick.preset')];
     if (!items) return;
-    setValue('items', [...getValues('items'), ...items.map(itemToForm)], { shouldDirty: true });
+    setValue('items', [...getValues('items'), ...items.map((item) => itemToForm(item, descriptors))], { shouldDirty: true });
   };
 
   const apply = () => {
-    const { spec: next, errors: found } = formToPanel(getValues());
+    const { spec: next, errors: found } = formToPanel(getValues(), descriptors);
     setErrors(found);
+    // Mark each bad value on its own field too, not only in the summary.
+    clearErrors();
+    for (const e of found) {
+      const path = e.item === null ? `panel.${e.field}` : `items.${e.item}.${e.field}`;
+      setError(path as Parameters<typeof setError>[0], { type: 'validate', message: e.message });
+    }
     if (found.length === 0) onApply(next);
   };
 
@@ -89,7 +105,7 @@ function ControlPanelForm({
   return (
     <FormProvider {...form}>
       <div className="flex flex-col gap-4">
-        <FormField.ObjectField control={c} columns={2} labelPosition="top" name="panel" fields={controlPanelFields(positionMode)} />
+        <FormField.ObjectField control={c} columns={2} labelPosition="top" name="panel" fields={controlPanelFields(positionMode, placement)} />
 
         <ControlItemsField control={control} choices={choices} />
 
@@ -141,8 +157,10 @@ function ControlPanelForm({
  * (`canvas.update({ controlPanels: patch })`). `ControlPanelsEditor` is the
  * connected wrapper that does exactly that.
  *
- * Item args and static options are edited as JSON; a parse error is listed
- * and nothing is submitted. Slot items (runtime React content) are shown but
+ * A command's args get a field per key its descriptor (`commandArgs`) names —
+ * layer / behaviour / layout ids as pickers over `layers` / `behaviours` /
+ * `layouts` — and the rest, like static options, as JSON. A bad value is marked
+ * on its field and listed, and nothing is submitted. Slot items (runtime React content) are shown but
  * not editable, and survive every round-trip; so do command / icon / widget
  * names this canvas doesn't register.
  */
@@ -151,6 +169,10 @@ export function ControlPanelsEditorPanel({
   commands,
   icons,
   widgets,
+  commandArgs,
+  layers,
+  behaviours,
+  layouts,
   presets,
   onSubmit,
   submitLabel = 'Apply',
@@ -165,9 +187,15 @@ export function ControlPanelsEditorPanel({
       commands: commands.filter((n) => !n.includes('#')).sort(),
       icons: [...icons].sort(),
       widgets: [...widgets].sort(),
+      ...(commandArgs ? { commandArgs } : {}),
+      ...(layers ? { layers: [...layers].sort() } : {}),
+      ...(behaviours ? { behaviours: [...behaviours].sort() } : {}),
+      ...(layouts ? { layouts: [...layouts].sort() } : {}),
     }),
-    [commands, icons, widgets],
+    [commands, icons, widgets, commandArgs, layers, behaviours, layouts],
   );
+  // Descriptors arrive as commands register: a form seeded without one must re-seed.
+  const described = useMemo(() => Object.keys(commandArgs ?? {}).sort().join(','), [commandArgs]);
 
   const addPanel = () => {
     const id = nextPanelId(ids);
@@ -212,7 +240,7 @@ export function ControlPanelsEditorPanel({
           </div>
           <ControlPanelForm
             // Remount per panel, and when the stored spec changes underneath.
-            key={`${selected}:${JSON.stringify(panels[selected])}`}
+            key={`${selected}:${described}:${JSON.stringify(panels[selected])}`}
             spec={panels[selected]!}
             choices={choices}
             {...(presets ? { presets } : {})}

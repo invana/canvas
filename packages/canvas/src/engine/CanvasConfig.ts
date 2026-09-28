@@ -108,6 +108,21 @@ export function configurable(inst: unknown): { setOptions(patch: unknown): void 
     : undefined;
 }
 
+/**
+ * An instance's current value for one option `key`: from `getOptions()` when it
+ * has the key (behaviours, most layers), else from its `options` field (layers'
+ * construction options; behaviours that resolve defaults there). `undefined`
+ * when neither holds it.
+ */
+export function currentOption(inst: unknown, key: string): unknown {
+  if (!inst || typeof inst !== 'object') return undefined;
+  const getOptions = (inst as { getOptions?: () => unknown }).getOptions;
+  const live = typeof getOptions === 'function' ? (getOptions.call(inst) as Record<string, unknown> | undefined) : undefined;
+  if (live && typeof live === 'object' && live[key] !== undefined) return live[key];
+  const options = (inst as { options?: unknown }).options;
+  return options && typeof options === 'object' ? (options as Record<string, unknown>)[key] : undefined;
+}
+
 /** A plain (POJO) object — the only kind merge recurses into. */
 function isPlainObject(v: unknown): v is Record<string, unknown> {
   if (typeof v !== 'object' || v === null || Array.isArray(v)) return false;

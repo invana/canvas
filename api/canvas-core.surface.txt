@@ -1,7 +1,7 @@
 # @invana/canvas-core — public API surface (generated; do not hand-edit)
 # Regenerate: pnpm build && node scripts/check-api-surface.mjs --write
 
-## . (366 exports)
+## . (369 exports)
 AnchorCtx
 AnchorShapeRef
 AnchorSpec
@@ -41,6 +41,8 @@ ColumnStore
 ColumnStoreOptions
 ColumnType
 ColumnValue
+CommandArgKind
+CommandArgSpec
 CommandOption
 CommandRegistry
 CommandRegistryOptions
@@ -61,6 +63,7 @@ ControlDividerItemSpec
 ControlItemSpec
 ControlPanelAnchor
 ControlPanelInsets
+ControlPanelPlacement
 ControlPanelPosition
 ControlPanelSpec
 ControlSlotItemSpec
