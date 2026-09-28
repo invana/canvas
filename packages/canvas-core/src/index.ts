@@ -214,6 +214,26 @@ export type {
 } from './state/port/types';
 export { select, shallowEqual, defaultEqual, type Selected } from './state/port/select';
 
+// ─── Operation log: history (record) + playbook (script) vocabulary ──────────
+export type {
+  ViewLogPart,
+  DataLogPart,
+  LogPart,
+  LogEntry,
+  LogEntryFilter,
+  LogStepInfo,
+  Delta,
+  DeltaOptions,
+  DataOpAdapter,
+  LogGroupMeta,
+  OperationLog,
+  HistoryView,
+  CameraIntent,
+  StepSpec,
+  PlaybookSpec,
+  Playbook,
+} from './state/log/types';
+
 // ─── View: the state shape + the named command API over it ───────────────────
 export { defaultCanvasView, type CanvasView, type CanvasSceneOptions } from './state/view/CanvasView';
 export { createActions, type CanvasActions } from './state/view/createActions';

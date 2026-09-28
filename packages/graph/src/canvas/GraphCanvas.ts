@@ -38,12 +38,14 @@ import { registerGraphCommands, type GraphCanvasCommandMap } from './graphComman
 /** Construction options for {@link GraphCanvas}: the engine's, plus the graph edit state. */
 export interface GraphCanvasOptions extends CanvasOptions {
   /**
-   * Undo for graph edits: every `GraphLayer` gets a `GraphHistory`, and node
-   * drags are journalled on it (one entry per gesture). `limit` caps the undo
-   * depth (default `100`). `false` opts out — no history and no drag capture;
-   * `history.undo` then covers `canvas.history` alone.
+   * Undo for graph edits: every `GraphLayer` gets a `GraphHistory` over the
+   * canvas's one operation log, and node drags are journalled on it (one entry
+   * per gesture). `false` opts out of the handle and the drag capture — the
+   * store's own content writes are still recorded in `canvas.history`.
+   *
+   * `limit` is deprecated and ignored: the log keeps every entry.
    */
-  history?: false | { limit?: number };
+  history?: false | { /** @deprecated Ignored — the operation log has no limit. */ limit?: number };
   /** Every `GraphLayer` gets a `GraphClipboard`; `pasteOffset` shifts pasted nodes (default `{ x: 24, y: 24 }`). */
   clipboard?: { pasteOffset?: Vec2 };
 }
@@ -117,8 +119,9 @@ export class GraphCanvas extends Canvas {
    * `history.*`, `clipboard.*`, …) to `commands`, and gives every `GraphLayer`
    * — on `scene:layer:add`, disposed on remove / destroy — its own:
    *
-   * - **`GraphHistory`** ({@link graphHistory}) with node drags journalled on it,
-   *   unless `opts.history` is `false`;
+   * - **`GraphHistory`** ({@link graphHistory}) — a handle on the canvas's one
+   *   operation log — with node drags journalled on it, unless `opts.history`
+   *   is `false`;
    * - **`GraphClipboard`** ({@link clipboard});
    * - **command-state bridges** to `commands.invalidate()`: the history's and the
    *   clipboard's `change`, and the layer's edge-template changes (`style:changed`,
@@ -196,10 +199,7 @@ export class GraphCanvas extends Canvas {
   /** Build `layer`'s history / clipboard and bridge their state to bound controls. */
   private createEditState(layer: GraphLayer): GraphLayerEditState {
     const invalidate = () => this.commands.invalidate();
-    const history =
-      this.historyOptions === false
-        ? null
-        : new GraphHistory(layer.store, this.historyOptions.limit !== undefined ? { limit: this.historyOptions.limit } : {});
+    const history = this.historyOptions === false ? null : new GraphHistory(layer.store);
     const clipboard = new GraphClipboard(
       layer.store,
       this.clipboardOptions.pasteOffset ? { pasteOffset: this.clipboardOptions.pasteOffset } : {},
@@ -216,7 +216,8 @@ export class GraphCanvas extends Canvas {
       clipboard,
       dispose: () => {
         for (const off of offs) off();
-        history?.clear();
+        // The log is the canvas's; its entries outlive the layer's handle.
+        history?.dispose();
       },
     };
   }

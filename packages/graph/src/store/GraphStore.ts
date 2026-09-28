@@ -12,7 +12,18 @@
  */
 
 import { ColumnStore, SourceEmitter } from '@invana/canvas';
-import type { CanvasEventBus, DataSource, FlushMode, LayerFlush } from '@invana/canvas';
+import type {
+  CanvasEventBus,
+  DataOpAdapter,
+  DataSource,
+  Delta,
+  DeltaOptions,
+  FlushMode,
+  LayerFlush,
+  OperationLog,
+} from '@invana/canvas';
+
+import type { HistoryOp } from '../history/types';
 
 import type { GraphSchema } from '../schema/types';
 import { AdjacencyIndex } from './AdjacencyIndex';
@@ -198,6 +209,27 @@ export class GraphStore implements DataSource {
    */
   private _frame = 0;
 
+  // ─── Recording (the operation log) ──────────────────────────────────────
+  /** Id this store's events and (by default) its log source carry. */
+  private readonly storeId: string;
+  /** The log recorded writes go to; `undefined` ⇒ nothing is recorded. */
+  private log: OperationLog | undefined;
+  /** This store's source id on {@link log}. */
+  private logSourceId = '';
+  /** Unregisters this store as a replay source on {@link log}. */
+  private unregisterSource: (() => void) | null = null;
+  private readonly logListeners = new Set<(log: OperationLog | undefined) => void>();
+  /**
+   * Depth of unrecorded sections — `store.internal.*`, a replay, and the inner
+   * steps of a composite write (a cascading remove records one op, not one per
+   * edge).
+   */
+  private unrecordedDepth = 0;
+  /** Ops recorded inside the current outermost {@link batch}; one entry on exit. */
+  private recordBuffer: HistoryOp[] | null = null;
+  /** The actor the first write of the current outermost batch named, if any. */
+  private recordActor: string | undefined;
+
   // ────────────────────────────────────────────────────────────────────────
 
   constructor(opts: GraphStoreOptions = {}) {
@@ -206,9 +238,10 @@ export class GraphStore implements DataSource {
     this.pendingEdgeTTL = opts.pendingEdgeTTL ?? Infinity;
     const initialCapacity = opts.initialCapacity ?? 256;
 
+    this.storeId = opts.id ?? 'graph-store';
     this.events = new SourceEmitter<GraphStoreEventMap>({
       kind: 'store',
-      id: opts.id ?? 'graph-store',
+      id: this.storeId,
     });
 
     this.nodeCols = new ColumnStore(NODE_SCHEMA, { initialCapacity });
@@ -227,6 +260,311 @@ export class GraphStore implements DataSource {
    */
   bindBus(bus: CanvasEventBus | undefined): void {
     this.events.setBus(bus);
+  }
+
+  // ─── Recording (the operation log) ──────────────────────────────────────
+  //
+  // Every **content** write is recorded into the attached log as `HistoryOp`s,
+  // captured before the mutation runs so each can be inverted: `applyDelta` —
+  // the one data door — and the writers that are shorthand for one of its
+  // fields (`addNode`, `updateNode`, `removeNode`, the edge equivalents,
+  // `hideNodes` / `showNodes` / `setNodeHidden` …, `setPinned`, `addData`, the
+  // bulk adds, `clear`). One public call is one entry; a `batch(fn)` is one
+  // entry. **Not recorded** (derived, recomputed from content): position writes
+  // (`setPosition` / `setPositionsBulk` — layouts and drag frames; a drag is
+  // journalled once on release), runtime states (hover / selection), the
+  // collapse / placement visibility inputs, `setNodeBoundingBox`, and anything
+  // written through {@link internal}. With no log attached nothing is recorded
+  // and nothing is captured. RFC
+  // `feat-2026-09-28-an-analysis-cannot-be-recorded-or-replayed`, F5 / F6.
+
+  /**
+   * Record this store's content writes into `log` (the canvas's operation log),
+   * and register it there as the replay source `sourceId`. Replaces any log
+   * attached before; `undefined` detaches. `GraphLayer` calls this on mount with
+   * the canvas's log and its own id. Returns the detach.
+   */
+  attachLog(log: OperationLog | undefined, sourceId: string = this.storeId): () => void {
+    this.unregisterSource?.();
+    this.unregisterSource = null;
+    this.log = log;
+    this.logSourceId = sourceId;
+    if (log) {
+      const adapter: DataOpAdapter = { sourceId, applyOps: (ops, direction) => this.replayOps(ops, direction) };
+      this.unregisterSource = log.registerSource(adapter);
+    }
+    for (const l of [...this.logListeners]) l(log);
+    return () => {
+      if (this.log === log) this.attachLog(undefined);
+    };
+  }
+
+  /** The log this store records into, or `undefined` when none is attached. */
+  get operationLog(): OperationLog | undefined {
+    return this.log;
+  }
+
+  /** Hear {@link attachLog} (a new log, or `undefined` on detach). Returns the unsubscribe. */
+  onLogAttached(listener: (log: OperationLog | undefined) => void): () => void {
+    this.logListeners.add(listener);
+    return () => this.logListeners.delete(listener);
+  }
+
+  /**
+   * Journal ops that were **already applied** as one entry — the escape hatch
+   * for a gesture that writes unrecorded frames and settles once (a node drag
+   * records one `moveNode` per node on release). No-op with no log attached.
+   */
+  recordApplied(ops: readonly HistoryOp[], meta: { title?: string; actor?: string } = {}): void {
+    const log = this.log;
+    if (!log || ops.length === 0 || log.replaying) return;
+    log.group(meta, () => log.recordData(this.logSourceId, ops, meta.actor));
+  }
+
+  /**
+   * **Derived writes — never recorded.** For behaviours and layouts that write
+   * presentation computed from content (a fade, a badge, a routed waypoint, a
+   * collapse or LOD hide): the same effect on screen as the public writer, but
+   * no history entry, so undo never fights the behaviour that recomputes it.
+   * `run(fn)` makes every write inside `fn` unrecorded.
+   */
+  readonly internal = {
+    /** Run `fn` with recording off; returns its result. */
+    run: <T>(fn: () => T): T => this.unrecorded(fn),
+    applyDelta: (delta: Delta<GraphNode, GraphEdge>): void => this.unrecorded(() => this.applyDelta(delta)),
+    updateNode: <D>(id: string, patch: Partial<GraphNode<D>>): void => this.unrecorded(() => this.updateNode(id, patch)),
+    updateEdge: <D>(id: string, patch: Partial<GraphEdge<D>>): void => this.unrecorded(() => this.updateEdge(id, patch)),
+    hideNodes: (ids: Iterable<string>): void => this.unrecorded(() => this.hideNodes(ids)),
+    showNodes: (ids: Iterable<string>): void => this.unrecorded(() => this.showNodes(ids)),
+    hideEdges: (ids: Iterable<string>): void => this.unrecorded(() => this.hideEdges(ids)),
+    showEdges: (ids: Iterable<string>): void => this.unrecorded(() => this.showEdges(ids)),
+    setPosition: (id: string, pos: Vec2, opts?: { silent?: boolean }): void => this.setPosition(id, pos, opts),
+    setPositionsBulk: (ids: readonly string[], xy: Float32Array, opts?: { silent?: boolean }): void =>
+      this.setPositionsBulk(ids, xy, opts),
+    setNodeState: (id: string, name: string, on = true): void => this.setNodeState(id, name, on),
+    setEdgeState: (id: string, name: string, on = true): void => this.setEdgeState(id, name, on),
+  };
+
+  /**
+   * Whether a write right now should be captured and recorded. Hot path — one
+   * check per write — so it doesn't ask the log whether it is replaying: this
+   * store's own replay runs unrecorded, and the log drops anything else written
+   * while it replays.
+   */
+  private get recording(): boolean {
+    return this.log !== undefined && this.unrecordedDepth === 0;
+  }
+
+  private unrecorded<T>(fn: () => T): T {
+    this.unrecordedDepth++;
+    try {
+      return fn();
+    } finally {
+      this.unrecordedDepth--;
+    }
+  }
+
+  /** Record `op` — buffered inside a batch, else its own entry. Call only when {@link recording}. */
+  private record(op: HistoryOp): void {
+    if (this.batchDepth > 0) {
+      (this.recordBuffer ??= []).push(op);
+      return;
+    }
+    this.log?.recordData(this.logSourceId, [op], this.takeRecordActor());
+  }
+
+  /**
+   * Record an add. Inside a batch, consecutive adds of one kind collect into a
+   * single `addNodes` / `addEdges` op instead of one op object per record — the
+   * bulk-load hot path (V10). The record is held by reference, not cloned: the
+   * store copies it on insert, so the caller's object is not the store's.
+   */
+  private recordAdd(kind: 'addNode', record: GraphNode): void;
+  private recordAdd(kind: 'addEdge', record: GraphEdge): void;
+  private recordAdd(kind: 'addNode' | 'addEdge', record: GraphNode | GraphEdge): void {
+    if (this.batchDepth === 0) {
+      this.record(kind === 'addNode' ? { kind, node: record as GraphNode } : { kind, edge: record as GraphEdge });
+      return;
+    }
+    const buffer = (this.recordBuffer ??= []);
+    const last = buffer[buffer.length - 1];
+    if (kind === 'addNode') {
+      if (last?.kind === 'addNodes') last.nodes.push(record as GraphNode);
+      else buffer.push({ kind: 'addNodes', nodes: [record as GraphNode] });
+    } else if (last?.kind === 'addEdges') last.edges.push(record as GraphEdge);
+    else buffer.push({ kind: 'addEdges', edges: [record as GraphEdge] });
+  }
+
+  private takeRecordActor(): string | undefined {
+    const actor = this.recordActor;
+    this.recordActor = undefined;
+    return actor;
+  }
+
+  /** Commit the outermost batch's buffered ops as one data part. */
+  private commitRecording(): void {
+    const ops = this.recordBuffer;
+    this.recordBuffer = null;
+    const actor = this.takeRecordActor();
+    if (!ops || ops.length === 0 || !this.log) return;
+    this.log.recordData(this.logSourceId, compactOps(ops), actor);
+  }
+
+  /** Snapshot the patched fields' prior values for a node. */
+  private captureNodeBefore(id: string, patch: object): Partial<GraphNode> {
+    const node = this.getNode(id) as unknown as Record<string, unknown>;
+    const before: Record<string, unknown> = {};
+    for (const key of Object.keys(patch)) before[key] = node[key];
+    return before as Partial<GraphNode>;
+  }
+
+  private captureEdgeBefore(id: string, patch: object): Partial<GraphEdge> {
+    const edge = this.getEdge(id) as unknown as Record<string, unknown>;
+    const before: Record<string, unknown> = {};
+    for (const key of Object.keys(patch)) before[key] = edge[key];
+    return before as Partial<GraphEdge>;
+  }
+
+  /** Cloned incident edges (both directions), deduped — self-loops appear once. */
+  private incidentEdges(nodeId: string): GraphEdge[] {
+    const seen = new Set<string>();
+    const out: GraphEdge[] = [];
+    for (const edge of this.edgesOf(nodeId, 'both')) {
+      if (seen.has(edge.id)) continue;
+      seen.add(edge.id);
+      out.push({ ...edge, hidden: this.isEdgeHidden(edge.id) });
+    }
+    return out;
+  }
+
+  /** {@link DataOpAdapter.applyOps} — replay recorded ops, unrecorded, as one flush. */
+  private replayOps(ops: readonly unknown[], direction: 'forward' | 'back'): void {
+    const list = ops as readonly HistoryOp[];
+    this.unrecorded(() =>
+      this.batch(() => {
+        if (direction === 'forward') {
+          for (const op of list) this.applyForward(op);
+        } else {
+          for (let i = list.length - 1; i >= 0; i--) this.applyInverse(list[i]!);
+        }
+      }),
+    );
+  }
+
+  private applyForward(op: HistoryOp): void {
+    switch (op.kind) {
+      case 'addNode':
+        if (!this.hasNode(op.node.id)) this.addNode(op.node);
+        break;
+      case 'removeNode':
+        if (this.hasNode(op.node.id)) this.removeNode(op.node.id, { cascade: true });
+        break;
+      case 'updateNode':
+        this.updateNode(op.id, op.after);
+        break;
+      case 'moveNode':
+        this.setPosition(op.id, op.after);
+        break;
+      case 'addEdge':
+        if (!this.hasEdge(op.edge.id)) this.addEdge(op.edge);
+        break;
+      case 'removeEdge':
+        if (this.hasEdge(op.edge.id)) this.removeEdge(op.edge.id);
+        break;
+      case 'updateEdge':
+        this.updateEdge(op.id, op.after);
+        break;
+      case 'addNodes':
+        for (const node of op.nodes) if (!this.hasNode(node.id)) this.addNode(node);
+        break;
+      case 'addEdges':
+        for (const edge of op.edges) if (!this.hasEdge(edge.id)) this.addEdge(edge);
+        break;
+      case 'setHidden':
+        for (const id of op.ids) {
+          if (op.element === 'node') this.setNodeHidden(id, op.hidden);
+          else this.setEdgeHidden(id, op.hidden);
+        }
+        break;
+      case 'clear':
+        // Per-element removes (not the silent wipe) so the renderer hears them.
+        for (const edge of op.edges) if (this.hasEdge(edge.id)) this.removeEdge(edge.id);
+        for (const node of op.nodes) if (this.hasNode(node.id)) this.removeNode(node.id, { cascade: true });
+        break;
+    }
+  }
+
+  private applyInverse(op: HistoryOp): void {
+    switch (op.kind) {
+      case 'addNode':
+        if (this.hasNode(op.node.id)) this.removeNode(op.node.id, { cascade: true });
+        break;
+      case 'removeNode':
+        if (!this.hasNode(op.node.id)) this.addNode(op.node);
+        this.readdEdges(op.edges);
+        this.relinkChildren(op.node.id, op.orphanedChildIds);
+        break;
+      case 'updateNode':
+        this.updateNode(op.id, op.before);
+        break;
+      case 'moveNode':
+        this.setPosition(op.id, op.before);
+        break;
+      case 'addEdge':
+        if (this.hasEdge(op.edge.id)) this.removeEdge(op.edge.id);
+        break;
+      case 'removeEdge':
+        if (!this.hasEdge(op.edge.id)) this.addEdge(op.edge);
+        break;
+      case 'updateEdge':
+        this.updateEdge(op.id, op.before);
+        break;
+      case 'addNodes':
+        for (let i = op.nodes.length - 1; i >= 0; i--) {
+          const id = op.nodes[i]!.id;
+          if (this.hasNode(id)) this.removeNode(id, { cascade: true });
+        }
+        break;
+      case 'addEdges':
+        for (let i = op.edges.length - 1; i >= 0; i--) {
+          const id = op.edges[i]!.id;
+          if (this.hasEdge(id)) this.removeEdge(id);
+        }
+        break;
+      case 'setHidden':
+        for (const id of op.ids) {
+          if (op.element === 'node') this.setNodeHidden(id, !op.hidden);
+          else this.setEdgeHidden(id, !op.hidden);
+        }
+        break;
+      case 'clear':
+        for (const node of op.nodes) if (!this.hasNode(node.id)) this.addNode(node);
+        this.readdEdges(op.edges);
+        break;
+    }
+  }
+
+  /**
+   * Restore `parentId` on the children a `removeNode` unlinked. Inverses run in
+   * reverse, so by the time a group is re-added its members (removed after it)
+   * are already back — parentless. Children that are gone, or that picked up
+   * another parent since, are left alone.
+   */
+  private relinkChildren(parentId: string, childIds: string[] | undefined): void {
+    if (!childIds) return;
+    for (const childId of childIds) {
+      if (!this.hasNode(childId) || this.parentOf(childId) !== undefined) continue;
+      this.updateNode(childId, { parentId });
+    }
+  }
+
+  /** Re-add edges whose both endpoints exist; skip duplicates and danglers. */
+  private readdEdges(edges: readonly GraphEdge[]): void {
+    for (const edge of edges) {
+      if (this.hasEdge(edge.id)) continue;
+      if (!this.hasNode(edge.source) || !this.hasNode(edge.target)) continue;
+      this.addEdge(edge);
+    }
   }
 
   // ─── Public read accessors ──────────────────────────────────────────────
@@ -509,6 +847,7 @@ export class GraphStore implements DataSource {
     flagsCol[slot] = next;
     this.nodeCols.touch();
     this._version++;
+    if (this.recording) this.record({ kind: 'updateNode', id, before: { pinned: !pinned }, after: { pinned } });
     this.enqueueNodeUpdate(id, { pinned });
     this.scheduleFlushIfNeeded();
   }
@@ -825,6 +1164,7 @@ export class GraphStore implements DataSource {
     else this.hiddenNodeIds.delete(id);
     this.nodeCols.touch();
     this._version++;
+    if (this.recording) this.record({ kind: 'setHidden', element: 'node', ids: [id], hidden });
     if (hidden) this.clearNodeRuntimeStatesOf(id);
     this.enqueueNodeVisibility(id, hidden);
     return true;
@@ -843,6 +1183,7 @@ export class GraphStore implements DataSource {
     else this.hiddenEdgeIds.delete(id);
     this.edgeCols.touch();
     this._version++;
+    if (this.recording) this.record({ kind: 'setHidden', element: 'edge', ids: [id], hidden });
     if (hidden) this.clearEdgeRuntimeStatesOf(id);
     this.enqueueEdgeVisibility(id, hidden);
     return true;
@@ -879,6 +1220,7 @@ export class GraphStore implements DataSource {
       throw new Error(`GraphStore.addNode: duplicate id "${node.id}"`);
     }
     this.installNode(node);
+    if (this.recording) this.recordAdd('addNode', node as GraphNode);
     this.scheduleFlushIfNeeded();
   }
 
@@ -889,6 +1231,7 @@ export class GraphStore implements DataSource {
       return;
     }
     this.installNode(node);
+    if (this.recording) this.recordAdd('addNode', node as GraphNode);
     this.scheduleFlushIfNeeded();
   }
 
@@ -896,6 +1239,7 @@ export class GraphStore implements DataSource {
     const cold = this.nodeMap.get(id);
     if (!cold) return;
     const slot = this.nodeCols.slot(id)!;
+    const before = this.recording ? this.captureNodeBefore(id, patch) : null;
 
     // Re-parenting validation + index maintenance.
     if ('parentId' in patch && patch.parentId !== cold.parentId) {
@@ -950,11 +1294,14 @@ export class GraphStore implements DataSource {
     // emits `node:visibility`). It also stays in the `node:update` patch below
     // so generic consumers / the DataSource delta see it.
     if ('hidden' in patch && patch.hidden !== undefined) {
-      this.applyNodeHidden(id, patch.hidden);
+      // Part of this update's op, not an op of its own.
+      const hidden = patch.hidden;
+      this.unrecorded(() => this.applyNodeHidden(id, hidden));
     }
 
     this.nodeCols.touch();
     this._version++;
+    if (before) this.record({ kind: 'updateNode', id, before, after: { ...(patch as Partial<GraphNode>) } });
     this.enqueueNodeUpdate(id, patch as Partial<GraphNode>);
     this.scheduleFlushIfNeeded();
   }
@@ -977,6 +1324,18 @@ export class GraphStore implements DataSource {
       );
     }
 
+    // Captured before anything goes: the node, its incident edges (removed with
+    // it), and the children whose `parentId` the removal clears — so undo
+    // restores the group with its members, not empty.
+    const op: HistoryOp | null = this.recording
+      ? {
+          kind: 'removeNode',
+          node: this.getNode(id)!,
+          edges: this.incidentEdges(id),
+          ...(this.childrenIndex.get(id)?.size ? { orphanedChildIds: [...this.childrenIndex.get(id)!] } : {}),
+        }
+      : null;
+
     // Snapshot edge ids to remove since `removeEdge` mutates the adjacency views.
     const incidentEdgeIds: string[] = [];
     for (let i = 0; i < outView.length; i++) {
@@ -987,7 +1346,10 @@ export class GraphStore implements DataSource {
       const eid = this.edgeCols.idAt(inView[i]!);
       if (eid !== undefined) incidentEdgeIds.push(eid);
     }
-    for (const eid of incidentEdgeIds) this.removeEdge(eid);
+    // The cascade is part of this op (`op.edges`), not ops of its own.
+    this.unrecorded(() => {
+      for (const eid of incidentEdgeIds) this.removeEdge(eid);
+    });
 
     // Remove from parent index + clear childrenIndex bucket if present.
     if (cold.parentId !== undefined) {
@@ -1020,6 +1382,7 @@ export class GraphStore implements DataSource {
 
     this.nodeCols.touch();
     this._version++;
+    if (op) this.record(op);
     this.enqueueNodeRemove(id);
     this.scheduleFlushIfNeeded();
 
@@ -1047,6 +1410,7 @@ export class GraphStore implements DataSource {
       return;
     }
     this.installEdge(edge, srcSlot, dstSlot);
+    if (this.recording) this.recordAdd('addEdge', edge as GraphEdge);
     this.scheduleFlushIfNeeded();
   }
 
@@ -1063,6 +1427,7 @@ export class GraphStore implements DataSource {
     const cold = this.edgeMap.get(id);
     if (!cold) return;
     const slot = this.edgeCols.slot(id)!;
+    const before = this.recording ? this.captureEdgeBefore(id, patch) : null;
 
     if ('source' in patch || 'target' in patch) {
       const nextSource = (patch.source ?? cold.source) as string;
@@ -1096,11 +1461,13 @@ export class GraphStore implements DataSource {
 
     // Visibility rides its own flag/index/event path — see updateNode.
     if ('hidden' in patch && patch.hidden !== undefined) {
-      this.applyEdgeHidden(id, patch.hidden);
+      const hidden = patch.hidden;
+      this.unrecorded(() => this.applyEdgeHidden(id, hidden));
     }
 
     this.edgeCols.touch();
     this._version++;
+    if (before) this.record({ kind: 'updateEdge', id, before, after: { ...(patch as Partial<GraphEdge>) } });
     this.enqueueEdgeUpdate(id, patch as Partial<GraphEdge>);
     this.scheduleFlushIfNeeded();
   }
@@ -1119,6 +1486,7 @@ export class GraphStore implements DataSource {
   removeEdge(id: string): void {
     const cold = this.edgeMap.get(id);
     if (!cold) return;
+    if (this.recording) this.record({ kind: 'removeEdge', edge: this.getEdge(id)! });
     const slot = this.edgeCols.slot(id)!;
     const srcSlot = this.nodeCols.slot(cold.source);
     const dstSlot = this.nodeCols.slot(cold.target);
@@ -1358,7 +1726,11 @@ export class GraphStore implements DataSource {
   }
 
   /**
-   * Apply a streaming delta in a single batch. Order within the batch:
+   * **The data door.** Apply a {@link Delta} in a single batch — one flush, one
+   * redraw, and (with a log attached) **one history entry**, attributed to
+   * `opts.actor` or the canvas's session actor. Every other content writer is
+   * shorthand for one of its fields. Order within the batch:
+   *
    * 1. `removed.edgeIds`  — removed first so node removals can't cascade
    *    them again (no-op double removal is harmless, but explicit is cleaner).
    * 2. `removed.nodeIds`  — cascade-removes incident edges per `removeNode`'s
@@ -1367,21 +1739,16 @@ export class GraphStore implements DataSource {
    * 4. `added.edges`      — `upsertEdge`.
    * 5. `updated.nodes`    — partial patches via `updateNode`.
    * 6. `updated.edges`    — partial patches via `updateEdge`.
+   * 7. `hidden` / `shown` — the explicit hidden flag, nodes then edges.
+   * 8. `pinned`           — pin (default) or unpin; `x` + `y` also move the node.
    *
-   * Use `upsertNode` / `upsertEdge` for the `added` lists so a feed that
-   * re-sends an existing id (common in pub-sub) merges rather than throwing.
-   * If you have hard-add semantics, use `addData` instead.
-   *
-   * Subscribers see one `flush` regardless of how many items were touched.
+   * Unknown ids are skipped. Use `upsertNode` / `upsertEdge` semantics for the
+   * `added` lists so a feed that re-sends an existing id (common in pub-sub)
+   * merges rather than throwing. If you have hard-add semantics, use `addData`
+   * instead.
    */
-  applyDelta(delta: {
-    added?: { nodes?: readonly GraphNode[]; edges?: readonly GraphEdge[] };
-    updated?: {
-      nodes?: ReadonlyArray<{ id: string; patch: Partial<GraphNode> }>;
-      edges?: ReadonlyArray<{ id: string; patch: Partial<GraphEdge> }>;
-    };
-    removed?: { nodeIds?: readonly string[]; edgeIds?: readonly string[] };
-  }): void {
+  applyDelta(delta: Delta<GraphNode, GraphEdge>, opts: DeltaOptions = {}): void {
+    if (opts.actor !== undefined && this.recordActor === undefined) this.recordActor = opts.actor;
     this.batch(() => {
       const removedEdgeIds = delta.removed?.edgeIds;
       if (removedEdgeIds) {
@@ -1415,14 +1782,28 @@ export class GraphStore implements DataSource {
           if (this.hasEdge(u.id)) this.updateEdge(u.id, u.patch);
         }
       }
+      for (const [change, hidden] of [
+        [delta.hidden, true],
+        [delta.shown, false],
+      ] as const) {
+        for (const id of change?.nodeIds ?? []) this.setNodeHidden(id, hidden);
+        for (const id of change?.edgeIds ?? []) this.setEdgeHidden(id, hidden);
+      }
+      for (const p of delta.pinned ?? []) {
+        if (!this.hasNode(p.id)) continue;
+        const pinned = p.pinned ?? true;
+        if (p.x !== undefined && p.y !== undefined) this.updateNode(p.id, { pinned, position: { x: p.x, y: p.y } });
+        else this.setPinned(p.id, pinned);
+      }
     });
   }
 
   // ─── Reactivity ─────────────────────────────────────────────────────────
 
   /**
-   * Coalesce all mutations inside `fn` into a single flush. Nested `batch`
-   * calls flush only on the outermost exit.
+   * Coalesce all mutations inside `fn` into a single flush and — with a log
+   * attached — a single history entry. Nested `batch` calls flush and record
+   * only on the outermost exit.
    */
   batch<T>(fn: () => T): T {
     this.batchDepth++;
@@ -1431,6 +1812,9 @@ export class GraphStore implements DataSource {
     } finally {
       this.batchDepth--;
       if (this.batchDepth === 0) {
+        // One recorded entry per outermost batch — before the flush, so an entry
+        // a flush listener's write causes lands after this one.
+        this.commitRecording();
         this.scheduleFlushIfNeeded();
         if (this.flushMode === 'sync') this.doFlush();
       }
@@ -1471,8 +1855,15 @@ export class GraphStore implements DataSource {
     }
   }
 
-  /** Wipe all data. Cancels any pending flush. */
+  /**
+   * Wipe all data. Cancels any pending flush. **Silent** — no per-element
+   * events (`GraphLayer.clear` / `setData` detach the renderer themselves).
+   * Recorded as one `clear` op holding what it removed, so undo re-adds it.
+   */
   clear(): void {
+    if (this.recording && (this.nodeMap.size > 0 || this.edgeMap.size > 0)) {
+      this.record({ kind: 'clear', nodes: [...this.nodes()], edges: [...this.edges()] });
+    }
     this.nodeMap.clear();
     this.edgeMap.clear();
     this.nodeRuntimeStates.clear();
@@ -1937,3 +2328,26 @@ export class GraphStore implements DataSource {
 // recycling causes problems for the GraphLayer renderer, the right fix is to
 // add a `disableRecycling` option to ColumnStore upstream — not to hack
 // around it here.
+
+/**
+ * Merge runs of consecutive same-kind `setHidden` ops (a bulk hide records one
+ * op per id as it goes) into one op per run, so a 10k-node hide is one op.
+ */
+function compactOps(ops: HistoryOp[]): HistoryOp[] {
+  if (!ops.some((op) => op.kind === 'setHidden')) return ops;
+  const out: HistoryOp[] = [];
+  for (const op of ops) {
+    const last = out[out.length - 1];
+    if (
+      op.kind === 'setHidden' &&
+      last?.kind === 'setHidden' &&
+      last.element === op.element &&
+      last.hidden === op.hidden
+    ) {
+      last.ids.push(...op.ids);
+      continue;
+    }
+    out.push(op.kind === 'setHidden' ? { ...op, ids: [...op.ids] } : op);
+  }
+  return out;
+}

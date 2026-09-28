@@ -265,7 +265,7 @@ export class EntranceBehaviour extends Behaviour<EntranceBehaviourOptions> {
       const prev = (store.getNode(id)?.style ?? {}) as NodeStyle;
       const delayMs = delayOf(id);
       if (delayMs > lastDelayMs) lastDelayMs = delayMs;
-      store.updateNode(id, {
+      store.internal.updateNode(id, {
         style: {
           ...prev,
           // Effects are replaced wholesale, so carry any the consumer set.
@@ -282,7 +282,7 @@ export class EntranceBehaviour extends Behaviour<EntranceBehaviourOptions> {
         // as a line drawn into empty space.
         const delayMs = Math.max(delayOf(edge.source), delayOf(edge.target));
         if (delayMs > lastDelayMs) lastDelayMs = delayMs;
-        store.updateEdge(edge.id, {
+        store.internal.updateEdge(edge.id, {
           style: {
             ...prev,
             effects: {
@@ -344,14 +344,14 @@ export class EntranceBehaviour extends Behaviour<EntranceBehaviourOptions> {
     for (const id of this.painted.nodes.splice(0)) {
       const prev = (store.getNode(id)?.style ?? {}) as NodeStyle;
       if (!prev.effects) continue;
-      store.updateNode(id, {
+      store.internal.updateNode(id, {
         style: { ...prev, effects: withoutEffect(prev.effects, NODE_EFFECT_KIND) } as NodeStyle,
       });
     }
     for (const id of this.painted.edges.splice(0)) {
       const prev = (store.getEdge(id)?.style ?? {}) as EdgeStyle;
       if (!prev.effects) continue;
-      store.updateEdge(id, {
+      store.internal.updateEdge(id, {
         style: { ...prev, effects: withoutEffect(prev.effects, EDGE_EFFECT_KIND) } as EdgeStyle,
       });
     }

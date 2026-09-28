@@ -36,6 +36,8 @@ function makeCanvas(opts: GraphCanvasOptions = {}) {
   layer.store.addNode({ id: 'a', type: 'node', position: { x: 0, y: 0 } });
   layer.store.addNode({ id: 'b', type: 'node', position: { x: 50, y: 0 } });
   layer.store.addEdge({ id: 'ab', type: 'edge', source: 'a', target: 'b' });
+  // The setup data is the starting state, not an edit: start with empty history.
+  canvas.history.clear();
   return { canvas, layer, click };
 }
 
@@ -111,22 +113,25 @@ describe('GraphCanvas edit state', () => {
     canvas.destroy();
   });
 
-  it('each layer has its own history; commands target `args.layerId`', () => {
+  it('each layer has its own history handle, all on the one log: Undo takes the newest change, whatever its layer', () => {
     const { canvas, layer } = makeCanvas();
     const other = new GraphLayer({ id: 'g2', options: {} });
     canvas.layers.add(other);
     canvas.layers.mountAll();
     other.store.addNode({ id: 'x', type: 'node', position: { x: 0, y: 0 } });
+    canvas.history.clear();
 
     expect(canvas.graphHistory('g2')).not.toBe(canvas.graphHistory('graph'));
+    drag(layer, 'a', { x: 5, y: 5 });
     drag(other, 'x', { x: 9, y: 9 });
-    expect(canvas.graphHistory('graph')!.canUndo).toBe(false);
+    // Both handles read the same log (RFC D-1: one undo order).
+    expect(canvas.graphHistory('graph')!.canUndo).toBe(true);
     expect(canvas.graphHistory('g2')!.canUndo).toBe(true);
-    // The default (`'graph'`) Undo has nothing of g2's to revert.
+    // The default (`'graph'`) Undo reverts g2's drag — it is the newest change.
     canvas.commands.run('history.undo');
-    expect(other.store.getPosition('x')).toEqual({ x: 9, y: 9 });
-    canvas.commands.run('history.undo', { layerId: 'g2' });
     expect(other.store.getPosition('x')).toEqual({ x: 0, y: 0 });
+    expect(layer.store.getPosition('a')).toEqual({ x: 5, y: 5 });
+    canvas.commands.run('history.undo', { layerId: 'g2' });
     expect(layer.store.getPosition('a')).toEqual({ x: 0, y: 0 });
     canvas.destroy();
   });
@@ -138,6 +143,7 @@ describe('GraphCanvas edit state', () => {
     canvas.layers.mountAll();
     const first = canvas.graphHistory('g2');
     other.store.addNode({ id: 'x', type: 'node', position: { x: 0, y: 0 } });
+    canvas.history.clear();
     canvas.layers.remove('g2');
     expect(canvas.graphHistory('g2')).toBeNull();
     expect(canvas.clipboard('g2')).toBeNull();
@@ -163,9 +169,9 @@ describe('GraphCanvas edit state', () => {
     canvas.destroy();
   });
 
-  it('`history.limit` and `clipboard.pasteOffset` reach every layer', () => {
+  it('`history.limit` is ignored (the log has no limit); `clipboard.pasteOffset` reaches every layer', () => {
     const { canvas } = makeCanvas({ history: { limit: 3 }, clipboard: { pasteOffset: { x: 5, y: 7 } } });
-    expect(canvas.graphHistory()!.maxDepth).toBe(3);
+    expect(canvas.graphHistory()!.maxDepth).toBe(Infinity);
     expect(canvas.clipboard()!.offset).toEqual({ x: 5, y: 7 });
     canvas.destroy();
   });

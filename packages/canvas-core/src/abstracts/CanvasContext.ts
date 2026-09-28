@@ -17,6 +17,7 @@ import type { IOverlayDevice, OverlaySpace } from '../contracts/IOverlayDevice';
 import type { ISurface, SurfaceOptions, SurfaceSpace } from '../contracts/ISurface';
 import type { CanvasStore } from '../state/CanvasStore';
 import type { ReactiveStore } from '../state/port/types';
+import type { OperationLog } from '../state/log/types';
 import type { CanvasEventBus } from '../state/events/CanvasEventBus';
 import type { Camera } from './Camera';
 import type { GestureArbiter } from './GestureArbiter';
@@ -90,6 +91,14 @@ export interface CanvasContext {
    * hand-built context (a test double) needn't supply one.
    */
   readonly commands?: CommandRegistry<unknown>;
+
+  /**
+   * The canvas's operation log — the record behind `canvas.history`. A data
+   * layer attaches its store here on mount (`GraphStore.attachLog`) so the
+   * store's recorded writes and the view's edits land in one undo order.
+   * Optional so a hand-built context (a test double) needn't supply one.
+   */
+  readonly log?: OperationLog;
 
   /**
    * Build a patch-emitting {@link ReactiveStore} — the factory behind

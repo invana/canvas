@@ -1,11 +1,19 @@
 /**
- * `GraphHistory` — undo/redo for a {@link GraphStore}.
+ * `GraphHistory` — undo/redo for a {@link GraphStore}, over the canvas's **one
+ * operation log**.
  *
- * A **command/transaction journal**, not a snapshot store and not a passive
- * event listener. Mutations are recorded only when routed through
- * {@link GraphHistory.transaction} (or {@link GraphHistory.push}); everything
- * else — streaming feed deltas, silent layout-sim position writes — bypasses the
- * journal, so the undo stack stays meaningful and small.
+ * The store records its own content writes (`applyDelta` and the writers that
+ * wrap it) into the log it is attached to — the canvas's, once its `GraphLayer`
+ * mounts. `GraphHistory` is the graph-flavoured handle on that log: it groups
+ * writes into one labelled entry ({@link transaction}), journals an
+ * already-applied gesture ({@link push}), and undoes / redoes. Because the log is
+ * shared, undo is linear across data and view edits — it takes back the newest
+ * change on the canvas, whichever layer or editor made it (RFC
+ * `feat-2026-09-28-an-analysis-cannot-be-recorded-or-replayed`, F4).
+ *
+ * A store with no log (a standalone store, a layer not yet mounted) gets a
+ * private one on construction, so this class works headless too; the store
+ * switches to the canvas's log when its layer mounts, and this follows.
  *
  * @example
  * ```ts
@@ -17,345 +25,178 @@
  * ```
  */
 
-import { EventEmitter } from '@invana/canvas';
+import { EventEmitter, createOperationLog, type LogEntry, type OperationLog } from '@invana/canvas';
 
 import type { GraphStore } from '../store';
-import type { GraphEdge, GraphNode, Vec2 } from '../store';
+import type { Vec2 } from '../store';
 import type {
   GraphHistoryEventMap,
   GraphHistoryOptions,
   HistoryEntry,
-  HistoryOp,
   HistoryRecorder,
 } from './types';
 
-const DEFAULT_LIMIT = 100;
-
-/** The clock entries are stamped with — the same one `createHistory` uses. */
-const now = (): number =>
-  typeof performance !== 'undefined' && typeof performance.now === 'function' ? performance.now() : Date.now();
+/** Whether plain undo can take `entry` back (it has a data part or an undoable view part). */
+const undoable = (entry: LogEntry): boolean => entry.parts.some((p) => p.kind === 'data' || p.undoable);
 
 export class GraphHistory {
-  /** Fires `change` after every mutation so observers can re-read undo/redo state. */
+  /** Fires `change` after every record / undo / redo / clear on the log, so observers can re-read state. */
   readonly events = new EventEmitter<GraphHistoryEventMap>();
 
   private readonly store: GraphStore;
-  private limit: number;
+  /** Unsubscribes from the current log's changes. */
+  private offLog: (() => void) | null = null;
+  private readonly offAttach: () => void;
 
-  private readonly undoStack: HistoryEntry[] = [];
-  private readonly redoStack: HistoryEntry[] = [];
-
-  /** Ops buffer for the in-flight transaction. Non-null only while recording. */
-  private recording: HistoryOp[] | null = null;
-  /** Nesting depth — only the outermost `transaction` commits an entry. */
-  private depth = 0;
-
+  /**
+   * @param store The graph store to journal. Given no log yet, it gets a private one.
+   * @param opts Deprecated: `limit` is ignored — the log has no limit.
+   */
   constructor(store: GraphStore, opts: GraphHistoryOptions = {}) {
+    void opts;
     this.store = store;
-    this.limit = opts.limit ?? DEFAULT_LIMIT;
+    if (!store.operationLog) store.attachLog(createOperationLog());
+    this.follow(store.operationLog);
+    this.offAttach = store.onLogAttached((log) => {
+      this.follow(log);
+      // A detach means the layer is going; its removal already re-notifies
+      // bound controls, so only a new log is news.
+      if (log) this.emitChange();
+    });
+  }
+
+  /** The log this history reads — the store's current one, or `undefined` once detached. */
+  private get log(): OperationLog | undefined {
+    return this.store.operationLog;
+  }
+
+  private follow(log: OperationLog | undefined): void {
+    this.offLog?.();
+    this.offLog = log ? log.subscribe(() => this.emitChange()) : null;
   }
 
   // ─── Public state ─────────────────────────────────────────────────────────
 
   /** True iff there is at least one entry that can be undone. */
   get canUndo(): boolean {
-    return this.undoStack.length > 0;
+    return this.log?.canUndo() ?? false;
   }
 
   /** True iff there is at least one undone entry that can be redone. */
   get canRedo(): boolean {
-    return this.redoStack.length > 0;
+    return this.log?.canRedo() ?? false;
   }
 
   /** The entry {@link undo} would revert (label + `at`), or `undefined`. */
   peekUndo(): Pick<HistoryEntry, 'label' | 'at'> | undefined {
-    const e = this.undoStack[this.undoStack.length - 1];
-    return e ? { label: e.label, at: e.at } : undefined;
+    const info = this.log?.peekUndo();
+    return info ? { label: info.title ?? info.action, at: info.at } : undefined;
   }
 
   /** The entry {@link redo} would re-apply (label + `at`), or `undefined`. */
   peekRedo(): Pick<HistoryEntry, 'label' | 'at'> | undefined {
-    const e = this.redoStack[this.redoStack.length - 1];
-    return e ? { label: e.label, at: e.at } : undefined;
+    const info = this.log?.peekRedo();
+    return info ? { label: info.title ?? info.action, at: info.at } : undefined;
   }
 
   // ─── Recording ────────────────────────────────────────────────────────────
 
   /**
-   * Run `fn`'s mutations as one undoable entry. Mutations MUST go through the
-   * {@link HistoryRecorder} passed to `fn` to be journaled. The whole body runs
+   * Run `fn`'s mutations as one undoable entry labelled `label`. The body runs
    * inside {@link GraphStore.batch}, so the canvas sees a single flush. Nested
    * `transaction` calls merge into the outermost entry. Returns `fn`'s result.
+   *
+   * The {@link HistoryRecorder} is kept for compatibility — the store records
+   * its own writes now, so plain `store.*` calls inside `fn` join the entry too.
    */
   transaction<T>(label: string, fn: (rec: HistoryRecorder) => T): T {
-    const outermost = this.depth === 0;
-    if (outermost) this.recording = [];
-    this.depth++;
-    let result: T;
-    try {
-      result = this.store.batch(() => fn(this.recorder));
-    } finally {
-      this.depth--;
-      if (outermost) {
-        const ops = this.recording ?? [];
-        this.recording = null;
-        if (ops.length > 0) this.commit({ ops, label });
-      }
-    }
-    return result;
+    const run = (): T => this.store.batch(() => fn(this.recorder));
+    const log = this.log;
+    return log ? log.group({ title: label }, run) : run();
   }
 
   /**
-   * Record an already-applied entry. Escape hatch for mutations that happen
-   * outside {@link transaction} — e.g. a drag behaviour that writes positions
-   * during the gesture and, on release, pushes a single `moveNode` op with the
-   * captured start/end positions. The ops are assumed to be applied already;
-   * this only journals them.
+   * Record an already-applied entry. Escape hatch for mutations made
+   * unrecorded — e.g. a drag that writes positions every frame and, on
+   * release, pushes one `moveNode` op per node with the captured start / end
+   * positions. The ops are assumed to be applied already; this only journals them.
    */
   push(entry: HistoryEntry): void {
-    if (entry.ops.length === 0) return;
-    this.commit(entry);
+    this.store.recordApplied(entry.ops, entry.label !== undefined ? { title: entry.label } : {});
   }
 
   // ─── Undo / redo ──────────────────────────────────────────────────────────
 
-  /** Revert the most recent entry and move it onto the redo stack. No-op if empty. */
+  /** Revert the newest undoable entry on the log. No-op if there is none. */
   undo(): void {
-    const entry = this.undoStack.pop();
-    if (!entry) return;
-    this.store.batch(() => {
-      for (let i = entry.ops.length - 1; i >= 0; i--) this.applyInverse(entry.ops[i]!);
-    });
-    this.redoStack.push(entry);
-    this.emitChange();
+    this.log?.undo();
   }
 
-  /** Re-apply the most recently undone entry and move it back onto the undo stack. */
+  /** Re-apply the most recently undone entry. */
   redo(): void {
-    const entry = this.redoStack.pop();
-    if (!entry) return;
-    this.store.batch(() => {
-      for (const op of entry.ops) this.applyForward(op);
-    });
-    entry.at = now();
-    this.undoStack.push(entry);
-    this.emitChange();
-  }
-
-  /** The maximum undo depth. */
-  get maxDepth(): number {
-    return this.limit;
+    this.log?.redo();
   }
 
   /**
-   * Change the maximum undo depth. Lowering it drops the oldest entries past
-   * the new limit at once.
+   * The maximum undo depth — always `Infinity`.
+   *
+   * @deprecated The operation log has no limit (RFC G6).
    */
-  setLimit(limit: number): void {
-    this.limit = limit;
-    if (this.undoStack.length <= limit) return;
-    this.undoStack.splice(0, this.undoStack.length - limit);
-    this.emitChange();
+  get maxDepth(): number {
+    return Infinity;
   }
 
-  /** Wipe both stacks. Use when loading a fresh dataset. */
+  /**
+   * No-op.
+   *
+   * @deprecated The operation log has no limit (RFC G6).
+   */
+  setLimit(limit: number): void {
+    void limit;
+  }
+
+  /** Wipe the log — every entry, not only this store's. Use when loading a fresh dataset. */
   clear(): void {
-    this.undoStack.length = 0;
-    this.redoStack.length = 0;
-    this.emitChange();
+    this.log?.clear();
+  }
+
+  /** Stop following the store's log. The log itself (and its entries) stays. */
+  dispose(): void {
+    this.offLog?.();
+    this.offLog = null;
+    this.offAttach();
   }
 
   // ─── Internals ────────────────────────────────────────────────────────────
 
-  private commit(entry: HistoryEntry): void {
-    this.undoStack.push({ ...entry, at: now() });
-    if (this.undoStack.length > this.limit) this.undoStack.shift();
-    // Any new recorded change invalidates the redo branch.
-    this.redoStack.length = 0;
-    this.emitChange();
-  }
-
   private emitChange(): void {
+    const applied = this.log?.entries() ?? [];
+    let undoDepth = 0;
+    for (const entry of applied) if (undoable(entry)) undoDepth++;
     this.events.emit('change', {
       canUndo: this.canUndo,
       canRedo: this.canRedo,
-      undoDepth: this.undoStack.length,
-      redoDepth: this.redoStack.length,
+      undoDepth,
+      redoDepth: this.canRedo ? 1 : 0,
     });
   }
 
   /**
-   * The recorder handed to `transaction` callbacks. Each method applies the
-   * change to the store and appends its op (carrying the pre-mutation state) to
-   * the in-flight ops buffer.
+   * The recorder handed to `transaction` callbacks: the store's own writers
+   * (which record themselves). `moveNode` goes through `updateNode` because a
+   * bare position write is derived and unrecorded.
    */
   private readonly recorder: HistoryRecorder = {
-    addNode: (node) => {
-      this.store.addNode(node);
-      this.record({ kind: 'addNode', node: { ...node } });
-    },
-    removeNode: (id) => {
-      const node = this.store.getNode(id);
-      if (!node) return;
-      const edges = this.incidentEdges(id);
-      // `store.removeNode` clears `parentId` on every surviving child, so a
-      // member removed *after* its group is journaled already unlinked — record
-      // the children now, or undo restores the group empty.
-      const orphanedChildIds = [...this.store.childrenOf(id)];
-      this.store.removeNode(id, { cascade: true });
-      this.record({
-        kind: 'removeNode',
-        node,
-        edges,
-        ...(orphanedChildIds.length > 0 ? { orphanedChildIds } : {}),
-      });
-    },
-    updateNode: (id, patch) => {
-      const before = this.captureNodeBefore(id, patch);
-      if (before === null) return;
-      this.store.updateNode(id, patch);
-      this.record({ kind: 'updateNode', id, before, after: { ...patch } });
-    },
+    addNode: (node) => this.store.addNode(node),
+    removeNode: (id) => this.store.removeNode(id, { cascade: true }),
+    updateNode: (id, patch) => this.store.updateNode(id, patch),
     moveNode: (id, position) => {
-      const before = this.store.getPosition(id);
-      if (!before) return;
-      this.store.setPosition(id, position);
-      this.record({ kind: 'moveNode', id, before, after: { ...position } });
+      if (this.store.hasNode(id)) this.store.updateNode(id, { position: { ...position } });
     },
-    addEdge: (edge) => {
-      this.store.addEdge(edge);
-      this.record({ kind: 'addEdge', edge: { ...edge } });
-    },
-    removeEdge: (id) => {
-      const edge = this.store.getEdge(id);
-      if (!edge) return;
-      this.store.removeEdge(id);
-      this.record({ kind: 'removeEdge', edge });
-    },
-    updateEdge: (id, patch) => {
-      const before = this.captureEdgeBefore(id, patch);
-      if (before === null) return;
-      this.store.updateEdge(id, patch);
-      this.record({ kind: 'updateEdge', id, before, after: { ...patch } });
-    },
+    addEdge: (edge) => this.store.addEdge(edge),
+    removeEdge: (id) => this.store.removeEdge(id),
+    updateEdge: (id, patch) => this.store.updateEdge(id, patch),
   };
-
-  private record(op: HistoryOp): void {
-    // Outside a transaction (shouldn't happen via recorder) drop silently.
-    this.recording?.push(op);
-  }
-
-  /** Snapshot the patched fields' prior values for a node. `null` if unknown id. */
-  private captureNodeBefore(id: string, patch: Partial<GraphNode>): Partial<GraphNode> | null {
-    const node = this.store.getNode(id);
-    if (!node) return null;
-    const before: Partial<GraphNode> = {};
-    for (const key of Object.keys(patch) as (keyof GraphNode)[]) {
-      (before as Record<string, unknown>)[key] = node[key];
-    }
-    return before;
-  }
-
-  private captureEdgeBefore(id: string, patch: Partial<GraphEdge>): Partial<GraphEdge> | null {
-    const edge = this.store.getEdge(id);
-    if (!edge) return null;
-    const before: Partial<GraphEdge> = {};
-    for (const key of Object.keys(patch) as (keyof GraphEdge)[]) {
-      (before as Record<string, unknown>)[key] = edge[key];
-    }
-    return before;
-  }
-
-  /** Cloned incident edges (both directions), deduped — self-loops appear once. */
-  private incidentEdges(nodeId: string): GraphEdge[] {
-    const seen = new Set<string>();
-    const out: GraphEdge[] = [];
-    for (const edge of this.store.edgesOf(nodeId, 'both')) {
-      if (seen.has(edge.id)) continue;
-      seen.add(edge.id);
-      out.push(edge);
-    }
-    return out;
-  }
-
-  // ─── Replay (no re-journal — calls plain store.* directly) ─────────────────
-
-  private applyForward(op: HistoryOp): void {
-    switch (op.kind) {
-      case 'addNode':
-        if (!this.store.hasNode(op.node.id)) this.store.addNode(op.node);
-        break;
-      case 'removeNode':
-        if (this.store.hasNode(op.node.id)) this.store.removeNode(op.node.id, { cascade: true });
-        break;
-      case 'updateNode':
-        this.store.updateNode(op.id, op.after);
-        break;
-      case 'moveNode':
-        this.store.setPosition(op.id, op.after);
-        break;
-      case 'addEdge':
-        if (!this.store.hasEdge(op.edge.id)) this.store.addEdge(op.edge);
-        break;
-      case 'removeEdge':
-        if (this.store.hasEdge(op.edge.id)) this.store.removeEdge(op.edge.id);
-        break;
-      case 'updateEdge':
-        this.store.updateEdge(op.id, op.after);
-        break;
-    }
-  }
-
-  private applyInverse(op: HistoryOp): void {
-    switch (op.kind) {
-      case 'addNode':
-        if (this.store.hasNode(op.node.id)) this.store.removeNode(op.node.id, { cascade: true });
-        break;
-      case 'removeNode':
-        if (!this.store.hasNode(op.node.id)) this.store.addNode(op.node);
-        this.readdEdges(op.edges);
-        this.relinkChildren(op.node.id, op.orphanedChildIds);
-        break;
-      case 'updateNode':
-        this.store.updateNode(op.id, op.before);
-        break;
-      case 'moveNode':
-        this.store.setPosition(op.id, op.before);
-        break;
-      case 'addEdge':
-        if (this.store.hasEdge(op.edge.id)) this.store.removeEdge(op.edge.id);
-        break;
-      case 'removeEdge':
-        if (!this.store.hasEdge(op.edge.id)) this.store.addEdge(op.edge);
-        break;
-      case 'updateEdge':
-        this.store.updateEdge(op.id, op.before);
-        break;
-    }
-  }
-
-  /**
-   * Restore `parentId` on the children a `removeNode` unlinked. Inverses run in
-   * reverse, so by the time a group is re-added its members (removed after it)
-   * are already back — parentless. Children that are gone, or that picked up
-   * another parent since, are left alone.
-   */
-  private relinkChildren(parentId: string, childIds: string[] | undefined): void {
-    if (!childIds) return;
-    for (const childId of childIds) {
-      if (!this.store.hasNode(childId) || this.store.parentOf(childId) !== undefined) continue;
-      this.store.updateNode(childId, { parentId });
-    }
-  }
-
-  /** Re-add edges whose both endpoints exist; skip duplicates and danglers. */
-  private readdEdges(edges: GraphEdge[]): void {
-    for (const edge of edges) {
-      if (this.store.hasEdge(edge.id)) continue;
-      if (!this.store.hasNode(edge.source) || !this.store.hasNode(edge.target)) continue;
-      this.store.addEdge(edge);
-    }
-  }
 }
 
 /** Re-export Vec2 for callers that build `moveNode` ops. */

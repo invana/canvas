@@ -315,6 +315,9 @@ export class GraphLayer extends WorldLayer<
    * templates. Seeded from the default theme until a theme is published. */
   private themePalette: RolePalette = FALLBACK_PALETTE;
 
+  /** Detaches the store from the canvas's operation log; set on mount. */
+  private detachLog: (() => void) | undefined;
+
   /** Initial data from `options.initData`, applied once in `onMount`. */
   private readonly initialData: GraphData | undefined;
 
@@ -629,10 +632,18 @@ export class GraphLayer extends WorldLayer<
     // shapes that don't exist yet. Flushing here installs nodes-then-edges (the
     // store emits every `node:add` before any `edge:add`) so the config always
     // lands on a fully-painted layer.
+    //
+    // `initData` is configuration — the starting state, not a change anyone
+    // made — so it loads unrecorded, before the store joins the canvas's log.
     if (this.initialData) {
-      this.setData(this.initialData);
+      const initial = this.initialData;
+      this.store.internal.run(() => this.setData(initial));
       this.store.flush();
     }
+
+    // From here on every content write to the store is recorded into the
+    // canvas's one operation log, as source `this.id` (RFC F5).
+    if (ctx.log) this.detachLog = this.store.attachLog(ctx.log, this.id);
   }
 
   /**
@@ -658,7 +669,8 @@ export class GraphLayer extends WorldLayer<
       for (const node of this.store.nodes()) {
         if (!this.isGroupNode(node)) continue;
         const prevStyle = (node.style ?? {}) as NodeStyle;
-        this.store.updateNode(node.id, { style: { ...prevStyle, ...groupPatch } });
+        // Derived from the theme, not authored: never recorded (RFC F6).
+        this.store.internal.updateNode(node.id, { style: { ...prevStyle, ...groupPatch } });
       }
     }
 
@@ -718,6 +730,8 @@ export class GraphLayer extends WorldLayer<
     this.projector?.destroy();
     this.projector = undefined;
     this.store.bindBus(undefined);
+    this.detachLog?.();
+    this.detachLog = undefined;
     // Not ours to destroy: the renderer belongs to the surface, which tears it
     // down in its own `destroy()` when the layer unmounts. Releasing the
     // reference is all this layer owes.

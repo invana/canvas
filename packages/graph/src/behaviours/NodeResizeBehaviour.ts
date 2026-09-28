@@ -134,6 +134,10 @@ interface DragState {
   readonly startGroup: GroupOptions | undefined;
   /** Full prior style — preserved verbatim outside the fields we mutate. */
   readonly startStyle: NodeStyle;
+  /** Node position at drag start — the `before` of the one history entry on release. */
+  readonly startPosition: { x: number; y: number } | undefined;
+  /** Whether any frame wrote a new size — only then is the gesture journalled. */
+  resized: boolean;
   /** Renderer-projected world bounds at drag start. */
   readonly startBounds: { left: number; top: number; right: number; bottom: number };
   /** AABB centroid (for circle radial drags). */
@@ -368,6 +372,8 @@ export class NodeResizeBehaviour extends Behaviour {
       target,
       startGroup: target === 'group' ? { ...(style.group as GroupOptions) } : undefined,
       startStyle: (node.style ?? {}) as NodeStyle,
+      startPosition: node.position ? { ...node.position } : undefined,
+      resized: false,
       startBounds: {
         left: worldBounds.x,
         top: worldBounds.y,
@@ -392,6 +398,7 @@ export class NodeResizeBehaviour extends Behaviour {
 
   private endDrag(): void {
     if (!this.state) return;
+    this.journalResize(this.state);
     window.removeEventListener('pointermove', this.onWindowPointerMove);
     window.removeEventListener('pointerup', this.onWindowPointerUp);
     window.removeEventListener('pointercancel', this.onWindowPointerUp);
@@ -502,7 +509,24 @@ export class NodeResizeBehaviour extends Behaviour {
     if (mayWritePos && next.posX !== undefined && next.posY !== undefined) {
       patch.position = { x: next.posX, y: next.posY };
     }
-    this.layer.store.updateNode(st.id, patch);
+    // Every frame is a derived write; the gesture is journalled once, on
+    // release ({@link journalResize}) — RFC F6.
+    this.layer.store.internal.updateNode(st.id, patch);
+    st.resized = true;
+  }
+
+  /** Record the whole gesture as one undoable `'resize'` entry, start → final. */
+  private journalResize(st: DragState): void {
+    const store = this.layer?.store;
+    const node = st.resized ? store?.getNode(st.id) : undefined;
+    if (!store || !node) return;
+    const before: Partial<GraphNode> = { style: st.startStyle };
+    const after: Partial<GraphNode> = { style: node.style };
+    if (st.startPosition && node.position) {
+      before.position = st.startPosition;
+      after.position = { ...node.position };
+    }
+    store.recordApplied([{ kind: 'updateNode', id: st.id, before, after }], { title: 'resize' });
   }
 }
 

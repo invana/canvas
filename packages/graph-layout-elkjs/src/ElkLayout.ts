@@ -388,7 +388,7 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
         // into its own node. The short border-hugging leg this leaves behind is
         // the lesser defect; see the History section of
         // rfc:fix-2026-09-13-edge-arrow-style-fields-are-never-read.
-        store.updateEdge(e.id, {
+        store.internal.updateEdge(e.id, {
           style: { ...prev, shape: { ...(prev.shape ?? {}), pathType: 'orth', waypoints } },
         });
       }
@@ -463,7 +463,7 @@ function routeFeedbackEdges(
           { x: lane, y: to.cy },
         ];
     const prev = (store.getEdge(id)?.style as EdgeStyle | undefined) ?? {};
-    store.updateEdge(id, {
+    store.internal.updateEdge(id, {
       style: { ...prev, shape: { ...(prev.shape ?? {}), pathType: 'orth', waypoints } },
     });
   });

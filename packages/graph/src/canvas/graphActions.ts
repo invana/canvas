@@ -121,57 +121,42 @@ export function pasteAndSelect(
   ]);
 }
 
-/**
- * Whether the graph stack's step goes first. Undo takes the **newer** top (the
- * most recent edit). Redo takes the **older** top: undo walked back newest →
- * oldest, so the step undone last — the one to redo first — is the older one.
- * Ties go to the graph stack.
- */
-function graphGoesFirst(
-  graph: { at?: number } | undefined,
-  view: { at: number } | undefined,
-  redo = false,
-): boolean {
-  if (!view) return true;
-  if (!graph) return false;
-  const at = graph.at ?? 0;
-  return redo ? at <= view.at : at >= view.at;
-}
-
 /*
- * Two stacks, one Undo button: graph edits (a `GraphHistory` over a layer's
- * store) and definition edits (`canvas.history`, the Studio's `edit:*`
- * applies). Each function below acts on whichever top should go first.
+ * One Undo button, one log: graph edits and definition edits (the Studio's
+ * `edit:*` applies) are entries in the canvas's single operation log, so
+ * `canvas.history` alone decides the order (RFC
+ * `feat-2026-09-28-an-analysis-cannot-be-recorded-or-replayed`, F4). The
+ * `history` argument only matters when it journals a store that is *not* on
+ * the canvas's log (a layer that never mounted) — then it is the fallback.
  */
 
 /**
- * Undo the newer of the two tops — the graph `history`'s or `canvas.history`'s.
- * With no graph `history` (a plain `Canvas`, or `history: false`), `canvas.history` alone.
- * No-op when both stacks are empty.
+ * Undo the newest undoable change on the canvas — a graph edit or a definition
+ * edit, whichever came last. Falls back to `history` when the canvas has
+ * nothing to undo and `history` is on a log of its own. No-op when neither can undo.
  */
 export function undoNewest(canvas: Canvas, history: GraphHistory | null): void {
-  if (history && graphGoesFirst(history.peekUndo(), canvas.history.peekUndo())) history.undo();
-  else canvas.history.undo();
+  if (canvas.history.canUndo()) canvas.history.undo();
+  else if (history?.canUndo) history.undo();
 }
 
 /**
- * Redo the older of the two redo tops (the step undone last), from the graph
- * `history` or `canvas.history` — `canvas.history` alone when `history` is
- * `null`. No-op when both redo stacks are empty.
+ * Redo the most recently undone change on the canvas, falling back to `history`
+ * as {@link undoNewest} does. No-op when neither can redo.
  */
 export function redoNewest(canvas: Canvas, history: GraphHistory | null): void {
-  if (history && graphGoesFirst(history.peekRedo(), canvas.history.peekRedo(), true)) history.redo();
-  else canvas.history.redo();
+  if (canvas.history.canRedo()) canvas.history.redo();
+  else if (history?.canRedo) history.redo();
 }
 
-/** Whether either stack — the graph `history` (when given) or `canvas.history` — has a step to undo. */
+/** Whether the canvas — or, on a log of its own, `history` — has a change to undo. */
 export function canUndoEither(canvas: Canvas, history: GraphHistory | null): boolean {
-  return (history?.canUndo ?? false) || canvas.history.canUndo();
+  return canvas.history.canUndo() || (history?.canUndo ?? false);
 }
 
-/** Whether either stack — the graph `history` (when given) or `canvas.history` — has a step to redo. */
+/** Whether the canvas — or, on a log of its own, `history` — has a change to redo. */
 export function canRedoEither(canvas: Canvas, history: GraphHistory | null): boolean {
-  return (history?.canRedo ?? false) || canvas.history.canRedo();
+  return canvas.history.canRedo() || (history?.canRedo ?? false);
 }
 
 /** The layer's current edge `shape` template, or `{}`. */

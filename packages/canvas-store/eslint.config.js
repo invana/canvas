@@ -8,8 +8,9 @@ import { config } from "@repo/eslint-config/base";
  *   - `src/adapters/zustand/**` — the one sanctioned zustand importer. Everything
  *     else in the kernel programs against the `ReactiveStore` port, exactly like
  *     every consumer does.
- *   - `src/port|history|telemetry/**` — immer's legitimate callers: the machinery
- *     that turns mutations into the patches the port exposes.
+ *   - `src/port|history|log|telemetry/**` — immer's legitimate callers: the
+ *     machinery that turns mutations into the patches the port exposes, and the
+ *     operation log that replays them.
  *
  * The drawing-library ban still applies in full: this package renders nothing.
  * `scripts/check-renderer-boundary.mjs` allows the same paths for the same reason
@@ -24,6 +25,7 @@ export default [
       "src/adapters/zustand/**",
       "src/port/**",
       "src/history/**",
+      "src/log/**",
       "src/telemetry/**",
     ],
     rules: {

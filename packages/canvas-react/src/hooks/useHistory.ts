@@ -34,21 +34,22 @@ function hasRedraw(layer: unknown): layer is RedrawableLayer {
 }
 
 /**
- * Undo/redo + redraw over **both** undo stacks — the graph edits journalled by
- * the `GraphHistory` (a `<GraphHistoryProvider>` ancestor's, else the one the
- * `GraphCanvas` owns for `layerId` — see {@link useGraphHistory}), and the canvas's
- * definition edits (`canvas.history`: a Studio editor's `edit:*` applies).
- * `undo` reverts whichever top is newer, `redo` re-applies the step undone
- * last — `@invana/graph`'s `undoNewest` / `redoNewest`, the same functions the
- * `history.undo` / `history.redo` commands call, so this hook and a saved
- * Undo button always do the same thing. With no graph history at all (a
- * plain `Canvas`, or `history: false`) it covers `canvas.history` alone.
+ * Undo/redo + redraw over the canvas's **one operation log** — graph edits
+ * (recorded by the layer's store; the `GraphHistory` from a
+ * `<GraphHistoryProvider>` ancestor, else the one the `GraphCanvas` owns for
+ * `layerId` — see {@link useGraphHistory}) and definition edits (a Studio
+ * editor's `edit:*` applies) are entries in the same log, so `undo` takes back
+ * the newest one, whichever it is. `@invana/graph`'s `undoNewest` /
+ * `redoNewest` — the same functions the `history.undo` / `history.redo`
+ * commands call — so this hook and a saved Undo button always do the same thing.
  *
- * `canUndo` / `canRedo` stay reactive via the graph history's `change` event
- * and `canvas.history`'s subscription. `redraw` goes straight to the layer.
+ * `canUndo` / `canRedo` stay reactive via `canvas.history`'s subscription (and
+ * the graph history's `change` event). `redraw` goes straight to the layer.
  *
  * Changed 2026-09-29 (H9): `undo` / `redo` / `canUndo` / `canRedo` used to act
- * on the graph stack only.
+ * on the graph stack only. Changed 2026-09-28 (RFC
+ * `feat-2026-09-28-an-analysis-cannot-be-recorded-or-replayed`, F4): the two
+ * stacks became one log; there is no "newer top" arbitration any more.
  */
 export function useHistory(
   options: UseHistoryOptions = {},

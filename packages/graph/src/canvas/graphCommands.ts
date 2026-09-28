@@ -232,9 +232,10 @@ function editCommands(access: GraphEditAccess, defaultLayerId = 'graph'): EditCo
     },
   });
   const commands: EditCommands = {
-    // One Undo button for two stacks: the layer's graph edits and the definition
-    // edits (`canvas.history`) — `undoNewest` / `redoNewest`. `args.layerId`
-    // (default `defaultLayerId`) is accepted but not described: a saved Undo is arg-less.
+    // One Undo button, one log: graph and definition edits are entries in
+    // `canvas.history` — `undoNewest` / `redoNewest`. `args.layerId` (default
+    // `defaultLayerId`) only picks the fallback history for a store that is not
+    // on the canvas's log; not described, as a saved Undo is arg-less.
     'history.undo': {
       label: 'Undo',
       isEnabled: (canvas, args) => canUndoEither(canvas, access.history(layerIdOf(args))),

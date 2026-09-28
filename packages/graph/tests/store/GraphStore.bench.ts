@@ -9,6 +9,7 @@
  * but the reported numbers should be inspected and stored in CI artifacts.
  */
 import { bench, describe } from 'vitest';
+import { createOperationLog } from '@invana/canvas';
 
 import { GraphStore } from '../../src/store';
 
@@ -58,6 +59,28 @@ describe('GraphStore bulk insert', () => {
     },
     { iterations: 5 },
   );
+});
+
+describe('GraphStore.applyDelta recording (V10)', () => {
+  // Target (rfc:feat-2026-09-28-an-analysis-cannot-be-recorded-or-replayed V10):
+  // a 20k-node + 20k-edge load with the operation log attached stays within
+  // 10% of the same load with no log.
+  const LOAD = 20_000;
+  const nodes = Array.from({ length: LOAD }, (_, i) => ({ id: `n-${i}`, type: 'node', data: { i }, position: { x: i, y: i } }));
+  const edges = Array.from({ length: LOAD }, (_, i) => ({
+    id: `e-${i}`,
+    type: 'edge',
+    source: `n-${i}`,
+    target: `n-${(i * 7 + 1) % LOAD}`,
+  }));
+  bench('applyDelta 20k + 20k, no log', () => {
+    new GraphStore({ initialCapacity: LOAD }).applyDelta({ added: { nodes, edges } });
+  });
+  bench('applyDelta 20k + 20k, recorded', () => {
+    const store = new GraphStore({ initialCapacity: LOAD });
+    store.attachLog(createOperationLog());
+    store.applyDelta({ added: { nodes, edges } });
+  });
 });
 
 describe('GraphStore.neighborsOf', () => {

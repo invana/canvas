@@ -8,10 +8,12 @@
  * to reconstruct a deleted node/edge — the store's `node:remove` / `edge:remove`
  * events fire *after* the data is already gone.
  *
- * Only mutations routed through {@link GraphHistory.transaction} (or pushed via
- * {@link GraphHistory.push}) are recorded. Silent layout-sim position writes and
- * streaming feed deltas bypass the journal by design, so they never flood the
- * undo stack.
+ * Since the operation log landed (RFC
+ * `feat-2026-09-28-an-analysis-cannot-be-recorded-or-replayed`, F5) the store
+ * itself records every content write — `applyDelta` and the writers that wrap
+ * it — as these ops, into the canvas's one log. Position writes
+ * (`setPosition` / `setPositionsBulk`), runtime states and `store.internal.*`
+ * are derived and never recorded.
  */
 
 import type { GraphEdge, GraphNode, Vec2 } from '../store';
@@ -25,12 +27,19 @@ import type { GraphEdge, GraphNode, Vec2 } from '../store';
  */
 export type HistoryOp =
   | { kind: 'addNode'; node: GraphNode }
+  /** Consecutive adds within one batch, collected (the bulk-load path). Inverse removes them, last first. */
+  | { kind: 'addNodes'; nodes: GraphNode[] }
+  | { kind: 'addEdges'; edges: GraphEdge[] }
   | { kind: 'removeNode'; node: GraphNode; edges: GraphEdge[]; orphanedChildIds?: string[] }
   | { kind: 'updateNode'; id: string; before: Partial<GraphNode>; after: Partial<GraphNode> }
   | { kind: 'moveNode'; id: string; before: Vec2; after: Vec2 }
   | { kind: 'addEdge'; edge: GraphEdge }
   | { kind: 'removeEdge'; edge: GraphEdge }
-  | { kind: 'updateEdge'; id: string; before: Partial<GraphEdge>; after: Partial<GraphEdge> };
+  | { kind: 'updateEdge'; id: string; before: Partial<GraphEdge>; after: Partial<GraphEdge> }
+  /** Explicit hide / show of `ids` (only the ids whose flag actually changed). Inverse flips `hidden`. */
+  | { kind: 'setHidden'; element: 'node' | 'edge'; ids: string[]; hidden: boolean }
+  /** A whole-store wipe (`GraphStore.clear`), carrying what it removed. Inverse re-adds it. */
+  | { kind: 'clear'; nodes: GraphNode[]; edges: GraphEdge[] };
 
 /** One undoable unit of work — a labelled, ordered list of {@link HistoryOp}s. */
 export interface HistoryEntry {
@@ -40,8 +49,7 @@ export interface HistoryEntry {
   label?: string;
   /**
    * When the entry was recorded (or last redone), in `performance.now()` ms —
-   * stamped by `GraphHistory`. Lets one Undo button pick the newer step between
-   * this history and the canvas's definition history.
+   * stamped by the operation log.
    */
   at?: number;
 }
@@ -70,12 +78,21 @@ export interface HistoryRecorder {
 
 /** Event-map for {@link GraphHistory.events}. */
 export type GraphHistoryEventMap = {
-  /** Fired after every undo / redo / record / clear so observers can re-read state. */
+  /**
+   * Fired after every undo / redo / record / clear on the log so observers can
+   * re-read state. `undoDepth` counts the applied undoable entries; `redoDepth`
+   * is `1` when something can be redone and `0` otherwise (the shared log does
+   * not expose the length of its redo side).
+   */
   change: { canUndo: boolean; canRedo: boolean; undoDepth: number; redoDepth: number };
 };
 
 /** Constructor options for {@link GraphHistory}. */
 export interface GraphHistoryOptions {
-  /** Maximum undo depth; oldest entries are dropped past this. Default `100`. */
+  /**
+   * Ignored.
+   *
+   * @deprecated The operation log keeps every entry (no limit, RFC G6).
+   */
   limit?: number;
 }

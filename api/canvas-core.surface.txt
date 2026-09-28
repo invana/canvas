@@ -1,7 +1,7 @@
 # @invana/canvas-core — public API surface (generated; do not hand-edit)
 # Regenerate: pnpm build && node scripts/check-api-surface.mjs --write
 
-## . (372 exports)
+## . (388 exports)
 AnchorCtx
 AnchorShapeRef
 AnchorSpec
@@ -21,6 +21,7 @@ Camera
 CameraChangeKind
 CameraInputConfig
 CameraInputModifier
+CameraIntent
 CameraOptions
 CameraTransform
 CameraTransformValue
@@ -76,11 +77,15 @@ ControlWidgetItemSpec
 CustomElementCtor
 DEFAULT_ENDPOINT_BADGE_GAP_PX
 DEFAULT_POSITION_TRANSITION_MS
+DataLogPart
+DataOpAdapter
 DataSource
 DecorationSpec
 DecorationTarget
 DeepPartial
 DefaultGestureArbiter
+Delta
+DeltaOptions
 DirtyBatcher
 DirtySnapshot
 EASING_NAMES
@@ -114,6 +119,7 @@ HeadlessCameraBinding
 HeadlessElementRenderer
 HeadlessRenderer
 HeadlessSurface
+HistoryView
 HitResult
 HtmlTagStyle
 IAnchor
@@ -156,6 +162,11 @@ LayoutRunOptions
 LiquidFillDecorationStyle
 Listener
 LocalSpec
+LogEntry
+LogEntryFilter
+LogGroupMeta
+LogPart
+LogStepInfo
 LoopCurvePresetName
 MarchingAntsConnectorDecorationStyle
 MarchingAntsDecorationStyle
@@ -166,6 +177,7 @@ NamedBadgePlacement
 NodeDelta
 NodeRecord
 Obstacle
+OperationLog
 OverlayFill
 OverlayFillLike
 OverlaySpace
@@ -177,6 +189,8 @@ PathSpec
 PathStyleEndpoints
 PinchInputOptions
 PlaneName
+Playbook
+PlaybookSpec
 Point
 PolygonSpec
 Polyline
@@ -234,6 +248,7 @@ SpecProjectorOptions
 SpecStore
 StarSpec
 StateCell
+StepSpec
 StoreChange
 StyleOverride
 SurfaceBackdrop
@@ -257,6 +272,7 @@ Tween
 TweenOptions
 Update
 Vec2
+ViewLogPart
 WheelInputOptions
 animatePositions
 attrs

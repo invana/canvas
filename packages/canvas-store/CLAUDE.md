@@ -19,6 +19,7 @@ package.
 | Area | Contents |
 |---|---|
 | `port/` | the **engine** behind core's `ReactiveStore` contract: `patch.ts` (immer `produceWithPatches`), `store-core.ts` (`createStoreFromCell` — shared change/batch logic), `createMemoryStore` (zustand-free, still immer-backed), `createHistory` (undo/redo over the patch stream) |
+| `log/` | `createOperationLog` — the one record behind `canvas.history`: view patches + data-source ops in one entry, an `actor` per entry, linear undo that steps over record-only entries (selection, focus), branches kept, no limit; `historyView` is its read + undo surface. `createHistory` is now a deprecated wrapper over it |
 | `adapters/` | `zustand.ts` — the repo's only zustand importer; the planned `yjs.ts` sibling is why the folder exists |
 | `hit/` | picking: `HitIndex` (rbush) + `PickingIndex` (narrow phase over core's `shapeGeometry`) |
 | `telemetry/` | `withTelemetry` port decorator, tracing/metrics/logging adapters, `wireTelemetry` |

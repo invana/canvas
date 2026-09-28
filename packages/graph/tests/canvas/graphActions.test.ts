@@ -58,6 +58,8 @@ function makeCanvas() {
   layer.store.addNode({ id: 'b', type: 'node', position: { x: 50, y: 0 } });
   layer.store.addEdge({ id: 'ab', type: 'edge', source: 'a', target: 'b' });
   const clipboard = new GraphClipboard(layer.store);
+  // The setup data is the starting state, not an edit: start with empty history.
+  canvas.history.clear();
   return { canvas, layer, click, clipboard };
 }
 
@@ -173,7 +175,7 @@ describe('clipboard actions', () => {
     canvas.destroy();
   });
 
-  it('clearGraphLayer is one undoable step with a history, a plain clear without', () => {
+  it('clearGraphLayer is one undoable step with a history — and without one, since the store records its own clear', () => {
     const { canvas, layer } = makeCanvas();
     const history = new GraphHistory(layer.store);
     clearGraphLayer(canvas, 'graph', history);
@@ -184,16 +186,19 @@ describe('clipboard actions', () => {
 
     clearGraphLayer(canvas, 'graph', null);
     expect(layer.store.getNode('a')).toBeUndefined();
-    expect(history.canUndo).toBe(false);
+    // The layer's `clear()` goes through the store, which records it (RFC F5).
+    expect(history.canUndo).toBe(true);
+    history.undo();
+    expect(layer.store.getNode('a')).toBeDefined();
     clearGraphLayer(canvas, 'missing', history); // no-op
     canvas.destroy();
   });
 });
 
-describe('two-stack undo', () => {
+describe('one-log undo (graph + definition edits in canvas.history)', () => {
   const EDIT = 'edit:settings:behaviours:brush-select';
 
-  it('undo takes the newer top, redo the older redo top', async () => {
+  it('undo takes the newest change, redo the one undone last', async () => {
     const { canvas, layer } = makeCanvas();
     const brush = canvas.behaviours.get<BrushSelectBehaviour>('brush-select')!;
     const history = new GraphHistory(layer.store);
@@ -249,11 +254,12 @@ describe('two-stack undo', () => {
     canvas.destroy();
   });
 
-  it('either stack alone enables and drives undo / redo', () => {
+  it('a definition edit alone enables and drives undo / redo — on the graph handle too', () => {
     const { canvas, layer } = makeCanvas();
     const history = new GraphHistory(layer.store);
     canvas.update({ behaviours: { 'brush-select': { enableElements: ['shape'] } } }, EDIT);
-    expect(history.canUndo).toBe(false);
+    // One log: the layer's history handle sees the definition edit as well.
+    expect(history.canUndo).toBe(true);
     expect(canUndoEither(canvas, history)).toBe(true);
     undoNewest(canvas, history);
     expect(canvas.history.canUndo()).toBe(false);

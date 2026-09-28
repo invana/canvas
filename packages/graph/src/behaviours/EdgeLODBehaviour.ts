@@ -272,7 +272,7 @@ export class EdgeLODBehaviour extends Behaviour {
       if (!store.isEdgeHidden(id)) toHide.push(id);
     }
     if (toHide.length === 0) return;
-    store.hideEdges(toHide);
+    store.internal.hideEdges(toHide);
     for (const id of toHide) this.hiddenByUs.add(id);
   }
 
@@ -280,7 +280,7 @@ export class EdgeLODBehaviour extends Behaviour {
   private show(): void {
     const store = this.layer?.store;
     if (!store || this.hiddenByUs.size === 0) return;
-    store.showEdges(this.hiddenByUs);
+    store.internal.showEdges(this.hiddenByUs);
     this.hiddenByUs.clear();
   }
 }

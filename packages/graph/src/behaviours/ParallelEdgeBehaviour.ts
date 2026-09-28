@@ -450,7 +450,7 @@ function applyPatch(
     (nextShape as { targetAnchorOpts: Record<string, unknown> }).targetAnchorOpts =
       patch.targetAnchorOpts;
   }
-  store.updateEdge(patch.edgeId, {
+  store.internal.updateEdge(patch.edgeId, {
     style: { ...priorStyle, shape: nextShape },
   });
 }

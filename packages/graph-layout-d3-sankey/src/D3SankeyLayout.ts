@@ -186,7 +186,7 @@ export class D3SankeyLayout extends Layout<GraphLayer> {
           existing.style && typeof existing.style === 'object'
             ? (existing.style as Record<string, unknown>)
             : {};
-        store.updateNode(id, {
+        store.internal.updateNode(id, {
           style: {
             ...existingStyle,
             shape: { kind: 'rect', width: size.width, height: size.height },
@@ -219,7 +219,7 @@ export class D3SankeyLayout extends Layout<GraphLayer> {
           existing.style && typeof existing.style === 'object'
             ? (existing.style as Record<string, unknown>)
             : {};
-        store.updateEdge(link.id, {
+        store.internal.updateEdge(link.id, {
           style: {
             ...existingStyle,
             shape: {

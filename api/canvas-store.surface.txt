@@ -1,7 +1,7 @@
 # @invana/canvas-store — public API surface (generated; do not hand-edit)
 # Regenerate: pnpm build && node scripts/check-api-surface.mjs --write
 
-## . (310 exports)
+## . (330 exports)
 AnchorCtx
 AnchorShapeRef
 AnchorSpec
@@ -13,6 +13,7 @@ BadgeShapeSpec
 BaseConnectorSpec
 BaseShapeSpec
 CANVAS_SOURCE
+CameraIntent
 CameraTransform
 CanvasActions
 CanvasEvent
@@ -59,10 +60,14 @@ ControlToggleItemSpec
 ControlWidgetItemSpec
 Counter
 CreateCanvasStoreOptions
+DataLogPart
+DataOpAdapter
 DataSource
 DecorationSpec
 DecorationTarget
 DeepPartial
+Delta
+DeltaOptions
 DirtyBatcher
 DirtySnapshot
 EdgeRecord
@@ -92,6 +97,7 @@ Histogram
 History
 HistoryOptions
 HistoryStepInfo
+HistoryView
 HitEntry
 HitGeometrySource
 HitIndex
@@ -122,8 +128,13 @@ LiquidFillDecorationStyle
 Listener
 LocalSpec
 LogAttributes
+LogEntry
+LogEntryFilter
+LogGroupMeta
 LogLevel
+LogPart
 LogRecord
+LogStepInfo
 Logger
 MarchingAntsConnectorDecorationStyle
 MarchingAntsDecorationStyle
@@ -136,6 +147,8 @@ NodeDelta
 NodeRecord
 NoopSink
 Obstacle
+OperationLog
+OperationLogOptions
 Patch
 Path
 PathCommand
@@ -145,6 +158,8 @@ PickingCamera
 PickingIndex
 PickingIndexOptions
 PlaneName
+Playbook
+PlaybookSpec
 Point
 PolygonSpec
 Polyline
@@ -197,6 +212,7 @@ SpecFlush
 SpecStore
 StarSpec
 StateCell
+StepSpec
 StoreChange
 StyleOverride
 TabAlign
@@ -220,6 +236,8 @@ Tracer
 TransformDelta
 Update
 Vec2
+ViewLogPart
+ViewPatchMode
 applyDeepPartial
 boundsOfArc
 boundsOfCircle
@@ -263,6 +281,7 @@ createHttpMeter
 createInteractionTracer
 createLogBridge
 createMemoryStore
+createOperationLog
 createReactiveStore
 createStoreFromCell
 createTapTracer
@@ -274,6 +293,7 @@ distanceToSegmentSq
 fitSpecToContent
 fitTabbedRectToContent
 hasSilhouetteFill
+historyView
 isInherit
 offsetPolygon
 onCanvasStoreCreated

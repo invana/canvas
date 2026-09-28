@@ -133,6 +133,32 @@ export { createMemoryStore } from './port/createMemoryStore';
 // ─── History ──────────────────────────────────────────────────────────────────
 export { createHistory, type History, type HistoryOptions, type HistoryStepInfo } from './port/createHistory';
 
+// ─── Operation log (the one record behind `canvas.history`) ──────────────────
+export {
+  createOperationLog,
+  type OperationLogOptions,
+  type ViewPatchMode,
+} from './log/createOperationLog';
+export { historyView } from './log/historyView';
+export type {
+  ViewLogPart,
+  DataLogPart,
+  LogPart,
+  LogEntry,
+  LogEntryFilter,
+  LogStepInfo,
+  Delta,
+  DeltaOptions,
+  DataOpAdapter,
+  LogGroupMeta,
+  OperationLog,
+  HistoryView,
+  CameraIntent,
+  StepSpec,
+  PlaybookSpec,
+  Playbook,
+} from '@invana/canvas-core';
+
 // ─── Picking (rbush spatial index + narrow phase over core's geometry) ────────
 export { PickingIndex, connectorHitBoxes } from './hit/PickingIndex';
 export type {

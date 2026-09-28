@@ -546,7 +546,7 @@ export class CollapseExpandBehaviour extends Behaviour<CollapseExpandBehaviourOp
     const badges = badge ? [...others, badge] : others;
     const { badges: _prev, ...rest } = style;
     const next: NodeStyle = badges.length > 0 ? { ...rest, badges } : rest;
-    this.layer!.store.updateNode(node.id, { style: next });
+    this.layer!.store.internal.updateNode(node.id, { style: next });
   }
 }
 

@@ -383,7 +383,7 @@ export class NodeCentralityBehaviour extends Behaviour {
           labelScale > 0
             ? clamp(size * labelScale, labelMinSize, labelMaxSize)
             : this.prior.get(id)!.labelFontSize;
-        store.updateNode(id, {
+        store.internal.updateNode(id, {
           style: { ...prevStyle, size, labelFontSize },
         });
       }
@@ -447,7 +447,7 @@ export class NodeCentralityBehaviour extends Behaviour {
         if (prev.size !== undefined) (restored as NodeStyle & { size?: number }).size = prev.size;
         if (prev.labelFontSize !== undefined)
           (restored as NodeStyle & { labelFontSize?: number }).labelFontSize = prev.labelFontSize;
-        store.updateNode(id, { style: restored });
+        store.internal.updateNode(id, { style: restored });
       }
     } finally {
       this.patching = false;

@@ -343,7 +343,7 @@ export class D3HierarchyLayout extends SubgraphPositionLayout<D3HierarchyLayoutO
             existing.style && typeof existing.style === 'object'
               ? (existing.style as Record<string, unknown>)
               : {};
-          store.updateNode(id, {
+          store.internal.updateNode(id, {
             style: { ...existingStyle, shape: { kind: 'circle', radius: diameter / 2 } },
           });
         }
@@ -360,7 +360,7 @@ export class D3HierarchyLayout extends SubgraphPositionLayout<D3HierarchyLayoutO
             existing.style && typeof existing.style === 'object'
               ? (existing.style as Record<string, unknown>)
               : {};
-          store.updateNode(id, {
+          store.internal.updateNode(id, {
             style: {
               ...existingStyle,
               shape: {

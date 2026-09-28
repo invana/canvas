@@ -142,6 +142,14 @@ A node's **`.data` is the only field persisted to the graph backend.** `style`, 
 - **Converge.** Skip the write when the slot already matches, so the flush it causes finds nothing more to change.
 - **Clean up** in `onDisable` / `onDestroy`, and treat an imported record's stale slot as something to reconcile away.
 - **Never write `.data`.** That is the user's graph.
+- **Write through `store.internal.*`.** The store records every content write
+  into the canvas's operation log (`canvas.history`); a derived write made
+  through the public writers would become an undo step that the behaviour then
+  recomputes over. `store.internal.updateNode` / `updateEdge` / `hideEdges` / …
+  (or `store.internal.run(fn)`) write the same thing unrecorded. A gesture that
+  writes every frame (drag, resize) writes frames through `internal` and
+  journals once on release with `store.recordApplied(ops, { title })`. See
+  `docs/rfcs/feat/2026-09-28-an-analysis-cannot-be-recorded-or-replayed.md` (F5 / F6).
 
 See `docs/rfcs/feat/2026-09-25-collapsed-count-badge-is-hardcoded-in-graphlayer.md`.
 

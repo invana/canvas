@@ -41,7 +41,15 @@ import {
 } from '@invana/canvas-store';
 import { createDefaultRenderer } from '@invana/renderer-pixijs';
 
-import { CanvasThemeState, createHistory, type History } from '@invana/canvas-store';
+import {
+  CanvasThemeState,
+  createOperationLog,
+  historyView,
+  type HistoryView,
+  type OperationLog,
+  type Patch,
+  type StoreChange,
+} from '@invana/canvas-store';
 import { Camera } from '@invana/canvas-core';
 import { DefaultGestureArbiter, type GestureArbiter } from '@invana/canvas-core';
 import type { Rect } from '@invana/canvas-store';
@@ -183,6 +191,14 @@ export interface CanvasOptions {
    * event-bus, and per-gesture interaction spans.
    */
   telemetry?: CanvasTelemetryConfig;
+
+  /**
+   * The session actor — who `canvas.history` attributes a change to when the
+   * write names nobody (`applyDelta(delta, { actor })` names one). Free text:
+   * `'user'`, `'user:ravi'`, `'engine'`, `'assistant'`. Default `'user'`;
+   * settable later through {@link Canvas.actor}.
+   */
+  actor?: string;
 }
 
 // ─── Canvas ────────────────────────────────────────────────────────────────
@@ -191,8 +207,23 @@ export interface CanvasOptions {
 const EDIT_ACTION_PREFIX = 'edit:';
 /** Same-action edits closer together than this merge into one undo step. */
 const EDIT_MERGE_MS = 600;
-/** A `Canvas.history` undo / redo of a user edit (see `createHistory`'s action names). */
+/** A `Canvas.history` undo / redo of a user edit (the log's replay action names). */
 const HISTORY_EDIT_ACTION = /^(undo|redo):edit:/;
+/** Interaction slices recorded as view intent (logged, but plain undo steps over them). */
+const RECORDED_INTERACTION = new Set<string | number>(['selection', 'focus']);
+
+/**
+ * How `Canvas.history` treats one view patch (RFC G5): a user edit's
+ * `definition/*` patches are undoable; selection and focus are recorded but
+ * skipped by plain undo; everything else (programmatic config, camera, hover,
+ * layout progress) is not recorded.
+ */
+function classifyViewPatch(patch: Patch, change: StoreChange<CanvasView>): 'undoable' | 'record' | 'skip' {
+  if (change.action?.startsWith(EDIT_ACTION_PREFIX)) return patch.path[0] === 'definition' ? 'undoable' : 'skip';
+  if (patch.path[0] === 'interaction' && RECORDED_INTERACTION.has(patch.path[1]!)) return 'record';
+  return 'skip';
+}
+
 /** The definition slices whose values live on registered instances. */
 const DEFINITION_SECTIONS = ['layers', 'behaviours', 'layouts'] as const;
 
@@ -232,19 +263,38 @@ export class Canvas {
   readonly store: CanvasStore;
 
   /**
-   * Undo / redo for **user edits to the definition** — the Studio editors'
-   * applies. Records only {@link update} calls whose action starts with `edit:`
-   * (`canvas.update(patch, 'edit:control-panels')`), and only their
-   * `definition/*` patches: programmatic config (a React root's `config` prop, a
-   * `<ControlPanel>` mount), camera, hover, selection and layout progress are
-   * never recorded.
+   * The record: **one operation log** of what changed, who changed it, and how
+   * to take it back (RFC `feat-2026-09-28-an-analysis-cannot-be-recorded-or-replayed`).
+   * Written only by the canvas — nobody writes to it directly.
    *
-   * Undo and redo re-apply the reverted `layers` / `behaviours` / `layouts`
-   * slices to the live instances, so what's drawn follows the store. Graph data
-   * has its own history (`GraphHistory`); the `history.undo` / `history.redo`
-   * commands pick whichever of the two holds the newer step.
+   * What enters it (G5):
+   * - **undoable** — a user edit to the definition: an {@link update} whose
+   *   action starts with `edit:` (`canvas.update(patch, 'edit:control-panels')`),
+   *   its `definition/*` patches only; and every recorded data write of an
+   *   attached data source (a `GraphLayer`'s `store.applyDelta` and the store
+   *   writers that wrap it);
+   * - **recorded, skipped by plain undo** — selection and focus changes;
+   * - **not recorded** — programmatic config (a React root's `config` prop, a
+   *   `<ControlPanel>` mount), camera, hover, layout progress, and derived
+   *   writes (`store.internal`).
+   *
+   * Undo is linear across actors and across data and view: it takes back the
+   * newest undoable entry. Reverting a definition edit re-applies the reverted
+   * `layers` / `behaviours` / `layouts` slices to the live instances, so what's
+   * drawn follows the store. Every entry carries an `actor` (see
+   * {@link actor}); read them with `history.entries({ actor })`.
    */
-  readonly history: History;
+  readonly history: HistoryView;
+
+  /**
+   * Who a recorded change is attributed to when its write names nobody. Free
+   * text; set it per session (`canvas.actor = 'user:ravi'`). Initialised from
+   * `CanvasOptions.actor`, default `'user'`.
+   */
+  actor: string;
+
+  /** The log behind {@link history}; handed to data layers through the context. */
+  private readonly log: OperationLog;
 
   /**
    * Public surface — populated by `init()` / `initWithRenderer()`. Accessing
@@ -358,12 +408,15 @@ export class Canvas {
     // (no separate engine bus). `canvas.events` *is* `store.events`.
     this.store = createCanvasStore(opts.telemetry ? { telemetry: opts.telemetry } : {});
     this.events = this.store.events;
-    this.history = createHistory(this.store.view, {
-      filter: (change) => change.action?.startsWith(EDIT_ACTION_PREFIX) ?? false,
-      patchFilter: (patch) => patch.path[0] === 'definition',
+    this.actor = opts.actor ?? 'user';
+    this.log = createOperationLog<CanvasView>({
+      view: this.store.view,
+      actor: () => this.actor,
+      classify: classifyViewPatch,
       // Live editors write per keystroke / drag frame: one step per burst.
       mergeWithinMs: EDIT_MERGE_MS,
     });
+    this.history = historyView(this.log);
     // Undo / redo revert the store; push the reverted slices to the instances.
     this.store.view.subscribeChanges((change) => {
       if (HISTORY_EDIT_ACTION.test(change.action ?? '')) {
@@ -1672,6 +1725,7 @@ export class Canvas {
       layers: this.layers,
       behaviours: this.behaviours,
       commands: this.commands,
+      log: this.log,
       ...(renderer.canvasElement ? { canvasElement: renderer.canvasElement } : {}),
       // The reactive-store factory behind `Layer.state` — injected here because
       // `@invana/canvas-core` is dependency-free and cannot construct one. A
