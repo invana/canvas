@@ -187,6 +187,12 @@ working design-of-record documents. Day-to-day API/concept docs live in
     work, in seven phases**: A defects (O3 behaviour events, O4 re-attach, V5) → B widget / choice option fields +
     footer panels → C `GraphCanvas` owns history + clipboard → D typed commands (generic map) → E shortcuts,
     command menus, palette → F stories (only when asked) → G breaking removals.
+  - [feat/2026-09-28-an-analysis-cannot-be-recorded-or-replayed.md](./rfcs/feat/2026-09-28-an-analysis-cannot-be-recorded-or-replayed.md)
+    — 🚧 accepted 2026-09-28 (F1–F17; F18–F23 deferred; lands as three PRs, see D-15). **Playbooks: a JSON script, and history as the record.** `canvas.playbook` is a list of JSON steps
+    (`addStep` only appends; `next` / `previous` / `goTo` play them through the ordinary canvas methods). `canvas.history`
+    becomes one operation log (the two stacks merge, no limit) with a free-text `actor` on every entry.
+    `GraphStore.applyDelta` is the one recorded data door; derived behaviour writes go unrecorded. Plus `FocusBehaviour`,
+    store-driven selection and inspect, relayout on hide/show, and feed-friendly layout. No filter in the canvas.
 
 ## Release
 

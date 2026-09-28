@@ -124,6 +124,7 @@ Legend: ✅ shipped · 🚧 in progress · 📋 planned
 | Drag node, node resize, draw edge, create node | ✅ |
 | Context menu, collapse / expand, colour-by-label | ✅ |
 | Hover preview card | ✅ |
+| Focus — highlight a set, fade the rest, frame it (`FocusBehaviour`); selection and inspect follow the store | 📋 |
 | Level-of-detail (node / edge size, label resolution) | ✅ |
 
 ### React & apps
@@ -157,6 +158,10 @@ Legend: ✅ shipped · 🚧 in progress · 📋 planned
 |---|---|
 | Serialisable config + live `update()` + `options:change` events | ✅ |
 | `options` → `state` vocabulary rename | 📋 |
+| One history for data and settings, with an `actor` on every change (who did what), no limit — [RFC](./docs/rfcs/feat/2026-09-28-an-analysis-cannot-be-recorded-or-replayed.md) | 📋 |
+| `applyDelta` as the one way data enters a graph; behaviour-derived writes unrecorded | 📋 |
+| Playbooks — a JSON script of steps (`canvas.playbook.addStep` / `next` / `previous` / `goTo`) the engine answers prompts in | 📋 |
+| Streaming-friendly layout — relayout on hide/show, throttled data relayouts that keep the camera, merged feed history | 📋 |
 | OpenTelemetry over state mutations — `withTelemetry` action spans + per-frame FPS metrics + lifecycle logs, exported over OTLP by the opt-in [`@invana/canvas-telemetry-otel`](./packages/canvas-telemetry-otel) | ✅ |
 | Real-time collaboration (CRDT doc + ephemeral presence) | 📋 |
 | Offline + multi-user (Postgres + Redis sync) | 📋 |
