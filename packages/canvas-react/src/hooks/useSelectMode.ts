@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import type { Canvas } from '@invana/canvas';
 import type { CanvasView } from '@invana/canvas-store';
+import { resolveSelectMode, selectModePatch } from '@invana/graph';
 
 import { useResolvedCanvas } from './useResolvedCanvas';
 import { useStore } from './useStore';
@@ -35,7 +36,10 @@ export interface UseSelectModeResult {
  * *writes* through `canvas.update({ behaviours })`. So the mode reflects — and
  * drives — the same state any other UI (e.g. a settings panel) reads/writes:
  * flip a tool in the panel and this picker follows, and vice-versa, with no
- * event wiring. The initial mode is enforced on mount. Memoize `behaviourIds`
+ * event wiring. The initial mode is enforced on mount. The rule and the patch
+ * are `@invana/graph`'s `resolveSelectMode` / `selectModePatch`, shared with the
+ * `select.mode` command (which reads the live behaviours instead of the
+ * definition). Memoize `behaviourIds`
  * (module scope or `useMemo`) so `setMode` stays stable.
  */
 export function useSelectMode(
@@ -49,23 +53,18 @@ export function useSelectMode(
   // Derive the active mode from the store: the first mode whose behaviour is
   // enabled, else the mode with no behaviour (e.g. `click`), else the first key.
   const behaviours = useStore(resolved.store.view, selectBehaviours);
-  const mode = useMemo(() => {
-    for (const [key, id] of Object.entries(behaviourIds)) {
-      if (id && (behaviours[id] as { enabled?: boolean } | undefined)?.enabled) return key;
-    }
-    return keys.find((k) => !behaviourIds[k]) ?? keys[0] ?? '';
-  }, [behaviours, behaviourIds, keys]);
+  const mode = useMemo(
+    () =>
+      resolveSelectMode(behaviourIds, (id) => !!(behaviours[id] as { enabled?: boolean } | undefined)?.enabled) ?? '',
+    [behaviours, behaviourIds],
+  );
 
   // Switch mode by writing through `canvas.update` — updates the store
   // definition AND enables/disables the behaviours — so every observer stays in
   // sync (one write path, no direct `behaviour.enable()`).
   const setMode = useCallback(
     (next: string) => {
-      const patch: Record<string, { enabled: boolean }> = {};
-      for (const [key, id] of Object.entries(behaviourIds)) {
-        if (id) patch[id] = { enabled: key === next };
-      }
-      resolved.update({ behaviours: patch });
+      resolved.update({ behaviours: selectModePatch(behaviourIds, next) });
     },
     [resolved, behaviourIds],
   );

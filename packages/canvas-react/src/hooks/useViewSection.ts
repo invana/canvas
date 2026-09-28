@@ -26,6 +26,12 @@ export interface UseViewSectionOptions {
  * the lock is a toggle whose icon flips unlocked↔locked (set `showLock: false` to
  * omit it); locking disables pan + node drag by default while leaving zoom
  * available. Icons are baked in.
+ *
+ * @deprecated A second way to draw toolbar controls beside the control specs
+ * `useControlItems` (in `@invana/canvas-ui`) renders. Use the `camera.zoomIn` / `camera.zoomOut` / `camera.fit` / `view.lock` control specs
+ *   (`VIEW_CONTROL_ITEMS`), or {@link useZoom} / {@link useFitContent} / {@link useLock} for bespoke UI.
+ * Kept for compatibility; removal waits for the next breaking release
+ * (`rfc:feat-2026-09-28-hooks-and-commands-duplicate-the-same-logic` X1).
  */
 export function useViewSection(options: UseViewSectionOptions = {}): ToolbarItem[] {
   const { showZoom = true, showLock = true, layerId = 'graph', lockBehaviourIds, canvas } = options;

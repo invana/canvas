@@ -13,7 +13,7 @@ export type { GraphToolbarProps } from './GraphToolbar';
 
 // Turnkey header control bars — `GraphControlsToolbarLite` (explorer set) and
 // `GraphControlsToolbar` (full, self-wraps history/clipboard providers). Both
-// compose the section hooks; supersede `GraphToolbar` for header use.
+// draw control specs via `useControlItems`; supersede `GraphToolbar` for header use.
 export { GraphControlsToolbar, GraphControlsToolbarLite } from './GraphControlsToolbar';
 export type { GraphControlsToolbarProps, GraphControlsSections } from './GraphControlsToolbar';
 

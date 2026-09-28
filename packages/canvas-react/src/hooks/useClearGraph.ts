@@ -1,9 +1,9 @@
 import { useCallback, useContext } from 'react';
 import type { Canvas } from '@invana/canvas';
+import { clearGraphLayer } from '@invana/graph';
 
 import { useResolvedCanvas } from './useResolvedCanvas';
 import { HistoryContext } from '../HistoryContext';
-import { clearGraphLayer } from '../providers/graphActions';
 
 export interface UseClearGraphResult {
   /** Remove every node and edge from the target layer. No-op if the layer doesn't exist yet. */
@@ -18,7 +18,7 @@ export interface UseClearGraphResult {
  * cascade) so Undo restores the whole graph and Redo clears it again. Without a
  * history provider it falls back to the layer's fast `clear()`.
  *
- * Shares its logic with the `graph.clear` command (see `providers/graphActions`).
+ * Shares its logic with the `graph.clear` command (`clearGraphLayer` in `@invana/graph`).
  *
  * @param layerId Target layer id (e.g. `'graph'`).
  * @param canvas  Optional explicit instance; defaults to the context canvas.

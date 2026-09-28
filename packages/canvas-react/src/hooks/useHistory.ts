@@ -33,6 +33,14 @@ function hasRedraw(layer: unknown): layer is RedrawableLayer {
  * `<GraphHistoryProvider>` ancestor. `canUndo`/`canRedo` stay reactive via the
  * history's `change` event. Without a provider, undo/redo are no-ops and the
  * flags are `false` (redraw still works — it goes straight to the layer).
+ *
+ * `undo` / `redo` act on the **graph** stack only. The `history.undo` /
+ * `history.redo` commands the provider registers also cover the canvas's
+ * definition edits (`canvas.history`), picking between the two stacks via
+ * `@invana/graph`'s `undoNewest` / `redoNewest` (`canUndoEither` /
+ * `canRedoEither`). Adopting that combined form here is H9
+ * (`docs/commands-followups.md` item 16) — deliberately not done yet, since it
+ * changes what this hook's Undo does.
  */
 export function useHistory(
   options: UseHistoryOptions = {},

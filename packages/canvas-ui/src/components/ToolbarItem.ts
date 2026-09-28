@@ -5,10 +5,10 @@ import type { ToolbarIcon, TooltipSide } from './types';
 /**
  * Fields shared by every {@link ToolbarItem} variant.
  *
- * The descriptor model is the data contract between the **section hooks**
- * (`useHistorySection`, `useViewSection`, …) — or any hand-built array off the
- * raw hooks — and the {@link ToolbarItems} renderer that compiles them into a
- * toolbar.
+ * The descriptor model is the data contract between the producers — control
+ * specs resolved by `useControlItems` (the `*Toolbar`s and control panels), or
+ * any hand-built array off the raw hooks — and the {@link ToolbarItems}
+ * renderer that compiles them into a toolbar.
  * Everything here is engine-agnostic — icons, strings, callbacks, `ReactNode` —
  * so the type stays a dumb building block (no `@invana/canvas` import).
  */
@@ -152,7 +152,7 @@ export type ToolbarItem =
  * Swap the `icon` of `button` / `toggle` items whose {@link ToolbarItemBase.key}
  * matches a key in `icons`. Partial — unlisted items keep their baked icon. This
  * is how the turnkey `*Toolbar` components honour their optional `icons` prop
- * without the section hooks ever taking icons: build items (with baked defaults),
+ * without the item producers ever taking icons: build items (with baked defaults),
  * then `applyIconOverrides(items, props.icons)` before rendering.
  *
  * Note: only the primary `icon` is overridden (not a toggle's `activeIcon`, nor a

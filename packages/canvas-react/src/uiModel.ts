@@ -1,6 +1,7 @@
 // Headless UI descriptor model — the data contract that canvas-react's builder
-// hooks (`useHistorySection`, `useViewSection`, `useEditorSection`,
-// `useLayoutsSection`, `useStyleEditorSection`, `useEntityEditor`) PRODUCE.
+// hooks (`useEntityEditor`, and the deprecated section hooks `useHistorySection`,
+// `useViewSection`, `useEditorSection`, `useLayoutsSection`,
+// `useStyleEditorSection`) PRODUCE.
 //
 // The `@invana/canvas-ui` renderer (`ToolbarItems`) and building blocks own the
 // **public** copies of these types (`components/ToolbarItem.ts` /

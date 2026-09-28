@@ -1,11 +1,11 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
 import type { Canvas } from '@invana/canvas';
+import { copySelection, cutSelection, deleteSelection, pasteAndSelect } from '@invana/graph';
 
 import { useResolvedCanvas } from './useResolvedCanvas';
 import { useSelection } from './useSelection';
 import { ClipboardContext } from '../ClipboardContext';
 import { HistoryContext } from '../HistoryContext';
-import { pasteAndSelect } from '../providers/graphActions';
 
 export interface UseClipboardOptions {
   /** Id of the `ClickSelectBehaviour` selection is read from / re-applied to. Default `'click-select'`. */
@@ -36,6 +36,11 @@ export interface UseClipboardResult {
  *
  * `canPaste` tracks the buffer (recomputed after each op); `hasSelection` is
  * reactive via {@link useSelection}.
+ *
+ * The actions are `@invana/graph`'s `cutSelection` / `copySelection` /
+ * `deleteSelection` / `pasteAndSelect` — the same functions the `clipboard.*`
+ * commands run — and read the click-selection at call time, so they never act
+ * on a selection captured in a stale closure.
  */
 export function useClipboard(
   options: UseClipboardOptions = {},
@@ -45,7 +50,8 @@ export function useClipboard(
   const resolved = useResolvedCanvas(canvas);
   const clipboard = useContext(ClipboardContext);
   const history = useContext(HistoryContext);
-  const { selectedNodeIds, selectedEdgeIds, count } = useSelection({ clickSelectId }, resolved);
+  // Only for the reactive `hasSelection`; the actions read the selection at call time.
+  const { count } = useSelection({ clickSelectId }, resolved);
   const [canPaste, setCanPaste] = useState(false);
 
   // Subscribe to the clipboard's buffer-change event so every `useClipboard`
@@ -61,16 +67,16 @@ export function useClipboard(
   }, [clipboard]);
 
   const copy = useCallback(() => {
-    clipboard?.copy(selectedNodeIds, selectedEdgeIds);
-  }, [clipboard, selectedNodeIds, selectedEdgeIds]);
+    if (clipboard) copySelection(resolved, clipboard, clickSelectId);
+  }, [clipboard, resolved, clickSelectId]);
 
   const cut = useCallback(() => {
-    clipboard?.cut(selectedNodeIds, selectedEdgeIds, history ?? undefined);
-  }, [clipboard, history, selectedNodeIds, selectedEdgeIds]);
+    if (clipboard) cutSelection(resolved, clipboard, history, clickSelectId);
+  }, [clipboard, history, resolved, clickSelectId]);
 
   const remove = useCallback(() => {
-    clipboard?.delete(selectedNodeIds, selectedEdgeIds, history ?? undefined);
-  }, [clipboard, history, selectedNodeIds, selectedEdgeIds]);
+    if (clipboard) deleteSelection(resolved, clipboard, history, clickSelectId);
+  }, [clipboard, history, resolved, clickSelectId]);
 
   const paste = useCallback(() => {
     if (clipboard) pasteAndSelect(resolved, clipboard, history, clickSelectId);

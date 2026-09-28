@@ -9,19 +9,28 @@
  *   3. **Edges** — connector routing: Straight · Orthogonal · Curved.
  *   4. **Fit** — fit the metagraph to view.
  *
- * Groups 1–3 are **controlled** (value in → `onChange` out) — the `SchemaViewPanel`
- * owns that state because it drives what the metagraph renders. **Fit self-wires**
- * from context (the schema canvas) via {@link useViewSection}, so the toolbar must
- * render inside the schema `<GraphCanvas>` (or be handed an explicit `canvas`).
+ * **Fit** is a control spec (`camera.fit { layerId }`) drawn by `useControlItems`,
+ * like every `*Toolbar` control; it resolves the schema canvas from context, so
+ * the toolbar must render inside the schema `<GraphCanvas>` (or be handed an
+ * explicit `canvas`).
+ *
+ * Groups 1–3 stay **controlled** (value in → `onChange` out), deliberately: their
+ * state belongs to the `SchemaViewPanel` (it drives what the metagraph renders),
+ * not to the canvas. A spec needs a command, which would mean either new public
+ * schema-view API or a private per-instance command — the pattern
+ * `GraphControlsToolbar` dropped for its layout picker
+ * (rfc:feat-2026-09-28-hooks-and-commands-duplicate-the-same-logic T2).
  * Renders a **bare** `<ToolbarItems>` meant to drop into a header slot.
  */
 
+import { useMemo } from 'react';
 import type { Canvas } from '@invana/canvas';
 import { CornerDownRight, Minus, Spline, Table as TableIcon, Circle } from 'lucide-react';
 
 import { ToolbarItems, applyIconOverrides } from '../components';
 import type { ToolbarIcon, ToolbarItem } from '../components';
-import { useViewSection } from '@invana/canvas-react';
+import { useControlItems } from '../control-panels/ControlItems';
+import { fitSpec } from './controlSpecs';
 import type { SchemaEdgeRouting, SchemaNodeMode } from '../view-panels/schema/schema';
 
 const NODE_LABELS: Record<SchemaNodeMode, string> = { simple: 'Simple', table: 'Table' };
@@ -88,7 +97,7 @@ function assemble(groups: ToolbarItem[][]): ToolbarItem[] {
 
 /**
  * The schema metagraph's control bar — node mode · layout · edge routing · fit.
- * Controlled for the first three (the `SchemaViewPanel` owns them); Fit self-wires.
+ * Controlled for the first three (the `SchemaViewPanel` owns them); Fit is a control spec.
  * Render inside the schema `<GraphCanvas>` so Fit resolves the right instance.
  */
 export function SchemaToolbar({
@@ -115,8 +124,9 @@ export function SchemaToolbar({
     ...sections,
   };
 
-  // Fit rides the view section (zoom + lock off → just the fit item).
-  const viewItems = useViewSection({ showZoom: false, showLock: false, layerId, canvas });
+  // Fit is the `camera.fit` control spec, drawn by the one spec renderer.
+  const fitSpecs = useMemo(() => [fitSpec(layerId)], [layerId]);
+  const fitItems = useControlItems(fitSpecs, { canvas });
 
   const nodeGroup: ToolbarItem[] = s.nodes
     ? [
@@ -163,7 +173,7 @@ export function SchemaToolbar({
         },
       ]
     : [];
-  const fitGroup: ToolbarItem[] = s.fit ? applyIconOverrides(viewItems, icons) : [];
+  const fitGroup: ToolbarItem[] = s.fit ? applyIconOverrides(fitItems, icons) : [];
 
   const items = assemble([nodeGroup, layoutGroup, edgeGroup, fitGroup]);
   return <ToolbarItems items={items} orientation={orientation} className={className} />;

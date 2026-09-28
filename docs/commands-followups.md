@@ -9,7 +9,7 @@ can't hold closures. Buttons name an action and `canvas.commands` resolves it. T
 one thing only commands give; everything else (overrides reaching every button, running
 without React, `list()` + arg descriptors for editors) is a bonus.
 
-**Proposed rule** (not yet in `canvas-react/CLAUDE.md` — item 8):
+**Rule** (in `packages/canvas-react/CLAUDE.md` since item 8):
 
 | Layer | Role |
 |---|---|
@@ -24,25 +24,25 @@ Status: 📋 open · 🚧 in progress · ✅ done.
 | # | Item | Status |
 |---|---|---|
 | 1 | Commit + merge `feat/view-history`; set its three RFCs (`canvas-definition-edits-cannot-be-undone`, `control-panel-command-args-are-raw-json`, `app-header-controls-do-not-save-with-the-canvas`) to `landed` | 📋 |
-| 2 | `control-panels-cannot-be-edited-in-the-studio` and `the-modeller-tool-lives-outside-the-canvas` stay `accepted` until their story rows (E9, S1) are done or rejected | 📋 |
-| 3 | `docs/README.md` still labels `canvas-core-structure`, `renderer-preference-canvas…`, `label-measurement…` as "🚧 implemented on `feat/control-panels`" — stale | 📋 |
+| 2 | `control-panels-cannot-be-edited-in-the-studio` and `the-modeller-tool-lives-outside-the-canvas` stay `accepted` until their story rows (E9, S1) are done or rejected | ✅ recorded — both stay `accepted`, E9 / S1 deferred (stories only when asked) |
+| 3 | `docs/README.md` still labels `canvas-core-structure`, `renderer-preference-canvas…`, `label-measurement…` as "🚧 implemented on `feat/control-panels`" — stale | ✅ relabelled from git (B1, B2 of `rfc:feat-2026-09-28-hooks-and-commands-duplicate-the-same-logic`) |
 
 ## 2. Remove the duplicate paths (the main risk to reuse)
 
 | # | Item | Status |
 |---|---|---|
-| 4 | `useSelectMode` and the `select.mode` command implement the same rule separately → one shared function, both call it | 📋 |
-| 5 | `useHistory` / `useClipboard` read the React context directly, beside the `history.*` / `clipboard.*` commands → pick one path | 📋 |
-| 6 | Section hooks (`useViewSection`, `useHistorySection`, `useLayoutsSection`, `useEditorSection`, `useStyleEditorSection`) are exported but no canvas-ui toolbar uses them → deprecate or keep (needs an RFC) | 📋 |
-| 7 | `GraphControlsToolbar`'s private `toolbar.layout#<id>` / `toolbar.layoutRun#<id>` commands are a workaround → back to the layout hook | 📋 |
-| 8 | Write the rule above into `packages/canvas-react/CLAUDE.md` | 📋 |
+| 4 | `useSelectMode` and the `select.mode` command implement the same rule separately → one shared function, both call it | ✅ `resolveSelectMode` / `selectModePatch` in `@invana/graph` |
+| 5 | `useHistory` / `useClipboard` read the React context directly, beside the `history.*` / `clipboard.*` commands → pick one path | ✅ shared functions in `@invana/graph` (`cutSelection` …, `undoNewest` …); `useHistory` stays graph-only until item 16 |
+| 6 | Section hooks (`useViewSection`, `useHistorySection`, `useLayoutsSection`, `useEditorSection`, `useStyleEditorSection`) are exported but no canvas-ui toolbar uses them → deprecate or keep (needs an RFC) | ✅ deprecated (TSDoc only) |
+| 7 | `GraphControlsToolbar`'s private `toolbar.layout#<id>` / `toolbar.layoutRun#<id>` commands are a workaround → back to the layout hook | ✅ built from `useLayout` |
+| 8 | Write the rule above into `packages/canvas-react/CLAUDE.md` | ✅ |
 
 ## 3. Unfinished toolbar conversion
 
 | # | Item | Status |
 |---|---|---|
-| 9 | `SchemaToolbar` is still callback-based → convert it, or record that it stays | 📋 |
-| 10 | `GraphToolbar` / `GraphLayoutToolbar` are deprecated with no users → remove in the next breaking release | 📋 |
+| 9 | `SchemaToolbar` is still callback-based → convert it, or record that it stays | ✅ Fit converted; the three pickers stay callbacks (state is `SchemaViewPanel`'s) |
+| 10 | `GraphToolbar` / `GraphLayoutToolbar` are deprecated with no users → remove in the next breaking release | ✅ recorded (G1 `deferred`) — removal still due in the next breaking release |
 
 ## 4. Weak spots in commands
 
@@ -62,7 +62,7 @@ Status: 📋 open · 🚧 in progress · ✅ done.
 | 17 | Descriptors for widget options and choice options (the last two JSON fields in the editor) | A8, `rfc:feat-2026-09-28-control-panel-command-args-are-raw-json` | 📋 |
 | 18 | Footer placement for panels | P7, `rfc:feat-2026-09-28-app-header-controls-do-not-save-with-the-canvas` | 📋 |
 | 19 | `GraphCanvas` owns history + clipboard instead of React providers (also fixes item 13 for undo) | D1-B, `rfc:feat-2026-09-28-graph-toolbar-actions-cannot-be-saved` | 📋 |
-| 20 | Close D4 (spec-valued header slots) — covered by header placement | D4, `rfc:feat-2026-09-28-toolbars-and-control-panels-draw-controls-twice` | 📋 |
+| 20 | Close D4 (spec-valued header slots) — covered by header placement | D4, `rfc:feat-2026-09-28-toolbars-and-control-panels-draw-controls-twice` | ✅ superseded by `rfc:feat-2026-09-28-app-header-controls-do-not-save-with-the-canvas` (history row) |
 
 ## 6. Found along the way (not caused by commands)
 
@@ -87,3 +87,5 @@ Status: 📋 open · 🚧 in progress · ✅ done.
 
 If 25–26 aren't planned soon, items 4–8 come next: they stop hooks and commands drifting
 apart.
+
+Items 3–10 landed through `rfc:feat-2026-09-28-hooks-and-commands-duplicate-the-same-logic` (on `feat/view-history`). It also recorded, out of scope: `useLock` re-implements `view.lock`, and `useEdgeType` goes through its command — the same drift as items 4–5.

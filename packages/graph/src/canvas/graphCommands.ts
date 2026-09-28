@@ -20,11 +20,12 @@
 
 import type { Canvas, CanvasCommand, CommandArgSpec, CommandOption, CommandRegistry } from '@invana/canvas';
 
-import type { ClickSelectBehaviour } from '../behaviours/ClickSelectBehaviour';
 import { GraphClipboard } from '../clipboard/GraphClipboard';
 import type { GraphHistory } from '../history/GraphHistory';
 import type { GraphLayer } from '../layer/GraphLayer';
 import type { EdgePathType, EdgeShapeOptions } from '../layer/types';
+import { selectedElementIds } from './graphActions';
+import { resolveSelectMode, selectModePatch } from './selectMode';
 
 /**
  * Default path types an edge-type picker offers, in display order — the three
@@ -94,10 +95,8 @@ const TOOL_OPTIONS: Record<string, CommandOption> = {
 const interaction = (canvas: Canvas) => canvas.store.view.getState().interaction;
 
 /** The click-select behaviour's current selection (`args.clickSelectId`, default `'click-select'`). */
-function clickSelection(canvas: Canvas, args: unknown): { nodeIds: string[]; edgeIds: string[] } {
-  const b = canvas.behaviours.get<ClickSelectBehaviour>(arg<string>(args, 'clickSelectId') ?? 'click-select');
-  return { nodeIds: b ? b.getSelectedShapeIds() : [], edgeIds: b ? b.getSelectedConnectorIds() : [] };
-}
+const clickSelection = (canvas: Canvas, args: unknown) =>
+  selectedElementIds(canvas, arg<string>(args, 'clickSelectId') ?? 'click-select');
 
 /**
  * The `graph.erase` command body: delete the click-selection (as one
@@ -141,15 +140,9 @@ const GRAPH_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
       labels: { kind: 'json', label: 'Labels', default: DEFAULT_SELECT_LABELS, description: 'Mode → label' },
     },
     // The first mode whose behaviour is enabled, else the behaviour-less mode
-    // (`click`), else the first — the same rule as `useSelectMode`.
-    value: (canvas, args) => {
-      const modes = selectModes(args);
-      for (const [mode, id] of Object.entries(modes)) {
-        if (id && canvas.behaviours.get(id)?.enabled) return mode;
-      }
-      const keys = Object.keys(modes);
-      return keys.find((k) => !modes[k]) ?? keys[0] ?? null;
-    },
+    // (`click`), else the first — `resolveSelectMode`, shared with `useSelectMode`.
+    // Reads the live behaviours (the hook reads the definition).
+    value: (canvas, args) => resolveSelectMode(selectModes(args), (id) => !!canvas.behaviours.get(id)?.enabled),
     options: (_canvas, args) => {
       const labels = arg<Record<string, string>>(args, 'labels') ?? DEFAULT_SELECT_LABELS;
       return Object.keys(selectModes(args)).map((mode): CommandOption => ({
@@ -162,11 +155,7 @@ const GRAPH_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
     run: (canvas, args) => {
       const next = arg<string>(args, 'value');
       if (next === undefined) return;
-      const patch: Record<string, { enabled: boolean }> = {};
-      for (const [mode, id] of Object.entries(selectModes(args))) {
-        if (id) patch[id] = { enabled: mode === next };
-      }
-      canvas.update({ behaviours: patch });
+      canvas.update({ behaviours: selectModePatch(selectModes(args), next) });
     },
   },
   'graph.edgeType': {

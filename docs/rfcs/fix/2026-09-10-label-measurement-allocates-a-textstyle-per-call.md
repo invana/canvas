@@ -2,7 +2,7 @@
 id: fix-2026-09-10-label-measurement-allocates-a-textstyle-per-call
 type: fix
 title: measureLabelContent allocates a TextStyle on every call, once per node per re-project
-status: proposed
+status: accepted
 opened: 2026-09-10
 decided: 2026-09-10
 landed: null
@@ -27,7 +27,7 @@ so it is allocation churn plus a bounded retention, not a pure transient.
 | **Dressing rows** | None |
 | **Open decisions** | None — D1 → (b), D2 → (a), both decided 2026-09-10 |
 
-Row status: proposed 0 · accepted 2 · landed 0 · deferred 0 · rejected 0 · superseded 0
+Row status: proposed 0 · accepted 0 · implemented 2 · landed 0 · deferred 0 · rejected 0 · superseded 0
 
 ---
 
@@ -89,8 +89,8 @@ and why D2 asks whether it is worth landing.
 
 | ID | Kind | Status | File/target | Change | Effect | Risk | Depends on |
 |----|------|--------|-------------|--------|--------|------|------------|
-| F1 | defect | accepted | `file:packages/renderer-pixijs/src/primitives/paint/labelContent.ts#L99-L109` | Memoise the `TextStyle` in a module-level `Map` keyed by a value key over the resolved `TextStyleOptions` (D1). Instances are **never mutated** after construction, so R3's hazard does not apply. Landed as `sym:measureStyleFor` + `sym:measureStyleKey` | Allocation count drops from *per node per re-project* to *per distinct label style*. No change to any returned measurement | Low — pure function, same inputs, same outputs; the only new state is a private cache | D1 |
-| F2 | defect | accepted | same | Bound the cache (small LRU or a plain size cap with clear-on-overflow), so a pathological graph with per-node fonts cannot grow it without limit. Landed as an insertion-order LRU at `MEASURE_STYLE_CACHE_LIMIT = 256` | Removes the one way F1 could become a leak of its own | Low | F1 |
+| F1 | defect | implemented | `file:packages/renderer-pixijs/src/primitives/paint/labelContent.ts#L99-L109` | Memoise the `TextStyle` in a module-level `Map` keyed by a value key over the resolved `TextStyleOptions` (D1). Instances are **never mutated** after construction, so R3's hazard does not apply. Landed as `sym:measureStyleFor` + `sym:measureStyleKey` | Allocation count drops from *per node per re-project* to *per distinct label style*. No change to any returned measurement | Low — pure function, same inputs, same outputs; the only new state is a private cache | D1 |
+| F2 | defect | implemented | same | Bound the cache (small LRU or a plain size cap with clear-on-overflow), so a pathological graph with per-node fonts cannot grow it without limit. Landed as an insertion-order LRU at `MEASURE_STYLE_CACHE_LIMIT = 256` | Removes the one way F1 could become a leak of its own | Low | F1 |
 
 ---
 
@@ -138,5 +138,6 @@ and why D2 asks whether it is worth landing.
 
 | Date | Event | Status | Note |
 |------|-------|--------|------|
+| 2026-09-28 | Status reconciled: the front matter still said `proposed` after the 2026-09-10 landing. F1 / F2 are in `main` (`5e6757b5`) but V1 / V4 are `pending`, so they are `implemented`, not `landed` | accepted | Found by `rfc:feat-2026-09-28-hooks-and-commands-duplicate-the-same-logic` B2 |
 | 2026-09-10 | Landed F1+F2 in `file:packages/renderer-pixijs/src/primitives/paint/labelContent.ts`. D1 → (b) hand-built key; D2 → (a) land it, so T4/V2 (the counter) were skipped rather than run. V3 green — `check-api-surface`'s only drift (`RenderPreference`) belongs to `rfc:fix-2026-09-10-renderer-preference-canvas-never-reaches-the-backend`, in flight on the same branch. V1 (visual control) and V4 (cache bound) still pending — both need a browser | accepted | Rows stay `accepted`, not `landed`: the code is in, V1 is not |
 | 2026-09-10 | Opened while auditing pixi 8.18.1 → 8.20.1. Found via 8.20.1's `#12159` (shared `TextStyle` detach), which does not apply to us (R4) but sent me to read our only `TextStyle` construction site | proposed | Two rows proposed. D2 is open on purpose: R1 undercuts the usual reason to care, and T4 should decide it |

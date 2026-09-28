@@ -49,6 +49,7 @@ export interface GraphToolbarProps {
  * share the control-spec renderer. Use `GraphControlsToolbar`, or
  * `<ControlItems items={…}>` with the `*_CONTROL_ITEMS` presets. Kept for
  * compatibility; see `docs/rfcs/feat/2026-09-28-toolbars-and-control-panels-draw-controls-twice.md` D3.
+ * Removal deferred to the next breaking release (rfc:feat-2026-09-28-hooks-and-commands-duplicate-the-same-logic G1).
  */
 export function GraphToolbar({
   layout,

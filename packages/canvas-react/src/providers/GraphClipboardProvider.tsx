@@ -1,7 +1,12 @@
 import { useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   GraphClipboard,
+  copySelection,
+  cutSelection,
+  deleteSelection,
   eraseCommand,
+  pasteAndSelect,
+  selectedElementIds,
   type GraphLayer,
   type Vec2,
 } from '@invana/graph';
@@ -10,7 +15,6 @@ import type { Canvas, CommandArgSpec } from '@invana/canvas';
 import { useResolvedCanvas } from '../hooks/useResolvedCanvas';
 import { ClipboardContext } from '../ClipboardContext';
 import { HistoryContext } from '../HistoryContext';
-import { pasteAndSelect, selectedElementIds } from './graphActions';
 
 export interface GraphClipboardProviderProps {
   /** Id of the `GraphLayer` whose store the clipboard reads/writes. Default `'graph'`. */
@@ -31,7 +35,10 @@ export interface GraphClipboardProviderProps {
  *
  * While mounted it also registers the `clipboard.cut` / `.copy` / `.paste` /
  * `.delete` commands on the canvas, for control panels, and an undoable
- * `graph.erase` when a `<GraphHistoryProvider>` is above it.
+ * `graph.erase` when a `<GraphHistoryProvider>` is above it. The command
+ * bodies are `@invana/graph`'s `copySelection` / `cutSelection` /
+ * `deleteSelection` / `pasteAndSelect` — the same functions `useClipboard`
+ * calls, so the hook and the commands can't diverge.
  */
 /** The click-select behaviour a clipboard command reads (`args.clickSelectId`, default `'click-select'`). */
 function clickSelectIdOf(args: unknown): string {
@@ -75,9 +82,8 @@ export function GraphClipboardProvider({
   useEffect(() => {
     if (!clipboard) return;
     const commands = resolved.commands;
-    const selection = (args: unknown) => selectedElementIds(resolved, clickSelectIdOf(args));
     const hasSelection = (args: unknown) => {
-      const { nodeIds, edgeIds } = selection(args);
+      const { nodeIds, edgeIds } = selectedElementIds(resolved, clickSelectIdOf(args));
       return nodeIds.length + edgeIds.length > 0;
     };
     const offs = [
@@ -85,19 +91,13 @@ export function GraphClipboardProvider({
         args: SELECTION_ARGS,
         label: 'Cut',
         isEnabled: (_c, args) => hasSelection(args),
-        run: (_c, args) => {
-          const { nodeIds, edgeIds } = selection(args);
-          clipboard.cut(nodeIds, edgeIds, historyRef.current ?? undefined);
-        },
+        run: (c, args) => cutSelection(c, clipboard, historyRef.current, clickSelectIdOf(args)),
       }),
       commands.register('clipboard.copy', {
         args: SELECTION_ARGS,
         label: 'Copy',
         isEnabled: (_c, args) => hasSelection(args),
-        run: (_c, args) => {
-          const { nodeIds, edgeIds } = selection(args);
-          clipboard.copy(nodeIds, edgeIds);
-        },
+        run: (c, args) => copySelection(c, clipboard, clickSelectIdOf(args)),
       }),
       commands.register('clipboard.paste', {
         args: SELECTION_ARGS,
@@ -109,10 +109,7 @@ export function GraphClipboardProvider({
         args: SELECTION_ARGS,
         label: 'Delete',
         isEnabled: (_c, args) => hasSelection(args),
-        run: (_c, args) => {
-          const { nodeIds, edgeIds } = selection(args);
-          clipboard.delete(nodeIds, edgeIds, historyRef.current ?? undefined);
-        },
+        run: (c, args) => deleteSelection(c, clipboard, historyRef.current, clickSelectIdOf(args)),
       }),
       // Undoable, selection-aware erase (overrides the graph's plain one).
       commands.register('graph.erase', eraseCommand((target) => (target === layerId ? historyRef.current : null))),

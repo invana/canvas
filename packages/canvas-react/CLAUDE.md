@@ -23,6 +23,16 @@ Hooks are the headless heart of this package: they turn engine/store state into 
 - **Store hooks** — `useStore(store, selector)` (a `useSyncExternalStore` slice over a kernel `ReactiveStore`), `useGraphCanvasOptions` / `useGraphCanvasUpdate` (read/patch `store.view.definition`). This is the coupling mechanism: UI reads through these and reflects store changes instantly.
 - **Engine hooks** — `useCamera` / `useZoom` / `useFitContent` / `useSelection` / `useLayout` / `useCanvasEvent` / `useGraphEvent` / … Resolve the engine from `CanvasContext` **or** an explicit `canvas` arg (`useResolvedCanvas(explicit ?? context)`), so they work from a `<Canvas>` descendant **or** target any instance — multi-canvas-safe.
 
+### Hooks vs commands — one piece of logic, two thin callers
+
+| Layer | Role |
+|---|---|
+| Plain engine functions / methods (`@invana/canvas`, `@invana/graph`) | **The logic.** Typed, React-free, testable |
+| Hooks (here) | The typed React API over those functions — for bespoke UI |
+| Commands (`canvas.commands`) | A thin named adapter over the **same** functions — only for **saved** controls (control panels, header panels) |
+
+A hook and a command never implement the same rule twice: if both need it, it becomes a function (e.g. `resolveSelectMode`, `cutSelection`, `undoNewest` in `@invana/graph`) and both call it. Don't register a command just to reach the spec renderer — toolbars aren't saved, so closure-driven controls build their `ToolbarItem`s from a hook. Open items: `docs/commands-followups.md`.
+
 Hooks may return data, callbacks, and **null-rendering** engine wrappers (e.g. a `<DevInfoLayer>` element), but **not** pixels. A turnkey hook that hands back a button (`useDevTool` / `useMiniMap`) is UI → it lives in `@invana/canvas-ui` and imports the layer-wrapper back from here.
 
 ## No application UI here

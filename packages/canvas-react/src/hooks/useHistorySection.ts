@@ -18,6 +18,11 @@ export interface UseHistorySectionOptions {
  * {@link useHistory}, with live `disabled` state (`!canUndo` / `!canRedo`).
  * Compose the result with other sections and render via `ToolbarItems`. Requires
  * a `<GraphHistoryProvider>` ancestor.
+ *
+ * @deprecated A second way to draw toolbar controls beside the control specs
+ * `useControlItems` (in `@invana/canvas-ui`) renders. Use the `history.undo` / `history.redo` control specs (`HISTORY_CONTROL_ITEMS`), or {@link useHistory} for bespoke UI.
+ * Kept for compatibility; removal waits for the next breaking release
+ * (`rfc:feat-2026-09-28-hooks-and-commands-duplicate-the-same-logic` X1).
  */
 export function useHistorySection(options: UseHistorySectionOptions = {}): ToolbarItem[] {
   const { layerId, labels, canvas } = options;

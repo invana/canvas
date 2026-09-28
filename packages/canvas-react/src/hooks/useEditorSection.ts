@@ -32,6 +32,12 @@ export interface UseEditorSectionOptions {
  * `<GraphClipboardProvider>` + `ClickSelectBehaviour`; edits are undoable with a
  * `<GraphHistoryProvider>`. Restrict the set via {@link UseEditorSectionOptions.items}
  * — e.g. `items: ['erase']` for an erase-only bar with no clipboard controls.
+ *
+ * @deprecated A second way to draw toolbar controls beside the control specs
+ * `useControlItems` (in `@invana/canvas-ui`) renders. Use the `clipboard.*` / `graph.erase` / `graph.clear` control specs (`EDIT_CONTROL_ITEMS`), or
+ *   {@link useClipboard} / {@link useClearGraph} for bespoke UI.
+ * Kept for compatibility; removal waits for the next breaking release
+ * (`rfc:feat-2026-09-28-hooks-and-commands-duplicate-the-same-logic` X1).
  */
 export function useEditorSection(options: UseEditorSectionOptions = {}): ToolbarItem[] {
   const { clickSelectId, layerId = 'graph', canvas, items } = options;

@@ -37,6 +37,11 @@ export interface UseStyleEditorSectionOptions {
  * built off {@link useEdgeType}. Selecting a type re-routes every edge in the
  * layer (straight / orthogonal / curved / …) and becomes the default for future
  * edges.
+ *
+ * @deprecated A second way to draw toolbar controls beside the control specs
+ * `useControlItems` (in `@invana/canvas-ui`) renders. Use the `graph.edgeType` control spec (`EDGE_TYPE_CONTROL_ITEMS`), or {@link useEdgeType} for bespoke UI.
+ * Kept for compatibility; removal waits for the next breaking release
+ * (`rfc:feat-2026-09-28-hooks-and-commands-duplicate-the-same-logic` X1).
  */
 export function useStyleEditorSection(options: UseStyleEditorSectionOptions = {}): ToolbarItem[] {
   const { layerId, label = 'Edge', initial, types, labels, align, canvas } = options;

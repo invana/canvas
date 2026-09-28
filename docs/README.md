@@ -98,7 +98,7 @@ working design-of-record documents. Day-to-day API/concept docs live in
     kernel's becomes canonical — noting the one behavioural difference (the canvas copy
     emits `theme:change` without a source descriptor).
   - [feat/2026-08-11-canvas-core-structure.md](./rfcs/feat/2026-08-11-canvas-core-structure.md)
-    — 🚧 implemented on `feat/control-panels`. **The new `@invana/canvas-core` package**: 47 files / 5 folders
+    — ✅ landed (in `main` since v0.0.12, `5e6757b5`; the folder layout below was since reshaped by `canvas-core-folder-sprawl` / `canvas-core-depends-on-the-kernel`). **The new `@invana/canvas-core` package**: 47 files / 5 folders
     (`contracts/` · `geometry/` · `svg/` · `animation/` · `headless/`), lifted wholesale
     from `@invana/canvas`'s `src/core/` subtree — nothing written fresh at extraction
     time. So a rendering backend depends on a small frozen package rather than the whole
@@ -106,7 +106,7 @@ working design-of-record documents. Day-to-day API/concept docs live in
     the three prerequisites, and a **checkable acceptance test**:
     `grep "@invana/canvas'" packages/renderer-pixijs/src` → 0 hits.
   - [fix/2026-09-10-renderer-preference-canvas-never-reaches-the-backend.md](./rfcs/fix/2026-09-10-renderer-preference-canvas-never-reaches-the-backend.md)
-    — 🚧 implemented on `feat/control-panels`. **`preference: 'canvas'` is silently rewritten to `'webgl'`** one line
+    — ✅ landed 2026-09-10 (D1 deferred, D2 accepted). **`preference: 'canvas'` is silently rewritten to `'webgl'`** one line
     before it crosses the renderer seam (`Canvas.ts#L337`), so pixi's canvas backend is
     unreachable through the engine — including via `bestRenderPreference()`, which the
     TSDoc recommends and which returns `'canvas'` on a device with neither WebGPU nor
@@ -115,13 +115,13 @@ working design-of-record documents. Day-to-day API/concept docs live in
     rewrite was a type-fit, not a decision, and `'auto'` has no producer anywhere. 4 rows,
     2 open decisions (adopt pixi 8.18's array-valued `preference`; drop `'auto'`).
   - [fix/2026-09-10-label-measurement-allocates-a-textstyle-per-call.md](./rfcs/fix/2026-09-10-label-measurement-allocates-a-textstyle-per-call.md)
-    — 🚧 implemented on `feat/control-panels`. **`measureLabelContent` builds a `TextStyle` per call**, once per
+    — 🚧 implemented, in `main` since `5e6757b5` (F1·F2 `implemented`; V1 · V4 pending). **`measureLabelContent` builds a `TextStyle` per call**, once per
     fit-to-label node per re-project, against 1–3 distinct styles. A cost defect with no
     visible symptom: pixi's metrics cache is *value*-keyed, so the measuring is already
     free on repeat and only the allocation is wasted. Records why the obvious fix — one
     shared mutable `TextStyle` — is wrong (cached `CanvasTextMetrics` retain the style by
-    reference, so mutation would corrupt entries backing real `Text` objects). D2 is open
-    on purpose: measure first, and `rejected` is an honest outcome.
+    reference, so mutation would corrupt entries backing real `Text` objects). D2 was
+    decided (a) — land it — without taking the measurement.
   - [feat/2026-09-27-no-floating-controls-inside-the-canvas.md](./rfcs/feat/2026-09-27-no-floating-controls-inside-the-canvas.md)
     — ✅ landed. **Control panels**: floating
     controls over the canvas stored as JSON in `definition.controlPanels`, so they save,
@@ -173,6 +173,10 @@ working design-of-record documents. Day-to-day API/concept docs live in
   - [feat/2026-09-28-app-header-controls-do-not-save-with-the-canvas.md](./rfcs/feat/2026-09-28-app-header-controls-do-not-save-with-the-canvas.md)
     — 🚧 implemented on `feat/view-history`. **`placement: 'header-*'` on `ControlPanelSpec`** so `GraphCanvasApp`
     header controls save with the canvas; adds a `layer.visible` toggle command.
+  - [feat/2026-09-28-hooks-and-commands-duplicate-the-same-logic.md](./rfcs/feat/2026-09-28-hooks-and-commands-duplicate-the-same-logic.md)
+    — 🚧 implemented on `feat/view-history` (G1 deferred to the next breaking release). **Hooks and commands call one set of
+    functions** in `@invana/graph` (select mode, clipboard, two-stack undo); `GraphControlsToolbar`'s private layout
+    commands go; the section hooks are deprecated; the logic → hooks → commands rule is in `canvas-react/CLAUDE.md`.
 
 ## Release
 

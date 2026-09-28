@@ -27,6 +27,12 @@ export interface UseLayoutsSectionOptions {
  * built off {@link useLayout} (applies the chosen layout + fits the view).
  * Layouts live in separate packages, so the consumer supplies the factory map
  * (memoize it).
+ *
+ * @deprecated A second way to draw toolbar controls beside the control specs
+ * `useControlItems` (in `@invana/canvas-ui`) renders. Use the `layout.activate` control spec (`LAYOUT_CONTROL_ITEMS`, over layouts registered on the canvas), or
+ *   {@link useLayout} for a factory-driven picker.
+ * Kept for compatibility; removal waits for the next breaking release
+ * (`rfc:feat-2026-09-28-hooks-and-commands-duplicate-the-same-logic` X1).
  */
 export function useLayoutsSection(options: UseLayoutsSectionOptions): ToolbarItem[] {
   const { layouts, label = 'Layout', layerId, fitPadding, initial, labels, align, canvas } = options;

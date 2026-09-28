@@ -1,7 +1,12 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import {
   GraphHistory,
+  canRedoEither,
+  canUndoEither,
+  clearGraphLayer,
   eraseCommand,
+  redoNewest,
+  undoNewest,
   type GraphLayer,
   type HistoryOp,
   type Vec2,
@@ -10,7 +15,6 @@ import type { Canvas } from '@invana/canvas';
 
 import { useResolvedCanvas } from '../hooks/useResolvedCanvas';
 import { HistoryContext } from '../HistoryContext';
-import { clearGraphLayer } from './graphActions';
 
 export interface GraphHistoryProviderProps {
   /** Id of the `GraphLayer` whose store the history journals. Default `'graph'`. */
@@ -36,8 +40,10 @@ export interface GraphHistoryProviderProps {
  * While mounted it also registers the `history.undo` / `history.redo` commands
  * and an undoable `graph.clear` on the canvas, for control panels. Those
  * `history.*` commands also cover the canvas's definition edits
- * (`canvas.history`): each undoes / redoes whichever of the two stacks holds the
- * newer step.
+ * (`canvas.history`): undo reverts whichever of the two stacks holds the newer
+ * step, redo re-applies the older redo top — `@invana/graph`'s `undoNewest` /
+ * `redoNewest` (enabled via `canUndoEither` / `canRedoEither`). The undoable
+ * `graph.clear` is `@invana/graph`'s `clearGraphLayer`.
  *
  * The history is rebuilt (and its stacks cleared) if `layerId`, `limit`, or the
  * resolved canvas change.
@@ -46,22 +52,6 @@ export interface GraphHistoryProviderProps {
 function targetLayer(args: unknown): string {
   const id = args && typeof args === 'object' ? (args as { layerId?: unknown }).layerId : undefined;
   return typeof id === 'string' ? id : 'graph';
-}
-
-/**
- * Whether the graph stack's step goes first. Undo takes the **newer** top (the
- * most recent edit). Redo takes the **older** top: undo walked back newest →
- * oldest, so the step undone last — the one to redo first — is the older one.
- */
-function graphGoesFirst(
-  graph: { at?: number } | undefined,
-  view: { at: number } | undefined,
-  redo = false,
-): boolean {
-  if (!view) return true;
-  if (!graph) return false;
-  const at = graph.at ?? 0;
-  return redo ? at <= view.at : at >= view.at;
 }
 
 export function GraphHistoryProvider({
@@ -137,16 +127,17 @@ export function GraphHistoryProvider({
     const commands = resolved.commands;
     const offs = [
       // One Undo button for two stacks: graph edits (this history) and definition
-      // edits (`canvas.history`). Each command acts on whichever top is newer.
+      // edits (`canvas.history`). Undo takes the newer top, redo the older redo
+      // top (the step undone last) — see `undoNewest` / `redoNewest`.
       commands.register('history.undo', {
         label: 'Undo',
-        run: (c) => (graphGoesFirst(history.peekUndo(), c.history.peekUndo()) ? history.undo() : c.history.undo()),
-        isEnabled: (c) => history.canUndo || c.history.canUndo(),
+        run: (c) => undoNewest(c, history),
+        isEnabled: (c) => canUndoEither(c, history),
       }),
       commands.register('history.redo', {
         label: 'Redo',
-        run: (c) => (graphGoesFirst(history.peekRedo(), c.history.peekRedo(), true) ? history.redo() : c.history.redo()),
-        isEnabled: (c) => history.canRedo || c.history.canRedo(),
+        run: (c) => redoNewest(c, history),
+        isEnabled: (c) => canRedoEither(c, history),
       }),
       commands.register('graph.clear', {
         label: 'Clear canvas',

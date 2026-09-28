@@ -69,10 +69,10 @@ export { useGraphCanvasOptions } from './useGraphCanvasOptions';
 // canvas the same way the bindings do.
 export { useResolvedCanvas } from './useResolvedCanvas';
 
-// Section hooks — each returns the `ToolbarItem[]` for one logical toolbar
-// section (off the raw operation hooks). Concatenate sections with `divider`s
-// and render via `ToolbarItems`; or skip these and hand-build items from the
-// raw hooks for full control.
+// Section hooks — DEPRECATED. Each returns the `ToolbarItem[]` for one toolbar
+// section. Toolbars now draw control specs through canvas-ui's `useControlItems`;
+// bespoke UI uses the raw operation hooks above. Kept until the next breaking
+// release (rfc:feat-2026-09-28-hooks-and-commands-duplicate-the-same-logic X1).
 export { useHistorySection } from './useHistorySection';
 export type { UseHistorySectionOptions } from './useHistorySection';
 export { useEditorSection } from './useEditorSection';

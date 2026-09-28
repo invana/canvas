@@ -154,9 +154,9 @@ function renderSegmented(key: string, item: ToolbarSelectItem, tipSide: TooltipS
  * - `divider` → a cross-axis `Separator`.
  * - `custom` → the item's own `render()` output.
  *
- * It's a dumb component (no engine import): pair it with the section hooks
- * (`useHistorySection`, `useViewSection`, …) or a hand-built item array off the
- * raw hooks.
+ * It's a dumb component (no engine import): feed it control specs resolved by
+ * `useControlItems` (or draw those directly with `<ControlItems>`), or a
+ * hand-built item array off the raw hooks.
  */
 export function ToolbarItems({
   items,
