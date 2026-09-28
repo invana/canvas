@@ -26,7 +26,8 @@ export interface ClearCanvasToolbarProps {
  * Clear-canvas action — a single toolbar **nav item** that wipes every node and
  * edge from the target `GraphLayer`. A ghost icon button with a tooltip;
  * clicking it calls {@link useClearGraph} (an undoable `history.transaction`
- * when a `<GraphHistoryProvider>` is present, else the layer's fast `clear()`).
+ * when there is a graph history — every `GraphCanvas` has one — else the
+ * layer's fast `clear()`).
  *
  * Self-wiring: pulls the engine from the `<Canvas>` context (or an explicit
  * `canvas` prop). Pairs naturally with `ExportStateToolbar` — clear the scene,

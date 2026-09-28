@@ -23,11 +23,11 @@ const UNAVAILABLE = ' (unavailable)';
 
 /**
  * Where the commands that aren't built into the engine usually come from — for
- * the dev warning. (`history.*` is built into every `Canvas`; a provider only
- * upgrades it.)
+ * the dev warning. (`history.*` is built into every `Canvas`; a `GraphCanvas`
+ * upgrades it to graph edits and adds `clipboard.*`.)
  */
 const PROVIDER_HINTS: ReadonlyArray<[prefix: string, hint: string]> = [
-  ['clipboard.', 'mount <GraphClipboardProvider>'],
+  ['clipboard.', 'use a GraphCanvas, or mount <GraphClipboardProvider> on a plain Canvas'],
   ['theme.toggle', 'mount <CanvasThemeSync> inside a <ThemeProvider>'],
 ];
 

@@ -59,9 +59,9 @@ Status: 📋 open · 🚧 in progress · ✅ done.
 | # | Item | Source | Status |
 |---|---|---|---|
 | 16 | Combined undo state (`canUndo` across both stacks) through `useHistory` | H9, `rfc:feat-2026-09-28-canvas-definition-edits-cannot-be-undone` | ✅ `useHistory` is two-stack; hook Undo now also undoes definition edits (H1, H2) |
-| 17 | Descriptors for widget options and choice options (the last two JSON fields in the editor) | A8, `rfc:feat-2026-09-28-control-panel-command-args-are-raw-json` | 📋 |
-| 18 | Footer placement for panels | P7, `rfc:feat-2026-09-28-app-header-controls-do-not-save-with-the-canvas` | 📋 |
-| 19 | `GraphCanvas` owns history + clipboard instead of React providers (also fixes item 13 for undo) | D1-B, `rfc:feat-2026-09-28-graph-toolbar-actions-cannot-be-saved` | 📋 |
+| 17 | Descriptors for widget options and choice options (the last two JSON fields in the editor) | A8, `rfc:feat-2026-09-28-control-panel-command-args-are-raw-json` | 🚧 implemented, unmerged — widget `optionsSpec` + choice option rows (B1–B3, `rfc:feat-2026-09-29-commands-stop-at-saved-control-panels`) |
+| 18 | Footer placement for panels | P7, `rfc:feat-2026-09-28-app-header-controls-do-not-save-with-the-canvas` | 🚧 implemented, unmerged — `footer-*` placements, `RegionControlPanels`, footer auto-shows (P1–P4, `rfc:feat-2026-09-29-commands-stop-at-saved-control-panels`) |
+| 19 | `GraphCanvas` owns history + clipboard instead of React providers (also fixes item 13 for undo) | D1-B, `rfc:feat-2026-09-28-graph-toolbar-actions-cannot-be-saved` | 🚧 implemented, unmerged — `GraphCanvas.graphHistory` / `.clipboard` per layer; providers bridge (C1–C5, `rfc:feat-2026-09-29-commands-stop-at-saved-control-panels`) |
 | 20 | Close D4 (spec-valued header slots) — covered by header placement | D4, `rfc:feat-2026-09-28-toolbars-and-control-panels-draw-controls-twice` | ✅ superseded by `rfc:feat-2026-09-28-app-header-controls-do-not-save-with-the-canvas` (history row) |
 
 ## 6. Found along the way (not caused by commands)
@@ -73,8 +73,8 @@ Items 12–16, 21 and O1–O2 landed through `rfc:feat-2026-09-29-command-contro
 | 21 | Several behaviours override `setOptions` without `super` (e.g. `BrushSelectBehaviour`), so `getOptions()` goes stale and `CanvasSettingsEditorPanel` can show old values | ✅ 11 behaviours call `recordOptions` (F1, F2) |
 | O1 | `useLock` re-implements `view.lock` | ✅ `isViewLocked` / `setViewLocked` in `@invana/canvas` (L1, L2) |
 | O2 | `useEdgeType` goes through the `graph.edgeType` command | ✅ `edgePathType` / `setEdgePathType` in `@invana/graph` (E1, E2) |
-| O3 | Base `Behaviour.setOptions` enables directly, so `canvas.update({ behaviours: { id: { enabled } } })` on a behaviour without its own `setOptions` fires no `scene:behaviour:enable` / `disable` | 📋 |
-| O4 | `useHoverElementPreview`, `useViewTarget`, `ElementInspectorViewPanel` re-attach on `scene:behaviour:register` but never detach on the new `scene:behaviour:unregister` | 📋 |
+| O3 | Base `Behaviour.setOptions` enables directly, so `canvas.update({ behaviours: { id: { enabled } } })` on a behaviour without its own `setOptions` fires no `scene:behaviour:enable` / `disable` | 🚧 implemented, unmerged — routed through the registry when mounted (A1, A2, `rfc:feat-2026-09-29-commands-stop-at-saved-control-panels`) |
+| O4 | `useHoverElementPreview`, `useViewTarget`, `ElementInspectorViewPanel` re-attach on `scene:behaviour:register` but never detach on the new `scene:behaviour:unregister` | 🚧 implemented, unmerged — `useBehaviourInstance` (A3, A4, `rfc:feat-2026-09-29-commands-stop-at-saved-control-panels`) |
 
 ## 7. Stories — only when asked (root rule 11)
 

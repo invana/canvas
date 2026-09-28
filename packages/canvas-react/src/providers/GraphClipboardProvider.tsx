@@ -12,6 +12,7 @@ import {
 } from '@invana/graph';
 import type { Canvas, CommandArgSpec } from '@invana/canvas';
 
+import { useCanvasGraphClipboard, useCanvasGraphHistory } from '../hooks/useGraphEditState';
 import { useResolvedCanvas } from '../hooks/useResolvedCanvas';
 import { ClipboardContext } from '../ClipboardContext';
 import { HistoryContext } from '../HistoryContext';
@@ -27,18 +28,24 @@ export interface GraphClipboardProviderProps {
 }
 
 /**
- * Constructs a `GraphClipboard` over the target layer's store and provides it
- * via {@link ClipboardContext}. Place it **inside** `<Canvas>` and **after** the
- * `<GraphLayer>` it targets. Descendant `useClipboard` / Cut-Copy-Paste-Delete
- * buttons resolve the clipboard from here. Pair with a `<GraphHistoryProvider>`
- * to make cut/paste/delete undoable.
+ * Provides the target layer's `GraphClipboard` via {@link ClipboardContext},
+ * for descendant `useClipboard` / Cut-Copy-Paste-Delete buttons.
  *
- * While mounted it also registers the `clipboard.cut` / `.copy` / `.paste` /
- * `.delete` commands on the canvas, for control panels, and an undoable
- * `graph.erase` when a `<GraphHistoryProvider>` is above it. The command
- * bodies are `@invana/graph`'s `copySelection` / `cutSelection` /
+ * **On a `GraphCanvas`** the canvas already owns a clipboard per graph layer,
+ * with the `clipboard.*` commands registered (undoable on the canvas's own
+ * history), so this provider only **bridges** that instance into the context
+ * and applies `pasteOffset` while mounted. It registers nothing — unless a
+ * `<GraphHistoryProvider>` above it built its own history (the canvas has none:
+ * `history: false`), in which case it registers the commands over that history
+ * as below. Optional there: `useGraphClipboard` falls back to the canvas's own.
+ *
+ * **Elsewhere** (a plain `Canvas`) it keeps the original behaviour: it builds a
+ * `GraphClipboard` over the layer's store and while mounted registers
+ * `clipboard.cut` / `.copy` / `.paste` / `.delete` and a selection-aware
+ * `graph.erase`, undoable when a `<GraphHistoryProvider>` is above it. The
+ * command bodies are `@invana/graph`'s `copySelection` / `cutSelection` /
  * `deleteSelection` / `pasteAndSelect` — the same functions `useClipboard`
- * calls, so the hook and the commands can't diverge.
+ * calls. Place it **after** the `<GraphLayer>` it targets.
  */
 /** The click-select behaviour a clipboard command reads (`args.clickSelectId`, default `'click-select'`). */
 function clickSelectIdOf(args: unknown): string {
@@ -58,22 +65,43 @@ export function GraphClipboardProvider({
   children,
 }: GraphClipboardProviderProps) {
   const resolved = useResolvedCanvas(canvas);
-  const [clipboard, setClipboard] = useState<GraphClipboard | null>(null);
+  // The `GraphCanvas`'s own clipboard / history for the layer, when it has them.
+  const owned = useCanvasGraphClipboard(resolved, layerId);
+  const ownedHistory = useCanvasGraphHistory(resolved, layerId);
+  const [own, setOwn] = useState<GraphClipboard | null>(null);
+  const offsetX = pasteOffset?.x;
+  const offsetY = pasteOffset?.y;
 
+  // Bridging: apply `pasteOffset` to the canvas's clipboard while mounted.
   useEffect(() => {
+    if (!owned || offsetX === undefined || offsetY === undefined) return;
+    const prev = owned.offset;
+    owned.setPasteOffset({ x: offsetX, y: offsetY });
+    return () => owned.setPasteOffset(prev);
+  }, [owned, offsetX, offsetY]);
+
+  // Not bridging: build one.
+  useEffect(() => {
+    if (owned) return;
     const layer = resolved.layers.get<GraphLayer>(layerId);
     const store = layer?.store;
     if (!store) return;
-    const instance = new GraphClipboard(store, pasteOffset ? { pasteOffset } : {});
-    setClipboard(instance);
-    return () => setClipboard(null);
-  }, [resolved, layerId, pasteOffset]);
+    const offset = offsetX !== undefined && offsetY !== undefined ? { x: offsetX, y: offsetY } : undefined;
+    const instance = new GraphClipboard(store, offset ? { pasteOffset: offset } : {});
+    setOwn(instance);
+    return () => setOwn(null);
+  }, [resolved, layerId, offsetX, offsetY, owned]);
 
   // Undoable when a `<GraphHistoryProvider>` is an ancestor. Read through a ref
   // so the registered commands always see the current history.
   const history = useContext(HistoryContext);
   const historyRef = useRef(history);
   historyRef.current = history;
+
+  // The canvas's built-in `clipboard.*` already cover its own clipboard + history.
+  // Register ours only when not bridging, or when an ancestor's history isn't the
+  // canvas's (the canvas was built with `history: false`).
+  const clipboard = owned !== null && history !== null && history !== ownedHistory ? owned : own;
 
   // While mounted, cut / copy / paste / delete are canvas commands. They act on
   // the click-select behaviour's selection (`args.clickSelectId`, default
@@ -121,5 +149,5 @@ export function GraphClipboardProvider({
     };
   }, [clipboard, resolved, layerId]);
 
-  return <ClipboardContext.Provider value={clipboard}>{children}</ClipboardContext.Provider>;
+  return <ClipboardContext.Provider value={owned ?? own}>{children}</ClipboardContext.Provider>;
 }

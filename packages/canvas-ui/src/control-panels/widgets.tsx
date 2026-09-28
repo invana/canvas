@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react';
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, LocateFixed } from 'lucide-react';
-import type { Canvas } from '@invana/canvas';
+import type { Canvas, CommandArgSpec } from '@invana/canvas';
 import { useCommandStates, useZoom } from '@invana/canvas-react';
 
 import { ToolbarItems, type ToolbarIcon } from '../components';
@@ -20,8 +20,31 @@ export interface ControlWidgetProps {
 /**
  * A control-panel **widget**: live UI that a `{ type: 'widget', widget: name }`
  * item names. Register app widgets via `<ControlPanels widgets={…}>`.
+ *
+ * A widget may describe its `options` bag with a static {@link ControlWidgetOptionsSpec}
+ * — the same `CommandArgSpec` vocabulary a command's `args` use — so the Studio's
+ * control-panel editor shows a field per described key instead of raw JSON.
+ * Keys it doesn't describe (and every key of an undescribed widget) stay JSON.
  */
-export type ControlWidget = ComponentType<ControlWidgetProps>;
+export type ControlWidget = ComponentType<ControlWidgetProps> & {
+  /** Describes the widget's `options`, one entry per key. */
+  optionsSpec?: ControlWidgetOptionsSpec;
+};
+
+/** A widget's option descriptor: `CommandArgSpec` per `options` key. */
+export type ControlWidgetOptionsSpec = Readonly<Record<string, CommandArgSpec>>;
+
+/**
+ * Each widget's {@link ControlWidget.optionsSpec}, by name — what the control-panel
+ * editor needs to turn widget options into fields. Undescribed widgets are left out.
+ */
+export function controlWidgetOptionsSpecs(
+  widgets: Readonly<Record<string, ControlWidget>>,
+): Readonly<Record<string, ControlWidgetOptionsSpec>> {
+  const out: Record<string, ControlWidgetOptionsSpec> = {};
+  for (const [name, widget] of Object.entries(widgets)) if (widget.optionsSpec) out[name] = widget.optionsSpec;
+  return out;
+}
 
 /** Live zoom level, e.g. `125%`. */
 function ZoomReadoutWidget({ canvas }: ControlWidgetProps) {
@@ -79,6 +102,9 @@ function PanPadWidget({ canvas, options }: ControlWidgetProps) {
     </div>
   );
 }
+PanPadWidget.optionsSpec = {
+  step: { kind: 'number', label: 'Step (px)', description: 'How far one arrow click pans.', default: PAN_STEP },
+} satisfies ControlWidgetOptionsSpec;
 
 // UI-rich controls (a hover-card form, a control that mounts its own layer) are
 // widgets: the spec names them, their `options` are the component's props.
@@ -87,6 +113,25 @@ function PanPadWidget({ canvas, options }: ControlWidgetProps) {
 function ExportImageWidget({ canvas, options }: ControlWidgetProps) {
   return <ExportImageToolbar {...(options as ExportImageToolbarProps | undefined)} canvas={canvas} />;
 }
+// The JSON-able `ExportImageToolbarProps`; `defaultValue` (a settings object) stays JSON.
+ExportImageWidget.optionsSpec = {
+  formats: { kind: 'strings', label: 'Formats', description: 'Offered formats, in order: png, jpg, webp, svg.', default: ['png', 'jpg', 'webp', 'svg'] },
+  filename: { kind: 'string', label: 'Filename', default: 'canvas' },
+  label: { kind: 'string', label: 'Label', default: 'Export' },
+  triggerText: { kind: 'string', label: 'Trigger text' },
+  align: {
+    kind: 'enum',
+    label: 'Card alignment',
+    default: 'end',
+    options: [
+      { value: 'start', label: 'Start' },
+      { value: 'center', label: 'Center' },
+      { value: 'end', label: 'End' },
+    ],
+  },
+  openDelay: { kind: 'number', label: 'Open delay (ms)', default: 120 },
+  closeDelay: { kind: 'number', label: 'Close delay (ms)', default: 200 },
+} satisfies ControlWidgetOptionsSpec;
 
 /** Save / load state JSON trigger + hover card. `options` → `ExportStateToolbarProps`. */
 function ExportStateWidget({ canvas, options }: ControlWidgetProps) {

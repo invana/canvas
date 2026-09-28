@@ -40,7 +40,7 @@ export class GraphHistory {
   readonly events = new EventEmitter<GraphHistoryEventMap>();
 
   private readonly store: GraphStore;
-  private readonly limit: number;
+  private limit: number;
 
   private readonly undoStack: HistoryEntry[] = [];
   private readonly redoStack: HistoryEntry[] = [];
@@ -139,6 +139,22 @@ export class GraphHistory {
     });
     entry.at = now();
     this.undoStack.push(entry);
+    this.emitChange();
+  }
+
+  /** The maximum undo depth. */
+  get maxDepth(): number {
+    return this.limit;
+  }
+
+  /**
+   * Change the maximum undo depth. Lowering it drops the oldest entries past
+   * the new limit at once.
+   */
+  setLimit(limit: number): void {
+    this.limit = limit;
+    if (this.undoStack.length <= limit) return;
+    this.undoStack.splice(0, this.undoStack.length - limit);
     this.emitChange();
   }
 

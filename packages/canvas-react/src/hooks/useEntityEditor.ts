@@ -1,4 +1,3 @@
-import { useContext } from 'react';
 import type { Canvas } from '@invana/canvas';
 import type {
   GraphLayer,
@@ -10,7 +9,7 @@ import type {
 
 import { useResolvedCanvas } from './useResolvedCanvas';
 import { useInspectTarget } from './useInspectTarget';
-import { HistoryContext } from '../HistoryContext';
+import { useGraphHistory } from './useGraphEditState';
 import type { PropertiesEditorValues } from '../uiModel';
 
 export interface UseEntityEditorOptions {
@@ -39,15 +38,15 @@ export interface EntityEditorTarget {
   /** Current `data` as a flat string map (non-string values are stringified). */
   data: Record<string, string>;
   /**
-   * Write the editor's values back to the store, undoable as one entry when a
-   * `<GraphHistoryProvider>` is present (a direct mutation otherwise). Replaces
+   * Write the editor's values back to the store, undoable as one entry when
+   * there is a graph history (a direct mutation otherwise). Replaces
    * `data` wholesale. A **node** also overwrites `style.labelText` (spreading the
    * prior style); an **edge** writes its `type` instead — edges have no label.
    */
   commit: (values: PropertiesEditorValues) => void;
   /**
    * Swap an edge's `source`/`target` (reverse its direction). Present only for
-   * edges; undoable as one entry when a `<GraphHistoryProvider>` is present.
+   * edges; undoable as one entry when there is a graph history.
    */
   reverse?: () => void;
 }
@@ -69,7 +68,8 @@ function toStringMap(data: unknown): Record<string, string> {
  * that writes edits back undoably — or `null` when nothing is targeted (so a
  * panel can render nothing). Reads the target via {@link useInspectTarget}
  * (needs a `ClickInspectBehaviour`, independent of selection); commits via the
- * `GraphHistory` from a `<GraphHistoryProvider>` ancestor when present.
+ * graph history when there is one ({@link useGraphHistory}: a
+ * `<GraphHistoryProvider>` ancestor's, else the `GraphCanvas`'s own for `layerId`).
  *
  * The view (`<PropertiesEditor>`) and placement (`<Panel>`) are the consumer's —
  * see {@link InspectorPanel} for the turnkey wiring.
@@ -80,7 +80,7 @@ export function useEntityEditor(
 ): EntityEditorTarget | null {
   const { layerId = 'graph', inspectId = 'click-inspect', typeAsLabel = false } = options;
   const resolved = useResolvedCanvas(canvas);
-  const history = useContext(HistoryContext);
+  const history = useGraphHistory(layerId, resolved);
   const single = useInspectTarget({ inspectId }, canvas);
   if (!single) return null;
 

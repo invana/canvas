@@ -18,7 +18,7 @@
  * | `layout.activate` | `{ value }` | choice over the registered layouts; value = `activeLayout` |
  * | `background.grid` | `{ layerId?, patternType? }` (default `'background'`) | toggle, active while the background is a pattern |
  * | `layer.visible` | `{ id }` | toggle, active while layer `id` is visible |
- * | `history.undo` / `history.redo` | — | button over `canvas.history` (definition edits); `GraphHistoryProvider` overrides both to also cover graph edits |
+ * | `history.undo` / `history.redo` | — | button over `canvas.history` (definition edits); `GraphCanvas` (or a `GraphHistoryProvider` on a plain canvas) overrides both to also cover graph edits |
  *
  * Each command also describes its args as data (`CanvasCommand.args`), so the
  * Studio's control-panel editor draws a field per key.

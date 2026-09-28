@@ -154,6 +154,7 @@ export type {
   ControlPanelFormState,
   ControlPanelFormError,
   CommandArgDescriptors,
+  WidgetOptionDescriptors,
 } from './editor-panels/control-panels';
 export {
   SchemaEditorPanel,
@@ -978,10 +979,13 @@ export { numberToHex, hexToNumber } from './shared/color';
 export {
   ControlPanels,
   HeaderControlPanels,
+  RegionControlPanels,
+  hasRailControlPanels,
   ControlItems,
   useControlItems,
   DEFAULT_CONTROL_ICONS,
   DEFAULT_CONTROL_WIDGETS,
+  controlWidgetOptionsSpecs,
   CANVAS_CONTROL_ITEMS,
   EDGE_TYPE_CONTROL_ITEMS,
   EDIT_CONTROL_ITEMS,
@@ -1003,10 +1007,13 @@ export {
   type ControlPanelsProps,
   type HeaderControlPanelsProps,
   type HeaderRegion,
+  type RegionControlPanelsProps,
+  type ControlPanelRail,
   type ControlItemsProps,
   type UseControlItemsOptions,
   type ControlWidget,
   type ControlWidgetProps,
+  type ControlWidgetOptionsSpec,
 } from './control-panels';
 
 // The pixels: the `GraphCanvasApp` shell, assembled toolbars, dumb building-block

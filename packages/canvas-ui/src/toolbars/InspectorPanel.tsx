@@ -37,7 +37,7 @@ export interface InspectorPanelProps {
  * whenever an element is clicked for editing, and renders nothing otherwise.
  *
  * Needs a `ClickInspectBehaviour` (for the click-to-edit target) and, for
- * undoable commits, a `<GraphHistoryProvider>` ancestor. Remounts the editor
+ * undoable commits, a graph history (every `GraphCanvas` has one). Remounts the editor
  * (via `key`) when the targeted element changes, so the form reloads from it.
  */
 export function InspectorPanel({

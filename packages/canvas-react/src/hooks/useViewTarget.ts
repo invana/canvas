@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Canvas } from '@invana/canvas';
 import type { ClickViewBehaviour, ViewTarget } from '@invana/graph';
 
-import { useResolvedCanvas } from './useResolvedCanvas';
+import { useBehaviourInstance } from './useBehaviourInstance';
 
 export interface UseViewTargetOptions {
   /** Id of the `ClickViewBehaviour` to read the target from. Default `'click-view'`. */
@@ -25,33 +25,17 @@ export function useViewTarget(
   canvas?: Canvas | null,
 ): ViewTarget | null {
   const { viewId = 'click-view' } = options;
-  const resolved = useResolvedCanvas(canvas);
+  const behaviour = useBehaviourInstance<ClickViewBehaviour>(viewId, canvas);
   const [target, setTarget] = useState<ViewTarget | null>(null);
 
+  // `useBehaviourInstance` follows late registration (the viewer UI nested inside
+  // the `<ClickViewBehaviour>` wrapper, whose effect runs after this child's),
+  // removal, and re-registration under the same id.
   useEffect(() => {
-    let offChange: (() => void) | undefined;
-    const attach = (): boolean => {
-      const behaviour = resolved.behaviours.get<ClickViewBehaviour>(viewId);
-      if (!behaviour) return false;
-      setTarget(behaviour.getTarget());
-      offChange = behaviour.events.on('view:change', setTarget);
-      return true;
-    };
-
-    if (attach()) return () => offChange?.();
-
-    // The behaviour may register *after* this hook mounts — e.g. when the viewer
-    // UI is nested inside the `<ClickViewBehaviour>` wrapper, whose registration
-    // effect (a parent) runs after this child's. Attach as soon as it appears.
-    setTarget(null);
-    const offReg = resolved.events.on('scene:behaviour:register', ({ id }) => {
-      if (id === viewId && attach()) offReg();
-    });
-    return () => {
-      offReg();
-      offChange?.();
-    };
-  }, [resolved, viewId]);
+    setTarget(behaviour?.getTarget() ?? null);
+    if (!behaviour) return;
+    return behaviour.events.on('view:change', setTarget);
+  }, [behaviour]);
 
   return target;
 }

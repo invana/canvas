@@ -1,15 +1,16 @@
-import { useCallback, useContext, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Canvas } from '@invana/canvas';
 import { copySelection, cutSelection, deleteSelection, pasteAndSelect } from '@invana/graph';
 
 import { useResolvedCanvas } from './useResolvedCanvas';
 import { useSelection } from './useSelection';
-import { ClipboardContext } from '../ClipboardContext';
-import { HistoryContext } from '../HistoryContext';
+import { useGraphClipboard, useGraphHistory } from './useGraphEditState';
 
 export interface UseClipboardOptions {
   /** Id of the `ClickSelectBehaviour` selection is read from / re-applied to. Default `'click-select'`. */
   clickSelectId?: string;
+  /** Graph layer whose canvas-owned clipboard / history are used when no provider is above. Default `'graph'`. */
+  layerId?: string;
 }
 
 export interface UseClipboardResult {
@@ -28,10 +29,11 @@ export interface UseClipboardResult {
 }
 
 /**
- * Cut / copy / paste / delete for the current selection, wired to the
- * `GraphClipboard` from a `<GraphClipboardProvider>` ancestor. Operations route
- * through the `<GraphHistoryProvider>`'s history when present, so they're
- * undoable. Reads the selection (and re-selects pasted items) via a
+ * Cut / copy / paste / delete for the current selection, over the
+ * `GraphClipboard` ({@link useGraphClipboard}: a `<GraphClipboardProvider>`
+ * ancestor's, else the one the `GraphCanvas` owns for `layerId`). Operations
+ * journal on the graph history ({@link useGraphHistory}) when there is one, so
+ * they're undoable. Reads the selection (and re-selects pasted items) via a
  * `ClickSelectBehaviour`.
  *
  * `canPaste` tracks the buffer (recomputed after each op); `hasSelection` is
@@ -46,10 +48,10 @@ export function useClipboard(
   options: UseClipboardOptions = {},
   canvas?: Canvas | null,
 ): UseClipboardResult {
-  const { clickSelectId = 'click-select' } = options;
+  const { clickSelectId = 'click-select', layerId = 'graph' } = options;
   const resolved = useResolvedCanvas(canvas);
-  const clipboard = useContext(ClipboardContext);
-  const history = useContext(HistoryContext);
+  const clipboard = useGraphClipboard(layerId, resolved);
+  const history = useGraphHistory(layerId, resolved);
   // Only for the reactive `hasSelection`; the actions read the selection at call time.
   const { count } = useSelection({ clickSelectId }, resolved);
   const [canPaste, setCanPaste] = useState(false);

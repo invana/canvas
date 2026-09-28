@@ -10,11 +10,12 @@ import type { ControlItemSpec } from '@invana/canvas';
  * Where a preset's commands come from:
  * - engine (every canvas): `camera.*` (zoom / fit / pan / zoomTo / reset),
  *   `view.lock`, `behaviour.toggle`, `layout.*`, `background.grid`;
- * - `GraphCanvas`: `select.mode`, `graph.edgeType`, `graph.clear`, and the modeller
- *   tool `tool.active` / `tool.nodeKind` (the store's `interaction.viewMode`);
+ * - `GraphCanvas`: `select.mode`, `graph.edgeType`, undoable `graph.clear` /
+ *   `graph.erase`, `history.*` over graph edits too, `clipboard.*`, and the
+ *   modeller tool `tool.active` / `tool.nodeKind` (the store's `interaction.viewMode`);
  * - `<CanvasThemeSync>` under a `<ThemeProvider>`: `theme.toggle`;
- * - `<GraphHistoryProvider>` while mounted: `history.*` (+ an undoable `graph.clear`);
- * - `<GraphClipboardProvider>` while mounted: `clipboard.*`.
+ * - on a plain `Canvas`: `<GraphHistoryProvider>` / `<GraphClipboardProvider>`
+ *   while mounted add graph-edit `history.*` / `clipboard.*`.
  * A control whose command isn't registered renders disabled.
  */
 
@@ -47,15 +48,18 @@ export const VIEW_CONTROL_ITEMS: readonly ControlItemSpec[] = [
   },
 ];
 
-/** Undo · redo. Needs a `<GraphHistoryProvider>`. The counterpart of `HistoryToolbar`. */
+/**
+ * Undo · redo — graph edits and Studio edits on a `GraphCanvas` (Studio edits
+ * alone on a plain `Canvas`). The counterpart of `HistoryToolbar`.
+ */
 export const HISTORY_CONTROL_ITEMS: readonly ControlItemSpec[] = [
   { type: 'command', key: 'undo', command: 'history.undo', icon: 'undo', label: 'Undo' },
   { type: 'command', key: 'redo', command: 'history.redo', icon: 'redo', label: 'Redo' },
 ];
 
 /**
- * Cut · copy · paste · delete the selection. Needs a `<GraphClipboardProvider>`
- * (and a `<GraphHistoryProvider>` above it to make them undoable). The
+ * Cut · copy · paste · delete the selection, undoably — built into every
+ * `GraphCanvas` (a plain `Canvas` needs a `<GraphClipboardProvider>`). The
  * counterpart of `EditToolbar`.
  */
 export const EDIT_CONTROL_ITEMS: readonly ControlItemSpec[] = [
@@ -226,8 +230,8 @@ export const EXPLORER_CONTROL_ITEMS: readonly ControlItemSpec[] = [
  * Graph modelling: tool (select / add / connect / delete) · node shape (while
  * adding) · undo / redo · delete selection · clear · fit. The serialisable
  * counterpart of `ModellerToolbar`. The tool works on any `GraphCanvas`; draw
- * behaviours follow it through their `modes`. History and delete need
- * `<GraphHistoryProvider>` / `<GraphClipboardProvider>`. Give the shape picker its kinds by copying the item
+ * behaviours follow it through their `modes`. Undo and delete
+ * are built into `GraphCanvas`. Give the shape picker its kinds by copying the item
  * with `args: { kinds: { circle: 'Circle', … } }`.
  */
 export const MODELLER_CONTROL_ITEMS: readonly ControlItemSpec[] = [

@@ -51,7 +51,8 @@ function ControlPanelForm({
   onApply: (spec: ControlPanelSpec) => void;
 }) {
   const descriptors = choices.commandArgs;
-  const form = useForm<ControlPanelFormState>({ defaultValues: panelToForm(spec, descriptors) });
+  const widgetDescriptors = choices.widgetOptions;
+  const form = useForm<ControlPanelFormState>({ defaultValues: panelToForm(spec, descriptors, widgetDescriptors) });
   const { control, getValues, setValue, setError, clearErrors } = form;
   const positionMode = useWatch({ control, name: 'panel.positionMode' });
   const placement = useWatch({ control, name: 'panel.placement' });
@@ -84,11 +85,13 @@ function ControlPanelForm({
   const insertPreset = () => {
     const items = presets?.[presetForm.getValues('pick.preset')];
     if (!items) return;
-    setValue('items', [...getValues('items'), ...items.map((item) => itemToForm(item, descriptors))], { shouldDirty: true });
+    setValue('items', [...getValues('items'), ...items.map((item) => itemToForm(item, descriptors, widgetDescriptors))], {
+      shouldDirty: true,
+    });
   };
 
   const apply = () => {
-    const { spec: next, errors: found } = formToPanel(getValues(), descriptors);
+    const { spec: next, errors: found } = formToPanel(getValues(), descriptors, widgetDescriptors);
     setErrors(found);
     // Mark each bad value on its own field too, not only in the summary.
     clearErrors();
@@ -159,7 +162,8 @@ function ControlPanelForm({
  *
  * A command's args get a field per key its descriptor (`commandArgs`) names —
  * layer / behaviour / layout ids as pickers over `layers` / `behaviours` /
- * `layouts` — and the rest, like static options, as JSON. A bad value is marked
+ * `layouts` — and the rest as JSON. A widget's options work the same way over
+ * its descriptor (`widgetOptions`), and a picker's static options are rows. A bad value is marked
  * on its field and listed, and nothing is submitted. Slot items (runtime React content) are shown but
  * not editable, and survive every round-trip; so do command / icon / widget
  * names this canvas doesn't register.
@@ -169,6 +173,7 @@ export function ControlPanelsEditorPanel({
   commands,
   icons,
   widgets,
+  widgetOptions,
   commandArgs,
   layers,
   behaviours,
@@ -187,12 +192,13 @@ export function ControlPanelsEditorPanel({
       commands: commands.filter((n) => !n.includes('#')).sort(),
       icons: [...icons].sort(),
       widgets: [...widgets].sort(),
+      ...(widgetOptions ? { widgetOptions } : {}),
       ...(commandArgs ? { commandArgs } : {}),
       ...(layers ? { layers: [...layers].sort() } : {}),
       ...(behaviours ? { behaviours: [...behaviours].sort() } : {}),
       ...(layouts ? { layouts: [...layouts].sort() } : {}),
     }),
-    [commands, icons, widgets, commandArgs, layers, behaviours, layouts],
+    [commands, icons, widgets, widgetOptions, commandArgs, layers, behaviours, layouts],
   );
   // Descriptors arrive as commands register: a form seeded without one must re-seed.
   const described = useMemo(() => Object.keys(commandArgs ?? {}).sort().join(','), [commandArgs]);

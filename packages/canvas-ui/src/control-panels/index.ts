@@ -1,12 +1,12 @@
 export { ControlPanels } from './ControlPanels';
 export type { ControlPanelsProps } from './ControlPanels';
-export { HeaderControlPanels } from './HeaderControlPanels';
-export type { HeaderControlPanelsProps, HeaderRegion } from './HeaderControlPanels';
+export { HeaderControlPanels, RegionControlPanels, hasRailControlPanels } from './HeaderControlPanels';
+export type { ControlPanelRail, HeaderControlPanelsProps, HeaderRegion, RegionControlPanelsProps } from './HeaderControlPanels';
 export { ControlItems, useControlItems } from './ControlItems';
 export type { ControlItemsProps, UseControlItemsOptions } from './ControlItems';
 export { DEFAULT_CONTROL_ICONS } from './icons';
-export { DEFAULT_CONTROL_WIDGETS } from './widgets';
-export type { ControlWidget, ControlWidgetProps } from './widgets';
+export { DEFAULT_CONTROL_WIDGETS, controlWidgetOptionsSpecs } from './widgets';
+export type { ControlWidget, ControlWidgetOptionsSpec, ControlWidgetProps } from './widgets';
 export {
   CANVAS_CONTROL_ITEMS,
   EDGE_TYPE_CONTROL_ITEMS,

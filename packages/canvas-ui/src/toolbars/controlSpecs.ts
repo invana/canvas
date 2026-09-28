@@ -46,7 +46,7 @@ export function lockSpec(behaviourIds?: readonly string[]): ControlItemSpec {
   };
 }
 
-/** Undo / redo (`history.*`, registered by a `<GraphHistoryProvider>`). */
+/** Undo / redo (`history.*` — over graph edits too on a `GraphCanvas`). */
 export function historySpecs(): ControlItemSpec[] {
   return [
     { type: 'command', key: 'undo', command: 'history.undo', icon: 'undo', label: 'Undo' },

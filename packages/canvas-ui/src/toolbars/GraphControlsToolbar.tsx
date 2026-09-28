@@ -9,8 +9,10 @@
  *     + run, zoom / fit / lock, select-mode, grid. No history / clipboard, so no
  *     providers are mounted.
  *   - **`GraphControlsToolbar`** (full) — the lite set plus undo/redo, the
- *     edge-routing style editor, and erase/clear. It self-wraps the
- *     `GraphHistoryProvider` + `GraphClipboardProvider` those sections need.
+ *     edge-routing style editor, and erase/clear. It self-wraps
+ *     `GraphHistoryProvider` + `GraphClipboardProvider` — bridges to the
+ *     `GraphCanvas`'s own history / clipboard for `layerId`, or the
+ *     undo / clipboard source itself on a plain `Canvas`.
  *
  * Both share one core, so they never drift. The controls are **control specs**
  * drawn by `useControlItems` — the same commands a saved control panel runs

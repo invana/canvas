@@ -11,11 +11,13 @@ import {
   ARG_DEFAULT,
   NO_ICON,
   type ArgFieldValue,
+  type ChoiceOptionFields,
   type CommandArgDescriptors,
   type ControlItemFields,
   type ControlPanelFields,
   type ControlPanelFormError,
   type ControlPanelFormState,
+  type WidgetOptionDescriptors,
 } from './types';
 
 /** A blank row of the given kind. */
@@ -33,8 +35,9 @@ export function emptyItemFields(type: ControlItemFields['type'] = 'command'): Co
     icon: NO_ICON,
     activeIcon: NO_ICON,
     display: 'dropdown',
-    choiceOptionsJson: '',
+    choiceOptions: [],
     widget: '',
+    widgetOptions: {},
     widgetOptionsJson: '',
     slot: '',
   };
@@ -67,18 +70,33 @@ function argToForm(spec: CommandArgSpec, value: unknown): ArgFieldValue {
 const SELECT_KINDS = new Set<CommandArgSpec['kind']>(['enum', 'boolean', 'layer', 'behaviour', 'layout']);
 
 /**
- * Split a command's `args` into the described keys' form values and the rest as
- * JSON text. With no descriptor every key is "the rest".
+ * Split a described bag (a command's `args`, a widget's `options`) into the
+ * described keys' form values and the rest as JSON text. With no descriptor
+ * every key is "the rest".
  */
+function describedToForm(
+  bag: unknown,
+  described: Readonly<Record<string, CommandArgSpec>> | undefined,
+): { values: Record<string, ArgFieldValue>; json: string } {
+  if (!described) return { values: {}, json: toJson(bag) };
+  const obj = bag && typeof bag === 'object' && !Array.isArray(bag) ? (bag as Record<string, unknown>) : {};
+  const values: Record<string, ArgFieldValue> = {};
+  for (const [key, spec] of Object.entries(described)) values[key] = argToForm(spec, obj[key]);
+  const rest = Object.fromEntries(Object.entries(obj).filter(([k]) => !(k in described)));
+  // A non-object bag (unusual) has no keys to describe: keep it whole as JSON.
+  const json = bag !== undefined && obj !== bag ? toJson(bag) : Object.keys(rest).length > 0 ? toJson(rest) : '';
+  return { values, json };
+}
+
+/** A command's `args` → the row's `args` + `argsJson` (see {@link describedToForm}). */
 function argsToForm(args: unknown, described: Readonly<Record<string, CommandArgSpec>> | undefined): Pick<ControlItemFields, 'args' | 'argsJson'> {
-  if (!described) return { args: {}, argsJson: toJson(args) };
-  const bag = args && typeof args === 'object' && !Array.isArray(args) ? (args as Record<string, unknown>) : {};
-  const out: Record<string, ArgFieldValue> = {};
-  for (const [key, spec] of Object.entries(described)) out[key] = argToForm(spec, bag[key]);
-  const rest = Object.fromEntries(Object.entries(bag).filter(([k]) => !(k in described)));
-  // A non-object `args` (unusual) has no keys to describe: keep it whole as JSON.
-  const restJson = args !== undefined && bag !== args ? toJson(args) : Object.keys(rest).length > 0 ? toJson(rest) : '';
-  return { args: out, argsJson: restJson };
+  const { values, json } = describedToForm(args, described);
+  return { args: values, argsJson: json };
+}
+
+/** A choice's static options → rows. */
+function choiceOptionsToForm(options: readonly ControlChoiceOption[] | undefined): ChoiceOptionFields[] {
+  return (options ?? []).map((o) => ({ value: o.value, label: o.label, icon: o.icon ?? NO_ICON }));
 }
 
 /**
@@ -86,7 +104,11 @@ function argsToForm(args: unknown, described: Readonly<Record<string, CommandArg
  * `CanvasCommand.args`) turn a command's described args into fields; the rest
  * stay JSON.
  */
-export function itemToForm(item: ControlItemSpec, descriptors?: CommandArgDescriptors): ControlItemFields {
+export function itemToForm(
+  item: ControlItemSpec,
+  descriptors?: CommandArgDescriptors,
+  widgetDescriptors?: WidgetOptionDescriptors,
+): ControlItemFields {
   const row = { ...emptyItemFields(item.type), key: item.key ?? '' };
   switch (item.type) {
     case 'command':
@@ -118,10 +140,12 @@ export function itemToForm(item: ControlItemSpec, descriptors?: CommandArgDescri
         ...argsToForm(item.args, descriptors?.[item.command]),
         label: item.label,
         display: item.display ?? 'dropdown',
-        choiceOptionsJson: toJson(item.options),
+        choiceOptions: choiceOptionsToForm(item.options),
       };
-    case 'widget':
-      return { ...row, widget: item.widget, widgetOptionsJson: toJson(item.options) };
+    case 'widget': {
+      const { values, json } = describedToForm(item.options, widgetDescriptors?.[item.widget]);
+      return { ...row, widget: item.widget, widgetOptions: values, widgetOptionsJson: json };
+    }
     case 'text':
       return { ...row, text: item.text };
     case 'slot':
@@ -131,8 +155,12 @@ export function itemToForm(item: ControlItemSpec, descriptors?: CommandArgDescri
   }
 }
 
-/** Map a panel spec to form state (see {@link itemToForm} for `descriptors`). */
-export function panelToForm(spec: ControlPanelSpec, descriptors?: CommandArgDescriptors): ControlPanelFormState {
+/** Map a panel spec to form state (see {@link itemToForm} for the descriptors). */
+export function panelToForm(
+  spec: ControlPanelSpec,
+  descriptors?: CommandArgDescriptors,
+  widgetDescriptors?: WidgetOptionDescriptors,
+): ControlPanelFormState {
   const position = spec.position ?? 'top-left';
   const insets: ControlPanelInsets = typeof position === 'string' ? {} : position;
   const offset = spec.offset ?? 8;
@@ -153,7 +181,7 @@ export function panelToForm(spec: ControlPanelSpec, descriptors?: CommandArgDesc
     surface: spec.surface ?? placement === 'canvas',
     visible: spec.visible ?? true,
   };
-  return { panel, items: spec.items.map((item) => itemToForm(item, descriptors)) };
+  return { panel, items: spec.items.map((item) => itemToForm(item, descriptors, widgetDescriptors)) };
 }
 
 /** Parse a JSON textarea: empty → `undefined`; bad JSON → an error entry. */
@@ -210,23 +238,34 @@ function argFromForm(
 }
 
 /**
- * A row's args back to one bag: the described keys' fields, over the JSON
- * rest. With no descriptor, the JSON text is the whole bag.
+ * A described bag back to one value: the described keys' fields (named
+ * `<prefix>.<key>` in errors), over the JSON rest (`jsonField`). With no
+ * descriptor, the JSON text is the whole bag.
  */
-function argsFromForm(
-  row: ControlItemFields,
+function describedFromForm(
+  values: Record<string, ArgFieldValue> | undefined,
+  json: string,
   described: Readonly<Record<string, CommandArgSpec>> | undefined,
+  names: { prefix: string; jsonField: string },
   index: number,
   errors: ControlPanelFormError[],
 ): unknown {
-  const rest = parseJson(row.argsJson, { item: index, field: 'argsJson' }, errors);
+  const rest = parseJson(json, { item: index, field: names.jsonField }, errors);
   if (!described) return rest;
   const out: Record<string, unknown> = rest && typeof rest === 'object' && !Array.isArray(rest) ? { ...rest } : {};
   for (const [key, spec] of Object.entries(described)) {
-    const v = argFromForm(spec, row.args?.[key], { item: index, field: `args.${key}` }, errors);
+    const v = argFromForm(spec, values?.[key], { item: index, field: `${names.prefix}.${key}` }, errors);
     if (v !== undefined) out[key] = v;
   }
   return Object.keys(out).length > 0 ? out : undefined;
+}
+
+/** Choice rows back to options; rows without a value are dropped, none → `undefined` (the command's own). */
+function choiceOptionsFromForm(rows: readonly ChoiceOptionFields[] | undefined): ControlChoiceOption[] | undefined {
+  const options = (rows ?? [])
+    .filter((r) => r.value.trim() !== '')
+    .map((r) => ({ value: r.value, label: r.label.trim() === '' ? r.value : r.label, ...(icon(r.icon) ? { icon: r.icon } : {}) }));
+  return options.length > 0 ? options : undefined;
 }
 
 const icon = (v: string): string | undefined => (v && v !== NO_ICON ? v : undefined);
@@ -242,10 +281,12 @@ export function formToItem(
   index: number,
   errors: ControlPanelFormError[],
   descriptors?: CommandArgDescriptors,
+  widgetDescriptors?: WidgetOptionDescriptors,
 ): ControlItemSpec {
   const key = opt(row.key);
   const base = key ? { key } : {};
-  const args = () => argsFromForm(row, descriptors?.[row.command], index, errors);
+  const args = () =>
+    describedFromForm(row.args, row.argsJson, descriptors?.[row.command], { prefix: 'args', jsonField: 'argsJson' }, index, errors);
   switch (row.type) {
     case 'command': {
       const a = args();
@@ -277,19 +318,26 @@ export function formToItem(
     }
     case 'choice': {
       const a = args();
-      const options = parseJson(row.choiceOptionsJson, { item: index, field: 'choiceOptionsJson' }, errors);
+      const options = choiceOptionsFromForm(row.choiceOptions);
       return {
         type: 'choice',
         ...base,
         command: row.command,
         ...(a !== undefined ? { args: a as Record<string, unknown> } : {}),
         label: row.label,
-        ...(options !== undefined ? { options: options as ControlChoiceOption[] } : {}),
+        ...(options !== undefined ? { options } : {}),
         ...(row.display === 'segmented' ? { display: 'segmented' as const } : {}),
       };
     }
     case 'widget': {
-      const options = parseJson(row.widgetOptionsJson, { item: index, field: 'widgetOptionsJson' }, errors);
+      const options = describedFromForm(
+        row.widgetOptions,
+        row.widgetOptionsJson,
+        widgetDescriptors?.[row.widget],
+        { prefix: 'widgetOptions', jsonField: 'widgetOptionsJson' },
+        index,
+        errors,
+      );
       return {
         type: 'widget',
         ...base,
@@ -314,6 +362,7 @@ export function formToItem(
 export function formToPanel(
   state: ControlPanelFormState,
   descriptors?: CommandArgDescriptors,
+  widgetDescriptors?: WidgetOptionDescriptors,
 ): { spec: ControlPanelSpec; errors: ControlPanelFormError[] } {
   const errors: ControlPanelFormError[] = [];
   const p = state.panel;
@@ -327,9 +376,9 @@ export function formToPanel(
       : (p.anchor as ControlPanelAnchor);
   const ox = p.offsetX ?? 8;
   const oy = p.offsetY ?? 8;
-  const items = state.items.map((row, i) => formToItem(row, i, errors, descriptors));
+  const items = state.items.map((row, i) => formToItem(row, i, errors, descriptors, widgetDescriptors));
   if (p.placement && p.placement !== 'canvas') {
-    // A header panel: no position, offset, flow or stretch — they don't apply there.
+    // A header / footer panel: no position, offset, flow or stretch — they don't apply there.
     return {
       spec: {
         kind: 'control-panel',

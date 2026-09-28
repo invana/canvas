@@ -7,15 +7,27 @@
  * anchor-or-insets pair of fields, and every item becomes one flat row whose
  * visible fields depend on its `type`. A command's `args` get one field per key
  * its `CanvasCommand.args` descriptor names (`args.<key>`); keys it doesn't name
- * — and every key of an undescribed command — stay JSON text (`argsJson`), as do
- * a choice's static `options` and a widget's `options`. `mapping.ts` is the
- * bridge both ways.
+ * — and every key of an undescribed command — stay JSON text (`argsJson`). A
+ * widget's `options` work the same way over the widget's `optionsSpec`
+ * (`widgetOptions.<key>` + `widgetOptionsJson`), and a choice's static `options`
+ * are rows (`choiceOptions`). `mapping.ts` is the bridge both ways.
  */
 
 import type { CommandArgSpec, ControlItemSpec, ControlPanelPlacement } from '@invana/canvas';
 
 /** Each command's argument descriptor, by command name (`CanvasCommand.args`). */
 export type CommandArgDescriptors = Readonly<Record<string, Readonly<Record<string, CommandArgSpec>>>>;
+
+/** Each widget's options descriptor, by widget name (`ControlWidget.optionsSpec`). */
+export type WidgetOptionDescriptors = Readonly<Record<string, Readonly<Record<string, CommandArgSpec>>>>;
+
+/** One static option of a choice item, as a form row (`ControlChoiceOption`). */
+export interface ChoiceOptionFields {
+  value: string;
+  label: string;
+  /** Icon name, or {@link NO_ICON}. */
+  icon: string;
+}
 
 /**
  * A described argument's form value: text for text-like kinds (a `strings` list
@@ -71,10 +83,12 @@ export interface ControlItemFields {
   activeIcon: string;
   /** Choice display — `'dropdown'` or `'segmented'`. */
   display: string;
-  /** A choice's static `options` as JSON text (empty = the command's own). */
-  choiceOptionsJson: string;
+  /** A choice's static `options`, one row each (none = the command's own). */
+  choiceOptions: ChoiceOptionFields[];
   widget: string;
-  /** A widget's `options` as JSON text (empty = none). */
+  /** Described widget options, one form value per key (see {@link ArgFieldValue}). */
+  widgetOptions: Record<string, ArgFieldValue>;
+  /** The options the widget's descriptor doesn't name — or all of them when it has none — as JSON text (empty = none). */
   widgetOptionsJson: string;
   /** A slot's name — read-only (its content is runtime React, owned by `<ControlPanel>`). */
   slot: string;

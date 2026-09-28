@@ -90,6 +90,7 @@ export type { CompositePart, CompositeRootSpec } from '@invana/canvas';
 
 export {
   GraphCanvas,
+  captureNodeDrags,
   DEFAULT_EDGE_TYPES,
   DEFAULT_EDGE_TYPE_LABELS,
   eraseCommand,
@@ -108,6 +109,7 @@ export {
   edgePathType,
   setEdgePathType,
 } from './canvas';
+export type { GraphCanvasOptions, GraphEditAccess } from './canvas';
 
 export {
   OneShotPositionLayout,

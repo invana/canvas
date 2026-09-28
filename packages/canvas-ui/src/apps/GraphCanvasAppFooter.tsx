@@ -9,12 +9,16 @@
  * Like the header, there's no baked content — compose whatever you want into the
  * slots: drop `<GraphStatusBar/>` on the left, `<CanvasMessageBar/>` on the right,
  * live stats wherever. A slot may be a node or a render-fn handed the live
- * {@link GraphCanvasAppControlContext}. Shared types are imported **type-only**
+ * {@link GraphCanvasAppControlContext}. After each slot come the control panels
+ * saved into that region (`placement: 'footer-<region>'`), as in the header.
+ * Shared types are imported **type-only**
  * from `./GraphCanvasApp` (erased at runtime → no cycle).
  */
 
 import { type ReactNode } from 'react';
 import type { NavHorizontalProps } from '@invana/ui';
+
+import { RegionControlPanels, type HeaderRegion } from '../control-panels/HeaderControlPanels';
 
 import type { GraphCanvasAppControlContext, RegionSlot } from './GraphCanvasApp';
 
@@ -53,9 +57,17 @@ export function buildFooterNav(
 ): NavHorizontalProps {
   // Footer content is engine-bound (status / message), so render only once live.
   const live = ctx.canvas != null;
-  const leftNode = left !== undefined && live ? renderSlot(left, ctx) : null;
-  const centerNode = center !== undefined && live ? renderSlot(center, ctx) : null;
-  const rightNode = right !== undefined && live ? renderSlot(right, ctx) : null;
+  // Each region: its code slot, then the control panels saved into it.
+  const region = (slot: RegionSlot | undefined, name: HeaderRegion): ReactNode =>
+    live ? (
+      <>
+        {slot !== undefined ? renderSlot(slot, ctx) : null}
+        <RegionControlPanels rail="footer" region={name} canvas={ctx.canvas} />
+      </>
+    ) : null;
+  const leftNode = region(left, 'left');
+  const centerNode = region(center, 'center');
+  const rightNode = region(right, 'right');
 
   return {
     left: leftNode,

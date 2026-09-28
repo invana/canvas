@@ -3,16 +3,16 @@ import {
   GraphHistory,
   canRedoEither,
   canUndoEither,
+  captureNodeDrags,
   clearGraphLayer,
   eraseCommand,
   redoNewest,
   undoNewest,
   type GraphLayer,
-  type HistoryOp,
-  type Vec2,
 } from '@invana/graph';
 import type { Canvas } from '@invana/canvas';
 
+import { useCanvasGraphHistory } from '../hooks/useGraphEditState';
 import { useResolvedCanvas } from '../hooks/useResolvedCanvas';
 import { HistoryContext } from '../HistoryContext';
 
@@ -27,26 +27,23 @@ export interface GraphHistoryProviderProps {
 }
 
 /**
- * Constructs a `GraphHistory` over the target layer's store and provides it via
- * {@link HistoryContext}. Place it **inside** `<Canvas>` and **after** the
- * `<GraphLayer>` it targets, so the layer (and its store) exist when the effect
- * runs. Descendant `useHistory` / Undo-Redo-Redraw buttons resolve the history
- * from here.
+ * Provides the target layer's `GraphHistory` via {@link HistoryContext}, for
+ * descendant `useHistory` / Undo-Redo buttons.
  *
- * Node **drags** are captured as one undoable "move" entry per gesture (snapshot
- * at `node:drag-start`, net change pushed at `node:drag-end`) — reusing
- * `history.push`, so per-frame writes and layout sim ticks never enter the stack.
+ * **On a `GraphCanvas`** the canvas already owns one per graph layer — with node
+ * drags journalled and the `history.*` / undoable `graph.clear` / `graph.erase`
+ * commands registered — so this provider only **bridges** that instance into the
+ * context and applies `limit` while mounted. It builds and registers nothing.
+ * Optional there: `useGraphHistory` falls back to the canvas's own.
  *
- * While mounted it also registers the `history.undo` / `history.redo` commands
- * and an undoable `graph.clear` on the canvas, for control panels. Those
- * `history.*` commands also cover the canvas's definition edits
- * (`canvas.history`): undo reverts whichever of the two stacks holds the newer
- * step, redo re-applies the older redo top — `@invana/graph`'s `undoNewest` /
- * `redoNewest` (enabled via `canUndoEither` / `canRedoEither`). The undoable
- * `graph.clear` is `@invana/graph`'s `clearGraphLayer`.
- *
- * The history is rebuilt (and its stacks cleared) if `layerId`, `limit`, or the
- * resolved canvas change.
+ * **Elsewhere** (a plain `Canvas`, or a `GraphCanvas` built with
+ * `history: false`) it keeps the original behaviour: it builds a `GraphHistory`
+ * over the layer's store, journals node drags on it (`captureNodeDrags`), and
+ * while mounted registers `history.undo` / `history.redo` (over this history and
+ * `canvas.history` — `undoNewest` / `redoNewest`) plus undoable `graph.clear` /
+ * `graph.erase`. That history is rebuilt (stacks cleared) if `layerId`, `limit`
+ * or the canvas change. Place the provider **after** the `<GraphLayer>` it
+ * targets, so the layer exists when its effect runs.
  */
 /** The layer a `graph.clear` targets (`args.layerId`, default `'graph'`). */
 function targetLayer(args: unknown): string {
@@ -61,68 +58,45 @@ export function GraphHistoryProvider({
   children,
 }: GraphHistoryProviderProps) {
   const resolved = useResolvedCanvas(canvas);
-  const [history, setHistory] = useState<GraphHistory | null>(null);
+  // The `GraphCanvas`'s own history for the layer, when it has one.
+  const owned = useCanvasGraphHistory(resolved, layerId);
+  const [own, setOwn] = useState<GraphHistory | null>(null);
 
+  // Bridging: apply `limit` to the canvas's history while mounted.
   useEffect(() => {
+    if (!owned || limit === undefined) return;
+    const prev = owned.maxDepth;
+    owned.setLimit(limit);
+    return () => owned.setLimit(prev);
+  }, [owned, limit]);
+
+  // Not bridging: build one.
+  useEffect(() => {
+    if (owned) return;
     const layer = resolved.layers.get<GraphLayer>(layerId);
     const store = layer?.store;
     if (!store) return;
     const instance = new GraphHistory(store, limit !== undefined ? { limit } : {});
-    setHistory(instance);
+    setOwn(instance);
     return () => {
       instance.clear();
-      setHistory(null);
+      setOwn(null);
     };
-  }, [resolved, layerId, limit]);
+  }, [resolved, layerId, limit, owned]);
 
-  // Capture node drags as one "move" entry per gesture. Every dragged primary
-  // (a multi-selection drag moves them all) plus each one's descendants (group
-  // drag) is snapshot at drag-start; the net position change is pushed at
-  // drag-end. No per-frame recording → layout sim writes and programmatic
-  // moves stay out of history.
+  // Not bridging: journal node drags on it, one "move" entry per gesture.
   useEffect(() => {
-    if (!history) return;
+    if (!own) return;
     const layer = resolved.layers.get<GraphLayer>(layerId);
-    const store = layer?.store;
-    if (!layer || !store) return;
+    return layer ? captureNodeDrags(layer, own) : undefined;
+  }, [resolved, layerId, own]);
 
-    let before: Map<string, Vec2> | null = null;
-    const offStart = layer.events.on('node:drag-start', ({ nodeId, nodeIds }) => {
-      const ids = new Set<string>();
-      for (const primary of nodeIds ?? [nodeId]) {
-        ids.add(primary);
-        for (const desc of store.descendantsOf(primary)) ids.add(desc);
-      }
-      before = new Map();
-      for (const id of ids) {
-        const p = store.getPosition(id);
-        if (p) before.set(id, { x: p.x, y: p.y });
-      }
-    });
-    const offEnd = layer.events.on('node:drag-end', () => {
-      const snap = before;
-      before = null;
-      if (!snap) return;
-      const ops: HistoryOp[] = [];
-      for (const [id, from] of snap) {
-        const to = store.getPosition(id);
-        if (to && (to.x !== from.x || to.y !== from.y)) {
-          ops.push({ kind: 'moveNode', id, before: from, after: { x: to.x, y: to.y } });
-        }
-      }
-      if (ops.length > 0) history.push({ ops, label: 'move' });
-    });
-    return () => {
-      offStart();
-      offEnd();
-    };
-  }, [resolved, layerId, history]);
-
-  // While mounted, undo / redo and an undoable `graph.clear` are canvas
-  // commands, so a saved control panel can bind to them. `graph.clear` overrides
-  // the graph's plain built-in and hands it back on unmount; a clear aimed at a
-  // layer this history doesn't journal falls back to the plain clear.
+  // Not bridging: while mounted, undo / redo and an undoable `graph.clear` are
+  // canvas commands, so a saved control panel can bind to them. `graph.clear`
+  // overrides the plain built-in and hands it back on unmount; a clear aimed at
+  // a layer this history doesn't journal falls back to the plain clear.
   useEffect(() => {
+    const history = own;
     if (!history) return;
     const commands = resolved.commands;
     const offs = [
@@ -156,7 +130,7 @@ export function GraphHistoryProvider({
     return () => {
       for (const off of offs) off();
     };
-  }, [history, resolved, layerId]);
+  }, [own, resolved, layerId]);
 
-  return <HistoryContext.Provider value={history}>{children}</HistoryContext.Provider>;
+  return <HistoryContext.Provider value={owned ?? own}>{children}</HistoryContext.Provider>;
 }

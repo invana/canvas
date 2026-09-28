@@ -260,11 +260,27 @@ export abstract class Behaviour<TOptions extends BehaviourOptions = BehaviourOpt
   setOptions(changes: Partial<TOptions>): void {
     this._options = { ...this._options, ...changes };
     if ('modes' in changes) this.setModes(changes.modes);
-    if (changes.enabled !== undefined) {
-      if (changes.enabled) this.enable();
-      else this.disable();
-    }
+    if (changes.enabled !== undefined) this.applyEnabled(changes.enabled);
     this.onOptionsChanged(changes);
+  }
+
+  /**
+   * Apply an `enabled` option. While this instance is the one mounted under its
+   * id, the toggle goes through the registry so `scene:behaviour:enable` /
+   * `disable` and the gesture-conflict warning fire — calling {@link enable}
+   * directly would leave the registry's own `setEnabled` (the engine's
+   * `canvas.update` path) a silent no-op. Unmounted, or superseded by a newer
+   * instance under the same id, it toggles itself directly.
+   */
+  private applyEnabled(enabled: boolean): void {
+    const registry = this.ctx?.behaviours;
+    if (registry && registry.get(this.id) === this) {
+      registry.setEnabled(this.id, enabled);
+    } else if (enabled) {
+      this.enable();
+    } else {
+      this.disable();
+    }
   }
 
   /**

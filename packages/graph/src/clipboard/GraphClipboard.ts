@@ -59,7 +59,7 @@ export class GraphClipboard {
   readonly events = new EventEmitter<GraphClipboardEventMap>();
 
   private readonly store: GraphStore;
-  private readonly pasteOffset: Vec2;
+  private pasteOffset: Vec2;
   private readonly remapId: (oldId: string, attempt: number) => string;
 
   private bufferedNodes: GraphNode[] = [];
@@ -74,6 +74,16 @@ export class GraphClipboard {
   /** True iff the buffer holds at least one node or edge (drives "can paste"). */
   get hasContent(): boolean {
     return this.bufferedNodes.length > 0 || this.bufferedEdges.length > 0;
+  }
+
+  /** The offset applied to pasted node positions. */
+  get offset(): Vec2 {
+    return this.pasteOffset;
+  }
+
+  /** Change the offset applied to pasted node positions (from the next paste). */
+  setPasteOffset(offset: Vec2): void {
+    this.pasteOffset = offset;
   }
 
   /** Empty the buffer. */

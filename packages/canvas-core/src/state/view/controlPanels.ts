@@ -172,33 +172,42 @@ export type ControlItemSpec =
 
 /**
  * Which surface draws a panel. `'canvas'` floats it over the canvas (the
- * `position` / `offset` / `stretch` fields place it there). The `header-*`
- * placements put it in a region of the app shell's header rail instead —
- * `GraphCanvasApp`'s left / centre / right — where it flows inline after that
- * region's own content: `position`, `offset` and `stretch` are ignored, it is
- * always a row, and `surface` defaults to `false`.
+ * `position` / `offset` / `stretch` fields place it there). The `header-*` and
+ * `footer-*` placements put it in a region of the app shell's header or footer
+ * rail instead — `GraphCanvasApp`'s left / centre / right — where it flows
+ * inline after that region's own content: `position`, `offset` and `stretch`
+ * are ignored, it is always a row, and `surface` defaults to `false`. A shell
+ * that doesn't draw a rail ignores panels placed in it.
  */
-export type ControlPanelPlacement = 'canvas' | 'header-left' | 'header-center' | 'header-right';
+export type ControlPanelPlacement =
+  | 'canvas'
+  | 'header-left'
+  | 'header-center'
+  | 'header-right'
+  | 'footer-left'
+  | 'footer-center'
+  | 'footer-right';
 
 /**
  * A control panel — pure JSON, stored in `CanvasView.definition.controlPanels`
  * keyed by panel id. Floats over the canvas by default; {@link placement} can
- * put it in the app header instead.
+ * put it in the app header or footer instead.
  */
 export interface ControlPanelSpec {
   /** Stable discriminator for tooling (the Studio's editor lookup). */
   kind: 'control-panel';
   /**
-   * The surface that draws the panel. Default `'canvas'`. A header placement is
-   * drawn by a host that renders header regions (`GraphCanvasApp`, or
-   * `<HeaderControlPanels>` in a custom shell); `<ControlPanels>` skips it.
+   * The surface that draws the panel. Default `'canvas'`. A header / footer
+   * placement is drawn by a host that renders those rail regions
+   * (`GraphCanvasApp`, or `<RegionControlPanels>` in a custom shell);
+   * `<ControlPanels>` skips it.
    */
   placement?: ControlPanelPlacement;
-  /** Where the panel sits over the canvas. Default `'top-left'`. Ignored for a header placement. */
+  /** Where the panel sits over the canvas. Default `'top-left'`. Ignored for a header / footer placement. */
   position?: ControlPanelPosition;
   /**
    * Distance from the anchored edges for a preset {@link position}, in px —
-   * one number for both axes or `{ x, y }`. Ignored for insets and header
+   * one number for both axes or `{ x, y }`. Ignored for insets and header / footer
    * placements. Default `8`.
    */
   offset?: number | { x: number; y: number };
@@ -213,7 +222,7 @@ export interface ControlPanelSpec {
    * Default `false`.
    */
   stretch?: boolean;
-  /** Draw the card surface (background, border, shadow). Default `true` over the canvas, `false` in the header. */
+  /** Draw the card surface (background, border, shadow). Default `true` over the canvas, `false` in a header / footer rail. */
   surface?: boolean;
   /** Show the panel. Default `true`. */
   visible?: boolean;

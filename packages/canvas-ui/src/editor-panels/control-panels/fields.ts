@@ -1,7 +1,7 @@
 import type { CommandArgSpec } from '@invana/canvas';
 import type { FieldConfig } from '@invana/forms';
 
-import { ARG_DEFAULT, NO_ICON, type CommandArgDescriptors, type ControlItemFields } from './types';
+import { ARG_DEFAULT, NO_ICON, type ArgFieldValue, type CommandArgDescriptors, type ControlItemFields, type WidgetOptionDescriptors } from './types';
 
 /** The nine anchors, in reading order. */
 const ANCHORS = ['top-left', 'top', 'top-right', 'left', 'center', 'right', 'bottom-left', 'bottom', 'bottom-right'];
@@ -12,12 +12,15 @@ const PLACEMENTS = [
   { label: 'Header · left', value: 'header-left' },
   { label: 'Header · centre', value: 'header-center' },
   { label: 'Header · right', value: 'header-right' },
+  { label: 'Footer · left', value: 'footer-left' },
+  { label: 'Footer · centre', value: 'footer-center' },
+  { label: 'Footer · right', value: 'footer-right' },
 ];
 
 /**
  * Panel-level fields: placement, position (anchor or insets), offset, flow and
  * chrome. A function of the current values so only the fields that apply show
- * — a header-placed panel has no position, offset, flow or stretch.
+ * — a header- or footer-placed panel has no position, offset, flow or stretch.
  */
 export function controlPanelFields(positionMode: string, placement = 'canvas'): FieldConfig[] {
   const placementField: FieldConfig = { name: 'placement', type: 'select', label: 'Placement', options: PLACEMENTS };
@@ -88,6 +91,8 @@ export interface ControlItemChoices {
   icons: readonly string[];
   /** Widget registry names. */
   widgets: readonly string[];
+  /** Each widget's options descriptor (`ControlWidget.optionsSpec`), by name — a field per described key. */
+  widgetOptions?: WidgetOptionDescriptors;
   /** Each command's argument descriptor (`CanvasCommand.args`), by name — a field per described key. */
   commandArgs?: CommandArgDescriptors;
   /** Registered layer ids, for `layer` arguments. */
@@ -105,7 +110,7 @@ function namesOptions(names: readonly string[], current: string, missing: string
 }
 
 /** An icon `select` with a "(none)" entry. */
-function iconField(name: string, label: string, icons: readonly string[], current: string): FieldConfig {
+export function iconField(name: string, label: string, icons: readonly string[], current: string): FieldConfig {
   const known = current && current !== NO_ICON ? namesOptions(icons, current, 'not registered') : icons.map((n) => ({ label: n, value: n }));
   return { name, type: 'select', label, options: [{ label: '(none)', value: NO_ICON }, ...known] };
 }
@@ -117,14 +122,18 @@ function defaultHint(spec: CommandArgSpec): string | undefined {
 }
 
 /**
- * One field per argument `described` names, for a row whose item is `type`.
- * A `pick` argument is left out of a `choice` item (picking supplies it). Ids
- * the registries don't hold stay selectable, flagged, like command names.
+ * One field per key `described` names, each named `<prefix>.<key>` — a
+ * command's `args` or a widget's `options`, whose current form values are
+ * `values`. A `pick` key is left out when `skipPick` (a `choice` item — picking
+ * supplies it). Ids the registries don't hold stay selectable, flagged, like
+ * command names.
  */
-function argFields(
+function describedFields(
   described: Readonly<Record<string, CommandArgSpec>>,
-  row: ControlItemFields,
+  prefix: string,
+  values: Record<string, ArgFieldValue> | undefined,
   choices: ControlItemChoices,
+  skipPick = false,
 ): FieldConfig[] {
   const refs: Partial<Record<CommandArgSpec['kind'], readonly string[]>> = {
     layer: choices.layers ?? [],
@@ -133,15 +142,15 @@ function argFields(
   };
   const fields: FieldConfig[] = [];
   for (const [key, spec] of Object.entries(described)) {
-    if (spec.pick && row.type === 'choice') continue;
+    if (spec.pick && skipPick) continue;
     const hint = defaultHint(spec);
     const base = {
-      name: `args.${key}`,
+      name: `${prefix}.${key}`,
       label: spec.label ?? key,
       ...(spec.description ? { description: spec.description } : {}),
     };
     const unset = { label: hint !== undefined ? `(default: ${hint})` : '(not set)', value: ARG_DEFAULT };
-    const current = row.args?.[key];
+    const current = values?.[key];
     const currentText = typeof current === 'string' && current !== ARG_DEFAULT ? current : '';
     switch (spec.kind) {
       case 'number':
@@ -190,7 +199,7 @@ export function controlItemFields(row: ControlItemFields, choices: ControlItemCh
   // everything, for an undescribed command — stays JSON.
   const described = choices.commandArgs?.[row.command];
   const argsFields: FieldConfig[] = [
-    ...(described ? argFields(described, row, choices) : []),
+    ...(described ? describedFields(described, 'args', row.args, choices, row.type === 'choice') : []),
     {
       name: 'argsJson',
       type: 'textarea',
@@ -242,22 +251,27 @@ export function controlItemFields(row: ControlItemFields, choices: ControlItemCh
           ],
         },
         ...argsFields,
-        {
-          name: 'choiceOptionsJson',
-          type: 'textarea',
-          label: 'Options (JSON)',
-          rows: 2,
-          colSpan: 2,
-          placeholder: 'empty = the command’s own',
-        },
+        // The static options are rows — `ChoiceOptionsField`, below these fields.
       ];
-    case 'widget':
+    case 'widget': {
+      // Like a command's args: a field per key the widget's `optionsSpec`
+      // describes, the rest (or everything, for an undescribed widget) as JSON.
+      const optionsSpec = choices.widgetOptions?.[row.widget];
       return [
         typeField,
         keyField,
         { name: 'widget', type: 'select', label: 'Widget', options: namesOptions(choices.widgets, row.widget, 'not registered') },
-        { name: 'widgetOptionsJson', type: 'textarea', label: 'Options (JSON)', rows: 2, colSpan: 2, placeholder: '{ }' },
+        ...(optionsSpec ? describedFields(optionsSpec, 'widgetOptions', row.widgetOptions, choices) : []),
+        {
+          name: 'widgetOptionsJson',
+          type: 'textarea',
+          label: optionsSpec ? 'More options (JSON)' : 'Options (JSON)',
+          rows: 2,
+          colSpan: 2,
+          placeholder: '{ }',
+        },
       ];
+    }
     case 'text':
       return [typeField, keyField, { name: 'text', type: 'text', label: 'Text' }];
     case 'divider':

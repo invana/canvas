@@ -1,12 +1,16 @@
-import { useCallback, useContext, useSyncExternalStore } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 import type { Canvas } from '@invana/canvas';
 import { canRedoEither, canUndoEither, redoNewest, undoNewest } from '@invana/graph';
 
+import { useGraphHistory } from './useGraphEditState';
 import { useResolvedCanvas } from './useResolvedCanvas';
-import { HistoryContext } from '../HistoryContext';
 
 export interface UseHistoryOptions {
-  /** Layer id whose `redraw()` the `redraw` action targets. Default `'graph'`. */
+  /**
+   * Graph layer id: whose canvas-owned `GraphHistory` is used when no
+   * `<GraphHistoryProvider>` is above, and whose `redraw()` the `redraw` action
+   * targets. Default `'graph'`.
+   */
   layerId?: string;
 }
 
@@ -31,13 +35,14 @@ function hasRedraw(layer: unknown): layer is RedrawableLayer {
 
 /**
  * Undo/redo + redraw over **both** undo stacks — the graph edits journalled by
- * a `<GraphHistoryProvider>` ancestor's `GraphHistory`, and the canvas's
+ * the `GraphHistory` (a `<GraphHistoryProvider>` ancestor's, else the one the
+ * `GraphCanvas` owns for `layerId` — see {@link useGraphHistory}), and the canvas's
  * definition edits (`canvas.history`: a Studio editor's `edit:*` applies).
  * `undo` reverts whichever top is newer, `redo` re-applies the step undone
  * last — `@invana/graph`'s `undoNewest` / `redoNewest`, the same functions the
  * `history.undo` / `history.redo` commands call, so this hook and a saved
- * Undo button always do the same thing. Without a provider it covers
- * `canvas.history` alone (as the built-in commands do).
+ * Undo button always do the same thing. With no graph history at all (a
+ * plain `Canvas`, or `history: false`) it covers `canvas.history` alone.
  *
  * `canUndo` / `canRedo` stay reactive via the graph history's `change` event
  * and `canvas.history`'s subscription. `redraw` goes straight to the layer.
@@ -51,7 +56,7 @@ export function useHistory(
 ): UseHistoryResult {
   const { layerId = 'graph' } = options;
   const resolved = useResolvedCanvas(canvas);
-  const history = useContext(HistoryContext);
+  const history = useGraphHistory(layerId, resolved);
 
   const subscribe = useCallback(
     (onChange: () => void) => {

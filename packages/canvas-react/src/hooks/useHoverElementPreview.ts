@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Canvas } from '@invana/canvas';
 import type { HoverElementPreviewBehaviour, PreviewSnapshot } from '@invana/graph';
 
-import { useResolvedCanvas } from './useResolvedCanvas';
+import { useBehaviourInstance } from './useBehaviourInstance';
 
 export interface UseHoverElementPreviewOptions {
   /** Id of the `HoverElementPreviewBehaviour` to read previews from. Default `'element-preview'`. */
@@ -19,41 +19,29 @@ export interface UseHoverElementPreviewOptions {
  * card repositions as the camera pans / zooms), `hide` clears it. Pair with
  * {@link HoverElementPreviewCard} to draw it, or just use {@link HoverElementPreviewBehaviour}.
  *
- * Mirrors {@link useViewTarget}'s late-registration handling: if the behaviour
- * registers *after* this hook mounts (its wrapper is a sibling whose effect runs
- * later), it attaches as soon as `behaviour:registered` fires for `previewId`.
+ * Follows the behaviour through {@link useBehaviourInstance}: it attaches when
+ * the behaviour registers after this hook mounts (its wrapper is a sibling whose
+ * effect runs later), clears when it unregisters, and re-attaches to a new
+ * instance registered under the same id.
  */
 export function useHoverElementPreview(
   options: UseHoverElementPreviewOptions = {},
   canvas?: Canvas | null,
 ): PreviewSnapshot | null {
   const { previewId = 'element-preview' } = options;
-  const resolved = useResolvedCanvas(canvas);
+  const behaviour = useBehaviourInstance<HoverElementPreviewBehaviour>(previewId, canvas);
   const [snapshot, setSnapshot] = useState<PreviewSnapshot | null>(null);
 
   useEffect(() => {
-    const offs: Array<() => void> = [];
-    const attach = (): boolean => {
-      const behaviour = resolved.behaviours.get<HoverElementPreviewBehaviour>(previewId);
-      if (!behaviour) return false;
-      setSnapshot(behaviour.current);
-      offs.push(behaviour.events.on('preview:show', setSnapshot));
-      offs.push(behaviour.events.on('preview:move', setSnapshot));
-      offs.push(behaviour.events.on('preview:hide', () => setSnapshot(null)));
-      return true;
-    };
-
-    if (attach()) return () => offs.forEach((off) => off());
-
-    setSnapshot(null);
-    const offReg = resolved.events.on('scene:behaviour:register', ({ id }) => {
-      if (id === previewId && attach()) offReg();
-    });
-    return () => {
-      offReg();
-      offs.forEach((off) => off());
-    };
-  }, [resolved, previewId]);
+    setSnapshot(behaviour?.current ?? null);
+    if (!behaviour) return;
+    const offs = [
+      behaviour.events.on('preview:show', setSnapshot),
+      behaviour.events.on('preview:move', setSnapshot),
+      behaviour.events.on('preview:hide', () => setSnapshot(null)),
+    ];
+    return () => offs.forEach((off) => off());
+  }, [behaviour]);
 
   return snapshot;
 }

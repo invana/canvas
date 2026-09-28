@@ -44,10 +44,9 @@ export function useLock(
 
   const subscribe = useCallback(
     (onChange: () => void) => {
-      // Behaviour events, plus view-store writes: `canvas.update` can flip
-      // `enabled` through a behaviour's own `setOptions`, which emits no event.
+      // Every enable / disable path — the registry, `canvas.update`, a
+      // behaviour's own `setOptions` — fires these events.
       const offs = [
-        resolved.store.view.subscribe(onChange),
         resolved.events.on('scene:behaviour:enable', onChange),
         resolved.events.on('scene:behaviour:disable', onChange),
         resolved.events.on('scene:behaviour:register', onChange),

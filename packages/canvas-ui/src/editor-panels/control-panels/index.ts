@@ -10,10 +10,12 @@ export { emptyItemFields, formToItem, formToPanel, itemToForm, newPanelSpec, pan
 export { ARG_DEFAULT, NO_ICON } from './types';
 export type {
   ArgFieldValue,
+  ChoiceOptionFields,
   CommandArgDescriptors,
   ControlItemFields,
   ControlPanelFields,
   ControlPanelFormError,
   ControlPanelFormState,
   PanelPositionMode,
+  WidgetOptionDescriptors,
 } from './types';

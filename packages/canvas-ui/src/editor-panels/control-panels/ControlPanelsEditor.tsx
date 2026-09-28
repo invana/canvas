@@ -24,7 +24,7 @@ import {
   ZOOM_CONTROL_ITEMS,
   ZOOM_LEVEL_CONTROL_ITEMS,
 } from '../../control-panels/presets';
-import { DEFAULT_CONTROL_WIDGETS, type ControlWidget } from '../../control-panels/widgets';
+import { DEFAULT_CONTROL_WIDGETS, controlWidgetOptionsSpecs, type ControlWidget } from '../../control-panels/widgets';
 import { ControlPanelsEditorPanel } from './ControlPanelsEditorPanel';
 
 /** The canvas-ui presets, by display name — the default "Insert preset" list. */
@@ -130,7 +130,10 @@ export function ControlPanelsEditor({ icons, widgets, presets = DEFAULT_CONTROL_
   const ids = useRegistryIds(resolved);
 
   const iconNames = useMemo(() => Object.keys({ ...DEFAULT_CONTROL_ICONS, ...icons }), [icons]);
-  const widgetNames = useMemo(() => Object.keys({ ...DEFAULT_CONTROL_WIDGETS, ...widgets }), [widgets]);
+  const widgetMap = useMemo(() => ({ ...DEFAULT_CONTROL_WIDGETS, ...widgets }), [widgets]);
+  const widgetNames = useMemo(() => Object.keys(widgetMap), [widgetMap]);
+  // Each widget's `optionsSpec` — its options become fields, like command args.
+  const widgetOptions = useMemo(() => controlWidgetOptionsSpecs(widgetMap), [widgetMap]);
   const apply = useCallback(
     (patch: Record<string, ControlPanelSpec | null>) => resolved.update({ controlPanels: patch }, 'edit:control-panels'),
     [resolved],
@@ -142,6 +145,7 @@ export function ControlPanelsEditor({ icons, widgets, presets = DEFAULT_CONTROL_
       commands={commands}
       icons={iconNames}
       widgets={widgetNames}
+      widgetOptions={widgetOptions}
       commandArgs={commandArgs}
       layers={ids.layers}
       behaviours={ids.behaviours}

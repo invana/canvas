@@ -46,6 +46,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useSyncExternalStore,
 } from 'react';
 import { deepMerge, type CanvasConfig, type CanvasTelemetryConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData } from '@invana/graph';
@@ -72,7 +73,7 @@ import { ColorByBehaviour } from '@invana/canvas-react';
 import { ThemeBehaviour } from '@invana/canvas-react';
 import { buildHeaderNav, type GraphCanvasAppHeaderOptions } from './GraphCanvasAppHeader';
 import { buildFooterNav, type GraphCanvasAppFooterOptions } from './GraphCanvasAppFooter';
-import { ControlPanels, type ControlPanelsProps } from '../control-panels';
+import { ControlPanels, hasRailControlPanels, type ControlPanelsProps } from '../control-panels';
 
 // Re-export the layout's bottom-span union so consumers can type the `bottomSpan`
 // prop without reaching into `@invana/themes` directly.
@@ -444,8 +445,9 @@ export interface GraphCanvasAppProps {
   showHeader?: boolean;
   /**
    * Force the footer rail on/off. The footer has no default content, so it shows
-   * automatically when you pass a `footer` bag; set `true` to render an empty
-   * rail, or `false` to suppress it even when `footer` is given. Default: auto.
+   * automatically when you pass a `footer` bag or the canvas saves a visible
+   * control panel with a `footer-*` placement; set `true` to render an empty
+   * rail, or `false` to suppress it even then. Default: auto.
    */
   showFooter?: boolean;
   /** Convenience width (number → px). Default: fill the parent. */
@@ -503,6 +505,22 @@ export interface GraphCanvasAppProps {
    * `config.controlPanels`; the app draws them over the canvas.
    */
   controlPanels?: Pick<ControlPanelsProps, 'icons' | 'widgets'>;
+}
+
+/**
+ * Whether the canvas saves a visible control panel placed in the footer rail —
+ * re-read on view-store writes; `false` until the engine is ready.
+ */
+function useHasFooterPanels(canvas: GraphCanvas | null): boolean {
+  const subscribe = useCallback(
+    (onChange: () => void) => (canvas ? canvas.store.view.subscribe(onChange) : () => {}),
+    [canvas],
+  );
+  const read = useCallback(
+    () => (canvas ? hasRailControlPanels(canvas.store.view.getState().definition.controlPanels, 'footer') : false),
+    [canvas],
+  );
+  return useSyncExternalStore(subscribe, read, read);
 }
 
 export function GraphCanvasApp({
@@ -565,6 +583,8 @@ export function GraphCanvasApp({
   const telemetry: CanvasTelemetryConfig | undefined =
     telemetryProp ?? (debug ? { metrics: true } : undefined);
 
+  const hasFooterPanels = useHasFooterPanels(canvas);
+
   const ctx: GraphCanvasAppControlContext = useMemo(
     () => ({ canvas, themeKind, toggleTheme: toggleMode }),
     [canvas, themeKind, toggleMode],
@@ -604,10 +624,11 @@ export function GraphCanvasApp({
   const headerNav = showHeader
     ? buildHeaderNav(header ?? {}, ctx)
     : { className: 'hidden' as const };
-  // Footer is auto: shown when a `footer` bag is given, unless `showFooter` forces
-  // it. When hidden, hand `AppLayoutV2` a display-`hidden` bar rather than letting
-  // it fall back to an empty 25px rail (its `footer ?? {…}` default always paints).
-  const footerNav = (showFooter ?? footer !== undefined)
+  // Footer is auto: shown when a `footer` bag is given or a saved panel is placed
+  // in it, unless `showFooter` forces it. When hidden, hand `AppLayoutV2` a
+  // display-`hidden` bar rather than letting it fall back to an empty 25px rail
+  // (its `footer ?? {…}` default always paints).
+  const footerNav = (showFooter ?? (footer !== undefined || hasFooterPanels))
     ? buildFooterNav(footer ?? {}, ctx)
     : { className: 'hidden' };
 

@@ -35,6 +35,7 @@ import type {
   GraphNode,
   InspectTarget,
 } from '@invana/graph';
+import { useBehaviourInstance } from '@invana/canvas-react';
 import { Badge, Button, Card, PropertyList, PropertyRow, Separator, cn } from '@invana/ui';
 import { ArrowRight, Check, Copy, Crosshair, HelpCircle, MousePointerClick } from 'lucide-react';
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
@@ -77,43 +78,26 @@ export interface ElementInspectorViewPanelProps {
  * registered at all (the two empty states read very differently: "click
  * something" vs "nothing here can tell me what you clicked").
  *
- * Re-attaches on `scene:behaviour:register`. That matters because this panel is
- * usually mounted **outside** the canvas subtree — handed the engine once it is
- * ready — while the behaviour is registered *inside* it: a one-shot lookup on
- * mount would miss a behaviour registered a tick later and stay dead forever.
+ * Follows the behaviour through `useBehaviourInstance`. That matters because this
+ * panel is usually mounted **outside** the canvas subtree — handed the engine once
+ * it is ready — while the behaviour is registered *inside* it: a one-shot lookup
+ * on mount would miss a behaviour registered a tick later, and a remount of the
+ * behaviour's wrapper would leave the panel listening to a destroyed instance.
  */
 function useInspectedTarget(
   canvas: GraphCanvas,
   inspectBehaviourId: string,
 ): { target: InspectTarget | null; behaviourPresent: boolean } {
-  const [state, setState] = useState<{ target: InspectTarget | null; present: boolean }>(() => {
-    const b = canvas.behaviours.get<ClickInspectBehaviour>(inspectBehaviourId);
-    return { target: b?.getTarget() ?? null, present: b != null };
-  });
+  const behaviour = useBehaviourInstance<ClickInspectBehaviour>(inspectBehaviourId, canvas);
+  const [target, setTarget] = useState<InspectTarget | null>(() => behaviour?.getTarget() ?? null);
 
   useEffect(() => {
-    let offTarget: (() => void) | undefined;
-    const attach = (): void => {
-      const b = canvas.behaviours.get<ClickInspectBehaviour>(inspectBehaviourId);
-      if (!b) {
-        setState({ target: null, present: false });
-        return;
-      }
-      offTarget?.();
-      setState({ target: b.getTarget(), present: true });
-      offTarget = b.events.on('inspect:change', (t) => setState({ target: t, present: true }));
-    };
-    attach();
-    const offRegister = canvas.events.on('scene:behaviour:register', (e: { id: string }) => {
-      if (e.id === inspectBehaviourId) attach();
-    });
-    return () => {
-      offTarget?.();
-      offRegister();
-    };
-  }, [canvas, inspectBehaviourId]);
+    setTarget(behaviour?.getTarget() ?? null);
+    if (!behaviour) return;
+    return behaviour.events.on('inspect:change', setTarget);
+  }, [behaviour]);
 
-  return { target: state.target, behaviourPresent: state.present };
+  return { target, behaviourPresent: behaviour !== null };
 }
 
 /** Longest property value rendered inline; the rest lives in the `title` tooltip. */

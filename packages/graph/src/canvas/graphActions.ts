@@ -1,8 +1,9 @@
 /**
  * The graph edit actions shared by `canvas-react`'s hooks (`useClearGraph`,
- * `useClipboard`) and the commands its providers register (`graph.clear`,
- * `clipboard.*`, `history.undo` / `history.redo`), so a toolbar button and a
- * control-panel button can never behave differently. Plain functions over a
+ * `useClipboard`) and the graph commands (`graph.clear`, `clipboard.*`,
+ * `history.undo` / `history.redo` — `GraphCanvas`'s built-ins and the
+ * providers' plain-canvas forms), so a toolbar button and a control-panel
+ * button can never behave differently. Plain functions over a
  * `Canvas` — no React — so they also run headless.
  *
  * Must not import `graphCommands.ts` (which imports this module).
@@ -145,7 +146,7 @@ function graphGoesFirst(
 
 /**
  * Undo the newer of the two tops — the graph `history`'s or `canvas.history`'s.
- * With no graph `history` (no `GraphHistoryProvider`), `canvas.history` alone.
+ * With no graph `history` (a plain `Canvas`, or `history: false`), `canvas.history` alone.
  * No-op when both stacks are empty.
  */
 export function undoNewest(canvas: Canvas, history: GraphHistory | null): void {
