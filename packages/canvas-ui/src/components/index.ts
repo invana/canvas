@@ -73,6 +73,8 @@ export type {
 export { GraphStatusBar } from './GraphStatusBar';
 export type { GraphStatusBarProps } from './GraphStatusBar';
 export { ContextMenuOverlay } from './ContextMenuOverlay';
+export { MenuItemList } from './MenuItemList';
+export type { MenuItemListProps } from './MenuItemList';
 export type { ContextMenuOverlayProps } from './ContextMenuOverlay';
 export { HoverElementPreviewCard } from './HoverElementPreviewCard';
 export type { HoverElementPreviewCardProps } from './HoverElementPreviewCard';

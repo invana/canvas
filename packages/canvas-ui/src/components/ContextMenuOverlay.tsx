@@ -1,5 +1,7 @@
 import type { CSSProperties } from 'react';
-import { NestedMenu, type MenuItem } from '@invana/ui';
+import type { MenuItem } from '@invana/ui';
+
+import { MenuItemList } from './MenuItemList';
 
 export interface ContextMenuOverlayProps {
   /** Left offset in px, relative to the positioned ancestor (the `<Canvas>` host). */
@@ -16,7 +18,7 @@ export interface ContextMenuOverlayProps {
 
 /**
  * Dumb overlay for a right-click context menu: an absolutely-positioned
- * `@invana/ui` `<NestedMenu>` anchored at `(x, y)` within its positioned
+ * {@link MenuItemList} anchored at `(x, y)` within its positioned
  * ancestor. Engine-agnostic, props-in only — the open/close state and the
  * action wiring live in the consumer (`useContextMenu` + the menu items).
  *
@@ -35,7 +37,7 @@ export function ContextMenuOverlay({ x, y, items, zIndex = 1000, style }: Contex
       onPointerDown={(ev) => ev.stopPropagation()}
       onContextMenu={(ev) => ev.preventDefault()}
     >
-      <NestedMenu menuItems={items} />
+      <MenuItemList items={items} />
     </div>
   );
 }

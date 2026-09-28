@@ -41,7 +41,7 @@ export interface KeyboardShortcutBinding {
 
 export interface KeyboardShortcutsBehaviourOptions extends BehaviourOptions {
   /** The bindings, first match wins. Default: none. */
-  bindings?: KeyboardShortcutBinding[];
+  bindings?: readonly KeyboardShortcutBinding[];
   /** Where keys are heard — `'canvas'` (default) or the whole `'document'`. */
   scope?: 'canvas' | 'document';
 }

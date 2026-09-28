@@ -1144,6 +1144,7 @@ export {
   isSafeHref,
   isImageUrl,
   ContextMenuOverlay,
+  MenuItemList,
   HoverElementPreviewCard,
   CanvasSettingsBrowser,
 } from './components';
@@ -1186,6 +1187,7 @@ export type {
   PropertyRenderContext,
   PropertyKind,
   ContextMenuOverlayProps,
+  MenuItemListProps,
   HoverElementPreviewCardProps,
   ToolbarIcon,
 } from './components';

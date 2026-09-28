@@ -60,6 +60,13 @@ export interface CommandArgSpec {
    * picking sets it, and shows it on a button / toggle, where it's fixed.
    */
   pick?: boolean;
+  /**
+   * The command can't run without this key (`behaviour.toggle`'s `id`). A
+   * surface that runs commands bare — the palette — leaves such commands out.
+   * Default `false`: an absent key falls back to {@link default} or the
+   * command's own behaviour.
+   */
+  required?: boolean;
 }
 
 /**

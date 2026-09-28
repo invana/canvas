@@ -168,7 +168,7 @@ const BUILTIN_COMMANDS: BuiltinCommands = {
   },
   'behaviour.toggle': {
     label: 'Toggle behaviour',
-    args: { id: { kind: 'behaviour', label: 'Behaviour' } },
+    args: { id: { kind: 'behaviour', label: 'Behaviour', required: true } },
     isActive: (canvas, args) => {
       const id = arg<string>(args, 'id');
       return id ? canvas.behaviours.get(id)?.enabled === true : false;
@@ -270,7 +270,7 @@ const BUILTIN_COMMANDS: BuiltinCommands = {
   },
   'layer.visible': {
     label: 'Show layer',
-    args: { id: { kind: 'layer', label: 'Layer' } },
+    args: { id: { kind: 'layer', label: 'Layer', required: true } },
     isActive: (canvas, args) => {
       const id = arg<string>(args, 'id');
       return id ? canvas.layers.get(id)?.visible === true : false;
