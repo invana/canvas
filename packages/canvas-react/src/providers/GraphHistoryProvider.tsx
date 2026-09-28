@@ -1,18 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import {
-  GraphHistory,
-  canRedoEither,
-  canUndoEither,
-  captureNodeDrags,
-  clearGraphLayer,
-  eraseCommand,
-  redoNewest,
-  undoNewest,
-  type GraphLayer,
-} from '@invana/graph';
+import { GraphHistory, captureNodeDrags, registerGraphEditCommands, type GraphLayer } from '@invana/graph';
 import type { Canvas } from '@invana/canvas';
 
-import { useCanvasGraphHistory } from '../hooks/useGraphEditState';
+import { providerEditAccess, useCanvasGraphHistory } from '../hooks/useGraphEditState';
 import { useResolvedCanvas } from '../hooks/useResolvedCanvas';
 import { HistoryContext } from '../HistoryContext';
 
@@ -44,12 +34,13 @@ export interface GraphHistoryProviderProps {
  * `graph.erase`. That history is rebuilt (stacks cleared) if `layerId`, `limit`
  * or the canvas change. Place the provider **after** the `<GraphLayer>` it
  * targets, so the layer exists when its effect runs.
+ *
+ * Its commands are `@invana/graph`'s own (`registerGraphEditCommands`) — the
+ * same args, bodies and palette metadata as a `GraphCanvas`'s. They honour
+ * `args.layerId` (default: this provider's `layerId`); another layer gets the
+ * `GraphCanvas`'s own history, or none on a plain `Canvas` (a `graph.clear`
+ * there is then a plain, un-journalled clear).
  */
-/** The layer a `graph.clear` targets (`args.layerId`, default `'graph'`). */
-function targetLayer(args: unknown): string {
-  const id = args && typeof args === 'object' ? (args as { layerId?: unknown }).layerId : undefined;
-  return typeof id === 'string' ? id : 'graph';
-}
 
 export function GraphHistoryProvider({
   layerId = 'graph',
@@ -91,39 +82,20 @@ export function GraphHistoryProvider({
     return layer ? captureNodeDrags(layer, own) : undefined;
   }, [resolved, layerId, own]);
 
-  // Not bridging: while mounted, undo / redo and an undoable `graph.clear` are
-  // canvas commands, so a saved control panel can bind to them. `graph.clear`
-  // overrides the plain built-in and hands it back on unmount; a clear aimed at
-  // a layer this history doesn't journal falls back to the plain clear.
+  // Not bridging: while mounted, undo / redo (this history + `canvas.history`,
+  // newest first — `undoNewest` / `redoNewest`) and undoable `graph.clear` /
+  // `graph.erase` are canvas commands, so a saved control panel can bind to
+  // them. They override the canvas's and hand them back on unmount.
   useEffect(() => {
     const history = own;
     if (!history) return;
     const commands = resolved.commands;
+    const access = providerEditAccess(resolved, layerId, { history: () => history });
     const offs = [
-      // One Undo button for two stacks: graph edits (this history) and definition
-      // edits (`canvas.history`). Undo takes the newer top, redo the older redo
-      // top (the step undone last) — see `undoNewest` / `redoNewest`.
-      commands.register('history.undo', {
-        label: 'Undo',
-        run: (c) => undoNewest(c, history),
-        isEnabled: (c) => canUndoEither(c, history),
+      registerGraphEditCommands(commands, access, {
+        layerId,
+        only: ['history.undo', 'history.redo', 'graph.clear', 'graph.erase'],
       }),
-      commands.register('history.redo', {
-        label: 'Redo',
-        run: (c) => redoNewest(c, history),
-        isEnabled: (c) => canRedoEither(c, history),
-      }),
-      commands.register('graph.clear', {
-        label: 'Clear canvas',
-        args: { layerId: { kind: 'layer', label: 'Layer', default: 'graph' } },
-        isEnabled: (c, args) => c.layers.has(targetLayer(args)),
-        run: (c, args) => {
-          const target = targetLayer(args);
-          clearGraphLayer(c, target, target === layerId ? history : null);
-        },
-      }),
-      // Deleting the selection journals on this history (its own layer only).
-      commands.register('graph.erase', eraseCommand((target) => (target === layerId ? history : null))),
       // The undo stack isn't in the view store: tell bound controls it moved.
       history.events.on('change', () => commands.invalidate()),
     ];

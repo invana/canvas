@@ -13,7 +13,8 @@ import { BrushSelectBehaviour } from '../../src/behaviours/BrushSelectBehaviour'
 import { LassoSelectBehaviour } from '../../src/behaviours/LassoSelectBehaviour';
 import { ClickSelectBehaviour } from '../../src/behaviours/ClickSelectBehaviour';
 import { GraphHistory } from '../../src/history/GraphHistory';
-import { eraseCommand } from '../../src/canvas/graphCommands';
+import { GraphClipboard } from '../../src/clipboard/GraphClipboard';
+import { eraseCommand, registerGraphEditCommands } from '../../src/canvas/graphCommands';
 
 beforeAll(() => {
   const g = globalThis as Record<string, unknown>;
@@ -166,6 +167,63 @@ describe('graph commands', () => {
     c.run('graph.erase');
     expect(layer.store.getNode('a')).toBeUndefined();
     expect(layer.store.getNode('b')).toBeUndefined();
+    canvas.destroy();
+  });
+
+  it('registerGraphEditCommands: honours args.layerId, defaults to its layer, carries the palette metadata, and disposes back to the canvas\'s', () => {
+    // `history: false` + an override for one layer — the providers' situation.
+    const canvas = new GraphCanvas({ history: false });
+    canvas.initWithRenderer(new HeadlessRenderer(), 800, 600);
+    const graph = new GraphLayer({ id: 'graph', options: {} });
+    const other = new GraphLayer({ id: 'other', options: {} });
+    canvas.layers.add(graph);
+    canvas.layers.add(other);
+    canvas.layers.mountAll();
+    graph.store.addNode({ id: 'g1', type: 'node', position: { x: 0, y: 0 } });
+    other.store.addNode({ id: 'o1', type: 'node', position: { x: 0, y: 0 } });
+    const selGraph = new ClickSelectBehaviour({ id: 'sel-graph', targetLayerId: 'graph', enabled: true });
+    const selOther = new ClickSelectBehaviour({ id: 'sel-other', targetLayerId: 'other', enabled: true });
+    canvas.behaviours.register(selGraph);
+    canvas.behaviours.register(selOther);
+    selGraph.select('g1');
+    selOther.select('o1');
+    const c = canvas.commands;
+
+    // The canvas's own: `'graph'` is the described default.
+    expect(c.get('clipboard.copy')?.args?.['layerId']?.default).toBe('graph');
+
+    const own = new GraphClipboard(other.store);
+    const off = registerGraphEditCommands(
+      c,
+      {
+        clipboard: (id) => (id === 'other' ? own : canvas.clipboard(id)),
+        history: (id) => (id === 'other' ? null : canvas.graphHistory(id)),
+      },
+      { layerId: 'other', only: ['clipboard.copy', 'history.undo'] },
+    );
+
+    // Metadata matches GraphCanvas's, and the default follows `layerId`.
+    const copy = c.get('clipboard.copy');
+    expect(copy?.category).toBe('Edit');
+    expect(copy?.keywords).toContain('duplicate');
+    expect(copy?.args?.['layerId']?.default).toBe('other');
+    expect(c.get('history.undo')?.category).toBe('Edit');
+    // `only` left the rest alone.
+    expect(c.get('clipboard.paste')?.args?.['layerId']?.default).toBe('graph');
+
+    // Bare → the override's layer.
+    c.run('clipboard.copy', { clickSelectId: 'sel-other' });
+    expect(own.hasContent).toBe(true);
+    expect(canvas.clipboard('graph')?.hasContent).toBe(false);
+
+    // Named → that layer, through the canvas's own clipboard.
+    c.run('clipboard.copy', { layerId: 'graph', clickSelectId: 'sel-graph' });
+    expect(canvas.clipboard('graph')?.hasContent).toBe(true);
+
+    // Disposing restores the canvas's registration.
+    off();
+    expect(c.get('clipboard.copy')?.args?.['layerId']?.default).toBe('graph');
+    expect(c.get('clipboard.copy')?.category).toBe('Edit');
     canvas.destroy();
   });
 });

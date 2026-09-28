@@ -1,6 +1,6 @@
 import { useCallback, useContext, useSyncExternalStore } from 'react';
 import type { Canvas } from '@invana/canvas';
-import type { GraphClipboard, GraphHistory } from '@invana/graph';
+import type { GraphClipboard, GraphEditAccess, GraphHistory } from '@invana/graph';
 
 import { ClipboardContext } from '../ClipboardContext';
 import { HistoryContext } from '../HistoryContext';
@@ -20,6 +20,25 @@ interface EditStateOwner {
 function editStateOwner(canvas: Canvas): EditStateOwner | null {
   const c = canvas as Partial<EditStateOwner>;
   return typeof c.graphHistory === 'function' && typeof c.clipboard === 'function' ? (c as EditStateOwner) : null;
+}
+
+/**
+ * The edit access a provider registers its commands over: layer `layerId`
+ * answers with the provider's own history / clipboard (read live, so a rebuilt
+ * instance is seen), every other layer with the `GraphCanvas`'s own — `null`
+ * on a plain `Canvas`. So a provider's override covers its layer and leaves the
+ * canvas's behaviour for the rest. Internal to the providers.
+ */
+export function providerEditAccess(
+  canvas: Canvas,
+  layerId: string,
+  own: { history?: () => GraphHistory | null; clipboard?: () => GraphClipboard | null },
+): GraphEditAccess {
+  const owner = editStateOwner(canvas);
+  return {
+    history: (id) => (id === layerId && own.history ? own.history() : (owner?.graphHistory(id) ?? null)),
+    clipboard: (id) => (id === layerId && own.clipboard ? own.clipboard() : (owner?.clipboard(id) ?? null)),
+  };
 }
 
 /**

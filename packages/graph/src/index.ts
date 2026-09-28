@@ -94,6 +94,7 @@ export {
   DEFAULT_EDGE_TYPES,
   DEFAULT_EDGE_TYPE_LABELS,
   eraseCommand,
+  registerGraphEditCommands,
   resolveSelectMode,
   selectModePatch,
   clearGraphLayer,
@@ -109,7 +110,14 @@ export {
   edgePathType,
   setEdgePathType,
 } from './canvas';
-export type { GraphCanvasOptions, GraphEditAccess, GraphCommandMap, GraphCanvasCommandMap } from './canvas';
+export type {
+  GraphCanvasOptions,
+  GraphEditAccess,
+  GraphCommandMap,
+  GraphCanvasCommandMap,
+  EditCommandName,
+  RegisterGraphEditCommandsOptions,
+} from './canvas';
 
 export {
   OneShotPositionLayout,

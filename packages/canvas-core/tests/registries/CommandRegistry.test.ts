@@ -82,6 +82,30 @@ describe('CommandRegistry', () => {
     registry.invalidate();
     expect(listener).toHaveBeenCalledTimes(3);
   });
+
+  it('bumps version on every signal — register, override pop, unregister, invalidate — and only then', () => {
+    const { registry, cmd } = makeRegistry();
+    const v0 = registry.version;
+    const off = registry.register('x', cmd('x'));
+    expect(registry.version).toBe(v0 + 1);
+    const offOverride = registry.register('x', cmd('y'));
+    offOverride();
+    expect(registry.version).toBe(v0 + 3);
+    // Reads don't bump.
+    registry.list();
+    registry.options('x');
+    registry.isEnabled('x');
+    expect(registry.version).toBe(v0 + 3);
+    registry.invalidate();
+    expect(registry.version).toBe(v0 + 4);
+    off();
+    off(); // idempotent: no second signal
+    expect(registry.version).toBe(v0 + 5);
+    registry.register('z', cmd('z'));
+    registry.unregister('z');
+    registry.unregister('z'); // absent: no signal
+    expect(registry.version).toBe(v0 + 7);
+  });
 });
 
 describe('CommandRegistry — arg validation (validateArgs)', () => {

@@ -219,6 +219,8 @@ export class CommandRegistry<C, M extends CommandMap = Record<never, never>> {
   /** Per name, the registrations oldest → newest; the last one is live. */
   private readonly stacks = new Map<string, Array<{ command: CanvasCommand<C> }>>();
   private readonly listeners = new Set<() => void>();
+  /** Bumped on every {@link subscribe} signal — see {@link version}. */
+  private _version = 0;
   private readonly getContext: () => C;
   private readonly validateArgs: boolean;
   /** `command|key|problem` already warned about, so a bound button doesn't flood the console. */
@@ -329,6 +331,17 @@ export class CommandRegistry<C, M extends CommandMap = Record<never, never>> {
     this.notify();
   }
 
+  /**
+   * A counter bumped on every {@link subscribe} signal (register, unregister,
+   * dispose, {@link invalidate}, {@link clear}) — and only then. Use it as a
+   * `useSyncExternalStore` snapshot when a UI must re-read *everything* on a
+   * signal: a snapshot derived from `list()` stays equal when only a command's
+   * `options` / state changed, and React would skip the re-render.
+   */
+  get version(): number {
+    return this._version;
+  }
+
   /** Hear every register / unregister / {@link invalidate}. Returns an unsubscribe. */
   subscribe(listener: () => void): () => void {
     this.listeners.add(listener);
@@ -365,6 +378,7 @@ export class CommandRegistry<C, M extends CommandMap = Record<never, never>> {
   }
 
   private notify(): void {
+    this._version++;
     for (const l of [...this.listeners]) l();
   }
 }

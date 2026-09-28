@@ -90,6 +90,8 @@ Items 12–16, 21 and O1–O2 landed through `rfc:feat-2026-09-29-command-contro
 |---|---|---|
 | 25 | Keyboard shortcuts bound to command names | 🚧 implemented, unmerged — `KeyboardShortcutsBehaviour` + `DEFAULT_SHORTCUTS` + editor + wrapper (K1–K4, `rfc:feat-2026-09-29-commands-stop-at-saved-control-panels`) |
 | 26 | Context menus and a command palette from `commands.list()` | 🚧 implemented, unmerged — `commandMenuItems` / `useCommandMenuItems`, `CommandPalette`, opt-in `selectTarget` (U1–U4, `rfc:feat-2026-09-29-commands-stop-at-saved-control-panels`); palette UI not yet seen in a story |
+| 27 | Shortcuts on shifted punctuation match the glyph typed (`mod+plus`, `?`), not the physical key: `shift+/` never matches ⇧/. Resolving punctuation from `KeyboardEvent.code` names the wrong glyph on non-US layouts (D-3 of `rfc:fix-2026-09-28-command-palette-shortcuts-provider-commands`) | 📋 deferred — documented in `KeyboardShortcutsBehaviour`'s TSDoc |
+| 28 | The React `<GraphCanvas>` / `GraphCanvasApp` roots can't pass `history: false` (or `clipboard`): `useCanvasEngine` forwards only `telemetry` to the constructor (`packages/canvas-react/src/useCanvasEngine.tsx:86-88`). The engine-level option is reachable only imperatively. Found while verifying the same RFC | 📋 |
 
 If 25–26 aren't planned soon, items 4–8 come next: they stop hooks and commands drifting
 apart.

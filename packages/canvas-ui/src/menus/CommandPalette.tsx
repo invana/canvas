@@ -133,16 +133,18 @@ export function CommandPalette({
   const inline = variant === 'inline';
   const resolved = useResolvedCanvas(canvas);
 
-  // Registered names, re-read on (un)registration.
+  // Rebuild on every registry signal — (un)registration *and* `invalidate()`,
+  // which is how a pick command's `options` changing (a layout added / removed)
+  // is announced. A snapshot of the names alone stays equal then.
   const subscribe = useCallback((onChange: () => void) => resolved.commands.subscribe(onChange), [resolved]);
-  const getNames = useCallback(() => resolved.commands.list().join('\n'), [resolved]);
-  const names = useSyncExternalStore(subscribe, getNames, getNames);
+  const getVersion = useCallback(() => resolved.commands.version, [resolved]);
+  const version = useSyncExternalStore(subscribe, getVersion, getVersion);
 
   const entries = useMemo<PaletteEntry[]>(() => {
     if (!inline && !open) return [];
     const only = commands ? new Set(commands) : null;
     const out: PaletteEntry[] = [];
-    for (const name of names ? names.split('\n') : []) {
+    for (const name of resolved.commands.list()) {
       if (name.includes('#') || (only && !only.has(name))) continue;
       const cmd = resolved.commands.get(name);
       if (!cmd) continue;
@@ -159,7 +161,9 @@ export function CommandPalette({
       }
     }
     return out;
-  }, [inline, open, names, commands, resolved]);
+    // `version` is the change signal; the body reads the registry directly.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inline, open, version, commands, resolved]);
 
   const { states, run } = useCommandStates(entries, resolved);
 

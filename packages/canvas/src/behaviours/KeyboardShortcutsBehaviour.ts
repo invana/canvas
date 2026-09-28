@@ -12,7 +12,17 @@
  * separating alternatives: `'mod+shift+z, mod+y'`. `mod` is ⌘ on macOS and Ctrl
  * elsewhere; `ctrl`, `alt` (`option`), `shift`, `meta` (`cmd`) are literal.
  * The key is `KeyboardEvent.key` lowercased (`z`, `delete`, `escape`,
- * `arrowup`, `space`, …) — see {@link normalizeShortcut}.
+ * `arrowup`, `space`, …) — see {@link normalizeShortcut}. Two rules make
+ * modified keys match what you'd write:
+ *
+ * - **Letters and digits are the key pressed.** Under a modifier, when the typed
+ *   character isn't a plain letter or digit (macOS ⌥Z types `Ω`, ⇧1 types `!`),
+ *   the key comes from `KeyboardEvent.code` (`KeyZ` → `z`, `Digit1` → `1`) — so
+ *   `alt+z` and `shift+1` work. A layout that types a letter keeps it (AZERTY's
+ *   Ctrl+Z is still `mod+z`, though that key is `KeyW`).
+ * - **Punctuation is the glyph typed.** Write the character, not the keys that
+ *   produce it: `mod+plus` (not `mod+shift+=`), `?`. The Shift needed to type
+ *   it may be held or not — `mod+plus` fires on Ctrl/⌘ + Shift + `=`.
  *
  * **Scope.** With `scope: 'canvas'` (default) a key is handled only when this
  * canvas is the one in use: focus is inside its scope root, or focus is on the
@@ -65,6 +75,11 @@ export const DEFAULT_SHORTCUTS: readonly KeyboardShortcutBinding[] = [
 /** The event fields a shortcut is matched on (a `KeyboardEvent` satisfies it). */
 export interface ShortcutKeyEvent {
   key: string;
+  /**
+   * The physical key (`KeyZ`, `Digit1`, …). Optional: without it, letters and
+   * digits typed under a modifier match only as the character they produced.
+   */
+  code?: string;
   ctrlKey: boolean;
   altKey: boolean;
   shiftKey: boolean;
@@ -139,19 +154,57 @@ export function normalizeShortcut(keys: string, mac = isMacPlatform()): string[]
   return out;
 }
 
-/**
- * A keyboard event as a canonical combo (see {@link normalizeShortcut}), or
- * `null` for a bare modifier press.
- */
-export function eventShortcut(e: ShortcutKeyEvent): string | null {
-  const raw = e.key.toLowerCase();
-  if (raw === 'control' || raw === 'alt' || raw === 'shift' || raw === 'meta' || raw === 'os') return null;
+/** An ASCII letter or digit — the keys resolved physically under a modifier. */
+const ALNUM = /^[a-z0-9]$/;
+
+/** `KeyZ` → `z`, `Digit1` → `1`; anything else (punctuation, numpad, …) → `undefined`. */
+function physicalAlnum(code: string | undefined): string | undefined {
+  const m = code ? /^(?:Key([A-Z])|Digit([0-9]))$/.exec(code) : null;
+  return m ? (m[1] ?? m[2])!.toLowerCase() : undefined;
+}
+
+/** The event's modifier set. */
+function eventMods(e: ShortcutKeyEvent): Set<string> {
   const mods = new Set<string>();
   if (e.ctrlKey) mods.add('ctrl');
   if (e.altKey) mods.add('alt');
   if (e.shiftKey) mods.add('shift');
   if (e.metaKey) mods.add('meta');
-  return comboString(mods, KEY_ALIASES[raw] ?? raw);
+  return mods;
+}
+
+/**
+ * A keyboard event as a canonical combo (see {@link normalizeShortcut}), or
+ * `null` for a bare modifier press. Under a modifier, a typed character that
+ * isn't a plain letter / digit (macOS ⌥Z → `Ω`, ⇧1 → `!`, a dead key) is
+ * replaced by the physical letter / digit from `e.code` when there is one.
+ */
+export function eventShortcut(e: ShortcutKeyEvent): string | null {
+  const raw = e.key.toLowerCase();
+  if (raw === 'control' || raw === 'alt' || raw === 'shift' || raw === 'meta' || raw === 'os') return null;
+  const mods = eventMods(e);
+  let key = KEY_ALIASES[raw] ?? raw;
+  if (mods.size > 0 && !ALNUM.test(key)) key = physicalAlnum(e.code) ?? key;
+  return comboString(mods, key);
+}
+
+/**
+ * Every combo `e` may match: {@link eventShortcut}'s, plus — when Shift is held
+ * to type a punctuation glyph (`+`, `?`, `!`) — the same combo without `shift`,
+ * so a binding written as the glyph (`mod+plus`) fires.
+ */
+function eventCandidates(e: ShortcutKeyEvent): string[] {
+  const combo = eventShortcut(e);
+  if (!combo) return [];
+  const out = [combo];
+  const raw = e.key.toLowerCase();
+  const key = KEY_ALIASES[raw] ?? raw;
+  if (e.shiftKey && [...key].length === 1 && key !== ' ' && !ALNUM.test(key)) {
+    const mods = eventMods(e);
+    mods.delete('shift');
+    out.push(comboString(mods, key));
+  }
+  return out;
 }
 
 /** Whether `target` is somewhere the user types (keys belong to it, not the canvas). */
@@ -214,10 +267,11 @@ export class KeyboardShortcutsBehaviour extends Behaviour<KeyboardShortcutsBehav
   handleKey(e: ShortcutKeyEvent & { preventDefault?: () => void }): boolean {
     const commands = this.ctx?.commands;
     if (!commands || isEditable(e.target)) return false;
-    const combo = eventShortcut(e);
-    if (!combo) return false;
+    const combos = eventCandidates(e);
+    if (combos.length === 0) return false;
     for (const binding of this.bindings) {
-      if (!normalizeShortcut(binding.keys, this.mac).includes(combo)) continue;
+      const keys = normalizeShortcut(binding.keys, this.mac);
+      if (!combos.some((c) => keys.includes(c))) continue;
       if (!commands.isEnabled(binding.command, binding.args)) continue;
       commands.run(binding.command, binding.args);
       e.preventDefault?.();

@@ -6,8 +6,14 @@
 
 export { GraphCanvas, captureNodeDrags } from './GraphCanvas';
 export type { GraphCanvasOptions } from './GraphCanvas';
-export { DEFAULT_EDGE_TYPES, DEFAULT_EDGE_TYPE_LABELS, eraseCommand } from './graphCommands';
-export type { GraphEditAccess, GraphCommandMap, GraphCanvasCommandMap } from './graphCommands';
+export { DEFAULT_EDGE_TYPES, DEFAULT_EDGE_TYPE_LABELS, eraseCommand, registerGraphEditCommands } from './graphCommands';
+export type {
+  GraphEditAccess,
+  GraphCommandMap,
+  GraphCanvasCommandMap,
+  EditCommandName,
+  RegisterGraphEditCommandsOptions,
+} from './graphCommands';
 export { resolveSelectMode, selectModePatch } from './selectMode';
 export {
   clearGraphLayer,
