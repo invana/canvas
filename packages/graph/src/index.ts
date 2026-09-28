@@ -186,6 +186,8 @@ export {
   type ClickViewBehaviourOptions,
   type ClickViewEventMap,
   type ViewTarget,
+  FocusBehaviour,
+  type FocusBehaviourOptions,
   HoverElementPreviewBehaviour,
   resolvePreviewCard,
   type HoverElementPreviewBehaviourOptions,

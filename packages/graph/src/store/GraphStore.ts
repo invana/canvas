@@ -90,6 +90,8 @@ interface FlushCounters {
   addedEdges: number;
   updatedEdges: number;
   removedEdges: number;
+  hiddenNodes: number;
+  shownNodes: number;
 }
 
 function emptyCounters(): FlushCounters {
@@ -100,6 +102,8 @@ function emptyCounters(): FlushCounters {
     addedEdges: 0,
     updatedEdges: 0,
     removedEdges: 0,
+    hiddenNodes: 0,
+    shownNodes: 0,
   };
 }
 
@@ -290,7 +294,12 @@ export class GraphStore implements DataSource {
     this.log = log;
     this.logSourceId = sourceId;
     if (log) {
-      const adapter: DataOpAdapter = { sourceId, applyOps: (ops, direction) => this.replayOps(ops, direction) };
+      const adapter: DataOpAdapter = {
+        sourceId,
+        applyOps: (ops, direction) => this.replayOps(ops, direction),
+        applyDelta: (delta, opts) => this.applyDelta(delta as Delta<GraphNode, GraphEdge>, opts),
+        hasElement: (id) => this.hasNode(id) || this.hasEdge(id),
+      };
       this.unregisterSource = log.registerSource(adapter);
     }
     for (const l of [...this.logListeners]) l(log);
@@ -2266,6 +2275,8 @@ export class GraphStore implements DataSource {
     // Explicit visibility toggles. Only explicit hide/show emit; endpoint-driven
     // (effective) edge hiding is derived and produces no event here.
     for (const [id, hidden] of nodeVisibility) {
+      if (hidden) counters.hiddenNodes++;
+      else counters.shownNodes++;
       this.events.emit('node:visibility', { nodeId: id, hidden });
     }
     for (const [id, hidden] of edgeVisibility) {

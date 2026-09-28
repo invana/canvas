@@ -1,6 +1,7 @@
 import type { EasingName } from '../../lib/animation/easings';
 import type { CameraTransform, Rect } from '../../specs/geom';
 import type { ControlPanelSpec } from './controlPanels';
+import type { CameraIntent } from '../log/types';
 
 /**
  * `CanvasView` — the reactive, observable, syncable half of `CanvasStore`: how a
@@ -76,6 +77,24 @@ export interface CanvasView {
      * write (see `canvas-state-plan.md` §7.1B). `null` when no focus is active.
      */
     focus: { ids: ReadonlySet<string>; dim: boolean } | null;
+    /**
+     * The element whose properties are open (a node or edge id), or `null`.
+     * Written by a playbook step, the assistant or a panel; a property-view
+     * behaviour (`ClickViewBehaviour`) follows it and writes it back when the
+     * user opens or closes one. Recorded as view intent — plain undo steps
+     * over it.
+     */
+    inspect: string | null;
+    /**
+     * The latest request to frame the camera — `'focus'` (the focus set),
+     * `'visible'` (every visible element) or `'all'` (all content, hidden
+     * included) — or `null` before any. An **intent, not pixels** (RFC D-4):
+     * whoever owns that framing performs it once the canvas settles (the
+     * engine frames `'visible'` / `'all'`, `FocusBehaviour` frames `'focus'`).
+     * `seq` increases on every request, so asking for the same intent twice
+     * frames twice. Recorded as view intent — plain undo steps over it.
+     */
+    cameraIntent: { intent: CameraIntent; seq: number } | null;
     /**
      * Nodes transiently locked during a drag/resize gesture — held against the
      * layout for the gesture's duration. **Distinct from data `pinned`** (the
@@ -184,6 +203,8 @@ export function defaultCanvasView(): CanvasView {
       raised: {},
       camera: { x: 0, y: 0, zoom: 1 },
       focus: null,
+      inspect: null,
+      cameraIntent: null,
       transientPins: new Set<string>(),
       viewMode: 'select',
       viewModeArgs: {},

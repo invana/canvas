@@ -12,6 +12,11 @@
  * viewer panel can show that element's `label` / `type` / `data` without
  * reaching into the (possibly multi-element) selection set.
  *
+ * **Follows `view.interaction.inspect`.** The viewed element is mirrored into
+ * the kernel's `interaction.inspect`, and a write there from anywhere else — a
+ * playbook step, the assistant, a panel — opens (or closes) that element here,
+ * provided it lives in this behaviour's layer.
+ *
  * Layer-scoped: constructed with a `targetLayerId`. Subscribes to that layer's
  * renderer click events; uses a native DOM `click` listener for the
  * clear-on-background path (the engine doesn't emit `background:click` today),
@@ -74,6 +79,9 @@ export class ClickViewBehaviour extends Behaviour<ClickViewBehaviourOptions> {
 
   /** Current viewed element, or `null`. */
   private target: ViewTarget | null = null;
+
+  /** The kernel store, for mirroring {@link target} into `interaction.inspect`. */
+  private canvasStore: CanvasContext['store'] | null = null;
 
   /** True when the most recent click already consumed an element. */
   private clickConsumedByElement = false;
@@ -155,6 +163,22 @@ export class ClickViewBehaviour extends Behaviour<ClickViewBehaviourOptions> {
       if (this.clearOnBackground) this.clear();
     };
 
+    // Follow `interaction.inspect` written elsewhere (a playbook step, a panel).
+    // The same-target check in `setTarget` ends the echo of our own mirror.
+    this.canvasStore = ctx.store;
+    this.subs.push(
+      ctx.store.view.subscribe((state, prev) => {
+        const id = state.interaction.inspect;
+        if (id === prev.interaction.inspect || !this._enabled || !this.layer) return;
+        if (id === null) {
+          if (this.target) this.setTarget(null);
+          return;
+        }
+        if (this.layer.store.hasNode(id)) this.setTarget({ kind: 'node', id });
+        else if (this.layer.store.hasEdge(id)) this.setTarget({ kind: 'edge', id });
+      }),
+    );
+
     renderer.events.on('shape:click', onShapeClick);
     renderer.events.on('connector:click', onConnClick);
     const el = ctx.canvasElement;
@@ -182,6 +206,7 @@ export class ClickViewBehaviour extends Behaviour<ClickViewBehaviourOptions> {
     for (const off of this.subs) off();
     this.subs.length = 0;
     this.layer = null;
+    this.canvasStore = null;
   }
 
   protected override onDisable(): void {
@@ -204,8 +229,14 @@ export class ClickViewBehaviour extends Behaviour<ClickViewBehaviourOptions> {
         target.kind === this.target.kind &&
         target.id === this.target.id);
     if (same) return;
+    const previous = this.target;
     this.target = target;
     this.events.emit('view:change', target);
+    // Mirror into `interaction.inspect`. Clearing only takes back our own id,
+    // so closing here never closes an element another layer's viewer opened.
+    const inspect = this.canvasStore?.view.getState().interaction.inspect ?? null;
+    if (target && inspect !== target.id) this.canvasStore?.actions.inspect.set(target.id);
+    else if (!target && previous && inspect === previous.id) this.canvasStore?.actions.inspect.clear();
   }
 
   /** Clear the viewed element. */

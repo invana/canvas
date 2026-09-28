@@ -117,8 +117,12 @@ export interface CanvasCommand<C, A = unknown> {
    * doesn't name still pass through unchecked.
    */
   args?: Readonly<Record<string, CommandArgSpec>>;
-  /** Perform the command. */
-  run(ctx: C, args?: A): void;
+  /**
+   * Perform the command. A command whose work finishes later (a layout run)
+   * returns its promise, so {@link CommandRegistry.runAsync} can wait for it;
+   * {@link CommandRegistry.run} ignores it.
+   */
+  run(ctx: C, args?: A): void | Promise<void>;
   /** Toggle state for toggle-style controls. Absent ⇒ never active. */
   isActive?(ctx: C, args?: A): boolean;
   /** Whether the command can run now. Absent ⇒ always enabled. */
@@ -286,7 +290,25 @@ export class CommandRegistry<C, M extends CommandMap = Record<never, never>> {
     if (this.validateArgs && cmd.args) this.checkArgs(name, cmd.args, args);
     const ctx = this.getContext();
     if (cmd.isEnabled && !cmd.isEnabled(ctx, args)) return false;
-    cmd.run(ctx, args);
+    void cmd.run(ctx, args);
+    return true;
+  }
+
+  /**
+   * {@link run}, awaiting the command's work: resolves once the promise a
+   * command's `run` returned settles (`layout.run` resolves when the layout
+   * run ends). Resolves `false` — without running anything — when the command
+   * is missing or disabled; a synchronous command resolves `true` at once. A
+   * playbook step's `do` verbs go through here, so each finishes before the
+   * next starts.
+   */
+  async runAsync<K extends CommandName<M>>(name: K, args?: CommandArgsOf<M, K>): Promise<boolean> {
+    const cmd = this.get(name);
+    if (!cmd) return false;
+    if (this.validateArgs && cmd.args) this.checkArgs(name, cmd.args, args);
+    const ctx = this.getContext();
+    if (cmd.isEnabled && !cmd.isEnabled(ctx, args)) return false;
+    await cmd.run(ctx, args);
     return true;
   }
 

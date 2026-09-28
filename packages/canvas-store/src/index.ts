@@ -140,6 +140,8 @@ export {
   type ViewPatchMode,
 } from './log/createOperationLog';
 export { historyView } from './log/historyView';
+export { createPlaybook, PlaybookStepError } from './log/createPlaybook';
+export type { PlaybookEnv, PlaybookOptions } from './log/createPlaybook';
 export type {
   ViewLogPart,
   DataLogPart,
@@ -147,8 +149,10 @@ export type {
   LogEntry,
   LogEntryFilter,
   LogStepInfo,
+  LogEntryStatus,
   Delta,
   DeltaOptions,
+  DeltaRecord,
   DataOpAdapter,
   LogGroupMeta,
   OperationLog,

@@ -124,12 +124,36 @@ export interface LayoutRunOptions {
   fitCamera?: boolean | { padding?: number };
 }
 
+/**
+ * How an **active** layout re-runs when its target layer's data changes
+ * (nodes added / removed / hidden / shown). Read by the facade that wires the
+ * active layout (`GraphCanvas`) each time it re-runs, so assigning
+ * {@link Layout.onData} takes effect on the next change.
+ */
+export interface LayoutDataRunOptions {
+  /**
+   * At most one data-triggered run per this many ms: the first change runs at
+   * once, later ones inside the window collapse into one run at its end — so
+   * a feed writing every tick doesn't restart the layout every tick. Default
+   * `0` (every change runs).
+   */
+  throttleMs?: number;
+  /**
+   * Leave the camera alone on data-triggered runs
+   * ({@link LayoutRunOptions.preserveCamera}) — the view doesn't re-frame each
+   * time the data changes. Default `false`.
+   */
+  preserveCamera?: boolean;
+}
+
 /** Construction options every layout shares (for the `LayoutRegistry`). */
 export interface LayoutOptions {
   /** Stable id, used to address the layout in a `LayoutRegistry` / config. Default `'layout'`. */
   id?: string;
   /** The layer this layout is meant to run against. Informational — `apply(layer)` still takes one explicitly. */
   targetLayerId?: string;
+  /** How data-triggered re-runs behave while this layout is active. See {@link LayoutDataRunOptions}. */
+  onData?: LayoutDataRunOptions;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -165,9 +189,16 @@ export abstract class Layout<TLayer extends Layer<any, any, any, any> = Layer<an
    */
   runOptions: Readonly<LayoutRunOptions> = {};
 
+  /**
+   * How data-triggered re-runs behave while this layout is active (throttle,
+   * keep the camera). Mutable: the wiring reads it on every data change.
+   */
+  onData: LayoutDataRunOptions;
+
   constructor(opts: LayoutOptions = {}) {
     this.id = opts.id ?? 'layout';
     this.targetLayerId = opts.targetLayerId;
+    this.onData = { ...(opts.onData ?? {}) };
   }
 
   /**
@@ -187,7 +218,10 @@ export abstract class Layout<TLayer extends Layer<any, any, any, any> = Layer<an
    * JSON-safe copy of those params.
    */
   serializeDefinition(): Record<string, unknown> | undefined {
-    return this.targetLayerId !== undefined ? { targetLayerId: this.targetLayerId } : undefined;
+    const out: Record<string, unknown> = {};
+    if (this.targetLayerId !== undefined) out.targetLayerId = this.targetLayerId;
+    if (Object.keys(this.onData).length > 0) out.onData = { ...this.onData };
+    return Object.keys(out).length > 0 ? out : undefined;
   }
 
   /**

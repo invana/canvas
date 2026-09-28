@@ -232,6 +232,13 @@ export type GraphStoreEventMap = {
     addedEdges: number;
     updatedEdges: number;
     removedEdges: number;
+    /**
+     * Nodes whose **explicit** hidden flag was set / cleared in this flush
+     * (`hideNodes` / `showNodes` / a delta's `hidden` / `shown`). Visibility
+     * derived from a collapsed ancestor or pending placement is not counted.
+     */
+    hiddenNodes: number;
+    shownNodes: number;
   };
 };
 

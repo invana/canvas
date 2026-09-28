@@ -201,7 +201,7 @@ const BUILTIN_COMMANDS: BuiltinCommands = {
     args: { id: { kind: 'layout', label: 'Layout', description: 'Default: the active layout' } },
     run: (canvas, args) => {
       const id = arg<string>(args, 'id');
-      void (id ? canvas.runLayout(id) : canvas.runActiveLayout());
+      return id ? canvas.runLayout(id) : canvas.runActiveLayout();
     },
     isEnabled: (canvas, args) => {
       const id = arg<string>(args, 'id');
@@ -220,7 +220,7 @@ const BUILTIN_COMMANDS: BuiltinCommands = {
       const id = arg<string>(args, 'value');
       if (!id || !canvas.layouts.has(id)) return;
       canvas.update({ activeLayout: id });
-      void canvas.runLayout(id);
+      return canvas.runLayout(id);
     },
   },
   'background.grid': {

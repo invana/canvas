@@ -373,6 +373,19 @@ export type {
   ClickViewOptions,
 } from './editors/behaviours/click-view';
 
+// FocusBehaviour
+export { FocusEditorPanel, focusFields } from './editors/behaviours/focus';
+export {
+  optionsToForm as focusOptionsToForm,
+  formToOptions as focusFormToOptions,
+} from './editors/behaviours/focus';
+export type {
+  FocusEditorPanelProps,
+  FocusFields,
+  FocusFormState,
+  FocusOptions,
+} from './editors/behaviours/focus';
+
 // BrushSelectBehaviour
 export { BrushSelectEditorPanel, brushSelectFields } from './editors/behaviours/brush-select';
 export {

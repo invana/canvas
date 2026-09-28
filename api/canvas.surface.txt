@@ -1,7 +1,7 @@
 # @invana/canvas — public API surface (generated; do not hand-edit)
 # Regenerate: pnpm build && node scripts/check-api-surface.mjs --write
 
-## . (453 exports)
+## . (457 exports)
 AnchorCtx
 AnchorShapeRef
 AnchorSpec
@@ -100,6 +100,7 @@ DefaultGestureArbiter
 DefinitionSerializable
 Delta
 DeltaOptions
+DeltaRecord
 DevInfoCorner
 DevInfoLayer
 DevInfoLayerCtorOptions
@@ -194,6 +195,7 @@ LayersPanelLayer
 LayersPanelLayerCtorOptions
 LayersPanelLayerOptions
 Layout
+LayoutDataRunOptions
 LayoutEndReason
 LayoutEvents
 LayoutOptions
@@ -205,6 +207,7 @@ Listener
 LocalSpec
 LogEntry
 LogEntryFilter
+LogEntryStatus
 LogGroupMeta
 LogPart
 LogStepInfo
@@ -237,6 +240,7 @@ PinchZoomBehaviourOptions
 PlaneName
 Playbook
 PlaybookSpec
+PlaybookStepError
 Point
 PolygonSpec
 Polyline

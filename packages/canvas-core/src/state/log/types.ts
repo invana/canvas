@@ -126,6 +126,13 @@ export interface Delta<N extends { id: string } = { id: string }, E extends { id
   pinned?: ReadonlyArray<{ id: string; pinned?: boolean; x?: number; y?: number }>;
 }
 
+/**
+ * A record in a playbook step's {@link Delta}: an id plus whatever fields the
+ * source's records carry (`type`, `data`, `source` / `target` …). Open, because
+ * the vocabulary is domain-free; the source checks the shape when it applies.
+ */
+export type DeltaRecord = { id: string } & Record<string, unknown>;
+
 /** Options for a recorded data write (`applyDelta(delta, opts)`). */
 export interface DeltaOptions {
   /** Who the history entry is attributed to. Default: the canvas's session actor. */
@@ -145,7 +152,18 @@ export interface DataOpAdapter {
   readonly sourceId: string;
   /** Re-apply `ops` in order (`'forward'`) or their inverses in reverse (`'back'`). */
   applyOps(ops: readonly unknown[], direction: 'forward' | 'back'): void;
+  /**
+   * The source's one recorded data door (a graph store's `applyDelta`). A
+   * playbook step's `data` goes through it. Absent ⇒ the source takes no
+   * steps.
+   */
+  applyDelta?(delta: Delta, opts?: DeltaOptions): void;
+  /** Whether the source holds an element with this id — a step's view ids are checked against it. */
+  hasElement?(id: string): boolean;
 }
+
+/** Where an entry id stands in the log: applied, waiting to be redone, or not (or no longer) in it. */
+export type LogEntryStatus = 'applied' | 'pending' | 'unknown';
 
 /** Metadata for {@link OperationLog.group}. */
 export interface LogGroupMeta {
@@ -167,6 +185,14 @@ export interface LogGroupMeta {
 export interface OperationLog {
   /** Register a data source for replay. Returns the unregister. */
   registerSource(adapter: DataOpAdapter): () => void;
+  /** The registered source with this id, or `undefined`. */
+  source(sourceId: string): DataOpAdapter | undefined;
+  /**
+   * Where `entryId` stands: `'applied'`, `'pending'` (undone, waiting to be
+   * redone) or `'unknown'` (never recorded, or moved to a side branch by a
+   * change after an undo). A playbook asks before replaying a step's entries.
+   */
+  status(entryId: string): LogEntryStatus;
   /**
    * Record already-applied data ops as one part. Outside a {@link group} it is
    * its own entry; inside, it joins the open one. Dropped while the log is
@@ -252,8 +278,8 @@ export interface StepSpec<S = Record<string, unknown>> {
   meta?: unknown;
   /** Data source id; defaults to the playbook's. */
   source?: string;
-  /** Exactly `applyDelta`'s argument. */
-  data?: Delta;
+  /** Exactly `applyDelta`'s argument, with the source's records as plain JSON. */
+  data?: Delta<DeltaRecord, DeltaRecord>;
   /** Exactly `canvas.update`'s argument. */
   settings?: S;
   view?: {
@@ -283,15 +309,28 @@ export interface PlaybookSpec<S = Record<string, unknown>> {
  * appends; moving to a step plays it (or replays / reverts its recorded entries).
  */
 export interface Playbook<S = Record<string, unknown>> {
+  /** The script's title (from {@link load}, else `'Playbook'`). */
+  readonly title: string;
   readonly steps: readonly StepSpec<S>[];
+  /** The step the canvas is at, or `undefined` before the first. */
   readonly current: StepSpec<S> | undefined;
-  /** Append to the list; the canvas does not change. Returns the step id. */
+  /** Index of {@link current} in {@link steps}; `-1` before the first. */
+  readonly index: number;
+  /** Append to the list; the canvas does not change. Returns the step id. Throws on a duplicate id. */
   addStep(spec: StepSpec<S>): string;
+  /**
+   * Play the next step — or replay it, when it was played and then stepped
+   * back over. Rejects (writing nothing) when the step fails validation.
+   * Resolves once its `do` verbs finished and the canvas settled.
+   */
   next(): Promise<void>;
+  /** Revert the current step's recorded entries and move back one. */
   previous(): Promise<void>;
+  /** Move to `stepId`, playing / reverting every step in between. */
   goTo(stepId: string): Promise<void>;
   toJSON(): PlaybookSpec<S>;
   /** Replace the list; the canvas does not change. */
   load(doc: PlaybookSpec<S>): Promise<void>;
+  /** Hear every change to the list or the position. Returns the unsubscribe. */
   subscribe(listener: () => void): () => void;
 }

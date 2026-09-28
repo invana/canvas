@@ -108,6 +108,11 @@ import {
   optionsToForm as clickInspectToForm,
   formToOptions as clickInspectToOptions,
 } from '../../editors/behaviours/click-inspect/mapping';
+import { focusFields } from '../../editors/behaviours/focus/fields';
+import {
+  optionsToForm as focusToForm,
+  formToOptions as focusToOptions,
+} from '../../editors/behaviours/focus/mapping';
 import { clickViewFields } from '../../editors/behaviours/click-view/fields';
 import {
   optionsToForm as clickViewToForm,
@@ -285,6 +290,7 @@ export const DEFAULT_CANVAS_SETTINGS_SCHEMAS: Record<string, SettingsSchemaEntry
   'hover-activate': { section: 'behaviours', typeLabel: 'Hover Activate', fields: hoverActivateFields, toForm: hoverActivateToForm, toOptions: hoverActivateToOptions },
   'click-select': { section: 'behaviours', typeLabel: 'Click Select', fields: clickSelectFields, toForm: clickSelectToForm, toOptions: clickSelectToOptions },
   'click-inspect': { section: 'behaviours', typeLabel: 'Click Inspect', fields: clickInspectFields, toForm: clickInspectToForm, toOptions: clickInspectToOptions },
+  focus: { section: 'behaviours', typeLabel: 'Focus', fields: focusFields, toForm: focusToForm, toOptions: focusToOptions },
   'click-view': { section: 'behaviours', typeLabel: 'Click View', fields: clickViewFields, toForm: clickViewToForm, toOptions: clickViewToOptions },
   'hover-element-preview': { section: 'behaviours', typeLabel: 'Hover Preview', fields: hoverElementPreviewFields, toForm: hoverElementPreviewToForm, toOptions: hoverElementPreviewToOptions },
   'brush-select': { section: 'behaviours', typeLabel: 'Brush Select', fields: brushSelectFields, toForm: brushSelectToForm, toOptions: brushSelectToOptions },

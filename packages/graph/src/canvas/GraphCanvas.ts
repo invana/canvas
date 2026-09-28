@@ -231,22 +231,56 @@ export class GraphCanvas extends Canvas {
 
   /**
    * Auto-run the active layout (`config.activeLayout`) against its target
-   * layer, now if it already has data and again whenever the target's topology
-   * changes (nodes added / removed). Position-only updates (drags, the sim's
-   * own writes) don't re-trigger it, so there's no loop.
+   * layer, now if it already has data and again whenever what it places
+   * changes: nodes added / removed, or explicitly hidden / shown (layouts skip
+   * hidden nodes, so a hide re-flows the rest). Position-only updates (drags,
+   * the sim's own writes) don't re-trigger it, so there's no loop. Collapse
+   * doesn't either — `CollapseExpandBehaviour` owns that re-flow (anchored,
+   * opt-in via `relayoutOnToggle`).
+   *
+   * Data-triggered runs follow the layout's {@link Layout.onData}: throttled
+   * to one run per `throttleMs` (leading + trailing), and with
+   * `preserveCamera` they leave the view where it is.
    */
   private wireActiveLayout(): void {
     this.offActiveLayout?.();
     this.offActiveLayout = null;
 
     const activeId = this.get().activeLayout;
-    const targetId = activeId ? this.layouts.get(activeId)?.targetLayerId : undefined;
+    const layout = activeId ? this.layouts.get(activeId) : undefined;
+    const targetId = layout?.targetLayerId;
     const layer = targetId ? this.layers.get<GraphLayer>(targetId) : undefined;
-    if (!activeId || !layer) return;
+    if (!activeId || !layout || !layer) return;
 
-    if (layer.store.nodeCount() > 0) void this.runLayout(activeId);
-    this.offActiveLayout = layer.events.on('data:changed', (e) => {
-      if (e.addedNodes > 0 || e.removedNodes > 0) void this.runLayout(activeId);
+    let lastRun = -Infinity;
+    let trailing: ReturnType<typeof setTimeout> | undefined;
+    const now = (): number => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    const runOnData = (): void => {
+      lastRun = now();
+      void this.runLayout(activeId, layout.onData.preserveCamera ? { preserveCamera: true } : undefined);
+    };
+    const onDataChange = (): void => {
+      const throttleMs = layout.onData.throttleMs ?? 0;
+      if (throttleMs <= 0) return runOnData();
+      if (trailing !== undefined) return; // this window's run is already queued
+      const wait = lastRun + throttleMs - now();
+      if (wait <= 0) return runOnData();
+      trailing = setTimeout(() => {
+        trailing = undefined;
+        runOnData();
+      }, wait);
+    };
+
+    if (layer.store.nodeCount() > 0) {
+      lastRun = now();
+      void this.runLayout(activeId);
+    }
+    const off = layer.events.on('data:changed', (e) => {
+      if (e.addedNodes > 0 || e.removedNodes > 0 || e.hiddenNodes > 0 || e.shownNodes > 0) onDataChange();
     });
+    this.offActiveLayout = () => {
+      off();
+      if (trailing !== undefined) clearTimeout(trailing);
+    };
   }
 }

@@ -12,8 +12,9 @@ export interface GraphLayerProps extends Omit<GraphLayerOptions, 'store'> {
   id?: string;
   /**
    * Graph data — nodes + edges. Reactive: when this prop changes the wrapper
-   * calls `layer.setData(data)`, which clears and refills the store in one
-   * batch. Pass `undefined` to skip the initial data load.
+   * calls `layer.loadData(data)`, which clears and refills the store in one
+   * batch **as the baseline** — unrecorded, with the canvas history cleared.
+   * Pass `undefined` to skip the initial data load.
    */
   data?: GraphData;
   /**
@@ -28,7 +29,7 @@ export interface GraphLayerProps extends Omit<GraphLayerOptions, 'store'> {
  * Init-only: `id`, `node`, `edge`, `useDefaultStates`, `store`, etc. — change
  * the `id` (or the component's `key`) to recreate with new options.
  *
- * Reactive: `data`. The wrapper calls `layer.setData(data)` whenever the
+ * Reactive: `data`. The wrapper calls `layer.loadData(data)` whenever the
  * referenced `GraphData` object changes — make sure the prop is a stable
  * reference between renders unless you actually want a re-load.
  */
@@ -51,9 +52,12 @@ export function GraphLayer({ id = 'graph', data, store, ...rest }: GraphLayerPro
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvas, id]);
 
+  // The `data` prop is configuration: it loads as the baseline (unrecorded,
+  // history cleared), so Undo right after a load doesn't empty the graph.
+  // Code that calls `setData` itself still records an undoable replace.
   useEffect(() => {
     if (data && layerRef.current) {
-      layerRef.current.setData(data);
+      layerRef.current.loadData(data);
     }
   }, [data]);
 

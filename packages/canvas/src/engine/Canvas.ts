@@ -44,8 +44,10 @@ import { createDefaultRenderer } from '@invana/renderer-pixijs';
 import {
   CanvasThemeState,
   createOperationLog,
+  createPlaybook,
   historyView,
   type HistoryView,
+  type Playbook,
   type OperationLog,
   type Patch,
   type StoreChange,
@@ -60,6 +62,7 @@ import { BehaviourRegistry } from '@invana/canvas-core';
 import { LayoutRegistry } from '@invana/canvas-core';
 import { CommandRegistry } from '@invana/canvas-core';
 import { registerBuiltinCommands, type EngineCommandMap } from './builtinCommands';
+import { canvasPlaybookEnv } from './playbook';
 import type { CanvasContext, LayoutRunOptions } from '@invana/canvas-core';
 import type { ISurface } from '@invana/canvas-core';
 import { Tween, resolveEasing, type EasingName } from '@invana/canvas-core';
@@ -210,11 +213,12 @@ const EDIT_MERGE_MS = 600;
 /** A `Canvas.history` undo / redo of a user edit (the log's replay action names). */
 const HISTORY_EDIT_ACTION = /^(undo|redo):edit:/;
 /** Interaction slices recorded as view intent (logged, but plain undo steps over them). */
-const RECORDED_INTERACTION = new Set<string | number>(['selection', 'focus']);
+const RECORDED_INTERACTION = new Set<string | number>(['selection', 'focus', 'inspect', 'cameraIntent']);
 
 /**
  * How `Canvas.history` treats one view patch (RFC G5): a user edit's
- * `definition/*` patches are undoable; selection and focus are recorded but
+ * `definition/*` patches are undoable; selection, focus, inspect and camera
+ * intent are recorded but
  * skipped by plain undo; everything else (programmatic config, camera, hover,
  * layout progress) is not recorded.
  */
@@ -273,7 +277,8 @@ export class Canvas {
    *   its `definition/*` patches only; and every recorded data write of an
    *   attached data source (a `GraphLayer`'s `store.applyDelta` and the store
    *   writers that wrap it);
-   * - **recorded, skipped by plain undo** — selection and focus changes;
+   * - **recorded, skipped by plain undo** — selection, focus, inspect and
+   *   camera-intent changes;
    * - **not recorded** — programmatic config (a React root's `config` prop, a
    *   `<ControlPanel>` mount), camera, hover, layout progress, and derived
    *   writes (`store.internal`).
@@ -292,6 +297,30 @@ export class Canvas {
    * `CanvasOptions.actor`, default `'user'`.
    */
   actor: string;
+
+  /**
+   * The script: a list of JSON steps and a position (RFC
+   * `feat-2026-09-28-an-analysis-cannot-be-recorded-or-replayed`, G8).
+   * `addStep(json)` only appends — the canvas doesn't change until a step is
+   * moved to. `next()` validates the step (a bad one writes nothing), writes
+   * its `data` (through the named source's `applyDelta`), `settings`
+   * (`update`, as an `edit:` change) and `view` (select / focus / inspect /
+   * camera intent) as **one** {@link history} entry tagged with the step, runs
+   * its `do` verbs (`commands.runAsync`, each awaited), then waits for the
+   * canvas to settle. `previous()` takes the step back; `next()` again replays
+   * it. Steps are plain JSON, so an engine or assistant can send them.
+   *
+   * @example
+   * ```ts
+   * canvas.playbook.addStep({
+   *   id: 'narrow', title: 'Only the Thénardiers',
+   *   data: { hidden: { nodeIds: ['Javert', 'Fantine'] } },
+   *   view: { focus: { ids: ['Thenardier', 'MmeThenardier'] }, camera: 'focus' },
+   * });
+   * await canvas.playbook.next();
+   * ```
+   */
+  readonly playbook: Playbook<CanvasConfig>;
 
   /** The log behind {@link history}; handed to data layers through the context. */
   private readonly log: OperationLog;
@@ -400,6 +429,9 @@ export class Canvas {
   /** False until the auto-fitter has issued its first fit — gates {@link _fitAnimation}. */
   private _firstFitDone = false;
 
+  /** {@link runLayout} calls whose promise hasn't settled — read by {@link _whenSettled}. */
+  private _runsInFlight = 0;
+
 
   constructor(opts: CanvasOptions = {}) {
     this.id = opts.id ?? 'canvas';
@@ -417,11 +449,30 @@ export class Canvas {
       mergeWithinMs: EDIT_MERGE_MS,
     });
     this.history = historyView(this.log);
+    this.playbook = createPlaybook<CanvasConfig>(
+      this.log,
+      canvasPlaybookEnv(this, this.log, () => this._whenSettled()),
+    );
     // Undo / redo revert the store; push the reverted slices to the instances.
     this.store.view.subscribeChanges((change) => {
       if (HISTORY_EDIT_ACTION.test(change.action ?? '')) {
         this._reconcileDefinition(change.prev.definition, change.state.definition);
       }
+    });
+    // Camera intents (RFC F10): the engine frames `'visible'` / `'all'` once the
+    // canvas settles; `'focus'` belongs to whoever draws the focus
+    // (`FocusBehaviour`). An import restores the intent as state only — its
+    // snapshot carries the camera itself.
+    this.store.view.subscribeChanges((change) => {
+      const next = change.state.interaction.cameraIntent;
+      if (!next || next === change.prev.interaction.cameraIntent) return;
+      if (change.action === 'canvas:importState:interaction') return;
+      if (next.intent === 'focus') return;
+      void this._whenSettled().then(() => {
+        // A newer request supersedes this one.
+        if (this.store.view.getState().interaction.cameraIntent !== next) return;
+        this._frameIntent(next.intent === 'all');
+      });
     });
     this.themeState = new CanvasThemeState(this.events);
     this.gestures = new DefaultGestureArbiter();
@@ -644,6 +695,39 @@ export class Canvas {
       interaction: this._interactions.current(t0),
     });
     this.events.emit('render:loop:tick', tick);
+  }
+
+  /**
+   * Resolve on the first frame with no layout run in flight (its position
+   * transition included), no reported layout run status and no camera glide
+   * (RFC F12). Always waits at least one frame, so a write made just before
+   * the call has flushed and any layout it triggered has started. Resolves
+   * anyway after `timeoutMs`, so a simulation that never cools can't hold a
+   * caller forever.
+   *
+   * Private on purpose: behaviours reach it as `CanvasContext.whenSettled`,
+   * and `canvas.playbook` waits on it between steps.
+   */
+  private _whenSettled(opts: { timeoutMs?: number } = {}): Promise<void> {
+    const timeoutMs = opts.timeoutMs ?? 15_000;
+    const started = performance.now();
+    const nextFrame = (fn: () => void): void => {
+      if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => fn());
+      else setTimeout(fn, 16);
+    };
+    return new Promise((resolve) => {
+      const check = (): void => {
+        // A destroyed canvas has nothing left to wait for.
+        if (!this._isInitialised) return resolve();
+        const settled =
+          this._runsInFlight === 0 &&
+          !this.store.view.getState().runtime.layout.running &&
+          !((this.camera as Camera | undefined)?.isAnimating ?? false);
+        if (settled || performance.now() - started >= timeoutMs) return resolve();
+        nextFrame(check);
+      };
+      nextFrame(check);
+    });
   }
 
   /**
@@ -1108,16 +1192,29 @@ export class Canvas {
    * which is unreliable when a bundler serves a domain package (e.g.
    * `@invana/graph`'s `GraphLayer`) a *separate copy* of the base class.
    */
-  private _contentBounds(): Rect | null {
+  /**
+   * Glide the camera to fit the content — every visible element, or with
+   * `includeHidden` all of it. The engine side of the `'visible'` / `'all'`
+   * camera intents.
+   */
+  private _frameIntent(includeHidden: boolean, padding = 80): void {
+    if (!this._isInitialised) return;
+    const rect = this._contentBounds(includeHidden);
+    if (!rect) return;
+    this.camera.animateTo(this._fitTransform(rect, padding), { durationMs: 450 });
+  }
+
+  private _contentBounds(includeHidden = false): Rect | null {
     let minX = Infinity;
     let minY = Infinity;
     let maxX = -Infinity;
     let maxY = -Infinity;
     let any = false;
     for (const layer of this.layers.byZOrder()) {
-      const getBounds = (layer as { getBounds?: () => Rect }).getBounds;
+      const getBounds = (layer as { getBounds?: (opts?: { includeHidden?: boolean }) => Rect | null })
+        .getBounds;
       if (typeof getBounds !== 'function') continue;
-      const r = getBounds.call(layer);
+      const r = includeHidden ? getBounds.call(layer, { includeHidden }) : getBounds.call(layer);
       if (!r || (r.width <= 0 && r.height <= 0)) continue;
       any = true;
       if (r.x < minX) minX = r.x;
@@ -1406,7 +1503,9 @@ export class Canvas {
       this.events.emit('layout:run:tick', { id: layout.id, ...cameraFlags });
     });
 
+    this._runsInFlight++;
     return layout.apply(target as never, run).finally(() => {
+      this._runsInFlight--;
       offStart();
       offEnd();
       offTick();
@@ -1751,6 +1850,7 @@ export class Canvas {
       showMessage: (text, timeout) => this.showMessage(text, timeout),
       clearMessage: () => this.clearMessage(),
       runActiveLayout: (run) => this.runActiveLayout(run),
+      whenSettled: (opts) => this._whenSettled(opts),
     };
   }
 

@@ -3,6 +3,7 @@ import type { CanvasEventBus } from '../events/CanvasEventBus';
 import type { ReactiveStore } from '../port/types';
 import type { CanvasSceneOptions, CanvasView } from './CanvasView';
 import type { ControlPanelSpec } from './controlPanels';
+import type { CameraIntent } from '../log/types';
 
 /** Loose option/patch bag for the view's per-instance config. */
 type Bag = Record<string, unknown>;
@@ -297,6 +298,22 @@ export function createActions(
       set: (ids: Iterable<string>, dim = true) =>
         v('view:focus:set', (s) => void (s.interaction.focus = { ids: new Set(ids), dim })),
       clear: () => v('view:focus:clear', (s) => void (s.interaction.focus = null)),
+    },
+
+    // ── VIEW · inspect (whose properties are open) ────────────────────────────
+    inspect: {
+      set: (id: string) => v('view:inspect:set', (s) => void (s.interaction.inspect = id)),
+      clear: () => v('view:inspect:clear', (s) => void (s.interaction.inspect = null)),
+    },
+
+    // ── VIEW · camera intent (frame the focus / the visible / everything) ─────
+    cameraIntent: {
+      /** Ask for a framing; the owner performs it once the canvas settles. */
+      request: (intent: CameraIntent) =>
+        v(
+          'view:cameraIntent:request',
+          (s) => void (s.interaction.cameraIntent = { intent, seq: (s.interaction.cameraIntent?.seq ?? 0) + 1 }),
+        ),
     },
 
     // ── VIEW · transient pins (drag/resize gesture locks; NOT data `pinned`) ───

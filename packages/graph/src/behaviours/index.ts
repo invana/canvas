@@ -38,6 +38,9 @@ export type {
   ViewTarget,
 } from './ClickViewBehaviour';
 
+export { FocusBehaviour } from './FocusBehaviour';
+export type { FocusBehaviourOptions } from './FocusBehaviour';
+
 export { HoverElementPreviewBehaviour, resolvePreviewCard } from './HoverElementPreviewBehaviour';
 export type {
   HoverElementPreviewBehaviourOptions,

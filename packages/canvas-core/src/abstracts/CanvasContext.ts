@@ -149,4 +149,17 @@ export interface CanvasContext {
    * provide it — callers use `ctx.runActiveLayout?.(…)`.
    */
   runActiveLayout?(run?: LayoutRunOptions): Promise<void>;
+
+  /**
+   * Resolve on the first frame on which the canvas is **settled**: no layout
+   * run in flight (its position transition included) and no camera glide.
+   * Waits at least one frame, so writes made just before the call have
+   * flushed. Resolves anyway after `timeoutMs` (default 15 000) so a
+   * never-ending simulation can't hold a caller forever.
+   *
+   * What a playbook step and `FocusBehaviour`'s framing wait on. Not on the
+   * public `Canvas` surface. Optional so hand-built contexts need not provide
+   * it — callers use `ctx.whenSettled?.()`.
+   */
+  whenSettled?(opts?: { timeoutMs?: number }): Promise<void>;
 }

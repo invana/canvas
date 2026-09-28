@@ -277,6 +277,14 @@ export function createOperationLog<T>(opts: OperationLogOptions<T> = {}): Operat
       };
     },
 
+    source: (sourceId) => sources.get(sourceId),
+
+    status(entryId) {
+      const i = indexOf(entryId);
+      if (i < 0) return 'unknown';
+      return i < cursor ? 'applied' : 'pending';
+    },
+
     recordData(sourceId, ops, actor) {
       if (replaying || ops.length === 0) return;
       const part: DataLogPart = { kind: 'data', sourceId, ops: [...ops] };

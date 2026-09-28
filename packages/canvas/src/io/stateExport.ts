@@ -1,4 +1,4 @@
-import type { CameraTransform, CanvasView } from '@invana/canvas-store';
+import type { CameraIntent, CameraTransform, CanvasView } from '@invana/canvas-store';
 
 import type { Canvas } from '../engine/Canvas';
 
@@ -58,6 +58,13 @@ export interface CanvasInteractionSnapshot {
   states: Record<string, string[]>;
   camera: CameraTransform;
   focus: { ids: string[]; dim: boolean } | null;
+  /** Whose properties are open. Absent in snapshots from before it existed. */
+  inspect?: string | null;
+  /**
+   * The latest camera intent. Restored as state only — an import keeps the
+   * snapshot's `camera` and does not re-frame. Absent in older snapshots.
+   */
+  cameraIntent?: { intent: CameraIntent; seq: number } | null;
   transientPins: string[];
   viewMode: string;
   /** Parameters of {@link viewMode}. Absent in snapshots from before it existed. */
@@ -204,6 +211,8 @@ export function exportCanvasState(canvas: Canvas): CanvasStateSnapshot {
         focus: interaction.focus
           ? { ids: [...interaction.focus.ids], dim: interaction.focus.dim }
           : null,
+        inspect: interaction.inspect,
+        cameraIntent: interaction.cameraIntent ? { ...interaction.cameraIntent } : null,
         transientPins: [...interaction.transientPins],
         viewMode: interaction.viewMode,
         viewModeArgs: { ...interaction.viewModeArgs },
@@ -303,6 +312,8 @@ export function importCanvasState(
       s.interaction.focus = interaction.focus
         ? { ids: new Set(interaction.focus.ids), dim: interaction.focus.dim }
         : null;
+      s.interaction.inspect = interaction.inspect ?? null;
+      s.interaction.cameraIntent = interaction.cameraIntent ? { ...interaction.cameraIntent } : null;
       s.interaction.transientPins = new Set(interaction.transientPins);
       s.interaction.viewMode = interaction.viewMode;
       s.interaction.viewModeArgs = { ...(interaction.viewModeArgs ?? {}) };

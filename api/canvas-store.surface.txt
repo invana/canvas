@@ -1,7 +1,7 @@
 # @invana/canvas-store — public API surface (generated; do not hand-edit)
 # Regenerate: pnpm build && node scripts/check-api-surface.mjs --write
 
-## . (330 exports)
+## . (336 exports)
 AnchorCtx
 AnchorShapeRef
 AnchorSpec
@@ -68,6 +68,7 @@ DecorationTarget
 DeepPartial
 Delta
 DeltaOptions
+DeltaRecord
 DirtyBatcher
 DirtySnapshot
 EdgeRecord
@@ -130,6 +131,7 @@ LocalSpec
 LogAttributes
 LogEntry
 LogEntryFilter
+LogEntryStatus
 LogGroupMeta
 LogLevel
 LogPart
@@ -159,7 +161,10 @@ PickingIndex
 PickingIndexOptions
 PlaneName
 Playbook
+PlaybookEnv
+PlaybookOptions
 PlaybookSpec
+PlaybookStepError
 Point
 PolygonSpec
 Polyline
@@ -282,6 +287,7 @@ createInteractionTracer
 createLogBridge
 createMemoryStore
 createOperationLog
+createPlaybook
 createReactiveStore
 createStoreFromCell
 createTapTracer

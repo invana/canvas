@@ -325,6 +325,26 @@ export class ClickSelectBehaviour extends Behaviour {
     this.layer = layer;
     this._canvasStore = ctx.store;
 
+    // Follow `view.interaction.selection` written elsewhere — a playbook step,
+    // the assistant, a panel (RFC F8). The store holds the *resolved*
+    // selection (what the mirror in `applySelection` writes), so it is applied
+    // as-is, without re-expanding by `degree`. Ids outside this layer are
+    // ignored. Our own mirror arrives here as a set equal to `selected`, which
+    // is the echo guard.
+    this.subs.push(
+      ctx.store.view.subscribe((state, prev) => {
+        const next = state.interaction.selection;
+        if (next === prev.interaction.selection || !this._enabled) return;
+        const incoming = new Map<string, SelectableElementType>();
+        for (const id of next) {
+          if (layer.store.hasNode(id)) incoming.set(id, 'shape');
+          else if (layer.store.hasEdge(id)) incoming.set(id, 'connector');
+        }
+        if (sameKeys(incoming, this.selected)) return;
+        this.applySelection(incoming, true, false);
+      }),
+    );
+
     const renderer = layer.getRenderer();
     if (!renderer) {
       throw new Error(
@@ -632,9 +652,10 @@ export class ClickSelectBehaviour extends Behaviour {
   private applySelection(
     seeds: Map<string, SelectableElementType>,
     emitEvents: boolean,
+    expand = true,
   ): void {
     if (!this.layer) return;
-    const expanded = this.expandSeeds(seeds);
+    const expanded = expand ? this.expandSeeds(seeds) : new Map(seeds);
     const prevSelected = new Map(this.selected);
 
     this.clearVisualsOnly();
@@ -675,7 +696,19 @@ export class ClickSelectBehaviour extends Behaviour {
     // `view.interaction.selection` (D11) — the single point every mode reaches
     // (lasso/brush delegate here). One `set` per change; readers subscribe to the
     // store slice instead of this behaviour's event.
-    this._canvasStore?.actions.selection.set([...snapshot.shapeIds, ...snapshot.connectorIds]);
+    // The store's selection is canvas-wide: replace only this layer's share
+    // and keep ids another layer's selection put there. Skipped when nothing
+    // changes — a selection that arrived *from* the store must not write it
+    // back as a second change.
+    const store = this._canvasStore;
+    const layerStore = this.layer?.store;
+    if (store && layerStore) {
+      const current = store.view.getState().interaction.selection;
+      const next: string[] = [];
+      for (const id of current) if (!layerStore.hasNode(id) && !layerStore.hasEdge(id)) next.push(id);
+      next.push(...snapshot.shapeIds, ...snapshot.connectorIds);
+      if (!sameSet(current, next)) store.actions.selection.set(next);
+    }
   }
 
   /** Expand seeds by `degree` hops (BFS) — same shape as HoverActivate. */
@@ -818,4 +851,18 @@ export class ClickSelectBehaviour extends Behaviour {
     }
     return { shapeIds, connectorIds };
   }
+}
+
+/** Whether two selections hold the same ids. */
+function sameKeys(a: ReadonlyMap<string, unknown>, b: ReadonlyMap<string, unknown>): boolean {
+  if (a.size !== b.size) return false;
+  for (const id of a.keys()) if (!b.has(id)) return false;
+  return true;
+}
+
+/** Whether `set` holds exactly the ids in `ids` (which has no duplicates). */
+function sameSet(set: ReadonlySet<string>, ids: readonly string[]): boolean {
+  if (set.size !== ids.length) return false;
+  for (const id of ids) if (!set.has(id)) return false;
+  return true;
 }

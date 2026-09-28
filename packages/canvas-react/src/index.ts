@@ -165,6 +165,8 @@ export type { EdgeScaleLODBehaviourProps } from './behaviours/EdgeScaleLODBehavi
 export { ParallelEdgeBehaviour } from './behaviours/ParallelEdgeBehaviour';
 export type { ParallelEdgeBehaviourProps } from './behaviours/ParallelEdgeBehaviour';
 
+export { FocusBehaviour } from './behaviours/FocusBehaviour';
+export type { FocusBehaviourProps } from './behaviours/FocusBehaviour';
 export { NodeCentralityBehaviour } from './behaviours/NodeCentralityBehaviour';
 export type { NodeCentralityBehaviourProps } from './behaviours/NodeCentralityBehaviour';
 export { TextLODBehaviour } from './behaviours/TextLODBehaviour';

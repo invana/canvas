@@ -774,6 +774,22 @@ export class GraphLayer extends WorldLayer<
   }
 
   /**
+   * Load `data` as the **baseline** — the starting state, not a change anyone
+   * made. Replaces the graph like {@link setData}, but unrecorded, and clears
+   * the canvas's history: entries recorded against the previous data can't be
+   * replayed over this one, and Undo right after a load must not empty the
+   * graph. What a React root's `data` prop and `options.initData` do (RFC
+   * `feat-2026-09-28-an-analysis-cannot-be-recorded-or-replayed`, D-16 / F24).
+   *
+   * Call {@link setData} instead when the replacement is an edit the user
+   * should be able to undo.
+   */
+  loadData(data: GraphData): void {
+    this.store.internal.run(() => this.setData(data));
+    this.ctx?.log?.clear();
+  }
+
+  /**
    * Serialise this layer's graph data — every node (with its live position,
    * `pinned` flag, style, states and payload) and every edge — to a plain
    * {@link GraphData} object safe to `JSON.stringify`.
@@ -852,6 +868,8 @@ export class GraphLayer extends WorldLayer<
       addedEdges: 0,
       updatedEdges: 0,
       removedEdges,
+      hiddenNodes: 0,
+      shownNodes: 0,
     });
   }
 
@@ -1206,8 +1224,11 @@ export class GraphLayer extends WorldLayer<
    * scene-graph bounds semantics for `visible: false` display objects.
    *
    * @param opts `includeHidden: true` unions hidden elements back in (default
-   *   `false`). Falls back to the base scene-graph bounds before the renderer
-   *   mounts or when nothing visible is aggregated.
+   *   `false`). `ids` measures only those nodes (no edges) — the box a
+   *   "frame these" action fits; it returns `null`, never the scene-graph
+   *   fallback, when none of them can be measured. Otherwise falls back to the
+   *   base scene-graph bounds before the renderer mounts or when nothing
+   *   visible is aggregated.
    */
   /**
    * World-space AABB of this layer's content, or `null` when there is nothing
@@ -1217,10 +1238,11 @@ export class GraphLayer extends WorldLayer<
    * zero rect produces a nonsense camera, whereas `null` lets them skip the fit
    * (`docs/renderer-split-design.md` D3).
    */
-  override getBounds(opts?: { includeHidden?: boolean }): Rect | null {
+  override getBounds(opts?: { includeHidden?: boolean; ids?: Iterable<string> }): Rect | null {
     const includeHidden = opts?.includeHidden ?? false;
+    const only = opts?.ids ? new Set(opts.ids) : null;
     const renderer = this._renderer;
-    if (!renderer) return super.getBounds();
+    if (!renderer) return only ? null : super.getBounds();
 
     // Drain pending mutations so the event stream (and anything it derives,
     // e.g. group frames) is consistent before measuring. Note this is *not*
@@ -1243,6 +1265,7 @@ export class GraphLayer extends WorldLayer<
     };
 
     for (const node of this.store.nodes()) {
+      if (only && !only.has(node.id)) continue;
       if (!includeHidden && !this.store.isNodeVisible(node.id)) continue;
       // **Store-derived, deterministic** (autofit RFC §7): built from the node's
       // own spec, so it is always fresh and needs no projection. The
@@ -1270,14 +1293,14 @@ export class GraphLayer extends WorldLayer<
         union(renderer.getShapeWorldBounds(node.id));
       }
     }
-    for (const edge of this.store.edges()) {
+    for (const edge of only ? [] : this.store.edges()) {
       if (!includeHidden && !this.store.isEdgeVisible(edge.id)) continue;
       const poly = renderer.getConnectorPolyline(edge.id);
       if (!poly || poly.length === 0) continue;
       for (const p of poly) union({ x: p.x, y: p.y, width: 0, height: 0 });
     }
 
-    if (!any) return super.getBounds();
+    if (!any) return only ? null : super.getBounds();
     return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
   }
 
