@@ -31,22 +31,18 @@ import type { CanvasCommand, CommandArgSpec, CommandRegistry, Rect } from '@inva
 import type { BackgroundLayer } from '../layers/BackgroundLayer';
 
 import type { Canvas } from './Canvas';
+import { canLockView, isViewLocked, setViewLocked } from './viewLock';
 
 /** Default zoom step for `camera.zoomIn` / `camera.zoomOut`. */
 const ZOOM_STEP = 1.2;
 /** Default `camera.zoomTo` levels, as scale factors. */
 const ZOOM_LEVELS = [0.25, 0.5, 1, 2, 4];
-/** Behaviours `view.lock` disables by default — pan + node drag; zoom stays live. */
+/** Behaviours `view.lock` disables by default — shown as the arg's default (the rule is `viewLock.ts`). */
 const DEFAULT_LOCK_IDS = ['pan', 'drag-node'];
 
 /** Read a field off a JSON `args` bag, or `undefined`. */
 function arg<T>(args: unknown, key: string): T | undefined {
   return args && typeof args === 'object' ? ((args as Record<string, unknown>)[key] as T | undefined) : undefined;
-}
-
-/** The ids `view.lock` targets that are actually registered. */
-function lockIds(canvas: Canvas, args: unknown): string[] {
-  return (arg<string[]>(args, 'behaviourIds') ?? DEFAULT_LOCK_IDS).filter((id) => canvas.behaviours.has(id));
 }
 
 /** The background layer `background.grid` targets. */
@@ -162,17 +158,12 @@ const BUILTIN_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
   'view.lock': {
     label: 'Lock view',
     args: { behaviourIds: { kind: 'strings', label: 'Behaviours', default: DEFAULT_LOCK_IDS } },
-    // Locked ⇔ every targeted behaviour that exists is disabled.
-    isActive: (canvas, args) => {
-      const ids = lockIds(canvas, args);
-      return ids.length > 0 && ids.every((id) => !canvas.behaviours.get(id)?.enabled);
-    },
-    isEnabled: (canvas, args) => lockIds(canvas, args).length > 0,
-    // Through the registry, so `scene:behaviour:enable`/`disable` fire and a
-    // bound toggle re-renders.
+    // The rule is `viewLock.ts`, shared with `useLock`.
+    isActive: (canvas, args) => isViewLocked(canvas, arg<string[]>(args, 'behaviourIds')),
+    isEnabled: (canvas, args) => canLockView(canvas, arg<string[]>(args, 'behaviourIds')),
     run: (canvas, args) => {
-      const lock = !BUILTIN_COMMANDS['view.lock']!.isActive!(canvas, args);
-      for (const id of lockIds(canvas, args)) canvas.behaviours.setEnabled(id, !lock);
+      const ids = arg<string[]>(args, 'behaviourIds');
+      setViewLocked(canvas, !isViewLocked(canvas, ids), ids);
     },
   },
   'layout.run': {
@@ -262,9 +253,9 @@ const BUILTIN_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
       const id = arg<string>(args, 'id');
       const layer = id ? canvas.layers.get(id) : undefined;
       if (!layer) return;
+      // `setVisible` emits `scene:layer:visibilitychange`, which the canvas
+      // bridges to `commands.invalidate()` — bound toggles re-read.
       layer.setVisible(!layer.visible);
-      // Visibility isn't store state: tell bound toggles to re-read.
-      canvas.commands.invalidate();
     },
   },
   'layout.toggle': {

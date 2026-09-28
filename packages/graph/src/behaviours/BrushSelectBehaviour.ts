@@ -254,6 +254,8 @@ export class BrushSelectBehaviour extends Behaviour {
   }
 
   setOptions(patch: Partial<BrushSelectBehaviourOptions>): void {
+    // Keep `getOptions()` current (settings-editor seed, undo baseline).
+    this.recordOptions(patch);
     this.opts = resolveOptions(this.opts, patch);
   }
 

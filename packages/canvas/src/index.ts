@@ -352,6 +352,7 @@ export type { CanvasConfig } from './engine/CanvasConfig';
 // The config-merge the engine itself uses for `update()` — exported so consumers
 // building config (deep-merging defaults under overrides) merge identically.
 export { deepMerge } from './engine/CanvasConfig';
+export { isViewLocked, setViewLocked } from './engine/viewLock';
 
 // ─── io: export / import ─────────────────────────────────────────────────────
 // Raster export (viewport / whole-diagram → PNG / JPEG / WebP). `Canvas.export`

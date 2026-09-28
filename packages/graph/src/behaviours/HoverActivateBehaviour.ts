@@ -491,6 +491,8 @@ export class HoverActivateBehaviour extends Behaviour {
    * so the next hover applies the new visuals cleanly.
    */
   setOptions(patch: Partial<HoverActivateBehaviourOptions>): void {
+    // Keep `getOptions()` current (settings-editor seed, undo baseline).
+    this.recordOptions(patch);
     const stateChanged =
       (patch.state !== undefined && patch.state !== this.opts.state) ||
       ('inactiveState' in patch && patch.inactiveState !== this.opts.inactiveState) ||

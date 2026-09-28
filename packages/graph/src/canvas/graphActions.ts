@@ -11,6 +11,8 @@
 import type { Canvas } from '@invana/canvas';
 
 import type { ClickSelectBehaviour } from '../behaviours/ClickSelectBehaviour';
+import type { GraphLayer } from '../layer/GraphLayer';
+import type { EdgePathType, EdgeShapeOptions } from '../layer/types';
 import type { GraphClipboard } from '../clipboard/GraphClipboard';
 import type { GraphHistory } from '../history/GraphHistory';
 
@@ -143,28 +145,56 @@ function graphGoesFirst(
 
 /**
  * Undo the newer of the two tops — the graph `history`'s or `canvas.history`'s.
+ * With no graph `history` (no `GraphHistoryProvider`), `canvas.history` alone.
  * No-op when both stacks are empty.
  */
-export function undoNewest(canvas: Canvas, history: GraphHistory): void {
-  if (graphGoesFirst(history.peekUndo(), canvas.history.peekUndo())) history.undo();
+export function undoNewest(canvas: Canvas, history: GraphHistory | null): void {
+  if (history && graphGoesFirst(history.peekUndo(), canvas.history.peekUndo())) history.undo();
   else canvas.history.undo();
 }
 
 /**
  * Redo the older of the two redo tops (the step undone last), from the graph
- * `history` or `canvas.history`. No-op when both redo stacks are empty.
+ * `history` or `canvas.history` — `canvas.history` alone when `history` is
+ * `null`. No-op when both redo stacks are empty.
  */
-export function redoNewest(canvas: Canvas, history: GraphHistory): void {
-  if (graphGoesFirst(history.peekRedo(), canvas.history.peekRedo(), true)) history.redo();
+export function redoNewest(canvas: Canvas, history: GraphHistory | null): void {
+  if (history && graphGoesFirst(history.peekRedo(), canvas.history.peekRedo(), true)) history.redo();
   else canvas.history.redo();
 }
 
-/** Whether either stack — the graph `history` or `canvas.history` — has a step to undo. */
-export function canUndoEither(canvas: Canvas, history: GraphHistory): boolean {
-  return history.canUndo || canvas.history.canUndo();
+/** Whether either stack — the graph `history` (when given) or `canvas.history` — has a step to undo. */
+export function canUndoEither(canvas: Canvas, history: GraphHistory | null): boolean {
+  return (history?.canUndo ?? false) || canvas.history.canUndo();
 }
 
-/** Whether either stack — the graph `history` or `canvas.history` — has a step to redo. */
-export function canRedoEither(canvas: Canvas, history: GraphHistory): boolean {
-  return history.canRedo || canvas.history.canRedo();
+/** Whether either stack — the graph `history` (when given) or `canvas.history` — has a step to redo. */
+export function canRedoEither(canvas: Canvas, history: GraphHistory | null): boolean {
+  return (history?.canRedo ?? false) || canvas.history.canRedo();
+}
+
+/** The layer's current edge `shape` template, or `{}`. */
+function edgeShape(layer: GraphLayer): EdgeShapeOptions {
+  const shape = (layer.edgeDefaults as { shape?: unknown } | undefined)?.shape;
+  return (shape && typeof shape === 'object' ? shape : {}) as EdgeShapeOptions;
+}
+
+/**
+ * The layer-wide edge path type — `edgeDefaults.shape.pathType` — or
+ * `undefined` when the template doesn't set one. Shared by the
+ * `graph.edgeType` command and `useEdgeType`.
+ */
+export function edgePathType(layer: GraphLayer): string | undefined {
+  return edgeShape(layer).pathType;
+}
+
+/**
+ * Switch every edge in the layer (and edges added later) to path type `type`
+ * via `GraphLayer.setEdgeDefaults`. The prior `shape` is spread first, since
+ * `setEdgeDefaults` replaces it wholesale — anchors / waypoints survive. The
+ * layer emits `style:changed` (scope `edge`), which `GraphCanvas` bridges to
+ * bound controls.
+ */
+export function setEdgePathType(layer: GraphLayer, type: string): void {
+  layer.setEdgeDefaults({ shape: { ...edgeShape(layer), pathType: type as EdgePathType } });
 }

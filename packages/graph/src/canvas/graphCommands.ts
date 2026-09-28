@@ -23,8 +23,8 @@ import type { Canvas, CanvasCommand, CommandArgSpec, CommandOption, CommandRegis
 import { GraphClipboard } from '../clipboard/GraphClipboard';
 import type { GraphHistory } from '../history/GraphHistory';
 import type { GraphLayer } from '../layer/GraphLayer';
-import type { EdgePathType, EdgeShapeOptions } from '../layer/types';
-import { selectedElementIds } from './graphActions';
+import type { EdgePathType } from '../layer/types';
+import { edgePathType, selectedElementIds, setEdgePathType } from './graphActions';
 import { resolveSelectMode, selectModePatch } from './selectMode';
 
 /**
@@ -65,12 +65,6 @@ function arg<T>(args: unknown, key: string): T | undefined {
 
 function graphLayer(canvas: Canvas, args: unknown): GraphLayer | undefined {
   return canvas.layers.get<GraphLayer>(arg<string>(args, 'layerId') ?? 'graph');
-}
-
-/** The current edge `shape`, or `{}`. */
-function edgeShape(layer: GraphLayer): EdgeShapeOptions {
-  const shape = (layer.edgeDefaults as { shape?: unknown } | undefined)?.shape;
-  return (shape && typeof shape === 'object' ? shape : {}) as EdgeShapeOptions;
 }
 
 /** `{ layerId? }` — the graph layer a command targets (default `'graph'`). */
@@ -169,7 +163,7 @@ const GRAPH_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
       const layer = graphLayer(canvas, args);
       if (!layer) return null;
       const types = arg<string[]>(args, 'types') ?? DEFAULT_EDGE_TYPES;
-      return edgeShape(layer).pathType ?? types[0] ?? null;
+      return edgePathType(layer) ?? types[0] ?? null;
     },
     options: (_canvas, args) =>
       (arg<string[]>(args, 'types') ?? DEFAULT_EDGE_TYPES).map((t) => ({
@@ -182,10 +176,9 @@ const GRAPH_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
       const layer = graphLayer(canvas, args);
       const next = arg<string>(args, 'value');
       if (!layer || !next) return;
-      // `setEdgeDefaults` replaces `shape` wholesale — keep anchors / waypoints.
-      layer.setEdgeDefaults({ shape: { ...edgeShape(layer), pathType: next as EdgePathType } });
-      // Edge defaults live on the layer, not in the view store: tell bound controls.
-      canvas.commands.invalidate();
+      // Shared with `useEdgeType`. The layer's `style:changed` is bridged to
+      // `commands.invalidate()` by `GraphCanvas`, so bound controls re-read.
+      setEdgePathType(layer, next);
     },
   },
   'graph.clear': {

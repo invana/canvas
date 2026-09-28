@@ -53,11 +53,12 @@ export const DEFAULT_CONTROL_PRESETS: Readonly<Record<string, readonly ControlIt
 function useRegistryIds(canvas: Canvas): { layers: string[]; behaviours: string[]; layouts: string[] } {
   const subscribe = useCallback(
     (onChange: () => void) => {
-      // The registries' bus events (behaviours announce registration only).
+      // The registries' bus events.
       const offs = [
         canvas.events.on('scene:layer:add', onChange),
         canvas.events.on('scene:layer:remove', onChange),
         canvas.events.on('scene:behaviour:register', onChange),
+        canvas.events.on('scene:behaviour:unregister', onChange),
         canvas.events.on('scene:layout:add', onChange),
         canvas.events.on('scene:layout:remove', onChange),
       ];

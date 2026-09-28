@@ -343,6 +343,8 @@ export class ParallelEdgeBehaviour extends Behaviour {
 
   /** Runtime option update. Re-runs the distribution immediately if enabled. */
   setOptions(patch: Partial<ParallelEdgeBehaviourOptions>): void {
+    // Keep `getOptions()` current (settings-editor seed, undo baseline).
+    this.recordOptions(patch);
     this.opts = resolveOptions(this.opts, patch);
     if (this.isEnabled) this.recompute();
   }

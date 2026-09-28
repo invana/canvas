@@ -27,8 +27,10 @@ export interface CommandState {
  * Live {@link CommandState} for each ref, plus a `run` dispatcher — what a
  * control-panel renderer needs to draw command buttons and toggles.
  *
- * Re-evaluates on view-store changes, command (un)registration /
- * `invalidate()` and behaviour enable / disable, but **re-renders only when a
+ * Re-evaluates on view-store changes and on `commands.subscribe` — command
+ * (un)registration and `invalidate()`, which the engine fires for everything
+ * else a command reads (registries, layer visibility, the undo stacks, edge
+ * defaults on a `GraphCanvas`). **Re-renders only when a
  * state actually changes**: the snapshot is the states serialised to a string,
  * so pointer-rate view writes (hover, camera) that change nothing here cost one
  * comparison.
@@ -41,13 +43,7 @@ export function useCommandStates(
 
   const subscribe = useCallback(
     (onChange: () => void) => {
-      const offs = [
-        resolved.store.view.subscribe(onChange),
-        resolved.commands.subscribe(onChange),
-        resolved.events.on('scene:behaviour:enable', onChange),
-        resolved.events.on('scene:behaviour:disable', onChange),
-        resolved.events.on('scene:behaviour:register', onChange),
-      ];
+      const offs = [resolved.store.view.subscribe(onChange), resolved.commands.subscribe(onChange)];
       return () => {
         for (const off of offs) off();
       };

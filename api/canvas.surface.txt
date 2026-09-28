@@ -1,7 +1,7 @@
 # @invana/canvas — public API surface (generated; do not hand-edit)
 # Regenerate: pnpm build && node scripts/check-api-surface.mjs --write
 
-## . (419 exports)
+## . (421 exports)
 AnchorCtx
 AnchorShapeRef
 AnchorSpec
@@ -362,6 +362,7 @@ hasSilhouetteFill
 importCanvasState
 importCanvasStateFromFile
 isInherit
+isViewLocked
 jsonSafe
 linear
 loopCurvePathStyle
@@ -403,6 +404,7 @@ scaleSpec
 scaleStar
 scaleTabbedRect
 select
+setViewLocked
 shallowEqual
 shapeSpecToSvg
 silhouettePortAnchor

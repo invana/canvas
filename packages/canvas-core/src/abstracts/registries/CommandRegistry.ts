@@ -62,14 +62,24 @@ export interface CommandArgSpec {
   pick?: boolean;
 }
 
-/** A named command, run against a context `C`. `args` is whatever the caller's spec carried (JSON). */
+/**
+ * A named command, run against a context `C`. `args` is whatever the caller's
+ * spec carried (JSON).
+ *
+ * Its `isEnabled` / `isActive` / `value` / `options` may read anything; a bound
+ * control re-reads them on view-store writes and on the registry's
+ * {@link CommandRegistry.subscribe} signal. State outside the store needs an
+ * owner-side {@link CommandRegistry.invalidate} bridge — see there.
+ */
 export interface CanvasCommand<C> {
   /** Human label — a default tooltip when a spec doesn't give one. */
   label?: string;
   /**
    * The keys `args` may carry, described for editors (the Studio's control-panel
-   * editor draws a field per key). Documentation as data: it isn't validated at
-   * run time, and keys it doesn't name still pass through.
+   * editor draws a field per key). In dev builds {@link CommandRegistry.run}
+   * checks a described key's value against its `kind` and warns (never throws)
+   * on a mismatch — see {@link CommandRegistryOptions.validateArgs}. Keys it
+   * doesn't name still pass through unchecked.
    */
   args?: Readonly<Record<string, CommandArgSpec>>;
   /** Perform the command. */
@@ -92,6 +102,66 @@ export interface CanvasCommand<C> {
 export interface CommandRegistryOptions<C> {
   /** The context every command runs against (resolved lazily, per call). */
   getContext: () => C;
+  /**
+   * Check `args` against each command's {@link CanvasCommand.args} descriptors
+   * in {@link CommandRegistry.run}, warning once per (command, key, problem) on
+   * a mismatch. Never throws, never blocks the run. Default: on in dev builds
+   * (`process.env.NODE_ENV !== 'production'`), off in production bundles.
+   */
+  validateArgs?: boolean;
+}
+
+/**
+ * Whether this is a dev build. Written as the literal `process.env.NODE_ENV`
+ * so consumer bundlers substitute it (and drop the validator in production);
+ * where `process` doesn't exist at all (an unbundled browser) it's `false`.
+ */
+function isDevBuild(): boolean {
+  try {
+    // `process` isn't declared in this dependency-free package.
+    return (process as { env: { NODE_ENV?: string } }).env.NODE_ENV !== 'production';
+  } catch {
+    return false;
+  }
+}
+
+declare const process: unknown;
+
+/** Why `value` doesn't fit `spec`, or `null` when it does. */
+function argProblem(spec: CommandArgSpec, value: unknown): string | null {
+  switch (spec.kind) {
+    case 'string':
+    case 'layer':
+    case 'behaviour':
+    case 'layout':
+      return typeof value === 'string' ? null : `expected a string (${spec.kind}), got ${describe(value)}`;
+    case 'number': {
+      if (typeof value === 'number' && Number.isFinite(value)) return null;
+      // A picker hands its pick back as a string (`camera.zoomTo`'s `value`).
+      if (spec.pick && typeof value === 'string' && value.trim() !== '' && Number.isFinite(Number(value))) return null;
+      return `expected a finite number, got ${describe(value)}`;
+    }
+    case 'boolean':
+      return typeof value === 'boolean' ? null : `expected a boolean, got ${describe(value)}`;
+    case 'enum': {
+      const allowed = (spec.options ?? []).map((o) => o.value);
+      return typeof value === 'string' && allowed.includes(value)
+        ? null
+        : `expected one of ${allowed.map((v) => JSON.stringify(v)).join(', ')}, got ${describe(value)}`;
+    }
+    case 'strings':
+      return Array.isArray(value) && value.every((v) => typeof v === 'string')
+        ? null
+        : `expected an array of strings, got ${describe(value)}`;
+    case 'json':
+      return null;
+  }
+}
+
+function describe(value: unknown): string {
+  if (Array.isArray(value)) return 'an array';
+  if (value === null) return 'null';
+  return typeof value === 'string' ? JSON.stringify(value) : typeof value;
 }
 
 /**
@@ -109,9 +179,13 @@ export class CommandRegistry<C> {
   private readonly stacks = new Map<string, Array<{ command: CanvasCommand<C> }>>();
   private readonly listeners = new Set<() => void>();
   private readonly getContext: () => C;
+  private readonly validateArgs: boolean;
+  /** `command|key|problem` already warned about, so a bound button doesn't flood the console. */
+  private readonly warned = new Set<string>();
 
   constructor(opts: CommandRegistryOptions<C>) {
     this.getContext = opts.getContext;
+    this.validateArgs = opts.validateArgs ?? isDevBuild();
   }
 
   /**
@@ -159,11 +233,14 @@ export class CommandRegistry<C> {
 
   /**
    * Run `name` with `args`. Returns `false` (and does nothing) when the command
-   * is missing or disabled.
+   * is missing or disabled. With `validateArgs` on, first warns about any
+   * described key whose value doesn't fit its descriptor — the run proceeds
+   * regardless.
    */
   run(name: string, args?: unknown): boolean {
     const cmd = this.get(name);
     if (!cmd) return false;
+    if (this.validateArgs && cmd.args) this.checkArgs(name, cmd.args, args);
     const ctx = this.getContext();
     if (cmd.isEnabled && !cmd.isEnabled(ctx, args)) return false;
     cmd.run(ctx, args);
@@ -196,9 +273,16 @@ export class CommandRegistry<C> {
   }
 
   /**
-   * Tell subscribers that command state changed **outside** anything they
-   * already watch (a history stack, a clipboard buffer, a layer's edge
-   * defaults), so a bound control re-reads `isEnabled` / `isActive` / `value`.
+   * Tell subscribers that command state changed **outside** the view store (a
+   * history stack, a clipboard buffer, a layer's edge defaults, a registry), so
+   * a bound control re-reads `isEnabled` / `isActive` / `value` / `options`.
+   *
+   * Call it from the state's **owner** — a bridge from the owner's own change
+   * signal, set up once (the engine bridges the registries, layer visibility and
+   * `canvas.history`; `GraphCanvas` its layers' edge templates; a provider its
+   * own history / clipboard) — never from the write sites, where another
+   * writer would forget it. A command whose state lives in the view store
+   * needs none.
    */
   invalidate(): void {
     this.notify();
@@ -215,6 +299,28 @@ export class CommandRegistry<C> {
     this.stacks.clear();
     this.notify();
     this.listeners.clear();
+  }
+
+  /** Warn (once each) about `args` values that don't fit `specs`. */
+  private checkArgs(name: string, specs: Readonly<Record<string, CommandArgSpec>>, args: unknown): void {
+    if (args === undefined || args === null) return;
+    if (typeof args !== 'object' || Array.isArray(args)) {
+      this.warn(name, '', `args should be an object, got ${describe(args)}`);
+      return;
+    }
+    for (const [key, spec] of Object.entries(specs)) {
+      const value = (args as Record<string, unknown>)[key];
+      if (value === undefined) continue;
+      const problem = argProblem(spec, value);
+      if (problem) this.warn(name, key, problem);
+    }
+  }
+
+  private warn(name: string, key: string, problem: string): void {
+    const id = `${name}|${key}|${problem}`;
+    if (this.warned.has(id)) return;
+    this.warned.add(id);
+    console.warn(`[canvas] command "${name}"${key ? ` arg "${key}"` : ''}: ${problem}`);
   }
 
   private notify(): void {

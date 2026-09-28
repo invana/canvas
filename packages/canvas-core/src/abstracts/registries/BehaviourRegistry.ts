@@ -4,7 +4,8 @@
  * Architecture: see `architecture-proposal.md` §2.2.
  *
  * **Responsibilities**
- *   - `register` / `unregister` (with register / destroy lifecycle).
+ *   - `register` / `unregister` (with register / destroy lifecycle; fires
+ *     `'scene:behaviour:register'` / `'scene:behaviour:unregister'`).
  *   - `setEnabled(id, enabled)` — toggles + fires `'scene:behaviour:enable'` /
  *     `'scene:behaviour:disable'`.
  *   - Typed `get<T>(id)`.
@@ -69,7 +70,11 @@ export class BehaviourRegistry {
     }
   }
 
-  /** Remove a behaviour. Calls `destroy()`. No-op if not registered. */
+  /**
+   * Remove a behaviour. Calls `destroy()`, then fires
+   * `'scene:behaviour:unregister'` (after `'scene:behaviour:disable'` when it
+   * was enabled). No-op if not registered.
+   */
   unregister(id: string): void {
     const b = this.behaviours.get(id);
     if (!b) return;
@@ -79,6 +84,7 @@ export class BehaviourRegistry {
     }
     this.behaviours.delete(id);
     b.destroy();
+    this.bus.emit('scene:behaviour:unregister', { id });
   }
 
   /** Enable / disable a behaviour. Fires the corresponding bus event. */

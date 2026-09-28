@@ -83,3 +83,82 @@ describe('CommandRegistry', () => {
     expect(listener).toHaveBeenCalledTimes(3);
   });
 });
+
+describe('CommandRegistry — arg validation (validateArgs)', () => {
+  const ARGS = {
+    s: { kind: 'string' },
+    id: { kind: 'layer' },
+    n: { kind: 'number' },
+    pickN: { kind: 'number', pick: true },
+    b: { kind: 'boolean' },
+    e: { kind: 'enum', options: [{ value: 'x', label: 'X' }, { value: 'y', label: 'Y' }] },
+    list: { kind: 'strings' },
+    j: { kind: 'json' },
+  } as const;
+
+  function setup(validateArgs?: boolean) {
+    const ran: unknown[] = [];
+    const registry = new CommandRegistry({
+      getContext: () => ({}),
+      ...(validateArgs !== undefined ? { validateArgs } : {}),
+    });
+    registry.register('t.cmd', { args: ARGS, run: (_c, args) => void ran.push(args) });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    return { registry, ran, warn };
+  }
+
+  it('accepts values that fit, absent keys, undescribed keys and a numeric string on a pick number', () => {
+    const { registry, ran, warn } = setup(true);
+    registry.run('t.cmd', { s: 'a', id: 'graph', n: 2, pickN: '1.5', b: false, e: 'y', list: ['a'], j: { any: [1] }, extra: 1 });
+    registry.run('t.cmd');
+    registry.run('t.cmd', {});
+    expect(warn).not.toHaveBeenCalled();
+    expect(ran).toHaveLength(3);
+    warn.mockRestore();
+  });
+
+  it('warns per mismatched key, never throws, and still runs', () => {
+    const { registry, ran, warn } = setup(true);
+    const args = { s: 1, id: 3, n: '2', pickN: 'abc', b: 'yes', e: 'z', list: ['a', 2], j: null };
+    expect(() => registry.run('t.cmd', args)).not.toThrow();
+    expect(ran).toEqual([args]);
+    const messages = warn.mock.calls.map(([m]) => String(m));
+    expect(messages).toHaveLength(7); // every kind but json
+    expect(messages[0]).toContain('command "t.cmd" arg "s"');
+    expect(messages.find((m) => m.includes('"e"'))).toContain('"x", "y"');
+    warn.mockRestore();
+  });
+
+  it('warns once per (command, key, problem)', () => {
+    const { registry, warn } = setup(true);
+    registry.run('t.cmd', { n: 'x' });
+    registry.run('t.cmd', { n: 'x' });
+    expect(warn).toHaveBeenCalledTimes(1);
+    registry.run('t.cmd', { n: true });
+    expect(warn).toHaveBeenCalledTimes(2);
+    warn.mockRestore();
+  });
+
+  it('warns about non-object args on a described command', () => {
+    const { registry, warn } = setup(true);
+    registry.run('t.cmd', 'oops');
+    expect(String(warn.mock.calls[0]?.[0])).toContain('args should be an object');
+    warn.mockRestore();
+  });
+
+  it('is silent with validateArgs: false, and for commands without descriptors', () => {
+    const { registry, warn } = setup(false);
+    registry.run('t.cmd', { n: 'x' });
+    registry.register('t.bare', { run: () => {} });
+    registry.run('t.bare', { n: 'x' });
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('defaults on outside production (vitest runs with NODE_ENV=test)', () => {
+    const { registry, warn } = setup();
+    registry.run('t.cmd', { n: 'x' });
+    expect(warn).toHaveBeenCalledTimes(1);
+    warn.mockRestore();
+  });
+});

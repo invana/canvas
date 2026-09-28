@@ -452,6 +452,8 @@ export class ClickSelectBehaviour extends Behaviour {
    * visual selection and re-apply with the new options.
    */
   setOptions(patch: Partial<ClickSelectBehaviourOptions>): void {
+    // Keep `getOptions()` current (settings-editor seed, undo baseline).
+    this.recordOptions(patch);
     const prev = this.opts;
     const stateChanged = patch.state !== undefined && patch.state !== prev.state;
     const unselChanged =

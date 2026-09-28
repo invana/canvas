@@ -49,16 +49,16 @@ Status: 📋 open · 🚧 in progress · ✅ done.
 | # | Item | Status |
 |---|---|---|
 | 11 | No type safety: names are strings, args `unknown` → a typed `run<'camera.fit'>(…)` driven by a name → args map | 📋 |
-| 12 | Buttons go stale if someone forgets `invalidate()` → audit non-store state commands read (edge defaults, layer visibility, clipboard, both histories), or move it into the store | 📋 |
-| 13 | A saved panel naming an unregistered command (`history.undo` without `GraphHistoryProvider`, `theme.toggle` without the theme bundle) shows a silently disabled button → flag it in the UI | 📋 |
-| 14 | No `scene:behaviour:unregister` event, so the editor's behaviour picker can list a removed behaviour | 📋 |
-| 15 | Arg descriptors are documentation only → optional dev-mode validation in `run` | 📋 |
+| 12 | Buttons go stale if someone forgets `invalidate()` → audit non-store state commands read (edge defaults, layer visibility, clipboard, both histories), or move it into the store | ✅ owner-side bridges, nothing moved into the store (I1–I5, `rfc:feat-2026-09-29-command-controls-go-stale-or-fail-silently`) |
+| 13 | A saved panel naming an unregistered command (`history.undo` without `GraphHistoryProvider`, `theme.toggle` without the theme bundle) shows a silently disabled button → flag it in the UI | ✅ "(unavailable)" label + dev warning (R1, R2) |
+| 14 | No `scene:behaviour:unregister` event, so the editor's behaviour picker can list a removed behaviour | ✅ event added; picker listens (N1, N2) |
+| 15 | Arg descriptors are documentation only → optional dev-mode validation in `run` | ✅ `validateArgs`, on in dev builds, warn-only (A1) |
 
 ## 5. Deferred RFC rows
 
 | # | Item | Source | Status |
 |---|---|---|---|
-| 16 | Combined undo state (`canUndo` across both stacks) through `useHistory` | H9, `rfc:feat-2026-09-28-canvas-definition-edits-cannot-be-undone` | 📋 |
+| 16 | Combined undo state (`canUndo` across both stacks) through `useHistory` | H9, `rfc:feat-2026-09-28-canvas-definition-edits-cannot-be-undone` | ✅ `useHistory` is two-stack; hook Undo now also undoes definition edits (H1, H2) |
 | 17 | Descriptors for widget options and choice options (the last two JSON fields in the editor) | A8, `rfc:feat-2026-09-28-control-panel-command-args-are-raw-json` | 📋 |
 | 18 | Footer placement for panels | P7, `rfc:feat-2026-09-28-app-header-controls-do-not-save-with-the-canvas` | 📋 |
 | 19 | `GraphCanvas` owns history + clipboard instead of React providers (also fixes item 13 for undo) | D1-B, `rfc:feat-2026-09-28-graph-toolbar-actions-cannot-be-saved` | 📋 |
@@ -66,9 +66,15 @@ Status: 📋 open · 🚧 in progress · ✅ done.
 
 ## 6. Found along the way (not caused by commands)
 
+Items 12–16, 21 and O1–O2 landed through `rfc:feat-2026-09-29-command-controls-go-stale-or-fail-silently`; O3–O4 were found there.
+
 | # | Item | Status |
 |---|---|---|
-| 21 | Several behaviours override `setOptions` without `super` (e.g. `BrushSelectBehaviour`), so `getOptions()` goes stale and `CanvasSettingsEditorPanel` can show old values | 📋 |
+| 21 | Several behaviours override `setOptions` without `super` (e.g. `BrushSelectBehaviour`), so `getOptions()` goes stale and `CanvasSettingsEditorPanel` can show old values | ✅ 11 behaviours call `recordOptions` (F1, F2) |
+| O1 | `useLock` re-implements `view.lock` | ✅ `isViewLocked` / `setViewLocked` in `@invana/canvas` (L1, L2) |
+| O2 | `useEdgeType` goes through the `graph.edgeType` command | ✅ `edgePathType` / `setEdgePathType` in `@invana/graph` (E1, E2) |
+| O3 | Base `Behaviour.setOptions` enables directly, so `canvas.update({ behaviours: { id: { enabled } } })` on a behaviour without its own `setOptions` fires no `scene:behaviour:enable` / `disable` | 📋 |
+| O4 | `useHoverElementPreview`, `useViewTarget`, `ElementInspectorViewPanel` re-attach on `scene:behaviour:register` but never detach on the new `scene:behaviour:unregister` | 📋 |
 
 ## 7. Stories — only when asked (root rule 11)
 

@@ -1,5 +1,6 @@
-import { useCallback, useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useSyncExternalStore } from 'react';
 import type { Canvas } from '@invana/canvas';
+import { canRedoEither, canUndoEither, redoNewest, undoNewest } from '@invana/graph';
 
 import { useResolvedCanvas } from './useResolvedCanvas';
 import { HistoryContext } from '../HistoryContext';
@@ -29,18 +30,20 @@ function hasRedraw(layer: unknown): layer is RedrawableLayer {
 }
 
 /**
- * Undo/redo + redraw, wired to the `GraphHistory` from a
- * `<GraphHistoryProvider>` ancestor. `canUndo`/`canRedo` stay reactive via the
- * history's `change` event. Without a provider, undo/redo are no-ops and the
- * flags are `false` (redraw still works — it goes straight to the layer).
+ * Undo/redo + redraw over **both** undo stacks — the graph edits journalled by
+ * a `<GraphHistoryProvider>` ancestor's `GraphHistory`, and the canvas's
+ * definition edits (`canvas.history`: a Studio editor's `edit:*` applies).
+ * `undo` reverts whichever top is newer, `redo` re-applies the step undone
+ * last — `@invana/graph`'s `undoNewest` / `redoNewest`, the same functions the
+ * `history.undo` / `history.redo` commands call, so this hook and a saved
+ * Undo button always do the same thing. Without a provider it covers
+ * `canvas.history` alone (as the built-in commands do).
  *
- * `undo` / `redo` act on the **graph** stack only. The `history.undo` /
- * `history.redo` commands the provider registers also cover the canvas's
- * definition edits (`canvas.history`), picking between the two stacks via
- * `@invana/graph`'s `undoNewest` / `redoNewest` (`canUndoEither` /
- * `canRedoEither`). Adopting that combined form here is H9
- * (`docs/commands-followups.md` item 16) — deliberately not done yet, since it
- * changes what this hook's Undo does.
+ * `canUndo` / `canRedo` stay reactive via the graph history's `change` event
+ * and `canvas.history`'s subscription. `redraw` goes straight to the layer.
+ *
+ * Changed 2026-09-29 (H9): `undo` / `redo` / `canUndo` / `canRedo` used to act
+ * on the graph stack only.
  */
 export function useHistory(
   options: UseHistoryOptions = {},
@@ -49,23 +52,30 @@ export function useHistory(
   const { layerId = 'graph' } = options;
   const resolved = useResolvedCanvas(canvas);
   const history = useContext(HistoryContext);
-  const [state, setState] = useState({ canUndo: false, canRedo: false });
 
-  useEffect(() => {
-    if (!history) {
-      setState({ canUndo: false, canRedo: false });
-      return;
-    }
-    setState({ canUndo: history.canUndo, canRedo: history.canRedo });
-    return history.events.on('change', ({ canUndo, canRedo }) => setState({ canUndo, canRedo }));
-  }, [history]);
+  const subscribe = useCallback(
+    (onChange: () => void) => {
+      const offs = [resolved.history.subscribe(onChange)];
+      if (history) offs.push(history.events.on('change', onChange));
+      return () => {
+        for (const off of offs) off();
+      };
+    },
+    [resolved, history],
+  );
+  // Both flags in one primitive snapshot, so an unrelated change is one compare.
+  const read = useCallback(
+    () => (canUndoEither(resolved, history) ? 1 : 0) + (canRedoEither(resolved, history) ? 2 : 0),
+    [resolved, history],
+  );
+  const flags = useSyncExternalStore(subscribe, read, read);
 
-  const undo = useCallback(() => history?.undo(), [history]);
-  const redo = useCallback(() => history?.redo(), [history]);
+  const undo = useCallback(() => undoNewest(resolved, history), [resolved, history]);
+  const redo = useCallback(() => redoNewest(resolved, history), [resolved, history]);
   const redraw = useCallback(() => {
     const layer = resolved.layers.get(layerId);
     if (hasRedraw(layer)) layer.redraw();
   }, [resolved, layerId]);
 
-  return { undo, redo, redraw, canUndo: state.canUndo, canRedo: state.canRedo };
+  return { undo, redo, redraw, canUndo: (flags & 1) !== 0, canRedo: (flags & 2) !== 0 };
 }

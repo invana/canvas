@@ -554,6 +554,8 @@ export class HoverElementPreviewBehaviour extends Behaviour {
    * in-flight card so the next paint reflects it immediately.
    */
   setOptions(patch: Partial<HoverElementPreviewBehaviourOptions>): void {
+    // Keep `getOptions()` current (settings-editor seed, undo baseline).
+    this.recordOptions(patch);
     const repaint =
       ('card' in patch && patch.card !== this.opts.card) ||
       ('cards' in patch && patch.cards !== this.opts.cards) ||

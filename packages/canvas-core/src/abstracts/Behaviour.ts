@@ -277,6 +277,21 @@ export abstract class Behaviour<TOptions extends BehaviourOptions = BehaviourOpt
     this.syncLive();
   }
 
+  /**
+   * Merge `changes` into the options {@link getOptions} returns — and nothing
+   * else: no enable / disable, no mode re-wiring, no {@link onOptionsChanged}.
+   *
+   * For subclasses that override {@link setOptions} with their own apply logic
+   * and don't call `super`: call this first so `getOptions()` (a settings
+   * editor's seed, the engine's undo baseline) stays current. Prefer it to
+   * `super.setOptions` there: the engine routes `enabled` / `modes` through
+   * the registry itself, and the base's direct `enable()` would pre-empt the
+   * registry's `scene:behaviour:enable` event.
+   */
+  protected recordOptions(changes: Partial<TOptions>): void {
+    this._options = { ...this._options, ...changes };
+  }
+
   /** Snapshot of the current (merged) options — seeds a settings editor. */
   getOptions(): Readonly<TOptions> {
     return this._options;

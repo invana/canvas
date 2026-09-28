@@ -186,3 +186,46 @@ describe('BehaviourRegistry — clear', () => {
     expect(ctx.behaviours.size).toBe(0);
   });
 });
+
+describe('BehaviourRegistry — scene:behaviour:unregister', () => {
+  it('fires after disable (when enabled) and after destroy', () => {
+    const ctx = makeContext();
+    const order: string[] = [];
+    const b = new FakeBehaviour({ id: 'a', enabled: true });
+    const destroy = b.destroy.bind(b);
+    b.destroy = () => {
+      order.push('destroy');
+      destroy();
+    };
+    ctx.behaviours.register(b);
+    ctx.events.on('scene:behaviour:disable', ({ id }) => order.push(`disable:${id}`));
+    ctx.events.on('scene:behaviour:unregister', ({ id }) => order.push(`unregister:${id}`));
+    ctx.behaviours.unregister('a');
+    expect(order).toEqual(['disable:a', 'destroy', 'unregister:a']);
+    expect(ctx.behaviours.has('a')).toBe(false);
+  });
+
+  it('fires without a disable for a disabled behaviour, and not at all for an unknown id', () => {
+    const ctx = makeContext();
+    ctx.behaviours.register(new FakeBehaviour({ id: 'a' }));
+    const onDisable = vi.fn();
+    const onUnregister = vi.fn();
+    ctx.events.on('scene:behaviour:disable', onDisable);
+    ctx.events.on('scene:behaviour:unregister', onUnregister);
+    ctx.behaviours.unregister('a');
+    ctx.behaviours.unregister('nope');
+    expect(onDisable).not.toHaveBeenCalled();
+    expect(onUnregister).toHaveBeenCalledTimes(1);
+    expect(onUnregister).toHaveBeenCalledWith({ id: 'a' });
+  });
+
+  it('clear() fires once per behaviour', () => {
+    const ctx = makeContext();
+    ctx.behaviours.register(new FakeBehaviour({ id: 'a' }));
+    ctx.behaviours.register(new FakeBehaviour({ id: 'b', enabled: true }));
+    const onUnregister = vi.fn();
+    ctx.events.on('scene:behaviour:unregister', onUnregister);
+    ctx.behaviours.clear();
+    expect(onUnregister.mock.calls.map(([e]) => e.id)).toEqual(['a', 'b']);
+  });
+});

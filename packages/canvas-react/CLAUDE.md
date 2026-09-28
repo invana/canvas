@@ -31,7 +31,7 @@ Hooks are the headless heart of this package: they turn engine/store state into 
 | Hooks (here) | The typed React API over those functions — for bespoke UI |
 | Commands (`canvas.commands`) | A thin named adapter over the **same** functions — only for **saved** controls (control panels, header panels) |
 
-A hook and a command never implement the same rule twice: if both need it, it becomes a function (e.g. `resolveSelectMode`, `cutSelection`, `undoNewest` in `@invana/graph`) and both call it. Don't register a command just to reach the spec renderer — toolbars aren't saved, so closure-driven controls build their `ToolbarItem`s from a hook. Open items: `docs/commands-followups.md`.
+A hook and a command never implement the same rule twice: if both need it, it becomes a function (e.g. `resolveSelectMode`, `cutSelection`, `undoNewest` in `@invana/graph`) and both call it. Don't register a command just to reach the spec renderer — toolbars aren't saved, so closure-driven controls build their `ToolbarItem`s from a hook. A command reading state **outside** the view store gets an **owner-side** `commands.invalidate()` bridge (the engine, `GraphCanvas` or the provider that owns the state), never an `invalidate()` at a write site — see `CommandRegistry.invalidate`. Open items: `docs/commands-followups.md`.
 
 Hooks may return data, callbacks, and **null-rendering** engine wrappers (e.g. a `<DevInfoLayer>` element), but **not** pixels. A turnkey hook that hands back a button (`useDevTool` / `useMiniMap`) is UI → it lives in `@invana/canvas-ui` and imports the layer-wrapper back from here.
 

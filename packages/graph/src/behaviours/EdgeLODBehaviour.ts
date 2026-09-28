@@ -170,6 +170,8 @@ export class EdgeLODBehaviour extends Behaviour {
 
   /** Runtime option update — re-applies immediately (a full pass) if enabled. */
   setOptions(patch: Partial<EdgeLODBehaviourOptions>): void {
+    // Keep `getOptions()` current (settings-editor seed, undo baseline).
+    this.recordOptions(patch);
     this.opts = resolveOptions(this.opts, patch);
     this.applied = undefined;
     if (this._enabled) this.schedule(true);

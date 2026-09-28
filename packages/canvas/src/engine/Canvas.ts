@@ -195,6 +195,25 @@ const EDIT_MERGE_MS = 600;
 const HISTORY_EDIT_ACTION = /^(undo|redo):edit:/;
 /** The definition slices whose values live on registered instances. */
 const DEFINITION_SECTIONS = ['layers', 'behaviours', 'layouts'] as const;
+
+/**
+ * Bus events after which a command's `isEnabled` / `isActive` / `value` /
+ * `options` may read differently though the view store didn't change: the
+ * registries' composition, layer visibility, and the renderer becoming ready
+ * (`canvas.isInitialised`). Each triggers `commands.invalidate()`.
+ */
+const COMMAND_STATE_EVENTS = [
+  'scene:layer:add',
+  'scene:layer:remove',
+  'scene:layer:visibilitychange',
+  'scene:layout:add',
+  'scene:layout:remove',
+  'scene:behaviour:register',
+  'scene:behaviour:unregister',
+  'scene:behaviour:enable',
+  'scene:behaviour:disable',
+  'canvas:renderer:ready',
+] as const;
 type DefinitionSection = (typeof DEFINITION_SECTIONS)[number];
 
 export class Canvas {
@@ -362,8 +381,13 @@ export class Canvas {
     this.layouts = new LayoutRegistry({ bus: this.events });
     this.commands = new CommandRegistry<Canvas>({ getContext: () => this });
     registerBuiltinCommands(this.commands);
-    // The history's stack isn't store state: tell bound controls it moved.
+    // Command state the view store doesn't hold — the history stack, the
+    // registries, layer visibility, "initialised" — is bridged here, at its
+    // owner, so `commands.subscribe` is the one "re-read" signal for every
+    // bound control and no write site has to remember `invalidate()`.
     this.history.subscribe(() => this.commands.invalidate());
+    const invalidate = () => this.commands.invalidate();
+    for (const type of COMMAND_STATE_EVENTS) this.events.on(type, invalidate);
 
     // A layer registered *after* config was already pushed (e.g. a React-mounted
     // `<MiniMapLayer>` that lands after `<SystemTheme>` has already called

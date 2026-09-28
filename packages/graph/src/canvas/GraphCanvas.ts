@@ -30,11 +30,35 @@ import { registerGraphCommands } from './graphCommands';
 
 export class GraphCanvas extends Canvas {
   private offActiveLayout: (() => void) | null = null;
+  /** Per graph layer id, the unsubscribe of its edge-template bridge (see the constructor). */
+  private readonly offEdgeStyle = new Map<string, () => void>();
 
-  /** Adds the graph commands (`select.mode`, `graph.edgeType`, `graph.clear`, …) to `commands`. */
+  /**
+   * Adds the graph commands (`select.mode`, `graph.edgeType`, `graph.clear`, …)
+   * to `commands`, and bridges each `GraphLayer`'s edge-template changes
+   * (`style:changed`, scope `edge`) to `commands.invalidate()` — edge defaults
+   * live on the layer, not in the view store, and several writers besides
+   * `graph.edgeType` set them (`ColorByBehaviour`, styling panels,
+   * `setOptions`), so a bound edge-type control follows all of them.
+   */
   constructor(opts: CanvasOptions = {}) {
     super(opts);
     registerGraphCommands(this.commands);
+    this.events.on('scene:layer:add', ({ id }) => {
+      const layer = this.layers.get(id);
+      if (!(layer instanceof GraphLayer)) return;
+      this.offEdgeStyle.get(id)?.();
+      this.offEdgeStyle.set(
+        id,
+        layer.events.on('style:changed', ({ scope }) => {
+          if (scope === 'edge') this.commands.invalidate();
+        }),
+      );
+    });
+    this.events.on('scene:layer:remove', ({ id }) => {
+      this.offEdgeStyle.get(id)?.();
+      this.offEdgeStyle.delete(id);
+    });
   }
 
   /** Typed layer lookup; defaults to `GraphLayer`. */
@@ -65,6 +89,8 @@ export class GraphCanvas extends Canvas {
   override destroy(): void {
     this.offActiveLayout?.();
     this.offActiveLayout = null;
+    for (const off of this.offEdgeStyle.values()) off();
+    this.offEdgeStyle.clear();
     super.destroy();
   }
 

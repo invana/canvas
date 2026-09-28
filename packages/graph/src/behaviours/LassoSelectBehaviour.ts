@@ -209,6 +209,8 @@ export class LassoSelectBehaviour extends Behaviour {
   }
 
   setOptions(patch: Partial<LassoSelectBehaviourOptions>): void {
+    // Keep `getOptions()` current (settings-editor seed, undo baseline).
+    this.recordOptions(patch);
     this.opts = resolveOptions(this.opts, patch);
   }
 

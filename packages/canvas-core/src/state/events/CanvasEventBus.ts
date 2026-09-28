@@ -40,6 +40,12 @@ export interface CanvasGlobalEvents {
    */
   'scene:layer:visibilitychange': { id: string; visible: boolean };
   'scene:behaviour:register': { id: string };
+  /**
+   * A behaviour was removed via `BehaviourRegistry.unregister` (or `clear`).
+   * Fires after `scene:behaviour:disable` (when it was enabled) and after the
+   * behaviour is destroyed — the counterpart of `scene:layer:remove`.
+   */
+  'scene:behaviour:unregister': { id: string };
   'scene:behaviour:enable': { id: string };
   'scene:behaviour:disable': { id: string };
   'scene:layout:add': { id: string };

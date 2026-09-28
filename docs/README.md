@@ -177,6 +177,11 @@ working design-of-record documents. Day-to-day API/concept docs live in
     — ✅ landed 2026-09-28 (G1 deferred to the next breaking release). **Hooks and commands call one set of
     functions** in `@invana/graph` (select mode, clipboard, two-stack undo); `GraphControlsToolbar`'s private layout
     commands go; the section hooks are deprecated; the logic → hooks → commands rule is in `canvas-react/CLAUDE.md`.
+  - [feat/2026-09-29-command-controls-go-stale-or-fail-silently.md](./rfcs/feat/2026-09-29-command-controls-go-stale-or-fail-silently.md)
+    — 🚧 implemented on `feat/commands-followups-2`. **Command controls stay live and say when they can't work**:
+    owner-side `commands.invalidate()` bridges replace write-site calls; an unregistered command reads "(unavailable)"
+    + a dev warning; dev-build arg validation; `scene:behaviour:unregister`; `useHistory` is two-stack; `useLock` /
+    `useEdgeType` share engine functions with their commands; 11 behaviours keep `getOptions()` current.
 
 ## Release
 

@@ -180,6 +180,8 @@ export class ContextMenuBehaviour extends Behaviour {
 
   /** Merge new options. Unspecified fields keep their current value. */
   setOptions(patch: Partial<ContextMenuBehaviourOptions>): void {
+    // Keep `getOptions()` current (settings-editor seed, undo baseline).
+    this.recordOptions(patch);
     this.opts = resolveOptions(this.opts, patch);
   }
 

@@ -148,6 +148,8 @@ export abstract class ContentLODBehaviour extends Behaviour {
 
   /** Runtime option update — re-applies immediately (a full sweep) if enabled. */
   setOptions(patch: Partial<ContentLODBehaviourOptions>): void {
+    // Keep `getOptions()` current (settings-editor seed, undo baseline).
+    this.recordOptions(patch);
     this.band = {
       minZoom: 'minZoom' in patch ? patch.minZoom : this.band.minZoom,
       maxZoom: 'maxZoom' in patch ? patch.maxZoom : this.band.maxZoom,

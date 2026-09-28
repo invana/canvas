@@ -160,6 +160,8 @@ export class ThemeBehaviour extends Behaviour<ThemeBehaviourOptions> {
 
   /** Patch options and re-publish (when enabled). */
   setOptions(patch: ThemePatch): void {
+    // Keep `getOptions()` current (settings-editor seed, undo baseline).
+    this.recordOptions(patch);
     if (patch.themes) this.themes = { ...BUILT_IN_THEMES, ...patch.themes };
     if (patch.fallback !== undefined) this.fallback = patch.fallback;
     if (patch.active !== undefined) this.active = patch.active;

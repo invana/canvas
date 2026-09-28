@@ -55,6 +55,7 @@ const LEVEL_BY_TYPE: Record<string, LogLevel> = {
   'scene:layer:remove': 'info',
   'scene:layer:visibilitychange': 'info',
   'scene:behaviour:register': 'info',
+  'scene:behaviour:unregister': 'info',
   'scene:behaviour:enable': 'info',
   'scene:behaviour:disable': 'info',
   'scene:layout:add': 'info',

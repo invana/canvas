@@ -298,6 +298,8 @@ export class NodeCentralityBehaviour extends Behaviour {
    * GUI slider changes are visible without an extra call.
    */
   setOptions(patch: Partial<NodeCentralityBehaviourOptions>): void {
+    // Keep `getOptions()` current (settings-editor seed, undo baseline).
+    this.recordOptions(patch);
     this.opts = resolveOptions(this.opts, patch);
     if (this.isEnabled) this.applyAll();
   }

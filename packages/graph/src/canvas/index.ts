@@ -18,4 +18,6 @@ export {
   redoNewest,
   canUndoEither,
   canRedoEither,
+  edgePathType,
+  setEdgePathType,
 } from './graphActions';

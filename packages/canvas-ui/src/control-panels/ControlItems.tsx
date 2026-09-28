@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react';
+import { useEffect, useMemo, type ReactNode } from 'react';
 import type { Canvas, ControlItemSpec } from '@invana/canvas';
 import { useCommandStates, useControlPanelSlot, useResolvedCanvas, type CommandRef } from '@invana/canvas-react';
 
@@ -18,6 +18,60 @@ export interface UseControlItemsOptions {
 /** Stand-in glyph for an item whose icon name isn't registered — the button shows its text instead. */
 const NoIcon: ToolbarIcon = () => null;
 
+/** Suffix on the label of a control whose command isn't registered. */
+const UNAVAILABLE = ' (unavailable)';
+
+/**
+ * Where the commands that aren't built into the engine usually come from — for
+ * the dev warning. (`history.*` is built into every `Canvas`; a provider only
+ * upgrades it.)
+ */
+const PROVIDER_HINTS: ReadonlyArray<[prefix: string, hint: string]> = [
+  ['clipboard.', 'mount <GraphClipboardProvider>'],
+  ['theme.toggle', 'mount <CanvasThemeSync> inside a <ThemeProvider>'],
+];
+
+/** How long a command may stay unregistered before the dev warning — providers register in a later effect. */
+const UNAVAILABLE_GRACE_MS = 1000;
+
+/** Per canvas, the command names already warned about. */
+const warnedUnavailable = new WeakMap<Canvas, Set<string>>();
+
+/** Dev build? The literal lets the consumer's bundler drop the warning in production. */
+function isDevBuild(): boolean {
+  try {
+    return (process as { env: { NODE_ENV?: string } }).env.NODE_ENV !== 'production';
+  } catch {
+    return false;
+  }
+}
+
+declare const process: unknown;
+
+/**
+ * Dev builds: warn once per (canvas, command) about a spec naming a command
+ * that is still unregistered {@link UNAVAILABLE_GRACE_MS} after it was drawn.
+ */
+function useWarnUnavailable(canvas: Canvas, missing: readonly string[]): void {
+  const key = missing.join('\n');
+  useEffect(() => {
+    if (!key || !isDevBuild()) return;
+    const timer = setTimeout(() => {
+      const warned = warnedUnavailable.get(canvas) ?? new Set<string>();
+      warnedUnavailable.set(canvas, warned);
+      for (const name of key.split('\n')) {
+        if (warned.has(name) || canvas.commands.has(name)) continue;
+        warned.add(name);
+        const hint = PROVIDER_HINTS.find(([prefix]) => name.startsWith(prefix))?.[1];
+        console.warn(
+          `[canvas-ui] control bound to command "${name}", which isn't registered on this canvas — it draws disabled.${hint ? ` To enable it, ${hint}.` : ''}`,
+        );
+      }
+    }, UNAVAILABLE_GRACE_MS);
+    return () => clearTimeout(timer);
+  }, [canvas, key]);
+}
+
 /** Renders a runtime slot's node (see `ControlPanel` children). */
 function SlotContent({ name, canvas }: { name: string; canvas: Canvas }) {
   return <>{useControlPanelSlot(name, canvas)}</>;
@@ -30,6 +84,11 @@ function SlotContent({ name, canvas }: { name: string; canvas: Canvas }) {
  * `commands` registry (enabled / active / value / options stay live), icons
  * and widgets against the registries, and slots against `<ControlPanel>`
  * children.
+ *
+ * A `command` / `toggle` item whose command isn't registered draws disabled
+ * with " (unavailable)" on its label (tooltip + `aria-label`); dev builds also
+ * warn once, naming the provider that usually registers it. A `choice` over an
+ * unregistered command has no options, so it draws nothing (and warns too).
  *
  * Returns plain `ToolbarItem`s, so a caller can still apply icon overrides,
  * append its own items, or filter before handing them to `<ToolbarItems>`.
@@ -48,6 +107,10 @@ export function useControlItems(
     it.type === 'command' || it.type === 'toggle' || it.type === 'choice' ? [{ command: it.command, args: it.args }] : [],
   );
   const { states, run } = useCommandStates(refs, resolved);
+  useWarnUnavailable(
+    resolved,
+    refs.flatMap((r, i) => (states[i]?.available === false ? [r.command] : [])),
+  );
 
   let c = 0;
   return items.flatMap((it: ControlItemSpec, i): ToolbarItem[] => {
@@ -58,7 +121,8 @@ export function useControlItems(
         const active = st?.active ?? false;
         const iconName = (active ? it.activeIcon : undefined) ?? it.icon;
         const icon = iconName ? iconMap[iconName] : undefined;
-        const label = (active ? it.activeLabel : undefined) ?? it.label;
+        // An unregistered command still draws (disabled), but says why.
+        const label = `${(active ? it.activeLabel : undefined) ?? it.label}${st?.available === false ? UNAVAILABLE : ''}`;
         const text = (active ? it.activeText : undefined) ?? it.text ?? (icon ? undefined : label);
         return [{
           type: 'button',
@@ -74,13 +138,14 @@ export function useControlItems(
         const st = states[c++];
         const icon = (it.icon ? iconMap[it.icon] : undefined) ?? NoIcon;
         const activeIcon = it.activeIcon ? iconMap[it.activeIcon] : undefined;
+        const suffix = st?.available === false ? UNAVAILABLE : '';
         return [{
           type: 'toggle',
           key,
           icon,
           ...(activeIcon ? { activeIcon } : {}),
-          label: it.label,
-          ...(it.activeLabel !== undefined ? { activeLabel: it.activeLabel } : {}),
+          label: `${it.label}${suffix}`,
+          ...(it.activeLabel !== undefined ? { activeLabel: `${it.activeLabel}${suffix}` } : {}),
           active: st?.active ?? false,
           disabled: !st?.enabled,
           onToggle: () => void run(it.command, it.args),
