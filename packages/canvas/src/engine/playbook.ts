@@ -18,6 +18,8 @@ export const PLAYBOOK_SETTINGS_ACTION = 'edit:playbook';
  * - `id` and `title` are strings;
  * - `data` names a registered source with a data door (`source`, or the
  *   playbook's), and is JSON;
+ * - every edge in `data.added` ends on nodes that exist after the step's own
+ *   removals and additions (the source holds them, or the step adds them);
  * - `settings` is JSON (no functions, no class instances);
  * - every id in `view` (select / focus / inspect) is held by a registered
  *   source, or added by this step's own `data`;
@@ -37,9 +39,23 @@ export function validateStepSpec(
   if (typeof step.title !== 'string') problems.push('title must be a string');
 
   if (step.data) {
+    const adapter = source === undefined ? undefined : log.source(source);
     if (source === undefined) problems.push('data needs a source (the step\'s `source` or the playbook\'s)');
-    else if (!log.source(source)?.applyDelta) problems.push(`no data source "${source}" takes deltas`);
+    else if (!adapter?.applyDelta) problems.push(`no data source "${source}" takes deltas`);
     for (const v of findSerialisationViolations(step.data, 'data')) problems.push(v);
+    // An added edge must end on nodes that exist once the step's removals and
+    // additions are applied — the door throws otherwise, half-way through.
+    if (adapter?.hasElement) {
+      const addedNodes = new Set((step.data.added?.nodes ?? []).map((n) => n.id));
+      const removedNodes = new Set(step.data.removed?.nodeIds ?? []);
+      const exists = (id: unknown): boolean =>
+        typeof id === 'string' && (addedNodes.has(id) || (!removedNodes.has(id) && adapter.hasElement!(id)));
+      for (const e of step.data.added?.edges ?? []) {
+        for (const end of ['source', 'target'] as const) {
+          if (!exists(e[end])) problems.push(`data.added.edges "${e.id}": unknown ${end} "${String(e[end])}"`);
+        }
+      }
+    }
   }
   if (step.settings !== undefined) {
     for (const v of findSerialisationViolations(step.settings, 'settings')) problems.push(v);

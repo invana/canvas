@@ -290,6 +290,12 @@ export class ClickSelectBehaviour extends Behaviour {
   private seeds = new Map<string, SelectableElementType>();
   /** Expanded set — seeds + degree-expanded neighbours. */
   private selected = new Map<string, SelectableElementType>();
+  /**
+   * The ids this behaviour last wrote into the store's canvas-wide selection —
+   * its share, replaced as a whole on the next change even when some of those
+   * elements have since been removed from the layer.
+   */
+  private mirrored = new Set<string>();
   /** Ids currently rendered with the `unselectedState`. */
   private unselectedIds = new Set<string>();
 
@@ -335,13 +341,7 @@ export class ClickSelectBehaviour extends Behaviour {
       ctx.store.view.subscribe((state, prev) => {
         const next = state.interaction.selection;
         if (next === prev.interaction.selection || !this._enabled) return;
-        const incoming = new Map<string, SelectableElementType>();
-        for (const id of next) {
-          if (layer.store.hasNode(id)) incoming.set(id, 'shape');
-          else if (layer.store.hasEdge(id)) incoming.set(id, 'connector');
-        }
-        if (sameKeys(incoming, this.selected)) return;
-        this.applySelection(incoming, true, false);
+        this.followStoreSelection(next);
       }),
     );
 
@@ -458,6 +458,15 @@ export class ClickSelectBehaviour extends Behaviour {
 
   protected override onDisable(): void {
     this.clearSelection();
+  }
+
+  /**
+   * Pick up a selection written while this behaviour was off (a playbook step,
+   * a panel) — the store subscription ignores writes while disabled.
+   */
+  protected override onEnable(): void {
+    const store = this._canvasStore;
+    if (store) this.followStoreSelection(store.view.getState().interaction.selection);
   }
 
   // ─── Public API ─────────────────────────────────────────────────────────
@@ -646,6 +655,24 @@ export class ClickSelectBehaviour extends Behaviour {
   }
 
   /**
+   * Apply the store's canvas-wide selection as this layer's share (RFC F8):
+   * the ids this layer holds, as-is — the store holds the *resolved* selection,
+   * so it isn't re-expanded by `degree`. Our own mirror arrives here as a set
+   * equal to `selected`, which is the echo guard.
+   */
+  private followStoreSelection(ids: ReadonlySet<string> | readonly string[]): void {
+    const layer = this.layer;
+    if (!layer) return;
+    const incoming = new Map<string, SelectableElementType>();
+    for (const id of ids) {
+      if (layer.store.hasNode(id)) incoming.set(id, 'shape');
+      else if (layer.store.hasEdge(id)) incoming.set(id, 'connector');
+    }
+    if (sameKeys(incoming, this.selected)) return;
+    this.applySelection(incoming, true, false);
+  }
+
+  /**
    * Core selection engine: replace seeds, recompute expansion, swap visuals,
    * diff-emit callbacks.
    */
@@ -697,16 +724,24 @@ export class ClickSelectBehaviour extends Behaviour {
     // (lasso/brush delegate here). One `set` per change; readers subscribe to the
     // store slice instead of this behaviour's event.
     // The store's selection is canvas-wide: replace only this layer's share
-    // and keep ids another layer's selection put there. Skipped when nothing
-    // changes — a selection that arrived *from* the store must not write it
-    // back as a second change.
+    // — the ids this behaviour mirrored last time, plus any id the layer holds
+    // — and keep the rest (another layer's). Tracking what was mirrored is what
+    // drops an id whose node has since been removed: the layer no longer holds
+    // it, so "not ours" can't be told from the layer alone. Skipped when
+    // nothing changes — a selection that arrived *from* the store must not
+    // write it back as a second change.
     const store = this._canvasStore;
     const layerStore = this.layer?.store;
     if (store && layerStore) {
       const current = store.view.getState().interaction.selection;
+      const mirrored = this.mirrored;
       const next: string[] = [];
-      for (const id of current) if (!layerStore.hasNode(id) && !layerStore.hasEdge(id)) next.push(id);
-      next.push(...snapshot.shapeIds, ...snapshot.connectorIds);
+      for (const id of current) {
+        if (!mirrored.has(id) && !layerStore.hasNode(id) && !layerStore.hasEdge(id)) next.push(id);
+      }
+      const ours = [...snapshot.shapeIds, ...snapshot.connectorIds];
+      next.push(...ours);
+      this.mirrored = new Set(ours);
       if (!sameSet(current, next)) store.actions.selection.set(next);
     }
   }

@@ -197,6 +197,33 @@ describe('F8 — ClickSelectBehaviour follows interaction.selection', () => {
   });
 });
 
+describe('F27 — the canvas-wide selection drops ids this behaviour mirrored', () => {
+  it('V20: a removed node leaves the selection on the next change; another layer\'s ids stay', () => {
+    const { canvas, layer } = makeCanvas();
+    const sel = new ClickSelectBehaviour({ id: 'sel', targetLayerId: 'graph', enabled: true });
+    canvas.behaviours.register(sel);
+    canvas.store.actions.selection.set(['a', 'elsewhere']);
+    layer.store.removeNode('a');
+    sel.select('b');
+    expect(new Set(canvas.store.view.getState().interaction.selection)).toEqual(new Set(['b', 'elsewhere']));
+    canvas.destroy();
+  });
+
+  it('V20: a re-enabled behaviour picks up a selection written while it was off', () => {
+    const { canvas, layer, flush } = makeCanvas();
+    const sel = new ClickSelectBehaviour({ id: 'sel', targetLayerId: 'graph', enabled: true });
+    canvas.behaviours.register(sel);
+    sel.disable();
+    canvas.store.actions.selection.set(['c']);
+    flush();
+    expect(layer.store.hasNodeState('c', 'selected')).toBe(false);
+    sel.enable();
+    flush();
+    expect(layer.store.hasNodeState('c', 'selected')).toBe(true);
+    canvas.destroy();
+  });
+});
+
 describe('F9 — FocusBehaviour draws interaction.focus', () => {
   it('V9: focus emphasises the ids, dims the rest through store.internal, and clears', () => {
     const { canvas, layer, flush } = makeCanvas();
@@ -381,6 +408,64 @@ describe('F13 — canvas.playbook plays JSON steps', () => {
     ]);
     expect(layer.store.isNodeHidden('a')).toBe(false);
     expect(canvas.history.entries()).toHaveLength(0);
+    canvas.destroy();
+  });
+
+  it('V21: an added edge to a node that won\'t exist is rejected before anything is written', async () => {
+    const { canvas, layer } = makeCanvas();
+    canvas.history.clear();
+    canvas.playbook.addStep({
+      id: 'dangling',
+      title: 'Dangling edge',
+      source: 'graph',
+      data: {
+        removed: { nodeIds: ['a'] },
+        added: {
+          nodes: [{ id: 'e' }],
+          edges: [
+            { id: 'ce', source: 'c', target: 'e' },
+            { id: 'cg', source: 'c', target: 'ghost' },
+            { id: 'ab2', source: 'a', target: 'b' },
+          ],
+        },
+      },
+    });
+    const err = await canvas.playbook.next().catch((e: unknown) => e);
+    expect((err as PlaybookStepError).problems).toEqual([
+      'data.added.edges "cg": unknown target "ghost"',
+      'data.added.edges "ab2": unknown source "a"',
+    ]);
+    expect(layer.store.hasNode('a')).toBe(true);
+    expect(layer.store.hasNode('e')).toBe(false);
+    expect(canvas.history.entries()).toHaveLength(0);
+    expect(canvas.playbook.index).toBe(-1);
+    canvas.destroy();
+  });
+
+  it('V21: a step that throws half-way is taken back whole and leaves no entry', async () => {
+    const { canvas, layer } = makeCanvas();
+    canvas.history.clear();
+    // Passes validation (the edge ends on known nodes) but the door rejects the
+    // record — the store throws after the removal already ran.
+    canvas.playbook.addStep({
+      id: 'throws',
+      title: 'Throws',
+      source: 'graph',
+      data: { removed: { nodeIds: ['a'] }, added: { nodes: [{ id: 'e' }], edges: [{ id: 'bad', source: 'b', target: 'e' }] } },
+    });
+    const store = layer.store as unknown as { upsertEdge: (e: unknown) => void };
+    const upsert = store.upsertEdge.bind(store);
+    store.upsertEdge = (e) => {
+      if ((e as { id: string }).id === 'bad') throw new Error('boom');
+      upsert(e);
+    };
+    await expect(canvas.playbook.next()).rejects.toThrow();
+    expect(layer.store.hasNode('a')).toBe(true);
+    expect(layer.store.hasEdge('ab')).toBe(true);
+    expect(layer.store.hasNode('e')).toBe(false);
+    expect(canvas.history.entries()).toHaveLength(0);
+    expect(canvas.history.canRedo()).toBe(false);
+    expect(canvas.playbook.index).toBe(-1);
     canvas.destroy();
   });
 

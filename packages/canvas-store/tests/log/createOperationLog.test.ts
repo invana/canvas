@@ -192,6 +192,25 @@ describe('createOperationLog — actor, groups, branches, limits', () => {
     expect(log.entries({ stepId: 's1' })).toHaveLength(1);
   });
 
+  it('a group that throws takes back what it wrote, data and view, and records nothing (F28)', () => {
+    const { view, log, src, addId } = setup();
+    addId('keep');
+    expect(() =>
+      log.group({ title: 'half' }, () => {
+        addId('a');
+        view.update((s) => void (s.definition.color = 'blue'), 'edit:color');
+        throw new Error('boom');
+      }),
+    ).toThrow('boom');
+    expect([...src.ids]).toEqual(['keep']);
+    expect(view.getState().definition.color).toBe('red');
+    expect(log.entries()).toHaveLength(1);
+    expect(log.canRedo()).toBe(false);
+    // The log is usable afterwards: the next write is its own entry.
+    addId('b');
+    expect(log.entries()).toHaveLength(2);
+  });
+
   it('an empty group records nothing', () => {
     const { log } = setup();
     log.group({ title: 'nothing' }, () => undefined);

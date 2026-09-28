@@ -199,7 +199,11 @@ export interface OperationLog {
    * replaying.
    */
   recordData(sourceId: string, ops: readonly unknown[], actor?: string): void;
-  /** Run `fn`; everything recorded meanwhile becomes one entry. Nested groups merge. */
+  /**
+   * Run `fn`; everything recorded meanwhile becomes one entry. Nested groups
+   * merge. **All or nothing:** if `fn` throws, what it recorded is reverted,
+   * no entry is kept, and the error is rethrown.
+   */
   group<T>(meta: LogGroupMeta, fn: () => T): T;
   /** Whether the log is applying entries (undo / redo / revertTo / replayTo) right now. */
   readonly replaying: boolean;

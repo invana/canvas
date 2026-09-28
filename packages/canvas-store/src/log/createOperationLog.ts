@@ -298,17 +298,24 @@ export function createOperationLog<T>(opts: OperationLogOptions<T> = {}): Operat
         if (open.stepId === undefined && meta.stepId !== undefined) open.stepId = meta.stepId;
         return fn();
       }
-      open = newEntry(meta.actor ?? sessionActor(), meta);
+      const entry = newEntry(meta.actor ?? sessionActor(), meta);
+      open = entry;
+      let result: ReturnType<typeof fn>;
       try {
-        return fn();
-      } finally {
-        const entry = open;
+        result = fn();
+      } catch (err) {
+        // All or nothing: take back whatever `fn` wrote before it threw and
+        // record nothing, so a half-applied step or transaction leaves no trace.
         open = null;
-        if (entry.parts.length > 0) {
-          entry.at = now();
-          append(entry);
-        }
+        if (entry.parts.length > 0) run(entry, 'back', 'all');
+        throw err;
       }
+      open = null;
+      if (entry.parts.length > 0) {
+        entry.at = now();
+        append(entry);
+      }
+      return result;
     },
 
     get replaying() {

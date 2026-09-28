@@ -167,6 +167,25 @@ describe('createPlaybook (F13, V11)', () => {
     expect(playbook.index).toBe(-1);
   });
 
+  it('a step that throws while applying is taken back whole; the position stays and a retry plays afresh (F28)', async () => {
+    const { playbook, ids, log, view } = setup();
+    // `settings.color` is written after the data, then the view write throws.
+    playbook.addStep({ ...expand, view: { focus: { ids: ['b'] } }, do: [] });
+    const off = view.subscribe((s, prev) => {
+      if (s.interaction.focus !== prev.interaction.focus && s.interaction.focus) throw new Error('boom');
+    });
+    await expect(playbook.next()).rejects.toThrow('boom');
+    expect([...ids]).toEqual(['a']);
+    expect(view.getState().definition.color).toBe('red');
+    expect(log.entries()).toHaveLength(0);
+    expect(log.canRedo()).toBe(false);
+    expect(playbook.index).toBe(-1);
+    off();
+    await playbook.next();
+    expect([...ids].sort()).toEqual(['a', 'b', 'c']);
+    expect(log.entries({ stepId: 's1' })).toHaveLength(1);
+  });
+
   it('a change made after stepping back cuts the recorded entry off, so the step plays afresh', async () => {
     const { playbook, log, view } = setup();
     playbook.addStep(expand);
