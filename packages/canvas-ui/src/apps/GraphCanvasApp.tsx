@@ -653,6 +653,10 @@ export function GraphCanvasApp({
       <GraphCanvasContext.Provider value={canvas}>
         <div
           data-theme={dataTheme}
+          // The app shell is one keyboard scope: a `KeyboardShortcutsBehaviour`
+          // on this canvas hears keys after a click anywhere in it (a header
+          // button, a side panel), not only on the canvas itself.
+          data-canvas-scope=""
           // `overflow-hidden`: the app shell must never paint outside its own box.
           // `AppLayoutV2` is `h-screen` by default (we force `h-full`), and its
           // resizable panels can momentarily overshoot; without this clip an

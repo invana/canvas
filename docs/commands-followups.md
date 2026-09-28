@@ -48,7 +48,7 @@ Status: 📋 open · 🚧 in progress · ✅ done.
 
 | # | Item | Status |
 |---|---|---|
-| 11 | No type safety: names are strings, args `unknown` → a typed `run<'camera.fit'>(…)` driven by a name → args map | 📋 |
+| 11 | No type safety: names are strings, args `unknown` → a typed `run<'camera.fit'>(…)` driven by a name → args map | 🚧 implemented, unmerged — `CommandRegistry<C, M>`, `EngineCommandMap` / `GraphCommandMap`, `defineControlItems` (T1–T3, `rfc:feat-2026-09-29-commands-stop-at-saved-control-panels`) |
 | 12 | Buttons go stale if someone forgets `invalidate()` → audit non-store state commands read (edge defaults, layer visibility, clipboard, both histories), or move it into the store | ✅ owner-side bridges, nothing moved into the store (I1–I5, `rfc:feat-2026-09-29-command-controls-go-stale-or-fail-silently`) |
 | 13 | A saved panel naming an unregistered command (`history.undo` without `GraphHistoryProvider`, `theme.toggle` without the theme bundle) shows a silently disabled button → flag it in the UI | ✅ "(unavailable)" label + dev warning (R1, R2) |
 | 14 | No `scene:behaviour:unregister` event, so the editor's behaviour picker can list a removed behaviour | ✅ event added; picker listens (N1, N2) |
@@ -88,8 +88,8 @@ Items 12–16, 21 and O1–O2 landed through `rfc:feat-2026-09-29-command-contro
 
 | # | Item | Status |
 |---|---|---|
-| 25 | Keyboard shortcuts bound to command names | 📋 |
-| 26 | Context menus and a command palette from `commands.list()` | 📋 |
+| 25 | Keyboard shortcuts bound to command names | 🚧 implemented, unmerged — `KeyboardShortcutsBehaviour` + `DEFAULT_SHORTCUTS` + editor + wrapper (K1–K4, `rfc:feat-2026-09-29-commands-stop-at-saved-control-panels`) |
+| 26 | Context menus and a command palette from `commands.list()` | 🚧 implemented, unmerged — `commandMenuItems` / `useCommandMenuItems`, `CommandPalette`, opt-in `selectTarget` (U1–U4, `rfc:feat-2026-09-29-commands-stop-at-saved-control-panels`); palette UI not yet seen in a story |
 
 If 25–26 aren't planned soon, items 4–8 come next: they stop hooks and commands drifting
 apart.

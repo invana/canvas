@@ -210,6 +210,9 @@ export type {
   CommandArgSpec,
   CommandOption,
   CommandRegistryOptions,
+  CommandMap,
+  CommandName,
+  CommandArgsOf,
   LoopCurvePresetName,
   BadgeOptions,
   BadgePlacement,
@@ -327,6 +330,18 @@ export { PinchZoomBehaviour } from './behaviours/PinchZoomBehaviour';
 export type { PinchZoomBehaviourOptions } from './behaviours/PinchZoomBehaviour';
 
 export { KeyboardCameraInputBehaviour } from './behaviours/KeyboardCameraInputBehaviour';
+export {
+  KeyboardShortcutsBehaviour,
+  DEFAULT_SHORTCUTS,
+  normalizeShortcut,
+  eventShortcut,
+  isMacPlatform,
+} from './behaviours/KeyboardShortcutsBehaviour';
+export type {
+  KeyboardShortcutsBehaviourOptions,
+  KeyboardShortcutBinding,
+  ShortcutKeyEvent,
+} from './behaviours/KeyboardShortcutsBehaviour';
 export type {
   KeyboardCameraInputBehaviourOptions,
   KeyboardCameraKeymap,
@@ -344,6 +359,7 @@ export type {
 // ─── Engine ─────────────────────────────────────────────────────────────
 export { Canvas } from './engine/Canvas';
 export type { CanvasOptions } from './engine/Canvas';
+export type { EngineCommandMap } from './engine/builtinCommands';
 // Frame-performance recorder exposed via `canvas.frames`. Frame data *types*
 // (`FrameTick` / `FrameStats` / `InteractionKind`) come from `@invana/canvas-store`.
 export { FrameMeter } from './engine/FrameMeter';

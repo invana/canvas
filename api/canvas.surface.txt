@@ -1,7 +1,7 @@
 # @invana/canvas — public API surface (generated; do not hand-edit)
 # Regenerate: pnpm build && node scripts/check-api-surface.mjs --write
 
-## . (421 exports)
+## . (433 exports)
 AnchorCtx
 AnchorShapeRef
 AnchorSpec
@@ -53,6 +53,9 @@ ColumnType
 ColumnValue
 CommandArgKind
 CommandArgSpec
+CommandArgsOf
+CommandMap
+CommandName
 CommandOption
 CommandRegistry
 CommandRegistryOptions
@@ -84,6 +87,7 @@ ControlWidgetItemSpec
 CustomElementCtor
 DEFAULT_ENDPOINT_BADGE_GAP_PX
 DEFAULT_POSITION_TRANSITION_MS
+DEFAULT_SHORTCUTS
 DataSerializableLayer
 DataSource
 DecorationSpec
@@ -113,6 +117,7 @@ ElementScaleLODBehaviour
 ElementScaleLODBehaviourOptions
 EllipseSpec
 Endpoint
+EngineCommandMap
 EventEmitter
 EventMap
 EventSource
@@ -163,6 +168,9 @@ InteractionTracker
 KeyboardCameraInputBehaviour
 KeyboardCameraInputBehaviourOptions
 KeyboardCameraKeymap
+KeyboardShortcutBinding
+KeyboardShortcutsBehaviour
+KeyboardShortcutsBehaviourOptions
 KindDelta
 LOOP_CURVE_PRESETS
 LabelBackground
@@ -261,6 +269,7 @@ ShapeLabelStyle
 ShapePaintStyle
 ShapeSpec
 ShapeStroke
+ShortcutKeyEvent
 Size
 SourceEmitter
 SpecFlush
@@ -351,6 +360,7 @@ easeOutCubic
 easeOutQuad
 edgePortAnchor
 erRouter
+eventShortcut
 exportCanvasState
 exportImage
 exportImageDataURL
@@ -362,6 +372,7 @@ hasSilhouetteFill
 importCanvasState
 importCanvasStateFromFile
 isInherit
+isMacPlatform
 isViewLocked
 jsonSafe
 linear
@@ -370,6 +381,7 @@ loopPolylinePathStyle
 manhattanRouter
 metroRouter
 normalPathStyle
+normalizeShortcut
 offsetPolygon
 oneSideRouter
 originToBadgeLocal

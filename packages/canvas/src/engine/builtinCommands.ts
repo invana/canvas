@@ -69,7 +69,37 @@ const FACTOR_ARG: Record<string, CommandArgSpec> = {
   factor: { kind: 'number', label: 'Factor', default: ZOOM_STEP, description: 'Zoom step per click' },
 };
 
-const BUILTIN_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
+/**
+ * The engine's commands and their `args` — the command map (`CommandMap`) that types
+ * `canvas.commands` (`canvas.commands.run('camera.fit', { padding: 40 })` is
+ * checked; any other name still takes `unknown`). Keys match the table above;
+ * the built-in registrations below are checked against it.
+ */
+export interface EngineCommandMap {
+  'camera.zoomIn': { factor?: number } | undefined;
+  'camera.zoomOut': { factor?: number } | undefined;
+  'camera.fit': { padding?: number; layerId?: string } | undefined;
+  'camera.pan': { dx?: number; dy?: number } | undefined;
+  /** A picker hands `value` back as a string; a fixed-level button passes a number. */
+  'camera.zoomTo': { value?: number | string; levels?: number[] } | undefined;
+  'camera.reset': undefined;
+  'behaviour.toggle': { id: string };
+  'view.lock': { behaviourIds?: string[] } | undefined;
+  'layout.run': { id?: string } | undefined;
+  'layout.stop': undefined;
+  'layout.toggle': { id?: string } | undefined;
+  'layout.activate': { value?: string } | undefined;
+  'background.grid': { layerId?: string; patternType?: 'dots' | 'grid' | 'lines' } | undefined;
+  'layer.visible': { id: string };
+  /** `layerId` is read by `GraphCanvas`'s override (which layer's graph history); the engine's ignores it. */
+  'history.undo': { layerId?: string } | undefined;
+  'history.redo': { layerId?: string } | undefined;
+}
+
+/** Each built-in, typed by its {@link EngineCommandMap} entry. */
+type BuiltinCommands = { [K in keyof EngineCommandMap]: CanvasCommand<Canvas, EngineCommandMap[K]> };
+
+const BUILTIN_COMMANDS: BuiltinCommands = {
   'camera.zoomIn': {
     label: 'Zoom in',
     args: FACTOR_ARG,
@@ -271,7 +301,29 @@ const BUILTIN_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
   },
 };
 
-/** Register every built-in command on `registry`. */
+/** Palette / menu metadata per built-in (`CanvasCommand.category` / `.keywords`). */
+const BUILTIN_META: { [K in keyof EngineCommandMap]: Pick<CanvasCommand<Canvas>, 'category' | 'keywords'> } = {
+  'camera.zoomIn': { category: 'Camera', keywords: ['magnify', 'bigger'] },
+  'camera.zoomOut': { category: 'Camera', keywords: ['smaller'] },
+  'camera.fit': { category: 'Camera', keywords: ['frame', 'zoom to fit', 'show all'] },
+  'camera.pan': { category: 'Camera', keywords: ['move', 'scroll'] },
+  'camera.zoomTo': { category: 'Camera', keywords: ['zoom level', 'percent'] },
+  'camera.reset': { category: 'Camera', keywords: ['home', 'actual size', 'origin'] },
+  'behaviour.toggle': { category: 'Behaviours' },
+  'view.lock': { category: 'View', keywords: ['freeze', 'pin view'] },
+  'layout.run': { category: 'Layout', keywords: ['arrange', 'start'] },
+  'layout.stop': { category: 'Layout', keywords: ['halt', 'pause'] },
+  'layout.toggle': { category: 'Layout', keywords: ['run', 'stop'] },
+  'layout.activate': { category: 'Layout', keywords: ['switch layout'] },
+  'background.grid': { category: 'View', keywords: ['dots', 'lines', 'pattern'] },
+  'layer.visible': { category: 'View', keywords: ['show', 'hide'] },
+  'history.undo': { category: 'Edit', keywords: ['revert', 'back'] },
+  'history.redo': { category: 'Edit', keywords: ['again', 'forward'] },
+};
+
+/** Register every built-in command on `registry`, with its palette metadata. */
 export function registerBuiltinCommands(registry: CommandRegistry<Canvas>): void {
-  for (const [name, command] of Object.entries(BUILTIN_COMMANDS)) registry.register(name, command);
+  for (const [name, command] of Object.entries(BUILTIN_COMMANDS)) {
+    registry.register(name, { ...BUILTIN_META[name as keyof EngineCommandMap], ...command });
+  }
 }

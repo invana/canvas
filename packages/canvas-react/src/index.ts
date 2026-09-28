@@ -92,6 +92,8 @@ export type { PinchZoomBehaviourProps } from './behaviours/PinchZoomBehaviour';
 
 export { KeyboardCameraInputBehaviour } from './behaviours/KeyboardCameraInputBehaviour';
 export type { KeyboardCameraInputBehaviourProps } from './behaviours/KeyboardCameraInputBehaviour';
+export { KeyboardShortcutsBehaviour } from './behaviours/KeyboardShortcutsBehaviour';
+export type { KeyboardShortcutsBehaviourProps } from './behaviours/KeyboardShortcutsBehaviour';
 
 // Graph-scoped
 export { DragNodeBehaviour } from './behaviours/DragNodeBehaviour';

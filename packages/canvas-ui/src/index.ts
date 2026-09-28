@@ -292,6 +292,22 @@ export type {
   KeyboardCameraOptions,
 } from './editors/behaviours/keyboard-camera';
 
+// KeyboardShortcutsBehaviour
+export { KeyboardShortcutsEditorPanel, keyboardShortcutsFields } from './editors/behaviours/keyboard-shortcuts';
+export {
+  optionsToForm as keyboardShortcutsOptionsToForm,
+  formToOptions as keyboardShortcutsFormToOptions,
+  bindingToLine,
+  lineToBinding,
+} from './editors/behaviours/keyboard-shortcuts';
+export type {
+  KeyboardShortcutsEditorPanelProps,
+  KeyboardShortcutsFields,
+  KeyboardShortcutsFormState,
+  KeyboardShortcutsOptions,
+  KeyboardShortcutBindingOption,
+} from './editors/behaviours/keyboard-shortcuts';
+
 // DragShapeBehaviour
 export { DragShapeEditorPanel, dragShapeFields } from './editors/behaviours/drag-shape';
 export {
@@ -986,6 +1002,7 @@ export {
   DEFAULT_CONTROL_ICONS,
   DEFAULT_CONTROL_WIDGETS,
   controlWidgetOptionsSpecs,
+  defineControlItems,
   CANVAS_CONTROL_ITEMS,
   EDGE_TYPE_CONTROL_ITEMS,
   EDIT_CONTROL_ITEMS,
@@ -1014,6 +1031,8 @@ export {
   type ControlWidget,
   type ControlWidgetProps,
   type ControlWidgetOptionsSpec,
+  type AuthoredControlItemSpec,
+  type ControlCommandName,
 } from './control-panels';
 
 // The pixels: the `GraphCanvasApp` shell, assembled toolbars, dumb building-block
@@ -1182,6 +1201,9 @@ export {
   GraphNodeContextMenu,
   GraphEdgeContextMenu,
   GraphBackgroundContextMenu,
+  commandMenuItems,
+  useCommandMenuItems,
+  CommandPalette,
 } from './menus';
 export type {
   GraphContextMenuProps,
@@ -1194,6 +1216,10 @@ export type {
   GraphContextMenuCommonProps,
   GraphContextMenuContext,
   GraphTargetMenuContext,
+  CommandMenuRef,
+  CommandMenuItemsOptions,
+  CommandPaletteProps,
+  CommandPaletteShortcut,
 } from './menus';
 
 // The hover-preview **behaviour** is headless and lives in `@invana/canvas-react`

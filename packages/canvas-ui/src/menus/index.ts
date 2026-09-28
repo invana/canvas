@@ -17,6 +17,11 @@ export type {
   GraphBackgroundMenuContext,
 } from './GraphBackgroundContextMenu';
 
+export { commandMenuItems, useCommandMenuItems } from './commandMenuItems';
+export { CommandPalette } from './CommandPalette';
+export type { CommandPaletteProps, CommandPaletteShortcut } from './CommandPalette';
+export type { CommandMenuRef, CommandMenuItemsOptions } from './commandMenuItems';
+
 export type {
   GraphContextMenuCommonProps,
   GraphContextMenuContext,

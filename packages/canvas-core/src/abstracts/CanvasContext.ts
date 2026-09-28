@@ -22,6 +22,7 @@ import type { Camera } from './Camera';
 import type { GestureArbiter } from './GestureArbiter';
 import type { LayerRegistry } from './registries/LayerRegistry';
 import type { BehaviourRegistry } from './registries/BehaviourRegistry';
+import type { CommandRegistry } from './registries/CommandRegistry';
 import type { ThemeState } from '../state/theme/types';
 import type { LayoutRunOptions } from './Layout';
 
@@ -82,6 +83,13 @@ export interface CanvasContext {
    * read this to find a parent element and to attach native DOM listeners.
    */
   readonly canvasElement?: HTMLCanvasElement;
+
+  /**
+   * The canvas's named commands (`canvas.commands`) — for an extension that
+   * dispatches by name, such as a keyboard-shortcut behaviour. Optional so a
+   * hand-built context (a test double) needn't supply one.
+   */
+  readonly commands?: CommandRegistry<unknown>;
 
   /**
    * Build a patch-emitting {@link ReactiveStore} — the factory behind

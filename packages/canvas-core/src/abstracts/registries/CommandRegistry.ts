@@ -63,17 +63,45 @@ export interface CommandArgSpec {
 }
 
 /**
+ * A **command map**: command name → the type of its `args` bag. A package
+ * exports its commands' map as a type (`EngineCommandMap` in `@invana/canvas`,
+ * `GraphCommandMap` in `@invana/graph`) and a registry typed with it
+ * (`CommandRegistry<C, M>`) checks the args of those names at compile time —
+ * types only, nothing at runtime. Any other name still takes `unknown` args, so
+ * app-registered commands keep working. Merge maps with `&`.
+ */
+export type CommandMap = object;
+
+/** A command name: one of `M`'s (offered for completion), or any other string. */
+export type CommandName<M extends CommandMap> = (keyof M & string) | (string & {});
+
+/**
+ * The `args` type of command `K` in map `M` — `unknown` for a name `M` doesn't
+ * list. An indexed access, not a conditional type, so a registry stays
+ * covariant in its map: a `CommandRegistry<C, Wider>` is a
+ * `CommandRegistry<C, Narrower>` (a subclass can widen `commands`' map).
+ */
+export type CommandArgsOf<M extends CommandMap, K extends string> = (M & Record<string, unknown>)[K];
+
+/**
  * A named command, run against a context `C`. `args` is whatever the caller's
- * spec carried (JSON).
+ * spec carried (JSON); `A` narrows it for a command whose map entry is known.
  *
  * Its `isEnabled` / `isActive` / `value` / `options` may read anything; a bound
  * control re-reads them on view-store writes and on the registry's
  * {@link CommandRegistry.subscribe} signal. State outside the store needs an
  * owner-side {@link CommandRegistry.invalidate} bridge — see there.
  */
-export interface CanvasCommand<C> {
+export interface CanvasCommand<C, A = unknown> {
   /** Human label — a default tooltip when a spec doesn't give one. */
   label?: string;
+  /**
+   * Group a command palette / menu lists it under (`'Camera'`, `'Edit'`,
+   * `'Layout'`, …). Data only — the kernel never reads it.
+   */
+  category?: string;
+  /** Extra search terms a command palette matches besides the label and name. Data only. */
+  keywords?: readonly string[];
   /**
    * The keys `args` may carry, described for editors (the Studio's control-panel
    * editor draws a field per key). In dev builds {@link CommandRegistry.run}
@@ -83,19 +111,19 @@ export interface CanvasCommand<C> {
    */
   args?: Readonly<Record<string, CommandArgSpec>>;
   /** Perform the command. */
-  run(ctx: C, args?: unknown): void;
+  run(ctx: C, args?: A): void;
   /** Toggle state for toggle-style controls. Absent ⇒ never active. */
-  isActive?(ctx: C, args?: unknown): boolean;
+  isActive?(ctx: C, args?: A): boolean;
   /** Whether the command can run now. Absent ⇒ always enabled. */
-  isEnabled?(ctx: C, args?: unknown): boolean;
+  isEnabled?(ctx: C, args?: A): boolean;
   /**
    * Current value, for a **pick-one** command (select mode, edge type, active
    * layout). Picking an option runs the command with `{ ...args, value }`.
    * `null` when nothing is picked.
    */
-  value?(ctx: C, args?: unknown): string | null;
+  value?(ctx: C, args?: A): string | null;
   /** The options a pick-one command offers. A spec's own `options` take precedence. */
-  options?(ctx: C, args?: unknown): CommandOption[];
+  options?(ctx: C, args?: A): CommandOption[];
 }
 
 /** Options for {@link CommandRegistry}. */
@@ -167,6 +195,12 @@ function describe(value: unknown): string {
 /**
  * Holds {@link CanvasCommand}s by name and runs them against a bound context.
  *
+ * `M` ({@link CommandMap}) types the args of the names it lists — `register`
+ * (the handler's `args`), `run`, `isEnabled`, `isActive`, `value`, `options` —
+ * while every other name takes `unknown` args. Unset, nothing is typed, and a
+ * typed registry still passes where a `CommandRegistry<C>` is expected. Types
+ * only: the registry behaves the same for any `M`.
+ *
  * Registrations **stack** per name: registering a name that already exists
  * overrides it (a provider upgrading `graph.clear` to its undoable form, an app
  * replacing a built-in), and disposing an override restores whatever is
@@ -174,7 +208,7 @@ function describe(value: unknown): string {
  * register / unregister and every {@link invalidate}, so a UI can re-read
  * command state.
  */
-export class CommandRegistry<C> {
+export class CommandRegistry<C, M extends CommandMap = Record<never, never>> {
   /** Per name, the registrations oldest → newest; the last one is live. */
   private readonly stacks = new Map<string, Array<{ command: CanvasCommand<C> }>>();
   private readonly listeners = new Set<() => void>();
@@ -193,7 +227,7 @@ export class CommandRegistry<C> {
    * that removes **this** registration only: if it is live, the one underneath
    * becomes live again; if it was already overridden, the override stays.
    */
-  register(name: string, command: CanvasCommand<C>): () => void {
+  register<K extends CommandName<M>>(name: K, command: CanvasCommand<C, CommandArgsOf<M, K>>): () => void {
     // A fresh wrapper per call, so registering the same command twice still
     // yields two independently disposable entries.
     const entry = { command };
@@ -237,7 +271,7 @@ export class CommandRegistry<C> {
    * described key whose value doesn't fit its descriptor — the run proceeds
    * regardless.
    */
-  run(name: string, args?: unknown): boolean {
+  run<K extends CommandName<M>>(name: K, args?: CommandArgsOf<M, K>): boolean {
     const cmd = this.get(name);
     if (!cmd) return false;
     if (this.validateArgs && cmd.args) this.checkArgs(name, cmd.args, args);
@@ -248,26 +282,26 @@ export class CommandRegistry<C> {
   }
 
   /** `isActive` of `name`; `false` when missing or not a toggle. */
-  isActive(name: string, args?: unknown): boolean {
+  isActive<K extends CommandName<M>>(name: K, args?: CommandArgsOf<M, K>): boolean {
     const cmd = this.get(name);
     return cmd?.isActive ? cmd.isActive(this.getContext(), args) : false;
   }
 
   /** `isEnabled` of `name`; `false` when missing, `true` when it declares no check. */
-  isEnabled(name: string, args?: unknown): boolean {
+  isEnabled<K extends CommandName<M>>(name: K, args?: CommandArgsOf<M, K>): boolean {
     const cmd = this.get(name);
     if (!cmd) return false;
     return cmd.isEnabled ? cmd.isEnabled(this.getContext(), args) : true;
   }
 
   /** `value` of a pick-one command; `null` when missing or not a picker. */
-  value(name: string, args?: unknown): string | null {
+  value<K extends CommandName<M>>(name: K, args?: CommandArgsOf<M, K>): string | null {
     const cmd = this.get(name);
     return cmd?.value ? cmd.value(this.getContext(), args) : null;
   }
 
   /** `options` of a pick-one command; `[]` when missing or it declares none. */
-  options(name: string, args?: unknown): CommandOption[] {
+  options<K extends CommandName<M>>(name: K, args?: CommandArgsOf<M, K>): CommandOption[] {
     const cmd = this.get(name);
     return cmd?.options ? cmd.options(this.getContext(), args) : [];
   }

@@ -109,7 +109,7 @@ export {
   edgePathType,
   setEdgePathType,
 } from './canvas';
-export type { GraphCanvasOptions, GraphEditAccess } from './canvas';
+export type { GraphCanvasOptions, GraphEditAccess, GraphCommandMap, GraphCanvasCommandMap } from './canvas';
 
 export {
   OneShotPositionLayout,

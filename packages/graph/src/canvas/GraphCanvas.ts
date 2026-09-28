@@ -26,14 +26,14 @@
  */
 
 import { Canvas } from '@invana/canvas';
-import type { Behaviour, CanvasConfig, CanvasOptions, Layer, Layout } from '@invana/canvas';
+import type { Behaviour, CanvasConfig, CanvasOptions, CommandRegistry, Layer, Layout } from '@invana/canvas';
 
 import { GraphClipboard } from '../clipboard/GraphClipboard';
 import { GraphHistory } from '../history/GraphHistory';
 import type { HistoryOp } from '../history/types';
 import { GraphLayer } from '../layer/GraphLayer';
 import type { Vec2 } from '../store';
-import { registerGraphCommands } from './graphCommands';
+import { registerGraphCommands, type GraphCanvasCommandMap } from './graphCommands';
 
 /** Construction options for {@link GraphCanvas}: the engine's, plus the graph edit state. */
 export interface GraphCanvasOptions extends CanvasOptions {
@@ -100,6 +100,12 @@ export function captureNodeDrags(layer: GraphLayer, history: GraphHistory): () =
 }
 
 export class GraphCanvas extends Canvas {
+  /**
+   * The engine's commands plus the graph's (`select.mode`, `graph.*`,
+   * `clipboard.*`, `tool.*`, graph-aware `history.*`), typed with
+   * {@link GraphCanvasCommandMap}. Type-only redeclaration — same instance.
+   */
+  declare readonly commands: CommandRegistry<Canvas, GraphCanvasCommandMap>;
   private offActiveLayout: (() => void) | null = null;
   /** Per graph layer id, its history / clipboard and bridges (see the constructor). */
   private readonly editState = new Map<string, GraphLayerEditState>();

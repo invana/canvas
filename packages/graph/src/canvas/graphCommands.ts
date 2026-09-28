@@ -24,7 +24,7 @@
  * Names are public API (`namespace.verb`): renaming one breaks saved panels.
  */
 
-import type { Canvas, CanvasCommand, CommandArgSpec, CommandOption, CommandRegistry } from '@invana/canvas';
+import type { Canvas, CanvasCommand, CommandArgSpec, CommandOption, CommandRegistry, EngineCommandMap } from '@invana/canvas';
 
 import { GraphClipboard } from '../clipboard/GraphClipboard';
 import type { GraphHistory } from '../history/GraphHistory';
@@ -142,6 +142,38 @@ export function eraseCommand(
   };
 }
 
+/** `{ layerId? }` args (default `'graph'`). */
+type LayerArgs = { layerId?: string } | undefined;
+/** `{ layerId?, clickSelectId? }` args — a command over the click-selection of a layer. */
+type SelectionArgs = { layerId?: string; clickSelectId?: string } | undefined;
+
+/**
+ * The graph commands and their `args` — the command map `GraphCanvas.commands`
+ * is typed with (over {@link GraphCanvasCommandMap}). Keys match the table above.
+ */
+export interface GraphCommandMap {
+  'select.mode': { value?: string; modes?: Record<string, string>; labels?: Record<string, string> } | undefined;
+  'graph.edgeType': { layerId?: string; types?: string[]; value?: string } | undefined;
+  'graph.clear': LayerArgs;
+  'graph.redraw': LayerArgs;
+  'graph.erase': SelectionArgs;
+  'history.undo': LayerArgs;
+  'history.redo': LayerArgs;
+  'clipboard.cut': SelectionArgs;
+  'clipboard.copy': SelectionArgs;
+  'clipboard.paste': SelectionArgs;
+  'clipboard.delete': SelectionArgs;
+  'tool.active': { value?: string; tools?: string[] } | undefined;
+  'tool.nodeKind': { value?: string; kinds?: Record<string, string> } | undefined;
+  'layout.activate': { value?: string } | undefined;
+}
+
+/**
+ * Every command a `GraphCanvas` holds: the engine's, with the graph's
+ * overrides (`history.*`, `layout.activate`) replacing theirs.
+ */
+export type GraphCanvasCommandMap = Omit<EngineCommandMap, keyof GraphCommandMap> & GraphCommandMap;
+
 /**
  * How the graph commands reach the per-layer edit state their canvas owns —
  * `GraphCanvas.graphHistory` / `GraphCanvas.clipboard`.
@@ -167,7 +199,7 @@ const CLIPBOARD_ARGS: Readonly<Record<string, CommandArgSpec>> = ERASE_ARGS;
  * undoable `graph.clear` / `graph.erase`. Bodies are the shared
  * `graphActions` functions — the same ones canvas-react's hooks call.
  */
-function editCommands(access: GraphEditAccess): Record<string, CanvasCommand<Canvas>> {
+function editCommands(access: GraphEditAccess): EditCommands {
   const hasSelection = (canvas: Canvas, args: unknown) => {
     const { nodeIds, edgeIds } = clickSelection(canvas, args);
     return nodeIds.length + edgeIds.length > 0;
@@ -219,7 +251,19 @@ function editCommands(access: GraphEditAccess): Record<string, CanvasCommand<Can
 
 const selectModes = (args: unknown) => arg<Record<string, string>>(args, 'modes') ?? DEFAULT_SELECT_MODES;
 
-const GRAPH_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
+/** The graph commands that don't touch the per-layer edit state. */
+type StatelessGraphCommands = {
+  [K in Exclude<keyof GraphCommandMap, keyof EditCommands>]: CanvasCommand<Canvas, GraphCommandMap[K]>;
+};
+/** The graph commands over the per-layer history / clipboard ({@link editCommands}). */
+type EditCommands = {
+  [K in 'history.undo' | 'history.redo' | 'graph.clear' | 'graph.erase' | 'clipboard.cut' | 'clipboard.copy' | 'clipboard.paste' | 'clipboard.delete']: CanvasCommand<
+    Canvas,
+    GraphCommandMap[K]
+  >;
+};
+
+const GRAPH_COMMANDS: StatelessGraphCommands = {
   'select.mode': {
     label: 'Select',
     args: {
@@ -336,12 +380,30 @@ const GRAPH_COMMANDS: Record<string, CanvasCommand<Canvas>> = {
   },
 };
 
+/** Palette / menu metadata per graph command (`CanvasCommand.category` / `.keywords`). */
+const GRAPH_META: { [K in keyof GraphCommandMap]: Pick<CanvasCommand<Canvas>, 'category' | 'keywords'> } = {
+  'select.mode': { category: 'Selection', keywords: ['brush', 'lasso', 'click'] },
+  'graph.edgeType': { category: 'View', keywords: ['routing', 'curved', 'straight', 'orthogonal'] },
+  'graph.clear': { category: 'Edit', keywords: ['empty', 'remove all', 'reset'] },
+  'graph.redraw': { category: 'View', keywords: ['refresh', 'repaint'] },
+  'graph.erase': { category: 'Edit', keywords: ['delete', 'remove'] },
+  'history.undo': { category: 'Edit', keywords: ['revert', 'back'] },
+  'history.redo': { category: 'Edit', keywords: ['again', 'forward'] },
+  'clipboard.cut': { category: 'Edit' },
+  'clipboard.copy': { category: 'Edit', keywords: ['duplicate'] },
+  'clipboard.paste': { category: 'Edit', keywords: ['insert'] },
+  'clipboard.delete': { category: 'Edit', keywords: ['remove', 'erase'] },
+  'tool.active': { category: 'Tools', keywords: ['select', 'add', 'connect', 'delete', 'mode'] },
+  'tool.nodeKind': { category: 'Tools', keywords: ['shape'] },
+  'layout.activate': { category: 'Layout', keywords: ['switch layout'] },
+};
+
 /**
  * Register every graph command on `registry` (overriding same-named engine
  * built-ins), with the history / clipboard commands over `access`.
  */
 export function registerGraphCommands(registry: CommandRegistry<Canvas>, access: GraphEditAccess): void {
   for (const [name, command] of Object.entries({ ...GRAPH_COMMANDS, ...editCommands(access) })) {
-    registry.register(name, command);
+    registry.register(name, { ...GRAPH_META[name as keyof GraphCommandMap], ...command });
   }
 }

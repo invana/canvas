@@ -1,6 +1,6 @@
 import { useCallback, type CSSProperties } from 'react';
 import type { Canvas } from '@invana/canvas';
-import type { ContextMenuEvent, ContextMenuTargetType } from '@invana/graph';
+import type { ClickSelectBehaviour, ContextMenuEvent, ContextMenuTargetType } from '@invana/graph';
 import type { MenuItem } from '@invana/ui';
 
 import { useCanvas } from '@invana/canvas-react';
@@ -52,6 +52,14 @@ export interface GraphContextMenuCommonProps {
    * Set `false` to manage dismissal yourself via `ctx.close`.
    */
   autoClose?: boolean;
+  /**
+   * Node / edge menus: the `ClickSelectBehaviour` id to **select the
+   * right-clicked element** with as the menu opens, unless it's already part of
+   * the selection — so selection commands in the menu (`clipboard.*`,
+   * `graph.erase`, via `commandMenuItems`) act on what was right-clicked. Off by
+   * default (the selection is left alone).
+   */
+  selectTarget?: string;
 }
 
 /**
@@ -105,6 +113,7 @@ export function GraphContextMenuRoot({
   style,
   autoClose = true,
   state = null,
+  selectTarget,
   build,
 }: GraphContextMenuRootProps) {
   const canvas = useCanvas();
@@ -118,10 +127,16 @@ export function GraphContextMenuRoot({
         canvas,
         close,
       };
+      // Select the right-clicked element first, so the builder — and the
+      // selection commands its items run — see it selected.
+      if (selectTarget && target !== 'canvas' && typeof event.id === 'string') {
+        const select = canvas.behaviours.get<ClickSelectBehaviour>(selectTarget);
+        if (select && !select.isSelected(event.id)) select.select(event.id, target === 'edge' ? 'connector' : 'shape');
+      }
       const items = build(event, base);
       open(event.screen.x, event.screen.y, autoClose ? withAutoClose(items, close) : items);
     },
-    [canvas, build, autoClose, open, close],
+    [canvas, build, autoClose, open, close, selectTarget, target],
   );
 
   return (

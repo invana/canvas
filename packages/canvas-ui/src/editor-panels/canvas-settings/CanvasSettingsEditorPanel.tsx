@@ -354,14 +354,29 @@ function CanvasSettingsEditorPanelContent({
     layouts: Introspected[];
   }>({ layers: [], behaviours: [], layouts: [] });
 
+  // Re-read on every (un)registration, so an instance added after mount — a
+  // wrapper that mounts later, a remount under the same id — gets its row.
   useEffect(() => {
     const map = (list: readonly { id: string }[]): Introspected[] =>
       list.map((i) => ({ id: i.id, kind: resolveKindRef.current(i), inst: i as unknown }));
-    setInstances({
-      layers: map(canvas.layers.list()),
-      behaviours: map(canvas.behaviours.list()),
-      layouts: map(canvas.layouts.list()),
-    });
+    const read = () =>
+      setInstances({
+        layers: map(canvas.layers.list()),
+        behaviours: map(canvas.behaviours.list()),
+        layouts: map(canvas.layouts.list()),
+      });
+    read();
+    const offs = [
+      canvas.events.on('scene:layer:add', read),
+      canvas.events.on('scene:layer:remove', read),
+      canvas.events.on('scene:behaviour:register', read),
+      canvas.events.on('scene:behaviour:unregister', read),
+      canvas.events.on('scene:layout:add', read),
+      canvas.events.on('scene:layout:remove', read),
+    ];
+    return () => {
+      for (const off of offs) off();
+    };
   }, [canvas]);
 
   // Merge the stable instance list with the reactive store definition: the

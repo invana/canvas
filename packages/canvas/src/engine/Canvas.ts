@@ -51,7 +51,7 @@ import { LayerRegistry } from '@invana/canvas-core';
 import { BehaviourRegistry } from '@invana/canvas-core';
 import { LayoutRegistry } from '@invana/canvas-core';
 import { CommandRegistry } from '@invana/canvas-core';
-import { registerBuiltinCommands } from './builtinCommands';
+import { registerBuiltinCommands, type EngineCommandMap } from './builtinCommands';
 import type { CanvasContext, LayoutRunOptions } from '@invana/canvas-core';
 import type { ISurface } from '@invana/canvas-core';
 import { Tween, resolveEasing, type EasingName } from '@invana/canvas-core';
@@ -269,9 +269,12 @@ export class Canvas {
    * Named commands (`'camera.fit'`, `'view.lock'`, …) run against this canvas —
    * what serialised UI such as control panels dispatches through. Holds the
    * engine built-ins from construction (see `builtinCommands.ts`); domain
-   * packages and apps register their own.
+   * packages and apps register their own. Typed with {@link EngineCommandMap}:
+   * those names' args are checked at compile time, any other name takes
+   * `unknown`. A subclass that registers more redeclares it with a wider map
+   * (`GraphCanvas`).
    */
-  readonly commands: CommandRegistry<Canvas>;
+  readonly commands: CommandRegistry<Canvas, EngineCommandMap>;
   context!: CanvasContext;
 
   /**
@@ -379,7 +382,7 @@ export class Canvas {
     this.layers = new LayerRegistry({ getContext: () => this.context, bus: this.events });
     this.behaviours = new BehaviourRegistry({ getContext: () => this.context, bus: this.events });
     this.layouts = new LayoutRegistry({ bus: this.events });
-    this.commands = new CommandRegistry<Canvas>({ getContext: () => this });
+    this.commands = new CommandRegistry<Canvas, EngineCommandMap>({ getContext: () => this });
     registerBuiltinCommands(this.commands);
     // Command state the view store doesn't hold — the history stack, the
     // registries, layer visibility, "initialised" — is bridged here, at its
@@ -1668,6 +1671,7 @@ export class Canvas {
       gestures: this.gestures,
       layers: this.layers,
       behaviours: this.behaviours,
+      commands: this.commands,
       ...(renderer.canvasElement ? { canvasElement: renderer.canvasElement } : {}),
       // The reactive-store factory behind `Layer.state` — injected here because
       // `@invana/canvas-core` is dependency-free and cannot construct one. A

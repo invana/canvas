@@ -73,6 +73,11 @@ import {
   optionsToForm as keyboardCameraToForm,
   formToOptions as keyboardCameraToOptions,
 } from '../../editors/behaviours/keyboard-camera/mapping';
+import { keyboardShortcutsFields } from '../../editors/behaviours/keyboard-shortcuts/fields';
+import {
+  optionsToForm as keyboardShortcutsToForm,
+  formToOptions as keyboardShortcutsToOptions,
+} from '../../editors/behaviours/keyboard-shortcuts/mapping';
 import { wheelZoomFields } from '../../editors/behaviours/wheel-zoom/fields';
 import {
   optionsToForm as wheelZoomToForm,
@@ -273,6 +278,7 @@ export const DEFAULT_CANVAS_SETTINGS_SCHEMAS: Record<string, SettingsSchemaEntry
   'drag-pan': { section: 'behaviours', typeLabel: 'Drag Pan', fields: dragPanFields, toForm: dragPanToForm, toOptions: dragPanToOptions },
   'pinch-zoom': { section: 'behaviours', typeLabel: 'Pinch Zoom', fields: pinchZoomFields, toForm: pinchZoomToForm, toOptions: pinchZoomToOptions },
   'keyboard-camera': { section: 'behaviours', typeLabel: 'Keyboard Camera', fields: keyboardCameraFields, toForm: keyboardCameraToForm, toOptions: keyboardCameraToOptions },
+  'keyboard-shortcuts': { section: 'behaviours', typeLabel: 'Keyboard Shortcuts', fields: keyboardShortcutsFields, toForm: keyboardShortcutsToForm, toOptions: keyboardShortcutsToOptions },
   'wheel-zoom': { section: 'behaviours', typeLabel: 'Wheel Zoom', fields: wheelZoomFields, toForm: wheelZoomToForm, toOptions: wheelZoomToOptions },
   'drag-shape': { section: 'behaviours', typeLabel: 'Drag Shape', fields: dragShapeFields, toForm: dragShapeToForm, toOptions: dragShapeToOptions },
   'drag-node': { section: 'behaviours', typeLabel: 'Drag Node', fields: dragNodeFields, toForm: dragNodeToForm, toOptions: dragNodeToOptions },

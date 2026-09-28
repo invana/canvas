@@ -100,6 +100,9 @@ export type {
   CommandArgSpec,
   CommandOption,
   CommandRegistryOptions,
+  CommandMap,
+  CommandName,
+  CommandArgsOf,
 } from './abstracts/registries/CommandRegistry';
 
 // ─── Headless reference implementation (test double, not a product renderer) ─

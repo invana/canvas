@@ -183,7 +183,7 @@ working design-of-record documents. Day-to-day API/concept docs live in
     + a dev warning; dev-build arg validation; `scene:behaviour:unregister`; `useHistory` is two-stack; `useLock` /
     `useEdgeType` share engine functions with their commands; 11 behaviours keep `getOptions()` current.
   - [feat/2026-09-29-commands-stop-at-saved-control-panels.md](./rfcs/feat/2026-09-29-commands-stop-at-saved-control-panels.md)
-    — 🚧 accepted; phases A–C implemented on `feat/commands-phases-a-b-c` (unmerged). **The remaining command
+    — 🚧 accepted; phases A–E implemented on `feat/commands-phases-a-b-c` (unmerged; F, G deferred). **The remaining command
     work, in seven phases**: A defects (O3 behaviour events, O4 re-attach, V5) → B widget / choice option fields +
     footer panels → C `GraphCanvas` owns history + clipboard → D typed commands (generic map) → E shortcuts,
     command menus, palette → F stories (only when asked) → G breaking removals.
