@@ -159,7 +159,7 @@ Legend: ✅ shipped · 🚧 in progress · 📋 planned
 | Serialisable config + live `update()` + `options:change` events | ✅ |
 | `options` → `state` vocabulary rename | 📋 |
 | One history for data and settings, with an `actor` on every change (who did what), no limit — [RFC](./docs/rfcs/feat/2026-09-28-an-analysis-cannot-be-recorded-or-replayed.md) | 🚧 |
-| `applyDelta` as the one way data enters a graph; behaviour-derived writes unrecorded | 📋 |
+| `applyDelta` as the one way data enters a graph; behaviour-derived writes unrecorded | 🚧 |
 | Playbooks — a JSON script of steps (`canvas.playbook.addStep` / `next` / `previous` / `goTo`) the engine answers prompts in | 🚧 |
 | Streaming-friendly layout — relayout on hide/show, throttled data relayouts that keep the camera, merged feed history | 🚧 |
 | OpenTelemetry over state mutations — `withTelemetry` action spans + per-frame FPS metrics + lifecycle logs, exported over OTLP by the opt-in [`@invana/canvas-telemetry-otel`](./packages/canvas-telemetry-otel) | ✅ |

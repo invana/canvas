@@ -26,7 +26,7 @@ function typeChecks(canvas: Canvas, graph: GraphCanvas): void {
   graph.commands.run('graph.clear', { layerId: 'graph' });
   // @ts-expect-error — `layerId` is a string
   graph.commands.run('graph.clear', { layerId: 5 });
-  graph.commands.run('history.undo', { layerId: 'g2' });
+  graph.commands.run('history.undo');
   graph.commands.run('camera.zoomIn', { factor: 2 });
 
   // A handler registered under a known name gets typed args.

@@ -24,8 +24,7 @@ export interface ContextMenuBehaviourProps
  * `key`) to recreate.
  *
  * `onContextMenu` must stay reactive: menu builders routinely close over state
- * that settles *after* mount (the undo `history` from `GraphHistoryProvider`,
- * the active tool, …). Freezing the first closure would leave those items
+ * that settles *after* mount (the active tool, a lifted panel's state, …). Freezing the first closure would leave those items
  * wired to stale `null`s, so the wrapper re-syncs it via `setOptions` on every
  * change rather than capturing it once at construction.
  */

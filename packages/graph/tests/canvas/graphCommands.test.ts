@@ -12,7 +12,6 @@ import { GraphLayer } from '../../src/layer/GraphLayer';
 import { BrushSelectBehaviour } from '../../src/behaviours/BrushSelectBehaviour';
 import { LassoSelectBehaviour } from '../../src/behaviours/LassoSelectBehaviour';
 import { ClickSelectBehaviour } from '../../src/behaviours/ClickSelectBehaviour';
-import { GraphHistory } from '../../src/history/GraphHistory';
 import { GraphClipboard } from '../../src/clipboard/GraphClipboard';
 import { eraseCommand, registerGraphEditCommands } from '../../src/canvas/graphCommands';
 
@@ -142,7 +141,7 @@ describe('graph commands', () => {
     c.destroy();
   });
 
-  it('graph.erase deletes the click-selection when there is one, else clears; a history override makes it undoable', () => {
+  it('graph.erase deletes the click-selection (undoably) when there is one, else clears', () => {
     const { canvas, layer } = makeCanvas();
     const click = new ClickSelectBehaviour({ id: 'click-select', targetLayerId: 'graph', enabled: true });
     canvas.behaviours.register(click);
@@ -154,12 +153,11 @@ describe('graph commands', () => {
     click.select('a');
     expect(c.isActive('graph.erase')).toBe(true);
 
-    const history = new GraphHistory(layer.store);
-    const off = c.register('graph.erase', eraseCommand((id) => (id === 'graph' ? history : null)));
+    const off = c.register('graph.erase', eraseCommand());
     c.run('graph.erase');
     expect(layer.store.getNode('a')).toBeUndefined();
     expect(layer.store.getNode('b')).toBeDefined();
-    history.undo();
+    canvas.history.undo();
     expect(layer.store.getNode('a')).toBeDefined();
     off();
 
@@ -171,8 +169,8 @@ describe('graph commands', () => {
   });
 
   it('registerGraphEditCommands: honours args.layerId, defaults to its layer, carries the palette metadata, and disposes back to the canvas\'s', () => {
-    // `history: false` + an override for one layer — the providers' situation.
-    const canvas = new GraphCanvas({ history: false });
+    // An override for one layer — the clipboard provider's situation.
+    const canvas = new GraphCanvas();
     canvas.initWithRenderer(new HeadlessRenderer(), 800, 600);
     const graph = new GraphLayer({ id: 'graph', options: {} });
     const other = new GraphLayer({ id: 'other', options: {} });
@@ -195,11 +193,8 @@ describe('graph commands', () => {
     const own = new GraphClipboard(other.store);
     const off = registerGraphEditCommands(
       c,
-      {
-        clipboard: (id) => (id === 'other' ? own : canvas.clipboard(id)),
-        history: (id) => (id === 'other' ? null : canvas.graphHistory(id)),
-      },
-      { layerId: 'other', only: ['clipboard.copy', 'history.undo'] },
+      { clipboard: (id) => (id === 'other' ? own : canvas.clipboard(id)) },
+      { layerId: 'other', only: ['clipboard.copy', 'graph.clear'] },
     );
 
     // Metadata matches GraphCanvas's, and the default follows `layerId`.
@@ -207,7 +202,7 @@ describe('graph commands', () => {
     expect(copy?.category).toBe('Edit');
     expect(copy?.keywords).toContain('duplicate');
     expect(copy?.args?.['layerId']?.default).toBe('other');
-    expect(c.get('history.undo')?.category).toBe('Edit');
+    expect(c.get('graph.clear')?.category).toBe('Edit');
     // `only` left the rest alone.
     expect(c.get('clipboard.paste')?.args?.['layerId']?.default).toBe('graph');
 

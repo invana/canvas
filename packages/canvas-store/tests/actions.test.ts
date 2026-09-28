@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createCanvasStore, createHistory, type TelemetryEvent } from '../src/index';
+import { createCanvasStore, createOperationLog, type TelemetryEvent } from '../src/index';
 
 /**
  * The action API — named, action-typed methods instead of raw `view.update`.
@@ -93,7 +93,7 @@ describe('actions — named, action-typed command API', () => {
 
   it('actions feed history — undo a camera.zoom', () => {
     const store = createCanvasStore();
-    const history = createHistory(store.view);
+    const history = createOperationLog({ view: store.view });
     store.actions.camera.zoomTo(2);
     expect(store.view.getState().interaction.camera.zoom).toBe(2);
     history.undo();

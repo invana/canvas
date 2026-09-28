@@ -10,9 +10,9 @@
  *     providers are mounted.
  *   - **`GraphControlsToolbar`** (full) — the lite set plus undo/redo, the
  *     edge-routing style editor, and erase/clear. It self-wraps
- *     `GraphHistoryProvider` + `GraphClipboardProvider` — bridges to the
- *     `GraphCanvas`'s own history / clipboard for `layerId`, or the
- *     undo / clipboard source itself on a plain `Canvas`.
+ *     `GraphClipboardProvider` — a bridge to the `GraphCanvas`'s own clipboard
+ *     for `layerId`, or the clipboard source itself on a plain `Canvas`. Undo
+ *     is `canvas.history` on any canvas.
  *
  * Both share one core, so they never drift. The controls are **control specs**
  * drawn by `useControlItems` — the same commands a saved control panel runs
@@ -41,7 +41,7 @@ import type { GraphCanvas } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 
 import { useGraphCanvas } from '@invana/canvas-react';
-import { GraphClipboardProvider, GraphHistoryProvider } from '@invana/canvas-react';
+import { GraphClipboardProvider } from '@invana/canvas-react';
 import { type LayoutFactory, useLayout } from '@invana/canvas-react';
 import { ToolbarItems, applyIconOverrides, type ToolbarIcon, type ToolbarItem } from '../components';
 import { useControlItems } from '../control-panels/ControlItems';
@@ -263,12 +263,10 @@ function GraphControlsToolbarFullBody(props: GraphControlsToolbarProps): ReactNo
 
 export function GraphControlsToolbar(props: GraphControlsToolbarProps): ReactNode {
   const layerId = props.layerId ?? 'graph';
-  // The history / edit commands come from these providers; mount them around the body.
+  // The clipboard / erase commands come from this provider on a plain canvas; mount it around the body.
   return (
-    <GraphHistoryProvider layerId={layerId}>
-      <GraphClipboardProvider layerId={layerId}>
-        <GraphControlsToolbarFullBody {...props} />
-      </GraphClipboardProvider>
-    </GraphHistoryProvider>
+    <GraphClipboardProvider layerId={layerId}>
+      <GraphControlsToolbarFullBody {...props} />
+    </GraphClipboardProvider>
   );
 }

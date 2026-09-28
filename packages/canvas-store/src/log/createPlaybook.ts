@@ -1,5 +1,7 @@
 import type { OperationLog, Playbook, PlaybookSpec, StepSpec } from '@invana/canvas-core';
 
+import { stepLinks } from './stepLinks';
+
 /**
  * What a playbook needs from its canvas — the ordinary canvas methods a step
  * is played with. The engine (`@invana/canvas`) supplies it; tests supply a
@@ -178,7 +180,22 @@ export function createPlaybook<S = Record<string, unknown>>(
     },
 
     addStep(spec) {
+      const atEnd = index === steps.length - 1;
       append(spec);
+      // A `sinceLastStep` result whose entries are still the newest is already
+      // on the canvas: adopt its entries as this step instead of playing it.
+      const link = stepLinks.get(spec);
+      if (
+        link &&
+        atEnd &&
+        link.log === log &&
+        newestApplied() === link.entryIds[link.entryIds.length - 1] &&
+        link.entryIds.every((id) => log.status(id) === 'applied')
+      ) {
+        log.tagStep(link.entryIds, { stepId: spec.id, title: spec.title });
+        played.set(spec.id, { before: link.before, last: link.entryIds[link.entryIds.length - 1]! });
+        index = steps.length - 1;
+      }
       notify();
       return spec.id;
     },

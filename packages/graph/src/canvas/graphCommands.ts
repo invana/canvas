@@ -8,18 +8,19 @@
  * |---|---|---|
  * | `select.mode` | `{ modes?, labels?, value }` — `modes` maps mode → behaviour id (`''` = no behaviour) | choice |
  * | `graph.edgeType` | `{ layerId?, types?, value }` (default `'graph'`, {@link DEFAULT_EDGE_TYPES}) | choice |
- * | `graph.clear` | `{ layerId? }` (default `'graph'`) | button — one undoable step on the layer's `GraphHistory` |
+ * | `graph.clear` | `{ layerId? }` (default `'graph'`) | button — one undoable `'clear'` entry in `canvas.history` |
  * | `graph.redraw` | `{ layerId? }` (default `'graph'`) | button — re-project the layer |
  * | `graph.erase` | `{ layerId?, clickSelectId? }` (default `'graph'` / `'click-select'`) | button — deletes the click-selection when there is one (active), else clears the layer via `graph.clear`; undoable |
- * | `history.undo` / `history.redo` | `{ layerId? }` (default `'graph'`) | button — the newer of the layer's `GraphHistory` top and `canvas.history`'s (overrides the engine's, which covers `canvas.history` alone) |
  * | `clipboard.cut` / `.copy` / `.paste` / `.delete` | `{ layerId?, clickSelectId? }` | button — over the layer's `GraphClipboard` and the click-selection; undoable |
  * | `layout.activate` | `{ value }` | choice — overrides the engine's so the facade's auto-run is the only run |
  * | `tool.active` | `{ tools?, value }` — the modeller tool = `view.interaction.viewMode` | choice; also a per-tool toggle (active while the mode is `args.value`) |
  * | `tool.nodeKind` | `{ kinds?, value }` — `viewModeArgs.nodeKind`; `kinds` maps key → label | choice, enabled while the tool is `add` |
  *
- * The history / clipboard a command uses is the owning `GraphCanvas`'s, per
- * layer ({@link GraphEditAccess}) — so saved Undo / Cut / Paste controls work on
- * every graph canvas, with no provider mounted.
+ * The clipboard a command uses is the owning `GraphCanvas`'s, per layer
+ * ({@link GraphEditAccess}) — so saved Cut / Paste controls work on every graph
+ * canvas, with no provider mounted. Undo / redo are the engine's
+ * `history.undo` / `history.redo` over `canvas.history`, which every graph
+ * layer's store records into.
  *
  * Names are public API (`namespace.verb`): renaming one breaks saved panels.
  */
@@ -27,22 +28,17 @@
 import type { Canvas, CanvasCommand, CommandArgSpec, CommandOption, CommandRegistry, EngineCommandMap } from '@invana/canvas';
 
 import { GraphClipboard } from '../clipboard/GraphClipboard';
-import type { GraphHistory } from '../history/GraphHistory';
 import type { GraphLayer } from '../layer/GraphLayer';
 import type { EdgePathType } from '../layer/types';
 import {
-  canRedoEither,
-  canUndoEither,
   clearGraphLayer,
   copySelection,
   cutSelection,
   deleteSelection,
   edgePathType,
   pasteAndSelect,
-  redoNewest,
   selectedElementIds,
   setEdgePathType,
-  undoNewest,
 } from './graphActions';
 import { resolveSelectMode, selectModePatch } from './selectMode';
 
@@ -118,19 +114,14 @@ const clickSelection = (canvas: Canvas, args: unknown) =>
   selectedElementIds(canvas, arg<string>(args, 'clickSelectId') ?? 'click-select');
 
 /**
- * The `graph.erase` command body: delete the click-selection (as one
- * transaction, journalled on `history(layerId)` when it returns one), or clear the layer when
- * nothing is selected — through the registry's `graph.clear` (aimed at the
- * same layer), so an undoable override applies. Carries no palette metadata —
- * {@link registerGraphEditCommands} adds it.
+ * The `graph.erase` command body: delete the click-selection (one undoable
+ * entry), or clear the layer when nothing is selected — through the
+ * registry's `graph.clear` (aimed at the same layer), so an override applies.
+ * Carries no palette metadata — {@link registerGraphEditCommands} adds it.
  *
- * @param history        The history to journal on, per layer id.
  * @param defaultLayerId The layer when `args.layerId` is absent. Default `'graph'`.
  */
-export function eraseCommand(
-  history?: (layerId: string) => GraphHistory | null | undefined,
-  defaultLayerId = 'graph',
-): CanvasCommand<Canvas> {
+export function eraseCommand(defaultLayerId = 'graph'): CanvasCommand<Canvas> {
   return {
     label: 'Erase',
     args: selectionArgs(defaultLayerId),
@@ -148,7 +139,7 @@ export function eraseCommand(
         canvas.commands.run('graph.clear', { ...(args && typeof args === 'object' ? args : {}), layerId: layer.id });
         return;
       }
-      new GraphClipboard(layer.store).delete(nodeIds, edgeIds, history?.(layer.id) ?? undefined);
+      new GraphClipboard(layer.store).delete(nodeIds, edgeIds);
     },
   };
 }
@@ -168,8 +159,6 @@ export interface GraphCommandMap {
   'graph.clear': LayerArgs;
   'graph.redraw': LayerArgs;
   'graph.erase': SelectionArgs;
-  'history.undo': LayerArgs;
-  'history.redo': LayerArgs;
   'clipboard.cut': SelectionArgs;
   'clipboard.copy': SelectionArgs;
   'clipboard.paste': SelectionArgs;
@@ -181,17 +170,15 @@ export interface GraphCommandMap {
 
 /**
  * Every command a `GraphCanvas` holds: the engine's, with the graph's
- * overrides (`history.*`, `layout.activate`) replacing theirs.
+ * override (`layout.activate`) replacing its.
  */
 export type GraphCanvasCommandMap = Omit<EngineCommandMap, keyof GraphCommandMap> & GraphCommandMap;
 
 /**
  * How the graph commands reach the per-layer edit state their canvas owns —
- * `GraphCanvas.graphHistory` / `GraphCanvas.clipboard`.
+ * `GraphCanvas.clipboard`.
  */
 export interface GraphEditAccess {
-  /** The `GraphHistory` over graph layer `layerId`'s store, or `null` (none, or history turned off). */
-  history(layerId: string): GraphHistory | null;
   /** The `GraphClipboard` over graph layer `layerId`'s store, or `null`. */
   clipboard(layerId: string): GraphClipboard | null;
 }
@@ -200,9 +187,8 @@ export interface GraphEditAccess {
 const clickSelectIdOf = (args: unknown): string => arg<string>(args, 'clickSelectId') ?? 'click-select';
 
 /**
- * The commands over per-layer history and clipboard: undo / redo across the
- * graph history and `canvas.history`, the clipboard, and the undoable
- * `graph.clear` / `graph.erase` — with their palette metadata. Bodies are the
+ * The commands over the per-layer clipboard, and the undoable `graph.clear` /
+ * `graph.erase` — with their palette metadata. Bodies are the
  * shared `graphActions` functions, the same ones canvas-react's hooks call.
  * Every one honours `args.layerId`, falling back to `defaultLayerId`.
  */
@@ -218,7 +204,7 @@ function editCommands(access: GraphEditAccess, defaultLayerId = 'graph'): EditCo
   const clipboardCommand = (
     label: string,
     when: (canvas: Canvas, args: unknown, clipboard: GraphClipboard) => boolean,
-    run: (canvas: Canvas, clipboard: GraphClipboard, history: GraphHistory | null, clickSelectId: string) => void,
+    run: (canvas: Canvas, clipboard: GraphClipboard, clickSelectId: string) => void,
   ): CanvasCommand<Canvas> => ({
     label,
     args: clipboardArgs,
@@ -228,35 +214,21 @@ function editCommands(access: GraphEditAccess, defaultLayerId = 'graph'): EditCo
     },
     run: (canvas, args) => {
       const clipboard = access.clipboard(layerIdOf(args));
-      if (clipboard) run(canvas, clipboard, access.history(layerIdOf(args)), clickSelectIdOf(args));
+      if (clipboard) run(canvas, clipboard, clickSelectIdOf(args));
     },
   });
   const commands: EditCommands = {
-    // One Undo button, one log: graph and definition edits are entries in
-    // `canvas.history` — `undoNewest` / `redoNewest`. `args.layerId` (default
-    // `defaultLayerId`) only picks the fallback history for a store that is not
-    // on the canvas's log; not described, as a saved Undo is arg-less.
-    'history.undo': {
-      label: 'Undo',
-      isEnabled: (canvas, args) => canUndoEither(canvas, access.history(layerIdOf(args))),
-      run: (canvas, args) => undoNewest(canvas, access.history(layerIdOf(args))),
-    },
-    'history.redo': {
-      label: 'Redo',
-      isEnabled: (canvas, args) => canRedoEither(canvas, access.history(layerIdOf(args))),
-      run: (canvas, args) => redoNewest(canvas, access.history(layerIdOf(args))),
-    },
     'graph.clear': {
       label: 'Clear canvas',
       args: layerArg(defaultLayerId),
       isEnabled: (canvas, args) => graphLayer(canvas, args, defaultLayerId) !== undefined,
-      run: (canvas, args) => clearGraphLayer(canvas, layerIdOf(args), access.history(layerIdOf(args))),
+      run: (canvas, args) => clearGraphLayer(canvas, layerIdOf(args)),
     },
-    'graph.erase': eraseCommand((layerId) => access.history(layerId), defaultLayerId),
-    'clipboard.cut': clipboardCommand('Cut', (c, a) => hasSelection(c, a), (c, cb, h, sel) => cutSelection(c, cb, h, sel)),
-    'clipboard.copy': clipboardCommand('Copy', (c, a) => hasSelection(c, a), (c, cb, _h, sel) => copySelection(c, cb, sel)),
-    'clipboard.paste': clipboardCommand('Paste', (_c, _a, cb) => cb.hasContent, (c, cb, h, sel) => pasteAndSelect(c, cb, h, sel)),
-    'clipboard.delete': clipboardCommand('Delete', (c, a) => hasSelection(c, a), (c, cb, h, sel) => deleteSelection(c, cb, h, sel)),
+    'graph.erase': eraseCommand(defaultLayerId),
+    'clipboard.cut': clipboardCommand('Cut', (c, a) => hasSelection(c, a), (c, cb, sel) => cutSelection(c, cb, sel)),
+    'clipboard.copy': clipboardCommand('Copy', (c, a) => hasSelection(c, a), (c, cb, sel) => copySelection(c, cb, sel)),
+    'clipboard.paste': clipboardCommand('Paste', (_c, _a, cb) => cb.hasContent, (c, cb, sel) => pasteAndSelect(c, cb, sel)),
+    'clipboard.delete': clipboardCommand('Delete', (c, a) => hasSelection(c, a), (c, cb, sel) => deleteSelection(c, cb, sel)),
   };
   for (const name of Object.keys(commands) as EditCommandName[]) commands[name] = { ...GRAPH_META[name], ...commands[name] } as never;
   return commands;
@@ -268,17 +240,15 @@ const selectModes = (args: unknown) => arg<Record<string, string>>(args, 'modes'
 type StatelessGraphCommands = {
   [K in Exclude<keyof GraphCommandMap, keyof EditCommands>]: CanvasCommand<Canvas, GraphCommandMap[K]>;
 };
-/** The graph commands over per-layer history / clipboard — see {@link registerGraphEditCommands}. */
+/** The graph commands over the per-layer clipboard — see {@link registerGraphEditCommands}. */
 export type EditCommandName =
-  | 'history.undo'
-  | 'history.redo'
   | 'graph.clear'
   | 'graph.erase'
   | 'clipboard.cut'
   | 'clipboard.copy'
   | 'clipboard.paste'
   | 'clipboard.delete';
-/** The graph commands over the per-layer history / clipboard ({@link editCommands}). */
+/** The graph commands over the per-layer clipboard ({@link editCommands}). */
 type EditCommands = {
   [K in EditCommandName]: CanvasCommand<Canvas, GraphCommandMap[K]>;
 };
@@ -407,8 +377,6 @@ const GRAPH_META: { [K in keyof GraphCommandMap]: Pick<CanvasCommand<Canvas>, 'c
   'graph.clear': { category: 'Edit', keywords: ['empty', 'remove all', 'reset'] },
   'graph.redraw': { category: 'View', keywords: ['refresh', 'repaint'] },
   'graph.erase': { category: 'Edit', keywords: ['delete', 'remove'] },
-  'history.undo': { category: 'Edit', keywords: ['revert', 'back'] },
-  'history.redo': { category: 'Edit', keywords: ['again', 'forward'] },
   'clipboard.cut': { category: 'Edit' },
   'clipboard.copy': { category: 'Edit', keywords: ['duplicate'] },
   'clipboard.paste': { category: 'Edit', keywords: ['insert'] },
@@ -420,7 +388,7 @@ const GRAPH_META: { [K in keyof GraphCommandMap]: Pick<CanvasCommand<Canvas>, 'c
 
 /**
  * Register every graph command on `registry` (overriding same-named engine
- * built-ins), with the history / clipboard commands over `access`.
+ * built-ins), with the clipboard commands over `access`.
  */
 export function registerGraphCommands(registry: CommandRegistry<Canvas>, access: GraphEditAccess): void {
   for (const [name, command] of Object.entries(GRAPH_COMMANDS)) {
@@ -438,11 +406,10 @@ export interface RegisterGraphEditCommandsOptions {
 }
 
 /**
- * Register the history / clipboard commands (`history.*`, `clipboard.*`,
- * `graph.clear`, `graph.erase`) over `access`, with the same args, bodies and
- * palette metadata `GraphCanvas` registers — so an override (canvas-react's
- * `GraphHistoryProvider` / `GraphClipboardProvider`) can't drift from the
- * built-ins. Each honours `args.layerId`, falling back to `opts.layerId`; an
+ * Register the clipboard commands (`clipboard.*`, `graph.clear`,
+ * `graph.erase`) over `access`, with the same args, bodies and palette
+ * metadata `GraphCanvas` registers — so an override (canvas-react's
+ * `GraphClipboardProvider`) can't drift from the built-ins. Each honours `args.layerId`, falling back to `opts.layerId`; an
  * override covering one layer delegates the others through `access`.
  *
  * Registrations stack over same-named ones. Returns a disposer that removes

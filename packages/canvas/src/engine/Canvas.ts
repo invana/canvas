@@ -62,7 +62,7 @@ import { BehaviourRegistry } from '@invana/canvas-core';
 import { LayoutRegistry } from '@invana/canvas-core';
 import { CommandRegistry } from '@invana/canvas-core';
 import { registerBuiltinCommands, type EngineCommandMap } from './builtinCommands';
-import { canvasPlaybookEnv } from './playbook';
+import { canvasPlaybookEnv, describeViewParts } from './playbook';
 import type { CanvasContext, LayoutRunOptions } from '@invana/canvas-core';
 import type { ISurface } from '@invana/canvas-core';
 import { Tween, resolveEasing, type EasingName } from '@invana/canvas-core';
@@ -448,7 +448,9 @@ export class Canvas {
       // Live editors write per keystroke / drag frame: one step per burst.
       mergeWithinMs: EDIT_MERGE_MS,
     });
-    this.history = historyView(this.log);
+    this.history = historyView(this.log, {
+      describeView: (parts) => describeViewParts(this.store.view.getState(), parts),
+    });
     this.playbook = createPlaybook<CanvasConfig>(
       this.log,
       canvasPlaybookEnv(this, this.log, () => this._whenSettled()),

@@ -12,15 +12,15 @@
  *   `export-state` and `export-image` widgets.
  * - **Bottom-right** — `ZOOM_CONTROL_ITEMS` and the `minimap-toggle` widget.
  *
- * Undo / redo and the clipboard commands exist only while
- * `<GraphHistoryProvider>` / `<GraphClipboardProvider>` are mounted, so they wrap
- * the panels here (inside the canvas, after the bundle's graph layer). Select a
+ * Undo / redo are the canvas's own history. The clipboard commands come from
+ * `<GraphClipboardProvider>`, which wraps the panels here (inside the canvas,
+ * after the bundle's graph layer). Select a
  * node and delete it, then undo. Or save the state, reload it, and the panels
  * come back with it.
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ControlPanel, ElkLayout, GraphClipboardProvider, GraphHistoryProvider } from '@invana/canvas-react';
+import { ControlPanel, ElkLayout, GraphClipboardProvider } from '@invana/canvas-react';
 import {
   EDIT_CONTROL_ITEMS,
   GRAPH_CONTROL_ITEMS,
@@ -42,26 +42,24 @@ export const ControlPanelsStory: Story = {
       {/* A second registered layout, so the layout picker has a choice. */}
       <ElkLayout id="layered" targetLayerId="graph" fitPadding={null} />
 
-      <GraphHistoryProvider>
-        <GraphClipboardProvider>
-          <ControlPanel id="graph-controls" position="top" items={GRAPH_CONTROL_ITEMS} />
-          <ControlPanel
-            id="edit"
-            position="left"
-            items={[
-              ...EDIT_CONTROL_ITEMS,
-              { type: 'divider' },
-              { type: 'widget', widget: 'export-state', options: { filename: 'control-panels' } },
-              { type: 'widget', widget: 'export-image', options: { filename: 'control-panels' } }
-            ]}
-          />
-          <ControlPanel
-            id="view"
-            position="bottom-right"
-            items={[...ZOOM_CONTROL_ITEMS, { type: 'divider' }, { type: 'widget', widget: 'minimap-toggle', options: { defaultOn: false } }]}
-          />
-        </GraphClipboardProvider>
-      </GraphHistoryProvider>
+      <GraphClipboardProvider>
+        <ControlPanel id="graph-controls" position="top" items={GRAPH_CONTROL_ITEMS} />
+        <ControlPanel
+          id="edit"
+          position="left"
+          items={[
+            ...EDIT_CONTROL_ITEMS,
+            { type: 'divider' },
+            { type: 'widget', widget: 'export-state', options: { filename: 'control-panels' } },
+            { type: 'widget', widget: 'export-image', options: { filename: 'control-panels' } }
+          ]}
+        />
+        <ControlPanel
+          id="view"
+          position="bottom-right"
+          items={[...ZOOM_CONTROL_ITEMS, { type: 'divider' }, { type: 'widget', widget: 'minimap-toggle', options: { defaultOn: false } }]}
+        />
+      </GraphClipboardProvider>
     </GraphCanvasApp>
   )
 };

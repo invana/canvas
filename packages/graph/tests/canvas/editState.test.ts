@@ -1,16 +1,20 @@
 /**
- * `GraphCanvas` owns a `GraphHistory` + `GraphClipboard` per `GraphLayer`, so the
- * `history.*` / `clipboard.*` / undoable `graph.clear` / `graph.erase` commands
- * work with no React provider mounted (phase C of
- * rfc:feat-2026-09-29-commands-stop-at-saved-control-panels).
+ * Graph edits undo through the canvas's one log with no provider mounted:
+ * every `GraphLayer` journals its node drags into `canvas.history`, and
+ * `GraphCanvas` owns a `GraphClipboard` per layer, so the `history.*` /
+ * `clipboard.*` / undoable `graph.clear` / `graph.erase` commands work
+ * (phase C of rfc:feat-2026-09-29-commands-stop-at-saved-control-panels; the
+ * `GraphHistory` handle was removed by
+ * rfc:feat-2026-09-28-an-analysis-cannot-be-recorded-or-replayed).
  *
  * Headless: `Canvas.initWithRenderer` with the shipped `HeadlessRenderer`.
  */
 import { beforeAll, describe, expect, it, vi } from 'vitest';
-import { HeadlessRenderer } from '@invana/canvas';
+import { Canvas, HeadlessRenderer } from '@invana/canvas';
 import { GraphCanvas, type GraphCanvasOptions } from '../../src/canvas/GraphCanvas';
 import { GraphLayer } from '../../src/layer/GraphLayer';
 import { ClickSelectBehaviour } from '../../src/behaviours/ClickSelectBehaviour';
+import { DragNodeBehaviour } from '../../src/behaviours/DragNodeBehaviour';
 
 beforeAll(() => {
   const g = globalThis as Record<string, unknown>;
@@ -49,27 +53,63 @@ function drag(layer: GraphLayer, id: string, to: { x: number; y: number }): void
 }
 
 describe('GraphCanvas edit state', () => {
-  it('every GraphLayer gets a history + clipboard, and the commands are registered with no provider', () => {
+  it('every GraphLayer gets a clipboard, and the history / clipboard commands are registered with no provider', () => {
     const { canvas } = makeCanvas();
-    expect(canvas.graphHistory()).not.toBeNull();
     expect(canvas.clipboard()).not.toBeNull();
-    expect(canvas.graphHistory('missing')).toBeNull();
+    expect(canvas.clipboard('missing')).toBeNull();
     for (const name of ['history.undo', 'history.redo', 'clipboard.cut', 'clipboard.copy', 'clipboard.paste', 'clipboard.delete']) {
       expect(canvas.commands.has(name), name).toBe(true);
     }
     canvas.destroy();
   });
 
-  it('a drag is one undoable entry, and history.undo reverts it', () => {
+  it('a drag is one undoable "move" entry, and history.undo reverts it', () => {
     const { canvas, layer } = makeCanvas();
     expect(canvas.commands.isEnabled('history.undo')).toBe(false);
     drag(layer, 'a', { x: 100, y: 100 });
-    expect(canvas.graphHistory()!.peekUndo()?.label).toBe('move');
+    expect(canvas.history.peekUndo()?.title).toBe('move');
     expect(canvas.commands.isEnabled('history.undo')).toBe(true);
     canvas.commands.run('history.undo');
     expect(layer.store.getPosition('a')).toEqual({ x: 0, y: 0 });
     canvas.commands.run('history.redo');
     expect(layer.store.getPosition('a')).toEqual({ x: 100, y: 100 });
+    canvas.destroy();
+  });
+
+  it('a plain Canvas journals drags too — the layer does it, not the canvas', () => {
+    const canvas = new Canvas();
+    canvas.initWithRenderer(new HeadlessRenderer(), 800, 600);
+    const layer = new GraphLayer({ id: 'graph', options: {} });
+    canvas.layers.add(layer);
+    canvas.layers.mountAll();
+    layer.store.addNode({ id: 'a', type: 'node', position: { x: 0, y: 0 } });
+    canvas.history.clear();
+    drag(layer, 'a', { x: 7, y: 8 });
+    canvas.history.undo();
+    expect(layer.store.getPosition('a')).toEqual({ x: 0, y: 0 });
+    canvas.destroy();
+  });
+
+  it('F26: a drag with pin-on-release is one entry — undo takes back the move and the pin together', () => {
+    const { canvas, layer } = makeCanvas();
+    const g = globalThis as Record<string, unknown>;
+    g['window'] ??= { addEventListener: () => {}, removeEventListener: () => {} };
+    const dragger = new DragNodeBehaviour({ id: 'drag', targetLayerId: 'graph', enabled: true, pinOnRelease: true });
+    canvas.behaviours.register(dragger);
+    // The gesture's middle, as `onWindowPointerMove` leaves it; then release.
+    layer.events.emit('node:drag-start', { nodeId: 'a', nodeIds: ['a'] });
+    layer.store.setPosition('a', { x: 30, y: 40 });
+    (dragger as unknown as { state: unknown }).state = {
+      primaryId: 'a', ids: ['a'], pointerWorldStart: { x: 0, y: 0 }, moveIds: ['a'], starts: new Map(), moved: true,
+    };
+    (dragger as unknown as { endDrag(): void }).endDrag();
+
+    expect(layer.store.getNode('a')?.pinned).toBe(true);
+    expect(canvas.history.entries()).toHaveLength(1);
+    expect(canvas.history.peekUndo()?.title).toBe('move');
+    canvas.history.undo();
+    expect(layer.store.getNode('a')?.pinned).toBeFalsy();
+    expect(layer.store.getPosition('a')).toEqual({ x: 0, y: 0 });
     canvas.destroy();
   });
 
@@ -113,7 +153,7 @@ describe('GraphCanvas edit state', () => {
     canvas.destroy();
   });
 
-  it('each layer has its own history handle, all on the one log: Undo takes the newest change, whatever its layer', () => {
+  it('one log across layers: Undo takes the newest change, whatever its layer', () => {
     const { canvas, layer } = makeCanvas();
     const other = new GraphLayer({ id: 'g2', options: {} });
     canvas.layers.add(other);
@@ -121,57 +161,38 @@ describe('GraphCanvas edit state', () => {
     other.store.addNode({ id: 'x', type: 'node', position: { x: 0, y: 0 } });
     canvas.history.clear();
 
-    expect(canvas.graphHistory('g2')).not.toBe(canvas.graphHistory('graph'));
     drag(layer, 'a', { x: 5, y: 5 });
     drag(other, 'x', { x: 9, y: 9 });
-    // Both handles read the same log (RFC D-1: one undo order).
-    expect(canvas.graphHistory('graph')!.canUndo).toBe(true);
-    expect(canvas.graphHistory('g2')!.canUndo).toBe(true);
-    // The default (`'graph'`) Undo reverts g2's drag — it is the newest change.
     canvas.commands.run('history.undo');
     expect(other.store.getPosition('x')).toEqual({ x: 0, y: 0 });
     expect(layer.store.getPosition('a')).toEqual({ x: 5, y: 5 });
-    canvas.commands.run('history.undo', { layerId: 'g2' });
+    canvas.commands.run('history.undo');
     expect(layer.store.getPosition('a')).toEqual({ x: 0, y: 0 });
     canvas.destroy();
   });
 
-  it('removing a layer disposes its edit state; re-adding gets a fresh one', () => {
+  it('removing a layer disposes its clipboard and stops its drag journal; re-adding gets fresh ones', () => {
     const { canvas } = makeCanvas();
     const other = new GraphLayer({ id: 'g2', options: {} });
     canvas.layers.add(other);
     canvas.layers.mountAll();
-    const first = canvas.graphHistory('g2');
+    const first = canvas.clipboard('g2');
     other.store.addNode({ id: 'x', type: 'node', position: { x: 0, y: 0 } });
     canvas.history.clear();
     canvas.layers.remove('g2');
-    expect(canvas.graphHistory('g2')).toBeNull();
     expect(canvas.clipboard('g2')).toBeNull();
-    // The removed layer's drags no longer reach the old history.
     drag(other, 'x', { x: 5, y: 5 });
-    expect(first!.canUndo).toBe(false);
+    expect(canvas.history.canUndo()).toBe(false);
 
     const again = new GraphLayer({ id: 'g2', options: {} });
     canvas.layers.add(again);
-    expect(canvas.graphHistory('g2')).not.toBeNull();
-    expect(canvas.graphHistory('g2')).not.toBe(first);
+    expect(canvas.clipboard('g2')).not.toBeNull();
+    expect(canvas.clipboard('g2')).not.toBe(first);
     canvas.destroy();
   });
 
-  it('`history: false` opts out: no graph history, no drag capture; Undo covers canvas.history alone', () => {
-    const { canvas, layer } = makeCanvas({ history: false });
-    expect(canvas.graphHistory()).toBeNull();
-    expect(canvas.clipboard()).not.toBeNull();
-    drag(layer, 'a', { x: 100, y: 100 });
-    expect(canvas.commands.isEnabled('history.undo')).toBe(false);
-    canvas.commands.run('graph.clear');
-    expect(layer.store.nodeCount()).toBe(0);
-    canvas.destroy();
-  });
-
-  it('`history.limit` is ignored (the log has no limit); `clipboard.pasteOffset` reaches every layer', () => {
-    const { canvas } = makeCanvas({ history: { limit: 3 }, clipboard: { pasteOffset: { x: 5, y: 7 } } });
-    expect(canvas.graphHistory()!.maxDepth).toBe(Infinity);
+  it('`clipboard.pasteOffset` reaches every layer', () => {
+    const { canvas } = makeCanvas({ clipboard: { pasteOffset: { x: 5, y: 7 } } });
     expect(canvas.clipboard()!.offset).toEqual({ x: 5, y: 7 });
     canvas.destroy();
   });

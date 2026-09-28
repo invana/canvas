@@ -6,15 +6,15 @@
  * `useClipboard` hook reads them off a `ClickSelectBehaviour`). This keeps the
  * clipboard decoupled from the selection mechanism and trivially testable.
  *
- * cut / paste / delete each run as a single undoable {@link GraphHistory}
- * transaction when a history instance is supplied; otherwise they fall back to a
- * plain {@link GraphStore.batch} (one flush, not undoable).
+ * cut / paste / delete each write one labelled `applyDelta` — one flush and,
+ * once the store is on a canvas, one undoable `canvas.history` entry
+ * (`'cut'`, `'delete'`, `'paste'`).
  *
  * @example
  * ```ts
  * const clipboard = new GraphClipboard(layer.store);
  * clipboard.copy(selectedNodeIds, selectedEdgeIds);
- * const { nodeIds } = clipboard.paste(history); // offset + re-id'd
+ * const { nodeIds } = clipboard.paste(); // offset + re-id'd
  * clickSelect.selectMultiple(nodeIds.map((id) => ({ id })));
  * ```
  */
@@ -23,7 +23,6 @@ import { EventEmitter } from '@invana/canvas';
 
 import type { GraphStore } from '../store';
 import type { GraphEdge, GraphNode, Vec2 } from '../store';
-import type { GraphHistory, HistoryRecorder } from '../history';
 
 const DEFAULT_OFFSET: Vec2 = { x: 24, y: 24 };
 
@@ -115,26 +114,26 @@ export class GraphClipboard {
     this.events.emit('change', { hasContent: this.hasContent });
   }
 
-  /** Copy the ids into the buffer, then delete them as one undoable transaction. */
-  cut(nodeIds: readonly string[], edgeIds: readonly string[], history?: GraphHistory): void {
+  /** Copy the ids into the buffer, then delete them as one undoable entry. */
+  cut(nodeIds: readonly string[], edgeIds: readonly string[]): void {
     this.copy(nodeIds, edgeIds);
-    this.removeAsTransaction('cut', nodeIds, edgeIds, history);
+    this.remove('cut', nodeIds, edgeIds);
   }
 
-  /** Delete the given ids as one undoable transaction. Buffer is left untouched. */
-  delete(nodeIds: readonly string[], edgeIds: readonly string[], history?: GraphHistory): void {
-    this.removeAsTransaction('delete', nodeIds, edgeIds, history);
+  /** Delete the given ids as one undoable entry. Buffer is left untouched. */
+  delete(nodeIds: readonly string[], edgeIds: readonly string[]): void {
+    this.remove('delete', nodeIds, edgeIds);
   }
 
   /**
    * Insert the buffer with fresh ids (collision-free) and a position offset, as
-   * one undoable transaction. Only buffered edges whose **both** endpoints were
+   * one undoable entry. Only buffered edges whose **both** endpoints were
    * also buffered are pasted, with endpoints remapped to the new node ids.
    * `parentId` is remapped when the parent was pasted too, else dropped.
    *
    * Returns the new ids so the caller can re-select the pasted items.
    */
-  paste(history?: GraphHistory): PasteResult {
+  paste(): PasteResult {
     if (!this.hasContent) return { nodeIds: [], edgeIds: [] };
 
     // Build the id remap up front so edge endpoints can be resolved.
@@ -168,31 +167,15 @@ export class GraphClipboard {
       newEdges.push({ ...edge, id: this.freshId(edge.id, taken), source, target });
     }
 
-    const apply = (rec: HistoryRecorder): PasteResult => {
-      for (const node of newNodes) rec.addNode(node);
-      for (const edge of newEdges) rec.addEdge(edge);
-      return { nodeIds: newNodes.map((n) => n.id), edgeIds: newEdges.map((e) => e.id) };
-    };
-
-    if (history) return history.transaction('paste', apply);
-    return this.store.batch(() => apply(this.plainRecorder()));
+    this.store.applyDelta({ added: { nodes: newNodes, edges: newEdges } }, { title: 'paste' });
+    return { nodeIds: newNodes.map((n) => n.id), edgeIds: newEdges.map((e) => e.id) };
   }
 
   // ─── Internals ────────────────────────────────────────────────────────────
 
-  /** Remove explicit edges first, then nodes (cascade), mirroring `applyDelta`. */
-  private removeAsTransaction(
-    label: string,
-    nodeIds: readonly string[],
-    edgeIds: readonly string[],
-    history?: GraphHistory,
-  ): void {
-    const run = (rec: HistoryRecorder): void => {
-      for (const id of edgeIds) if (this.store.hasEdge(id)) rec.removeEdge(id);
-      for (const id of nodeIds) if (this.store.hasNode(id)) rec.removeNode(id);
-    };
-    if (history) history.transaction(label, run);
-    else this.store.batch(() => run(this.plainRecorder()));
+  /** Remove explicit edges first, then nodes (cascading) — `applyDelta`'s order — as one labelled entry. */
+  private remove(title: string, nodeIds: readonly string[], edgeIds: readonly string[]): void {
+    this.store.applyDelta({ removed: { nodeIds, edgeIds } }, { title });
   }
 
   /** Pick the first remapped id that is neither already in the store nor reserved. */
@@ -205,21 +188,5 @@ export class GraphClipboard {
     }
     taken.add(candidate);
     return candidate;
-  }
-
-  /**
-   * A recorder that mutates the store directly without journaling — used when no
-   * {@link GraphHistory} is supplied so paste/cut/delete still run as one batch.
-   */
-  private plainRecorder(): HistoryRecorder {
-    return {
-      addNode: (node) => this.store.addNode(node),
-      removeNode: (id) => this.store.removeNode(id, { cascade: true }),
-      updateNode: (id, patch) => this.store.updateNode(id, patch),
-      moveNode: (id, position) => this.store.setPosition(id, position),
-      addEdge: (edge) => this.store.addEdge(edge),
-      removeEdge: (id) => this.store.removeEdge(id),
-      updateEdge: (id, patch) => this.store.updateEdge(id, patch),
-    };
   }
 }

@@ -1,14 +1,12 @@
 import { useCallback, useContext, useSyncExternalStore } from 'react';
 import type { Canvas } from '@invana/canvas';
-import type { GraphClipboard, GraphEditAccess, GraphHistory } from '@invana/graph';
+import type { GraphClipboard, GraphEditAccess } from '@invana/graph';
 
 import { ClipboardContext } from '../ClipboardContext';
-import { HistoryContext } from '../HistoryContext';
 import { useResolvedCanvas } from './useResolvedCanvas';
 
 /** A canvas that owns per-layer edit state — `GraphCanvas`, structurally. */
 interface EditStateOwner {
-  graphHistory(layerId?: string): GraphHistory | null;
   clipboard(layerId?: string): GraphClipboard | null;
 }
 
@@ -19,25 +17,24 @@ interface EditStateOwner {
  */
 function editStateOwner(canvas: Canvas): EditStateOwner | null {
   const c = canvas as Partial<EditStateOwner>;
-  return typeof c.graphHistory === 'function' && typeof c.clipboard === 'function' ? (c as EditStateOwner) : null;
+  return typeof c.clipboard === 'function' ? (c as EditStateOwner) : null;
 }
 
 /**
  * The edit access a provider registers its commands over: layer `layerId`
- * answers with the provider's own history / clipboard (read live, so a rebuilt
- * instance is seen), every other layer with the `GraphCanvas`'s own — `null`
- * on a plain `Canvas`. So a provider's override covers its layer and leaves the
- * canvas's behaviour for the rest. Internal to the providers.
+ * answers with the provider's own clipboard (read live, so a rebuilt instance
+ * is seen), every other layer with the `GraphCanvas`'s own — `null` on a plain
+ * `Canvas`. So a provider's override covers its layer and leaves the canvas's
+ * behaviour for the rest. Internal to the providers.
  */
 export function providerEditAccess(
   canvas: Canvas,
   layerId: string,
-  own: { history?: () => GraphHistory | null; clipboard?: () => GraphClipboard | null },
+  own: () => GraphClipboard | null,
 ): GraphEditAccess {
   const owner = editStateOwner(canvas);
   return {
-    history: (id) => (id === layerId && own.history ? own.history() : (owner?.graphHistory(id) ?? null)),
-    clipboard: (id) => (id === layerId && own.clipboard ? own.clipboard() : (owner?.clipboard(id) ?? null)),
+    clipboard: (id) => (id === layerId ? own() : (owner?.clipboard(id) ?? null)),
   };
 }
 
@@ -64,33 +61,10 @@ function useOwnedEditState<T>(canvas: Canvas | null, read: (owner: EditStateOwne
   return useSyncExternalStore(subscribe, get, get);
 }
 
-/**
- * The `GraphHistory` that the `GraphCanvas` itself owns for graph layer
- * `layerId` — ignoring any provider — or `null` (a plain `Canvas`, no such
- * layer, or a canvas built with `history: false`). Providers use it to bridge
- * the canvas's instance into {@link HistoryContext}.
- */
-export function useCanvasGraphHistory(canvas: Canvas | null, layerId = 'graph'): GraphHistory | null {
-  const read = useCallback((owner: EditStateOwner) => owner.graphHistory(layerId), [layerId]);
-  return useOwnedEditState(canvas, read);
-}
-
 /** The `GraphClipboard` the `GraphCanvas` itself owns for graph layer `layerId`, or `null`. */
 export function useCanvasGraphClipboard(canvas: Canvas | null, layerId = 'graph'): GraphClipboard | null {
   const read = useCallback((owner: EditStateOwner) => owner.clipboard(layerId), [layerId]);
   return useOwnedEditState(canvas, read);
-}
-
-/**
- * The `GraphHistory` graph edits journal on: a `<GraphHistoryProvider>`
- * ancestor's, else the one the `GraphCanvas` owns for `layerId` (default
- * `'graph'`) — so undo works on any graph canvas, with or without a provider.
- * `null` on a plain `Canvas` with no provider, or with `history: false`.
- */
-export function useGraphHistory(layerId = 'graph', canvas?: Canvas | null): GraphHistory | null {
-  const fromProvider = useContext(HistoryContext);
-  const owned = useCanvasGraphHistory(useResolvedCanvas(canvas), layerId);
-  return fromProvider ?? owned;
 }
 
 /**

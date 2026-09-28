@@ -286,3 +286,86 @@ describe('createOperationLog — actor, groups, branches, limits', () => {
     expect(view.getState().definition.size).toBe(1);
   });
 });
+
+describe('createOperationLog — streamed writes (F15, G12)', () => {
+  /** The toy source, plus a `compact` that cancels an add and a later remove of one id. */
+  function streaming() {
+    const ctx = setup();
+    type Op = { add?: string; remove?: string };
+    ctx.src.adapter.compact = (ops) => {
+      const list = ops as Op[];
+      const out: Op[] = [];
+      for (const op of list) {
+        const i = op.remove !== undefined ? out.findIndex((o) => o.add === op.remove) : -1;
+        if (i >= 0) out.splice(i, 1);
+        else out.push(op);
+      }
+      return out;
+    };
+    const feed = (op: Op, actor = 'feed') => {
+      if (op.add) ctx.src.ids.add(op.add);
+      if (op.remove) ctx.src.ids.delete(op.remove);
+      ctx.log.recordData('data', [op], actor, { coalesce: true });
+    };
+    return { ...ctx, feed };
+  }
+
+  it('V13: one open entry per actor; an add then a remove cancel; plain undo skips it', () => {
+    const { log, src, feed, addId } = streaming();
+    addId('mine');
+    feed({ add: 'x' });
+    feed({ add: 'y' });
+    feed({ remove: 'x' });
+    const entries = log.entries();
+    expect(entries).toHaveLength(2);
+    expect(entries[1]).toMatchObject({ actor: 'feed', coalesced: true });
+    expect(entries[1]!.parts).toEqual([{ kind: 'data', sourceId: 'data', ops: [{ add: 'y' }] }]);
+    // Plain undo takes back the user's entry, stepping over the feed's.
+    log.undo();
+    expect([...src.ids].sort()).toEqual(['y']);
+    expect(log.canUndo()).toBe(false);
+  });
+
+  it('any other entry, another actor or an undo seals the open entry', () => {
+    const { log, feed, addId } = streaming();
+    feed({ add: 'a' });
+    addId('user-edit');
+    feed({ add: 'b' });
+    feed({ add: 'c' }, 'other-feed');
+    feed({ add: 'd' }, 'other-feed');
+    expect(log.entries().map((e) => e.actor)).toEqual(['feed', 'user', 'feed', 'other-feed']);
+    log.undo();
+    feed({ add: 'e' }, 'other-feed');
+    expect(log.entries().filter((e) => e.coalesced)).toHaveLength(4);
+  });
+
+  it('a merge that cancels everything drops the entry; revertTo still reverts streamed entries', () => {
+    const { log, src, feed } = streaming();
+    feed({ add: 'x' });
+    feed({ remove: 'x' });
+    expect(log.entries()).toHaveLength(0);
+    feed({ add: 'y' });
+    log.revertTo(null);
+    expect([...src.ids]).toEqual([]);
+  });
+
+  it('inside a group a streamed write joins the group (a step seals nothing mid-way)', () => {
+    const { log, feed } = streaming();
+    feed({ add: 'a' });
+    log.group({ title: 'step', stepId: 's' }, () => feed({ add: 'b' }));
+    feed({ add: 'c' });
+    const entries = log.entries();
+    expect(entries.map((e) => e.stepId ?? (e.coalesced ? 'stream' : '?'))).toEqual(['stream', 's', 'stream']);
+  });
+});
+
+describe('createOperationLog — tagStep', () => {
+  it('marks applied entries with a step id and a title where they had none', () => {
+    const { log, addId } = setup();
+    addId('a');
+    log.group({ title: 'kept' }, () => addId('b'));
+    const ids = log.entries().map((e) => e.id);
+    log.tagStep([...ids, 'nope'], { stepId: 's1', title: 'Step' });
+    expect(log.entries({ stepId: 's1' }).map((e) => e.title)).toEqual(['Step', 'kept']);
+  });
+});

@@ -1,8 +1,2 @@
-export { GraphHistory } from './GraphHistory';
-export type {
-  GraphHistoryEventMap,
-  GraphHistoryOptions,
-  HistoryEntry,
-  HistoryOp,
-  HistoryRecorder,
-} from './types';
+export type { HistoryOp } from './types';
+export { cancelOps, opsToDelta } from './netOps';

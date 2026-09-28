@@ -27,7 +27,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Button } from '@invana/ui';
 import {
   createCanvasStore,
-  createHistory,
+  createOperationLog,
+  historyView,
   createCollectorTracer,
   createTapTracer,
   traceActions,
@@ -35,7 +36,7 @@ import {
   type CanvasEvent,
   type CanvasStore,
   type CollectedSpan,
-  type History,
+  type HistoryView,
   type LayerFlush
 } from '@invana/canvas-store';
 import { getCanvasTracer, telemetryInfo } from './otel';
@@ -201,7 +202,7 @@ function Playground(): ReactNode {
   const ref = useRef<{
     store: CanvasStore;
     actions: CanvasActions;
-    history: History;
+    history: HistoryView;
     seq: number;
     spans: CollectedSpan[];
   } | null>(null);
@@ -223,7 +224,7 @@ function Playground(): ReactNode {
     // seed a tiny graph so edges / groups work immediately (they connect existing nodes)
     store.layer('graph').setData({ nodes: [{ id: 'n0' }, { id: 'n1' }, { id: 'n2' }] });
     store.layer('graph').flush();
-    ref.current = { store, actions, history: createHistory(store.view), seq: 3, spans };
+    ref.current = { store, actions, history: historyView(createOperationLog({ view: store.view })), seq: 3, spans };
   }
   const { store, actions: a, history, spans } = ref.current;
   const graph = store.layer('graph');

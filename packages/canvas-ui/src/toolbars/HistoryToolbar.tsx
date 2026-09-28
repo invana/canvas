@@ -22,8 +22,7 @@ export interface HistoryToolbarProps {
 /**
  * History bar — undo / redo (`history.*`) plus an optional redraw button
  * (`graph.redraw`), drawn from control specs like a saved panel. Undo / redo
- * cover graph edits on any `GraphCanvas` (on a plain `Canvas`, under a
- * `<GraphHistoryProvider>`); redraw works regardless.
+ * are `canvas.history` on any canvas — graph and definition edits alike.
  */
 export function HistoryToolbar({
   icons,

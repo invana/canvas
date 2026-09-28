@@ -1,4 +1,4 @@
-import type { CameraIntent, OperationLog, PlaybookEnv, StepSpec } from '@invana/canvas-store';
+import type { CameraIntent, CanvasView, OperationLog, PlaybookEnv, StepSpec, ViewLogPart } from '@invana/canvas-store';
 
 import { findSerialisationViolations } from './assertSerialisable';
 import type { Canvas } from './Canvas';
@@ -125,5 +125,78 @@ export function canvasPlaybookEnv(
       canvas.commands.runAsync(name as never, args as never),
     whenSettled,
     actor: () => canvas.actor,
+  };
+}
+
+/** Definition sections that map 1:1 onto a `canvas.update` key, keyed by instance id. */
+const ID_SECTIONS = new Set(['layers', 'behaviours', 'layouts']);
+/** `definition.canvas` fields that `canvas.update` takes at its top level. */
+const SCENE_KEYS = new Set(['fitOnLoad', 'fitAnimation', 'entrance', 'defaultViewMode']);
+
+/** A JSON copy — definition values are JSON by contract (`assertSerialisable`). */
+const copy = <T>(value: T): T => (value === undefined ? value : (JSON.parse(JSON.stringify(value)) as T));
+
+/**
+ * Summarise recorded view parts as a step's `settings` and `view` — the
+ * engine half of `history.sinceLastStep` (RFC F14). Only the paths the patches
+ * touched are read, and each carries its **current** value, so several edits
+ * to one option merge into its final value.
+ *
+ * - `settings`: `definition.{layers,behaviours,layouts}.<id>[.<key>]`,
+ *   `activeLayout`, `controlPanels.<id>` (a removed panel → `null`) and the
+ *   scene keys `canvas.update` takes (`fitOnLoad`, `fitAnimation`, `entrance`,
+ *   `defaultViewMode`). A removed option can't be written by `canvas.update`
+ *   and is left out; `theme` and `templates` have no `update` key yet.
+ * - `view`: the current selection, focus, inspect and camera intent, for the
+ *   slices the patches touched.
+ */
+export function describeViewParts(
+  state: CanvasView,
+  parts: readonly ViewLogPart[],
+): { settings?: CanvasConfig; view?: StepSpec['view'] } {
+  const def = state.definition as unknown as Record<string, Record<string, unknown>>;
+  const settings: Record<string, unknown> = {};
+  const view: NonNullable<StepSpec['view']> = {};
+  const touched = new Set<string>();
+  for (const part of parts) {
+    for (const patch of part.patches) {
+      const path = patch.path.map(String);
+      const key = path.slice(0, 4).join('/');
+      if (touched.has(key)) continue;
+      touched.add(key);
+      const [root, section, id, field] = path;
+      if (root === 'definition') {
+        if (section === 'activeLayout') settings['activeLayout'] = state.definition.activeLayout;
+        else if (section === 'controlPanels' && id !== undefined) {
+          const panels = (settings['controlPanels'] ??= {}) as Record<string, unknown>;
+          panels[id] = copy(state.definition.controlPanels[id]) ?? null;
+        } else if (section === 'canvas' && id !== undefined && SCENE_KEYS.has(id)) {
+          const value = (state.definition.canvas as unknown as Record<string, unknown>)[id];
+          if (value !== undefined) settings[id] = copy(value);
+        } else if (section !== undefined && ID_SECTIONS.has(section)) {
+          const bag = def[section]!;
+          if (id === undefined) {
+            settings[section] = copy(bag);
+            continue;
+          }
+          const instance = bag[id] as Record<string, unknown> | undefined;
+          const value = field === undefined ? instance : instance?.[field];
+          if (value === undefined) continue;
+          const out = ((settings[section] ??= {}) as Record<string, Record<string, unknown>>);
+          if (field === undefined) out[id] = copy(value) as Record<string, unknown>;
+          else (out[id] ??= {})[field] = copy(value);
+        }
+      } else if (root === 'interaction') {
+        const i = state.interaction;
+        if (section === 'selection') view.select = [...i.selection];
+        else if (section === 'focus') view.focus = i.focus ? { ids: [...i.focus.ids], dim: i.focus.dim } : null;
+        else if (section === 'inspect') view.inspect = i.inspect;
+        else if (section === 'cameraIntent' && i.cameraIntent) view.camera = i.cameraIntent.intent;
+      }
+    }
+  }
+  return {
+    ...(Object.keys(settings).length > 0 ? { settings: settings as CanvasConfig } : {}),
+    ...(Object.keys(view).length > 0 ? { view } : {}),
   };
 }

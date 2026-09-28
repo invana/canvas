@@ -38,7 +38,7 @@ export interface OperationLogOptions<T> {
   actor?: () => string;
   /**
    * Classify each view patch (the forward and the inverse lists are classified
-   * independently, as `createHistory`'s `patchFilter` was). Default: every patch
+   * independently). Default: every patch
    * is `'undoable'`.
    */
   classify?: (patch: Patch, change: StoreChange<T>) => ViewPatchMode;
@@ -48,12 +48,6 @@ export interface OperationLogOptions<T> {
    * writing per keystroke records one step per gesture. Absent / `0` ⇒ never.
    */
   mergeWithinMs?: number;
-  /**
-   * Maximum entries kept; the oldest applied entry drops first. Default: no
-   * limit (the canvas keeps its whole session). Exists for the deprecated
-   * `createHistory` wrapper.
-   */
-  limit?: number;
   /** Clock for {@link LogEntry.at}. Default `performance.now` (or `Date.now`). */
   now?: () => number;
 }
@@ -64,9 +58,12 @@ const defaultNow = (): number =>
 /** What a replay of an entry applies: its undoable parts only, or every part. */
 type ReplayScope = 'undoable' | 'all';
 
-/** Whether plain undo can take `entry` back — it holds a data part or an undoable view part. */
+/**
+ * Whether plain undo can take `entry` back — it holds a data part or an
+ * undoable view part, and is not a streamed entry (G12: undo steps over feeds).
+ */
 function isUndoable(entry: LogEntry): boolean {
-  return entry.parts.some((p) => p.kind === 'data' || p.undoable);
+  return !entry.coalesced && entry.parts.some((p) => p.kind === 'data' || p.undoable);
 }
 
 function stepInfo(entry: LogEntry | undefined): LogStepInfo | undefined {
@@ -84,7 +81,7 @@ function stepInfo(entry: LogEntry | undefined): LogStepInfo | undefined {
  * The canvas's **one operation log** — the record behind `canvas.history`
  * (RFC `feat-2026-09-28-an-analysis-cannot-be-recorded-or-replayed`, G1).
  *
- * It taps the view store's patch + inverse stream (as `createHistory` did) and
+ * It taps the view store's patch + inverse stream and
  * takes data ops from each registered source (`GraphStore.applyDelta`), so one
  * entry can hold both — a change that touches data and view undoes in one call.
  * Every entry carries a free-text `actor`.
@@ -96,8 +93,11 @@ function stepInfo(entry: LogEntry | undefined): LogStepInfo | undefined {
  *   discarding a redo tail — clicking a node after an undo keeps the redo.
  * - **Branches, not discards.** An undoable change after an undo moves the redo
  *   tail to a kept side branch.
- * - **No limit** by default; replays run with recording suspended, so nothing a
+ * - **No limit**; replays run with recording suspended, so nothing a
  *   replay writes is recorded again.
+ * - **Streamed writes merge** (`recordData(…, { coalesce: true })`, G12): one
+ *   open entry per actor, compacted through the source, skipped by plain undo,
+ *   sealed by any other entry.
  *
  * View replays write with the action `undo:<action>` / `redo:<action>`, so a
  * store subscriber can tell a history write from an ordinary one (the engine's
@@ -108,7 +108,6 @@ export function createOperationLog<T>(opts: OperationLogOptions<T> = {}): Operat
   const sessionActor = opts.actor ?? (() => 'user');
   const classify = opts.classify ?? ((): ViewPatchMode => 'undoable');
   const mergeWithinMs = opts.mergeWithinMs ?? 0;
-  const limit = opts.limit ?? Infinity;
   const view = opts.view;
 
   /** Entries `[0, cursor)` are applied; `[cursor, length)` wait to be redone. */
@@ -123,6 +122,12 @@ export function createOperationLog<T>(opts: OperationLogOptions<T> = {}): Operat
   const entryListeners = new Set<(entry: LogEntry) => void>();
   /** The entry a {@link OperationLog.group} is filling, or `null`. */
   let open: LogEntry | null = null;
+  /**
+   * The open **streamed** entry — the newest entry, recorded with
+   * `coalesce`, that the same actor's next streamed write merges into. Any
+   * other entry, an undo / redo / revert / replay or a clear seals it.
+   */
+  let stream: LogEntry | null = null;
   let replaying = false;
   let seq = 0;
 
@@ -150,6 +155,7 @@ export function createOperationLog<T>(opts: OperationLogOptions<T> = {}): Operat
   }
 
   function append(entry: LogEntry): void {
+    stream = null;
     if (isUndoable(entry)) {
       if (cursor < entries.length) branches.push(entries.splice(cursor));
       entries.push(entry);
@@ -158,10 +164,6 @@ export function createOperationLog<T>(opts: OperationLogOptions<T> = {}): Operat
       // Record-only: applied, but it must not cut off what is waiting to be redone.
       entries.splice(cursor, 0, entry);
       cursor++;
-    }
-    while (entries.length > limit && cursor > 0) {
-      entries.shift();
-      cursor--;
     }
     for (const l of [...entryListeners]) l(entry);
     notify();
@@ -177,6 +179,37 @@ export function createOperationLog<T>(opts: OperationLogOptions<T> = {}): Operat
     const entry = newEntry(actor);
     for (const part of parts) pushPart(entry, part);
     append(entry);
+  }
+
+  /**
+   * A streamed write (G12): merge `ops` into the open streamed entry when it
+   * is still the newest and belongs to `actor`, compacting through the
+   * source (an add then a remove cancels); otherwise start a new streamed
+   * entry. A merge that cancels everything drops the entry.
+   */
+  function recordStreamed(sourceId: string, ops: readonly unknown[], actor: string): void {
+    const compact = (list: unknown[]): unknown[] => sources.get(sourceId)?.compact?.(list) ?? list;
+    const top = stream;
+    if (top && top.actor === actor && cursor === entries.length && entries[cursor - 1] === top) {
+      const part = top.parts.find((p): p is DataLogPart => p.kind === 'data' && p.sourceId === sourceId);
+      if (part) part.ops = compact([...part.ops, ...ops]);
+      else top.parts.push({ kind: 'data', sourceId, ops: compact([...ops]) });
+      top.parts = top.parts.filter((p) => p.kind !== 'data' || p.ops.length > 0);
+      if (top.parts.length === 0) {
+        entries.pop();
+        cursor--;
+        stream = null;
+      } else top.at = now();
+      notify();
+      return;
+    }
+    const merged = compact([...ops]);
+    if (merged.length === 0) return;
+    const entry = newEntry(actor);
+    entry.coalesced = true;
+    entry.parts.push({ kind: 'data', sourceId, ops: merged });
+    append(entry);
+    stream = entry;
   }
 
   /** Merge a lone undoable view part into the newest entry when {@link OperationLogOptions.mergeWithinMs} allows. */
@@ -285,10 +318,27 @@ export function createOperationLog<T>(opts: OperationLogOptions<T> = {}): Operat
       return i < cursor ? 'applied' : 'pending';
     },
 
-    recordData(sourceId, ops, actor) {
+    recordData(sourceId, ops, actor, recordOpts) {
       if (replaying || ops.length === 0) return;
+      const who = actor ?? sessionActor();
+      if (recordOpts?.coalesce && !open) {
+        recordStreamed(sourceId, ops, who);
+        return;
+      }
       const part: DataLogPart = { kind: 'data', sourceId, ops: [...ops] };
-      record([part], actor ?? sessionActor());
+      record([part], who);
+    },
+
+    tagStep(entryIds, meta) {
+      const ids = new Set(entryIds);
+      let changed = false;
+      for (const entry of entries.slice(0, cursor)) {
+        if (!ids.has(entry.id)) continue;
+        entry.stepId = meta.stepId;
+        if (meta.title !== undefined && entry.title === undefined) entry.title = meta.title;
+        changed = true;
+      }
+      if (changed) notify();
     },
 
     group(meta, fn) {
@@ -324,6 +374,7 @@ export function createOperationLog<T>(opts: OperationLogOptions<T> = {}): Operat
 
     undo() {
       if (open) return;
+      stream = null;
       const i = undoIndex();
       if (i < 0) return;
       const entry = entries[i]!;
@@ -338,6 +389,7 @@ export function createOperationLog<T>(opts: OperationLogOptions<T> = {}): Operat
 
     redo() {
       if (open || cursor >= entries.length) return;
+      stream = null;
       const entry = entries[cursor]!;
       reapplyEntry(entry);
       cursor++;
@@ -351,6 +403,7 @@ export function createOperationLog<T>(opts: OperationLogOptions<T> = {}): Operat
     peekRedo: () => stepInfo(entries[cursor]),
 
     revertTo(entryId) {
+      stream = null;
       const target = entryId === null ? 0 : indexOf(entryId) + 1;
       if (entryId !== null && target === 0) return;
       if (cursor <= target) return;
@@ -359,6 +412,7 @@ export function createOperationLog<T>(opts: OperationLogOptions<T> = {}): Operat
     },
 
     replayTo(entryId) {
+      stream = null;
       const target = indexOf(entryId) + 1;
       if (target <= cursor) return;
       while (cursor < target) reapplyEntry(entries[cursor++]!);
@@ -388,6 +442,7 @@ export function createOperationLog<T>(opts: OperationLogOptions<T> = {}): Operat
     },
 
     clear() {
+      stream = null;
       if (entries.length === 0 && branches.length === 0) return;
       entries.length = 0;
       branches.length = 0;

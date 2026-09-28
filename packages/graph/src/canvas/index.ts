@@ -4,7 +4,7 @@
  * (`CanvasConfig`).
  */
 
-export { GraphCanvas, captureNodeDrags } from './GraphCanvas';
+export { GraphCanvas } from './GraphCanvas';
 export type { GraphCanvasOptions } from './GraphCanvas';
 export { DEFAULT_EDGE_TYPES, DEFAULT_EDGE_TYPE_LABELS, eraseCommand, registerGraphEditCommands } from './graphCommands';
 export type {
@@ -22,10 +22,6 @@ export {
   cutSelection,
   deleteSelection,
   pasteAndSelect,
-  undoNewest,
-  redoNewest,
-  canUndoEither,
-  canRedoEither,
   edgePathType,
   setEdgePathType,
 } from './graphActions';

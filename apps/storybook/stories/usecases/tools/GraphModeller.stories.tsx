@@ -31,22 +31,17 @@
  * already lifts the `CanvasContext` / `GraphCanvasContext` for us (fed by its own
  * ready-bridge), so the footer status bar resolves the live engine for free. The
  * header's `ModellerToolbar` and the in-canvas drawing behaviours additionally
- * need the **same** `GraphToolProvider` (active tool + node shape) and the same
- * undo history — so this story passes the app a `wrap` that adds a
- * `GraphToolProvider` and a lifted `HistoryContext` *above* the whole app.
- *
- * The actual `GraphHistoryProvider` stays **inside** `<Canvas>` (an app child) so
- * it resolves a live engine + store; `<HistoryBridge>` lifts that history up into
- * the `wrap`'s `HistoryContext` so the header toolbar's Undo / Redo drive the same
- * instance the in-canvas behaviours journal into. `useDrawHistory` reads history
- * through a ref, so the drawing behaviours — which mount before the engine is
- * published — still journal correctly.
+ * need the **same** `GraphToolProvider` (active tool + node shape) — so this
+ * story passes the app a `wrap` that adds a `GraphToolProvider` *above* the
+ * whole app. Undo / Redo need no wiring: every edit (drawing, context menu,
+ * inspector) is recorded by the graph store into `canvas.history`, which the
+ * header toolbar's `history.*` controls drive.
  */
 
-import { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Circle, Square, Diamond, Sun, Moon } from 'lucide-react';
-import { BackgroundLayer, GraphLayer, DragPanBehaviour, WheelZoomBehaviour, DragNodeBehaviour, ClickSelectBehaviour, ClickInspectBehaviour, CreateNodeBehaviour, DrawEdgeBehaviour, EraseBehaviour, ParallelEdgeBehaviour, GraphHistoryProvider, GraphToolProvider, HistoryContext, useGraphCanvas, useGraphCanvasUpdate, useTool, useDrawHistory, useFitContent, useClearGraph } from '@invana/canvas-react';
+import { BackgroundLayer, GraphLayer, DragPanBehaviour, WheelZoomBehaviour, DragNodeBehaviour, ClickSelectBehaviour, ClickInspectBehaviour, CreateNodeBehaviour, DrawEdgeBehaviour, EraseBehaviour, ParallelEdgeBehaviour, GraphToolProvider, useGraphCanvas, useGraphCanvasUpdate, useTool, useFitContent, useClearGraph } from '@invana/canvas-react';
 import { CanvasMessageBar, GraphNodeContextMenu, GraphEdgeContextMenu, GraphBackgroundContextMenu, GraphCanvasApp, ModellerToolbar, InspectorPanel, GraphStatusBar, ToolbarItems } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas-react';
 import type { GraphCanvasAppControlContext, GraphNodeMenuContext, GraphEdgeMenuContext, GraphBackgroundMenuContext, ToolbarItem } from '@invana/canvas-ui';
@@ -54,7 +49,6 @@ import type { MenuItem } from '@invana/ui';
 import type {
   GraphData,
   GraphEdge,
-  GraphHistory,
   NodeShapeOptions
 } from '@invana/graph';
 import type * as graph from '@invana/graph';
@@ -160,27 +154,10 @@ function ThemeSync() {
 }
 
 /**
- * Lifts the `GraphHistory` built by the in-`<Canvas>` `<GraphHistoryProvider>`
- * up to the shell, so the header `ModellerToolbar`'s Undo / Redo — a sibling of
- * `<Canvas>`, outside that provider — drives the **same** history the in-canvas
- * drawing behaviours journal into. The `GraphHistoryProvider` stays inside
- * `<Canvas>` (so it resolves a live engine + store); this bridge is the history
- * counterpart of {@link CanvasBridge}.
- */
-function HistoryBridge({ onReady }: { onReady: (history: GraphHistory | null) => void }) {
-  const history = useContext(HistoryContext);
-  useEffect(() => {
-    onReady(history);
-    return () => onReady(null);
-  }, [history, onReady]);
-  return null;
-}
-
-/**
  * The drawing toolbar that fills the shell header. `ModellerToolbar` in `bare`
  * mode renders its `Nav*` only (no `<Panel>`). It self-wires from the lifted
- * `GraphToolProvider` (active tool + node shape) and `GraphHistoryProvider`
- * (undo / redo / erase) — both ancestors of the whole shell — so it stays in
+ * `GraphToolProvider` (active tool + node shape) — an ancestor of the whole
+ * shell — and the canvas's commands (undo / redo / erase), so it stays in
  * lockstep with the in-canvas drawing behaviours.
  */
 function HeaderToolbar() {
@@ -213,21 +190,16 @@ function HeaderThemeToggle({ ctx }: { ctx: GraphCanvasAppControlContext }) {
 /**
  * The drawing behaviours + inspector + right-click context menus. Lives inside
  * `<Canvas>` (so the behaviours register on the engine) and inside the lifted
- * providers, so it can read the active tool (`useTool`) and journal gestures
- * (`useDrawHistory` / `useClearGraph`). Each behaviour's `enabled` is gated on
+ * providers, so it can read the active tool (`useTool`). Every edit is recorded
+ * by the graph store, so each is one undoable step. Each behaviour's `enabled` is gated on
  * the active tool — only one is live at a time. The toolbar itself lives in the
  * header; the per-tool hint is pushed to the footer message channel from here.
  */
 function DrawingTools() {
   const canvas = useGraphCanvas();
   const { tool, nodeKind, setTool } = useTool();
-  const draw = useDrawHistory();
   const { fitContent } = useFitContent('graph');
   const { clear } = useClearGraph('graph');
-  // Raw history instance (from the lifted `<GraphHistoryProvider>`) — context-menu
-  // edits run as `history.transaction(...)` so the recorder applies + journals
-  // them in one undoable step. `draw` above stays for the drawing *behaviours*.
-  const history = useContext(HistoryContext);
 
   // Surface the active tool's guidance on the canvas message channel — sticky
   // (no timeout), so the footer always shows the current tool's hint. Replaces
@@ -247,16 +219,15 @@ function DrawingTools() {
 
   // ─── Context-menu item builders ────────────────────────────────────────────
   // One per target, consumed by the `<Graph*ContextMenu>` rendered below. Each
-  // action is a single engine call: structural edits (add / delete) run through
-  // `history.transaction` — the recorder applies the mutation AND journals its
-  // inverse (cascading incident edges), so the toolbar's Undo / Redo reverse them
-  // with no manual snapshotting. Pin and reverse are direct store sugar
+  // action is a single engine call: structural edits (add / delete) are one
+  // titled `applyDelta` — the store records it (cascading incident edges), so
+  // the toolbar's Undo / Redo reverse it. Pin and reverse are direct store sugar
   // (`setPinned` / `reverseEdge`). The right-clicked `id` and the live `canvas`
   // arrive on each builder's `ctx`.
 
   // Add a fresh node at `pos`, as one undoable entry. `shapeKey` picks the drawn
   // shape (defaults to the layer's circle); `fromId` links it from an existing
-  // node. `rec.addNode` / `rec.addEdge` apply + journal together.
+  // node, in the same entry.
   const addNodeAt = useCallback(
     (pos: { x: number; y: number }, opts?: { shapeKey?: string; fromId?: string }): void => {
       const { shapeKey, fromId } = opts ?? {};
@@ -264,16 +235,17 @@ function DrawingTools() {
       const stamp = Date.now().toString(36);
       const newId = `cm-n-${n}-${stamp}`;
       const shape = shapeKey ? SHAPES[shapeKey] : undefined;
-      history?.transaction('add node', (rec) => {
-        rec.addNode({ type: 'node',
-          id: newId,
-          position: pos,
-          style: { labelText: `N${n}`, ...(shape ? { shape } : {}) }
-        });
-        if (fromId) rec.addEdge({ type: 'edge', id: `cm-e-${n}-${stamp}`, source: fromId, target: newId });
-      });
+      canvas.layers.get<graph.GraphLayer>('graph')?.store.applyDelta(
+        {
+          added: {
+            nodes: [{ type: 'node', id: newId, position: pos, style: { labelText: `N${n}`, ...(shape ? { shape } : {}) } }],
+            edges: fromId ? [{ type: 'edge', id: `cm-e-${n}-${stamp}`, source: fromId, target: newId }] : []
+          }
+        },
+        { title: 'add node' }
+      );
     },
-    [history],
+    [canvas],
   );
 
   const nodeItems = useCallback(
@@ -309,11 +281,11 @@ function DrawingTools() {
           id: 'delete',
           label: 'Delete node',
           shortcut: '⌫',
-          onClick: () => history?.transaction('delete node', (rec) => rec.removeNode(id))
+          onClick: () => store.applyDelta({ removed: { nodeIds: [id] } }, { title: 'delete node' })
         },
       ];
     },
-    [setTool, addNodeAt, history],
+    [setTool, addNodeAt],
   );
 
   const edgeItems = useCallback(
@@ -337,11 +309,11 @@ function DrawingTools() {
           id: 'delete',
           label: 'Delete edge',
           shortcut: '⌫',
-          onClick: () => history?.transaction('delete edge', (rec) => rec.removeEdge(id))
+          onClick: () => store.applyDelta({ removed: { edgeIds: [id] } }, { title: 'delete edge' })
         },
       ];
     },
-    [setTool, history],
+    [setTool],
   );
 
   const backgroundItems = useCallback(
@@ -388,15 +360,9 @@ function DrawingTools() {
             style: { shape: SHAPES[nodeKindRef.current] ?? SHAPES.circle, labelText: String(n) }
           };
         }}
-        onNodeCreate={draw.onNodeCreate}
       />
-      <DrawEdgeBehaviour
-        targetLayerId="graph"
-        enabled={tool === 'connect'}
-        allowSelfLoop
-        onEdgeCreate={draw.onEdgeCreate}
-      />
-      <EraseBehaviour targetLayerId="graph" enabled={tool === 'delete'} onErase={draw.onErase} />
+      <DrawEdgeBehaviour targetLayerId="graph" enabled={tool === 'connect'} allowSelfLoop />
+      <EraseBehaviour targetLayerId="graph" enabled={tool === 'delete'} />
       {/* Fan out edges that share a node pair (drawn either direction). */}
       <ParallelEdgeBehaviour targetLayerId="graph" spacing={18} groupBy={undirectedPair} />
 
@@ -408,7 +374,7 @@ function DrawingTools() {
 
       {/* Right-click menus — one component per target, each owning its own
           behaviour + overlay + dismissal. Builders defined above (they need the
-          tool + draw-history hooks, so they live here rather than in `Modeller`). */}
+          tool hook, so they live here rather than in `Modeller`). */}
       <GraphNodeContextMenu items={nodeItems} />
       <GraphEdgeContextMenu items={edgeItems} />
       <GraphBackgroundContextMenu items={backgroundItems} />
@@ -417,12 +383,6 @@ function DrawingTools() {
 }
 
 function ModellerApp() {
-  // The undo history, lifted out of the in-<Canvas> <GraphHistoryProvider> by
-  // <HistoryBridge>, so the header toolbar's Undo / Redo share the same instance
-  // the in-canvas drawing behaviours journal into.
-  const [history, setHistory] = useState<GraphHistory | null>(null);
-  const handleHistory = useCallback((h: GraphHistory | null) => setHistory(h), []);
-
   // The whole modeller is `<GraphCanvasApp bundle={false}>` + the right `wrap` and
   // children: the app lifts CanvasContext / GraphCanvasContext (fed by its own
   // ready-bridge) for us, so this story only supplies the modeller-specific
@@ -439,16 +399,11 @@ function ModellerApp() {
         data={SEED}
         bundle={false}
         config={MODELLER_OPTIONS}
-        // Lift the active tool + undo history ABOVE the app so the header toolbar
-        // (a sibling of <Canvas>, outside its own provider) shares them with the
-        // in-canvas drawing behaviours. GraphToolProvider owns no engine (pure
-        // state); the HistoryContext is fed by <HistoryBridge> from inside <Canvas>.
-        // The footer hint rides the engine itself (Canvas.showMessage) — no provider.
-        wrap={(app) => (
-          <GraphToolProvider>
-            <HistoryContext.Provider value={history}>{app}</HistoryContext.Provider>
-          </GraphToolProvider>
-        )}
+        // Lift the active tool ABOVE the app so the header toolbar (a sibling of
+        // <Canvas>) shares it with the in-canvas drawing behaviours.
+        // GraphToolProvider owns no engine (pure state). The footer hint rides the
+        // engine itself (Canvas.showMessage) — no provider.
+        wrap={(app) => <GraphToolProvider>{app}</GraphToolProvider>}
         // Header / footer slots are rendered only once the engine is live, so they
         // need no `canvas ? … : null` gate. `title` fills the default header-left brand.
         header={{
@@ -474,13 +429,7 @@ function ModellerApp() {
         <DragPanBehaviour id="pan" />
         <WheelZoomBehaviour id="wheel" />
 
-        {/* History over the graph store — inside <Canvas> so it resolves the live
-            engine. <DrawingTools> reads it directly; <HistoryBridge> lifts the
-            instance up to the header (via the lifted HistoryContext above). */}
-        <GraphHistoryProvider layerId="graph">
-          <DrawingTools />
-          <HistoryBridge onReady={handleHistory} />
-        </GraphHistoryProvider>
+        <DrawingTools />
       </GraphCanvasApp>
     </ThemeProvider>
   );

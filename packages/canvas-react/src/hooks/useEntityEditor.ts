@@ -9,7 +9,6 @@ import type {
 
 import { useResolvedCanvas } from './useResolvedCanvas';
 import { useInspectTarget } from './useInspectTarget';
-import { useGraphHistory } from './useGraphEditState';
 import type { PropertiesEditorValues } from '../uiModel';
 
 export interface UseEntityEditorOptions {
@@ -67,9 +66,9 @@ function toStringMap(data: unknown): Record<string, string> {
  * edge the user clicked to edit — its effective label + `data` and a `commit`
  * that writes edits back undoably — or `null` when nothing is targeted (so a
  * panel can render nothing). Reads the target via {@link useInspectTarget}
- * (needs a `ClickInspectBehaviour`, independent of selection); commits via the
- * graph history when there is one ({@link useGraphHistory}: a
- * `<GraphHistoryProvider>` ancestor's, else the `GraphCanvas`'s own for `layerId`).
+ * (needs a `ClickInspectBehaviour`, independent of selection); each commit is
+ * one labelled entry in `canvas.history` (`'edit node'`, `'edit edge'`,
+ * `'reverse edge'`).
  *
  * The view (`<PropertiesEditor>`) and placement (`<Panel>`) are the consumer's —
  * see {@link InspectorPanel} for the turnkey wiring.
@@ -80,7 +79,6 @@ export function useEntityEditor(
 ): EntityEditorTarget | null {
   const { layerId = 'graph', inspectId = 'click-inspect', typeAsLabel = false } = options;
   const resolved = useResolvedCanvas(canvas);
-  const history = useGraphHistory(layerId, resolved);
   const single = useInspectTarget({ inspectId }, canvas);
   if (!single) return null;
 
@@ -101,8 +99,7 @@ export function useEntityEditor(
         const value = nextType ?? '';
         const prior = (node.style ?? {}) as Partial<NodeStyle>;
         const patch: Partial<GraphNode> = { type: value, style: { ...prior, labelText: value }, data };
-        if (history) history.transaction('edit node', (rec) => rec.updateNode(single.id, patch));
-        else store.updateNode(single.id, patch);
+        store.batch(() => store.updateNode(single.id, patch), { title: 'edit node' });
       };
       return { kind: 'node', id: single.id, label: '', type, data: toStringMap(node.data), commit };
     }
@@ -110,8 +107,7 @@ export function useEntityEditor(
     const commit = ({ label: nextLabel, data }: PropertiesEditorValues): void => {
       const prior = (node.style ?? {}) as Partial<NodeStyle>;
       const patch: Partial<GraphNode> = { style: { ...prior, labelText: nextLabel }, data };
-      if (history) history.transaction('edit node', (rec) => rec.updateNode(single.id, patch));
-      else store.updateNode(single.id, patch);
+      store.batch(() => store.updateNode(single.id, patch), { title: 'edit node' });
     };
     return { kind: 'node', id: single.id, label, data: toStringMap(node.data), commit };
   }
@@ -131,13 +127,11 @@ export function useEntityEditor(
       const prior = (edge.style ?? {}) as Partial<EdgeStyle>;
       patch.style = { ...prior, labelText: value };
     }
-    if (history) history.transaction('edit edge', (rec) => rec.updateEdge(single.id, patch));
-    else store.updateEdge(single.id, patch);
+    store.batch(() => store.updateEdge(single.id, patch), { title: 'edit edge' });
   };
   const reverse = (): void => {
     const swap: Partial<GraphEdge> = { source: edge.target, target: edge.source };
-    if (history) history.transaction('reverse edge', (rec) => rec.updateEdge(single.id, swap));
-    else store.updateEdge(single.id, swap);
+    store.batch(() => store.updateEdge(single.id, swap), { title: 'reverse edge' });
   };
   return {
     kind: 'edge',

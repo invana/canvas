@@ -57,7 +57,7 @@ const TOOL_ICONS: Record<GraphTool, string> = {
  * canvas store's `interaction.viewMode`, reached through a `<GraphToolProvider>`
  * or the enclosing canvas root. Every control is a control spec (`tool.active`
  * per tool, `tool.nodeKind`, `history.*`, `graph.erase`) drawn like a saved
- * panel's (a `<GraphHistoryProvider>` makes undo/redo live). The consumer still
+ * panel's (undo / redo are `canvas.history`, live on any canvas). The consumer still
  * declares the drawing behaviours — give each `modes` (e.g. `modes: ['connect']`)
  * and they follow the tool on their own. Only the per-kind shape-picker icons
  * (`nodeKindIcons`) are consumer-supplied, since those are domain-specific.

@@ -1,7 +1,7 @@
 # @invana/canvas-store — public API surface (generated; do not hand-edit)
 # Regenerate: pnpm build && node scripts/check-api-surface.mjs --write
 
-## . (336 exports)
+## . (333 exports)
 AnchorCtx
 AnchorShapeRef
 AnchorSpec
@@ -95,10 +95,8 @@ GlowDecorationStyle
 GraphInput
 GroupRecord
 Histogram
-History
-HistoryOptions
-HistoryStepInfo
 HistoryView
+HistoryViewOptions
 HitEntry
 HitGeometrySource
 HitIndex
@@ -281,7 +279,6 @@ createConsoleLogger
 createConsoleMeter
 createConsoleTracer
 createFrameMetrics
-createHistory
 createHttpMeter
 createInteractionTracer
 createLogBridge

@@ -23,6 +23,7 @@ import type {
   OperationLog,
 } from '@invana/canvas';
 
+import { cancelOps, opsToDelta } from '../history/netOps';
 import type { HistoryOp } from '../history/types';
 
 import type { GraphSchema } from '../schema/types';
@@ -233,6 +234,8 @@ export class GraphStore implements DataSource {
   private recordBuffer: HistoryOp[] | null = null;
   /** The actor the first write of the current outermost batch named, if any. */
   private recordActor: string | undefined;
+  /** Whether the current write is streamed (`applyDelta(…, { coalesce: true })`) — merged into the actor's open entry. */
+  private recordCoalesce = false;
 
   // ────────────────────────────────────────────────────────────────────────
 
@@ -299,6 +302,8 @@ export class GraphStore implements DataSource {
         applyOps: (ops, direction) => this.replayOps(ops, direction),
         applyDelta: (delta, opts) => this.applyDelta(delta as Delta<GraphNode, GraphEdge>, opts),
         hasElement: (id) => this.hasNode(id) || this.hasEdge(id),
+        toDelta: (ops) => opsToDelta(ops as readonly HistoryOp[]),
+        compact: (ops) => cancelOps(ops as readonly HistoryOp[]),
       };
       this.unregisterSource = log.registerSource(adapter);
     }
@@ -379,7 +384,8 @@ export class GraphStore implements DataSource {
       (this.recordBuffer ??= []).push(op);
       return;
     }
-    this.log?.recordData(this.logSourceId, [op], this.takeRecordActor());
+    const coalesce = this.recordCoalesce;
+    this.log?.recordData(this.logSourceId, [op], this.takeRecordActor(), coalesce ? { coalesce } : undefined);
   }
 
   /**
@@ -404,9 +410,11 @@ export class GraphStore implements DataSource {
     else buffer.push({ kind: 'addEdges', edges: [record as GraphEdge] });
   }
 
+  /** Consume the current write's actor (and its streamed flag, which travels with it). */
   private takeRecordActor(): string | undefined {
     const actor = this.recordActor;
     this.recordActor = undefined;
+    this.recordCoalesce = false;
     return actor;
   }
 
@@ -414,9 +422,10 @@ export class GraphStore implements DataSource {
   private commitRecording(): void {
     const ops = this.recordBuffer;
     this.recordBuffer = null;
+    const coalesce = this.recordCoalesce;
     const actor = this.takeRecordActor();
     if (!ops || ops.length === 0 || !this.log) return;
-    this.log.recordData(this.logSourceId, compactOps(ops), actor);
+    this.log.recordData(this.logSourceId, compactOps(ops), actor, coalesce ? { coalesce } : undefined);
   }
 
   /** Snapshot the patched fields' prior values for a node. */
@@ -1751,6 +1760,11 @@ export class GraphStore implements DataSource {
    * 7. `hidden` / `shown` — the explicit hidden flag, nodes then edges.
    * 8. `pinned`           — pin (default) or unpin; `x` + `y` also move the node.
    *
+   * `opts.coalesce` marks a **streamed** write (a live feed): it merges into
+   * the actor's open streamed entry, an add and a later remove of the same id
+   * cancel, and plain undo steps over it (RFC G12). Hosts should hold feed
+   * ticks while `!history.atLatest()`.
+   *
    * Unknown ids are skipped. Use `upsertNode` / `upsertEdge` semantics for the
    * `added` lists so a feed that re-sends an existing id (common in pub-sub)
    * merges rather than throwing. If you have hard-add semantics, use `addData`
@@ -1758,53 +1772,60 @@ export class GraphStore implements DataSource {
    */
   applyDelta(delta: Delta<GraphNode, GraphEdge>, opts: DeltaOptions = {}): void {
     if (opts.actor !== undefined && this.recordActor === undefined) this.recordActor = opts.actor;
-    this.batch(() => {
-      const removedEdgeIds = delta.removed?.edgeIds;
-      if (removedEdgeIds) {
-        for (const id of removedEdgeIds) {
-          if (this.hasEdge(id)) this.removeEdge(id);
-        }
+    // Like the actor, the first writer of an outermost batch decides.
+    if (opts.coalesce && this.batchDepth === 0) this.recordCoalesce = true;
+    // A titled delta is its own labelled entry (and so is never merged as a stream).
+    const label = opts.title !== undefined ? { title: opts.title, ...(opts.actor !== undefined ? { actor: opts.actor } : {}) } : {};
+    this.batch(() => this.applyDeltaBody(delta), label);
+  }
+
+  /** The body of {@link applyDelta}, in its documented order. */
+  private applyDeltaBody(delta: Delta<GraphNode, GraphEdge>): void {
+    const removedEdgeIds = delta.removed?.edgeIds;
+    if (removedEdgeIds) {
+      for (const id of removedEdgeIds) {
+        if (this.hasEdge(id)) this.removeEdge(id);
       }
-      const removedNodeIds = delta.removed?.nodeIds;
-      if (removedNodeIds) {
-        for (const id of removedNodeIds) {
-          if (this.hasNode(id)) this.removeNode(id);
-        }
+    }
+    const removedNodeIds = delta.removed?.nodeIds;
+    if (removedNodeIds) {
+      for (const id of removedNodeIds) {
+        if (this.hasNode(id)) this.removeNode(id);
       }
-      const addedNodes = delta.added?.nodes;
-      if (addedNodes) {
-        for (const n of addedNodes) this.upsertNode(n);
+    }
+    const addedNodes = delta.added?.nodes;
+    if (addedNodes) {
+      for (const n of addedNodes) this.upsertNode(n);
+    }
+    const addedEdges = delta.added?.edges;
+    if (addedEdges) {
+      for (const e of addedEdges) this.upsertEdge(e);
+    }
+    const updatedNodes = delta.updated?.nodes;
+    if (updatedNodes) {
+      for (const u of updatedNodes) {
+        if (this.hasNode(u.id)) this.updateNode(u.id, u.patch);
       }
-      const addedEdges = delta.added?.edges;
-      if (addedEdges) {
-        for (const e of addedEdges) this.upsertEdge(e);
+    }
+    const updatedEdges = delta.updated?.edges;
+    if (updatedEdges) {
+      for (const u of updatedEdges) {
+        if (this.hasEdge(u.id)) this.updateEdge(u.id, u.patch);
       }
-      const updatedNodes = delta.updated?.nodes;
-      if (updatedNodes) {
-        for (const u of updatedNodes) {
-          if (this.hasNode(u.id)) this.updateNode(u.id, u.patch);
-        }
-      }
-      const updatedEdges = delta.updated?.edges;
-      if (updatedEdges) {
-        for (const u of updatedEdges) {
-          if (this.hasEdge(u.id)) this.updateEdge(u.id, u.patch);
-        }
-      }
-      for (const [change, hidden] of [
-        [delta.hidden, true],
-        [delta.shown, false],
-      ] as const) {
-        for (const id of change?.nodeIds ?? []) this.setNodeHidden(id, hidden);
-        for (const id of change?.edgeIds ?? []) this.setEdgeHidden(id, hidden);
-      }
-      for (const p of delta.pinned ?? []) {
-        if (!this.hasNode(p.id)) continue;
-        const pinned = p.pinned ?? true;
-        if (p.x !== undefined && p.y !== undefined) this.updateNode(p.id, { pinned, position: { x: p.x, y: p.y } });
-        else this.setPinned(p.id, pinned);
-      }
-    });
+    }
+    for (const [change, hidden] of [
+      [delta.hidden, true],
+      [delta.shown, false],
+    ] as const) {
+      for (const id of change?.nodeIds ?? []) this.setNodeHidden(id, hidden);
+      for (const id of change?.edgeIds ?? []) this.setEdgeHidden(id, hidden);
+    }
+    for (const p of delta.pinned ?? []) {
+      if (!this.hasNode(p.id)) continue;
+      const pinned = p.pinned ?? true;
+      if (p.x !== undefined && p.y !== undefined) this.updateNode(p.id, { pinned, position: { x: p.x, y: p.y } });
+      else this.setPinned(p.id, pinned);
+    }
   }
 
   // ─── Reactivity ─────────────────────────────────────────────────────────
@@ -1813,8 +1834,31 @@ export class GraphStore implements DataSource {
    * Coalesce all mutations inside `fn` into a single flush and — with a log
    * attached — a single history entry. Nested `batch` calls flush and record
    * only on the outermost exit.
+   *
+   * `opts.title` labels the entry (`'paste'`, `'delete selection'`) and
+   * `opts.actor` attributes it; both apply to the outermost batch only. The
+   * entry is all or nothing: if `fn` throws, what it wrote is reverted.
    */
-  batch<T>(fn: () => T): T {
+  batch<T>(fn: () => T, opts: { title?: string; actor?: string } = {}): T {
+    const log = this.log;
+    if (
+      (opts.title !== undefined || opts.actor !== undefined) &&
+      log &&
+      this.recording &&
+      this.batchDepth === 0 &&
+      !log.replaying
+    ) {
+      const meta = {
+        ...(opts.title !== undefined ? { title: opts.title } : {}),
+        ...(opts.actor !== undefined ? { actor: opts.actor } : {}),
+      };
+      return log.group(meta, () => this.runBatch(fn));
+    }
+    return this.runBatch(fn);
+  }
+
+  /** {@link batch} without the entry label: one flush, one recorded part on the outermost exit. */
+  private runBatch<T>(fn: () => T): T {
     this.batchDepth++;
     try {
       return fn();

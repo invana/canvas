@@ -131,7 +131,6 @@ export { createReactiveStore } from './adapters/zustand';
 export { createMemoryStore } from './port/createMemoryStore';
 
 // ─── History ──────────────────────────────────────────────────────────────────
-export { createHistory, type History, type HistoryOptions, type HistoryStepInfo } from './port/createHistory';
 
 // ─── Operation log (the one record behind `canvas.history`) ──────────────────
 export {
@@ -140,6 +139,7 @@ export {
   type ViewPatchMode,
 } from './log/createOperationLog';
 export { historyView } from './log/historyView';
+export type { HistoryViewOptions } from './log/historyView';
 export { createPlaybook, PlaybookStepError } from './log/createPlaybook';
 export type { PlaybookEnv, PlaybookOptions } from './log/createPlaybook';
 export type {

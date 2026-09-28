@@ -16,8 +16,7 @@ export interface UseHistorySectionOptions {
 /**
  * **History** toolbar section — undo / redo {@link ToolbarItem}s built off
  * {@link useHistory}, with live `disabled` state (`!canUndo` / `!canRedo`).
- * Compose the result with other sections and render via `ToolbarItems`. Requires
- * a `<GraphHistoryProvider>` ancestor.
+ * Compose the result with other sections and render via `ToolbarItems`.
  *
  * @deprecated A second way to draw toolbar controls beside the control specs
  * `useControlItems` (in `@invana/canvas-ui`) renders. Use the `history.undo` / `history.redo` control specs (`HISTORY_CONTROL_ITEMS`), or {@link useHistory} for bespoke UI.

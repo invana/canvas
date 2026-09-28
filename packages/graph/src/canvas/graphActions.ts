@@ -1,9 +1,10 @@
 /**
  * The graph edit actions shared by `canvas-react`'s hooks (`useClearGraph`,
- * `useClipboard`) and the graph commands (`graph.clear`, `clipboard.*`,
- * `history.undo` / `history.redo` — `GraphCanvas`'s built-ins and the
- * providers' plain-canvas forms), so a toolbar button and a control-panel
- * button can never behave differently. Plain functions over a
+ * `useClipboard`) and the graph commands (`graph.clear`, `clipboard.*` —
+ * `GraphCanvas`'s built-ins and the clipboard provider's plain-canvas forms),
+ * so a toolbar button and a control-panel button can never behave
+ * differently. Every edit is recorded by the layer's store into
+ * `canvas.history`, so undo needs nothing from here. Plain functions over a
  * `Canvas` — no React — so they also run headless.
  *
  * Must not import `graphCommands.ts` (which imports this module).
@@ -15,12 +16,11 @@ import type { ClickSelectBehaviour } from '../behaviours/ClickSelectBehaviour';
 import type { GraphLayer } from '../layer/GraphLayer';
 import type { EdgePathType, EdgeShapeOptions } from '../layer/types';
 import type { GraphClipboard } from '../clipboard/GraphClipboard';
-import type { GraphHistory } from '../history/GraphHistory';
 
 /** A layer `clearGraphLayer` can clear (a `GraphLayer`, structurally). */
 interface ClearableLayer {
   clear(): void;
-  store?: { nodes(): IterableIterator<{ id: string }> };
+  store?: { operationLog?: { group<T>(meta: { title?: string }, fn: () => T): T; readonly replaying: boolean } };
 }
 
 function isClearable(layer: unknown): layer is ClearableLayer {
@@ -28,30 +28,19 @@ function isClearable(layer: unknown): layer is ClearableLayer {
 }
 
 /**
- * Clear `layerId`. With a `history` over that layer's store it is one undoable
- * `'clear'` entry (every node removed, edges cascading), so Undo restores the
- * graph; otherwise the layer's fast `clear()`. No-op when the layer is missing
- * or can't be cleared.
+ * Clear `layerId` — one undoable `'clear'` entry in `canvas.history` (the
+ * store records the wipe with everything it removed, so Undo restores the
+ * graph). No-op when the layer is missing or can't be cleared.
  *
  * @param canvas  The canvas holding the layer.
  * @param layerId The graph layer to clear.
- * @param history The `GraphHistory` journalling that layer's store, or `null`.
  */
-export function clearGraphLayer(canvas: Canvas, layerId: string, history: GraphHistory | null): void {
+export function clearGraphLayer(canvas: Canvas, layerId: string): void {
   const layer = canvas.layers.get(layerId);
   if (!isClearable(layer)) return;
-  const store = layer.store;
-  if (history && store) {
-    // Snapshot ids first — removing mutates the store mid-iteration.
-    const ids = [...store.nodes()].map((n) => n.id);
-    if (ids.length > 0) {
-      history.transaction('clear', (rec) => {
-        for (const id of ids) rec.removeNode(id);
-      });
-      return;
-    }
-  }
-  layer.clear();
+  const log = layer.store?.operationLog;
+  if (log && !log.replaying) log.group({ title: 'clear' }, () => layer.clear());
+  else layer.clear();
 }
 
 /**
@@ -78,85 +67,32 @@ export function copySelection(canvas: Canvas, clipboard: GraphClipboard, clickSe
 
 /**
  * Cut the current click-selection (read at call time): copy it to the buffer,
- * then delete it — one undoable step when `history` is given.
+ * then delete it — one undoable step.
  */
-export function cutSelection(
-  canvas: Canvas,
-  clipboard: GraphClipboard,
-  history: GraphHistory | null,
-  clickSelectId: string,
-): void {
+export function cutSelection(canvas: Canvas, clipboard: GraphClipboard, clickSelectId: string): void {
   const { nodeIds, edgeIds } = selectedElementIds(canvas, clickSelectId);
-  clipboard.cut(nodeIds, edgeIds, history ?? undefined);
+  clipboard.cut(nodeIds, edgeIds);
 }
 
 /**
  * Delete the current click-selection (read at call time) without touching the
- * buffer — one undoable step when `history` is given.
+ * buffer — one undoable step.
  */
-export function deleteSelection(
-  canvas: Canvas,
-  clipboard: GraphClipboard,
-  history: GraphHistory | null,
-  clickSelectId: string,
-): void {
+export function deleteSelection(canvas: Canvas, clipboard: GraphClipboard, clickSelectId: string): void {
   const { nodeIds, edgeIds } = selectedElementIds(canvas, clickSelectId);
-  clipboard.delete(nodeIds, edgeIds, history ?? undefined);
+  clipboard.delete(nodeIds, edgeIds);
 }
 
 /**
- * Paste the clipboard (undoably when `history` is given) and select what was
- * pasted through the click-select behaviour `clickSelectId`.
+ * Paste the clipboard (one undoable step) and select what was pasted through
+ * the click-select behaviour `clickSelectId`.
  */
-export function pasteAndSelect(
-  canvas: Canvas,
-  clipboard: GraphClipboard,
-  history: GraphHistory | null,
-  clickSelectId: string,
-): void {
-  const { nodeIds, edgeIds } = clipboard.paste(history ?? undefined);
+export function pasteAndSelect(canvas: Canvas, clipboard: GraphClipboard, clickSelectId: string): void {
+  const { nodeIds, edgeIds } = clipboard.paste();
   canvas.behaviours.get<ClickSelectBehaviour>(clickSelectId)?.selectMultiple([
     ...nodeIds.map((id) => ({ id, type: 'shape' as const })),
     ...edgeIds.map((id) => ({ id, type: 'connector' as const })),
   ]);
-}
-
-/*
- * One Undo button, one log: graph edits and definition edits (the Studio's
- * `edit:*` applies) are entries in the canvas's single operation log, so
- * `canvas.history` alone decides the order (RFC
- * `feat-2026-09-28-an-analysis-cannot-be-recorded-or-replayed`, F4). The
- * `history` argument only matters when it journals a store that is *not* on
- * the canvas's log (a layer that never mounted) — then it is the fallback.
- */
-
-/**
- * Undo the newest undoable change on the canvas — a graph edit or a definition
- * edit, whichever came last. Falls back to `history` when the canvas has
- * nothing to undo and `history` is on a log of its own. No-op when neither can undo.
- */
-export function undoNewest(canvas: Canvas, history: GraphHistory | null): void {
-  if (canvas.history.canUndo()) canvas.history.undo();
-  else if (history?.canUndo) history.undo();
-}
-
-/**
- * Redo the most recently undone change on the canvas, falling back to `history`
- * as {@link undoNewest} does. No-op when neither can redo.
- */
-export function redoNewest(canvas: Canvas, history: GraphHistory | null): void {
-  if (canvas.history.canRedo()) canvas.history.redo();
-  else if (history?.canRedo) history.redo();
-}
-
-/** Whether the canvas — or, on a log of its own, `history` — has a change to undo. */
-export function canUndoEither(canvas: Canvas, history: GraphHistory | null): boolean {
-  return canvas.history.canUndo() || (history?.canUndo ?? false);
-}
-
-/** Whether the canvas — or, on a log of its own, `history` — has a change to redo. */
-export function canRedoEither(canvas: Canvas, history: GraphHistory | null): boolean {
-  return canvas.history.canRedo() || (history?.canRedo ?? false);
 }
 
 /** The layer's current edge `shape` template, or `{}`. */

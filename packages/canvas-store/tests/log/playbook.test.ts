@@ -5,6 +5,7 @@ import type { DataOpAdapter, Delta, Patch, StepSpec, StoreChange } from '@invana
 import { createMemoryStore } from '../../src/port/createMemoryStore';
 import { createOperationLog, type ViewPatchMode } from '../../src/log/createOperationLog';
 import { createPlaybook, PlaybookStepError, type PlaybookEnv } from '../../src/log/createPlaybook';
+import { historyView } from '../../src/log/historyView';
 
 interface S {
   definition: { color: string };
@@ -216,5 +217,105 @@ describe('createPlaybook (F13, V11)', () => {
     expect(playbook.title).toBe('Again');
     expect(playbook.steps.map((s) => s.id)).toEqual(['s1']);
     expect([...ids]).toEqual(['a']);
+  });
+});
+
+describe('history.sinceLastStep (F14, V12)', () => {
+  /** The playbook setup, plus a history view whose `describeView` reads the toy view. */
+  function withHistory() {
+    const ctx = setup();
+    const history = historyView(ctx.log, {
+      describeView: (parts) => {
+        const touched = new Set(parts.flatMap((p) => p.patches.map((q) => q.path.join('/'))));
+        const s = ctx.view.getState();
+        return {
+          ...(touched.has('definition/color') ? { settings: { color: s.definition.color } } : {}),
+          ...(touched.has('interaction/focus') ? { view: { focus: s.interaction.focus ? { ids: s.interaction.focus } : null } } : {}),
+        };
+      },
+    });
+    // The toy source's net delta: adds and removes that survive.
+    const adapter = ctx.log.source('graph')!;
+    adapter.toDelta = (ops) => {
+      const added = new Set<string>();
+      const removed = new Set<string>();
+      for (const op of ops as Array<{ add?: string; remove?: string }>) {
+        if (op.add) (removed.has(op.add) ? removed.delete(op.add) : added.add(op.add));
+        if (op.remove) (added.has(op.remove) ? added.delete(op.remove) : removed.add(op.remove));
+      }
+      return {
+        ...(added.size ? { added: { nodes: [...added].map((id) => ({ id })) } } : {}),
+        ...(removed.size ? { removed: { nodeIds: [...removed] } } : {}),
+      };
+    };
+    const userAdd = (id: string) => adapter.applyDelta!({ added: { nodes: [{ id }] } }, { actor: 'user' });
+    const userRemove = (id: string) => adapter.applyDelta!({ removed: { nodeIds: [id] } }, { actor: 'user' });
+    return { ...ctx, history, userAdd, userRemove };
+  }
+
+  it('summarises work since the last step: net delta, merged settings, final view; reading changes nothing', async () => {
+    const { playbook, history, view, log, userAdd, userRemove } = withHistory();
+    playbook.addStep(expand);
+    await playbook.next();
+    userAdd('x');
+    userAdd('y');
+    userRemove('x'); // cancels with the add
+    userRemove('c'); // added by the step, removed by the user
+    view.update((d) => void (d.definition.color = 'green'), 'edit:user');
+    view.update((d) => void (d.definition.color = 'pink'), 'edit:user');
+    view.update((d) => void (d.interaction.focus = ['y']), 'view:focus:set');
+    const before = log.entries().length;
+
+    const step = history.sinceLastStep<{ color?: string }>('My changes');
+    expect(step).toEqual({
+      id: expect.stringMatching(/^since-/),
+      title: 'My changes',
+      source: 'graph',
+      data: { added: { nodes: [{ id: 'y' }] }, removed: { nodeIds: ['c'] } },
+      settings: { color: 'pink' },
+      view: { focus: { ids: ['y'] } },
+    });
+    expect(log.entries()).toHaveLength(before);
+  });
+
+  it('with nothing since the last step, returns a bare step', async () => {
+    const { playbook, history } = withHistory();
+    playbook.addStep(expand);
+    await playbook.next();
+    const step = history.sinceLastStep('Nothing');
+    expect(Object.keys(step).sort()).toEqual(['id', 'title']);
+  });
+
+  it('addStep adopts the recorded entries: no re-run, previous reverts them, next replays them', async () => {
+    const { playbook, history, ids, log, userAdd, commands } = withHistory();
+    playbook.addStep(expand);
+    await playbook.next();
+    userAdd('x');
+    const step = history.sinceLastStep('Add x');
+    playbook.addStep(step);
+    expect(playbook.index).toBe(1);
+    expect(log.entries({ stepId: step.id })).toHaveLength(1);
+    expect(log.entries()).toHaveLength(2);
+
+    await playbook.previous();
+    expect(ids.has('x')).toBe(false);
+    await playbook.next();
+    expect(ids.has('x')).toBe(true);
+    expect(log.entries()).toHaveLength(2); // replayed, not re-run
+    expect(commands).toEqual(['layout.run']);
+  });
+
+  it('a copy, or a result that is no longer the newest work, is added as an ordinary step', async () => {
+    const { playbook, history, log, userAdd } = withHistory();
+    userAdd('x');
+    const stale = history.sinceLastStep('Stale');
+    userAdd('y');
+    playbook.addStep(stale);
+    expect(playbook.index).toBe(-1);
+    const copy = JSON.parse(JSON.stringify(history.sinceLastStep('Copy'))) as StepSpec<{ color?: string }>;
+    copy.id = 'copy';
+    playbook.addStep(copy);
+    expect(playbook.index).toBe(-1);
+    expect(log.entries().every((e) => e.stepId === undefined)).toBe(true);
   });
 });

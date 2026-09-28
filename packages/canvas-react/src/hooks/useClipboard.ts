@@ -4,12 +4,12 @@ import { copySelection, cutSelection, deleteSelection, pasteAndSelect } from '@i
 
 import { useResolvedCanvas } from './useResolvedCanvas';
 import { useSelection } from './useSelection';
-import { useGraphClipboard, useGraphHistory } from './useGraphEditState';
+import { useGraphClipboard } from './useGraphEditState';
 
 export interface UseClipboardOptions {
   /** Id of the `ClickSelectBehaviour` selection is read from / re-applied to. Default `'click-select'`. */
   clickSelectId?: string;
-  /** Graph layer whose canvas-owned clipboard / history are used when no provider is above. Default `'graph'`. */
+  /** Graph layer whose canvas-owned clipboard is used when no provider is above. Default `'graph'`. */
   layerId?: string;
 }
 
@@ -31,9 +31,9 @@ export interface UseClipboardResult {
 /**
  * Cut / copy / paste / delete for the current selection, over the
  * `GraphClipboard` ({@link useGraphClipboard}: a `<GraphClipboardProvider>`
- * ancestor's, else the one the `GraphCanvas` owns for `layerId`). Operations
- * journal on the graph history ({@link useGraphHistory}) when there is one, so
- * they're undoable. Reads the selection (and re-selects pasted items) via a
+ * ancestor's, else the one the `GraphCanvas` owns for `layerId`). Each edit is
+ * one entry in `canvas.history` (the layer's store records it), so it's
+ * undoable. Reads the selection (and re-selects pasted items) via a
  * `ClickSelectBehaviour`.
  *
  * `canPaste` tracks the buffer (recomputed after each op); `hasSelection` is
@@ -51,7 +51,6 @@ export function useClipboard(
   const { clickSelectId = 'click-select', layerId = 'graph' } = options;
   const resolved = useResolvedCanvas(canvas);
   const clipboard = useGraphClipboard(layerId, resolved);
-  const history = useGraphHistory(layerId, resolved);
   // Only for the reactive `hasSelection`; the actions read the selection at call time.
   const { count } = useSelection({ clickSelectId }, resolved);
   const [canPaste, setCanPaste] = useState(false);
@@ -73,16 +72,16 @@ export function useClipboard(
   }, [clipboard, resolved, clickSelectId]);
 
   const cut = useCallback(() => {
-    if (clipboard) cutSelection(resolved, clipboard, history, clickSelectId);
-  }, [clipboard, history, resolved, clickSelectId]);
+    if (clipboard) cutSelection(resolved, clipboard, clickSelectId);
+  }, [clipboard, resolved, clickSelectId]);
 
   const remove = useCallback(() => {
-    if (clipboard) deleteSelection(resolved, clipboard, history, clickSelectId);
-  }, [clipboard, history, resolved, clickSelectId]);
+    if (clipboard) deleteSelection(resolved, clipboard, clickSelectId);
+  }, [clipboard, resolved, clickSelectId]);
 
   const paste = useCallback(() => {
-    if (clipboard) pasteAndSelect(resolved, clipboard, history, clickSelectId);
-  }, [clipboard, history, resolved, clickSelectId]);
+    if (clipboard) pasteAndSelect(resolved, clipboard, clickSelectId);
+  }, [clipboard, resolved, clickSelectId]);
 
   return { cut, copy, paste, remove, canPaste, hasSelection: count > 0 };
 }

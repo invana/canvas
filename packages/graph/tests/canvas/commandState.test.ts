@@ -1,8 +1,8 @@
 /**
  * Command state the view store doesn't hold reaches bound controls through the
  * engine's owner-side bridges (`commands.subscribe`), not through write sites
- * remembering `invalidate()`; and the view-lock / edge-type / two-stack undo
- * rules are shared engine functions
+ * remembering `invalidate()`; and the view-lock / edge-type rules are shared
+ * engine functions
  * (rfc:feat-2026-09-29-command-controls-go-stale-or-fail-silently).
  *
  * Headless: `Canvas.initWithRenderer` with the shipped `HeadlessRenderer`.
@@ -18,14 +18,7 @@ import {
 } from '@invana/canvas';
 import { GraphCanvas } from '../../src/canvas/GraphCanvas';
 import { GraphLayer } from '../../src/layer/GraphLayer';
-import {
-  canRedoEither,
-  canUndoEither,
-  edgePathType,
-  redoNewest,
-  setEdgePathType,
-  undoNewest,
-} from '../../src/canvas/graphActions';
+import { edgePathType, setEdgePathType } from '../../src/canvas/graphActions';
 
 beforeAll(() => {
   const g = globalThis as Record<string, unknown>;
@@ -148,16 +141,16 @@ describe('shared engine functions', () => {
     canvas.destroy();
   });
 
-  it('two-stack undo with no graph history = canvas.history alone', () => {
+  it('history.undo / history.redo are the engine\'s, over canvas.history, and follow it', () => {
     const { canvas } = makeCanvas();
-    expect(canUndoEither(canvas, null)).toBe(false);
+    expect(canvas.commands.isEnabled('history.undo')).toBe(false);
     canvas.update({ layers: { graph: { edge: { style: { strokeWidth: 3 } } } } as never }, 'edit:test');
-    expect(canUndoEither(canvas, null)).toBe(true);
-    undoNewest(canvas, null);
-    expect(canUndoEither(canvas, null)).toBe(false);
-    expect(canRedoEither(canvas, null)).toBe(true);
-    redoNewest(canvas, null);
-    expect(canUndoEither(canvas, null)).toBe(true);
+    expect(canvas.commands.isEnabled('history.undo')).toBe(true);
+    canvas.commands.run('history.undo');
+    expect(canvas.commands.isEnabled('history.undo')).toBe(false);
+    expect(canvas.commands.isEnabled('history.redo')).toBe(true);
+    canvas.commands.run('history.redo');
+    expect(canvas.history.canUndo()).toBe(true);
     canvas.destroy();
   });
 });

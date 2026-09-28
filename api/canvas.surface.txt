@@ -1,7 +1,7 @@
 # @invana/canvas — public API surface (generated; do not hand-edit)
 # Regenerate: pnpm build && node scripts/check-api-surface.mjs --write
 
-## . (457 exports)
+## . (454 exports)
 AnchorCtx
 AnchorShapeRef
 AnchorSpec
@@ -145,9 +145,6 @@ HeadlessCameraBinding
 HeadlessElementRenderer
 HeadlessRenderer
 HeadlessSurface
-History
-HistoryOptions
-HistoryStepInfo
 HistoryView
 HitGeometrySource
 HitPolyline

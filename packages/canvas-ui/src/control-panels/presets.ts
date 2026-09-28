@@ -13,11 +13,12 @@ import { defineControlItems } from './defineControlItems';
  * - engine (every canvas): `camera.*` (zoom / fit / pan / zoomTo / reset),
  *   `view.lock`, `behaviour.toggle`, `layout.*`, `background.grid`;
  * - `GraphCanvas`: `select.mode`, `graph.edgeType`, undoable `graph.clear` /
- *   `graph.erase`, `history.*` over graph edits too, `clipboard.*`, and the
+ *   `graph.erase`, `clipboard.*`, and the
  *   modeller tool `tool.active` / `tool.nodeKind` (the store's `interaction.viewMode`);
  * - `<CanvasThemeSync>` under a `<ThemeProvider>`: `theme.toggle`;
- * - on a plain `Canvas`: `<GraphHistoryProvider>` / `<GraphClipboardProvider>`
- *   while mounted add graph-edit `history.*` / `clipboard.*`.
+ * - on a plain `Canvas`: `<GraphClipboardProvider>` while mounted adds
+ *   `clipboard.*` / `graph.erase`. `history.*` is the engine's on every canvas
+ *   (graph edits included — one log).
  * A control whose command isn't registered renders disabled.
  */
 

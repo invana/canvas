@@ -90,7 +90,6 @@ export type { CompositePart, CompositeRootSpec } from '@invana/canvas';
 
 export {
   GraphCanvas,
-  captureNodeDrags,
   DEFAULT_EDGE_TYPES,
   DEFAULT_EDGE_TYPE_LABELS,
   eraseCommand,
@@ -103,10 +102,6 @@ export {
   cutSelection,
   deleteSelection,
   pasteAndSelect,
-  undoNewest,
-  redoNewest,
-  canUndoEither,
-  canRedoEither,
   edgePathType,
   setEdgePathType,
 } from './canvas';
@@ -148,12 +143,7 @@ export {
 } from './layout/groups';
 
 export {
-  GraphHistory,
-  type GraphHistoryEventMap,
-  type GraphHistoryOptions,
-  type HistoryEntry,
   type HistoryOp,
-  type HistoryRecorder,
 } from './history';
 
 export {

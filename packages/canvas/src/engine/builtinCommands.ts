@@ -18,7 +18,7 @@
  * | `layout.activate` | `{ value }` | choice over the registered layouts; value = `activeLayout` |
  * | `background.grid` | `{ layerId?, patternType? }` (default `'background'`) | toggle, active while the background is a pattern |
  * | `layer.visible` | `{ id }` | toggle, active while layer `id` is visible |
- * | `history.undo` / `history.redo` | — | button over `canvas.history` (definition edits); `GraphCanvas` (or a `GraphHistoryProvider` on a plain canvas) overrides both to also cover graph edits |
+ * | `history.undo` / `history.redo` | — | button over `canvas.history` — every recorded change: definition edits and every data source's writes (one log) |
  *
  * Each command also describes its args as data (`CanvasCommand.args`), so the
  * Studio's control-panel editor draws a field per key.
@@ -91,9 +91,8 @@ export interface EngineCommandMap {
   'layout.activate': { value?: string } | undefined;
   'background.grid': { layerId?: string; patternType?: 'dots' | 'grid' | 'lines' } | undefined;
   'layer.visible': { id: string };
-  /** `layerId` is read by `GraphCanvas`'s override (which layer's graph history); the engine's ignores it. */
-  'history.undo': { layerId?: string } | undefined;
-  'history.redo': { layerId?: string } | undefined;
+  'history.undo': undefined;
+  'history.redo': undefined;
 }
 
 /** Each built-in, typed by its {@link EngineCommandMap} entry. */

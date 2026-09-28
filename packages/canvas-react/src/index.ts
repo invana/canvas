@@ -33,18 +33,16 @@ export {
   bestRenderPreference,
 } from '@invana/renderer-pixijs';
 export type { RenderPreference } from '@invana/renderer-pixijs';
-export { HistoryContext } from './HistoryContext';
 export { ClipboardContext } from './ClipboardContext';
 export { ToolContext } from './ToolContext';
 export type { GraphTool, ToolContextValue } from './ToolContext';
 
 // ─── Providers ─────────────────────────────────────────────────────────────
-// Construct engine-owned `GraphHistory` / `GraphClipboard` over a layer's store
-// and surface them to descendant hooks / buttons via context. `GraphToolProvider`
+// Construct an engine-owned `GraphClipboard` over a layer's store and surface
+// it to descendant hooks / buttons via context. `GraphToolProvider`
 // holds the active modelling tool (pure React state — no engine reference).
-export { GraphHistoryProvider, GraphClipboardProvider, GraphToolProvider } from './providers';
+export { GraphClipboardProvider, GraphToolProvider } from './providers';
 export type {
-  GraphHistoryProviderProps,
   GraphClipboardProviderProps,
   GraphToolProviderProps,
 } from './providers';
@@ -208,10 +206,11 @@ export {
   useViewData,
   useViewContext,
   useHistory,
+  usePlaybook,
+  useHistoryEntries,
+  useGraphStore,
   useClipboard,
-  useGraphHistory,
   useGraphClipboard,
-  useCanvasGraphHistory,
   useCanvasGraphClipboard,
   useGrid,
   useLayout,
@@ -221,7 +220,6 @@ export {
   DEFAULT_EDGE_TYPE_LABELS,
   useLock,
   useTool,
-  useDrawHistory,
   useEntityEditor,
   useContextMenu,
   useHistorySection,
@@ -259,6 +257,7 @@ export type {
   ViewContext,
   UseHistoryOptions,
   UseHistoryResult,
+  UsePlaybookResult,
   UseClipboardOptions,
   UseClipboardResult,
   UseGridOptions,
@@ -273,7 +272,6 @@ export type {
   UseEdgeTypeResult,
   UseLockOptions,
   UseLockResult,
-  UseDrawHistoryResult,
   UseEntityEditorOptions,
   EntityEditorTarget,
   ContextMenuState,

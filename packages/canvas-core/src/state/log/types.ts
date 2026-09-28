@@ -72,8 +72,14 @@ export interface LogEntry {
   actor: string;
   /** Human label: a playbook step's title, a graph transaction's label (`'paste'`). */
   title?: string;
-  /** Set when a playbook step produced the entry. */
+  /** Set when a playbook step produced the entry (or adopted it — `Playbook.addStep` of a `sinceLastStep` result). */
   stepId?: string;
+  /**
+   * Set on a **streamed** entry — writes made with `applyDelta(delta, { coalesce: true })`,
+   * merged into one open entry per actor (RFC G12). Plain undo steps over it;
+   * a playbook's `revertTo` / `replayTo` still applies it.
+   */
+  coalesced?: true;
   /** The parts, in the order they were recorded. */
   parts: LogPart[];
 }
@@ -137,6 +143,19 @@ export type DeltaRecord = { id: string } & Record<string, unknown>;
 export interface DeltaOptions {
   /** Who the history entry is attributed to. Default: the canvas's session actor. */
   actor?: string;
+  /** The history entry's label (`'paste'`, `'delete selection'`), shown by undo menus and `peekUndo`. */
+  title?: string;
+  /**
+   * Streamed write (a live feed): merge into the actor's **open** streamed
+   * entry instead of making a new one. Within it, an add and a later remove
+   * of the same id cancel. Plain undo steps over streamed entries; any other
+   * entry, a playbook step, an undo / redo or a clear seals the open one, so
+   * the next streamed write starts a new entry (RFC D-14, G12).
+   *
+   * Hosts should hold feed ticks while `!history.atLatest()` — a streamed
+   * entry recorded while undone entries wait to be redone sits before them.
+   */
+  coalesce?: boolean;
 }
 
 // ─── The log (internal to the canvas) ────────────────────────────────────────
@@ -160,6 +179,21 @@ export interface DataOpAdapter {
   applyDelta?(delta: Delta, opts?: DeltaOptions): void;
   /** Whether the source holds an element with this id — a step's view ids are checked against it. */
   hasElement?(id: string): boolean;
+  /**
+   * The **net** change `ops` make, as a {@link Delta}: an add and a later
+   * remove of the same id cancel, updates fold into one patch per id, the last
+   * hide / show wins. `HistoryView.sinceLastStep` builds a step's `data` with
+   * it. Absent ⇒ the source's entries contribute no `data`.
+   */
+  toDelta?(ops: readonly unknown[]): Delta<DeltaRecord, DeltaRecord>;
+  /**
+   * Compact an op list that will be replayed as one unit — used when streamed
+   * writes merge ({@link DeltaOptions.coalesce}): an element added and removed
+   * within `ops` drops out, with every op on it in between. Must replay
+   * (forward and back) to the same states as `ops`. Absent ⇒ ops are kept
+   * as recorded.
+   */
+  compact?(ops: readonly unknown[]): unknown[];
 }
 
 /** Where an entry id stands in the log: applied, waiting to be redone, or not (or no longer) in it. */
@@ -196,9 +230,16 @@ export interface OperationLog {
   /**
    * Record already-applied data ops as one part. Outside a {@link group} it is
    * its own entry; inside, it joins the open one. Dropped while the log is
-   * replaying.
+   * replaying. With `opts.coalesce` (outside a group) the ops merge into the
+   * actor's open streamed entry — see {@link DeltaOptions.coalesce}.
    */
-  recordData(sourceId: string, ops: readonly unknown[], actor?: string): void;
+  recordData(sourceId: string, ops: readonly unknown[], actor?: string, opts?: { coalesce?: boolean }): void;
+  /**
+   * Mark applied entries as belonging to a playbook step — how
+   * `Playbook.addStep` adopts a `sinceLastStep` result: its entries become the
+   * step's, without being re-run. Ids not in the applied record are ignored.
+   */
+  tagStep(entryIds: readonly string[], meta: { stepId: string; title?: string }): void;
   /**
    * Run `fn`; everything recorded meanwhile becomes one entry. Nested groups
    * merge. **All or nothing:** if `fn` throws, what it recorded is reverted,
@@ -252,6 +293,26 @@ export interface HistoryView {
   onEntry(listener: (entry: LogEntry) => void): () => void;
   /** True when no recorded entry is waiting to be redone. */
   atLatest(): boolean;
+  /**
+   * The work done since the last playbook step, **as a step** (RFC F14, D-13):
+   * every applied entry after the newest one carrying a `stepId` (or from the
+   * start), summarised —
+   *
+   * - `data`: the net delta per source (an add then a remove cancels);
+   * - `settings`: the definition values those entries changed, as a
+   *   `canvas.update` patch holding their current values;
+   * - `view`: the current selection / focus / inspect / camera intent, for
+   *   the slices those entries changed.
+   *
+   * Pass the returned object to `playbook.addStep` to make the work a step:
+   * it **adopts** the recorded entries rather than playing them again (only
+   * while they are still the newest; otherwise, or for a copy of the object,
+   * it is added as an ordinary step). Returns a step with no fields besides
+   * `id` / `title` when nothing was done. Reading it changes nothing.
+   *
+   * @typeParam S The settings patch shape — `CanvasConfig` on a `Canvas`.
+   */
+  sinceLastStep<S = Record<string, unknown>>(title: string): StepSpec<S>;
   /** Hear every change (record / undo / redo / clear). Returns the unsubscribe. */
   subscribe(listener: () => void): () => void;
   /** Drop every entry. */
@@ -320,7 +381,16 @@ export interface Playbook<S = Record<string, unknown>> {
   readonly current: StepSpec<S> | undefined;
   /** Index of {@link current} in {@link steps}; `-1` before the first. */
   readonly index: number;
-  /** Append to the list; the canvas does not change. Returns the step id. Throws on a duplicate id. */
+  /**
+   * Append to the list; the canvas does not change. Returns the step id.
+   * Throws on a duplicate id.
+   *
+   * A step returned by `history.sinceLastStep` is **adopted** instead when its
+   * entries are still the newest and the playbook is at its last step: the
+   * work is already on the canvas, so its entries are tagged with the step's
+   * id, the step counts as played, and the position moves to it — `previous`
+   * reverts that work like any played step.
+   */
   addStep(spec: StepSpec<S>): string;
   /**
    * Play the next step — or replay it, when it was played and then stepped

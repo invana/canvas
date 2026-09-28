@@ -13,10 +13,8 @@ import {
   DrawEdgeBehaviour,
   EraseBehaviour,
   GraphToolProvider,
-  GraphHistoryProvider,
   GraphClipboardProvider,
   useTool,
-  useDrawHistory,
   type GraphLayerProps
 } from '@invana/canvas-react';
 import { ControlPanels, MODELLER_CONTROL_ITEMS } from '@invana/canvas-ui';
@@ -35,8 +33,9 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
  *   Select.
  * - **Shape** is `tool.nodeKind`, enabled only while adding. The preset item is
  *   copied with `args.kinds` so it lists this story's shapes.
- * - **Undo / redo / clear** come from `<GraphHistoryProvider>`, and **delete**
- *   from `<GraphClipboardProvider>`, both mounted inside the root.
+ * - **Undo / redo** are the canvas's own history — every drawing edit is
+ *   recorded — and **delete** / **clear** come from `<GraphClipboardProvider>`,
+ *   mounted inside the root.
  */
 const meta: Meta = { title: 'canvas-react/ControlPanel/GraphCanvas/Modeller' };
 export default meta;
@@ -74,7 +73,6 @@ const ITEMS: ControlItemSpec[] = MODELLER_CONTROL_ITEMS.map((item) =>
 /** The drawing behaviours, each enabled only while its tool is active. */
 function DrawingTools() {
   const { tool, nodeKind } = useTool();
-  const draw = useDrawHistory();
   // The Add tool's factory is captured once; read the live shape through a ref.
   const kindRef = useRef(nodeKind);
   kindRef.current = nodeKind;
@@ -96,10 +94,9 @@ function DrawingTools() {
             style: { shape: SHAPES[kindRef.current] ?? SHAPES.circle, labelText: String(n) }
           };
         }}
-        onNodeCreate={draw.onNodeCreate}
       />
-      <DrawEdgeBehaviour targetLayerId="graph" enabled={tool === 'connect'} onEdgeCreate={draw.onEdgeCreate} />
-      <EraseBehaviour targetLayerId="graph" enabled={tool === 'delete'} onErase={draw.onErase} />
+      <DrawEdgeBehaviour targetLayerId="graph" enabled={tool === 'connect'} />
+      <EraseBehaviour targetLayerId="graph" enabled={tool === 'delete'} />
     </>
   );
 }
@@ -115,12 +112,10 @@ export const Modeller: Story = {
           <DragPanBehaviour id="pan" />
           <WheelZoomBehaviour id="zoom" />
 
-          <GraphHistoryProvider>
-            <GraphClipboardProvider>
-              <DrawingTools />
-              <ControlPanel id="modeller" position="top" items={ITEMS} />
-            </GraphClipboardProvider>
-          </GraphHistoryProvider>
+          <GraphClipboardProvider>
+            <DrawingTools />
+            <ControlPanel id="modeller" position="top" items={ITEMS} />
+          </GraphClipboardProvider>
 
           <ControlPanels />
         </GraphCanvas>

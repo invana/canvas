@@ -465,12 +465,21 @@ export class DragNodeBehaviour extends Behaviour<DragNodeBehaviourOptions> {
       // the node is now permanently pinned (`pinnedIds.has(id)`), so the
       // store mutation has to land first to be observed. Pin every primary
       // (one batched flush), not just the grabbed one.
-      if (this.pinOnRelease) {
-        this.layer.store.batch(() => {
-          for (const id of ids) this.layer!.store.setPinned(id, true);
-        });
-      }
-      this.layer.events.emit('node:drag-end', { nodeId: primaryId, nodeIds: ids });
+      //
+      // One history entry for the gesture: the pin and the layer's move
+      // journal (recorded on `node:drag-end`) share an open log group.
+      const store = this.layer.store;
+      const release = (): void => {
+        if (this.pinOnRelease) {
+          store.batch(() => {
+            for (const id of ids) store.setPinned(id, true);
+          });
+        }
+        this.layer!.events.emit('node:drag-end', { nodeId: primaryId, nodeIds: ids });
+      };
+      const log = store.operationLog;
+      if (log && !log.replaying) log.group({ title: 'move' }, release);
+      else release();
     }
   }
 

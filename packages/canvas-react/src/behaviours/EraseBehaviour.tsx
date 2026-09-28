@@ -17,8 +17,8 @@ export interface EraseBehaviourProps extends Omit<EraseBehaviourOptions, 'id' | 
  * (cascades its edges) or an edge to delete it.
  *
  * `enabled` is reactive (toggle it from a tool-mode switch); other options are
- * init-only — change `id` / `targetLayerId` (or the `key`) to recreate. Pair `onErase`
- * with `useDrawHistory().onErase` to make deletes undoable.
+ * init-only — change `id` / `targetLayerId` (or the `key`) to recreate. Deletes
+ * are undoable through `canvas.history` (the layer's store records them).
  */
 export function EraseBehaviour({
   id = 'erase',

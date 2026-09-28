@@ -29,8 +29,8 @@ export interface UseEditorSectionOptions {
  * without a selection, paste until something is copied. Erase is selection-aware
  * — it deletes the selection (with a "Selection" label) when something is
  * selected, otherwise clears the whole layer. Requires a
- * `<GraphClipboardProvider>` + `ClickSelectBehaviour`; edits are undoable with a
- * `<GraphHistoryProvider>`. Restrict the set via {@link UseEditorSectionOptions.items}
+ * `<GraphClipboardProvider>` + `ClickSelectBehaviour`; edits are undoable
+ * through `canvas.history`. Restrict the set via {@link UseEditorSectionOptions.items}
  * — e.g. `items: ['erase']` for an erase-only bar with no clipboard controls.
  *
  * @deprecated A second way to draw toolbar controls beside the control specs

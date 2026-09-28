@@ -51,11 +51,8 @@ export {
   defaultEqual,
   createReactiveStore,
   createMemoryStore,
-  type History,
-  type HistoryOptions,
-  type HistoryStepInfo,
   // The operation log — the one record behind `canvas.history` (a data source
-  // attaches to it; `createOperationLog` also backs a standalone `GraphHistory`).
+  // attaches to it; `createOperationLog` also backs a standalone graph store).
   createOperationLog,
   historyView,
   PlaybookStepError,

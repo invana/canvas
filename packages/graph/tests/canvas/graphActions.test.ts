@@ -1,7 +1,8 @@
 /**
  * The plain graph action functions shared by `canvas-react`'s hooks and the
  * commands its providers register: the select-mode rule, clipboard actions over
- * the click-selection, clear, and the two-stack (graph + definition) undo.
+ * the click-selection, and clear — each one entry in `canvas.history`, which
+ * also orders graph and definition edits (one log).
  *
  * Headless: `Canvas.initWithRenderer` with the shipped `HeadlessRenderer`.
  */
@@ -12,20 +13,15 @@ import { GraphLayer } from '../../src/layer/GraphLayer';
 import { BrushSelectBehaviour } from '../../src/behaviours/BrushSelectBehaviour';
 import { LassoSelectBehaviour } from '../../src/behaviours/LassoSelectBehaviour';
 import { ClickSelectBehaviour } from '../../src/behaviours/ClickSelectBehaviour';
-import { GraphHistory } from '../../src/history/GraphHistory';
 import { GraphClipboard } from '../../src/clipboard/GraphClipboard';
 import { resolveSelectMode, selectModePatch } from '../../src/canvas/selectMode';
 import {
-  canRedoEither,
-  canUndoEither,
   clearGraphLayer,
   copySelection,
   cutSelection,
   deleteSelection,
   pasteAndSelect,
-  redoNewest,
   selectedElementIds,
-  undoNewest,
 } from '../../src/canvas/graphActions';
 
 beforeAll(() => {
@@ -121,7 +117,7 @@ describe('clipboard actions', () => {
     expect(clipboard.hasContent).toBe(true);
     expect(layer.store.getNode('a')).toBeDefined();
 
-    pasteAndSelect(canvas, clipboard, null, 'click-select');
+    pasteAndSelect(canvas, clipboard, 'click-select');
     const { nodeIds } = selectedElementIds(canvas, 'click-select');
     expect(nodeIds).toHaveLength(1);
     expect(nodeIds[0]).not.toBe('a');
@@ -134,138 +130,105 @@ describe('clipboard actions', () => {
     click.select('a');
     click.clearSelection();
     click.select('b');
-    deleteSelection(canvas, clipboard, null, 'click-select');
+    deleteSelection(canvas, clipboard, 'click-select');
     expect(layer.store.getNode('a')).toBeDefined();
     expect(layer.store.getNode('b')).toBeUndefined();
     canvas.destroy();
   });
 
-  it('cut / delete without a history are plain edits', () => {
+  it('cut / delete / paste are each one labelled, undoable entry', () => {
     const { canvas, layer, click, clipboard } = makeCanvas();
+
     click.select('a');
-    cutSelection(canvas, clipboard, null, 'click-select');
+    cutSelection(canvas, clipboard, 'click-select');
     expect(layer.store.getNode('a')).toBeUndefined();
     expect(clipboard.hasContent).toBe(true);
-    canvas.destroy();
-  });
-
-  it('cut / delete / paste with a history are each one undoable step', () => {
-    const { canvas, layer, click, clipboard } = makeCanvas();
-    const history = new GraphHistory(layer.store);
-
-    click.select('a');
-    cutSelection(canvas, clipboard, history, 'click-select');
-    expect(layer.store.getNode('a')).toBeUndefined();
-    history.undo();
+    expect(canvas.history.peekUndo()?.title).toBe('cut');
+    canvas.history.undo();
     expect(layer.store.getNode('a')).toBeDefined();
     expect(layer.store.getEdge('ab')).toBeDefined();
 
     click.clearSelection();
     click.select('b');
-    deleteSelection(canvas, clipboard, history, 'click-select');
+    deleteSelection(canvas, clipboard, 'click-select');
     expect(layer.store.getNode('b')).toBeUndefined();
-    history.undo();
+    expect(canvas.history.peekUndo()?.title).toBe('delete');
+    canvas.history.undo();
     expect(layer.store.getNode('b')).toBeDefined();
 
-    pasteAndSelect(canvas, clipboard, history, 'click-select');
+    pasteAndSelect(canvas, clipboard, 'click-select');
     const [pasted] = selectedElementIds(canvas, 'click-select').nodeIds;
     expect(layer.store.getNode(pasted!)).toBeDefined();
-    history.undo();
+    expect(canvas.history.peekUndo()?.title).toBe('paste');
+    canvas.history.undo();
     expect(layer.store.getNode(pasted!)).toBeUndefined();
     canvas.destroy();
   });
 
-  it('clearGraphLayer is one undoable step with a history — and without one, since the store records its own clear', () => {
+  it('clearGraphLayer is one undoable "clear" entry', () => {
     const { canvas, layer } = makeCanvas();
-    const history = new GraphHistory(layer.store);
-    clearGraphLayer(canvas, 'graph', history);
+    clearGraphLayer(canvas, 'graph');
     expect(layer.store.getNode('a')).toBeUndefined();
-    history.undo();
+    expect(canvas.history.entries()).toHaveLength(1);
+    expect(canvas.history.peekUndo()?.title).toBe('clear');
+    canvas.history.undo();
     expect(layer.store.getNode('a')).toBeDefined();
     expect(layer.store.getNode('b')).toBeDefined();
-
-    clearGraphLayer(canvas, 'graph', null);
-    expect(layer.store.getNode('a')).toBeUndefined();
-    // The layer's `clear()` goes through the store, which records it (RFC F5).
-    expect(history.canUndo).toBe(true);
-    history.undo();
-    expect(layer.store.getNode('a')).toBeDefined();
-    clearGraphLayer(canvas, 'missing', history); // no-op
+    expect(layer.store.getEdge('ab')).toBeDefined();
+    clearGraphLayer(canvas, 'missing'); // no-op
     canvas.destroy();
   });
 });
 
 describe('one-log undo (graph + definition edits in canvas.history)', () => {
   const EDIT = 'edit:settings:behaviours:brush-select';
+  const addC = (layer: GraphLayer) =>
+    layer.store.applyDelta({ added: { nodes: [{ id: 'c', type: 'node', position: { x: 0, y: 50 } }] } }, { title: 'add' });
 
   it('undo takes the newest change, redo the one undone last', async () => {
     const { canvas, layer } = makeCanvas();
     const brush = canvas.behaviours.get<BrushSelectBehaviour>('brush-select')!;
-    const history = new GraphHistory(layer.store);
-    expect(canUndoEither(canvas, history)).toBe(false);
-    expect(canRedoEither(canvas, history)).toBe(false);
+    expect(canvas.history.canUndo()).toBe(false);
 
     // 1. a graph edit, then 2. a definition edit.
-    history.transaction('add', (rec) => rec.addNode({ id: 'c', type: 'node', position: { x: 0, y: 50 } }));
+    addC(layer);
     await tick();
     canvas.update({ behaviours: { 'brush-select': { enableElements: ['shape'] } } }, EDIT);
-    expect(canUndoEither(canvas, history)).toBe(true);
 
     // Undo walks back newest → oldest: the definition edit first.
-    undoNewest(canvas, history);
+    canvas.history.undo();
     expect(brush.options.enableElements).toEqual(['shape', 'connector']);
     expect(layer.store.getNode('c')).toBeDefined();
-    expect(canRedoEither(canvas, history)).toBe(true);
-
-    undoNewest(canvas, history);
+    canvas.history.undo();
     expect(layer.store.getNode('c')).toBeUndefined();
-    expect(canUndoEither(canvas, history)).toBe(false);
+    expect(canvas.history.canUndo()).toBe(false);
 
     // Redo replays oldest → newest: the graph edit first.
-    redoNewest(canvas, history);
+    canvas.history.redo();
     expect(layer.store.getNode('c')).toBeDefined();
     expect(brush.options.enableElements).toEqual(['shape', 'connector']);
-
-    redoNewest(canvas, history);
+    canvas.history.redo();
     expect(brush.options.enableElements).toEqual(['shape']);
-    expect(canRedoEither(canvas, history)).toBe(false);
-    expect(canUndoEither(canvas, history)).toBe(true);
+    expect(canvas.history.canRedo()).toBe(false);
     canvas.destroy();
   });
 
   it('a definition edit before a graph edit is undone second', async () => {
     const { canvas, layer } = makeCanvas();
     const brush = canvas.behaviours.get<BrushSelectBehaviour>('brush-select')!;
-    const history = new GraphHistory(layer.store);
-
     canvas.update({ behaviours: { 'brush-select': { enableElements: ['shape'] } } }, EDIT);
     await tick();
-    history.transaction('add', (rec) => rec.addNode({ id: 'c', type: 'node', position: { x: 0, y: 50 } }));
+    addC(layer);
 
-    undoNewest(canvas, history);
+    canvas.history.undo();
     expect(layer.store.getNode('c')).toBeUndefined();
     expect(brush.options.enableElements).toEqual(['shape']);
-    undoNewest(canvas, history);
+    canvas.history.undo();
     expect(brush.options.enableElements).toEqual(['shape', 'connector']);
 
-    redoNewest(canvas, history);
+    canvas.history.redo();
     expect(brush.options.enableElements).toEqual(['shape']);
     expect(layer.store.getNode('c')).toBeUndefined();
-    canvas.destroy();
-  });
-
-  it('a definition edit alone enables and drives undo / redo — on the graph handle too', () => {
-    const { canvas, layer } = makeCanvas();
-    const history = new GraphHistory(layer.store);
-    canvas.update({ behaviours: { 'brush-select': { enableElements: ['shape'] } } }, EDIT);
-    // One log: the layer's history handle sees the definition edit as well.
-    expect(history.canUndo).toBe(true);
-    expect(canUndoEither(canvas, history)).toBe(true);
-    undoNewest(canvas, history);
-    expect(canvas.history.canUndo()).toBe(false);
-    expect(canRedoEither(canvas, history)).toBe(true);
-    redoNewest(canvas, history);
-    expect(canvas.history.canUndo()).toBe(true);
     canvas.destroy();
   });
 });

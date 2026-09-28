@@ -22,7 +22,8 @@ import type { BadgeOptions } from '@invana/canvas';
 import type { DecorationSpec, EffectSpec, Rect, ShapeFillLayer } from '@invana/canvas';
 
 import { GraphStore } from '../store/GraphStore';
-import type { EdgeDirection, GraphEdge, GraphNode } from '../store/types';
+import type { EdgeDirection, GraphEdge, GraphNode, Vec2 } from '../store/types';
+import type { HistoryOp } from '../history/types';
 import type { GraphSchema } from '../schema/types';
 
 import {
@@ -621,6 +622,10 @@ export class GraphLayer extends WorldLayer<
     const currentTheme = ctx.theme.current();
     if (currentTheme) this.applyTheme(currentTheme.palette);
 
+    // A drag writes positions every frame, unrecorded; journal the gesture
+    // once, on release, as one "move" entry.
+    this.subs.push(this.journalNodeDrags());
+
     // Load initial data now that the renderer + subscriptions are live — this
     // fires `data:changed`, which auto-triggers the active layout.
     //
@@ -716,6 +721,49 @@ export class GraphLayer extends WorldLayer<
       ...(styling?.group ? { group: styling.group } : {}),
       ...(badges !== undefined ? { badges } : {}),
       ...(size !== undefined ? { size } : {}),
+    };
+  }
+
+  /**
+   * Journal node drags as one `'move'` history entry per gesture: every
+   * dragged primary (a multi-selection drag moves them all) plus each one's
+   * descendants (a group drag) is snapshot at `node:drag-start`, and the net
+   * change is recorded at `node:drag-end` through {@link GraphStore.recordApplied}.
+   * Nothing per frame, so layout writes and programmatic moves stay out of
+   * history. A drag-end inside an open log group (`DragNodeBehaviour`'s
+   * pin-on-release) joins that entry. Returns the unsubscribe.
+   */
+  private journalNodeDrags(): () => void {
+    const store = this.store;
+    let before: Map<string, Vec2> | null = null;
+    const offStart = this.events.on('node:drag-start', ({ nodeId, nodeIds }) => {
+      const ids = new Set<string>();
+      for (const primary of nodeIds ?? [nodeId]) {
+        ids.add(primary);
+        for (const desc of store.descendantsOf(primary)) ids.add(desc);
+      }
+      before = new Map();
+      for (const id of ids) {
+        const p = store.getPosition(id);
+        if (p) before.set(id, { x: p.x, y: p.y });
+      }
+    });
+    const offEnd = this.events.on('node:drag-end', () => {
+      const snap = before;
+      before = null;
+      if (!snap) return;
+      const ops: HistoryOp[] = [];
+      for (const [id, from] of snap) {
+        const to = store.getPosition(id);
+        if (to && (to.x !== from.x || to.y !== from.y)) {
+          ops.push({ kind: 'moveNode', id, before: from, after: { x: to.x, y: to.y } });
+        }
+      }
+      store.recordApplied(ops, { title: 'move' });
+    });
+    return () => {
+      offStart();
+      offEnd();
     };
   }
 

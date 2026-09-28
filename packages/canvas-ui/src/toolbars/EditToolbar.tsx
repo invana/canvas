@@ -25,8 +25,8 @@ export interface EditToolbarProps {
  * Editor bar — cut / copy / paste / erase (`clipboard.*` + `graph.erase`),
  * drawn from control specs like a saved panel. Erase is selection-aware (deletes the selection when something is
  * selected, otherwise clears the layer). Needs a `ClickSelectBehaviour`;
- * the clipboard and undo are built into `GraphCanvas` (on a plain `Canvas`, mount
- * `<GraphClipboardProvider>` / `<GraphHistoryProvider>`).
+ * the clipboard is built into `GraphCanvas` (on a plain `Canvas`, mount
+ * `<GraphClipboardProvider>`); undo is `canvas.history` everywhere.
  */
 export function EditToolbar({
   icons,

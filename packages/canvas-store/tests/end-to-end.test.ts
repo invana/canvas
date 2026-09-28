@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createCanvasStore, createHistory, select, type TelemetryEvent } from '../src/index';
+import { createCanvasStore, createOperationLog, select, type TelemetryEvent } from '../src/index';
 
 /**
  * End-to-end: a single update to a layer / behaviour / layout **setting** drives
@@ -20,7 +20,7 @@ describe('end-to-end — a setting update drives renderer + a React-like subscri
   it('layer/behaviour/layout settings react; targeted; telemetry + history fall out', () => {
     const telemetry: TelemetryEvent[] = [];
     const store = createCanvasStore({ telemetry: { sink: { emit: (e) => telemetry.push(e) } } });
-    const history = createHistory(store.view);
+    const history = createOperationLog({ view: store.view });
     const graph = store.layer('graph');
 
     const radiusOf = (): number | undefined =>
