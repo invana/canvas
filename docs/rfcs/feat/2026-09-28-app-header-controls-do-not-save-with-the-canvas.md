@@ -2,10 +2,10 @@
 id: feat-2026-09-28-app-header-controls-do-not-save-with-the-canvas
 type: feat
 title: Control panels can be placed in GraphCanvasApp's header, so header controls save with the canvas
-status: accepted
+status: landed
 opened: 2026-09-28
 decided: 2026-09-28
-landed: null
+landed: 2026-09-28
 packages: [pkg:@invana/canvas-core, pkg:@invana/canvas, pkg:@invana/canvas-ui]
 design_of_record: null
 relations:
@@ -20,7 +20,7 @@ relations:
 |---|---|
 | **Motivation** | `GraphCanvasApp`'s header regions (`left` / `center` / `right`) take React nodes, so whatever an app puts there is code and is lost on export. Controls floating *over* the canvas already save as `definition.controlPanels`; the header rail, outside the canvas host, can't hold them. This is D4 of `rfc:feat-2026-09-28-toolbars-and-control-panels-draw-controls-twice`. |
 | **Design** | `ControlPanelSpec.placement?: 'canvas' \| 'header-left' \| 'header-center' \| 'header-right'`. `<ControlPanels>` draws only `canvas` panels. A new `<HeaderControlPanels region>` draws the rest inside the header regions. Persistence, import, `<ControlPanel>` and the editor come with the existing spec. |
-| **Row status** | proposed 0 · accepted 0 · implemented 6 · landed 0 · deferred 2 · rejected 0 · superseded 0 |
+| **Row status** | proposed 0 · accepted 0 · implemented 0 · landed 6 · deferred 2 · rejected 0 · superseded 0 |
 | **Open decisions** | none — all as recommended |
 
 ## 1. Motivation
@@ -63,12 +63,12 @@ relations:
 
 | ID | Kind | Status | File/target | Change | Effect | Risk | Depends on |
 |---|---|---|---|---|---|---|---|
-| P1 | defect | implemented | `sym:ControlPanelSpec` | `placement?` + TSDoc on which fields each placement honours | a panel can target the header | low — additive, optional | — |
-| P2 | defect | implemented | `sym:ControlPanels` | skip non-`canvas` placements | no double draw | low | P1 |
-| P3 | defect | implemented | `pkg:@invana/canvas-ui` `control-panels/HeaderControlPanels.tsx` | new exported component | a projection for header regions | low — new export | P1 |
-| P4 | defect | implemented | `sym:buildHeaderNav` | append saved panels per region (D2) | `GraphCanvasApp` headers save and restore | **medium** — changes what every `GraphCanvasApp` header renders when header-placed panels exist; none do today, so current stories are unchanged | P3 |
-| P5 | defect | implemented | `editor-panels/control-panels/{fields,mapping,types}.ts` | Placement field; hide position, offset and stretch for header placements | Studio authoring | low | P1 |
-| P6 | defect | implemented | `file:packages/canvas/src/engine/builtinCommands.ts` | `layer.visible { id }` toggle | minimap and dev-info toggles become saveable | low — additive command | — |
+| P1 | defect | landed | `sym:ControlPanelSpec` | `placement?` + TSDoc on which fields each placement honours | a panel can target the header | low — additive, optional | — |
+| P2 | defect | landed | `sym:ControlPanels` | skip non-`canvas` placements | no double draw | low | P1 |
+| P3 | defect | landed | `pkg:@invana/canvas-ui` `control-panels/HeaderControlPanels.tsx` | new exported component | a projection for header regions | low — new export | P1 |
+| P4 | defect | landed | `sym:buildHeaderNav` | append saved panels per region (D2) | `GraphCanvasApp` headers save and restore | **medium** — changes what every `GraphCanvasApp` header renders when header-placed panels exist; none do today, so current stories are unchanged | P3 |
+| P5 | defect | landed | `editor-panels/control-panels/{fields,mapping,types}.ts` | Placement field; hide position, offset and stretch for header placements | Studio authoring | low | P1 |
+| P6 | defect | landed | `file:packages/canvas/src/engine/builtinCommands.ts` | `layer.visible { id }` toggle | minimap and dev-info toggles become saveable | low — additive command | — |
 | P7 | defect | deferred | `sym:GraphCanvasAppFooter` | `footer-*` placements (D3) | the same for the footer | low | P3 |
 | P8 | defect | deferred | `apps/storybook` headers (M4) | migrate stories to saved header panels | — | — | only if a story is asked for (rule 11) |
 
@@ -117,3 +117,4 @@ Downstream
 | 2026-09-28 | Opened from D4 of `rfc:feat-2026-09-28-toolbars-and-control-panels-draw-controls-twice` | proposed | Finding: the minimap, dev-info, dock, dataset and export header controls have no commands; P6 covers the first two |
 | 2026-09-28 | Approved whole ("impleemnt all in this branch"); every decision as recommended | accepted | |
 | 2026-09-28 | P1–P6 implemented on `feat/view-history` | accepted | V1: build, check-types, lint, tests. V2: headless Chromium, `FullFeatured` — a `header-right` panel draws in the header rail (button bottom 32 px, canvas top 40 px), and its `camera.fit` works; a canvas-placed panel in the same run still floats over the canvas. V3: `exportState` → remove → `importState` brings the header panel back with its placement. V4: a header-placed panel's form shows only Placement / Card surface / Visible (switching the select itself was not driven). V5: `FullFeatured`, `EmbeddedWidget`, `GraphCanvasApp/ControlPanels`, `ControlPanel/GraphCanvas/Modeller`, `ControlPanel/Canvas/Basic` and `usecases/tools/GraphModeller` load with no console errors; an empty region adds no DOM (fragments), so no pixel diff was taken. V6: `layer.visible { id: 'minimap' }` hides and re-shows the minimap and reports active while visible. **Correction to M5 / P6:** minimap and dev-info toggles were already saveable — as the `minimap-toggle` / `dev-info-toggle` widgets. `layer.visible` stays as a generic toggle for any registered layer (legend, contours, a hidden overlay). Also: switching Placement in the editor resets Card surface to that surface's default |
+| 2026-09-28 | `feat/view-history` merged to `main` | landed | Every implemented row → landed (all verification rows `pass`; build, check-types, lint, test green at merge). Deferred rows stay deferred, tracked in `doc:docs/commands-followups.md` |

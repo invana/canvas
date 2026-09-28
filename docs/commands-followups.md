@@ -23,7 +23,7 @@ Status: 📋 open · 🚧 in progress · ✅ done.
 
 | # | Item | Status |
 |---|---|---|
-| 1 | Commit + merge `feat/view-history`; set its three RFCs (`canvas-definition-edits-cannot-be-undone`, `control-panel-command-args-are-raw-json`, `app-header-controls-do-not-save-with-the-canvas`) to `landed` | 📋 |
+| 1 | Commit + merge `feat/view-history`; set its three RFCs (`canvas-definition-edits-cannot-be-undone`, `control-panel-command-args-are-raw-json`, `app-header-controls-do-not-save-with-the-canvas`) to `landed` | ✅ merged 2026-09-28 |
 | 2 | `control-panels-cannot-be-edited-in-the-studio` and `the-modeller-tool-lives-outside-the-canvas` stay `accepted` until their story rows (E9, S1) are done or rejected | ✅ recorded — both stay `accepted`, E9 / S1 deferred (stories only when asked) |
 | 3 | `docs/README.md` still labels `canvas-core-structure`, `renderer-preference-canvas…`, `label-measurement…` as "🚧 implemented on `feat/control-panels`" — stale | ✅ relabelled from git (B1, B2 of `rfc:feat-2026-09-28-hooks-and-commands-duplicate-the-same-logic`) |
 
@@ -88,4 +88,4 @@ Status: 📋 open · 🚧 in progress · ✅ done.
 If 25–26 aren't planned soon, items 4–8 come next: they stop hooks and commands drifting
 apart.
 
-Items 3–10 landed through `rfc:feat-2026-09-28-hooks-and-commands-duplicate-the-same-logic` (on `feat/view-history`). It also recorded, out of scope: `useLock` re-implements `view.lock`, and `useEdgeType` goes through its command — the same drift as items 4–5.
+Items 3–10 landed through `rfc:feat-2026-09-28-hooks-and-commands-duplicate-the-same-logic`. It also recorded, out of scope: `useLock` re-implements `view.lock`, and `useEdgeType` goes through its command — the same drift as items 4–5.

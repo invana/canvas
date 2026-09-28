@@ -2,10 +2,10 @@
 id: feat-2026-09-28-canvas-definition-edits-cannot-be-undone
 type: feat
 title: Edits to the canvas definition (settings, control panels) can be undone alongside graph edits
-status: accepted
+status: landed
 opened: 2026-09-28
 decided: 2026-09-28
-landed: null
+landed: 2026-09-28
 packages: [pkg:@invana/canvas-core, pkg:@invana/canvas-store, pkg:@invana/canvas, pkg:@invana/graph, pkg:@invana/canvas-react, pkg:@invana/canvas-ui]
 design_of_record: doc:docs/canvas-state-plan.md
 relations:
@@ -19,7 +19,7 @@ relations:
 |---|---|
 | **Motivation** | The Studio editors (`CanvasSettingsEditorPanel`, `ControlPanelsEditor`) write `view.definition`. No view history exists, so an applied edit cannot be undone, and **Undo** (`history.undo`) only covers graph data. D4 of `rfc:feat-2026-09-28-control-panels-cannot-be-edited-in-the-studio` deferred this to its own kernel-wide RFC. |
 | **Design** | (1) Record only **named user edits**: `canvas.update(patch, action)` with an `edit:*` action, filtered to `definition` paths. (2) A **reconciler** in `Canvas`: undo and redo also re-apply the reverted definition slices to the live instances. (3) **One Undo button, two stacks**: `history.*` undoes whichever stack's top entry is newer. |
-| **Row status** | proposed 0 · accepted 0 · implemented 8 · landed 0 · deferred 1 · rejected 0 · superseded 0 |
+| **Row status** | proposed 0 · accepted 0 · implemented 0 · landed 8 · deferred 1 · rejected 0 · superseded 0 |
 | **Open decisions** | none — D1, D2 as recommended; D3 superseded by the baseline write (§8) |
 
 ## 1. Motivation
@@ -63,14 +63,14 @@ relations:
 
 | ID | Kind | Status | File/target | Change | Effect | Risk | Depends on |
 |---|---|---|---|---|---|---|---|
-| H1 | defect | implemented | `sym:createHistory` (`pkg:@invana/canvas-store`) | `filter` option; `subscribe(listener)`; `peek()` returning the top step's `at`; each recorded step stamped with `at` | scoped, observable history | low — additive; existing tests keep passing | — |
-| H2 | defect | implemented | `sym:Canvas.update` | optional second arg `action` (default `'canvas:update'`) | writes can be named | low — additive signature | — |
-| H3 | defect | implemented | `pkg:@invana/canvas` `Canvas` | `canvas.history: History`, filtered to `edit:*` actions and `definition/*` paths, and disposed with the canvas | a view history exists | medium — a new public field, so the API surface snapshot changes | H1, H2 |
-| H4 | defect | implemented | `pkg:@invana/canvas` `Canvas` | reconciler on undo and redo (step 4); the `interaction.viewMode` seed is not affected | undo changes what's drawn, not just the store | **medium-high** — it re-drives `setOptions` on live layers and behaviours; D3 decides how removed keys are handled | H3 |
-| H5 | defect | implemented | `pkg:@invana/canvas` builtins + `sym:GraphHistoryProvider` + `sym:GraphHistory` | built-in `history.undo` / `history.redo` over `canvas.history`; the provider's override picks the newer top across both stacks; `GraphHistory` entries get `at` | one Undo button | medium — changes Undo order for apps that edit both the graph and the settings | H3 |
-| H6 | defect | implemented | `sym:ControlPanelsEditor`, `sym:CanvasSettingsEditorPanel`, `sym:useGraphCanvasUpdate` | apply with `edit:*` actions | Studio edits are recorded | low | H2 |
-| H7 | defect | implemented | `sym:importCanvasState` | `canvas.history.clear()` after an import | no stale steps | low | H3 |
-| H8 | defect | implemented | TSDoc at M3; `file:packages/canvas-core/src/state/view/controlPanels.ts#L7-L9` | state what is actually undone: `edit:*` definition changes | docs match behaviour | low | H3 |
+| H1 | defect | landed | `sym:createHistory` (`pkg:@invana/canvas-store`) | `filter` option; `subscribe(listener)`; `peek()` returning the top step's `at`; each recorded step stamped with `at` | scoped, observable history | low — additive; existing tests keep passing | — |
+| H2 | defect | landed | `sym:Canvas.update` | optional second arg `action` (default `'canvas:update'`) | writes can be named | low — additive signature | — |
+| H3 | defect | landed | `pkg:@invana/canvas` `Canvas` | `canvas.history: History`, filtered to `edit:*` actions and `definition/*` paths, and disposed with the canvas | a view history exists | medium — a new public field, so the API surface snapshot changes | H1, H2 |
+| H4 | defect | landed | `pkg:@invana/canvas` `Canvas` | reconciler on undo and redo (step 4); the `interaction.viewMode` seed is not affected | undo changes what's drawn, not just the store | **medium-high** — it re-drives `setOptions` on live layers and behaviours; D3 decides how removed keys are handled | H3 |
+| H5 | defect | landed | `pkg:@invana/canvas` builtins + `sym:GraphHistoryProvider` + `sym:GraphHistory` | built-in `history.undo` / `history.redo` over `canvas.history`; the provider's override picks the newer top across both stacks; `GraphHistory` entries get `at` | one Undo button | medium — changes Undo order for apps that edit both the graph and the settings | H3 |
+| H6 | defect | landed | `sym:ControlPanelsEditor`, `sym:CanvasSettingsEditorPanel`, `sym:useGraphCanvasUpdate` | apply with `edit:*` actions | Studio edits are recorded | low | H2 |
+| H7 | defect | landed | `sym:importCanvasState` | `canvas.history.clear()` after an import | no stale steps | low | H3 |
+| H8 | defect | landed | TSDoc at M3; `file:packages/canvas-core/src/state/view/controlPanels.ts#L7-L9` | state what is actually undone: `edit:*` definition changes | docs match behaviour | low | H3 |
 | H9 | defect | deferred | `sym:useHistory` / `HistoryContext` | expose the combined timeline to React (`canUndo` across both stacks) | toolbars' enabled state reflects view edits | medium — `useHistory` returns `GraphHistory` today, so this is an API change. Deferred until H5 proves the arbitration | H5 |
 
 ## 5. Blast radius
@@ -118,3 +118,4 @@ Downstream
 | 2026-09-28 | Opened from D4 of `rfc:feat-2026-09-28-control-panels-cannot-be-edited-in-the-studio`, after the control-panel branch merged | proposed | awaiting approval |
 | 2026-09-28 | Approved whole ("impleemnt all in this branch"); every decision as recommended | accepted | |
 | 2026-09-28 | H1–H8 implemented on `feat/view-history` | accepted | V1: build, check-types, lint (surfaces regenerated: `History*` types, `ControlPanelPlacement`, `CommandArg*`), tests (canvas-store +4, graph +7 in `tests/canvas/definitionHistory.test.ts`, +1 `GraphHistory` peek). V3: headless Chromium, `CanvasSettingsEditorPanel` — an `edit:` background colour turns the canvas red, `history.undo` returns it to the grid on screen, and the header Undo / Redo buttons follow. V4: `FullFeatured` — lasso-select edit then `graph.clear`; Undo → 77 nodes back (lasso still on), Undo → lasso off; Redo → lasso on, Redo → cleared. V5: zoom / pan commands and `select.mode` switches leave `canUndo` false (hover and layout progress are filtered by the same `edit:` prefix; not driven separately). V6: `importCanvasState` on `FullFeatured` + a graph test leave nothing to undo (driven through the API, not the ExportState story's file picker). **Learned — the RFC was wrong or short in four places:** (1) D3's option B (send `undefined` for a removed key) would reset an option to the *class* default, not the pre-edit value — the settings editor writes whole option bags, so almost every key is "new" to the definition. Replaced by a **baseline write**: before an `edit:` update, the instance's current value of each key the definition doesn't hold is written unrecorded, so the inverse patch restores the real old value; `undefined` is now only the fallback for non-JSON values. (2) Live editors write per keystroke / drag frame, so H1 gained `mergeWithinMs` (same action within 600 ms → one step) and the settings panel names its action per instance. (3) Redo must take the **older** top across the two stacks, not the newer (undo walked newest → oldest). (4) Several behaviours override `setOptions` without `super`, so `getOptions()` is stale for them (`BrushSelectBehaviour` resolves into `.options`); the baseline reads each key from `getOptions()` then `.options`. The same staleness affects what `CanvasSettingsEditorPanel` shows for those behaviours — pre-existing, not fixed here. Also: undoing an `activeLayout` change re-announces it through `update` so `GraphCanvas` re-wires it; `GraphCanvas.update` gained the `action` parameter |
+| 2026-09-28 | `feat/view-history` merged to `main` | landed | Every implemented row → landed (all verification rows `pass`; build, check-types, lint, test green at merge). Deferred rows stay deferred, tracked in `doc:docs/commands-followups.md` |

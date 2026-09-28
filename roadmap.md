@@ -137,9 +137,9 @@ Legend: ✅ shipped · 🚧 in progress · 📋 planned
 | Control-panel editor for the Studio (`ControlPanelsEditor`, also in `CanvasSettingsEditorPanel`) | ✅ |
 | Toolbars drawn from control specs (one renderer: `useControlItems` / `<ControlItems>`) | ✅ |
 | Modeller tool in the kernel (`interaction.viewMode`) — behaviours follow it via `modes` | ✅ |
-| Undo for Studio edits (`canvas.history` over `edit:*` definition changes; one Undo with graph edits) | 🚧 on `feat/view-history` |
-| Command arg descriptors (`CanvasCommand.args`) — the control-panel editor draws a field per arg | 🚧 on `feat/view-history` |
-| Header-placed control panels (`placement: 'header-*'`, `<HeaderControlPanels>`) — `GraphCanvasApp` headers save with the canvas | 🚧 on `feat/view-history` |
+| Undo for Studio edits (`canvas.history` over `edit:*` definition changes; one Undo with graph edits) | ✅ |
+| Command arg descriptors (`CanvasCommand.args`) — the control-panel editor draws a field per arg | ✅ |
+| Header-placed control panels (`placement: 'header-*'`, `<HeaderControlPanels>`) — `GraphCanvasApp` headers save with the canvas | ✅ |
 | Command refactor follow-ups — unify hooks ⇄ commands, typed commands, remaining toolbars ([`docs/commands-followups.md`](./docs/commands-followups.md)) | 📋 |
 | `GraphCanvasApp` compound app | ✅ |
 

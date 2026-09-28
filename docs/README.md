@@ -162,19 +162,19 @@ working design-of-record documents. Day-to-day API/concept docs live in
     behaviours gain a `modes` option and gate themselves; `tool.*` commands move to graph
     and the React bridge goes.
   - [feat/2026-09-28-canvas-definition-edits-cannot-be-undone.md](./rfcs/feat/2026-09-28-canvas-definition-edits-cannot-be-undone.md)
-    — 🚧 implemented on `feat/view-history`. **A view history for Studio edits**: records only `edit:*`-named
+    — ✅ landed 2026-09-28. **A view history for Studio edits**: records only `edit:*`-named
     `canvas.update`s to `definition` (a baseline write makes undo restore real pre-edit
     values), merges live-edit bursts, reconciles live instances on undo / redo, and one
     Undo button arbitrates between the view and graph stacks.
   - [feat/2026-09-28-control-panel-command-args-are-raw-json.md](./rfcs/feat/2026-09-28-control-panel-command-args-are-raw-json.md)
-    — 🚧 implemented on `feat/view-history`. **Commands describe their args** (`CanvasCommand.args`, plain data in
+    — ✅ landed 2026-09-28. **Commands describe their args** (`CanvasCommand.args`, plain data in
     core) so the control-panel editor draws fields — reference kinds pick live layers /
     behaviours / layouts; undeclared keys keep a JSON fallback.
   - [feat/2026-09-28-app-header-controls-do-not-save-with-the-canvas.md](./rfcs/feat/2026-09-28-app-header-controls-do-not-save-with-the-canvas.md)
-    — 🚧 implemented on `feat/view-history`. **`placement: 'header-*'` on `ControlPanelSpec`** so `GraphCanvasApp`
+    — ✅ landed 2026-09-28. **`placement: 'header-*'` on `ControlPanelSpec`** so `GraphCanvasApp`
     header controls save with the canvas; adds a `layer.visible` toggle command.
   - [feat/2026-09-28-hooks-and-commands-duplicate-the-same-logic.md](./rfcs/feat/2026-09-28-hooks-and-commands-duplicate-the-same-logic.md)
-    — 🚧 implemented on `feat/view-history` (G1 deferred to the next breaking release). **Hooks and commands call one set of
+    — ✅ landed 2026-09-28 (G1 deferred to the next breaking release). **Hooks and commands call one set of
     functions** in `@invana/graph` (select mode, clipboard, two-stack undo); `GraphControlsToolbar`'s private layout
     commands go; the section hooks are deprecated; the logic → hooks → commands rule is in `canvas-react/CLAUDE.md`.
 

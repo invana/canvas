@@ -2,10 +2,10 @@
 id: feat-2026-09-28-hooks-and-commands-duplicate-the-same-logic
 type: feat
 title: Hooks and commands share one set of engine functions, so they can't drift
-status: accepted
+status: landed
 opened: 2026-09-28
 decided: 2026-09-28
-landed: null
+landed: 2026-09-28
 packages: [pkg:@invana/graph, pkg:@invana/canvas-react, pkg:@invana/canvas-ui]
 design_of_record: doc:docs/commands-followups.md
 relations:
@@ -21,7 +21,7 @@ relations:
 | **Motivation** | Several actions are written twice: once in a `canvas-react` hook and once in a command (`select.mode`, `clipboard.*`, the two-stack undo). `GraphControlsToolbar` registers private commands only to fit its layout picker into the spec renderer. Five section hooks are a second way to draw toolbar controls that no live toolbar uses. Items 3–10 of `doc:docs/commands-followups.md` |
 | **Design** | Logic goes into plain functions in `pkg:@invana/graph`. Hooks and commands both call them. Commands only for saved controls. Section hooks deprecated. The rule goes into `doc:packages/canvas-react/CLAUDE.md` |
 | **Constraint** | Nothing users see changes: labels, enabled / pressed states, layout entries, saved panels. No command renamed. No export removed |
-| **Row status** | proposed 0 · accepted 0 · implemented 16 · landed 0 · deferred 1 · rejected 0 · superseded 0 |
+| **Row status** | proposed 0 · accepted 0 · implemented 0 · landed 16 · deferred 1 · rejected 0 · superseded 0 |
 | **Open decisions** | none — D1–D5 accepted as recommended |
 
 ## 1. Motivation
@@ -82,23 +82,23 @@ One difference: today, the first render before the effect registers the commands
 
 | ID | Kind | Status | File/target | Change | Effect | Risk | Depends on |
 |---|---|---|---|---|---|---|---|
-| B1 | defect | implemented | `doc:docs/README.md` (item 3) | `canvas-core-structure` → "✅ landed (in `main` since v0.0.12; folder layout since reshaped by `canvas-core-folder-sprawl`)". `renderer-preference…` → "✅ landed 2026-09-10". `label-measurement…` → "🚧 in `main`; V1 / V4 pending" | index matches git | low | — |
-| B2 | defect | implemented | `doc:docs/rfcs/fix/2026-09-10-label-measurement-allocates-a-textstyle-per-call.md` (item 3) | front matter `proposed` → `accepted`; F1 / F2 `accepted` → `implemented`; row-status line; history row | RFC agrees with its own history | low | — |
-| S1 | defect | implemented | new `file:packages/graph/src/canvas/selectMode.ts` (item 4) | `resolveSelectMode(modes, isEnabled): string \| null`, `selectModePatch(modes, next)`, exported from `pkg:@invana/graph` | one rule | low — additive exports | — |
-| S2 | defect | implemented | `sym:select.mode` in `file:packages/graph/src/canvas/graphCommands.ts#L145-L171` | `value` / `run` call S1 (live-behaviour reader, D1) | — | low — `graphCommands.test.ts` covers it | S1 |
-| S3 | defect | implemented | `sym:useSelectMode` | `mode` / `setMode` call S1 (definition reader, D1). Initial-mode enforcement unchanged | — | low — signature unchanged | S1 |
-| H1 | defect | implemented | `canvas-react/providers/graphActions.ts` → `file:packages/graph/src/canvas/graphActions.ts` (item 5, D4) | move `clearGraphLayer` / `selectedElementIds` / `pasteAndSelect`. Add `copySelection` / `cutSelection` / `deleteSelection`. `graphCommands`' private `clickSelection` → `selectedElementIds`. Export from `pkg:@invana/graph` | one home, no React | **medium** — cross-package move. The canvas-react file was internal, so no public import breaks | — |
-| H2 | defect | implemented | `sym:GraphClipboardProvider`, `sym:useClipboard`, `sym:useClearGraph` | commands and hook call H1. `useClipboard` reads the selection at call time. Result type unchanged | clipboard hook and commands can't diverge | medium — every Cut / Copy / Paste / Delete button and command | H1 |
-| H3 | defect | implemented | `sym:GraphHistoryProvider` → H1's module | `graphGoesFirst` + the `history.undo` / `.redo` bodies and `isEnabled` → `undoNewest` / `redoNewest` / `canUndoEither` / `canRedoEither`. Commands call them | arbitration reusable (H9-ready) | medium — every Undo / Redo button | H1 |
-| H4 | defect | implemented | `sym:useHistory` | no code change: already a thin wrapper over `GraphHistory`. TSDoc points at `undoNewest` and notes the combined form is H9 (D2) | behaviour unchanged | low | H3 |
-| X1 | defect | implemented | `useViewSection`, `useHistorySection`, `useLayoutsSection`, `useEditorSection`, `useStyleEditorSection` (item 6, D3) | TSDoc `@deprecated`, pointing at control specs + `useControlItems` for toolbars, or the plain hooks for bespoke UI. Removal is left to the next breaking release, with G1 | callers get a deprecation hint | low — no removal. The shared ESLint config is warn-only | T1 |
-| X2 | dressing | implemented | comments in `file:packages/canvas-react/src/uiModel.ts#L1-L3`, `file:packages/canvas-ui/src/components/ToolbarItem.ts#L9`, `file:packages/canvas-ui/src/components/ToolbarItems.tsx#L158`, `file:packages/canvas-ui/src/toolbars/GraphControlsToolbar.tsx#L1-L25` | stop recommending the section hooks. Fix the toolbar's header, which still names them and the private commands | docs match code | low | X1, L1 |
-| L1 | defect | implemented | `sym:GraphControlsToolbar` `useLayoutSpecs` (item 7) | → `useLayoutItems`: build the two §2 items straight from `useLayout`. Drop both `register` calls and the `invalidate()` effect | no private commands | **high** — ~36 stories render this toolbar (§5 N1). Picker entries, Run ⇄ Stop and icon overrides must be identical | — |
-| C1 | defect | implemented | `doc:packages/canvas-react/CLAUDE.md` (item 8) | a short "logic → hooks → commands (saved controls only)" section, pointing at `doc:docs/commands-followups.md` | the rule is written down | low | — |
-| T1 | defect | implemented | `sym:SchemaToolbar` Fit (item 9, D5) | `useViewSection` → `useControlItems([fitSpec(layerId)], { canvas })`. `icons.fit` still applies through `applyIconOverrides` (key `'fit'`) | Fit uses the one renderer | medium — Fit is now `disabled` until the schema canvas is initialised (`camera.fit`'s `whenInitialised`) | — |
-| T2 | defect | implemented | `sym:SchemaToolbar` groups 1–3 (item 9) | **stay callback-based**, recorded in the TSDoc: their state belongs to `SchemaViewPanel`, not the canvas. A spec needs a command, meaning a new public schema-view command (new scope) or a private one (what L1 removes) | recorded | none | — |
+| B1 | defect | landed | `doc:docs/README.md` (item 3) | `canvas-core-structure` → "✅ landed (in `main` since v0.0.12; folder layout since reshaped by `canvas-core-folder-sprawl`)". `renderer-preference…` → "✅ landed 2026-09-10". `label-measurement…` → "🚧 in `main`; V1 / V4 pending" | index matches git | low | — |
+| B2 | defect | landed | `doc:docs/rfcs/fix/2026-09-10-label-measurement-allocates-a-textstyle-per-call.md` (item 3) | front matter `proposed` → `accepted`; F1 / F2 `accepted` → `implemented`; row-status line; history row | RFC agrees with its own history | low | — |
+| S1 | defect | landed | new `file:packages/graph/src/canvas/selectMode.ts` (item 4) | `resolveSelectMode(modes, isEnabled): string \| null`, `selectModePatch(modes, next)`, exported from `pkg:@invana/graph` | one rule | low — additive exports | — |
+| S2 | defect | landed | `sym:select.mode` in `file:packages/graph/src/canvas/graphCommands.ts#L145-L171` | `value` / `run` call S1 (live-behaviour reader, D1) | — | low — `graphCommands.test.ts` covers it | S1 |
+| S3 | defect | landed | `sym:useSelectMode` | `mode` / `setMode` call S1 (definition reader, D1). Initial-mode enforcement unchanged | — | low — signature unchanged | S1 |
+| H1 | defect | landed | `canvas-react/providers/graphActions.ts` → `file:packages/graph/src/canvas/graphActions.ts` (item 5, D4) | move `clearGraphLayer` / `selectedElementIds` / `pasteAndSelect`. Add `copySelection` / `cutSelection` / `deleteSelection`. `graphCommands`' private `clickSelection` → `selectedElementIds`. Export from `pkg:@invana/graph` | one home, no React | **medium** — cross-package move. The canvas-react file was internal, so no public import breaks | — |
+| H2 | defect | landed | `sym:GraphClipboardProvider`, `sym:useClipboard`, `sym:useClearGraph` | commands and hook call H1. `useClipboard` reads the selection at call time. Result type unchanged | clipboard hook and commands can't diverge | medium — every Cut / Copy / Paste / Delete button and command | H1 |
+| H3 | defect | landed | `sym:GraphHistoryProvider` → H1's module | `graphGoesFirst` + the `history.undo` / `.redo` bodies and `isEnabled` → `undoNewest` / `redoNewest` / `canUndoEither` / `canRedoEither`. Commands call them | arbitration reusable (H9-ready) | medium — every Undo / Redo button | H1 |
+| H4 | defect | landed | `sym:useHistory` | no code change: already a thin wrapper over `GraphHistory`. TSDoc points at `undoNewest` and notes the combined form is H9 (D2) | behaviour unchanged | low | H3 |
+| X1 | defect | landed | `useViewSection`, `useHistorySection`, `useLayoutsSection`, `useEditorSection`, `useStyleEditorSection` (item 6, D3) | TSDoc `@deprecated`, pointing at control specs + `useControlItems` for toolbars, or the plain hooks for bespoke UI. Removal is left to the next breaking release, with G1 | callers get a deprecation hint | low — no removal. The shared ESLint config is warn-only | T1 |
+| X2 | dressing | landed | comments in `file:packages/canvas-react/src/uiModel.ts#L1-L3`, `file:packages/canvas-ui/src/components/ToolbarItem.ts#L9`, `file:packages/canvas-ui/src/components/ToolbarItems.tsx#L158`, `file:packages/canvas-ui/src/toolbars/GraphControlsToolbar.tsx#L1-L25` | stop recommending the section hooks. Fix the toolbar's header, which still names them and the private commands | docs match code | low | X1, L1 |
+| L1 | defect | landed | `sym:GraphControlsToolbar` `useLayoutSpecs` (item 7) | → `useLayoutItems`: build the two §2 items straight from `useLayout`. Drop both `register` calls and the `invalidate()` effect | no private commands | **high** — ~36 stories render this toolbar (§5 N1). Picker entries, Run ⇄ Stop and icon overrides must be identical | — |
+| C1 | defect | landed | `doc:packages/canvas-react/CLAUDE.md` (item 8) | a short "logic → hooks → commands (saved controls only)" section, pointing at `doc:docs/commands-followups.md` | the rule is written down | low | — |
+| T1 | defect | landed | `sym:SchemaToolbar` Fit (item 9, D5) | `useViewSection` → `useControlItems([fitSpec(layerId)], { canvas })`. `icons.fit` still applies through `applyIconOverrides` (key `'fit'`) | Fit uses the one renderer | medium — Fit is now `disabled` until the schema canvas is initialised (`camera.fit`'s `whenInitialised`) | — |
+| T2 | defect | landed | `sym:SchemaToolbar` groups 1–3 (item 9) | **stay callback-based**, recorded in the TSDoc: their state belongs to `SchemaViewPanel`, not the canvas. A spec needs a command, meaning a new public schema-view command (new scope) or a private one (what L1 removes) | recorded | none | — |
 | G1 | defect | deferred | `sym:GraphToolbar`, `sym:GraphLayoutToolbar` (item 10) | **deferred**: remove them in the next breaking release (breaking `pkg:@invana/canvas-ui` export). Nothing changes now | recorded | none | — |
-| F1 | dressing | implemented | `doc:docs/commands-followups.md` | items 2–10 and 20 → ✅ (item 10 as "recorded, removal deferred") | bookkeeping | low | all |
+| F1 | dressing | landed | `doc:docs/commands-followups.md` | items 2–10 and 20 → ✅ (item 10 as "recorded, removal deferred") | bookkeeping | low | all |
 
 ## 5. Blast radius
 
@@ -154,3 +154,4 @@ Downstream
 | 2026-09-28 | Opened for items 3–10 of `doc:docs/commands-followups.md`. Items 1, 2 and 20 are bookkeeping outside this RFC | proposed | Finding: the hook / command difference in undo (M5) is H9, not drift, so H4 keeps it. O1 / O2 recorded, not in scope |
 | 2026-09-28 | Approved whole ("yes"); D1–D5 as recommended. V0 baseline taken over the pre-change `dist/` (5 stories, 0 console errors) | accepted | |
 | 2026-09-28 | Implemented on `feat/view-history` (two parallel subagents + lead). All rows `implemented` except G1 `deferred` (removal waits for the next breaking release) | accepted | V1: build, check-types, lint (0 warnings in changed files; boundaries + API surfaces unchanged, no `--write`), test (graph 230 incl. 14 new in `graphActions.test.ts`). V3: `graphCommands` / `definitionHistory` unedited and green. V4: 5 stories, controls / disabled / pressed / picker menus identical to V0, 0 console errors. V5: layout switch runs, Run ⇄ Stop, lasso toggles, copy → paste → undo → redo = 77 → 78 → 77 → 78 nodes, schema Fit present + enabled. V6: 0 hits. Learned: `useClipboard` now reads the selection at call time (never stale); `canvas-ui/CLAUDE.md` also prescribed the private-command workaround and was updated with C1; T1's `whenInitialised` gate never showed (the toolbar mounts after init). Rows reach `landed` when `feat/view-history` merges to `main` |
+| 2026-09-28 | `feat/view-history` merged to `main` | landed | Every implemented row → landed (all verification rows `pass`; build, check-types, lint, test green at merge). Deferred rows stay deferred, tracked in `doc:docs/commands-followups.md` |

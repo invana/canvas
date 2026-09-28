@@ -2,10 +2,10 @@
 id: feat-2026-09-28-control-panel-command-args-are-raw-json
 type: feat
 title: Commands describe their arguments, so the control-panel editor shows fields instead of raw JSON
-status: accepted
+status: landed
 opened: 2026-09-28
 decided: 2026-09-28
-landed: null
+landed: 2026-09-28
 packages: [pkg:@invana/canvas-core, pkg:@invana/canvas, pkg:@invana/graph, pkg:@invana/canvas-react, pkg:@invana/canvas-ui]
 design_of_record: null
 relations:
@@ -19,7 +19,7 @@ relations:
 |---|---|
 | **Motivation** | In `ControlPanelsEditor`, a command item's `args` are a JSON textarea. To set `camera.fit`'s padding or point `graph.erase` at a layer, you have to know the key names from TSDoc and type valid JSON. This is R3 / D3 of `rfc:feat-2026-09-28-control-panels-cannot-be-edited-in-the-studio`. |
 | **Design** | `CanvasCommand` gains an optional, UI-agnostic `args` descriptor: plain data in `canvas-core`, with value kinds and reference kinds (layer / behaviour / layout). canvas-ui maps it to `@invana/forms` fields. Commands without a descriptor, and keys the descriptor doesn't name, keep the JSON field, so nothing is ever dropped. |
-| **Row status** | proposed 0 · accepted 0 · implemented 7 · landed 0 · deferred 1 · rejected 0 · superseded 0 |
+| **Row status** | proposed 0 · accepted 0 · implemented 0 · landed 7 · deferred 1 · rejected 0 · superseded 0 |
 | **Open decisions** | none — all as recommended |
 
 ## 1. Motivation
@@ -63,13 +63,13 @@ relations:
 
 | ID | Kind | Status | File/target | Change | Effect | Risk | Depends on |
 |---|---|---|---|---|---|---|---|
-| A1 | defect | implemented | `file:packages/canvas-core/src/abstracts/registries/CommandRegistry.ts` | `CommandArgSpec`, `CommandArgKind`, `CanvasCommand.args?` | commands can describe their arguments | low — additive, optional | — |
-| A2 | defect | implemented | `file:packages/canvas/src/engine/builtinCommands.ts` | descriptors on all 13 built-ins (`camera.zoomTo.levels` → `json`) | the engine's commands get fields | low | A1 |
-| A3 | defect | implemented | `file:packages/graph/src/canvas/graphCommands.ts` | descriptors on `select.mode`, `graph.*` (including `eraseCommand`), `tool.*`, `layout.activate` | the graph's commands get fields | low | A1 |
-| A4 | defect | implemented | `sym:GraphHistoryProvider`, `sym:GraphClipboardProvider`, `sym:CanvasThemeSync` | descriptors on their overrides and commands (`clickSelectId` → `behaviour`) | overrides don't lose their fields | low | A1 |
-| A5 | defect | implemented | `file:packages/canvas-ui/src/editor-panels/control-panels/{fields,mapping,types}.ts` | `commandArgFields`, `args.<key>` + `argsRestJson` mapping, `pick` handling | the editor shows fields | medium — a form-model change; the existing round-trip tests must keep passing | A1 |
-| A6 | defect | implemented | `sym:ControlPanelsEditor`, `sym:ControlPanelsEditorPanel` | pass descriptors + layer / behaviour / layout id lists as props (the controlled editor stays pure) | live reference pickers | low — new optional props | A5 |
-| A7 | defect | implemented | `ControlPanelsEditorPanel` | per-field error display | M5 | low | A5 |
+| A1 | defect | landed | `file:packages/canvas-core/src/abstracts/registries/CommandRegistry.ts` | `CommandArgSpec`, `CommandArgKind`, `CanvasCommand.args?` | commands can describe their arguments | low — additive, optional | — |
+| A2 | defect | landed | `file:packages/canvas/src/engine/builtinCommands.ts` | descriptors on all 13 built-ins (`camera.zoomTo.levels` → `json`) | the engine's commands get fields | low | A1 |
+| A3 | defect | landed | `file:packages/graph/src/canvas/graphCommands.ts` | descriptors on `select.mode`, `graph.*` (including `eraseCommand`), `tool.*`, `layout.activate` | the graph's commands get fields | low | A1 |
+| A4 | defect | landed | `sym:GraphHistoryProvider`, `sym:GraphClipboardProvider`, `sym:CanvasThemeSync` | descriptors on their overrides and commands (`clickSelectId` → `behaviour`) | overrides don't lose their fields | low | A1 |
+| A5 | defect | landed | `file:packages/canvas-ui/src/editor-panels/control-panels/{fields,mapping,types}.ts` | `commandArgFields`, `args.<key>` + `argsRestJson` mapping, `pick` handling | the editor shows fields | medium — a form-model change; the existing round-trip tests must keep passing | A1 |
+| A6 | defect | landed | `sym:ControlPanelsEditor`, `sym:ControlPanelsEditorPanel` | pass descriptors + layer / behaviour / layout id lists as props (the controlled editor stays pure) | live reference pickers | low — new optional props | A5 |
+| A7 | defect | landed | `ControlPanelsEditorPanel` | per-field error display | M5 | low | A5 |
 | A8 | defect | deferred | `sym:ControlWidgetItemSpec.options`, choice `options` | the same descriptor for widget props and choice options | removes the two remaining JSON fields | medium — widgets are React components in canvas-ui, so the descriptor would sit on the widget registry. Deferred until A1–A7 prove the kinds | A1 |
 
 ## 5. Blast radius
@@ -113,3 +113,4 @@ Downstream
 | 2026-09-28 | Opened from R3 / D3 of `rfc:feat-2026-09-28-control-panels-cannot-be-edited-in-the-studio` | proposed | awaiting approval |
 | 2026-09-28 | Approved whole ("impleemnt all in this branch"); every decision as recommended | accepted | |
 | 2026-09-28 | A1–A7 implemented on `feat/view-history` | accepted | V1: build, check-types, lint, tests. V2: `packages/graph/tests/canvas/definitionHistory.test.ts` pins every built-in and graph command's descriptor keys to its TSDoc table, and `pick` on the six picker values. V3: headless Chromium, `CanvasSettingsEditorPanel` — a `camera.fit` item shows **Padding** and **Layer** fields (the button itself was driven on `FullFeatured`). V4: `{ padding: 40, layerId: 'graph', foo: 1 }` shows `foo` in "More args (JSON)" and Apply writes all three back, recorded as `edit:control-panels`. V5: a `select.mode` choice shows Modes / Labels and no Mode field; a `tool.active` toggle shows its Tool field. Learned: the undoable `graph.clear` and the clipboard commands describe their own args (overrides don't inherit); `ERASE_ARGS` stays private — the providers reuse `eraseCommand`, which carries it; the editor refreshes its layer / behaviour / layout lists from bus events, and behaviours announce registration only, so an unregistered behaviour lingers in the picker until the next change; bad values are marked on their field with `setError` as well as listed |
+| 2026-09-28 | `feat/view-history` merged to `main` | landed | Every implemented row → landed (all verification rows `pass`; build, check-types, lint, test green at merge). Deferred rows stay deferred, tracked in `doc:docs/commands-followups.md` |
