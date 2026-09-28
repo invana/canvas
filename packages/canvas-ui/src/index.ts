@@ -882,6 +882,19 @@ export type { FindInCanvasViewPanelProps } from './view-panels/find-in-canvas';
 export { SelectionViewPanel } from './view-panels/selection';
 export type { SelectionViewPanelProps } from './view-panels/selection';
 
+// ─── Playbook + history ──────────────────────────────────────────────────────
+// The canvas's script and record as panels (RFC
+// feat-2026-09-28-an-analysis-cannot-be-recorded-or-replayed, F35 / F36).
+// `PlaybookViewPanel`: steps, narration, ◀ Previous / Next ▶, jump, Save as step,
+// Copy JSON — over `usePlaybook`. `HistoryViewPanel`: applied entries newest
+// first with actor / step / streamed badges and a data summary, an actor filter,
+// Undo / Redo — over `useHistoryEntries` + `history.entryData`. Both resolve the
+// canvas from context or an optional `canvas` prop.
+export { PlaybookViewPanel } from './view-panels/playbook';
+export type { PlaybookViewPanelProps } from './view-panels/playbook';
+export { HistoryViewPanel } from './view-panels/history';
+export type { HistoryViewPanelProps } from './view-panels/history';
+
 // ─── Element inspector ───────────────────────────────────────────────────────
 // A read-only card for the element the user **clicked** — identity, endpoints
 // (edges), `data` properties, element state, and a Focus action. Driven by

@@ -278,6 +278,18 @@ describe('history.sinceLastStep (F14, V12)', () => {
     expect(log.entries()).toHaveLength(before);
   });
 
+  it('entryData: one entry as its source\'s net delta; view-only entries and unknown sources give [] (F38)', () => {
+    const { history, view, log, userAdd, userRemove } = withHistory();
+    userAdd('x');
+    userRemove('a');
+    view.update((d) => void (d.definition.color = 'green'), 'edit:user');
+    const [add, remove, edit] = log.entries();
+    expect(history.entryData(add!)).toEqual([{ sourceId: 'graph', delta: { added: { nodes: [{ id: 'x' }] } } }]);
+    expect(history.entryData(remove!)).toEqual([{ sourceId: 'graph', delta: { removed: { nodeIds: ['a'] } } }]);
+    expect(history.entryData(edit!)).toEqual([]);
+    expect(history.entryData({ ...add!, parts: [{ kind: 'data', sourceId: 'nope', ops: [{ add: 'z' }] }] })).toEqual([]);
+  });
+
   it('with nothing since the last step, returns a bare step', async () => {
     const { playbook, history } = withHistory();
     playbook.addStep(expand);

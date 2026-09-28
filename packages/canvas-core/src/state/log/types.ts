@@ -313,6 +313,14 @@ export interface HistoryView {
    * @typeParam S The settings patch shape — `CanvasConfig` on a `Canvas`.
    */
   sinceLastStep<S = Record<string, unknown>>(title: string): StepSpec<S>;
+  /**
+   * What one entry did to the data, **per source**: each data part's ops as
+   * that source's net {@link Delta} (its {@link DataOpAdapter.toDelta}). A
+   * source without `toDelta`, or whose ops net to nothing, is left out; an
+   * entry holding only view parts returns `[]`. For display (a history
+   * panel's "+3 nodes · −1 edge"); reading it changes nothing.
+   */
+  entryData(entry: LogEntry): ReadonlyArray<{ sourceId: string; delta: Delta<DeltaRecord, DeltaRecord> }>;
   /** Hear every change (record / undo / redo / clear). Returns the unsubscribe. */
   subscribe(listener: () => void): () => void;
   /** Drop every entry. */

@@ -256,3 +256,34 @@ describe('F14 — history.sinceLastStep on a canvas', () => {
     canvas.destroy();
   });
 });
+
+describe('F38 — history.entryData on a canvas', () => {
+  it('reads each entry as the graph source\'s net delta: labelled batch, hide, streamed feed; view-only entries give []', () => {
+    const { canvas, layer } = makeCanvas();
+    canvas.history.clear();
+    layer.store.batch(
+      () => {
+        layer.store.addNode({ id: 'x', type: 'node' });
+        layer.store.addEdge({ id: 'ax', type: 'edge', source: 'a', target: 'x' });
+        layer.store.removeNode('d');
+      },
+      { title: 'paste' },
+    );
+    layer.store.applyDelta({ hidden: { nodeIds: ['b'] } });
+    layer.store.applyDelta({ added: { nodes: [{ id: 'f1', type: 'node' }] } }, { actor: 'feed', coalesce: true });
+    layer.store.applyDelta({ added: { nodes: [{ id: 'f2', type: 'node' }] } }, { actor: 'feed', coalesce: true });
+    canvas.store.view.update((d) => void (d.interaction.focus = ['a']), 'view:focus:set');
+
+    const [paste, hide, feed, focus] = canvas.history.entries();
+    const [pasteData] = canvas.history.entryData(paste!);
+    expect(pasteData!.sourceId).toBe('graph');
+    expect(pasteData!.delta.added?.nodes?.map((n) => n.id)).toEqual(['x']);
+    expect(pasteData!.delta.added?.edges?.map((e) => e.id)).toEqual(['ax']);
+    expect(pasteData!.delta.removed?.nodeIds).toEqual(['d']);
+    expect(pasteData!.delta.removed?.edgeIds).toEqual(['cd']);
+    expect(canvas.history.entryData(hide!)[0]!.delta.hidden?.nodeIds).toEqual(['b']);
+    expect(canvas.history.entryData(feed!)[0]!.delta.added?.nodes?.map((n) => n.id)).toEqual(['f1', 'f2']);
+    expect(canvas.history.entryData(focus!)).toEqual([]);
+    canvas.destroy();
+  });
+});

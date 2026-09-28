@@ -87,6 +87,23 @@ export function historyView(log: OperationLog, opts: HistoryViewOptions = {}): H
     return step;
   }
 
+  function entryData(entry: LogEntry): Array<{ sourceId: string; delta: Delta<DeltaRecord, DeltaRecord> }> {
+    // One entry may hold several parts for the same source; net them together.
+    const opsBySource = new Map<string, unknown[]>();
+    for (const part of entry.parts) {
+      if (part.kind !== 'data') continue;
+      const list = opsBySource.get(part.sourceId) ?? [];
+      list.push(...part.ops);
+      opsBySource.set(part.sourceId, list);
+    }
+    const out: Array<{ sourceId: string; delta: Delta<DeltaRecord, DeltaRecord> }> = [];
+    for (const [sourceId, ops] of opsBySource) {
+      const delta = log.source(sourceId)?.toDelta?.(ops);
+      if (delta && !isEmptyDelta(delta)) out.push({ sourceId, delta });
+    }
+    return out;
+  }
+
   return {
     undo: () => log.undo(),
     redo: () => log.redo(),
@@ -98,6 +115,7 @@ export function historyView(log: OperationLog, opts: HistoryViewOptions = {}): H
     onEntry: (listener) => log.onEntry(listener),
     atLatest: () => log.atLatest(),
     sinceLastStep,
+    entryData,
     subscribe: (listener) => log.subscribe(listener),
     clear: () => log.clear(),
     dispose: () => log.dispose(),
