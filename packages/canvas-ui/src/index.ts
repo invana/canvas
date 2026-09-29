@@ -889,9 +889,11 @@ export type { SelectionViewPanelProps } from './view-panels/selection';
 // Copy JSON — over `usePlaybook`. `HistoryViewPanel`: applied entries newest
 // first with actor / step / streamed badges and a data summary, an actor filter,
 // Undo / Redo — over `useHistoryEntries` + `history.entryData`. Both resolve the
-// canvas from context or an optional `canvas` prop.
-export { PlaybookViewPanel } from './view-panels/playbook';
-export type { PlaybookViewPanelProps } from './view-panels/playbook';
+// canvas from context or an optional `canvas` prop. `PlaybookPresenterBar` (F20):
+// the same playbook as a deck — title, narration, n / N, ◀ / ▶, a dot per step,
+// ← / → while focused; steps only, no authoring.
+export { PlaybookViewPanel, PlaybookPresenterBar } from './view-panels/playbook';
+export type { PlaybookViewPanelProps, PlaybookPresenterBarProps } from './view-panels/playbook';
 export { HistoryViewPanel } from './view-panels/history';
 export type { HistoryViewPanelProps } from './view-panels/history';
 

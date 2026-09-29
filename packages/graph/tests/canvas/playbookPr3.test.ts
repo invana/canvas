@@ -272,7 +272,7 @@ describe('F38 — history.entryData on a canvas', () => {
     layer.store.applyDelta({ hidden: { nodeIds: ['b'] } });
     layer.store.applyDelta({ added: { nodes: [{ id: 'f1', type: 'node' }] } }, { actor: 'feed', coalesce: true });
     layer.store.applyDelta({ added: { nodes: [{ id: 'f2', type: 'node' }] } }, { actor: 'feed', coalesce: true });
-    canvas.store.view.update((d) => void (d.interaction.focus = ['a']), 'view:focus:set');
+    canvas.store.view.update((d) => void (d.interaction.focus = { ids: new Set(['a']), dim: true }), 'view:focus:set');
 
     const [paste, hide, feed, focus] = canvas.history.entries();
     const [pasteData] = canvas.history.entryData(paste!);
