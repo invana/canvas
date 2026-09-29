@@ -20,7 +20,7 @@ import {
 } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { lesMiserables } from '@invana/graph-datasets';
-import { HistoryViewPanel, PlaybookViewPanel } from '@invana/canvas-ui';
+import { HistoryViewPanel, PlaybookPresenterBar, PlaybookViewPanel } from '@invana/canvas-ui';
 import { useEffect, useRef, useState } from 'react';
 
 /** What a playbook story varies — everything else is the standard canvas below. */
@@ -37,6 +37,12 @@ export interface PlaybookStoryOptions {
   layouts?: () => StoppableLayout[];
   /** Deep-merged over the standard config (node templates, behaviour / layout options). */
   config?: Record<string, unknown>;
+  /**
+   * Overlay `PlaybookPresenterBar` on the bottom of the canvas — the playbook as
+   * a deck (title, narration, n / N, ◀ / ▶, a dot per step; ← / → once it has
+   * focus). Default `false`.
+   */
+  presenter?: boolean;
 }
 
 /** A layout the story can stop on teardown (every shipped graph layout). */
@@ -102,7 +108,9 @@ const STANDARD_CONFIG = {
  * A story that plays `playbook` on a standard graph canvas, with the real
  * playbook controls beside it: `PlaybookViewPanel` (the step and its narration,
  * ◀ Previous, Next ▶, jump to a step, Save as step, Copy JSON) above
- * `HistoryViewPanel` (every entry, who made it, the step it belongs to).
+ * `HistoryViewPanel` (every entry, who made it, the step it belongs to). With
+ * `presenter: true`, `PlaybookPresenterBar` also sits over the bottom of the
+ * canvas.
  *
  * The canvas: a `GraphLayer` (`'graph'`), pan / zoom / drag / theme, and the
  * behaviours that draw a step's `view` — `ClickSelectBehaviour` (selection),
@@ -116,7 +124,7 @@ export function playbookStory(options: PlaybookStoryOptions): StoryObj {
 }
 
 /** The canvas host + the playbook / history panels. Built once per mount. */
-function PlaybookStage({ playbook, data = lesMiserables, layouts, config }: PlaybookStoryOptions) {
+function PlaybookStage({ playbook, data = lesMiserables, layouts, config, presenter = false }: PlaybookStoryOptions) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [canvas, setCanvas] = useState<GraphCanvas | null>(null);
 
@@ -166,7 +174,12 @@ function PlaybookStage({ playbook, data = lesMiserables, layouts, config }: Play
 
   return (
     <div className="flex h-screen w-full overflow-hidden">
-      <div ref={hostRef} className="min-w-0 flex-1" />
+      <div className="relative min-w-0 flex-1">
+        <div ref={hostRef} className="absolute inset-0" />
+        {presenter && (
+          <PlaybookPresenterBar canvas={canvas} className="absolute inset-x-4 bottom-4 mx-auto max-w-2xl shadow-lg" />
+        )}
+      </div>
       <aside className="border-border bg-card flex w-80 shrink-0 flex-col border-l">
         <PlaybookViewPanel canvas={canvas} className="max-h-[60%] shrink-0" />
         <HistoryViewPanel canvas={canvas} className="min-h-0 flex-1 border-border border-t" />

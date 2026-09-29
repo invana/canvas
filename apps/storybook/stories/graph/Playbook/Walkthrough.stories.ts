@@ -13,10 +13,14 @@ export default meta;
  * **Next** plays a step: its `data` and `view` land as one history entry tagged
  * with the step, then its `do` verbs run and the canvas settles. **Previous**
  * takes it back; **Next** again replays it.
+ *
+ * The **presenter bar** over the canvas plays the same script as a deck: the
+ * step's narration, a dot per step, and ← / → once the bar has focus.
  */
 export const WalkthroughStory = {
   name: 'Walkthrough',
   ...playbookStory({
+    presenter: true,
     // Valjean's aliases (added in step 6) get their own node type.
     config: {
       layers: {
