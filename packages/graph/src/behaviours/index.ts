@@ -149,6 +149,16 @@ export type {
   ParallelEdgePatch,
 } from './ParallelEdgeBehaviour';
 
+export { FisheyeBehaviour } from './FisheyeBehaviour';
+export type {
+  FisheyeBehaviourOptions,
+  FisheyeTrigger,
+  FisheyeWheelModifier,
+  ResolvedFisheyeOptions,
+} from './FisheyeBehaviour';
+export { fisheyeDisplace } from './fisheye';
+export type { FisheyeDisplacement } from './fisheye';
+
 export { NodeCentralityBehaviour } from './NodeCentralityBehaviour';
 export type {
   NodeCentralityBehaviourOptions,

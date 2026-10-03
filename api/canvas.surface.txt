@@ -1,7 +1,7 @@
 # @invana/canvas — public API surface (generated; do not hand-edit)
 # Regenerate: pnpm build && node scripts/check-api-surface.mjs --write
 
-## . (454 exports)
+## . (455 exports)
 AnchorCtx
 AnchorShapeRef
 AnchorSpec
@@ -277,6 +277,7 @@ SelectionFrameDecorationStyle
 SelectionFrameHandleHit
 SelectionFrameHandleShape
 SelectionFramePlacement
+ShapeDisplayOverride
 ShapeFill
 ShapeFillLayer
 ShapeHitRecord

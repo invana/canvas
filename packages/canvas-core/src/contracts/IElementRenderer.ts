@@ -55,6 +55,38 @@ export interface MountedDecoration<TStyle = unknown> {
  */
 export type CustomElementCtor = abstract new (...args: never[]) => object;
 
+/**
+ * A **display-only** adjustment to one shape, layered on top of everything
+ * else that positions or scales it — the logical position (`spec.x/y`, kept
+ * current by `moveShape` / `updateShape`), the LOD/hover visual scale
+ * (`scaleShape`) and any text-LOD visibility. None of those writes clobbers an
+ * override, and the override never reaches the spec, the store or history.
+ *
+ * Built for focus+context distortion (a fisheye lens): nodes inside the lens
+ * are drawn displaced and enlarged while their layout positions stay put.
+ * Connectors, anchors and picking follow the **drawn** shape, so edges stay
+ * glued to it and a click lands on what the user sees.
+ */
+export interface ShapeDisplayOverride {
+  /** World-space offset added to the drawn origin. Default `0`. */
+  readonly dx?: number;
+  /** World-space offset added to the drawn origin. Default `0`. */
+  readonly dy?: number;
+  /**
+   * Multiplier on the shape's current visual scale, applied about the shape's
+   * visual centre (so top-left-anchored rects and cards grow in place).
+   * Default `1`.
+   */
+  readonly scale?: number;
+  /**
+   * `true` forces the shape's text (its `'label'` decoration and any internal
+   * text) visible while the override is set, regardless of text-LOD or
+   * label-collision hiding. Clearing the override restores whatever those last
+   * asked for. Omitted / `false` leaves text visibility to them.
+   */
+  readonly showText?: boolean;
+}
+
 export interface IElementRenderer extends SpecProjectionTarget {
   /**
    * Teach this backend a new element kind. The spec vocabulary stays open —
@@ -72,6 +104,20 @@ export interface IElementRenderer extends SpecProjectionTarget {
   // reasoning about transient visuals, applied to transforms.
   moveShape(id: string, x: number, y: number): void;
   scaleShape(id: string, scale: number): void;
+  /**
+   * Set (or, with `null`, clear) a shape's {@link ShapeDisplayOverride}. The
+   * drawn shape, its connectors' anchors and its hit area follow the override;
+   * {@link getShapePosition} keeps answering the **logical** position, because
+   * its callers (drag, resize, collapse) write that position back. Connectors
+   * are **not** re-routed here — the caller re-routes the ones it cares about
+   * with `updateConnector(id, {})`, once per batch. No-op for unknown ids.
+   */
+  setShapeDisplayOverride(id: string, override: ShapeDisplayOverride | null): void;
+  /**
+   * Clear every display override this renderer holds. Same re-routing caveat
+   * as {@link setShapeDisplayOverride}.
+   */
+  clearShapeDisplayOverrides(): void;
   setConnectorStroke(id: string, stroke: { color: number; width: number }): void;
   scaleConnectorStroke(id: string, scale: number): void;
   setRaised(ids: Iterable<string>): void;

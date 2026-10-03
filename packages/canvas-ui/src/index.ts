@@ -572,6 +572,19 @@ export type {
   ThemeOptions,
 } from './editors/behaviours/theme';
 
+// FisheyeBehaviour
+export { FisheyeEditorPanel, fisheyeFields } from './editors/behaviours/fisheye';
+export {
+  optionsToForm as fisheyeOptionsToForm,
+  formToOptions as fisheyeFormToOptions,
+} from './editors/behaviours/fisheye';
+export type {
+  FisheyeEditorPanelProps,
+  FisheyeFields,
+  FisheyeFormState,
+  FisheyeOptions,
+} from './editors/behaviours/fisheye';
+
 // NodeCentralityBehaviour
 export { NodeCentralityEditorPanel, nodeCentralityFields } from './editors/behaviours/node-centrality';
 export {

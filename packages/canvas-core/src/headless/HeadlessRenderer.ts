@@ -19,7 +19,7 @@
 import { EventEmitter } from '../state/events/EventEmitter';
 import type { Camera } from '../abstracts/Camera';
 import type { ICameraBinding } from '../contracts/ICameraBinding';
-import type { IElementRenderer } from '../contracts/IElementRenderer';
+import type { IElementRenderer, ShapeDisplayOverride } from '../contracts/IElementRenderer';
 import type { IOverlayDevice } from '../contracts/IOverlayDevice';
 import type {
   IRenderer,
@@ -45,6 +45,9 @@ function noopOverlay(): IOverlayDevice {
     poly: () => self,
     fill: () => self,
     stroke: () => self,
+    setVisible: () => self,
+    setZIndex: () => self,
+    setPosition: () => self,
     destroy: () => {},
   } as unknown as IOverlayDevice;
   return self;
@@ -103,6 +106,20 @@ export class HeadlessElementRenderer implements IElementRenderer {
   getShapePosition(id: string): { x: number; y: number } | null {
     const s = this.shapes.get(id);
     return s ? { x: s.x, y: s.y } : null;
+  }
+
+  /**
+   * Display overrides by shape id — recorded so a test can assert what a
+   * behaviour asked to draw. Nothing is drawn, and positions stay logical.
+   */
+  readonly displayOverrides = new Map<string, ShapeDisplayOverride>();
+  setShapeDisplayOverride(id: string, override: ShapeDisplayOverride | null): void {
+    if (!this.shapes.has(id)) return;
+    if (override === null) this.displayOverrides.delete(id);
+    else this.displayOverrides.set(id, override);
+  }
+  clearShapeDisplayOverrides(): void {
+    this.displayOverrides.clear();
   }
 
   // Everything below is a no-op or a null answer: these are the calls a layer

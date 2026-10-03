@@ -165,6 +165,8 @@ export type { ParallelEdgeBehaviourProps } from './behaviours/ParallelEdgeBehavi
 
 export { FocusBehaviour } from './behaviours/FocusBehaviour';
 export type { FocusBehaviourProps } from './behaviours/FocusBehaviour';
+export { FisheyeBehaviour } from './behaviours/FisheyeBehaviour';
+export type { FisheyeBehaviourProps } from './behaviours/FisheyeBehaviour';
 export { NodeCentralityBehaviour } from './behaviours/NodeCentralityBehaviour';
 export type { NodeCentralityBehaviourProps } from './behaviours/NodeCentralityBehaviour';
 export { TextLODBehaviour } from './behaviours/TextLODBehaviour';

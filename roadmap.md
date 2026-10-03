@@ -126,6 +126,7 @@ Legend: ✅ shipped · 🚧 in progress · 📋 planned
 | Hover preview card | ✅ |
 | Focus — highlight a set, fade the rest, frame it (`FocusBehaviour`); selection and inspect follow the store | 🚧 |
 | Level-of-detail (node / edge size, label resolution) | ✅ |
+| Fisheye lens — focus+context magnifier over dense regions, display-only (`FisheyeBehaviour`) | 🚧 |
 
 ### React & apps
 | Surface | Status |

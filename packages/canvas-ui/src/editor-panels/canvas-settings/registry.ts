@@ -168,6 +168,11 @@ import {
   optionsToForm as themeToForm,
   formToOptions as themeToOptions,
 } from '../../editors/behaviours/theme/mapping';
+import { fisheyeFields } from '../../editors/behaviours/fisheye/fields';
+import {
+  optionsToForm as fisheyeToForm,
+  formToOptions as fisheyeToOptions,
+} from '../../editors/behaviours/fisheye/mapping';
 import { nodeCentralityFields } from '../../editors/behaviours/node-centrality/fields';
 import {
   optionsToForm as nodeCentralityToForm,
@@ -303,6 +308,7 @@ export const DEFAULT_CANVAS_SETTINGS_SCHEMAS: Record<string, SettingsSchemaEntry
   'color-by': { section: 'behaviours', typeLabel: 'Color by', fields: colorByFields, toForm: colorByToForm, toOptions: colorByToOptions },
   'theme': { section: 'behaviours', typeLabel: 'Theme', fields: themeFields, toForm: themeToForm, toOptions: themeToOptions },
   'degree-size': { section: 'behaviours', typeLabel: 'Degree Size', fields: nodeCentralityFields, toForm: nodeCentralityToForm, toOptions: nodeCentralityToOptions },
+  'fisheye': { section: 'behaviours', typeLabel: 'Fisheye Lens', fields: fisheyeFields, toForm: fisheyeToForm, toOptions: fisheyeToOptions },
   'context-menu': { section: 'behaviours', typeLabel: 'Context Menu', fields: contextMenuFields, toForm: contextMenuToForm, toOptions: contextMenuToOptions },
   'label-resolution-lod': { section: 'behaviours', typeLabel: 'Label Resolution LOD', fields: textResolutionLodFields, toForm: textResolutionLodToForm, toOptions: textResolutionLodToOptions },
   'node-size-lod': { section: 'behaviours', typeLabel: 'Node Size LOD', fields: nodeScaleLodFields, toForm: nodeScaleLodToForm, toOptions: nodeScaleLodToOptions },

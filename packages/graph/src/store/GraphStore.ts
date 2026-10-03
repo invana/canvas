@@ -798,6 +798,31 @@ export class GraphStore implements DataSource {
   }
 
   /**
+   * Ids of the **visible** nodes ({@link isNodeVisible}) whose stored position
+   * lies within `r` of `(cx, cy)` — a radius query over the `x`/`y` columns.
+   *
+   * O(N) typed-array reads with no per-node allocation, so a pointer-driven
+   * caller (a fisheye lens) can ask every frame; only candidates inside the
+   * radius pay the visibility check. Answers from **logical** positions —
+   * whatever a renderer draws on top (a display override) never feeds back.
+   *
+   * @param out Optional array to fill (cleared first) instead of allocating.
+   */
+  nodeIdsWithin(cx: number, cy: number, r: number, out: string[] = []): string[] {
+    out.length = 0;
+    if (!(r > 0)) return out;
+    const xs = this.nodeCols.column('x');
+    const ys = this.nodeCols.column('y');
+    const r2 = r * r;
+    this.nodeCols.forEach((id, slot) => {
+      const dx = xs[slot]! - cx;
+      const dy = ys[slot]! - cy;
+      if (dx * dx + dy * dy <= r2 && this.isNodeVisible(id)) out.push(id);
+    });
+    return out;
+  }
+
+  /**
    * Set a single node's position.
    *
    * Default fires `node:update`. `opts.silent: true` skips the event and just

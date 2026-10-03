@@ -194,6 +194,7 @@ export type {
   IElementRenderer,
   MountedDecoration,
   CustomElementCtor,
+  ShapeDisplayOverride,
   IOverlayDevice,
   OverlayFill,
   OverlayFillLike,

@@ -34,6 +34,7 @@ export type {
   IElementRenderer,
   MountedDecoration,
   CustomElementCtor,
+  ShapeDisplayOverride,
 } from './contracts/IElementRenderer';
 export type {
   IOverlayDevice,

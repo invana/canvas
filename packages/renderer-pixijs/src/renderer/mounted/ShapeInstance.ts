@@ -14,6 +14,8 @@
  * between caller spec and rendered output.
  */
 
+import type { ShapeDisplayOverride } from '@invana/canvas-core';
+
 import type {
   BaseShapeSpec,
   IShape,
@@ -46,6 +48,38 @@ export class ShapeInstance<TSpec extends BaseShapeSpec = BaseShapeSpec> {
    * visibly fall short of the smaller shape.
    */
   gfxScale: number = 1;
+
+  /**
+   * Display-only override (`PrimitivesRenderer.setShapeDisplayOverride`), or
+   * `null`. Layered on top of `spec.x/y` and {@link gfxScale}; neither of those
+   * writers touches it.
+   */
+  displayOverride: ShapeDisplayOverride | null = null;
+
+  /**
+   * Offset of the **drawn** gfx origin from `(spec.x, spec.y)` — the override's
+   * `dx/dy` plus the shift that keeps an override scale centred on the shape.
+   * `0` without an override. Cached by `PrimitivesRenderer.applyDisplayTransform`
+   * so geometry answers (anchors, picking) don't recompute it per query.
+   */
+  drawnDx = 0;
+  /** See {@link drawnDx}. */
+  drawnDy = 0;
+
+  /**
+   * Last text visibility a text-LOD writer asked for (`setShapeTextVisible`) and
+   * last `'label'` decoration visibility (`setDecorationVisible`). Kept so a
+   * display override's `showText` can force text on and, when cleared, put back
+   * exactly what those writers wanted.
+   */
+  textWanted = true;
+  /** See {@link textWanted}. */
+  labelWanted = true;
+
+  /** Visual scale actually drawn: {@link gfxScale} × the override's `scale`. */
+  get drawnScale(): number {
+    return this.gfxScale * (this.displayOverride?.scale ?? 1);
+  }
 
   constructor(
     readonly id: string,

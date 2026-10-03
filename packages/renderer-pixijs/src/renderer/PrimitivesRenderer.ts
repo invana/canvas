@@ -36,7 +36,7 @@ import { PickingIndex } from '@invana/canvas-store';
 import { DEFAULT_ENDPOINT_BADGE_GAP_PX, bezierPathStyle, boundaryAnchor, bumpHorizontalPathStyle, bumpRadialPathStyle, bundlePathStyle, centerAnchor, connectorGeometryKey, connectorToSvg, edgePortAnchor, erRouter, loopCurvePathStyle, loopPolylinePathStyle, manhattanRouter, metroRouter, normalPathStyle, oneSideRouter, orthRouter, perpendicularAnchor, quadraticPathStyle, resolveBadgePosition, resolveConnectorBadgePosition, roundedPathStyle, samplePath, shapeSpecToSvg, silhouettePortAnchor, smoothPathStyle, stepRadialPathStyle, straightRouter, trimPathEnds } from '@invana/canvas-core';
 import { ConnectorInstance } from './mounted/ConnectorInstance';
 import { ShapeInstance } from './mounted/ShapeInstance';
-import type { BadgeOptions, Camera, IElementRenderer } from '@invana/canvas-core';
+import type { BadgeOptions, Camera, IElementRenderer, ShapeDisplayOverride } from '@invana/canvas-core';
 import type { ConnectorHitRecord, HitGeometrySource, ShapeHitRecord } from '@invana/canvas-store';
 import { EventEmitter } from '@invana/canvas-store';
 import { TextureRegistry } from '../assets/TextureRegistry';
@@ -547,7 +547,10 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
       textureRegistry: this.textureRegistry,
       requestRedraw: () => {
         const cur = this.shapeInstances.get(id);
-        if (cur) cur.shape.draw(cur.spec);
+        if (!cur) return;
+        cur.shape.draw(cur.spec);
+        // `draw` re-seats the gfx at the spec origin — put the override back.
+        if (cur.displayOverride !== null) this.applyDisplayTransform(cur);
       },
     };
     const shape = new Ctor(spec, host) as IShape<TSpec>;
@@ -608,6 +611,9 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
     if (!inst) return;
     inst.spec = { ...inst.spec, ...partial };
     inst.shape.draw(inst.spec);
+    // `draw` re-seats the gfx at the spec origin; a display override rides on
+    // top of it (and its centring shift depends on the bounds just redrawn).
+    if (inst.displayOverride !== null) this.applyDisplayTransform(inst as unknown as ShapeInstance);
     // `plane` can flip on any update — a group frame collapsing becomes an
     // ordinary interactive node and must leave the backdrop, or it renders
     // under the very edges it now terminates.
@@ -654,7 +660,96 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
     const inst = this.shapeInstances.get(id);
     if (!inst) return;
     inst.gfxScale = scale;
+    if (inst.displayOverride !== null) {
+      // The override multiplies this scale (and re-centres on it).
+      this.applyDisplayTransform(inst);
+      return;
+    }
     inst.shape.gfx.scale.set(scale, scale);
+  }
+
+  /**
+   * Set or clear a shape's display-only override — see
+   * {@link IElementRenderer.setShapeDisplayOverride}. The gfx transform and the
+   * text visibility are rewritten at once; the hit index is marked moved
+   * (re-indexed lazily, like {@link moveShape}) and badges re-anchor.
+   * Connectors are left to the caller.
+   */
+  setShapeDisplayOverride(id: string, override: ShapeDisplayOverride | null): void {
+    const inst = this.shapeInstances.get(id);
+    if (!inst) return;
+    if (override === null && inst.displayOverride === null) return;
+    const wasForced = inst.displayOverride?.showText === true;
+    inst.displayOverride = override;
+    this.applyDisplayTransform(inst);
+    if (wasForced !== (override?.showText === true)) this.applyTextVisibility(inst);
+    this.picking.markShapeMoved(id);
+    if (this.badges.has(id)) this.reanchorBadges(id);
+  }
+
+  /** Clear every display override — see {@link IElementRenderer.clearShapeDisplayOverrides}. */
+  clearShapeDisplayOverrides(): void {
+    for (const inst of this.shapeInstances.values()) {
+      if (inst.displayOverride !== null) this.setShapeDisplayOverride(inst.id, null);
+    }
+  }
+
+  /**
+   * Write a shape's gfx transform from its spec origin, {@link ShapeInstance.gfxScale}
+   * and its display override, and cache the drawn offset on the instance.
+   *
+   * The override scale is applied about the shape's visual centre `c` (local
+   * bounds midpoint): with the LOD scale `g` and drawn scale `S = g·s`, the
+   * centre stays where `g` alone put it (`spec + g·c + d`), so the gfx origin is
+   * `spec + d + (g − S)·c`. A circle (`c = 0`) just translates; a top-left
+   * rect or card grows in place instead of toward its bottom-right.
+   *
+   * A host with effects is handed to {@link applyEffectsToHost}, which composes
+   * the override with the effect deltas (and runs every frame anyway).
+   */
+  private applyDisplayTransform(inst: ShapeInstance): void {
+    const o = inst.displayOverride;
+    const gfx = inst.shape.gfx;
+    if (o === null) {
+      inst.drawnDx = 0;
+      inst.drawnDy = 0;
+      if (this.hostsWithEffects.has(inst)) {
+        this.applyEffectsToHost(inst);
+        return;
+      }
+      gfx.position.set(inst.spec.x, inst.spec.y);
+      gfx.scale.set(inst.gfxScale, inst.gfxScale);
+      return;
+    }
+    const g = inst.gfxScale;
+    const s = inst.drawnScale;
+    let ox = o.dx ?? 0;
+    let oy = o.dy ?? 0;
+    if (s !== g) {
+      const b = inst.shape.bounds();
+      ox += (g - s) * (b.x + b.width / 2);
+      oy += (g - s) * (b.y + b.height / 2);
+    }
+    inst.drawnDx = ox;
+    inst.drawnDy = oy;
+    if (this.hostsWithEffects.has(inst)) {
+      this.applyEffectsToHost(inst);
+      return;
+    }
+    gfx.position.set(inst.spec.x + ox, inst.spec.y + oy);
+    gfx.scale.set(s, s);
+  }
+
+  /**
+   * Reconcile a shape's text visibility: forced on while its display override
+   * says `showText`, otherwise whatever the text-LOD / label-collision writers
+   * last asked for ({@link ShapeInstance.textWanted} / {@link ShapeInstance.labelWanted}).
+   */
+  private applyTextVisibility(inst: ShapeInstance): void {
+    const forced = inst.displayOverride?.showText === true;
+    const label = inst.decorations.get('label') as { gfx?: Container } | undefined;
+    if (label?.gfx) label.gfx.visible = forced || inst.labelWanted;
+    inst.shape.setTextVisible?.(forced || inst.textWanted);
   }
 
   /**
@@ -668,8 +763,10 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
   setShapeTextVisible(id: string, visible: boolean): void {
     const inst = this.shapeInstances.get(id);
     if (!inst) return;
+    inst.textWanted = visible;
     if (inst.decorations.has('label')) this.setDecorationVisible(id, 'label', visible);
-    inst.shape.setTextVisible?.(visible);
+    // A display override's `showText` outranks text LOD until it is cleared.
+    inst.shape.setTextVisible?.(visible || inst.displayOverride?.showText === true);
   }
 
   /**
@@ -777,7 +874,12 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
     const pos = inst.spec as { x: number; y: number };
     pos.x = x;
     pos.y = y;
-    inst.shape.gfx.position.set(x, y);
+    if (inst.displayOverride !== null) {
+      // The cached drawn offset is position-independent; just re-seat on it.
+      inst.shape.gfx.position.set(x + inst.drawnDx, y + inst.drawnDy);
+    } else {
+      inst.shape.gfx.position.set(x, y);
+    }
     this.picking.markShapeMoved(id);
     if (this.badges.has(id)) this.reanchorBadges(id);
   }
@@ -1685,7 +1787,18 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
     // the centre — e.g. RectShape is top-left). When scale and rotation are
     // identity, skip the pivot detour to keep the position math trivial.
     const needsCentredPivot = sx !== 1 || sy !== 1 || dRot !== 0;
-    if (needsCentredPivot) {
+    if (inst.displayOverride !== null) {
+      // Overridden host: the effect deltas ride on the *drawn* transform —
+      // centre at `spec + drawnD + S·c`, scale `S` (LOD × override) × effect.
+      const b = inst.shape.bounds();
+      const cx = b.x + b.width / 2;
+      const cy = b.y + b.height / 2;
+      const s = inst.drawnScale;
+      gfx.pivot.set(cx, cy);
+      gfx.position.set(baseX + inst.drawnDx + s * cx + dx, baseY + inst.drawnDy + s * cy + dy);
+      sx *= s;
+      sy *= s;
+    } else if (needsCentredPivot) {
       const b = inst.shape.bounds();
       const cx = b.x + b.width / 2;
       const cy = b.y + b.height / 2;
@@ -1744,6 +1857,8 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
     gfx.scale.set(1, 1);
     gfx.alpha = spec.alpha ?? 1;
     (gfx as unknown as { tint: number }).tint = 0xffffff;
+    // The baseline of an overridden shape is its drawn transform, not the spec.
+    if (inst.displayOverride !== null) this.applyDisplayTransform(inst);
   }
 
   // ─── Hit-testing + pointer router ────────────────────────────────────
@@ -1801,8 +1916,13 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
     const inst = this.shapeInstances.get(id);
     if (!inst) return null;
     return {
-      spec: inst.spec,
-      scale: inst.gfxScale,
+      // A display-overridden shape is picked where it is *drawn*. The copy is
+      // made only for overridden shapes (a lens holds a handful), so the
+      // common path stays allocation-free.
+      spec: inst.displayOverride === null
+        ? inst.spec
+        : { ...inst.spec, x: inst.spec.x + inst.drawnDx, y: inst.spec.y + inst.drawnDy },
+      scale: inst.drawnScale,
       containsLocal: (x, y) => inst.shape.getHitArea().contains(x, y),
       localBounds: () => inst.shape.bounds(),
     };
@@ -1975,8 +2095,11 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
     if (!hit || hit.kind !== 'shape') return undefined;
     const inst = this.shapeInstances.get(hit.id);
     if (!inst?.shape.hitTestPart) return undefined;
-    const s = inst.gfxScale || 1;
-    return inst.shape.hitTestPart((x - inst.spec.x) / s, (y - inst.spec.y) / s);
+    const s = inst.drawnScale || 1;
+    return inst.shape.hitTestPart(
+      (x - inst.spec.x - inst.drawnDx) / s,
+      (y - inst.spec.y - inst.drawnDy) / s,
+    );
   }
 
   /**
@@ -2211,13 +2334,20 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
    * No-op when `targetId` / `slot` doesn't resolve.
    */
   setDecorationVisible(targetId: string, slot: string, visible: boolean): void {
-    const host =
-      this.shapeInstances.get(targetId) ?? this.connectorInstances.get(targetId);
+    const shape = this.shapeInstances.get(targetId);
+    const host = shape ?? this.connectorInstances.get(targetId);
     if (!host) return;
     const deco = host.decorations.get(slot);
     if (!deco) return;
+    let show = visible;
+    if (shape && slot === 'label') {
+      // Remember what LOD / collision wanted; a display override's `showText`
+      // outranks it until cleared (`applyTextVisibility` restores this value).
+      shape.labelWanted = visible;
+      if (shape.displayOverride?.showText === true) show = true;
+    }
     const g = (deco as { gfx?: Container }).gfx;
-    if (g) g.visible = visible;
+    if (g) g.visible = show;
   }
 
   /**
@@ -2256,6 +2386,14 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
     const inst = this.shapeInstances.get(id);
     if (!inst) return null;
     const b = inst.shape.bounds();
+    if (inst.displayOverride !== null) {
+      // Where the overridden shape is drawn (offset + drawn scale).
+      const s = inst.drawnScale;
+      return {
+        x: inst.spec.x + inst.drawnDx + (b.x + b.width / 2) * s,
+        y: inst.spec.y + inst.drawnDy + (b.y + b.height / 2) * s,
+      };
+    }
     return {
       x: inst.spec.x + b.x + b.width / 2,
       y: inst.spec.y + b.y + b.height / 2,
@@ -2322,7 +2460,7 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
   private shapeWorldBounds(inst: ShapeInstance): Rect {
     return (
       this.picking.shapeWorldBounds(inst.id) ??
-      { x: inst.spec.x, y: inst.spec.y, width: 0, height: 0 }
+      { x: inst.spec.x + inst.drawnDx, y: inst.spec.y + inst.drawnDy, width: 0, height: 0 }
     );
   }
 
@@ -2433,10 +2571,10 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
       throw new Error(`PrimitivesRenderer: connector references unknown shape "${spec.shapeId}"`);
     }
     const b = inst.shape.bounds();
-    const s = inst.gfxScale;
+    const s = inst.drawnScale;
     return {
-      x: inst.spec.x + (b.x + b.width / 2) * s,
-      y: inst.spec.y + (b.y + b.height / 2) * s,
+      x: inst.spec.x + inst.drawnDx + (b.x + b.width / 2) * s,
+      y: inst.spec.y + inst.drawnDy + (b.y + b.height / 2) * s,
     };
   }
 
@@ -2474,7 +2612,11 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
     const inst = this.shapeInstances.get(id);
     if (!inst) return undefined;
     const localBounds = inst.shape.bounds();
-    const s = inst.gfxScale;
+    // Drawn scale + origin: a display override moves and scales the visible
+    // silhouette, and connectors must anchor to what is drawn.
+    const s = inst.drawnScale;
+    const ox = inst.spec.x + inst.drawnDx;
+    const oy = inst.spec.y + inst.drawnDy;
     const bounds = s === 1
       ? localBounds
       : {
@@ -2499,11 +2641,11 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
           }
       : undefined;
     return {
-      origin: { x: inst.spec.x, y: inst.spec.y },
+      origin: { x: ox, y: oy },
       bounds,
       center: {
-        x: inst.spec.x + bounds.x + bounds.width / 2,
-        y: inst.spec.y + bounds.y + bounds.height / 2,
+        x: ox + bounds.x + bounds.width / 2,
+        y: oy + bounds.y + bounds.height / 2,
       },
       boundaryIntersect,
     };
