@@ -1,6 +1,6 @@
 /**
  * **Canvas Boards** — multiple independent canvases in one **tab panel**, built on
- * `@invana/canvas-ui`'s `CanvasPagesViewPanel` (Bootstrap `nav-tabs` styling; the
+ * `@invana/ui`'s `Workbook` (folder-tab strip; the
  * active tab exposes a caret dropdown of host-supplied actions). Each tab is a
  * fully self-contained `<GraphCanvasApp>` with its **own engine instance and its
  * own state** (config, camera, layout positions, selection) — boards share nothing
@@ -35,11 +35,11 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { TextResolutionLODBehaviour, useLayout, type LayoutFactory } from '@invana/canvas-react';
 import { GraphCanvasApp } from '@invana/canvas-ui';
 import {
-  CanvasPagesViewPanel,
-  type CanvasHeaderAction,
-  type CanvasPage,
-  type CanvasPageMenuItem
-} from '@invana/canvas-ui';
+  Workbook,
+  type WorkbookAction,
+  type WorkbookPage,
+  type WorkbookPageMenuItem
+} from '@invana/ui';
 import { Copy, Info, Pencil, Settings, Trash2 } from 'lucide-react';
 import type { EdgeStyle, GraphData, GraphNode, NodeStyle } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
@@ -215,7 +215,7 @@ interface Board {
 }
 
 /**
- * The boards shell — `@invana/canvas-ui`'s {@link CanvasPagesViewPanel} over a
+ * The boards shell — `@invana/ui`'s {@link Workbook} over a
  * stack of canvases. Each board maps to one page whose `content` is its own
  * `<GraphCanvasApp>`. The view keeps every page mounted and hides the inactive
  * ones (`keepMounted`, its default), so a board keeps its camera / layout /
@@ -276,7 +276,7 @@ function CanvasBoards(): ReactNode {
 
   // Boards → pages. `content` is each board's own independent `<GraphCanvasApp>`;
   // the tab strip keeps them all mounted (state preserved) and shows the active.
-  const pages: CanvasPage[] = boards.map((b) => ({
+  const pages: WorkbookPage[] = boards.map((b) => ({
     id: String(b.id),
     title: titleOf(b),
     content: <CanvasBoard template={TEMPLATES[b.templateIndex]!} />
@@ -284,7 +284,7 @@ function CanvasBoards(): ReactNode {
 
   // The active tab's dropdown actions. Each `onSelect` gets the active page id;
   // "Remove" is destructive and disabled while only one board remains.
-  const pageMenuItems: CanvasPageMenuItem[] = [
+  const pageMenuItems: WorkbookPageMenuItem[] = [
     { id: 'rename', label: 'Rename', icon: Pencil, onSelect: (id) => renameBoard(Number(id)) },
     { id: 'duplicate', label: 'Duplicate', icon: Copy, onSelect: (id) => duplicateBoard(Number(id)) },
     {
@@ -299,7 +299,7 @@ function CanvasBoards(): ReactNode {
   ];
 
   // Strip-level extra buttons in the right cluster (left of the pager / +).
-  const headerActions: CanvasHeaderAction[] = [
+  const headerActions: WorkbookAction[] = [
     { id: 'settings', label: 'Settings', icon: Settings, onClick: () => window.alert('Settings') },
     { id: 'about', label: 'About', icon: Info, onClick: () => window.alert('Canvas Boards demo') },
   ];
@@ -313,7 +313,7 @@ function CanvasBoards(): ReactNode {
         color: 'var(--foreground, #0f172a)'
       }}
     >
-      <CanvasPagesViewPanel
+      <Workbook
         pages={pages}
         activeId={String(activeId)}
         onSelect={(id) => setActiveId(Number(id))}

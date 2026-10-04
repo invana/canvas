@@ -50,7 +50,7 @@ export function PlaybookPresenterBar({ canvas, className, ...rest }: PlaybookPre
   if (!resolved) {
     return (
       <Card className={cn('flex items-center justify-center p-3', className)}>
-        <p className="text-muted-foreground text-sm">No canvas yet.</p>
+        <p className="text-muted-foreground text-base">No canvas yet.</p>
       </Card>
     );
   }
@@ -111,14 +111,14 @@ function PlaybookPresenterBarContent({
       <div className="flex items-start gap-3">
         <div className="flex min-w-0 flex-1 flex-col gap-1" aria-live="polite">
           <span className="font-semibold">{current ? current.title : steps.length === 0 ? 'No steps' : 'Start'}</span>
-          {current?.narration && <p className="text-muted-foreground text-sm leading-relaxed">{current.narration}</p>}
+          {current?.narration && <p className="text-muted-foreground text-base leading-relaxed">{current.narration}</p>}
         </div>
-        <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
+        <span className="text-muted-foreground shrink-0 text-sm tabular-nums">
           {steps.length === 0 ? '' : index < 0 ? `${steps.length} steps` : `Step ${index + 1} / ${steps.length}`}
         </span>
       </div>
 
-      {error && <p className="text-destructive text-xs">{error}</p>}
+      {error && <p className="text-destructive text-sm">{error}</p>}
 
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm" disabled={busy || !canPrevious} onClick={() => void run(previous)}>

@@ -178,7 +178,7 @@ export function useControlItems(
         return [{
           type: 'custom',
           key,
-          render: () => <span className="px-2 text-xs font-semibold whitespace-nowrap text-foreground">{it.text}</span>,
+          render: () => <span className="px-2 text-sm font-semibold whitespace-nowrap text-foreground">{it.text}</span>,
         }];
       case 'widget': {
         const Widget = widgetMap[it.widget];

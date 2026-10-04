@@ -70,11 +70,11 @@ export function HoverElementPreviewCard({ card, className, style }: HoverElement
           ) : null}
           <div className="min-w-0 flex-1">
             {card.title ? (
-              <div className="text-sm font-semibold text-foreground">{card.title}</div>
+              <div className="text-base font-semibold text-foreground">{card.title}</div>
             ) : null}
             {card.subtitle ? (
               <div
-                className="mt-0.5 overflow-hidden text-xs text-muted-foreground"
+                className="mt-0.5 overflow-hidden text-sm text-muted-foreground"
                 style={{
                   display: '-webkit-box',
                   WebkitBoxOrient: 'vertical',
@@ -95,7 +95,7 @@ export function HoverElementPreviewCard({ card, className, style }: HoverElement
           {hasIdentity ? <Separator className="my-2.5" /> : null}
           <div className="flex flex-col gap-0.5">
             {card.rows.map((row) => (
-              <div key={row.label} className="flex justify-between gap-3 text-xs">
+              <div key={row.label} className="flex justify-between gap-3 text-sm">
                 <span className="shrink-0 text-muted-foreground">{row.label}</span>
                 <span className="truncate text-right text-foreground" title={row.value}>
                   {row.value}

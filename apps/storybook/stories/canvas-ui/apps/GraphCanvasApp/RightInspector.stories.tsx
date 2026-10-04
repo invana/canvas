@@ -46,7 +46,7 @@ function RightInspectorApp() {
       {view.kind === 'edge' ? <EdgeDetailView ctx={view} /> : <NodeDetailView ctx={view} />}
     </PanelContent>
   ) : (
-    <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted-foreground">
+    <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-base text-muted-foreground">
       <span className="text-2xl">👆</span>
       <span>Click a node or edge to inspect it here.</span>
     </div>

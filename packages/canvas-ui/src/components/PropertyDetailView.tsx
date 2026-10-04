@@ -62,7 +62,7 @@ export function PropertyDetailView({
           {title}
         </div>
       )}
-      {entries.length === 0 && <span className="text-xs text-muted-foreground">{emptyText}</span>}
+      {entries.length === 0 && <span className="text-sm text-muted-foreground">{emptyText}</span>}
       {entries.map(([key, value]) => {
         const hint = hints?.[key];
         const renderer = resolvePropertyRenderer(value, { name: key, ...(hint ? { hint } : {}) }, renderers);

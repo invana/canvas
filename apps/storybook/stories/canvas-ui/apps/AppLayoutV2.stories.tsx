@@ -1,11 +1,11 @@
 /**
  * **The Explorer shell around a stack of canvases** — `AppLayoutV2` (the
  * design-kit's app shell: header · rail · left panel · main · right inspector ·
- * status bar) with a `<CanvasPagesViewPanel>` filling its **main** region. The
+ * status bar) with a `<Workbook>` filling its **main** region. The
  * boards read like sheets in a spreadsheet: one tab strip across the top of the
  * main area, the page bodies underneath it.
  *
- * **One view, one instance.** `CanvasPagesViewPanel` renders its strip and its
+ * **One view, one instance.** `Workbook` renders its strip and its
  * body as a single column, so the main section mounts it once and gets both —
  * the tabs (with `onAdd`, the per-page caret menu and a `headerActions` gear that
  * opens the inspector on its Settings tab) and, below them, one
@@ -89,7 +89,6 @@ import type {
 } from '@invana/graph';
 import {
   CanvasFiltersViewPanel,
-  CanvasPagesViewPanel,
   CanvasSettingsEditorPanel,
   CanvasSnapshotsViewPanel,
   FindInCanvasViewPanel,
@@ -101,8 +100,6 @@ import {
   LayersViewPanel,
   SelectionViewPanel,
   StylingViewPanel,
-  type CanvasPage,
-  type CanvasPageMenuItem,
   type CanvasSnapshot,
   type TypeStylingPatch,
 } from '@invana/canvas-ui';
@@ -129,7 +126,10 @@ import {
   Separator,
   StatusDot,
   TabbedPanel,
+  Workbook,
   cn,
+  type WorkbookPage,
+  type WorkbookPageMenuItem,
 } from '@invana/ui';
 import {
   Copy,
@@ -519,7 +519,7 @@ export const AppLayoutV2Story: Story = {
     // ── The pages the view renders ───────────────────────────────────────────
     // One independent `<GraphCanvasApp>` per board, header off — the chrome
     // around it is the AppV2 shell, not the app's own rail.
-    const pages: CanvasPage[] = boards.map((b) => ({
+    const pages: WorkbookPage[] = boards.map((b) => ({
       id: b.id,
       title: b.title,
       icon: templates[b.templateIndex]!.icon,
@@ -669,7 +669,7 @@ export const AppLayoutV2Story: Story = {
     }));
 
     // The active tab's caret dropdown, in the main region's strip.
-    const pageMenuItems: CanvasPageMenuItem[] = [
+    const pageMenuItems: WorkbookPageMenuItem[] = [
       { id: 'rename', label: 'Rename', icon: Pencil, onSelect: renameBoard },
       { id: 'duplicate', label: 'Duplicate', icon: Copy, onSelect: duplicateBoard },
       {
@@ -739,7 +739,7 @@ export const AppLayoutV2Story: Story = {
         ) : null,
         right: (
           <div className="flex items-center gap-1 px-2">
-            <span className="text-meta text-muted-foreground tabular-nums">
+            <span className="text-sm text-muted-foreground tabular-nums">
               {boards.length} {boards.length === 1 ? 'canvas' : 'canvases'}
             </span>
             <Button variant="ghost" size="xs" onClick={addBoard}>
@@ -837,8 +837,8 @@ export const AppLayoutV2Story: Story = {
                               )}
                             >
                               <Icon className="size-3.5 shrink-0" />
-                              <span className="truncate text-sm">{b.title}</span>
-                              <span className="ml-auto shrink-0 text-meta text-muted-foreground tabular-nums">
+                              <span className="truncate text-base">{b.title}</span>
+                              <span className="ml-auto shrink-0 text-sm text-muted-foreground tabular-nums">
                                 {t.data.nodes.length} / {t.data.edges.length}
                               </span>
                             </button>
@@ -867,13 +867,12 @@ export const AppLayoutV2Story: Story = {
         defaultSize: '600px',
         minSize: '300px',
         content: (
-          <CanvasPagesViewPanel
+          <Workbook
             pages={pages}
             activeId={activeBoard.id}
             onSelect={setActiveId}
             onAdd={addBoard}
             addLabel="New canvas"
-            menuLabel="Canvas options"
             pageMenuItems={pageMenuItems}
             headerActions={[
               {
@@ -930,12 +929,12 @@ export const AppLayoutV2Story: Story = {
                               </Badge>
                               <span className="truncate font-semibold">{activeBoard.title}</span>
                             </div>
-                            <p className="text-meta text-muted-foreground">
+                            <p className="text-sm text-muted-foreground">
                               {activeTemplate.about}
                             </p>
                           </div>
                           <div className="flex flex-col gap-1">
-                            <p className="text-meta text-muted-foreground">Graph</p>
+                            <p className="text-sm text-muted-foreground">Graph</p>
                             <PropertyList>
                               <PropertyRow label="nodes">
                                 {activeTemplate.data.nodes.length}
@@ -947,7 +946,7 @@ export const AppLayoutV2Story: Story = {
                             </PropertyList>
                           </div>
                           <div className="flex flex-col gap-1">
-                            <p className="text-meta text-muted-foreground">Engine</p>
+                            <p className="text-sm text-muted-foreground">Engine</p>
                             <PropertyList>
                               <PropertyRow label="layout" mono>
                                 graph-force
@@ -958,7 +957,7 @@ export const AppLayoutV2Story: Story = {
                               </PropertyRow>
                             </PropertyList>
                           </div>
-                          <p className="text-meta text-muted-foreground">
+                          <p className="text-sm text-muted-foreground">
                             Every board stays mounted (`keepMounted`), so switching a tab is
                             pure visibility — the camera you left is the camera you return to.
                           </p>
@@ -1071,7 +1070,7 @@ export const AppLayoutV2Story: Story = {
       footer: {
         className: '!h-[30px]',
         left: (
-          <div className="flex items-center gap-3 px-2 text-meta text-muted-foreground">
+          <div className="flex items-center gap-3 px-2 text-sm text-muted-foreground">
             <span className="flex items-center gap-2">
               <StatusDot tone="success" />
               <span className="text-success">LIVE</span>
@@ -1081,7 +1080,7 @@ export const AppLayoutV2Story: Story = {
           </div>
         ),
         right: (
-          <div className="flex items-center gap-3 px-2 text-meta text-muted-foreground">
+          <div className="flex items-center gap-3 px-2 text-sm text-muted-foreground">
             <span className="tabular-nums">
               {activeTemplate.data.nodes.length} nodes · {activeTemplate.data.edges.length} edges
             </span>

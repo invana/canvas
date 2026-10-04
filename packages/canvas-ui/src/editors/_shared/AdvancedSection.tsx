@@ -32,7 +32,7 @@ export function AdvancedSection({
   return (
     <Accordion type="single" collapsible defaultValue={defaultOpen ? 'advanced' : undefined}>
       <AccordionItem value="advanced" className="border-b-0">
-        <AccordionTrigger className="py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
+        <AccordionTrigger className="py-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
           {title}
         </AccordionTrigger>
         <AccordionContent className="p-0">{children}</AccordionContent>

@@ -904,8 +904,8 @@ export function LayersViewPanel({ canvas: explicit }: LayersViewPanelProps) {
         {items.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center text-muted-foreground">
             <Layers className="h-6 w-6" />
-            <p className="text-sm">No canvas layers</p>
-            <p className="text-xs">Mount a canvas to see its layers.</p>
+            <p className="text-base">No canvas layers</p>
+            <p className="text-sm">Mount a canvas to see its layers.</p>
           </div>
         ) : (
           <div onContextMenu={handleContextMenu}>

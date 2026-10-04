@@ -49,7 +49,7 @@ export function controlWidgetOptionsSpecs(
 /** Live zoom level, e.g. `125%`. */
 function ZoomReadoutWidget({ canvas }: ControlWidgetProps) {
   const { zoom } = useZoom(canvas);
-  return <span className="px-2 text-xs tabular-nums text-muted-foreground">{Math.round(zoom * 100)}%</span>;
+  return <span className="px-2 text-sm tabular-nums text-muted-foreground">{Math.round(zoom * 100)}%</span>;
 }
 
 /** Default `pan-pad` step, in screen px. */

@@ -1,5 +1,5 @@
-import { useState, type CSSProperties, type ReactNode } from 'react';
-import { Badge, Button } from '@invana/ui';
+import { useState, type ReactNode } from 'react';
+import { Badge, Button, ClampedText } from '@invana/ui';
 
 /**
  * The built-in property kinds. The registry is open — a custom
@@ -157,24 +157,7 @@ function ImageValue({ url }: { url: string }): ReactNode {
   );
 }
 
-const TOGGLE_CLASS = 'h-auto p-0 text-xs font-normal text-primary';
-
-function LongTextValue({ text }: { text: string }): ReactNode {
-  const [open, setOpen] = useState(false);
-  const clampStyle: CSSProperties | undefined = open
-    ? undefined
-    : { display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: CLAMP_LINES };
-  return (
-    <div>
-      <div className="overflow-hidden whitespace-pre-wrap break-words" style={clampStyle}>
-        {text}
-      </div>
-      <Button variant="link" size="sm" className={TOGGLE_CLASS} onClick={() => setOpen((o) => !o)}>
-        {open ? 'Show less' : 'Show more'}
-      </Button>
-    </div>
-  );
-}
+const TOGGLE_CLASS = 'h-auto p-0 text-sm font-normal text-primary';
 
 function TagList({ items }: { items: readonly unknown[] }): ReactNode {
   const shown = items.slice(0, LIST_ITEM_CAP);
@@ -186,7 +169,7 @@ function TagList({ items }: { items: readonly unknown[] }): ReactNode {
           {String(t)}
         </Badge>
       ))}
-      {extra > 0 && <span className="text-xs text-muted-foreground">+{extra} more</span>}
+      {extra > 0 && <span className="text-sm text-muted-foreground">+{extra} more</span>}
     </div>
   );
 }
@@ -208,7 +191,7 @@ function ListValue({
           <span className="min-w-0 flex-1 break-words">{renderValue(it, { name: `[${i}]` })}</span>
         </div>
       ))}
-      {extra > 0 && <span className="text-xs text-muted-foreground">+{extra} more</span>}
+      {extra > 0 && <span className="text-sm text-muted-foreground">+{extra} more</span>}
     </div>
   );
 }
@@ -243,7 +226,7 @@ function JsonValue({
         <div className="mt-1 flex flex-col gap-1.5 border-l border-border pl-2">
           {entries.map(([k, v]) => (
             <div key={k} className="flex flex-col gap-0.5">
-              <span className="text-xs text-muted-foreground">{k}</span>
+              <span className="text-sm text-muted-foreground">{k}</span>
               <span className="break-words">{renderValue(v, { name: k })}</span>
             </div>
           ))}
@@ -283,7 +266,11 @@ export const defaultPropertyRenderers: readonly PropertyRenderer[] = [
     kind: 'longtext',
     layout: 'block',
     match: (v) => typeof v === 'string' && (v.length > LONG_TEXT_THRESHOLD || v.includes('\n')),
-    render: ({ value }) => <LongTextValue text={value as string} />,
+    render: ({ value }) => (
+      <ClampedText lines={CLAMP_LINES} className="break-words">
+        {value as string}
+      </ClampedText>
+    ),
   },
   {
     kind: 'tags',

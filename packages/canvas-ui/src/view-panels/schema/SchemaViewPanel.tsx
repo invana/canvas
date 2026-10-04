@@ -188,7 +188,7 @@ export function SchemaViewPanel({
   if (schema.nodeTypes.length === 0) {
     return (
       <div className={`grid h-full w-full place-items-center p-4 ${className ?? ''}`}>
-        <p className="text-muted-foreground text-xs">No schema yet — load a graph to see its node &amp; edge types.</p>
+        <p className="text-muted-foreground text-sm">No schema yet — load a graph to see its node &amp; edge types.</p>
       </div>
     );
   }

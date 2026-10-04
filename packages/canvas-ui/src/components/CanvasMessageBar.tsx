@@ -28,7 +28,7 @@ export function CanvasMessageBar({ icon: Icon, canvas, className, style }: Canva
 
   return (
     <div
-      className={cn('flex items-center gap-1.5 whitespace-nowrap text-xs opacity-80', className)}
+      className={cn('flex items-center gap-1.5 whitespace-nowrap text-sm opacity-80', className)}
       style={style}
     >
       {Icon ? <Icon size={13} /> : null}

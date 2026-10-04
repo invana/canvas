@@ -22,7 +22,7 @@
   "peerDependencies": {
     "@invana/canvas-ui": "workspace:*",
     "@invana/graph": "workspace:*",
-    "@invana/ui": "*",
+    "@invana/ui": ">=0.0.32",
     "@invana/forms": "*",
     "react": "^18.0.0 || ^19.0.0",
     "react-dom": "^18.0.0 || ^19.0.0",
@@ -30,9 +30,9 @@
   },
   "devDependencies": {
     "@invana/canvas-ui": "workspace:*",
-    "@invana/forms": "^0.0.24",
+    "@invana/forms": "^0.0.32",
     "@invana/graph": "workspace:*",
-    "@invana/ui": "^0.0.24",
+    "@invana/ui": "^0.0.32",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/react": "^18.3.12",

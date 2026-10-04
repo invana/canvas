@@ -199,13 +199,13 @@ export function CanvasSettingsBrowser({
   }, [rows, sections]);
 
   return (
-    <div className={cn('flex flex-col gap-1 p-2 text-sm', className)}>
+    <div className={cn('flex flex-col gap-1 p-2 text-base', className)}>
       <Accordion type="multiple" defaultValue={sections}>
         {sections.map((section) => {
           const sectionRows = rowsBySection.get(section) ?? [];
           return (
             <AccordionItem key={section} value={section} className="border-b">
-              <AccordionTrigger className="py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
+              <AccordionTrigger className="py-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
                 <span className="flex items-center gap-2">
                   {SECTION_LABEL[section]}
                   <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
@@ -215,7 +215,7 @@ export function CanvasSettingsBrowser({
               </AccordionTrigger>
               <AccordionContent className="pb-1 pl-1">
                 {sectionRows.length === 0 ? (
-                  <p className="px-2 py-1 text-xs italic text-muted-foreground">None registered</p>
+                  <p className="px-2 py-1 text-sm italic text-muted-foreground">None registered</p>
                 ) : (
                   <Accordion type="multiple">
                     {sectionRows.map((row) => (
@@ -227,7 +227,7 @@ export function CanvasSettingsBrowser({
                         <AccordionTrigger className="py-2 hover:no-underline">
                           <span className="flex min-w-0 items-center gap-2">
                             <span className="truncate font-medium">{row.id}</span>
-                            <span className="truncate text-xs text-muted-foreground">
+                            <span className="truncate text-sm text-muted-foreground">
                               {row.typeName}
                             </span>
                             {row.enabled !== undefined && (
@@ -260,7 +260,7 @@ export function CanvasSettingsBrowser({
                               apply: (patch) => update({ [section]: { [row.id]: patch } }, `edit:settings:${section}:${row.id}`),
                             })
                           ) : (
-                            <p className="px-3 py-2 text-xs italic text-muted-foreground">
+                            <p className="px-3 py-2 text-sm italic text-muted-foreground">
                               No settings editor registered for {row.typeName}.
                             </p>
                           )}

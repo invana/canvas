@@ -30,7 +30,7 @@ function isSafeImageSrc(s: string): boolean {
 
 function PreviewRow({ label, value, mono }: PreviewCardRow) {
   return (
-    <div className="flex justify-between gap-3 text-xs">
+    <div className="flex justify-between gap-3 text-sm">
       <span className="shrink-0 text-muted-foreground">{label}</span>
       <span className={cn('truncate text-right text-foreground', mono && 'font-mono')} title={value}>
         {value}
@@ -90,7 +90,7 @@ export function NodePreviewCard({
           <div className="min-w-0">
             <CardTitle className="truncate text-base leading-tight">{title}</CardTitle>
             {subtitle ? (
-              <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{subtitle}</p>
+              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{subtitle}</p>
             ) : null}
           </div>
         </div>
@@ -136,8 +136,8 @@ export function EdgePreviewCard({ badge, title, subtitle, rows, className }: Edg
     <Card className={cn('w-72 shadow-xl', className)}>
       <CardHeader className="space-y-1.5">
         {badge ? <Badge className="w-fit font-mono text-[10px]">{badge}</Badge> : null}
-        <CardTitle className="text-sm">{title}</CardTitle>
-        {subtitle ? <p className="text-xs text-muted-foreground">{subtitle}</p> : null}
+        <CardTitle className="text-base">{title}</CardTitle>
+        {subtitle ? <p className="text-sm text-muted-foreground">{subtitle}</p> : null}
       </CardHeader>
       {rows && rows.length > 0 ? (
         <CardContent className="space-y-2">

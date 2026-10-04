@@ -89,7 +89,7 @@ export function DetailCard({
       )}
 
       {subtitle && (
-        <div className="-mt-1.5 break-all font-mono text-xs text-muted-foreground">{subtitle}</div>
+        <div className="-mt-1.5 break-all font-mono text-sm text-muted-foreground">{subtitle}</div>
       )}
 
       {rows && rows.length > 0 && (
@@ -99,7 +99,7 @@ export function DetailCard({
               <span className="shrink-0 grow-0 basis-[38%] break-words text-muted-foreground">
                 {row.label}
               </span>
-              <span className={cn('flex-1 break-words', row.mono && 'font-mono text-xs')}>
+              <span className={cn('flex-1 break-words', row.mono && 'font-mono text-sm')}>
                 {row.value}
               </span>
             </div>

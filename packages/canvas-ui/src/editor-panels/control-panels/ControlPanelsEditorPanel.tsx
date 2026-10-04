@@ -235,11 +235,11 @@ export function ControlPanelsEditorPanel({
       </div>
 
       {selected === null ? (
-        <p className="text-sm italic text-muted-foreground">No control panels on this canvas.</p>
+        <p className="text-base italic text-muted-foreground">No control panels on this canvas.</p>
       ) : (
         <>
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold">{selected}</span>
+            <span className="text-base font-semibold">{selected}</span>
             <Button type="button" variant="ghost" size="sm" onClick={() => onSubmit({ [selected]: null })} aria-label="Remove panel">
               <Trash2 className="size-4" /> Remove
             </Button>

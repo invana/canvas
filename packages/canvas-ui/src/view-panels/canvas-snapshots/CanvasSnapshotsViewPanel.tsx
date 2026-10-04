@@ -224,7 +224,7 @@ const DAY_MS = 86_400_000;
  * input, no hand-rolled CSS.
  */
 const RENAME_INPUT_CLASS =
-  'h-6 min-w-0 flex-1 rounded border border-border bg-background px-1.5 text-sm text-foreground outline-none focus:border-primary disabled:opacity-60';
+  'h-6 min-w-0 flex-1 rounded border border-border bg-background px-1.5 text-base text-foreground outline-none focus:border-primary disabled:opacity-60';
 
 /**
  * A thumbnail of what is on screen, in the requested flavour. Never throws: an
@@ -415,7 +415,7 @@ function SnapshotRow({
         ) : onRename ? (
           <Button
             variant="ghost"
-            className="h-auto min-w-0 flex-1 justify-start gap-1.5 px-1 py-0 text-sm font-normal"
+            className="h-auto min-w-0 flex-1 justify-start gap-1.5 px-1 py-0 text-base font-normal"
             title={`${title} — click to rename`}
             onClick={beginEdit}
           >
@@ -427,7 +427,7 @@ function SnapshotRow({
             {title}
           </span>
         )}
-        <span className="shrink-0 text-xs tabular-nums text-muted-foreground" title={date.toLocaleString(locale)}>
+        <span className="shrink-0 text-sm tabular-nums text-muted-foreground" title={date.toLocaleString(locale)}>
           {time}
         </span>
         {onDelete &&
@@ -439,12 +439,12 @@ function SnapshotRow({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-6 px-1.5 text-xs text-destructive"
+                className="h-6 px-1.5 text-sm text-destructive"
                 onClick={onDelete}
               >
                 Delete
               </Button>
-              <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs" onClick={onDisarmDelete}>
+              <Button variant="ghost" size="sm" className="h-6 px-1.5 text-sm" onClick={onDisarmDelete}>
                 Cancel
               </Button>
             </span>
@@ -463,7 +463,7 @@ function SnapshotRow({
           ))}
       </div>
       {(snapshot.summary || snapshot.by) && (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           {snapshot.summary}
           {snapshot.summary && snapshot.by ? ' · ' : ''}
           {snapshot.by}
@@ -663,20 +663,20 @@ export function CanvasSnapshotsViewPanel({
   const empty = !isLoading && groups.length === 0;
 
   return (
-    <div className={cn('flex h-full min-h-0 flex-col text-sm', className)}>
+    <div className={cn('flex h-full min-h-0 flex-col text-base', className)}>
       {showCapture && (
         <div className="border-b border-border p-2">
           <Button
             variant="outline"
             size="sm"
-            className="h-8 w-full gap-1.5 text-xs"
+            className="h-8 w-full gap-1.5 text-sm"
             disabled={isCapturing || !canvas}
             onClick={() => void capture()}
           >
             <Camera className="h-3.5 w-3.5" />
             {captureLabel}
           </Button>
-          {captureHint && <p className="mt-1.5 text-xs leading-snug text-muted-foreground">{captureHint}</p>}
+          {captureHint && <p className="mt-1.5 text-sm leading-snug text-muted-foreground">{captureHint}</p>}
         </div>
       )}
 
@@ -689,11 +689,11 @@ export function CanvasSnapshotsViewPanel({
             </div>
           )}
 
-          {empty && <p className="px-1 text-xs text-muted-foreground">{emptyText}</p>}
+          {empty && <p className="px-1 text-sm text-muted-foreground">{emptyText}</p>}
 
           {groups.map((group) => (
             <section key={group.key} className="flex flex-col gap-2">
-              <p className="px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <p className="px-1 text-sm font-medium uppercase tracking-wide text-muted-foreground">
                 {group.heading}
               </p>
               {group.snapshots.map((v) => {

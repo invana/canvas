@@ -69,7 +69,7 @@ export function ExportStatePanel({
   return (
     <div className={cn('flex w-full flex-col gap-3', className)}>
       {title != null && title !== '' && (
-        <div className="text-sm font-semibold text-foreground">{title}</div>
+        <div className="text-base font-semibold text-foreground">{title}</div>
       )}
 
       <Button variant="default" size="sm" className="w-full gap-2" onClick={onExport}>
@@ -98,7 +98,7 @@ export function ExportStatePanel({
         <>
           <Separator />
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-medium text-muted-foreground">
+            <span className="text-sm font-medium text-muted-foreground">
               Restore view (camera &amp; selection)
             </span>
             <Toggle
@@ -106,7 +106,7 @@ export function ExportStatePanel({
               pressed={restoreView ?? true}
               onPressedChange={onRestoreViewChange}
               aria-label="Restore view on import"
-              className="text-xs"
+              className="text-sm"
             >
               {restoreView ?? true ? 'On' : 'Off'}
             </Toggle>

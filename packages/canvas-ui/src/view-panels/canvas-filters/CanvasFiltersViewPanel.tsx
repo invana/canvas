@@ -148,9 +148,9 @@ export function CanvasFiltersViewPanel({
     nodes.some((id) => store?.isNodeHidden(id)) || edges.some((id) => store?.isEdgeHidden(id));
 
   return (
-    <div className="flex h-full flex-col gap-2 overflow-y-auto p-2 text-sm">
+    <div className="flex h-full flex-col gap-2 overflow-y-auto p-2 text-base">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-muted-foreground text-xs">
+        <span className="text-muted-foreground text-sm">
           {nodes.length} node(s) · {edges.length} edge(s)
         </span>
         <Button variant="outline" size="sm" disabled={!anyHidden} onClick={showAll}>
@@ -159,7 +159,7 @@ export function CanvasFiltersViewPanel({
       </div>
 
       {empty ? (
-        <p className="text-muted-foreground px-1 text-xs">
+        <p className="text-muted-foreground px-1 text-sm">
           Nothing hidden — right-click an element to Hide it.
         </p>
       ) : (

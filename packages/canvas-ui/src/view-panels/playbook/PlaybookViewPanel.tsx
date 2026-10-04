@@ -52,7 +52,7 @@ export function PlaybookViewPanel({ canvas, className, ...rest }: PlaybookViewPa
   if (!resolved) {
     return (
       <Card className={cn('flex h-full w-full items-center justify-center', className)}>
-        <p className="text-muted-foreground p-4 text-sm">No canvas yet.</p>
+        <p className="text-muted-foreground p-4 text-base">No canvas yet.</p>
       </Card>
     );
   }
@@ -122,11 +122,11 @@ function PlaybookViewPanelContent({
   }, [playbook]);
 
   return (
-    <div className={cn('flex h-full flex-col gap-2 overflow-hidden p-2 text-sm', className)}>
+    <div className={cn('flex h-full flex-col gap-2 overflow-hidden p-2 text-base', className)}>
       {/* Title + position. */}
       <div className="flex items-center justify-between gap-2">
         <span className="truncate font-medium">{title}</span>
-        <span className="text-muted-foreground shrink-0 text-xs">
+        <span className="text-muted-foreground shrink-0 text-sm">
           {steps.length === 0 ? 'no steps' : `${index + 1} / ${steps.length}`}
         </span>
       </div>
@@ -135,9 +135,9 @@ function PlaybookViewPanelContent({
       <div className="bg-muted/40 flex flex-col gap-1 rounded-md p-2">
         <span className="font-medium">{current ? current.title : 'Start'}</span>
         {current?.narration ? (
-          <p className="text-muted-foreground text-xs leading-relaxed">{current.narration}</p>
+          <p className="text-muted-foreground text-sm leading-relaxed">{current.narration}</p>
         ) : (
-          !current && <p className="text-muted-foreground text-xs">Before the first step.</p>
+          !current && <p className="text-muted-foreground text-sm">Before the first step.</p>
         )}
       </div>
 
@@ -155,7 +155,7 @@ function PlaybookViewPanelContent({
         )}
       </div>
 
-      {error && <p className="text-destructive text-xs">{error}</p>}
+      {error && <p className="text-destructive text-sm">{error}</p>}
 
       <Separator />
 
@@ -177,7 +177,7 @@ function PlaybookViewPanelContent({
                 i > index && 'text-muted-foreground',
               )}
             >
-              <span className="w-5 shrink-0 text-right text-xs tabular-nums">{i + 1}</span>
+              <span className="w-5 shrink-0 text-right text-sm tabular-nums">{i + 1}</span>
               <span className="min-w-0 flex-1 truncate">{step.title}</span>
               {step.actor && (
                 <Badge variant="outline" className="shrink-0 px-1.5 py-0 text-[10px]">
@@ -187,7 +187,7 @@ function PlaybookViewPanelContent({
             </Button>
           </li>
         ))}
-        {steps.length === 0 && <li className="text-muted-foreground px-2 text-xs">No steps yet.</li>}
+        {steps.length === 0 && <li className="text-muted-foreground px-2 text-sm">No steps yet.</li>}
       </ol>
 
       {showSaveStep && (
@@ -201,7 +201,7 @@ function PlaybookViewPanelContent({
                 if (e.key === 'Enter' && unsaved && !canNext && !busy) saveStep();
               }}
               placeholder={`Step ${steps.length + 1}`}
-              className="h-8 text-xs"
+              className="h-8 text-sm"
             />
             <Button
               variant="outline"

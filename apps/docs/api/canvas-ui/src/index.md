@@ -457,12 +457,6 @@ Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 
 ***
 
-### CanvasHeaderAction
-
-Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
-
-***
-
 ### CanvasMessageBar
 
 Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
@@ -470,30 +464,6 @@ Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 ***
 
 ### CanvasMessageBarProps
-
-Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
-
-***
-
-### CanvasPage
-
-Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
-
-***
-
-### CanvasPageMenuItem
-
-Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
-
-***
-
-### CanvasPagesViewPanel
-
-Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
-
-***
-
-### CanvasPagesViewPanelProps
 
 Renames and re-exports [SpecStore](../../canvas/src/variables/SpecStore.md)
 

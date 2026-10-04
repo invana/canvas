@@ -132,14 +132,14 @@ export function StylingViewPanel({
   const empty = schema.nodeTypes.length === 0 && schema.edgeTypes.length === 0;
 
   return (
-    <div className={cn('flex h-full min-h-0 flex-col text-sm', className)}>
+    <div className={cn('flex h-full min-h-0 flex-col text-base', className)}>
       <ScrollArea className="min-h-0 flex-1">
         <div className="flex flex-col gap-4 p-2">
-          {empty && <p className="px-1 text-xs text-muted-foreground">{emptyText}</p>}
+          {empty && <p className="px-1 text-sm text-muted-foreground">{emptyText}</p>}
 
           {schema.nodeTypes.length > 0 && (
             <section className="flex flex-col gap-2">
-              <p className="px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <p className="px-1 text-sm font-medium uppercase tracking-wide text-muted-foreground">
                 Node types
               </p>
               {schema.nodeTypes.map((t) => {
@@ -151,7 +151,7 @@ export function StylingViewPanel({
                       <span className="min-w-0 flex-1 truncate" title={t.name}>
                         {t.name}
                       </span>
-                      <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{t.count}</span>
+                      <span className="shrink-0 text-sm tabular-nums text-muted-foreground">{t.count}</span>
                       {styled && (
                         <Button
                           variant="ghost"
@@ -216,7 +216,7 @@ export function StylingViewPanel({
 
           {schema.edgeTypes.length > 0 && (
             <section className="flex flex-col gap-2">
-              <p className="px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <p className="px-1 text-sm font-medium uppercase tracking-wide text-muted-foreground">
                 Edge types
               </p>
               {schema.edgeTypes.map((t) => {
@@ -224,10 +224,10 @@ export function StylingViewPanel({
                 const styled = Object.keys(style).length > 0;
                 return (
                   <div key={t.name} className="flex items-center gap-2 rounded-md border border-border p-2">
-                    <span className="min-w-0 flex-1 truncate font-mono text-xs" title={t.name}>
+                    <span className="min-w-0 flex-1 truncate font-mono text-sm" title={t.name}>
                       {t.name}
                     </span>
-                    <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{t.count}</span>
+                    <span className="shrink-0 text-sm tabular-nums text-muted-foreground">{t.count}</span>
                     {styled && (
                       <Button
                         variant="ghost"

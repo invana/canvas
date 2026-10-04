@@ -121,7 +121,7 @@ export function GraphStatusBar({
   return (
     <div
       className={cn(
-        'flex items-center gap-2 whitespace-nowrap text-xs tabular-nums opacity-80',
+        'flex items-center gap-2 whitespace-nowrap text-sm tabular-nums opacity-80',
         className,
       )}
       style={style}

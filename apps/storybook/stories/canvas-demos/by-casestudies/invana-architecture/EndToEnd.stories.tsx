@@ -471,7 +471,7 @@ export const EndToEndStory: Story = {
           render: (c) => (
             <Card className="m-3">
               <CardHeader className="py-3">
-                <CardTitle className="text-sm">box binding</CardTitle>
+                <CardTitle className="text-base">box binding</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <NodeStructureEditorPanel
@@ -512,14 +512,14 @@ export const EndToEndStory: Story = {
           // the point the JSON makes better than prose.
           render: () => (
             <div className="flex h-full flex-col gap-2 p-3">
-              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-muted-foreground">
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm text-muted-foreground">
                 <span className="font-medium text-foreground">invanaArchitecture</span>
                 <span className="tabular-nums">
                   {invanaArchitecture.nodes.length} nodes · {invanaArchitecture.edges.length} edges
                 </span>
                 <span className="font-mono">@invana/graph-datasets/usecase-demos</span>
               </div>
-              <pre className="min-h-0 flex-1 overflow-auto rounded-md bg-muted/40 p-3 font-mono text-xs leading-relaxed text-foreground">
+              <pre className="min-h-0 flex-1 overflow-auto rounded-md bg-muted/40 p-3 font-mono text-sm leading-relaxed text-foreground">
                 {datasetJson}
               </pre>
             </div>

@@ -147,7 +147,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-1.5">
-      <h3 className="text-muted-foreground px-1 text-xs font-medium">{title}</h3>
+      <h3 className="text-muted-foreground px-1 text-sm font-medium">{title}</h3>
       {children}
     </section>
   );
@@ -187,7 +187,7 @@ export function ElementInspectorViewPanel({ canvas, className, ...rest }: Elemen
   if (!canvas) {
     return (
       <Card className={cn('flex h-full w-full items-center justify-center', className)}>
-        <p className="text-muted-foreground p-4 text-sm">Failed to load — no canvas.</p>
+        <p className="text-muted-foreground p-4 text-base">Failed to load — no canvas.</p>
       </Card>
     );
   }
@@ -273,10 +273,10 @@ function ElementInspectorViewPanelContent({
   const properties = element && isRecord(element.data) ? Object.entries(element.data) : [];
 
   return (
-    <div className={cn('flex h-full flex-col gap-2 overflow-hidden p-2 text-sm', className)}>
+    <div className={cn('flex h-full flex-col gap-2 overflow-hidden p-2 text-base', className)}>
       {/* What is being shown, and the one action that touches the canvas. */}
       <div className="flex items-center justify-between gap-2">
-        <span className="text-muted-foreground min-w-0 truncate text-xs">
+        <span className="text-muted-foreground min-w-0 truncate text-sm">
           {controlled ? 'Inspecting' : resolved ? `Clicked ${resolved.kind}` : 'No element'}
         </span>
         <Button
@@ -299,7 +299,7 @@ function ElementInspectorViewPanelContent({
           // Two different nothings: no click yet, versus nothing that can report a
           // click. Collapsing them would leave a host debugging an empty panel that
           // was never wired up.
-          <div className="text-muted-foreground flex items-start gap-2 px-1 text-xs">
+          <div className="text-muted-foreground flex items-start gap-2 px-1 text-sm">
             <MousePointerClick className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             <span className="min-w-0">
               {behaviourPresent || controlled ? (
@@ -318,14 +318,14 @@ function ElementInspectorViewPanelContent({
           // The id is selected but resolves to no element in this layer: removed
           // while selected, or belonging to a different layer. Say which id.
           <div className="flex flex-col gap-2 px-1">
-            <div className="text-muted-foreground flex items-start gap-2 text-xs">
+            <div className="text-muted-foreground flex items-start gap-2 text-sm">
               <HelpCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span className="min-w-0">
                 This element is no longer in the <span className="font-mono">{layerId}</span> layer — it may have been
                 removed since it was clicked.
               </span>
             </div>
-            <p className="text-muted-foreground/80 break-all font-mono text-xs">{inspectedId}</p>
+            <p className="text-muted-foreground/80 break-all font-mono text-sm">{inspectedId}</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -395,7 +395,7 @@ function ElementInspectorViewPanelContent({
             {/* ── Properties ── */}
             <Section title={`Properties${properties.length > 0 ? ` (${properties.length})` : ''}`}>
               {properties.length === 0 ? (
-                <p className="text-muted-foreground px-1 text-xs italic">No properties</p>
+                <p className="text-muted-foreground px-1 text-sm italic">No properties</p>
               ) : (
                 <PropertyList labelWidth={96} className="px-1">
                   {properties.map(([key, value]) => (

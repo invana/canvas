@@ -41,7 +41,7 @@ export function HistoryViewPanel({ canvas, className, ...rest }: HistoryViewPane
   if (!resolved) {
     return (
       <Card className={cn('flex h-full w-full items-center justify-center', className)}>
-        <p className="text-muted-foreground p-4 text-sm">No canvas yet.</p>
+        <p className="text-muted-foreground p-4 text-base">No canvas yet.</p>
       </Card>
     );
   }
@@ -108,15 +108,15 @@ function HistoryViewPanelContent({ canvas, showUndoRedo = true, className }: His
   }, [all]);
 
   return (
-    <div className={cn('flex h-full flex-col gap-2 overflow-hidden p-2 text-sm', className)}>
+    <div className={cn('flex h-full flex-col gap-2 overflow-hidden p-2 text-base', className)}>
       <div className="flex items-center justify-between gap-2">
-        <span className="text-muted-foreground text-xs whitespace-nowrap">{count(all.length, 'entry', 'entries')}</span>
+        <span className="text-muted-foreground text-sm whitespace-nowrap">{count(all.length, 'entry', 'entries')}</span>
         {showUndoRedo && <HistoryToolbar canvas={canvas} showRedraw={false} />}
       </div>
 
       {actors.length > 1 && (
         <div className="flex flex-wrap items-center gap-1">
-          <Button variant="ghost" size="sm" className={cn('h-6 px-2 text-xs', active === undefined && ACTIVE_CLASS)} onClick={() => setActor(undefined)}>
+          <Button variant="ghost" size="sm" className={cn('h-6 px-2 text-sm', active === undefined && ACTIVE_CLASS)} onClick={() => setActor(undefined)}>
             All
           </Button>
           {actors.map((a) => (
@@ -124,7 +124,7 @@ function HistoryViewPanelContent({ canvas, showUndoRedo = true, className }: His
               key={a}
               variant="ghost"
               size="sm"
-              className={cn('h-6 px-2 text-xs', active === a && ACTIVE_CLASS)}
+              className={cn('h-6 px-2 text-sm', active === a && ACTIVE_CLASS)}
               onClick={() => setActor(a)}
             >
               {a}
@@ -139,7 +139,7 @@ function HistoryViewPanelContent({ canvas, showUndoRedo = true, className }: His
         {shown.map((entry) => (
           <HistoryRow key={entry.id} entry={entry} canvas={canvas} now={now} />
         ))}
-        {shown.length === 0 && <li className="text-muted-foreground px-2 text-xs">Nothing recorded yet.</li>}
+        {shown.length === 0 && <li className="text-muted-foreground px-2 text-sm">Nothing recorded yet.</li>}
       </ol>
     </div>
   );

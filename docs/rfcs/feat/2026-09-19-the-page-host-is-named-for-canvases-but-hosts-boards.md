@@ -2,17 +2,20 @@
 id: feat-2026-09-19-the-page-host-is-named-for-canvases-but-hosts-boards
 type: feat
 title: The page host is named for canvases but hosts boards
-status: proposed
+status: superseded
 opened: 2026-09-19
 decided: null
 landed: null
 packages: [pkg:@invana/canvas-ui]
 design_of_record: null
 relations:
+  - { predicate: superseded-by, object: rfc:feat-2026-10-04-canvas-ui-uses-the-kit-workbook }
   - { predicate: relates-to, object: file:packages/canvas-ui/src/view-panels/canvas-pages/CanvasPagesViewPanel.tsx }
 ---
 
 # The page host is named for canvases but hosts boards
+
+> **Superseded** by `rfc:feat-2026-10-04-canvas-ui-uses-the-kit-workbook`. The strip moved to the design kit as `Workbook` (`@invana/ui`), and canvas-ui deleted `BoardPagesViewPanel` along with these aliases. What still holds: the reasoning that the host is not canvas-specific, which is why the kit names it `Workbook`.
 
 | | |
 |---|---|
@@ -102,3 +105,4 @@ Downstream:
 |---|---|---|---|
 | 2026-09-19 | Opened | proposed | Raised while renaming the saved record from *canvas* to *board* in Invana Studio; the host was the one canvas-ui export the rename genuinely reached |
 | 2026-09-19 | F1–F5 written, V1–V4 green | implemented | Not committed and not released. Studio keeps compiling on the published package through the F4 aliases; it adopts the new names once a release carries them |
+| 2026-10-05 | Superseded | superseded | `rfc:feat-2026-10-04-canvas-ui-uses-the-kit-workbook` replaces the panel with the kit's `Workbook` and deletes the `Board*` names and the deprecated `Canvas*` aliases. D-1 (how long the aliases live) is answered: until this release |

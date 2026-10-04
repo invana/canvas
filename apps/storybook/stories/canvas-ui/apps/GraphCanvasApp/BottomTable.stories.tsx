@@ -34,7 +34,7 @@ const DATA = lesMiserables;
 // The bottom region — a data table projecting the graph's nodes. A plain
 // scrollable table stands in for the real `DataStore`-backed grid.
 const bottomTable = (
-  <div className="h-full overflow-auto text-xs text-foreground">
+  <div className="h-full overflow-auto text-sm text-foreground">
     <table className="w-full border-collapse">
       <thead className="sticky top-0 bg-background">
         <tr className="text-left text-muted-foreground">

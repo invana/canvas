@@ -481,7 +481,7 @@ export const SchemaTableStory: Story = {
               style={{ left: fieldMenu.x, top: fieldMenu.y }}
               onPointerDown={(e) => e.stopPropagation()}
             >
-              <div className="text-muted-foreground px-2 py-1 text-xs">
+              <div className="text-muted-foreground px-2 py-1 text-sm">
                 Field: {fieldsOf(fieldMenu.nodeId)[fieldMenu.field]?.name}
               </div>
               <Button

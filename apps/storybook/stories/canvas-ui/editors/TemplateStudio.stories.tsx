@@ -134,7 +134,7 @@ function StudioEditors() {
     <div className="flex flex-col gap-3 p-3">
       <Card>
         <CardHeader className="py-3">
-          <CardTitle className="text-sm">Theme palette</CardTitle>
+          <CardTitle className="text-base">Theme palette</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
           {THEMES.map((t) => (
@@ -153,7 +153,7 @@ function StudioEditors() {
 
       <Card>
         <CardHeader className="py-3">
-          <CardTitle className="text-sm">IdCard styling</CardTitle>
+          <CardTitle className="text-base">IdCard styling</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <NodeStylingEditorPanel defaults={BUILT_IN_STYLINGS.idCard} onSubmit={applyStyling} />
@@ -162,7 +162,7 @@ function StudioEditors() {
 
       <Card>
         <CardHeader className="py-3">
-          <CardTitle className="text-sm">person binding</CardTitle>
+          <CardTitle className="text-base">person binding</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <NodeStructureEditorPanel

@@ -82,7 +82,7 @@ export const Basic: Story = {
 
         {/* Exact insets, with React children (a runtime slot, not persisted). */}
         <ControlPanel id="brand" position={{ top: 16, left: 16 }}>
-          <span className="px-2 text-sm font-semibold">Base canvas</span>
+          <span className="px-2 text-base font-semibold">Base canvas</span>
         </ControlPanel>
 
         {/* Edge-centre anchor, bare (no card surface). The only item is static text. */}

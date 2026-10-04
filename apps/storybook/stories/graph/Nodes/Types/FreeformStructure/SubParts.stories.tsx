@@ -197,9 +197,9 @@ function HitReadout({ hit }: { hit: PartHit | null }) {
   return (
     <Card className="absolute left-4 top-4 w-72">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm">Sub-part events</CardTitle>
+        <CardTitle className="text-base">Sub-part events</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-2 text-xs">
+      <CardContent className="flex flex-col gap-2 text-sm">
         {hit ? (
           <>
             <div className="flex items-center justify-between gap-2">

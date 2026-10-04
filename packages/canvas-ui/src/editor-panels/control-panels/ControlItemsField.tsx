@@ -32,8 +32,8 @@ function ChoiceOptionsField({
 
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-xs font-medium">Options</span>
-      {fields.length === 0 && <p className="text-xs italic text-muted-foreground">None — the command’s own options.</p>}
+      <span className="text-sm font-medium">Options</span>
+      {fields.length === 0 && <p className="text-sm italic text-muted-foreground">None — the command’s own options.</p>}
       {fields.map((f, i) => (
         <div key={f.id} className="flex items-start gap-1">
           <div className="flex-1">
@@ -93,7 +93,7 @@ function ControlItemRow({
     <div className="flex items-start gap-2 border-t border-border pt-2 first:border-t-0 first:pt-0">
       <div className="flex flex-1 flex-col gap-1">
         {row.type === 'slot' && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Badge variant="secondary">slot</Badge>
             <span>{row.slot} — runtime content from a {'<ControlPanel>'}; kept as is</span>
           </div>
@@ -139,8 +139,8 @@ export function ControlItemsField({ control, choices }: ControlItemsFieldProps) 
 
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-sm font-semibold">Items</span>
-      {fields.length === 0 && <p className="text-xs italic text-muted-foreground">No items yet.</p>}
+      <span className="text-base font-semibold">Items</span>
+      {fields.length === 0 && <p className="text-sm italic text-muted-foreground">No items yet.</p>}
       {fields.map((f, i) => (
         <ControlItemRow
           key={f.id}

@@ -25,7 +25,7 @@ function Endpoint({ role, ep }: { role: string; ep: EdgeEndpoint }) {
   const colorStyle = ep.color ? { style: { color: ep.color } } : {};
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-xs font-medium text-muted-foreground">{role}</span>
+      <span className="text-sm font-medium text-muted-foreground">{role}</span>
       {(ep.label || ep.type) && (
         <div className="flex flex-wrap items-center gap-2">
           {/* Endpoint title tinted with the node's styling colour. */}
@@ -42,7 +42,7 @@ function Endpoint({ role, ep }: { role: string; ep: EdgeEndpoint }) {
         </div>
       )}
       <span
-        className="break-all font-mono text-xs text-muted-foreground"
+        className="break-all font-mono text-sm text-muted-foreground"
         {...(!ep.label && ep.color ? { style: { color: ep.color } } : {})}
       >
         {ep.id}

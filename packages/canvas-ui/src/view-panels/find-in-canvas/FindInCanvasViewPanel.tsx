@@ -405,7 +405,7 @@ export function FindInCanvasViewPanel({
   );
 
   return (
-    <div className="flex h-full flex-col gap-3 overflow-hidden p-2 text-sm">
+    <div className="flex h-full flex-col gap-3 overflow-hidden p-2 text-base">
       {/* Element-kind scope. */}
       <ToggleGroup
         type="single"

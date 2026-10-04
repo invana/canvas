@@ -88,7 +88,7 @@ export function SelectionViewPanel({ canvas, className, ...rest }: SelectionView
   if (!canvas) {
     return (
       <Card className={cn('flex h-full w-full items-center justify-center', className)}>
-        <p className="text-muted-foreground p-4 text-sm">Failed to load — no canvas.</p>
+        <p className="text-muted-foreground p-4 text-base">Failed to load — no canvas.</p>
       </Card>
     );
   }
@@ -194,11 +194,11 @@ function SelectionViewPanelContent({
   }, [layer, nodes, edges, select]);
 
   return (
-    <div className={cn('flex h-full flex-col gap-2 overflow-hidden p-2 text-sm', className)}>
+    <div className={cn('flex h-full flex-col gap-2 overflow-hidden p-2 text-base', className)}>
       {/* Count + the bulk actions. Both mutate the selection, so both are absent
           when no ClickSelectBehaviour resolves (the panel is then read-only). */}
       <div className="flex items-center justify-between gap-2">
-        <span className="text-muted-foreground text-xs">
+        <span className="text-muted-foreground text-sm">
           {total} selected · {nodes.length} node(s) · {edges.length} edge(s)
         </span>
         {select && (
@@ -225,7 +225,7 @@ function SelectionViewPanelContent({
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         {total === 0 ? (
-          <p className="text-muted-foreground px-1 text-xs">
+          <p className="text-muted-foreground px-1 text-sm">
             {select
               ? 'Nothing selected — click, brush, or lasso elements on the canvas.'
               : 'Nothing selected. No ClickSelectBehaviour is registered, so this list is read-only.'}
@@ -234,7 +234,7 @@ function SelectionViewPanelContent({
           <div className="flex flex-col gap-2">
             {nodes.length > 0 && (
               <section className="flex flex-col gap-0.5">
-                <h3 className="text-muted-foreground px-2 text-xs font-medium">Nodes ({nodes.length})</h3>
+                <h3 className="text-muted-foreground px-2 text-sm font-medium">Nodes ({nodes.length})</h3>
                 {nodes.map((n) => {
                   // The node's body colour — the same style the renderer paints.
                   const color = layer ? nodeSwatchColor(layer.resolveNodeStyle(n)) : undefined;
@@ -279,7 +279,7 @@ function SelectionViewPanelContent({
 
             {edges.length > 0 && (
               <section className="flex flex-col gap-0.5">
-                <h3 className="text-muted-foreground px-2 text-xs font-medium">Edges ({edges.length})</h3>
+                <h3 className="text-muted-foreground px-2 text-sm font-medium">Edges ({edges.length})</h3>
                 {edges.map((e) => (
                   <div key={`e:${e.id}`} className="group flex items-center gap-2 px-1">
                     <Button
@@ -323,7 +323,7 @@ function SelectionViewPanelContent({
                 rather than dropped, so the list always accounts for the set. */}
             {unresolved.length > 0 && (
               <section className="flex flex-col gap-0.5">
-                <h3 className="text-muted-foreground px-2 text-xs font-medium">Not in this layer ({unresolved.length})</h3>
+                <h3 className="text-muted-foreground px-2 text-sm font-medium">Not in this layer ({unresolved.length})</h3>
                 {unresolved.map((id) => (
                   <div key={`u:${id}`} className="flex items-center gap-2 px-3 py-1.5">
                     <HelpCircle className="text-muted-foreground/70 h-3 w-3 shrink-0" />

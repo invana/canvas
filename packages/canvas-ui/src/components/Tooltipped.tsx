@@ -29,11 +29,6 @@ export interface TooltippedProps {
  * `ButtonWithTooltip`), so a control works standalone without the host wiring a
  * provider. `asChild` forwards the trigger props onto the child, preserving its
  * variant / size / active styling.
- *
- * The content background is pinned to `--color-popover` (opaque): the design
- * kit's default tooltip is translucent (`bg-popover/85` + backdrop-blur), which
- * reads as see-through over a busy canvas — same reasoning as the `RichSelect`
- * dropdown surfaces the {@link ToolbarItems} renderer uses.
  */
 export function Tooltipped({ label, side, delayDuration = 0, children }: TooltippedProps) {
   if (label == null || label === '') return children;
@@ -41,7 +36,7 @@ export function Tooltipped({ label, side, delayDuration = 0, children }: Tooltip
     <TooltipProvider delayDuration={delayDuration}>
       <Tooltip>
         <TooltipTrigger asChild>{children}</TooltipTrigger>
-        <TooltipContent side={side} style={{ backgroundColor: 'var(--color-popover)' }}>
+        <TooltipContent side={side}>
           {label}
         </TooltipContent>
       </Tooltip>

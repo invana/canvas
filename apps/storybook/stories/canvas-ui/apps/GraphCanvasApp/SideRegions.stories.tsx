@@ -33,8 +33,8 @@ export const SideRegionsStory: Story = {
     // Right region — a simple details / settings-style surface. Plain content (no
     // engine needed); a real app drops the settings panel / node-edge editors here.
     const rightPanel = (
-      <div className="flex h-full flex-col gap-3 p-3 text-sm text-foreground">
-        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      <div className="flex h-full flex-col gap-3 p-3 text-base text-foreground">
+        <div className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Details
         </div>
         <div className="flex justify-between">
@@ -45,7 +45,7 @@ export const SideRegionsStory: Story = {
           <span>Edges</span>
           <span>{data.edges.length}</span>
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           The right region is the home for settings, node / edge detail, and editors. Drag its
           handle to resize; it collapses too.
         </p>
@@ -55,7 +55,7 @@ export const SideRegionsStory: Story = {
     // Bottom region — a data table projecting the graph's nodes. A placeholder for
     // the real `DataStore`-backed table; here it's a plain scrollable table.
     const bottomTable = (
-      <div className="h-full overflow-auto text-xs text-foreground">
+      <div className="h-full overflow-auto text-sm text-foreground">
         <table className="w-full border-collapse">
           <thead className="sticky top-0 bg-background">
             <tr className="text-left text-muted-foreground">

@@ -13,6 +13,14 @@ onlyBuiltDependencies:
 # transitive dev/build-tooling deps flagged by `pnpm audit`. All are
 # non-shipped (build/lint/docs/test toolchain). See SECURITY-AUDIT-2026-07-19.md.
 overrides:
+  # TEMPORARY (rfc:feat-2026-10-04-canvas-ui-uses-the-kit-workbook D-1): the design-kit
+  # 0.0.32 (`Workbook`, the control scale) is unpublished, so these point at tarballs
+  # packed from a local design-kit checkout. Machine-local: CI cannot install this.
+  # Delete these four lines once @invana/*@0.0.32 is on npm.
+  "@invana/ui": "file:../design-kit/.local-packs/invana-ui-0.0.31.tgz"
+  "@invana/styling": "file:../design-kit/.local-packs/invana-styling-0.0.31.tgz"
+  "@invana/themes": "file:../design-kit/.local-packs/invana-themes-0.0.31.tgz"
+  "@invana/forms": "file:../design-kit/.local-packs/invana-forms-0.0.31.tgz"
   # Single-major in the tree — plain range, no consumer crosses a major.
   ws: ">=8.21.1"
   "@xmldom/xmldom": ">=0.8.15 <0.9.0"

@@ -212,7 +212,7 @@ function InstanceEditor({
 
   if (fields.length === 0) {
     return (
-      <p className="px-3 py-2 text-xs italic text-muted-foreground">
+      <p className="px-3 py-2 text-sm italic text-muted-foreground">
         No settings for this instance.
       </p>
     );
@@ -305,7 +305,7 @@ export function CanvasSettingsEditorPanel({ canvas, className, ...rest }: Canvas
   if (!canvas) {
     return (
       <Card className={cn('flex h-full w-full items-center justify-center', className)}>
-        <p className="p-4 text-sm text-muted-foreground">Failed to load — no canvas.</p>
+        <p className="p-4 text-base text-muted-foreground">Failed to load — no canvas.</p>
       </Card>
     );
   }
@@ -450,7 +450,7 @@ function CanvasSettingsEditorPanelContent({
   // `PanelStack` section's `content` below.
   const renderSectionItems = (sectionId: SettingsSection, items: CanvasSettingsInstance[]): ReactNode =>
     items.length === 0 ? (
-      <p className="px-2 py-1 text-xs italic text-muted-foreground">None registered</p>
+      <p className="px-2 py-1 text-sm italic text-muted-foreground">None registered</p>
     ) : (
       // One expandable instance per row, with a tree-style indentation guide line.
       <div className="ml-2 border-l pl-2">
@@ -492,7 +492,7 @@ function CanvasSettingsEditorPanelContent({
                     >
                       <span className="flex min-w-0 items-center gap-2">
                         <span className="truncate font-medium">{inst.id}</span>
-                        <span className="truncate text-xs text-muted-foreground">
+                        <span className="truncate text-sm text-muted-foreground">
                           {inst.typeLabel ?? entry?.typeLabel ?? inst.kind}
                         </span>
                         {isActive && (
@@ -527,7 +527,7 @@ function CanvasSettingsEditorPanelContent({
                         onChange={(patch) => applyChange(sectionId, inst.id, patch)}
                       />
                     ) : (
-                      <p className="px-3 py-2 text-xs italic text-muted-foreground">
+                      <p className="px-3 py-2 text-sm italic text-muted-foreground">
                         No settings editor registered for {inst.kind}.
                       </p>
                     )}
@@ -555,7 +555,7 @@ function CanvasSettingsEditorPanelContent({
     .map(({ section, items }) => ({
       id: section.id,
       title: (
-        <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <span className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           {section.label}
           <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
             {instancesBySection[section.id].length}
@@ -568,7 +568,7 @@ function CanvasSettingsEditorPanelContent({
     sections.push({
       id: 'controlPanels',
       title: (
-        <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <span className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           {CONTROL_PANELS_LABEL}
           <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
             {Object.keys(config.controlPanels ?? {}).length}
@@ -597,7 +597,7 @@ function CanvasSettingsEditorPanelContent({
         </div>
 
         {noMatches ? (
-          <p className="px-2 py-6 text-center text-sm italic text-muted-foreground">
+          <p className="px-2 py-6 text-center text-base italic text-muted-foreground">
             No settings match “{query.trim()}”.
           </p>
         ) : (

@@ -191,7 +191,7 @@ function Section({ title, children }: { title: string; children: ReactNode }): R
 }
 function Btn({ onClick, children }: { onClick: () => void; children: ReactNode }): ReactNode {
   return (
-    <Button variant="outline" size="sm" className="h-7 justify-start px-2 text-xs font-normal" onClick={onClick}>
+    <Button variant="outline" size="sm" className="h-7 justify-start px-2 text-sm font-normal" onClick={onClick}>
       {children}
     </Button>
   );
@@ -249,7 +249,7 @@ function Playground(): ReactNode {
     ((view.definition.layers['graph']?.style as { node?: { radius?: number } } | undefined)?.node?.radius) ?? 6;
 
   return (
-    <div className="flex h-screen bg-background font-sans text-sm text-foreground">
+    <div className="flex h-screen bg-background font-sans text-base text-foreground">
       {/* LEFT — action buttons */}
       <div className="w-72 shrink-0 space-y-3 overflow-auto border-r border-border p-3">
         <Section title="data — nodes / edges / groups / notes">
@@ -383,7 +383,7 @@ function Playground(): ReactNode {
               : ''}
           </span>
           {log.length > 0 ? (
-            <Button variant="ghost" size="sm" className="ml-auto h-6 px-2 text-xs text-muted-foreground" onClick={() => setLog([])}>
+            <Button variant="ghost" size="sm" className="ml-auto h-6 px-2 text-sm text-muted-foreground" onClick={() => setLog([])}>
               clear
             </Button>
           ) : null}

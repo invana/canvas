@@ -105,7 +105,7 @@ export function PropertiesEditor({
 
       {showLabel && (
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-muted-foreground">Label</span>
+          <span className="text-sm font-medium text-muted-foreground">Label</span>
           <input
             className={INPUT_CLASS}
             value={label}
@@ -117,7 +117,7 @@ export function PropertiesEditor({
 
       {showType && (
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-muted-foreground">Type</span>
+          <span className="text-sm font-medium text-muted-foreground">Type</span>
           <input
             className={INPUT_CLASS}
             value={type}
@@ -128,8 +128,8 @@ export function PropertiesEditor({
       )}
 
       <div className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium text-muted-foreground">Properties</span>
-        {rows.length === 0 && <span className="text-xs text-muted-foreground">No properties yet.</span>}
+        <span className="text-sm font-medium text-muted-foreground">Properties</span>
+        {rows.length === 0 && <span className="text-sm text-muted-foreground">No properties yet.</span>}
         {rows.map((row, i) => (
           <div key={i} className="flex items-center gap-1.5">
             <input

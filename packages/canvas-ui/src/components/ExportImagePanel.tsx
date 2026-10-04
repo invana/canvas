@@ -104,7 +104,7 @@ export interface ExportImagePanelProps {
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+      <span className="text-sm font-medium text-muted-foreground">{label}</span>
       {children}
     </div>
   );
@@ -148,7 +148,7 @@ function Segmented({
           key={o.value}
           value={o.value}
           aria-label={o.label}
-          className="w-full min-w-0 px-1 text-xs"
+          className="w-full min-w-0 px-1 text-sm"
         >
           {o.label}
         </ToggleGroupItem>
@@ -193,7 +193,7 @@ export function ExportImagePanel({
   return (
     <div className={cn('flex w-full flex-col gap-3', className)}>
       {title != null && title !== '' && (
-        <div className="text-sm font-semibold text-foreground">{title}</div>
+        <div className="text-base font-semibold text-foreground">{title}</div>
       )}
 
       <Field label="Format">
