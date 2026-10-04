@@ -1054,8 +1054,14 @@ export {
 
 // ─── App (batteries-included composition) ────────────────────────────────────
 export { GraphCanvasApp, CanvasThemeSync, graphCanvasAppBaseConfig } from './apps';
+// The engine half on its own (rfc:feat-2026-10-05-graph-canvas-app-engine-is-welded-to-its-layout):
+// a root that owns + scopes the engine, and a surface that draws it — for hosts
+// that lay the canvas out themselves, such as a board panel.
+export { GraphCanvasAppRoot, GraphCanvasAppSurface, useGraphCanvasApp } from './apps';
 export type { CanvasThemeSyncProps } from './apps';
 export type {
+  GraphCanvasAppRootProps,
+  GraphCanvasAppSurfaceProps,
   GraphCanvasAppProps,
   GraphCanvasAppControlContext,
   GraphCanvasAppSectionOptions,

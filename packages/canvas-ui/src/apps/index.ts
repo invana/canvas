@@ -6,17 +6,24 @@
 export { GraphCanvasApp } from './GraphCanvasApp';
 // The bundle's opinionated default `CanvasConfig` — reuse it as shared defaults
 // across `<GraphCanvasApp>` instances (`deepMerge(graphCanvasAppBaseConfig, {…})`).
-export { BASE_CONFIG as graphCanvasAppBaseConfig } from './GraphCanvasApp';
+export { BASE_CONFIG as graphCanvasAppBaseConfig } from './GraphCanvasAppRoot';
 // Reusable host-theme → engine-`ThemeBehaviour` bridge; drop inside any canvas
 // (incl. nested) whose rendered theme should follow the app's light/dark toggle.
 export type {
   GraphCanvasAppProps,
-  GraphCanvasAppControlContext,
   GraphCanvasAppSectionOptions,
   RegionSlot,
-  ThemeKind,
   BottomSpan,
 } from './GraphCanvasApp';
+// The engine half on its own — for hosts that lay the canvas out themselves (a
+// board, a split view). `GraphCanvasApp` is these two plus `AppLayoutV2`.
+export { GraphCanvasAppRoot, GraphCanvasAppSurface, useGraphCanvasApp } from './GraphCanvasAppRoot';
+export type {
+  GraphCanvasAppRootProps,
+  GraphCanvasAppSurfaceProps,
+  GraphCanvasAppControlContext,
+  ThemeKind,
+} from './GraphCanvasAppRoot';
 export type { GraphCanvasAppHeaderOptions } from './GraphCanvasAppHeader';
 export type { GraphCanvasAppFooterOptions } from './GraphCanvasAppFooter';
 

@@ -24,7 +24,8 @@ import { type ReactNode } from 'react';
 import type { NavHorizontalProps } from '@invana/ui';
 
 import { HeaderControlPanels, type HeaderRegion } from '../control-panels/HeaderControlPanels';
-import type { GraphCanvasAppControlContext, RegionSlot } from './GraphCanvasApp';
+import type { RegionSlot } from './GraphCanvasApp';
+import type { GraphCanvasAppControlContext } from './GraphCanvasAppRoot';
 
 /** Resolve a {@link RegionSlot} against the control context. */
 function renderSlot(slot: RegionSlot | undefined, ctx: GraphCanvasAppControlContext): ReactNode {

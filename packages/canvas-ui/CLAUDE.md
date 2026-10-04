@@ -44,7 +44,7 @@ src/
 │                 instance (node-style{,/simple,/composite}, node-style-overview,
 │                 node-styling, node-structure, schema, hover-preview-card)
 ├─ view-panels/  presentational *ViewPanel surfaces (SchemaViewPanel, LayersViewPanel, CanvasFiltersViewPanel, preview cards) — props in → JSX. A tab strip over pages is the kit's `Workbook` (`@invana/ui`), not a view panel here
-├─ apps/         GraphCanvasApp (+ header/footer)
+├─ apps/         GraphCanvasApp (+ header/footer) = GraphCanvasAppRoot (owns + scopes the engine, lifted context) + GraphCanvasAppSurface (draws it) + AppLayoutV2. Hosts with their own layout (a board) use the root + surface directly
 ├─ hooks/        UI-only turnkey hooks (useSidePanels — activity-bar for GraphCanvasApp side panels: descriptors → shared-toolbar `items` + active-panel `region`, one docked at a time; useDevTool, useMiniMap)
 └─ shared/       colour utils + presets used across tracks
 ```

@@ -1,7 +1,7 @@
 import { Moon, Sun } from 'lucide-react';
 
 import { ToolbarItems } from '../components';
-import type { GraphCanvasAppControlContext } from '../apps/GraphCanvasApp';
+import type { GraphCanvasAppControlContext } from '../apps/GraphCanvasAppRoot';
 
 export interface ThemeToggleProps {
   /** The app control context — supplies `themeKind` + `toggleTheme`. */
