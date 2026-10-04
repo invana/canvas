@@ -247,7 +247,7 @@ larger connector-renderer rewrite.
 If the **zoomed-out hairball** is the primary pain, swap Phase 1 and Phase 2.
 
 > **Also shipped alongside these:** a node-content zoom-LOD family —
-> `TextLODBehaviour` / `IconLODBehaviour` / `ImageLODBehaviour` (hide labels /
+> `NodeLabelLODBehaviour` / `IconLODBehaviour` / `ImageLODBehaviour` (hide labels /
 > icons / image fills by zoom band) and `NodeCentralityBehaviour` (size + label +
 > weighted-degree). These cut per-node render cost the same way C cuts per-edge.
 

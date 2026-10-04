@@ -171,6 +171,8 @@ export {
   resolveBadgePosition,
   originToBadgeLocal,
   resolveConnectorBadgePosition,
+  // Label sizing across zoom
+  resolveLabelScale,
   // Animation
   Tween,
   linear,
@@ -195,6 +197,8 @@ export type {
   MountedDecoration,
   CustomElementCtor,
   ShapeDisplayOverride,
+  LabelSizePolicy,
+  LabelSizeTarget,
   IOverlayDevice,
   OverlayFill,
   OverlayFillLike,

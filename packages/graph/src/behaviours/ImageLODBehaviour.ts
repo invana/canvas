@@ -4,7 +4,7 @@
  * the body (not a separate child), hiding it repaints the body with the image
  * layer stripped — done only on a threshold crossing, not per frame.
  *
- * Sits in the node-content LOD family alongside `TextLODBehaviour` /
+ * Sits in the node-content LOD family alongside `NodeLabelLODBehaviour` /
  * `IconLODBehaviour`; opt-in, off the per-frame render path (see
  * {@link ContentLODBehaviour}).
  *
@@ -26,6 +26,8 @@ import {
 export type ImageLODBehaviourOptions = ContentLODBehaviourOptions;
 
 export class ImageLODBehaviour extends ContentLODBehaviour {
+  override readonly kind = 'image-lod';
+
   protected setContentVisible(renderer: ContentRenderer, id: string, visible: boolean): void {
     renderer.setShapeImageVisible(id, visible);
   }

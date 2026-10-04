@@ -1,7 +1,7 @@
 # @invana/canvas — public API surface (generated; do not hand-edit)
 # Regenerate: pnpm build && node scripts/check-api-surface.mjs --write
 
-## . (455 exports)
+## . (458 exports)
 AnchorCtx
 AnchorShapeRef
 AnchorSpec
@@ -179,6 +179,8 @@ KindDelta
 LOOP_CURVE_PRESETS
 LabelBackground
 LabelContent
+LabelSizePolicy
+LabelSizeTarget
 LabelStyleCommon
 LabelVisibility
 LabelWrap
@@ -421,6 +423,7 @@ resolveBadgePosition
 resolveCompositeRoot
 resolveConnectorBadgePosition
 resolveEasing
+resolveLabelScale
 resolveNumberOrGetter
 resolveThemed
 roundedPathStyle

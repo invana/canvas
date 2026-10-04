@@ -228,4 +228,42 @@ describe('BehaviourRegistry — scene:behaviour:unregister', () => {
     ctx.behaviours.clear();
     expect(onUnregister.mock.calls.map(([e]) => e.id)).toEqual(['a', 'b']);
   });
+
+  // F27 (rfc:feat-2026-10-04-labels-balloon-on-zoom-and-edge-labels-have-no-lod):
+  // a behaviour that rejects its context leaves no registry entry behind.
+  it('register() drops the entry when wiring throws, so the id can be reused', () => {
+    const ctx = makeContext();
+    class Rejecting extends FakeBehaviour {
+      override register(): void {
+        throw new Error('rejected');
+      }
+    }
+    const onRegister = vi.fn();
+    ctx.events.on('scene:behaviour:register', onRegister);
+    expect(() => ctx.behaviours.register(new Rejecting({ id: 'a' }))).toThrow('rejected');
+    expect(ctx.behaviours.list()).toEqual([]);
+    expect(onRegister).not.toHaveBeenCalled();
+
+    const ok = new FakeBehaviour({ id: 'a' });
+    ctx.behaviours.register(ok);
+    expect(ctx.behaviours.list()).toEqual([ok]);
+  });
+
+  it('registerAll() drops a behaviour whose deferred wiring throws', () => {
+    let ctx: CanvasContext | undefined;
+    const real = makeContext();
+    const bus = real.events as CanvasEventBus;
+    const registry = new BehaviourRegistry({ getContext: () => ctx, bus });
+    class Rejecting extends FakeBehaviour {
+      override register(): void {
+        throw new Error('rejected');
+      }
+    }
+    const ok = new FakeBehaviour({ id: 'ok' });
+    registry.register(ok);
+    registry.register(new Rejecting({ id: 'bad' }));
+    ctx = real;
+    expect(() => registry.registerAll()).toThrow('rejected');
+    expect(registry.list()).toEqual([ok]);
+  });
 });

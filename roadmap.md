@@ -126,6 +126,7 @@ Legend: ✅ shipped · 🚧 in progress · 📋 planned
 | Hover preview card | ✅ |
 | Focus — highlight a set, fade the rest, frame it (`FocusBehaviour`); selection and inspect follow the store | 🚧 |
 | Level-of-detail (node / edge size, label resolution) | ✅ |
+| Label zoom LOD — node and edge labels each get a show/hide zoom band and an on-screen size cap / floor / damping (`NodeLabelLODBehaviour`, `EdgeLabelLODBehaviour`). Known limit: ~3–4 ms per zoom frame with 10 000 labels all on screen and no band — pair the size with a band on large graphs | 🚧 |
 | Fisheye lens — focus+context magnifier over dense regions, display-only (`FisheyeBehaviour`) | 🚧 |
 
 ### React & apps

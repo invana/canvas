@@ -9,7 +9,7 @@
  * if we recreated on every update.
  */
 
-import { Text, HTMLText, CanvasTextMetrics, TextStyle, type TextStyleOptions } from 'pixi.js';
+import { Text, HTMLText, CanvasTextMetrics, TextStyle, type Container, type TextStyleOptions } from 'pixi.js';
 import type { LabelContent, LabelWrap } from '../../types';
 
 export type LabelTextDisplay = Text | HTMLText;
@@ -81,6 +81,32 @@ export function updateLabelContent(
 export function applyLabelResolution(view: LabelContentView, resolution: number): void {
   if (resolution <= 0 || !Number.isFinite(resolution)) return;
   (view.display as unknown as { resolution: number }).resolution = resolution;
+}
+
+/**
+ * Authored font size of `content` — its on-screen size at camera zoom `1`, the
+ * input a label-size policy scales from. `text` reads `fontSize`, `html-text`
+ * reads `defaultFontSize`; both default to `12`, the renderer's own default.
+ */
+export function contentFontSize(content: LabelContent): number {
+  return content.kind === 'html-text' ? (content.defaultFontSize ?? 12) : (content.fontSize ?? 12);
+}
+
+/**
+ * Camera zoom as seen from a decoration's host surface: the product of
+ * `scale.x` from the surface's **parent** up to the stage. Starting above the
+ * host means neither the host's own visual scale (a node-size LOD, a lens) nor
+ * the decoration being detached from it changes the answer — which is what a
+ * zoom band (`visibility.minZoom` / `maxZoom`) is documented to mean.
+ */
+export function zoomAboveHost(surface: Container | null): number {
+  let s = 1;
+  let p: Container | null = surface?.parent ?? null;
+  while (p) {
+    s *= p.scale.x;
+    p = p.parent;
+  }
+  return s;
 }
 
 /**

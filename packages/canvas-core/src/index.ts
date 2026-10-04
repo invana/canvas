@@ -35,6 +35,8 @@ export type {
   MountedDecoration,
   CustomElementCtor,
   ShapeDisplayOverride,
+  LabelSizePolicy,
+  LabelSizeTarget,
 } from './contracts/IElementRenderer';
 export type {
   IOverlayDevice,
@@ -161,6 +163,9 @@ export type {
   NamedBadgePlacement,
   ConnectorBadgePlacement,
 } from './lib/geometry/badges';
+
+// ─── Geometry: label sizing across zoom ──────────────────────────────────────
+export { resolveLabelScale } from './lib/geometry/labels';
 
 // ─── Animation: tweens, easings, position transitions ────────────────────────
 export { Tween } from './lib/animation';

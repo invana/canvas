@@ -4,7 +4,7 @@
  * `.visible` flip — no repaint), keeping a crowded overview fast; they return as
  * you zoom in.
  *
- * Sits in the node-content LOD family alongside `TextLODBehaviour` /
+ * Sits in the node-content LOD family alongside `NodeLabelLODBehaviour` /
  * `ImageLODBehaviour`; opt-in, off the per-frame render path (see
  * {@link ContentLODBehaviour}).
  *
@@ -26,6 +26,8 @@ import {
 export type IconLODBehaviourOptions = ContentLODBehaviourOptions;
 
 export class IconLODBehaviour extends ContentLODBehaviour {
+  override readonly kind = 'icon-lod';
+
   protected setContentVisible(renderer: ContentRenderer, id: string, visible: boolean): void {
     renderer.setShapeIconVisible(id, visible);
   }

@@ -379,7 +379,7 @@ export class CompositeShape extends ShapeBase<CompositeSpec> {
    * Show / hide every mounted `label` part — the composite's internal text.
    * A pure `.visible` flip; the flag persists so a later redraw keeps text
    * hidden ({@link syncLabels} re-asserts it). This is the `IShape.setTextVisible`
-   * hook the renderer's text zoom-LOD path drives, so a `TextLODBehaviour` gates
+   * hook the renderer's text zoom-LOD path drives, so a `NodeLabelLODBehaviour` gates
    * composite text the same way it gates a simple node's `'label'` decoration.
    */
   setTextVisible(visible: boolean): void {

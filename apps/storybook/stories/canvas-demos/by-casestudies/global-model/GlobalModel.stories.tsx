@@ -39,7 +39,7 @@ import {
   GraphLayer,
   HoverActivateBehaviour,
   HoverElementPreviewBehaviour,
-  TextLODBehaviour,
+  NodeLabelLODBehaviour,
   TextResolutionLODBehaviour,
   ThemeBehaviour,
   WheelZoomBehaviour
@@ -234,7 +234,7 @@ export const GlobalModelStory: Story = {
         <CollapseExpandBehaviour id="collapse-expand" targetLayerId="graph" enabled />
         <TextResolutionLODBehaviour id="label-resolution" targetLayerId="graph" />
         {/* Card text is unreadable below 40% zoom — drop it (band lives in `settings.json`). */}
-        <TextLODBehaviour id="text-lod" targetLayerId="graph" />
+        <NodeLabelLODBehaviour id="text-lod" targetLayerId="graph" />
         <HoverElementPreviewBehaviour targetLayerId="graph" renderNode={renderNode} renderEdge={renderEdge} />
       </GraphCanvasApp>
     );

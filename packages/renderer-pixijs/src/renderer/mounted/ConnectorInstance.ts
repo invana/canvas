@@ -58,6 +58,18 @@ export class ConnectorInstance<TSpec extends BaseConnectorSpec = BaseConnectorSp
    */
   strokeWidthScale: number = 1;
 
+  /**
+   * The text-LOD channel for this connector's `'label'` decoration — what
+   * `setConnectorTextVisible` last asked for.
+   */
+  textWanted = true;
+  /**
+   * The label-collision channel — what `setDecorationVisible(id, 'label', …)`
+   * last asked for. The label is drawn only when both channels allow it; both
+   * survive a label remount. Mirrors `ShapeInstance`.
+   */
+  labelWanted = true;
+
   constructor(
     readonly id: string,
     public spec: TSpec,

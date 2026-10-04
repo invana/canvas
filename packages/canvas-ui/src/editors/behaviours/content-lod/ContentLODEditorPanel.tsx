@@ -12,7 +12,7 @@ export interface ContentLODEditorPanelProps {
    * to reload.
    */
   defaults?: ContentLODFields;
-  /** Optional heading (e.g. `'Text'`, `'Icon'`, `'Image'`) shown above the band. */
+  /** Optional heading (e.g. `'Node labels'`, `'Icon'`, `'Image'`) shown above the band. */
   title?: string;
   /** The form schema. Defaults to {@link contentLODFields}. */
   fields?: FieldConfig[];
@@ -27,9 +27,11 @@ export interface ContentLODEditorPanelProps {
 
 /**
  * Self-contained, engine-agnostic settings form for a content-LOD behaviour —
- * a single `{ minZoom, maxZoom }` zoom band. One editor serves `TextLODBehaviour`,
- * `IconLODBehaviour`, and `ImageLODBehaviour` (identical option shapes); the
- * optional `title` distinguishes them in the UI.
+ * a `{ minZoom, maxZoom }` zoom band, plus whatever extra knobs the passed
+ * `fields` schema carries. One editor serves `NodeLabelLODBehaviour`
+ * (`nodeLabelLODFields`), `EdgeLabelLODBehaviour` (`edgeLabelLODFields`),
+ * `IconLODBehaviour` and `ImageLODBehaviour` (`contentLODFields`); the optional
+ * `title` distinguishes them in the UI.
  *
  * Owns a react-hook-form instance seeded by `defaults`, renders the schema with
  * `@invana/forms`, and hands the current values to `onSubmit`. No engine

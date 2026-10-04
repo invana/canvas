@@ -17,6 +17,8 @@ import { EdgeLODBehaviour } from '../../src/behaviours/EdgeLODBehaviour';
 import { HoverActivateBehaviour } from '../../src/behaviours/HoverActivateBehaviour';
 import { HoverElementPreviewBehaviour } from '../../src/behaviours/HoverElementPreviewBehaviour';
 import { IconLODBehaviour } from '../../src/behaviours/IconLODBehaviour';
+import { NodeLabelLODBehaviour } from '../../src/behaviours/NodeLabelLODBehaviour';
+import { EdgeLabelLODBehaviour } from '../../src/behaviours/EdgeLabelLODBehaviour';
 import { LassoSelectBehaviour } from '../../src/behaviours/LassoSelectBehaviour';
 import { NodeCentralityBehaviour } from '../../src/behaviours/NodeCentralityBehaviour';
 import { ParallelEdgeBehaviour } from '../../src/behaviours/ParallelEdgeBehaviour';
@@ -58,6 +60,8 @@ const CASES: Array<[string, () => WithOptions, Record<string, unknown>]> = [
   ['ParallelEdge', () => new ParallelEdgeBehaviour({ id: 'b', targetLayerId: t }), { spacing: 9 }],
   ['EdgeLOD', () => new EdgeLODBehaviour({ id: 'b', targetLayerId: t }), { minZoom: 0.3 }],
   ['ContentLOD (IconLOD)', () => new IconLODBehaviour({ id: 'b', targetLayerId: t }), { minZoom: 0.4 }],
+  ['NodeLabelLOD', () => new NodeLabelLODBehaviour({ id: 'b', targetLayerId: t }), { maxFontPx: 18, alwaysShowTop: 0.1 }],
+  ['EdgeLabelLOD', () => new EdgeLabelLODBehaviour({ id: 'b', targetLayerId: t }), { zoomGrowth: 0, minZoom: 1.2 }],
   ['Theme', () => new ThemeBehaviour({ id: 'b' }), { accentVar: '--x' }],
 ];
 

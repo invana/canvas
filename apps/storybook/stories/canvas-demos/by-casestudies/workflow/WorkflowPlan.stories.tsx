@@ -35,7 +35,7 @@ import {
   GraphLayer,
   HoverActivateBehaviour,
   HoverElementPreviewBehaviour,
-  TextLODBehaviour,
+  NodeLabelLODBehaviour,
   TextResolutionLODBehaviour,
   ThemeBehaviour,
   WheelZoomBehaviour
@@ -213,7 +213,7 @@ export const WorkflowPlanStory: Story = {
         <ElkLayout id="elk" targetLayerId="graph" fitPadding={60} />
         <D3ForceLayout id="force" targetLayerId="graph" />
         <TextResolutionLODBehaviour id="label-resolution" targetLayerId="graph" />
-        <TextLODBehaviour id="text-lod" targetLayerId="graph" />
+        <NodeLabelLODBehaviour id="text-lod" targetLayerId="graph" />
         <HoverElementPreviewBehaviour targetLayerId="graph" renderNode={renderNode} renderEdge={renderEdge} />
       </GraphCanvasApp>
     );

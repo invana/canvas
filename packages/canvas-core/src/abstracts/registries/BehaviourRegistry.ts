@@ -41,6 +41,11 @@ export class BehaviourRegistry {
    * Register a Behaviour. Wires it (`behaviour.register(ctx)` + events) now if
    * the Canvas is initialised; otherwise it's stored and wired later by
    * `registerAll()` (called by `Canvas.init`). Throws on duplicate id.
+   *
+   * When wiring throws (the behaviour rejects its context — a missing target
+   * layer, a second instance of a one-per-layer kind), the entry is removed
+   * before the error propagates, so a rejected behaviour never shows up in
+   * {@link list} and its id stays free.
    */
   register(behaviour: IBehaviour): void {
     if (this.behaviours.has(behaviour.id)) {
@@ -48,15 +53,28 @@ export class BehaviourRegistry {
     }
     this.behaviours.set(behaviour.id, behaviour);
     const ctx = this.getContext();
-    if (ctx) this.wire(behaviour, ctx);
+    if (!ctx) return;
+    try {
+      this.wire(behaviour, ctx);
+    } catch (err) {
+      this.behaviours.delete(behaviour.id);
+      throw err;
+    }
   }
 
   /** Wire every not-yet-registered behaviour. Called by `Canvas.init` (after layers mount). */
   registerAll(): void {
     const ctx = this.getContext();
     if (!ctx) return;
-    for (const behaviour of this.behaviours.values()) {
-      if (!behaviour.isRegistered) this.wire(behaviour, ctx);
+    for (const behaviour of [...this.behaviours.values()]) {
+      if (behaviour.isRegistered) continue;
+      try {
+        this.wire(behaviour, ctx);
+      } catch (err) {
+        // Same rollback as `register`: a rejected behaviour leaves no entry.
+        this.behaviours.delete(behaviour.id);
+        throw err;
+      }
     }
   }
 

@@ -16,8 +16,9 @@
  *
  * **This is not the end state.** The classification table in
  * `docs/renderer-split-design.md` (P4.5) records where each of these is headed:
- * the three `setShape*Visible` calls collapse into `setLODLevel` (G5), and
- * decorations and badges become spec state. Until then the interface describes
+ * decorations and badges become spec state, while the LOD setters stay
+ * per-element commands (G5 was revised: a single global level cannot express
+ * per-element exemptions). Until then the interface describes
  * what is really called, rather than what we wish were called — a smaller
  * interface that lied would not let the package split at all.
  */
@@ -87,6 +88,44 @@ export interface ShapeDisplayOverride {
   readonly showText?: boolean;
 }
 
+/**
+ * Which labels a {@link LabelSizePolicy} governs: `'shape'` = the `'label'`
+ * decoration of every shape (graph nodes), `'connector'` = the `'label'`
+ * decoration of every connector (graph edges). Badge plates and the text
+ * *inside* a shape (composite `label` parts) are never governed.
+ */
+export type LabelSizeTarget = 'shape' | 'connector';
+
+/**
+ * How big a label is drawn **on screen** as the camera zooms — the input to
+ * {@link IElementRenderer.setLabelSizePolicy}. Sizes are CSS pixels; a label's
+ * authored `fontSize` is its size at camera zoom `1`.
+ *
+ * Every field is optional and an empty policy changes nothing: without
+ * `zoomGrowth` a label keeps whatever size its host gives it today (it grows
+ * with the world, or stays pixel-constant under a node-size LOD); the clamps
+ * then bound that.
+ *
+ * @example
+ * ```ts
+ * // Grow with √zoom, never above 24px on screen.
+ * renderer.setLabelSizePolicy('shape', { zoomGrowth: 0.5, maxFontPx: 24 });
+ * ```
+ */
+export interface LabelSizePolicy {
+  /**
+   * How on-screen size follows camera zoom: `fontSize × zoom ^ zoomGrowth`.
+   * `1` grows with the world, `0.5` with its square root, `0` keeps each
+   * label's own `fontSize` on screen. Clamped to `[0, 1]`. Omit to keep the
+   * size the host gives the label (see the interface doc).
+   */
+  readonly zoomGrowth?: number;
+  /** Smallest on-screen font size in CSS px. Omit for no floor. */
+  readonly minFontPx?: number;
+  /** Largest on-screen font size in CSS px. Omit for no cap. */
+  readonly maxFontPx?: number;
+}
+
 export interface IElementRenderer extends SpecProjectionTarget {
   /**
    * Teach this backend a new element kind. The spec vocabulary stays open —
@@ -122,11 +161,49 @@ export interface IElementRenderer extends SpecProjectionTarget {
   scaleConnectorStroke(id: string, scale: number): void;
   setRaised(ids: Iterable<string>): void;
 
-  // ─── Level of detail (G5 will collapse these into setLODLevel) ─────────
+  // ─── Level of detail (per-element commands — G5 revised) ───────────────
+  /**
+   * Text-LOD visibility of a shape's text: its `'label'` decoration **and** any
+   * text the shape draws inside itself (composite `label` parts). This is the
+   * LOD channel only — label collision writes its own channel through
+   * `setDecorationVisible(id, 'label', …)`, and a label is drawn only when both
+   * allow it (a display override's `showText` forces it on).
+   */
   setShapeTextVisible(id: string, visible: boolean): void;
+  /**
+   * Text-LOD visibility of a connector's `'label'` decoration. Same two-channel
+   * rule as {@link setShapeTextVisible}: collision's
+   * `setDecorationVisible(id, 'label', …)` is a separate channel, and the label
+   * is drawn only when both allow it. No-op for unknown ids.
+   */
+  setConnectorTextVisible(id: string, visible: boolean): void;
+  /**
+   * What the text-LOD channel last asked for this shape or connector (`true`
+   * when a display override's `showText` forces it on); `false` for an unknown
+   * id. Lets label collision ignore labels LOD has hidden, so an invisible
+   * label never blocks a visible one.
+   */
+  isTextVisible(id: string): boolean;
   setShapeIconVisible(id: string, visible: boolean): void;
   setShapeImageVisible(id: string, visible: boolean): void;
   setLabelsResolution(resolution: number): void;
+  /**
+   * Set (or, with `null`, clear) how this renderer sizes the `'label'`
+   * decorations of every shape or every connector across camera zoom — see
+   * {@link LabelSizePolicy}. The backend re-applies it whenever the camera
+   * scale, a host's visual scale or a label changes; a caller pushes it once
+   * per configuration change, never per frame. Clearing restores each label's
+   * natural size.
+   *
+   * **Cost.** The pixi backend sizes only labels that are drawn (not hidden by a
+   * label LOD) and on screen on a zoom frame, catching off-screen ones up while
+   * the zoom holds still — so a zoomed-in view or a visibility band keeps it
+   * under ~1 ms a frame at 10 000 labels. The known limit is every label on
+   * screen at once with no band (a zoomed-out hairball): each still costs one
+   * transform write per zoom frame, ~3–4 ms at 10 000. Pair a size policy with
+   * a band (`NodeLabelLODBehaviour.minZoom`) on large graphs.
+   */
+  setLabelSizePolicy(target: LabelSizeTarget, policy: LabelSizePolicy | null): void;
 
   // ─── Visible set (G4) ──────────────────────────────────────────────────
   setVisibleSet(ids: ReadonlySet<string> | null): void;

@@ -208,6 +208,22 @@ import {
   optionsToForm as entranceToForm,
   formToOptions as entranceToOptions,
 } from '../../editors/behaviours/entrance/mapping';
+import {
+  contentLODFields,
+  nodeLabelLODFields,
+  edgeLabelLODFields,
+} from '../../editors/behaviours/content-lod/fields';
+import {
+  optionsToForm as contentLodToForm,
+  formToOptions as contentLodToOptions,
+  labelLodOptionsToForm,
+  labelLodFormToOptions,
+} from '../../editors/behaviours/content-lod/mapping';
+import { edgeLODFields } from '../../editors/behaviours/edge-lod/fields';
+import {
+  optionsToForm as edgeLodToForm,
+  formToOptions as edgeLodToOptions,
+} from '../../editors/behaviours/edge-lod/mapping';
 import { labelCollisionFields } from '../../editors/behaviours/label-collision/fields';
 import {
   optionsToForm as labelCollisionToForm,
@@ -313,6 +329,11 @@ export const DEFAULT_CANVAS_SETTINGS_SCHEMAS: Record<string, SettingsSchemaEntry
   'label-resolution-lod': { section: 'behaviours', typeLabel: 'Label Resolution LOD', fields: textResolutionLodFields, toForm: textResolutionLodToForm, toOptions: textResolutionLodToOptions },
   'node-size-lod': { section: 'behaviours', typeLabel: 'Node Size LOD', fields: nodeScaleLodFields, toForm: nodeScaleLodToForm, toOptions: nodeScaleLodToOptions },
   'edge-size-lod': { section: 'behaviours', typeLabel: 'Edge Size LOD', fields: edgeScaleLodFields, toForm: edgeScaleLodToForm, toOptions: edgeScaleLodToOptions },
+  'node-label-lod': { section: 'behaviours', typeLabel: 'Node Label LOD', fields: nodeLabelLODFields, toForm: labelLodOptionsToForm, toOptions: labelLodFormToOptions },
+  'edge-label-lod': { section: 'behaviours', typeLabel: 'Edge Label LOD', fields: edgeLabelLODFields, toForm: labelLodOptionsToForm, toOptions: labelLodFormToOptions },
+  'icon-lod': { section: 'behaviours', typeLabel: 'Icon LOD', fields: contentLODFields, toForm: contentLodToForm, toOptions: contentLodToOptions },
+  'image-lod': { section: 'behaviours', typeLabel: 'Image LOD', fields: contentLODFields, toForm: contentLodToForm, toOptions: contentLodToOptions },
+  'edge-lod': { section: 'behaviours', typeLabel: 'Edge Thinning LOD', fields: edgeLODFields, toForm: edgeLodToForm, toOptions: edgeLodToOptions },
   'parallel-edge': { section: 'behaviours', typeLabel: 'Parallel Edge', fields: parallelEdgeFields, toForm: parallelEdgeToForm, toOptions: parallelEdgeToOptions },
   'label-collision': { section: 'behaviours', typeLabel: 'Label Collision', fields: labelCollisionFields, toForm: labelCollisionToForm, toOptions: labelCollisionToOptions },
   'entrance': { section: 'behaviours', typeLabel: 'Entrance', fields: entranceFields, toForm: entranceToForm, toOptions: entranceToOptions },

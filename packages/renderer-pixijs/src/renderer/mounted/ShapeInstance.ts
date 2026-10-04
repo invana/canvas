@@ -67,14 +67,25 @@ export class ShapeInstance<TSpec extends BaseShapeSpec = BaseShapeSpec> {
   drawnDy = 0;
 
   /**
-   * Last text visibility a text-LOD writer asked for (`setShapeTextVisible`) and
-   * last `'label'` decoration visibility (`setDecorationVisible`). Kept so a
-   * display override's `showText` can force text on and, when cleared, put back
-   * exactly what those writers wanted.
+   * The text-LOD channel: what `setShapeTextVisible` last asked for. Governs the
+   * `'label'` decoration **and** the shape's internal text.
    */
   textWanted = true;
-  /** See {@link textWanted}. */
+  /**
+   * The label-collision channel: what `setDecorationVisible(id, 'label', …)`
+   * last asked for. Governs the `'label'` decoration only.
+   *
+   * The two channels are separate so neither writer overwrites the other: the
+   * label is drawn only when both allow it ({@link textWanted} ∧ this), and a
+   * display override's `showText` forces it on. Both survive a label remount.
+   */
   labelWanted = true;
+
+  /**
+   * `true` for a badge plate (`PrimitivesRenderer.setBadge`). A badge's text is
+   * part of the badge, so a label-size policy never rescales it.
+   */
+  isBadge = false;
 
   /** Visual scale actually drawn: {@link gfxScale} × the override's `scale`. */
   get drawnScale(): number {

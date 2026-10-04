@@ -169,8 +169,11 @@ export type {
   ContentLODBehaviourOptions,
   ZoomBand,
 } from './ContentLODBehaviour';
-export { TextLODBehaviour } from './TextLODBehaviour';
-export type { TextLODBehaviourOptions } from './TextLODBehaviour';
+export { NodeLabelLODBehaviour } from './NodeLabelLODBehaviour';
+export type { NodeLabelLODBehaviourOptions } from './NodeLabelLODBehaviour';
+export { EdgeLabelLODBehaviour } from './EdgeLabelLODBehaviour';
+export type { EdgeLabelLODBehaviourOptions } from './EdgeLabelLODBehaviour';
+export type { LabelSizeOptions } from './labelSize';
 export { IconLODBehaviour } from './IconLODBehaviour';
 export type { IconLODBehaviourOptions } from './IconLODBehaviour';
 export { ImageLODBehaviour } from './ImageLODBehaviour';

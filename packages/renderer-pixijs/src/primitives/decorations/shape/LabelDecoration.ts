@@ -18,9 +18,11 @@ import { Container, Graphics } from 'pixi.js';
 import { ShapeDecorationBase } from '../../base/ShapeDecorationBase';
 import {
   applyLabelResolution,
+  contentFontSize,
   fitInsideBox,
   mountLabelContent,
   updateLabelContent,
+  zoomAboveHost,
   type LabelContentView,
 } from '../../paint/labelContent';
 import { drawLabelBackground } from '../../paint/labelBackground';
@@ -43,6 +45,21 @@ export class LabelDecoration extends ShapeDecorationBase<ShapeLabelStyle> {
    * changes trigger a fresh `updateLabelContent`.
    */
   private resolution: number | null = null;
+  /**
+   * Scale the renderer's label-size policy last asked for (`1` = natural).
+   * Survives `repaint()` like {@link resolution}.
+   */
+  private textScale = 1;
+  /**
+   * Where `repaint()` last anchored the label: the anchor point on the host and
+   * the label-relative delta from it (placement alignment + style offset). The
+   * delta is in label units, so {@link applyPlacement} scales it with the text
+   * — that keeps an outside label's near edge on the host as it shrinks/grows.
+   */
+  private anchorX = 0;
+  private anchorY = 0;
+  private deltaX = 0;
+  private deltaY = 0;
 
   /**
    * Pixi rasterises `Text` to a glyph texture once and re-uses it across
@@ -64,6 +81,36 @@ export class LabelDecoration extends ShapeDecorationBase<ShapeLabelStyle> {
    */
   getResolution(): number | null {
     return this.resolution;
+  }
+
+  /** Authored font size of the label's content — see `contentFontSize`. */
+  textFontSize(): number {
+    return contentFontSize(this.style.content);
+  }
+
+  /**
+   * `true` for `inside-*` placements, whose fit-to-box contract a label-size
+   * policy may only shrink within, never grow past.
+   */
+  isContained(): boolean {
+    return isInsidePlacement(this.style.placement ?? 'bottom');
+  }
+
+  /**
+   * Draw the label at `scale` × its natural size (the renderer's label-size
+   * policy), re-anchored so it stays attached to its host. Idempotent.
+   */
+  setTextScale(scale: number): void {
+    if (!(scale > 0) || scale === this.textScale) return;
+    this.textScale = scale;
+    this.applyPlacement();
+  }
+
+  /** Write the anchored position and the text scale onto `gfx`. */
+  private applyPlacement(): void {
+    const s = this.textScale;
+    this.gfx.scale.set(s, s);
+    this.gfx.position.set(this.anchorX + s * this.deltaX, this.anchorY + s * this.deltaY);
   }
 
   protected repaint(): void {
@@ -181,7 +228,11 @@ export class LabelDecoration extends ShapeDecorationBase<ShapeLabelStyle> {
       visualCenter,
     );
 
-    this.gfx.position.set(ax + alignDx + offsetX, ay + alignDy + offsetY);
+    this.anchorX = ax;
+    this.anchorY = ay;
+    this.deltaX = alignDx + offsetX;
+    this.deltaY = alignDy + offsetY;
+    this.applyPlacement();
     this.gfx.rotation = this.style.rotation ?? 0;
     // Fit cascade may have produced a "hide" result for inside-* placements
     // that couldn't fit even after shrink + truncate; clamp alpha to 0 in
@@ -202,7 +253,10 @@ export class LabelDecoration extends ShapeDecorationBase<ShapeLabelStyle> {
   tick(_deltaMs: number): boolean {
     const v = this.style.visibility;
     if (!v || (v.minZoom === undefined && v.maxZoom === undefined)) return false;
-    const z = effectiveScale(this.gfx);
+    // Camera zoom, read from above the host: neither this label being detached
+    // (which would leave no parent chain) nor the host's own LOD scale may
+    // change what the band compares against.
+    const z = zoomAboveHost(this.hostSurface);
     const shouldShow =
       (v.minZoom === undefined || z >= v.minZoom) &&
       (v.maxZoom === undefined || z <= v.maxZoom);
@@ -372,17 +426,3 @@ export function innerBoxFor(
   }
 }
 
-/**
- * Effective world-space scale of `gfx` — product of `scale.x` walking up
- * parent chain. The camera applies its zoom as a scale on the world layer,
- * so the product reflects current effective zoom for LOD decisions.
- */
-function effectiveScale(gfx: Container): number {
-  let s = 1;
-  let p: Container | null = gfx;
-  while (p) {
-    s *= p.scale.x;
-    p = p.parent;
-  }
-  return s;
-}

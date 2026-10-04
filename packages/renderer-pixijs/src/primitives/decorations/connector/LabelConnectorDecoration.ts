@@ -20,8 +20,10 @@ import { ConnectorDecorationBase } from '../../base/ConnectorDecorationBase';
 import { samplePathAt } from '@invana/canvas-core';
 import {
   applyLabelResolution,
+  contentFontSize,
   mountLabelContent,
   updateLabelContent,
+  zoomAboveHost,
   type LabelContentView,
 } from '../../paint/labelContent';
 import { drawLabelBackground } from '../../paint/labelBackground';
@@ -35,6 +37,8 @@ export class LabelConnectorDecoration extends ConnectorDecorationBase<ConnectorL
   private hostSurface: Container | null = null;
   /** See `LabelDecoration.resolution`. */
   private resolution: number | null = null;
+  /** See `LabelDecoration.textScale`. */
+  private textScale = 1;
 
   /** See `LabelDecoration.setResolution`. */
   setResolution(resolution: number): void {
@@ -45,6 +49,22 @@ export class LabelConnectorDecoration extends ConnectorDecorationBase<ConnectorL
   /** See `LabelDecoration.getResolution`. */
   getResolution(): number | null {
     return this.resolution;
+  }
+
+  /** See `LabelDecoration.textFontSize`. */
+  textFontSize(): number {
+    return contentFontSize(this.style.content);
+  }
+
+  /**
+   * Draw the label at `scale` × its natural size (the renderer's label-size
+   * policy). The label stays centred on its path point; its style `offset`
+   * scales with it, so the gap to the path keeps its proportion. Idempotent.
+   */
+  setTextScale(scale: number): void {
+    if (!(scale > 0) || scale === this.textScale) return;
+    this.textScale = scale;
+    this.positionOnPath();
   }
 
   protected repaint(): void {
@@ -133,8 +153,8 @@ export class LabelConnectorDecoration extends ConnectorDecorationBase<ConnectorL
     // Screen-space offset is applied *after* rotation — so `offset.y: -8`
     // always lifts the label perpendicular to the path direction, not in
     // raw world space.
-    const offsetX = this.style.offset?.x ?? 0;
-    const offsetY = this.style.offset?.y ?? 0;
+    const offsetX = (this.style.offset?.x ?? 0) * this.textScale;
+    const offsetY = (this.style.offset?.y ?? 0) * this.textScale;
     if (rotation !== 0 && (offsetX !== 0 || offsetY !== 0)) {
       const cos = Math.cos(rotation);
       const sin = Math.sin(rotation);
@@ -147,6 +167,7 @@ export class LabelConnectorDecoration extends ConnectorDecorationBase<ConnectorL
 
     this.gfx.position.set(baseX, baseY);
     this.gfx.rotation = rotation;
+    this.gfx.scale.set(this.textScale, this.textScale);
   }
 
   tick(_deltaMs: number): boolean {
@@ -156,7 +177,8 @@ export class LabelConnectorDecoration extends ConnectorDecorationBase<ConnectorL
     if (!wantsLOD && !wantsAutoRotate) return false;
 
     if (wantsLOD && v) {
-      const z = effectiveScale(this.gfx);
+      // Camera zoom from above the host — see `LabelDecoration.tick`.
+      const z = zoomAboveHost(this.hostSurface);
       const shouldShow =
         (v.minZoom === undefined || z >= v.minZoom) &&
         (v.maxZoom === undefined || z <= v.maxZoom);
@@ -194,12 +216,3 @@ function resolveT(placement: NonNullable<ConnectorLabelStyle['placement']>): num
   }
 }
 
-function effectiveScale(gfx: Container): number {
-  let s = 1;
-  let p: Container | null = gfx;
-  while (p) {
-    s *= p.scale.x;
-    p = p.parent;
-  }
-  return s;
-}

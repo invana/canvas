@@ -19,7 +19,12 @@
 import { EventEmitter } from '../state/events/EventEmitter';
 import type { Camera } from '../abstracts/Camera';
 import type { ICameraBinding } from '../contracts/ICameraBinding';
-import type { IElementRenderer, ShapeDisplayOverride } from '../contracts/IElementRenderer';
+import type {
+  IElementRenderer,
+  LabelSizePolicy,
+  LabelSizeTarget,
+  ShapeDisplayOverride,
+} from '../contracts/IElementRenderer';
 import type { IOverlayDevice } from '../contracts/IOverlayDevice';
 import type {
   IRenderer,
@@ -122,13 +127,40 @@ export class HeadlessElementRenderer implements IElementRenderer {
     this.displayOverrides.clear();
   }
 
+  /**
+   * Ids whose text the LOD channel has hidden (`setShapeTextVisible` /
+   * `setConnectorTextVisible` with `false`) — recorded so a behaviour test can
+   * assert what a text LOD asked for.
+   */
+  readonly textHidden = new Set<string>();
+  setShapeTextVisible(id: string, visible: boolean): void {
+    if (visible) this.textHidden.delete(id);
+    else this.textHidden.add(id);
+  }
+  setConnectorTextVisible(id: string, visible: boolean): void {
+    if (visible) this.textHidden.delete(id);
+    else this.textHidden.add(id);
+  }
+  isTextVisible(id: string): boolean {
+    if (!this.shapes.has(id) && !this.connectors.has(id)) return false;
+    return !this.textHidden.has(id);
+  }
+
+  /** The label-size policy last pushed per target — recorded for assertions. */
+  readonly labelSizePolicies: Record<LabelSizeTarget, LabelSizePolicy | null> = {
+    shape: null,
+    connector: null,
+  };
+  setLabelSizePolicy(target: LabelSizeTarget, policy: LabelSizePolicy | null): void {
+    this.labelSizePolicies[target] = policy;
+  }
+
   // Everything below is a no-op or a null answer: these are the calls a layer
   // makes for pixels, and there are none here.
   scaleShape(): void {}
   setConnectorStroke(): void {}
   scaleConnectorStroke(): void {}
   setRaised(): void {}
-  setShapeTextVisible(): void {}
   setShapeIconVisible(): void {}
   setShapeImageVisible(): void {}
   setLabelsResolution(): void {}

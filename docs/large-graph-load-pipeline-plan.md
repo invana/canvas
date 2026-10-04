@@ -106,7 +106,7 @@ are typically zoom-fit on 5k nodes, where nothing is legible:
 
 | Cut | Why |
 |---|---|
-| **Labels** | 5k pixi `Text` objects at a zoom where each is sub-pixel. `TextLODBehaviour` hides them a frame later anyway. Install the label decoration lazily on entering the zoom band. Very likely the biggest per-node cost. |
+| **Labels** | 5k pixi `Text` objects at a zoom where each is sub-pixel. `NodeLabelLODBehaviour` hides them a frame later anyway. Install the label decoration lazily on entering the zoom band. Very likely the biggest per-node cost. |
 | **Edges** | `EdgeLODBehaviour` already thins to `keepFraction` at low zoom — apply it at *install* time, not after. At fit-zoom that's ~2k of 20k edges installed; the rest materialize on zoom-in. |
 | **Badges / decorations** | Same rule: skip at install when LOD will hide them. |
 | **Routing** | Install connectors unrouted; route on first settle instead of routing into positions that are about to move. |

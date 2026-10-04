@@ -316,6 +316,9 @@ export class LabelCollisionBehaviour extends Behaviour {
 
     for (const node of layer.store.nodes()) {
       if (!layer.store.isNodeVisible(node.id)) continue; // invisible nodes have no label
+      // A label text LOD hid isn't drawn, so it must not block a visible one.
+      // (Its collision channel is left as-is; LOD showing it re-enters it here.)
+      if (!renderer.isTextVisible(node.id)) continue;
       const settings = labelSettingsFromStyle(layer.resolveNodeStyle(node));
       if (settings === undefined) continue;
       const b = renderer.getDecorationWorldBounds(node.id, 'label');
@@ -333,6 +336,7 @@ export class LabelCollisionBehaviour extends Behaviour {
 
     for (const edge of layer.store.edges()) {
       if (!layer.store.isEdgeVisible(edge.id)) continue; // hidden edge → no label
+      if (!renderer.isTextVisible(edge.id)) continue; // LOD-hidden — see the node loop
       const settings = labelSettingsFromStyle(layer.resolveEdgeStyle(edge));
       if (settings === undefined) continue;
       const b = renderer.getDecorationWorldBounds(edge.id, 'label');

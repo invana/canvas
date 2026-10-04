@@ -429,7 +429,7 @@ Derived from source reading, **not yet run**. The re-add must restore the stripe
 index or paint order silently changes. Verify alongside the `renderGroup` spike.
 
 **Per D7 this is a gate, not a curiosity:** if it holds, the zoom-threshold LOD behaviours
-(`TextLODBehaviour`, `IconLODBehaviour`, `ContentLODBehaviour`, `EdgeLODBehaviour`) migrate
+(`NodeLabelLODBehaviour`, `IconLODBehaviour`, `ContentLODBehaviour`, `EdgeLODBehaviour`) migrate
 from O(n) per-element flag loops onto O(1) plane toggles. If it does not hold, LOD drops
 out of scope and those behaviours stay exactly as they are — they are already repaint-free,
 so nothing regresses.
@@ -438,7 +438,7 @@ so nothing regresses.
 
 The LOD behaviours already avoid redrawing. `setShapeTextVisible` / `setShapeIconVisible`
 are documented *"Pure `.visible` flip — no repaint"*, and the behaviours iterate the store
-flipping booleans (`TextLODBehaviour:89`, `ContentLODBehaviour:208`,
+flipping booleans (`NodeLabelLODBehaviour`, `ContentLODBehaviour:208`,
 `EdgeLODBehaviour:234,242`). That is O(n) **cheap flag writes**.
 
 Contrast with hover-mute, which rebuilds a spec and re-runs `shape.draw()` per element.

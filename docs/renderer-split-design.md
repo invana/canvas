@@ -560,7 +560,7 @@ classified. **(a)** spec state · **(b)** per-frame command · **(c)** engine-si
 
 ⚠ **G5 is wrong as designed, and was not implemented as written.** It calls for one global
 `setLODLevel(level)` where "the renderer decides what a level shows". But the LOD behaviours make
-**per-element** decisions: `TextLODBehaviour` hides labels *except* the top-N nodes by degree
+**per-element** decisions: `NodeLabelLODBehaviour` hides labels *except* the top-N nodes by degree
 (`alwaysShowTop` → an exemption set), and `Icon`/`ImageLODBehaviour` toggle per id. A single global
 level cannot express "hide labels except the most central 10%", so collapsing to it would lose
 capability, not merely churn. The three setters stay per-element commands. What G5 actually wanted —

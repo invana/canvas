@@ -96,6 +96,7 @@ function hashUnit(id: string): number {
 }
 
 export class EdgeLODBehaviour extends Behaviour {
+  override readonly kind = 'edge-lod';
   /** Bound target layer — resolved in `onRegister`. */
   private layer: GraphLayer | null = null;
 

@@ -33,10 +33,10 @@
 
 import { Container, RenderLayer } from 'pixi.js';
 import { PickingIndex } from '@invana/canvas-store';
-import { DEFAULT_ENDPOINT_BADGE_GAP_PX, bezierPathStyle, boundaryAnchor, bumpHorizontalPathStyle, bumpRadialPathStyle, bundlePathStyle, centerAnchor, connectorGeometryKey, connectorToSvg, edgePortAnchor, erRouter, loopCurvePathStyle, loopPolylinePathStyle, manhattanRouter, metroRouter, normalPathStyle, oneSideRouter, orthRouter, perpendicularAnchor, quadraticPathStyle, resolveBadgePosition, resolveConnectorBadgePosition, roundedPathStyle, samplePath, shapeSpecToSvg, silhouettePortAnchor, smoothPathStyle, stepRadialPathStyle, straightRouter, trimPathEnds } from '@invana/canvas-core';
+import { DEFAULT_ENDPOINT_BADGE_GAP_PX, bezierPathStyle, boundaryAnchor, bumpHorizontalPathStyle, bumpRadialPathStyle, bundlePathStyle, centerAnchor, connectorGeometryKey, connectorToSvg, edgePortAnchor, erRouter, loopCurvePathStyle, loopPolylinePathStyle, manhattanRouter, metroRouter, normalPathStyle, oneSideRouter, orthRouter, perpendicularAnchor, quadraticPathStyle, resolveBadgePosition, resolveConnectorBadgePosition, resolveLabelScale, roundedPathStyle, samplePath, shapeSpecToSvg, silhouettePortAnchor, smoothPathStyle, stepRadialPathStyle, straightRouter, trimPathEnds } from '@invana/canvas-core';
 import { ConnectorInstance } from './mounted/ConnectorInstance';
 import { ShapeInstance } from './mounted/ShapeInstance';
-import type { BadgeOptions, Camera, IElementRenderer, ShapeDisplayOverride } from '@invana/canvas-core';
+import type { BadgeOptions, Camera, IElementRenderer, LabelSizePolicy, LabelSizeTarget, ShapeDisplayOverride } from '@invana/canvas-core';
 import type { ConnectorHitRecord, HitGeometrySource, ShapeHitRecord } from '@invana/canvas-store';
 import { EventEmitter } from '@invana/canvas-store';
 import { TextureRegistry } from '../assets/TextureRegistry';
@@ -274,6 +274,39 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
    * sets and tolerate a longer transition.
    */
   private static readonly LABEL_RASTER_PER_TICK = 64;
+
+  /**
+   * The label-size policy per target (`setLabelSizePolicy`), or `null` when the
+   * target's labels keep their natural size.
+   */
+  private readonly labelSizePolicies: Record<LabelSizeTarget, LabelSizePolicy | null> = {
+    shape: null,
+    connector: null,
+  };
+  /**
+   * Targets whose policy changed since the last sweep — swept once even when the
+   * new policy is `null`, so clearing a policy restores every label it scaled.
+   */
+  private readonly labelSizeDirty: Record<LabelSizeTarget, boolean> = {
+    shape: false,
+    connector: false,
+  };
+  /** Camera scale the label sizes were last swept at; `null` = never swept. */
+  private labelSizeZoom: number | null = null;
+  /**
+   * Labels not yet sized at {@link labelSizeZoom}. A zoom frame sizes only what is
+   * on screen and leaves the rest here; frames where the zoom holds still drain
+   * it {@link LABEL_SIZE_PER_TICK} at a time. `null` = nothing pending.
+   */
+  private readonly labelSizeBacklog: {
+    shape: Iterator<ShapeInstance> | null;
+    connector: Iterator<ConnectorInstance> | null;
+  } = { shape: null, connector: null };
+  /**
+   * Off-screen labels sized per frame while catching up after a zoom. At
+   * ~0.3 µs a label this keeps the catch-up well under 1 ms a frame.
+   */
+  private static readonly LABEL_SIZE_PER_TICK = 1000;
 
   readonly events = new EventEmitter<PrimitivesRendererEventMap>();
 
@@ -660,6 +693,8 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
     const inst = this.shapeInstances.get(id);
     if (!inst) return;
     inst.gfxScale = scale;
+    // The label inherits the host's scale; a size policy has to re-cancel it.
+    if (this.labelSizePolicies.shape !== null) this.sizeShapeLabel(inst, this.camera.scale);
     if (inst.displayOverride !== null) {
       // The override multiplies this scale (and re-centres on it).
       this.applyDisplayTransform(inst);
@@ -682,7 +717,11 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
     const wasForced = inst.displayOverride?.showText === true;
     inst.displayOverride = override;
     this.applyDisplayTransform(inst);
-    if (wasForced !== (override?.showText === true)) this.applyTextVisibility(inst);
+    if (wasForced !== (override?.showText === true)) {
+      this.applyTextVisibility(inst);
+      // A lens forcing a LOD-hidden label on: size it (the sweep skipped it).
+      if (!wasForced) this.sizeShapeLabel(inst, this.camera.scale);
+    }
     this.picking.markShapeMoved(id);
     if (this.badges.has(id)) this.reanchorBadges(id);
   }
@@ -741,15 +780,30 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
   }
 
   /**
-   * Reconcile a shape's text visibility: forced on while its display override
-   * says `showText`, otherwise whatever the text-LOD / label-collision writers
-   * last asked for ({@link ShapeInstance.textWanted} / {@link ShapeInstance.labelWanted}).
+   * Reconcile a shape's text visibility from its two channels: the `'label'`
+   * decoration is drawn when the display override forces `showText`, or when
+   * both text LOD ({@link ShapeInstance.textWanted}) and label collision
+   * ({@link ShapeInstance.labelWanted}) allow it. The shape's internal text
+   * (composite parts) follows the LOD channel alone — collision never sees it.
    */
   private applyTextVisibility(inst: ShapeInstance): void {
-    const forced = inst.displayOverride?.showText === true;
+    this.applyShapeLabelVisibility(inst);
+    inst.shape.setTextVisible?.(inst.displayOverride?.showText === true || inst.textWanted);
+  }
+
+  /** The `'label'` half of {@link applyTextVisibility}. No-op without a label. */
+  private applyShapeLabelVisibility(inst: ShapeInstance): void {
     const label = inst.decorations.get('label') as { gfx?: Container } | undefined;
-    if (label?.gfx) label.gfx.visible = forced || inst.labelWanted;
-    inst.shape.setTextVisible?.(forced || inst.textWanted);
+    if (!label?.gfx) return;
+    label.gfx.visible =
+      inst.displayOverride?.showText === true || (inst.textWanted && inst.labelWanted);
+  }
+
+  /** Connector analogue of {@link applyShapeLabelVisibility} (no display override). */
+  private applyConnectorLabelVisibility(inst: ConnectorInstance): void {
+    const label = inst.decorations.get('label') as { gfx?: Container } | undefined;
+    if (!label?.gfx) return;
+    label.gfx.visible = inst.textWanted && inst.labelWanted;
   }
 
   /**
@@ -759,14 +813,43 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
    * Gives text zoom-LOD a single entry point that covers atomic and composite
    * nodes alike; the companion trio is {@link setShapeIconVisible} /
    * {@link setShapeImageVisible}. No-op for the pieces a shape doesn't have.
+   *
+   * Writes the **LOD channel only** ({@link ShapeInstance.textWanted}); label
+   * collision's channel is untouched, so neither undoes the other.
    */
   setShapeTextVisible(id: string, visible: boolean): void {
     const inst = this.shapeInstances.get(id);
     if (!inst) return;
+    const shown = visible && !inst.textWanted;
     inst.textWanted = visible;
-    if (inst.decorations.has('label')) this.setDecorationVisible(id, 'label', visible);
-    // A display override's `showText` outranks text LOD until it is cleared.
-    inst.shape.setTextVisible?.(visible || inst.displayOverride?.showText === true);
+    this.applyTextVisibility(inst);
+    // The size sweep skips LOD-hidden labels, so one coming back is sized now.
+    if (shown) this.sizeShapeLabel(inst, this.camera.scale);
+  }
+
+  /**
+   * Text-LOD visibility of a connector's `'label'` decoration — the connector
+   * twin of {@link setShapeTextVisible}. Writes the LOD channel only; label
+   * collision keeps its own. No-op for unknown ids.
+   */
+  setConnectorTextVisible(id: string, visible: boolean): void {
+    const inst = this.connectorInstances.get(id);
+    if (!inst) return;
+    const shown = visible && !inst.textWanted;
+    inst.textWanted = visible;
+    this.applyConnectorLabelVisibility(inst);
+    if (shown) this.sizeConnectorLabel(inst, this.camera.scale);
+  }
+
+  /**
+   * What the text-LOD channel last asked for `id` — forced `true` by a display
+   * override's `showText`; `false` for an unknown id. See
+   * {@link IElementRenderer.isTextVisible}.
+   */
+  isTextVisible(id: string): boolean {
+    const shape = this.shapeInstances.get(id);
+    if (shape) return shape.displayOverride?.showText === true || shape.textWanted;
+    return this.connectorInstances.get(id)?.textWanted ?? false;
   }
 
   /**
@@ -1300,6 +1383,12 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
       }
       if (decoHasSetResolution(deco)) this.labelBearingDecorations.add(deco);
       this.applyTrackedLabelResolution(deco);
+      if (slot === 'label') {
+        // A remounted label keeps what text LOD and collision last asked for,
+        // and is sized now rather than on the next tick (no one-frame pop).
+        this.applyShapeLabelVisibility(shape);
+        if (this.labelSizePolicies.shape !== null) this.sizeShapeLabel(shape, this.camera.scale);
+      }
       // Refresh siblings so any LabelDecoration on this host re-flows past
       // the new ring / halo. Skip the just-mounted decoration — we already
       // gave it the up-to-date aggregate above.
@@ -1325,6 +1414,13 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
       }
       if (decoHasSetResolution(deco)) this.labelBearingDecorations.add(deco);
       this.applyTrackedLabelResolution(deco);
+      if (slot === 'label') {
+        // See the shape branch: keep both visibility channels, size immediately.
+        this.applyConnectorLabelVisibility(connector!);
+        if (this.labelSizePolicies.connector !== null) {
+          this.sizeConnectorLabel(connector!, this.camera.scale);
+        }
+      }
       // Now that the decoration is in the map, re-aggregate padding and
       // re-route the path. `recomputeConnectorPath` redraws the body /
       // markers on the trimmed path and refreshes every decoration
@@ -1484,6 +1580,8 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
     // is never observed by the user.
     this.addShape(badgeId, { ...options.shape, x: 0, y: 0 } as unknown as BaseShapeSpec);
     const badge = this.shapeInstances.get(badgeId)!;
+    // Marked before its decorations mount, so a label-size policy skips them.
+    badge.isBadge = true;
 
     if (shapeHost) {
       const pos = resolveBadgePosition(
@@ -1662,6 +1760,121 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
     withResolution.setResolution?.(this.trackedLabelResolution);
   }
 
+  /**
+   * Set (or clear) how the `'label'` decorations of every shape / connector are
+   * sized across camera zoom — see {@link IElementRenderer.setLabelSizePolicy}.
+   * Applied on the next frame tick, then again whenever the camera scale moves;
+   * labels mounted later and hosts re-scaled by `scaleShape` are sized as they
+   * change. Badge text and a shape's internal text are never touched.
+   */
+  setLabelSizePolicy(target: LabelSizeTarget, policy: LabelSizePolicy | null): void {
+    // An unchanged policy is a no-op, so a caller may re-push on every data
+    // change without costing a full label sweep each time.
+    if (sameLabelSizePolicy(this.labelSizePolicies[target], policy)) return;
+    this.labelSizePolicies[target] = policy;
+    this.labelSizeDirty[target] = true;
+  }
+
+  /**
+   * Re-size labels when a policy changed or the camera scale moved under an
+   * active policy. A zoom frame sizes only the labels **on screen** (one
+   * transform write each, like a node-size LOD's `scaleShape`) and queues the
+   * rest; frames where the zoom holds still keep the on-screen set current and
+   * size a chunk of the queue, so off-screen labels converge within a few frames
+   * and the per-frame cost tracks what is visible, not the graph size. Labels a
+   * label LOD hides are skipped and sized when shown again.
+   */
+  private tickLabelSizes(): void {
+    const zoom = this.camera.scale;
+    const zoomMoved = zoom !== this.labelSizeZoom;
+    const shapes =
+      this.labelSizeDirty.shape || (this.labelSizePolicies.shape !== null && zoomMoved);
+    const connectors =
+      this.labelSizeDirty.connector || (this.labelSizePolicies.connector !== null && zoomMoved);
+    const backlog = this.labelSizeBacklog;
+    if (!shapes && !connectors && backlog.shape === null && backlog.connector === null) return;
+    this.labelSizeZoom = zoom;
+    if (shapes) {
+      this.labelSizeDirty.shape = false;
+      backlog.shape = this.shapeInstances.values();
+    }
+    if (connectors) {
+      this.labelSizeDirty.connector = false;
+      backlog.connector = this.connectorInstances.values();
+    }
+
+    // On screen first, every frame a queue is pending — a pan right after a zoom
+    // never shows a label at its old size.
+    // Grown 10% a side: a label hangs past its node, so a node just off-screen
+    // can still show its label.
+    const v = this.camera.getVisibleBounds();
+    const view: Rect = {
+      x: v.x - v.width * 0.1,
+      y: v.y - v.height * 0.1,
+      width: v.width * 1.2,
+      height: v.height * 1.2,
+    };
+    if (backlog.shape !== null) {
+      for (const inst of this.shapeInstances.values()) {
+        if (pointInRect(inst.spec.x, inst.spec.y, view)) this.sizeShapeLabel(inst, zoom);
+      }
+    }
+    if (backlog.connector !== null) {
+      for (const inst of this.connectorInstances.values()) {
+        if (pathInRect(inst.path, view)) this.sizeConnectorLabel(inst, zoom);
+      }
+    }
+    if (shapes || connectors) return;
+
+    // The zoom held still: drain a chunk of the off-screen queue.
+    let budget = PrimitivesRenderer.LABEL_SIZE_PER_TICK;
+    while (budget > 0 && backlog.shape !== null) {
+      const next = backlog.shape.next();
+      if (next.done) backlog.shape = null;
+      else {
+        this.sizeShapeLabel(next.value, zoom);
+        budget--;
+      }
+    }
+    while (budget > 0 && backlog.connector !== null) {
+      const next = backlog.connector.next();
+      if (next.done) backlog.connector = null;
+      else {
+        this.sizeConnectorLabel(next.value, zoom);
+        budget--;
+      }
+    }
+  }
+
+  /**
+   * Size one shape's `'label'` decoration under the shape policy. The host scale
+   * is the shape's LOD scale ({@link ShapeInstance.gfxScale}) — cancelled by the
+   * policy — and **not** its display override's, so a fisheye lens still
+   * magnifies the label. Skips badge plates (their text is the badge) and, under
+   * a policy, labels the text LOD hides — {@link setShapeTextVisible} sizes those
+   * when they come back. Collision-hidden labels are still sized: collision
+   * measures them to decide whether to show them again.
+   */
+  private sizeShapeLabel(inst: ShapeInstance, zoom: number): void {
+    const policy = this.labelSizePolicies.shape;
+    if (inst.isBadge) return;
+    if (policy !== null && !inst.textWanted && inst.displayOverride?.showText !== true) return;
+    const label = inst.decorations.get('label');
+    if (!(label instanceof LabelDecoration)) return;
+    label.setTextScale(
+      resolveLabelScale(label.textFontSize(), zoom, inst.gfxScale, policy, label.isContained()),
+    );
+  }
+
+  /** Connector analogue of {@link sizeShapeLabel}; a connector's gfx is unscaled and never contains its label. */
+  private sizeConnectorLabel(inst: ConnectorInstance, zoom: number): void {
+    const policy = this.labelSizePolicies.connector;
+    if (policy !== null && !inst.textWanted) return;
+    const label = inst.decorations.get('label');
+    if (!(label instanceof LabelConnectorDecoration)) return;
+    label.setTextScale(resolveLabelScale(label.textFontSize(), zoom, 1, policy));
+  }
+
   // ─── Per-frame animation ────────────────────────────────────────────────
 
   tickAnimations(deltaMs: number): void {
@@ -1690,6 +1903,8 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
         this.applyEffectsToConnector(host);
       }
     }
+
+    this.tickLabelSizes();
 
     if (this.trackedLabelResolution !== null && this.labelBearingDecorations.size > 0) {
       this.tickLabelRasterise();
@@ -2296,33 +2511,37 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
   }
 
   /**
-   * Local-space AABB of a decoration's gfx container in world coordinates
-   * (origin offset by the host). Returns `null` when no host or slot exists.
+   * World-space AABB of a decoration **as drawn**. Returns `null` when no host
+   * or slot exists.
    *
-   * Cheaper to call than `getGlobalBounds` because we don't traverse the
-   * scene; just take the decoration's local bounds and offset by its
-   * position. Used by `LabelCollisionBehaviour` and any other behaviour
-   * that needs per-decoration screen geometry.
+   * The decoration's gfx is a child of the host's gfx, so its drawn box is its
+   * local bounds through its own scale (a label-size policy), then through the
+   * host's drawn transform: a shape's origin is `spec + drawn offset` and its
+   * scale the drawn scale (node-size LOD × a display override); a connector's
+   * gfx sits at the world origin, unscaled. Rotation is ignored (an AABB of the
+   * unrotated box), and so are transient effect deltas.
+   *
+   * Cheaper than `getGlobalBounds` — no scene traversal. Used by
+   * `LabelCollisionBehaviour` and any behaviour needing decoration geometry.
    */
   getDecorationWorldBounds(targetId: string, slot: string): Rect | null {
-    const host =
-      this.shapeInstances.get(targetId) ?? this.connectorInstances.get(targetId);
+    const shape = this.shapeInstances.get(targetId);
+    const host = shape ?? this.connectorInstances.get(targetId);
     if (!host) return null;
     const deco = host.decorations.get(slot);
     if (!deco) return null;
     const g = (deco as { gfx?: Container }).gfx;
     if (!g) return null;
     const lb = g.getLocalBounds();
-    // Decoration gfx is parented to the host's gfx. The host's gfx has the
-    // host position applied (shape: spec.x/y, connector: 0). Combine to get
-    // world-space.
-    const hostX = (host as { spec?: { x?: number; y?: number } }).spec?.x ?? 0;
-    const hostY = (host as { spec?: { x?: number; y?: number } }).spec?.y ?? 0;
+    const own = g.scale.x;
+    const hostScale = shape ? shape.drawnScale : 1;
+    const originX = shape ? shape.spec.x + shape.drawnDx : 0;
+    const originY = shape ? shape.spec.y + shape.drawnDy : 0;
     return {
-      x: hostX + g.position.x + lb.x,
-      y: hostY + g.position.y + lb.y,
-      width: lb.width,
-      height: lb.height,
+      x: originX + hostScale * (g.position.x + own * lb.x),
+      y: originY + hostScale * (g.position.y + own * lb.y),
+      width: hostScale * own * lb.width,
+      height: hostScale * own * lb.height,
     };
   }
 
@@ -2330,6 +2549,11 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
    * Show / hide a decoration's gfx without destroying it. Used by
    * collision-style behaviours that want to suppress overlapping labels for a
    * frame without paying the cost of re-mounting on the next reveal.
+   *
+   * For the `'label'` slot this is the **label-collision channel**: it is stored
+   * on the host and combined with the text-LOD channel
+   * ({@link setShapeTextVisible} / {@link setConnectorTextVisible}), so the
+   * label is drawn only when both allow it. Other slots flip `visible` directly.
    *
    * No-op when `targetId` / `slot` doesn't resolve.
    */
@@ -2339,15 +2563,22 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
     if (!host) return;
     const deco = host.decorations.get(slot);
     if (!deco) return;
-    let show = visible;
-    if (shape && slot === 'label') {
-      // Remember what LOD / collision wanted; a display override's `showText`
-      // outranks it until cleared (`applyTextVisibility` restores this value).
-      shape.labelWanted = visible;
-      if (shape.displayOverride?.showText === true) show = true;
+    if (slot === 'label') {
+      // The label-collision channel. Drawn visibility combines it with the
+      // text-LOD channel (and a display override's `showText`), so a collision
+      // show never resurrects a label LOD hid, and vice versa.
+      if (shape) {
+        shape.labelWanted = visible;
+        this.applyShapeLabelVisibility(shape);
+      } else {
+        const connector = host as ConnectorInstance;
+        connector.labelWanted = visible;
+        this.applyConnectorLabelVisibility(connector);
+      }
+      return;
     }
     const g = (deco as { gfx?: Container }).gfx;
-    if (g) g.visible = show;
+    if (g) g.visible = visible;
   }
 
   /**
@@ -2809,6 +3040,13 @@ function decoHasSetResolution(deco: IDecorationBase<unknown>): boolean {
   return typeof (deco as { setResolution?: unknown }).setResolution === 'function';
 }
 
+/** Field-wise equality of two label-size policies (`null` equals only `null`). */
+function sameLabelSizePolicy(a: LabelSizePolicy | null, b: LabelSizePolicy | null): boolean {
+  if (a === b) return true;
+  if (a === null || b === null) return false;
+  return a.zoomGrowth === b.zoomGrowth && a.minFontPx === b.minFontPx && a.maxFontPx === b.maxFontPx;
+}
+
 /**
  * Name a decoration's root container for the pixi devtools scene tree, using the
  * **registry kind** rather than `constructor.name` — class names mangle under
@@ -2834,6 +3072,24 @@ function labelDecoration(deco: IDecorationBase<unknown>, kind: string): void {
 const DECO_LABELS = new Map<string, string>();
 
 /** AABB intersection in screen / world coords. Half-open on the far edges. */
+/** Is `(x, y)` inside `r` (a world-space viewport)? */
+function pointInRect(x: number, y: number, r: Rect): boolean {
+  return x >= r.x && x <= r.x + r.width && y >= r.y && y <= r.y + r.height;
+}
+
+/** Does the bbox of a connector path's two ends touch `r`? Conservative for a straight edge. */
+function pathInRect(path: Path, r: Rect): boolean {
+  const a = path[0];
+  const b = path[path.length - 1];
+  if (!a || !b) return false;
+  return (
+    Math.max(a.x, b.x) >= r.x &&
+    Math.min(a.x, b.x) <= r.x + r.width &&
+    Math.max(a.y, b.y) >= r.y &&
+    Math.min(a.y, b.y) <= r.y + r.height
+  );
+}
+
 function rectsIntersect(
   a: { x: number; y: number; width: number; height: number },
   b: { x: number; y: number; width: number; height: number },

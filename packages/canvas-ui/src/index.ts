@@ -598,25 +598,32 @@ export type {
   NodeCentralityOptions,
 } from './editors/behaviours/node-centrality';
 
-// Content-LOD behaviours (TextLODBehaviour / IconLODBehaviour / ImageLODBehaviour)
-// share one option shape (a { minZoom, maxZoom } zoom band), so one editor serves
-// all three. `ContentLODEditorPanel` is the canonical component; the per-behaviour
-// names alias it for discoverability + the per-behaviour editor convention.
+// Content-LOD behaviours (NodeLabelLODBehaviour / EdgeLabelLODBehaviour /
+// IconLODBehaviour / ImageLODBehaviour) share one option shape (a { minZoom,
+// maxZoom } zoom band, plus the label behaviours' size knobs), so one editor
+// serves all four — each passes its own `fields` schema. `ContentLODEditorPanel`
+// is the canonical component; the per-behaviour names alias it for
+// discoverability + the per-behaviour editor convention.
 export {
   ContentLODEditorPanel,
-  ContentLODEditorPanel as TextLODEditorPanel,
+  ContentLODEditorPanel as NodeLabelLODEditorPanel,
+  ContentLODEditorPanel as EdgeLabelLODEditorPanel,
   ContentLODEditorPanel as IconLODEditorPanel,
   ContentLODEditorPanel as ImageLODEditorPanel,
   contentLODFields,
-  textLODFields,
+  nodeLabelLODFields,
+  edgeLabelLODFields,
 } from './editors/behaviours/content-lod';
 export {
   optionsToForm as contentLODOptionsToForm,
   formToOptions as contentLODFormToOptions,
+  labelLodOptionsToForm as labelLODOptionsToForm,
+  labelLodFormToOptions as labelLODFormToOptions,
 } from './editors/behaviours/content-lod';
 export type {
   ContentLODEditorPanelProps,
-  ContentLODEditorPanelProps as TextLODEditorPanelProps,
+  ContentLODEditorPanelProps as NodeLabelLODEditorPanelProps,
+  ContentLODEditorPanelProps as EdgeLabelLODEditorPanelProps,
   ContentLODEditorPanelProps as IconLODEditorPanelProps,
   ContentLODEditorPanelProps as ImageLODEditorPanelProps,
   ContentLODFields,

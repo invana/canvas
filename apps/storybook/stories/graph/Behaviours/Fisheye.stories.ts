@@ -2,7 +2,7 @@
  * **Fisheye lens** — read a dense region in place without zooming away from it.
  *
  * The flare class tree (~250 nodes) runs under a live force layout. At this
- * zoom `TextLODBehaviour` hides every label, so the overview is unreadable dots.
+ * zoom `NodeLabelLODBehaviour` hides every label, so the overview is unreadable dots.
  * Move the pointer over the graph: nodes under the lens are pushed apart,
  * enlarged toward its centre and **labelled**, while everything outside keeps
  * its place — the region stays connected to its surroundings.
@@ -15,9 +15,15 @@
  *   - **Clicks land on what you see.** Hover and drag a magnified node — it is
  *     picked where it is drawn. While the drag runs the lens steps aside (the
  *     node drag owns the gesture) and comes back on release.
- *   - **Labels beat text LOD only inside the lens.** Turn the lens off and the
- *     labels are hidden again; zoom in past the band and they all show, as
+ *   - **Labels beat the label band only inside the lens.** Turn the lens off and
+ *     the labels are hidden again; zoom in past the band and they all show, as
  *     without a lens.
+ *   - **Label size is a separate knob.** `NodeLabelLODBehaviour` also holds the
+ *     on-screen size: labels grow with √zoom and stop at 16 px, so zooming in
+ *     doesn't balloon them. The lens still magnifies its labels past that cap —
+ *     it scales the drawn node, not the label's policy. The **Node labels** folder
+ *     tunes both the band and the size; one instance owns both, since a second
+ *     node-label LOD on the same layer is rejected.
  *   - **Wheel adjust.** Hold **Alt** and scroll inside the lens to resize it, or
  *     **Shift** to change the distortion; a plain scroll still zooms the camera.
  *     The panel's radius / distortion follow along.
@@ -36,7 +42,7 @@ import {
   GraphCanvas,
   GraphLayer,
   HoverActivateBehaviour,
-  TextLODBehaviour,
+  NodeLabelLODBehaviour,
   ThemeBehaviour
 } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
@@ -67,7 +73,7 @@ export const FisheyeStory: Story = {
     canvas.behaviours.register(new WheelZoomBehaviour({ id: 'zoom' }));
     canvas.behaviours.register(new DragNodeBehaviour({ id: 'drag-node', targetLayerId: 'graph' }));
     canvas.behaviours.register(new HoverActivateBehaviour({ id: 'hover', targetLayerId: 'graph' }));
-    canvas.behaviours.register(new TextLODBehaviour({ id: 'text-lod', targetLayerId: 'graph' }));
+    canvas.behaviours.register(new NodeLabelLODBehaviour({ id: 'node-labels', targetLayerId: 'graph' }));
     // Cluster colour = the class's top-level flare package (`data.group`).
     canvas.behaviours.register(new ColorByBehaviour({ id: 'color', targetLayerId: 'graph' }));
     // Kept so the panel can read back what Alt/Shift+wheel changed in the canvas.
@@ -105,7 +111,8 @@ export const FisheyeStory: Story = {
         hover: { enabled: true },
         color: { enabled: true, nodeValueKey: 'data.group', colorEdges: false },
         // Labels only from 1.8× up — the overview is dots until the lens passes.
-        'text-lod': { enabled: true, minZoom: 1.8 },
+        // Size: grow with √zoom, capped at 16 px on screen.
+        'node-labels': { enabled: true, minZoom: 1.8, zoomGrowth: 0.5, minFontPx: 0, maxFontPx: 16 },
         // Every option from FisheyeBehaviourOptions exposed here.
         fisheye: {
           enabled: true,
@@ -136,7 +143,9 @@ export const FisheyeStory: Story = {
 
     const lens = canvasOptions.behaviours.fisheye;
     const push = (patch: Record<string, unknown>): void => canvas.update({ behaviours: { fisheye: patch } });
-    const textLod = canvasOptions.behaviours['text-lod'];
+    const labels = canvasOptions.behaviours['node-labels'];
+    const pushLabels = (patch: Record<string, unknown>): void =>
+      canvas.update({ behaviours: { 'node-labels': patch } });
 
     const gui = new GUI({ title: 'Fisheye' });
     onStoryTeardown(() => gui.destroy());
@@ -176,8 +185,21 @@ export const FisheyeStory: Story = {
     ring.addColor(lens, 'lensFillColor').name('fill colour').onChange((v: number) => push({ lensFillColor: v }));
     ring.add(lens, 'lensFillAlpha', 0, 1, 0.01).name('fill alpha').onChange((v: number) => push({ lensFillAlpha: v }));
 
-    gui.add(textLod, 'enabled').name('text LOD')
-      .onChange((v: boolean) => canvas.update({ behaviours: { 'text-lod': { enabled: v } } }));
+    // Every option from NodeLabelLODBehaviourOptions exposed here (alwaysShowTop
+    // and maxZoom aside — the lens is what reveals labels below the band).
+    const nodeLabels = gui.addFolder('Node labels');
+    nodeLabels.add(labels, 'enabled').name('label LOD on').onChange((v: boolean) => pushLabels({ enabled: v }));
+    nodeLabels.add(labels, 'minZoom', 0, 4, 0.1).name('show from zoom').onChange((v: number) => pushLabels({ minZoom: v }));
+    // Off = no size policy (`null` clears an option): labels scale with the world again.
+    const size = { on: true };
+    const sizePatch = (): Record<string, unknown> =>
+      size.on
+        ? { zoomGrowth: labels.zoomGrowth, minFontPx: labels.minFontPx || null, maxFontPx: labels.maxFontPx || null }
+        : { zoomGrowth: null, minFontPx: null, maxFontPx: null };
+    nodeLabels.add(size, 'on').name('size labels').onChange(() => pushLabels(sizePatch()));
+    nodeLabels.add(labels, 'zoomGrowth', 0, 1, 0.05).name('zoom growth').onChange(() => pushLabels(sizePatch()));
+    nodeLabels.add(labels, 'minFontPx', 0, 24, 1).name('min font px (0 = none)').onChange(() => pushLabels(sizePatch()));
+    nodeLabels.add(labels, 'maxFontPx', 0, 48, 1).name('max font px (0 = none)').onChange(() => pushLabels(sizePatch()));
     gui.add({ fit: () => canvas.fitView(60) }, 'fit').name('Fit to content');
   }
 };
