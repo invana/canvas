@@ -1,7 +1,7 @@
 /**
  * **Canvas Boards** — a workbook of **boards**: each tab is a design-kit board
  * (`@invana/boards`, drawn from a JSON spec), and a board can hold a live canvas,
- * dashboard panels, or both. The canvas panels come from `@invana/canvas-boards`:
+ * dashboard panels, or both. The canvas panels come from `@invana/canvas-ui/boards`:
  *
  * - **Team** — a `canvas` with `inspect: true`, and a `canvas-inspector` in the
  *   board's inspector column. Click a node and the column shows it.
@@ -26,7 +26,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import type { BoardSpec } from '@invana/boards';
-import { CanvasBoard, type CanvasPanelKinds } from '@invana/canvas-boards';
+import { CanvasBoard, type CanvasPanelKinds } from '@invana/canvas-ui/boards';
 import type { GraphData } from '@invana/graph';
 import { Workbook, type WorkbookAction, type WorkbookPage, type WorkbookPageMenuItem } from '@invana/ui';
 import { Copy, Info, Pencil, Settings, Trash2 } from 'lucide-react';

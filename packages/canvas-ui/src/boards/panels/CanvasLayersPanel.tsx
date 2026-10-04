@@ -1,5 +1,5 @@
 import type { PanelRendererProps } from '@invana/boards';
-import { LayersViewPanel } from '@invana/canvas-ui';
+import { LayersViewPanel } from '../../view-panels/layers';
 
 import { useBoardCanvas } from '../provider';
 import type { CanvasLayersPanelOptions } from '../types';

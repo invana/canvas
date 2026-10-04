@@ -1,5 +1,5 @@
 import type { PanelRendererProps } from '@invana/boards';
-import { ElementInspectorViewPanel } from '@invana/canvas-ui';
+import { ElementInspectorViewPanel } from '../../view-panels/element-inspector';
 
 import { useBoardCanvas } from '../provider';
 import type { CanvasInspectorPanelOptions } from '../types';

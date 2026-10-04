@@ -1,5 +1,7 @@
-// @invana/canvas-boards — canvas panels for the design kit's `@invana/boards`.
-// See rfc:feat-2026-10-05-a-board-cannot-hold-a-canvas.
+// @invana/canvas-ui/boards — canvas panels for the design kit's `@invana/boards`.
+// A separate entry point so the main barrel never imports `@invana/boards`
+// (an optional peer). See rfc:feat-2026-10-05-a-board-cannot-hold-a-canvas and
+// rfc:feat-2026-10-05-canvas-board-is-a-separate-package.
 
 export { CanvasBoard, CANVAS_PANELS } from './CanvasBoard';
 export type { CanvasBoardProps } from './CanvasBoard';

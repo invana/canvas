@@ -80,7 +80,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import type { CanvasConfig } from '@invana/canvas';
 import type { BoardSpec } from '@invana/boards';
-import { CanvasBoard, type CanvasPanelKinds } from '@invana/canvas-boards';
+import { CanvasBoard, type CanvasPanelKinds } from '@invana/canvas-ui/boards';
 import { CanvasContext, ClickInspectBehaviour, GraphCanvasContext, MiniMapLayer } from '@invana/canvas-react';
 import type {
   ClickInspectBehaviour as ClickInspectBehaviourClass,
@@ -672,7 +672,7 @@ export const AppLayoutV2Story: Story = {
     }));
 
     // ── A dashboard page beside the canvases ─────────────────────────────────
-    // A board of design-kit panels only (`@invana/canvas-boards`' `CanvasBoard`,
+    // A board of design-kit panels only (`@invana/canvas-ui/boards`' `CanvasBoard`,
     // no `canvas` panel), summarising the canvas boards. Its spec is JSON. The
     // shell's canvas-specific parts (rail selection, inspector, snapshots) keep
     // showing the first board while it is open.

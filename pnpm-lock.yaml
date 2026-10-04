@@ -69,9 +69,6 @@ importers:
       '@invana/canvas':
         specifier: workspace:*
         version: link:../../packages/canvas
-      '@invana/canvas-boards':
-        specifier: workspace:*
-        version: link:../../packages/canvas-boards
       '@invana/canvas-designer':
         specifier: workspace:*
         version: link:../../packages/canvas-designer
@@ -248,76 +245,6 @@ importers:
       vitest:
         specifier: ^3.2.6
         version: 3.2.7(@types/debug@4.1.13)(@types/node@22.15.3)(happy-dom@20.9.0)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3)
-
-  packages/canvas-boards:
-    dependencies:
-      '@invana/boards':
-        specifier: file:../../../design-kit/.local-packs/invana-boards-0.0.31.tgz
-        version: file:../design-kit/.local-packs/invana-boards-0.0.31.tgz(7b62a167108e9727b18a1daf356e9d1c)
-      '@invana/ui':
-        specifier: file:../../../design-kit/.local-packs/invana-ui-0.0.31.tgz
-        version: file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2)
-    devDependencies:
-      '@invana/blocks':
-        specifier: file:../../../design-kit/.local-packs/invana-blocks-0.0.31.tgz
-        version: file:../design-kit/.local-packs/invana-blocks-0.0.31.tgz(929ea7b79e027fc0fa864e041337da2d)
-      '@invana/canvas':
-        specifier: workspace:*
-        version: link:../canvas
-      '@invana/canvas-react':
-        specifier: workspace:*
-        version: link:../canvas-react
-      '@invana/canvas-ui':
-        specifier: workspace:*
-        version: link:../canvas-ui
-      '@invana/charts':
-        specifier: file:../../../design-kit/.local-packs/invana-charts-0.0.31.tgz
-        version: file:../design-kit/.local-packs/invana-charts-0.0.31.tgz(e35c2aa548fef66f5358756ec41af62e)
-      '@invana/editor':
-        specifier: file:../../../design-kit/.local-packs/invana-editor-0.0.31.tgz
-        version: file:../design-kit/.local-packs/invana-editor-0.0.31.tgz(@invana/styling@file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2))(@invana/ui@file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@invana/forms':
-        specifier: file:../../../design-kit/.local-packs/invana-forms-0.0.31.tgz
-        version: file:../design-kit/.local-packs/invana-forms-0.0.31.tgz(@invana/styling@file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2))(@invana/ui@file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.81.0(react@18.3.1))(react@18.3.1)
-      '@invana/graph':
-        specifier: workspace:*
-        version: link:../graph
-      '@invana/styling':
-        specifier: file:../../../design-kit/.local-packs/invana-styling-0.0.31.tgz
-        version: file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2)
-      '@invana/tables':
-        specifier: file:../../../design-kit/.local-packs/invana-tables-0.0.31.tgz
-        version: file:../design-kit/.local-packs/invana-tables-0.0.31.tgz(@invana/forms@file:../design-kit/.local-packs/invana-forms-0.0.31.tgz(@invana/styling@file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2))(@invana/ui@file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.81.0(react@18.3.1))(react@18.3.1))(@invana/styling@file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2))(@invana/ui@file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@invana/themes':
-        specifier: file:../../../design-kit/.local-packs/invana-themes-0.0.31.tgz
-        version: file:../design-kit/.local-packs/invana-themes-0.0.31.tgz(@invana/styling@file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2))(@invana/ui@file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@repo/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      '@repo/typescript-config':
-        specifier: workspace:*
-        version: link:../typescript-config
-      '@types/react':
-        specifier: ^18.3.12
-        version: 18.3.29
-      '@types/react-dom':
-        specifier: ^18.3.1
-        version: 18.3.7(@types/react@18.3.29)
-      react:
-        specifier: ^18.3.1
-        version: 18.3.1
-      react-dom:
-        specifier: ^18.3.1
-        version: 18.3.1(react@18.3.1)
-      react-hook-form:
-        specifier: ^7.69.0
-        version: 7.81.0(react@18.3.1)
-      tsup:
-        specifier: ^8.3.5
-        version: 8.5.1(jiti@2.7.0)(postcss@8.5.12)(tsx@4.21.0)(typescript@5.9.2)(yaml@2.8.3)
-      typescript:
-        specifier: 5.9.2
-        version: 5.9.2
 
   packages/canvas-core:
     devDependencies:
@@ -532,6 +459,9 @@ importers:
 
   packages/canvas-ui:
     dependencies:
+      '@invana/boards':
+        specifier: file:../../../design-kit/.local-packs/invana-boards-0.0.31.tgz
+        version: file:../design-kit/.local-packs/invana-boards-0.0.31.tgz(0212108b1de4b51cc9a0081e7c0bd27d)
       '@invana/forms':
         specifier: file:../../../design-kit/.local-packs/invana-forms-0.0.31.tgz
         version: file:../design-kit/.local-packs/invana-forms-0.0.31.tgz(@invana/styling@file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2))(@invana/ui@file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.76.0(react@18.3.1))(react@18.3.1)
@@ -545,18 +475,30 @@ importers:
         specifier: file:../../../design-kit/.local-packs/invana-ui-0.0.31.tgz
         version: file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2)
     devDependencies:
+      '@invana/blocks':
+        specifier: file:../../../design-kit/.local-packs/invana-blocks-0.0.31.tgz
+        version: file:../design-kit/.local-packs/invana-blocks-0.0.31.tgz(bab9eefc48abfb37cfae2ba6d57d99f0)
       '@invana/canvas':
         specifier: workspace:*
         version: link:../canvas
       '@invana/canvas-react':
         specifier: workspace:*
         version: link:../canvas-react
+      '@invana/charts':
+        specifier: file:../../../design-kit/.local-packs/invana-charts-0.0.31.tgz
+        version: file:../design-kit/.local-packs/invana-charts-0.0.31.tgz(012f65b65b8ea04ae84c5304234b35d7)
+      '@invana/editor':
+        specifier: file:../../../design-kit/.local-packs/invana-editor-0.0.31.tgz
+        version: file:../design-kit/.local-packs/invana-editor-0.0.31.tgz(@invana/styling@file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2))(@invana/ui@file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@invana/graph':
         specifier: workspace:*
         version: link:../graph
       '@invana/graph-layout-d3-force':
         specifier: workspace:*
         version: link:../graph-layout-d3-force
+      '@invana/tables':
+        specifier: file:../../../design-kit/.local-packs/invana-tables-0.0.31.tgz
+        version: file:../design-kit/.local-packs/invana-tables-0.0.31.tgz(@invana/forms@file:../design-kit/.local-packs/invana-forms-0.0.31.tgz(@invana/styling@file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2))(@invana/ui@file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.76.0(react@18.3.1))(react@18.3.1))(@invana/styling@file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2))(@invana/ui@file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
@@ -6424,6 +6366,31 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
       react-hook-form: 7.81.0(react@18.3.1)
 
+  '@invana/blocks@file:../design-kit/.local-packs/invana-blocks-0.0.31.tgz(bab9eefc48abfb37cfae2ba6d57d99f0)':
+    dependencies:
+      '@invana/charts': file:../design-kit/.local-packs/invana-charts-0.0.31.tgz(012f65b65b8ea04ae84c5304234b35d7)
+      '@invana/forms': file:../design-kit/.local-packs/invana-forms-0.0.31.tgz(@invana/styling@file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2))(@invana/ui@file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.76.0(react@18.3.1))(react@18.3.1)
+      '@invana/styling': file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2)
+      '@invana/tables': file:../design-kit/.local-packs/invana-tables-0.0.31.tgz(@invana/forms@file:../design-kit/.local-packs/invana-forms-0.0.31.tgz(@invana/styling@file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2))(@invana/ui@file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.76.0(react@18.3.1))(react@18.3.1))(@invana/styling@file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2))(@invana/ui@file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@invana/ui': file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      react-hook-form: 7.76.0(react@18.3.1)
+
+  '@invana/boards@file:../design-kit/.local-packs/invana-boards-0.0.31.tgz(0212108b1de4b51cc9a0081e7c0bd27d)':
+    dependencies:
+      '@invana/blocks': file:../design-kit/.local-packs/invana-blocks-0.0.31.tgz(bab9eefc48abfb37cfae2ba6d57d99f0)
+      '@invana/charts': file:../design-kit/.local-packs/invana-charts-0.0.31.tgz(012f65b65b8ea04ae84c5304234b35d7)
+      '@invana/editor': file:../design-kit/.local-packs/invana-editor-0.0.31.tgz(@invana/styling@file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2))(@invana/ui@file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@invana/forms': file:../design-kit/.local-packs/invana-forms-0.0.31.tgz(@invana/styling@file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2))(@invana/ui@file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.76.0(react@18.3.1))(react@18.3.1)
+      '@invana/styling': file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2)
+      '@invana/tables': file:../design-kit/.local-packs/invana-tables-0.0.31.tgz(@invana/forms@file:../design-kit/.local-packs/invana-forms-0.0.31.tgz(@invana/styling@file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2))(@invana/ui@file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.76.0(react@18.3.1))(react@18.3.1))(@invana/styling@file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2))(@invana/ui@file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@invana/ui': file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2)
+      lucide-react: 1.24.0(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      react-hook-form: 7.76.0(react@18.3.1)
+
   '@invana/boards@file:../design-kit/.local-packs/invana-boards-0.0.31.tgz(7b62a167108e9727b18a1daf356e9d1c)':
     dependencies:
       '@invana/blocks': file:../design-kit/.local-packs/invana-blocks-0.0.31.tgz(929ea7b79e027fc0fa864e041337da2d)
@@ -6437,6 +6404,15 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       react-hook-form: 7.81.0(react@18.3.1)
+
+  '@invana/charts@file:../design-kit/.local-packs/invana-charts-0.0.31.tgz(012f65b65b8ea04ae84c5304234b35d7)':
+    dependencies:
+      '@invana/styling': file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2)
+      '@invana/tables': file:../design-kit/.local-packs/invana-tables-0.0.31.tgz(@invana/forms@file:../design-kit/.local-packs/invana-forms-0.0.31.tgz(@invana/styling@file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2))(@invana/ui@file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.76.0(react@18.3.1))(react@18.3.1))(@invana/styling@file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2))(@invana/ui@file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@invana/ui': file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      uplot: 1.6.32
 
   '@invana/charts@file:../design-kit/.local-packs/invana-charts-0.0.31.tgz(e35c2aa548fef66f5358756ec41af62e)':
     dependencies:
@@ -6526,6 +6502,20 @@ snapshots:
   '@invana/styling@file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2)':
     dependencies:
       tailwindcss: 4.3.2
+
+  '@invana/tables@file:../design-kit/.local-packs/invana-tables-0.0.31.tgz(@invana/forms@file:../design-kit/.local-packs/invana-forms-0.0.31.tgz(@invana/styling@file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2))(@invana/ui@file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.76.0(react@18.3.1))(react@18.3.1))(@invana/styling@file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2))(@invana/ui@file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@dnd-kit/core': 6.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@dnd-kit/modifiers': 9.0.0(@dnd-kit/core@6.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      '@dnd-kit/sortable': 10.0.0(@dnd-kit/core@6.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      '@dnd-kit/utilities': 3.2.2(react@18.3.1)
+      '@invana/forms': file:../design-kit/.local-packs/invana-forms-0.0.31.tgz(@invana/styling@file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2))(@invana/ui@file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.76.0(react@18.3.1))(react@18.3.1)
+      '@invana/styling': file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2)
+      '@invana/ui': file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2)
+      '@tanstack/react-table': 8.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      lucide-react: 1.24.0(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   '@invana/tables@file:../design-kit/.local-packs/invana-tables-0.0.31.tgz(@invana/forms@file:../design-kit/.local-packs/invana-forms-0.0.31.tgz(@invana/styling@file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2))(@invana/ui@file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.81.0(react@18.3.1))(react@18.3.1))(@invana/styling@file:../design-kit/.local-packs/invana-styling-0.0.31.tgz(tailwindcss@4.3.2))(@invana/ui@file:../design-kit/.local-packs/invana-ui-0.0.31.tgz(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.3.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:

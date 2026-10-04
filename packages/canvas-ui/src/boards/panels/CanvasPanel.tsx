@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import type { PanelRendererProps } from '@invana/boards';
 import { ClickInspectBehaviour } from '@invana/canvas-react';
-import { GraphCanvasAppRoot, GraphCanvasAppSurface } from '@invana/canvas-ui';
+import { GraphCanvasAppRoot, GraphCanvasAppSurface } from '../../apps';
 import type { GraphCanvas } from '@invana/graph';
 
 import { useCanvasBoardContext } from '../provider';

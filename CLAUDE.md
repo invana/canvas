@@ -64,8 +64,7 @@ All in-repo packages share **one version** (currently `0.0.12`; keep them in loc
 | Path | Package | Role | 3rd-party deps |
 |---|---|---|---|
 | `packages/canvas-react` | `@invana/canvas-react` | **headless React binding layer** — declarative `<Canvas>` / `<GraphCanvas>` roots, contexts, null-rendering layer/behaviour/layout wrappers, and store/engine hooks. Renders **no application UI**; **never imports `@invana/ui`**. See its `CLAUDE.md`. 🚧 UI still migrating out per `docs/ui-consolidation-plan.md`. | `lucide-react` (dep: `@invana/themes`) |
-| `packages/canvas-ui` | `@invana/canvas-ui` | **the React UI kit** — all pixels (components, toolbars, menus, editors, view panels, `GraphCanvasApp`) built **on** canvas-react's hooks, so it couples to `@invana/canvas-store` and is **live by default**. Owns `@invana/ui`; pixi never enters. See its `CLAUDE.md`. | — |
-| `packages/canvas-boards` | `@invana/canvas-boards` | **canvas panels for the design kit's `@invana/boards`** — `canvas` (the engine half of `GraphCanvasApp`), `canvas-inspector`, `canvas-layers`, `canvas-table`, plus `CanvasBoard` (provider + kit `Board`). A board of kit panels is a dashboard; add a `canvas` panel for a canvas board. Specs are JSON. See its `CLAUDE.md`. | — (peers: canvas-ui, canvas-react, canvas, graph, `@invana/boards`, `@invana/ui`) |
+| `packages/canvas-ui` | `@invana/canvas-ui` | **the React UI kit** — all pixels (components, toolbars, menus, editors, view panels, `GraphCanvasApp`) built **on** canvas-react's hooks, so it couples to `@invana/canvas-store` and is **live by default**. Owns `@invana/ui`; pixi never enters. The **`@invana/canvas-ui/boards`** subpath adds canvas panels for the design kit's `@invana/boards` (`canvas`, `canvas-inspector`, `canvas-layers`, `canvas-table` + `CanvasBoard`); `@invana/boards` is an optional peer the main entry never imports. See its `CLAUDE.md`. | — (optional peer: `@invana/boards`) |
 | `packages/canvas-designer` | `@invana/canvas-designer` | the **canvas designer** — visual authoring for the visualisation's definition. Today: the **node template** surface (`src/templates/`) — opt-in WYSIWYG composite-card authoring (drag canvas, layers, undo/redo, save/load), emits `FreeformStructure`. **Planned:** studio shell + layout/behaviour/layer designers hosting `@invana/canvas-ui` editors (rule 12). Headless today — `@invana/graph` types only | — |
 
 #### Data + shared config
@@ -126,10 +125,9 @@ All in-repo packages share **one version** (currently `0.0.12`; keep them in loc
    ├── graph-layer-maplibre                  (peer: canvas only)
    └── @invana/canvas-react                  (HEADLESS bindings — peer: canvas, graph, graph-layout-d3-force; dep: themes, canvas-store; NO @invana/ui)
           ▲
-          └── @invana/canvas-ui              (the React UI KIT / all pixels — peer: canvas-react, canvas[types], graph[types], graph-layout-d3-force, ui, themes, styling, forms)
+          └── @invana/canvas-ui              (the React UI KIT / all pixels — peer: canvas-react, canvas[types], graph[types], graph-layout-d3-force, ui, themes, styling, forms; optional peer @invana/boards for the `/boards` subpath)
                  ▲
-                 ├── @invana/canvas-designer (peer: canvas-ui, graph, ui, forms)
-                 └── @invana/canvas-boards   (peer: canvas-ui, canvas-react, graph, @invana/boards, ui — canvas panels for kit boards)
+                 └── @invana/canvas-designer (peer: canvas-ui, graph, ui, forms)
 
 @invana/graph-datasets                       (peer: graph)
 ```

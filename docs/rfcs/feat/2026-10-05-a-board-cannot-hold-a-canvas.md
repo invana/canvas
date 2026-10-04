@@ -9,10 +9,13 @@ landed: null
 packages: [pkg:@invana/canvas-boards, pkg:@canvas/storybook]
 design_of_record: null
 relations:
+  - { predicate: superseded-by, object: rfc:feat-2026-10-05-canvas-board-is-a-separate-package }
   - { predicate: depends-on, object: rfc:feat-2026-10-05-graph-canvas-app-engine-is-welded-to-its-layout }
   - { predicate: depends-on, object: pkg:@invana/boards }
   - { predicate: relates-to, object: rfc:feat-2026-10-04-canvas-ui-uses-the-kit-workbook }
 ---
+
+> **Partly superseded** by rfc:feat-2026-10-05-canvas-board-is-a-separate-package: the code now lives in `pkg:@invana/canvas-ui` at `@invana/canvas-ui/boards`, and `@invana/canvas-boards` is deleted (D-3). The design (§2), D-1, D-2 and the deferred F7 still hold.
 
 **Summary:** The design kit's `@invana/boards` draws a board from JSON, and **deliberately ships no `canvas` panel**: "the consumer registers a renderer for `kind: "canvas"`" (design-kit `packages/boards/src/types.ts`, `CustomOptions`). Canvas has never registered one. This RFC adds **`@invana/canvas-boards`**: a `canvas` panel plus `canvas-inspector`, `canvas-layers` and `canvas-table`, so a board page can be a canvas, a dashboard (kit panels), or both.
 
@@ -75,7 +78,7 @@ Row status: proposed 0 · accepted 0 · implemented 6 · landed 0 · deferred 1 
 |----|----------|---------|----------------|--------|
 | D-1 | Canvases per board | one · many | One in v1 (`canvasId` already keys the registry, so many is additive) | accepted |
 | D-2 | Which canvas-ui panels become kinds in v1 | inspector, layers, table · more | inspector, layers, table | accepted |
-| D-3 | Where the panels live | new package · canvas-ui · stories | New `@invana/canvas-boards` | accepted |
+| D-3 | Where the panels live | new package · canvas-ui · stories | New `@invana/canvas-boards` | superseded |
 
 ## 8. History
 
@@ -84,3 +87,4 @@ Row status: proposed 0 · accepted 0 · implemented 6 · landed 0 · deferred 1 
 | 2026-10-05 | Opened, with go-ahead to implement | accepted | Maintainer confirmed pages = boards, canvas as a registered panel kind, the new package, both stories, and local packing |
 | 2026-10-05 | `BoardPages` not used in stories | — | The kit's `BoardPages` has no page menu, header actions or `keepMounted` switch, which both stories use. They keep `Workbook`, with a `CanvasBoard` as each page's body |
 | 2026-10-05 | F1–F6 implemented, V1–V4 pass | implemented | Labels need a structure template (a bare `bindings.label` yields nothing), so the story specs carry small `simple` structures. Not committed |
+| 2026-10-05 | D-3 superseded | — | Package folded into canvas-ui as `@invana/canvas-ui/boards` and deleted: rfc:feat-2026-10-05-canvas-board-is-a-separate-package |

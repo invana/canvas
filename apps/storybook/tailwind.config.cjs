@@ -29,7 +29,6 @@ module.exports = {
     path.join(__dirname, 'stories/**/*.{js,ts,jsx,tsx,mdx}'),
     path.join(__dirname, '../../packages/canvas-ui/src/**/*.{js,ts,jsx,tsx}'),
     path.join(__dirname, '../../packages/canvas-react/src/**/*.{js,ts,jsx,tsx}'),
-    path.join(__dirname, '../../packages/canvas-boards/src/**/*.{js,ts,jsx,tsx}'),
     // Design-kit components — their published dist (per package, not local copies).
     path.join(uiDist, '**/*.{js,cjs,mjs}'),
     path.join(formsDist, '**/*.{js,cjs,mjs}'),

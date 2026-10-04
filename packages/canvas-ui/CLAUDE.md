@@ -45,11 +45,12 @@ src/
 │                 node-styling, node-structure, schema, hover-preview-card)
 ├─ view-panels/  presentational *ViewPanel surfaces (SchemaViewPanel, LayersViewPanel, CanvasFiltersViewPanel, preview cards) — props in → JSX. A tab strip over pages is the kit's `Workbook` (`@invana/ui`), not a view panel here
 ├─ apps/         GraphCanvasApp (+ header/footer) = GraphCanvasAppRoot (owns + scopes the engine, lifted context) + GraphCanvasAppSurface (draws it) + AppLayoutV2. Hosts with their own layout (a board) use the root + surface directly
+├─ boards/       the `@invana/canvas-ui/boards` entry — canvas panels for the kit's `@invana/boards` (see "Boards" below)
 ├─ hooks/        UI-only turnkey hooks (useSidePanels — activity-bar for GraphCanvasApp side panels: descriptors → shared-toolbar `items` + active-panel `region`, one docked at a time; useDevTool, useMiniMap)
 └─ shared/       colour utils + presets used across tracks
 ```
 
-One barrel (`index.ts`), sectioned. The folder split is internal organisation — **no subpath exports**; consumers import from the package root, so internal moves don't change the public surface.
+One barrel (`index.ts`), sectioned. The folder split is internal organisation; consumers import from the package root, so internal moves don't change the public surface. **The one subpath export is `@invana/canvas-ui/boards`** (`src/boards/index.ts`), so the main barrel never imports `@invana/boards`; never re-export `boards/` from `index.ts`.
 
 **Naming standard — `view-panels/` surfaces carry the `*ViewPanel` suffix.** Every presentational / store-connected view in `view-panels/` is a `*ViewPanel` (`SchemaViewPanel`, `LayersViewPanel`, `CanvasFiltersViewPanel`), one folder per surface, with matching `*ViewPanelProps`. It's the counterpart to the `*Toolbar` / `*EditorPanel` suffixes — a stable, greppable name for "a dockable content surface". (`preview-cards.tsx` is the exception: `NodePreviewCard` / `EdgePreviewCard` are render-prop *content*, not dockable panels.)
 
@@ -123,6 +124,25 @@ store.updateNode(id, { style: { ...resolveNodeStyle(node), ...formToStyle(values
 - **`@invana/canvas-react` stays a peer dependency** (single, deduped instance) so the context object is shared between the host's root and this package's consumers — a duplicate copy silently breaks `useCanvas()`.
 - **Theme is global CSS tokens**, wired at the host app root — `@invana/themes/styles.css` then `@invana/ui/styles.css` (order matters). There is **no React `<ThemeProvider>`** in this package; don't add one. Storybook wires the stylesheets in `.storybook/preview.ts`.
 - New Behaviour / Layer / Layout ⇒ new `editors/<category>/<surface>/` where `<category>` is `behaviours` / `layers` / `layouts` (root rule 12). High-level / non-1:1 editors (the whole-canvas aggregate, graph-domain template editors) live in the top-level `editor-panels/` (a sibling of `editors/`, not nested under it).
+
+## Boards (`src/boards/` → `@invana/canvas-ui/boards`)
+
+Canvas panels for the design kit's `@invana/boards`. A kit board is drawn from a JSON `BoardSpec`, and the kit deliberately ships no `canvas` panel; these are that panel plus the panels that read a canvas: `canvas` · `canvas-inspector` · `canvas-layers` · `canvas-table`, and `CanvasBoard` (provider + kit `Board`). A board of kit panels only is a dashboard; add a `canvas` panel and it is a canvas board. See `docs/rfcs/feat/2026-10-05-a-board-cannot-hold-a-canvas.md` and `docs/rfcs/feat/2026-10-05-canvas-board-is-a-separate-package.md`.
+
+| File | Role |
+|---|---|
+| `types.ts` | Each kind's **JSON** options + `CanvasPanelKinds` (the spec's type argument — keep it a `type`, not an `interface`: an index signature would make every option unchecked) |
+| `provider.tsx` | `CanvasBoardProvider` — `resolveData(dataRef)` + the live engines keyed by `canvasId`. Board panels only get their own options, and a canvas is a *sibling* of the panels that read it, so the engine travels through this |
+| `panels/CanvasPanel.tsx` | `GraphCanvasAppRoot` + `GraphCanvasAppSurface` — the app's engine half, none of its chrome |
+| `panels/Canvas{Inspector,Layers,Table}Panel.tsx` | Thin bindings: the view panels, and the kit's own `table` block fed from the live graph |
+| `CanvasBoard.tsx` | `CANVAS_PANELS` registry + `CanvasBoard` (provider + kit `Board`) |
+
+- **Only `boards/` imports `@invana/boards`** (an optional peer). Nothing outside it may, or every canvas-ui consumer would need the kit's boards packages.
+- **Import siblings relatively** (`../../apps`, `../../view-panels/…`), never from `@invana/canvas-ui`. tsup `splitting` stays on so the two entries share one copy of the `GraphCanvasApp` contexts.
+- **Options are JSON.** A graph is a `dataRef`, never data; config is `CanvasConfig` data, never a callback or a layout class.
+- **No module state.** Everything per-board lives in `CanvasBoardProvider`, so N boards on one page are independent.
+- **Behaviours are opt-in** (root rule 7): the canvas panel registers `ClickInspectBehaviour` only when the spec says `inspect: true`.
+- **Reuse, don't redraw.** A new kind wraps an existing view panel or a kit block; chrome comes from the kit's `PanelBox`, which every board panel already gets.
 
 ## No tests
 
