@@ -65,6 +65,7 @@ All in-repo packages share **one version** (currently `0.0.12`; keep them in loc
 |---|---|---|---|
 | `packages/canvas-react` | `@invana/canvas-react` | **headless React binding layer** — declarative `<Canvas>` / `<GraphCanvas>` roots, contexts, null-rendering layer/behaviour/layout wrappers, and store/engine hooks. Renders **no application UI**; **never imports `@invana/ui`**. See its `CLAUDE.md`. 🚧 UI still migrating out per `docs/ui-consolidation-plan.md`. | `lucide-react` (dep: `@invana/themes`) |
 | `packages/canvas-ui` | `@invana/canvas-ui` | **the React UI kit** — all pixels (components, toolbars, menus, editors, view panels, `GraphCanvasApp`) built **on** canvas-react's hooks, so it couples to `@invana/canvas-store` and is **live by default**. Owns `@invana/ui`; pixi never enters. See its `CLAUDE.md`. | — |
+| `packages/canvas-boards` | `@invana/canvas-boards` | **canvas panels for the design kit's `@invana/boards`** — `canvas` (the engine half of `GraphCanvasApp`), `canvas-inspector`, `canvas-layers`, `canvas-table`, plus `CanvasBoard` (provider + kit `Board`). A board of kit panels is a dashboard; add a `canvas` panel for a canvas board. Specs are JSON. See its `CLAUDE.md`. | — (peers: canvas-ui, canvas-react, canvas, graph, `@invana/boards`, `@invana/ui`) |
 | `packages/canvas-designer` | `@invana/canvas-designer` | the **canvas designer** — visual authoring for the visualisation's definition. Today: the **node template** surface (`src/templates/`) — opt-in WYSIWYG composite-card authoring (drag canvas, layers, undo/redo, save/load), emits `FreeformStructure`. **Planned:** studio shell + layout/behaviour/layer designers hosting `@invana/canvas-ui` editors (rule 12). Headless today — `@invana/graph` types only | — |
 
 #### Data + shared config
@@ -127,7 +128,8 @@ All in-repo packages share **one version** (currently `0.0.12`; keep them in loc
           ▲
           └── @invana/canvas-ui              (the React UI KIT / all pixels — peer: canvas-react, canvas[types], graph[types], graph-layout-d3-force, ui, themes, styling, forms)
                  ▲
-                 └── @invana/canvas-designer (peer: canvas-ui, graph, ui, forms)
+                 ├── @invana/canvas-designer (peer: canvas-ui, graph, ui, forms)
+                 └── @invana/canvas-boards   (peer: canvas-ui, canvas-react, graph, @invana/boards, ui — canvas panels for kit boards)
 
 @invana/graph-datasets                       (peer: graph)
 ```

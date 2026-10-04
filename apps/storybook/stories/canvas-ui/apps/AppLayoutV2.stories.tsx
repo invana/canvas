@@ -79,6 +79,8 @@ import { useEffect, useMemo, useRef, useState, type ElementType } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import type { CanvasConfig } from '@invana/canvas';
+import type { BoardSpec } from '@invana/boards';
+import { CanvasBoard, type CanvasPanelKinds } from '@invana/canvas-boards';
 import { CanvasContext, ClickInspectBehaviour, GraphCanvasContext, MiniMapLayer } from '@invana/canvas-react';
 import type {
   ClickInspectBehaviour as ClickInspectBehaviourClass,
@@ -136,6 +138,7 @@ import {
   Eye,
   Filter,
   GitBranch,
+  LayoutDashboard,
   History,
   Info,
   Lasso,
@@ -668,6 +671,65 @@ export const AppLayoutV2Story: Story = {
       ),
     }));
 
+    // ── A dashboard page beside the canvases ─────────────────────────────────
+    // A board of design-kit panels only (`@invana/canvas-boards`' `CanvasBoard`,
+    // no `canvas` panel), summarising the canvas boards. Its spec is JSON. The
+    // shell's canvas-specific parts (rail selection, inspector, snapshots) keep
+    // showing the first board while it is open.
+    const overviewSpec: BoardSpec<CanvasPanelKinds> = {
+      rows: [
+        {
+          panels: [
+            {
+              id: 'overview-tiles',
+              kind: 'grid',
+              options: {
+                tiles: [
+                  { label: 'Canvases', value: boards.length },
+                  {
+                    label: 'Nodes',
+                    value: boards.reduce((n, b) => n + templates[b.templateIndex]!.data.nodes.length, 0),
+                  },
+                  {
+                    label: 'Edges',
+                    value: boards.reduce((n, b) => n + templates[b.templateIndex]!.data.edges.length, 0),
+                  },
+                ],
+              },
+            },
+          ],
+        },
+        {
+          panels: [
+            {
+              id: 'overview-table',
+              kind: 'table',
+              title: 'Canvases',
+              options: {
+                columns: [
+                  { key: 'title', label: 'Canvas' },
+                  { key: 'nodes', label: 'Nodes', align: 'right' },
+                  { key: 'edges', label: 'Edges', align: 'right' },
+                ],
+                rows: boards.map((b) => ({
+                  title: b.title,
+                  nodes: templates[b.templateIndex]!.data.nodes.length,
+                  edges: templates[b.templateIndex]!.data.edges.length,
+                })),
+                noun: 'canvases',
+              },
+            },
+          ],
+        },
+      ],
+    };
+    pages.push({
+      id: 'overview',
+      title: 'Overview',
+      icon: LayoutDashboard,
+      content: <CanvasBoard resolveData={() => undefined} spec={overviewSpec} className="h-full overflow-auto p-3" />,
+    });
+
     // The active tab's caret dropdown, in the main region's strip.
     const pageMenuItems: WorkbookPageMenuItem[] = [
       { id: 'rename', label: 'Rename', icon: Pencil, onSelect: renameBoard },
@@ -869,7 +931,9 @@ export const AppLayoutV2Story: Story = {
         content: (
           <Workbook
             pages={pages}
-            activeId={activeBoard.id}
+            // `activeBoard` always resolves to a canvas board; the dashboard page
+            // has its own id.
+            activeId={activeId === 'overview' ? 'overview' : activeBoard.id}
             onSelect={setActiveId}
             onAdd={addBoard}
             addLabel="New canvas"

@@ -17,6 +17,10 @@ const path = require('node:path');
  */
 const uiDist = path.dirname(require.resolve('@invana/ui'));
 const formsDist = path.dirname(require.resolve('@invana/forms'));
+// Boards and what it draws with (rfc:feat-2026-10-05-a-board-cannot-hold-a-canvas).
+const kitBoardDists = ['@invana/boards', '@invana/blocks', '@invana/charts', '@invana/tables', '@invana/editor'].map(
+  (pkg) => path.dirname(require.resolve(pkg)),
+);
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -25,8 +29,10 @@ module.exports = {
     path.join(__dirname, 'stories/**/*.{js,ts,jsx,tsx,mdx}'),
     path.join(__dirname, '../../packages/canvas-ui/src/**/*.{js,ts,jsx,tsx}'),
     path.join(__dirname, '../../packages/canvas-react/src/**/*.{js,ts,jsx,tsx}'),
+    path.join(__dirname, '../../packages/canvas-boards/src/**/*.{js,ts,jsx,tsx}'),
     // Design-kit components — their published dist (per package, not local copies).
     path.join(uiDist, '**/*.{js,cjs,mjs}'),
     path.join(formsDist, '**/*.{js,cjs,mjs}'),
+    ...kitBoardDists.map((dist) => path.join(dist, '**/*.{js,cjs,mjs}')),
   ],
 };

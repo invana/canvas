@@ -1,0 +1,87 @@
+{
+  "name": "@invana/canvas-boards",
+  "version": "0.0.14",
+  "description": "Canvas panels for @invana/boards — put a live graph canvas, its inspector, its layers and a table of its nodes on a design-kit board, next to dashboard panels.",
+  "homepage": "https://github.com/invana/canvas#readme",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typedocOptions": {
+    "entryPoints": [
+      "src/index.ts"
+    ]
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "@invana/boards": ">=0.0.32",
+    "@invana/canvas": "workspace:*",
+    "@invana/canvas-react": "workspace:*",
+    "@invana/canvas-ui": "workspace:*",
+    "@invana/graph": "workspace:*",
+    "@invana/ui": ">=0.0.32",
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@invana/blocks": "^0.0.32",
+    "@invana/boards": "^0.0.32",
+    "@invana/canvas": "workspace:*",
+    "@invana/canvas-react": "workspace:*",
+    "@invana/canvas-ui": "workspace:*",
+    "@invana/charts": "^0.0.32",
+    "@invana/editor": "^0.0.32",
+    "@invana/forms": "^0.0.32",
+    "@invana/graph": "workspace:*",
+    "@invana/styling": "^0.0.32",
+    "@invana/tables": "^0.0.32",
+    "@invana/themes": "^0.0.32",
+    "@invana/ui": "^0.0.32",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.69.0",
+    "tsup": "^8.3.5",
+    "typescript": "5.9.2"
+  },
+  "keywords": [
+    "canvas",
+    "graph",
+    "board",
+    "dashboard",
+    "react"
+  ],
+  "bugs": {
+    "url": "https://github.com/invana/canvas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/invana/canvas.git",
+    "directory": "packages/canvas-boards"
+  },
+  "license": "Apache-2.0",
+  "author": "Ravi Raja Merugu",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
