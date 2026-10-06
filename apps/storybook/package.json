@@ -45,8 +45,8 @@
     "lil-gui": "^0.21.0",
     "lucide-react": "^0.562.0",
     "maplibre-gl": "^4.7.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
   },
   "devDependencies": {
     "@invana/forms": "^0.0.32",
@@ -58,8 +58,8 @@
     "@storybook/react-vite": "^10.4.0",
     "@tailwindcss/vite": "^4",
     "@types/d3-delaunay": "^6.0.4",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
     "remark-gfm": "^4.0.1",
     "storybook": "^10.4.0",
     "typescript": "5.9.2",

@@ -86,6 +86,12 @@ All in-repo packages share **one version** (currently `0.0.12`; keep them in loc
 
 `@invana/ui`, `@invana/forms`, `@invana/themes`, `@invana/styling` are **published packages from the Invana design kit** (separate repo). They are consumed here as normal registry deps — there are no `packages/ui` / `packages/forms` / etc. folders. `canvas-ui` builds its UI on `@invana/forms` + `@invana/ui`; `canvas-react` pulls `@invana/themes` (+ `@invana/graph` as a peer) but — as the headless layer — **not** `@invana/ui`. Don't try to `--filter` or build these locally; bump their versions like any third-party dep.
 
+**Bumping the design kit ⇒ re-align React.** Canvas's dev/test React must match the React the kit is built and tested against — the kit's peers say `^18 || ^19`, but its deps (e.g. `@shadcn/react`, ref-as-prop) can silently need the newer major, and `skipLibCheck` hides type skew. On every kit bump:
+
+- Read the kit's `react` / `react-dom` / `@types/react` / `@types/react-dom` **devDependency** specs (`npm view @invana/ui@<ver> devDependencies`, or `../design-kit/packages/ui/package.json`) and set the same specs in the `devDependencies` of `canvas-react`, `canvas-ui`, `canvas-designer` and `apps/storybook` (+ storybook's `dependencies`). Leave the published `peerDependencies` ranges (`^18.0.0 || ^19.0.0`) alone unless the kit drops a major.
+- `pnpm install` must show **no unmet React peer warnings**, and `pnpm why @types/react -r` must show **one major** (the kit's `.d.ts` resolve `react` through pnpm's hidden hoist — a stray `@types/react` from any dep, e.g. VitePress's `@docsearch/react`, gets picked up; pin it in `pnpm-workspace.yaml` `overrides`).
+- Then `pnpm check-types` + `pnpm build` + `pnpm lint` + tests, and smoke-test Storybook.
+
 ### Dependency layering (use when adding/bumping workspace deps)
 
 ```

@@ -29,6 +29,11 @@ overrides:
   "@invana/charts": "file:../design-kit/.local-packs/invana-charts-0.0.31.tgz"
   "@invana/tables": "file:../design-kit/.local-packs/invana-tables-0.0.31.tgz"
   "@invana/editor": "file:../design-kit/.local-packs/invana-editor-0.0.31.tgz"
+  # React types: the design-kit packages don't peer on @types/react, so their .d.ts resolve
+  # `react` through pnpm's hidden hoist. VitePress's @docsearch/react (docs app only) was the
+  # one consumer pulling @types/react@18, which made the kit's types resolve against 18 while
+  # canvas compiles against 19. Keep a single @types/react major in the tree.
+  "@docsearch/react>@types/react": "^19.2.17"
   # Single-major in the tree — plain range, no consumer crosses a major.
   ws: ">=8.21.1"
   "@xmldom/xmldom": ">=0.8.15 <0.9.0"

@@ -60,7 +60,7 @@ export function useCanvasEngine<T extends Canvas>(
   engineOpts: Omit<CanvasOptions, 'container' | 'config'>,
   config: CanvasConfig | undefined,
   ref: Ref<T>,
-): { canvas: T | null; hostRef: RefObject<HTMLDivElement> } {
+): { canvas: T | null; hostRef: RefObject<HTMLDivElement | null> } {
   const hostRef = useRef<HTMLDivElement>(null);
   const [canvas, setCanvas] = useState<T | null>(null);
 
@@ -158,7 +158,7 @@ export function CanvasHost({
   style,
   children,
 }: {
-  hostRef: RefObject<HTMLDivElement>;
+  hostRef: RefObject<HTMLDivElement | null>;
   className?: string;
   style?: CSSProperties;
   children?: ReactNode;
