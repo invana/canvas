@@ -1,0 +1,68 @@
+{
+  "name": "@invana/graph-datasets",
+  "version": "0.0.15",
+  "description": "Example graph datasets for @invana/graph (Les Misérables, scientists org chart, random tree, etc.).",
+  "homepage": "https://github.com/invana/canvas#readme",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./usecase-demos": {
+      "types": "./dist/usecase-demos/index.d.ts",
+      "import": "./dist/usecase-demos/index.js",
+      "default": "./dist/usecase-demos/index.js"
+    },
+    "./epic-saga": {
+      "types": "./dist/epic-saga/index.d.ts",
+      "import": "./dist/epic-saga/index.js",
+      "default": "./dist/epic-saga/index.js"
+    },
+    "./topic-cartography": {
+      "types": "./dist/topic-cartography/index.d.ts",
+      "import": "./dist/topic-cartography/index.js",
+      "default": "./dist/topic-cartography/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "test": "vitest run --passWithNoTests"
+  },
+  "peerDependencies": {
+    "@invana/canvas": "^0.0.15",
+    "@invana/graph": "^0.0.15"
+  },
+  "keywords": [
+    "canvas",
+    "graph",
+    "datasets",
+    "examples",
+    "visualization"
+  ],
+  "bugs": {
+    "url": "https://github.com/invana/canvas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/invana/canvas.git",
+    "directory": "packages/graph-datasets"
+  },
+  "license": "Apache-2.0",
+  "author": "Ravi Raja Merugu",
+  "module": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
