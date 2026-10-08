@@ -78,6 +78,12 @@ jobs:
         with:
           ref: ${{ steps.target.outputs.ref }}
 
+      # A release ships npm versions, never local links. Every later job needs
+      # `resolve`, so a tag carrying a file:/link:/git/URL dependency publishes
+      # and deploys nothing. Same check release.sh runs before tagging.
+      - name: Dependencies resolve to npm versions only
+        run: node scripts/check-release-deps.mjs
+
       # The dist-branches matrix, read off the workspace at the target ref so a
       # re-run of an older tag branches exactly the packages that tag had.
       - name: Enumerate publishable packages

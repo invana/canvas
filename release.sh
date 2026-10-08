@@ -35,6 +35,11 @@ if [ -n "$(git status --porcelain)" ]; then
   exit 1
 fi
 
+# A release ships npm versions, never local links (file:/link:/git/URL specs in
+# overrides, manifests or the lockfile). Checked before anything is bumped,
+# committed or tagged. See scripts/check-release-deps.mjs.
+node scripts/check-release-deps.mjs
+
 if git rev-parse "v$VERSION" >/dev/null 2>&1; then
   echo "Error: tag v$VERSION already exists."
   exit 1

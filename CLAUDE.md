@@ -192,6 +192,7 @@ pnpm build                                      # turbo build (deps first)
 pnpm dev                                        # turbo watch
 pnpm check-types                                # turbo tsc --noEmit
 pnpm lint / pnpm format
+pnpm check-release-deps                         # release gate: npm versions only, no file:/link: (run by release.sh + CI; not in lint)
 pnpm --filter @invana/canvas build              # single package
 pnpm --filter @canvas/storybook dev             # → http://localhost:6006
 pnpm --filter @canvas/docs dev                  # → http://localhost:5173

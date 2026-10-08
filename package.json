@@ -17,7 +17,8 @@
     "docs:preview": "pnpm --filter @canvas/docs preview",
     "check-boundaries": "node scripts/check-renderer-boundary.mjs",
     "check-api-surface": "node scripts/check-api-surface.mjs",
-    "check-node-import": "node scripts/check-node-import.mjs"
+    "check-node-import": "node scripts/check-node-import.mjs",
+    "check-release-deps": "node scripts/check-release-deps.mjs"
   },
   "devDependencies": {
     "git-cliff": "^2.13.1",
