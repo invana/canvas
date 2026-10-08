@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@invana/canvas-store": "workspace:*",
-    "@invana/themes": "^0.0.32",
+    "@invana/themes": ">=0.0.32 <0.1.0",
     "lucide-react": "^0.562.0"
   },
   "peerDependencies": {
