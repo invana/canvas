@@ -118,13 +118,22 @@ function toSection(
   const body = resolveSlot(bag.content, ctx);
   return {
     content: bag.className ? <div className={cx('h-full', bag.className)}>{body}</div> : body,
-    defaultSize: bag.defaultSize,
+    defaultSize: toLayoutSize(bag.defaultSize),
     // Default the floor to 0 (panel can shrink fully) rather than the layout's
     // built-in per-region minimum; a consumer-set `minSize` overrides it.
-    minSize: bag.minSize ?? '0px',
-    maxSize: bag.maxSize,
+    minSize: toLayoutSize(bag.minSize) ?? '0px',
+    maxSize: toLayoutSize(bag.maxSize),
     collapsible: bag.collapsible ?? true,
   };
+}
+
+/**
+ * A region size as the layout expects it. This app's API documents a bare
+ * number as a **percent**, but `AppLayoutV2` (react-resizable-panels v4) reads
+ * a bare number as **pixels** — so `24` becomes `'24%'`. Strings pass through.
+ */
+function toLayoutSize(size: number | string | undefined): string | undefined {
+  return typeof size === 'number' ? `${size}%` : size;
 }
 
 /** Join truthy class names. */

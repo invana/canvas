@@ -26,11 +26,11 @@ export interface SidePanelDef {
   activeLabel?: string;
   /** Panel body — handed the live engine (`null` until every layer registers). */
   render: (canvas: GraphCanvas | null) => ReactNode;
-  /** Per-panel initial region size (overrides {@link UseSidePanelsOptions.section}). */
+  /** Per-panel initial region size — percent number, or a CSS size string (overrides {@link UseSidePanelsOptions.section}). */
   defaultSize?: number | string;
-  /** Per-panel minimum region size. */
+  /** Per-panel minimum region size — percent number, or a CSS size string. */
   minSize?: number | string;
-  /** Per-panel maximum region size. */
+  /** Per-panel maximum region size — percent number, or a CSS size string. */
   maxSize?: number | string;
   /** Per-panel: allow the drag handle to fully collapse the region. */
   collapsible?: boolean;
