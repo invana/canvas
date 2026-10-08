@@ -1,0 +1,62 @@
+{
+  "name": "@invana/graph-layer-maplibre",
+  "version": "0.0.15",
+  "description": "MapLibre GL JS basemap Layer for @invana/canvas — projects graph nodes onto a real interactive world map.",
+  "homepage": "https://github.com/invana/canvas#readme",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typedocOptions": {
+    "entryPoints": [
+      "src/index.ts"
+    ]
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "maplibre-gl": "^4.7.1"
+  },
+  "peerDependencies": {
+    "@invana/canvas": "^0.0.15",
+    "pixi.js": "^8.21.0"
+  },
+  "keywords": [
+    "canvas",
+    "graph",
+    "layer",
+    "maplibre",
+    "map",
+    "geo",
+    "basemap"
+  ],
+  "bugs": {
+    "url": "https://github.com/invana/canvas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/invana/canvas.git",
+    "directory": "packages/graph-layer-maplibre"
+  },
+  "license": "Apache-2.0",
+  "author": "Ravi Raja Merugu",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
