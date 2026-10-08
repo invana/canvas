@@ -1,0 +1,81 @@
+{
+  "name": "@invana/canvas-ui",
+  "version": "0.0.15",
+  "description": "Schema-driven, engine-agnostic React UI components (style editors, panels, controls) for Invana graph tools — built on the @invana/forms design-kit form-generator.",
+  "homepage": "https://github.com/invana/canvas#readme",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typedocOptions": {
+    "entryPoints": [
+      "src/index.ts",
+      "src/boards/index.ts"
+    ]
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "@invana/boards": ">=0.0.32 <0.1.0",
+    "@invana/canvas": "^0.0.15",
+    "@invana/canvas-react": "^0.0.15",
+    "@invana/forms": ">=0.0.32 <0.1.0",
+    "@invana/graph": "^0.0.15",
+    "@invana/graph-layout-d3-force": "^0.0.15",
+    "@invana/styling": ">=0.0.32 <0.1.0",
+    "@invana/themes": ">=0.0.32 <0.1.0",
+    "@invana/ui": ">=0.0.32 <0.1.0",
+    "lucide-react": ">=0.400.0",
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0",
+    "react-hook-form": "^7"
+  },
+  "peerDependenciesMeta": {
+    "@invana/boards": {
+      "optional": true
+    }
+  },
+  "keywords": [
+    "canvas",
+    "react",
+    "ui",
+    "components",
+    "graph",
+    "editor",
+    "design-kit"
+  ],
+  "bugs": {
+    "url": "https://github.com/invana/canvas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/invana/canvas.git",
+    "directory": "packages/canvas-ui"
+  },
+  "license": "Apache-2.0",
+  "author": "Ravi Raja Merugu",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./boards": {
+      "types": "./dist/boards.d.ts",
+      "import": "./dist/boards.js",
+      "default": "./dist/boards.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
