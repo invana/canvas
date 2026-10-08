@@ -1,0 +1,66 @@
+{
+  "name": "@invana/canvas-store",
+  "version": "0.0.15",
+  "description": "State machinery of the Invana canvas — the immer-backed ReactiveStore engine + adapters (zustand now, Yjs later), history, picking (rbush), telemetry, and the CanvasStore factory. The vocabulary and contracts live one floor below in @invana/canvas-core.",
+  "homepage": "https://github.com/invana/canvas#readme",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "typedocOptions": {
+    "entryPoints": [
+      "src/index.ts"
+    ]
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/ tests/",
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "bench": "vitest bench --run"
+  },
+  "dependencies": {
+    "@invana/canvas-core": "^0.0.15",
+    "immer": "^11.1.4",
+    "rbush": "^4.0.1",
+    "zustand": "^5.0.12"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
+  },
+  "keywords": [
+    "state",
+    "reactive",
+    "store",
+    "telemetry",
+    "crdt",
+    "canvas"
+  ],
+  "bugs": {
+    "url": "https://github.com/invana/canvas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/invana/canvas.git",
+    "directory": "packages/canvas-store"
+  },
+  "license": "Apache-2.0",
+  "author": "Ravi Raja Merugu",
+  "module": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
