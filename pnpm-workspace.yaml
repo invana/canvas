@@ -13,22 +13,6 @@ onlyBuiltDependencies:
 # transitive dev/build-tooling deps flagged by `pnpm audit`. All are
 # non-shipped (build/lint/docs/test toolchain). See SECURITY-AUDIT-2026-07-19.md.
 overrides:
-  # TEMPORARY (rfc:feat-2026-10-04-canvas-ui-uses-the-kit-workbook D-1): the design-kit
-  # 0.0.32 (`Workbook`, the control scale) is unpublished, so these point at tarballs
-  # packed from a local design-kit checkout. Machine-local: CI cannot install this.
-  # Delete these lines once @invana/*@0.0.32 is on npm.
-  "@invana/ui": "file:../design-kit/.local-packs/invana-ui-0.0.31.tgz"
-  "@invana/styling": "file:../design-kit/.local-packs/invana-styling-0.0.31.tgz"
-  "@invana/themes": "file:../design-kit/.local-packs/invana-themes-0.0.31.tgz"
-  "@invana/forms": "file:../design-kit/.local-packs/invana-forms-0.0.31.tgz"
-  # Same, for rfc:feat-2026-10-05-a-board-cannot-hold-a-canvas: @invana/boards and the
-  # blocks/charts it needs are not on npm at all; tables/editor are packed from the
-  # same checkout so the whole kit is one build.
-  "@invana/boards": "file:../design-kit/.local-packs/invana-boards-0.0.31.tgz"
-  "@invana/blocks": "file:../design-kit/.local-packs/invana-blocks-0.0.31.tgz"
-  "@invana/charts": "file:../design-kit/.local-packs/invana-charts-0.0.31.tgz"
-  "@invana/tables": "file:../design-kit/.local-packs/invana-tables-0.0.31.tgz"
-  "@invana/editor": "file:../design-kit/.local-packs/invana-editor-0.0.31.tgz"
   # React types: the design-kit packages don't peer on @types/react, so their .d.ts resolve
   # `react` through pnpm's hidden hoist. VitePress's @docsearch/react (docs app only) was the
   # one consumer pulling @types/react@18, which made the kit's types resolve against 18 while

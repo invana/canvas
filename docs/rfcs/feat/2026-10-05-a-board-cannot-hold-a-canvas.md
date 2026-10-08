@@ -88,3 +88,4 @@ Row status: proposed 0 · accepted 0 · implemented 6 · landed 0 · deferred 1 
 | 2026-10-05 | `BoardPages` not used in stories | — | The kit's `BoardPages` has no page menu, header actions or `keepMounted` switch, which both stories use. They keep `Workbook`, with a `CanvasBoard` as each page's body |
 | 2026-10-05 | F1–F6 implemented, V1–V4 pass | implemented | Labels need a structure template (a bare `bindings.label` yields nothing), so the story specs carry small `simple` structures. Not committed |
 | 2026-10-05 | D-3 superseded | — | Package folded into canvas-ui as `@invana/canvas-ui/boards` and deleted: rfc:feat-2026-10-05-canvas-board-is-a-separate-package |
+| 2026-10-08 | F1 overrides removed | — | `@invana/boards`/`blocks`/`charts` are on npm at `0.0.32`, so the temporary overrides are gone (rfc:feat-2026-10-04-canvas-ui-uses-the-kit-workbook, history 2026-10-08) |
