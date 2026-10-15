@@ -4,15 +4,16 @@
  * 150 synthetic papers across 5 topics, ~400 citation edges, force-laid into
  * topic clusters with a density-contour overlay that brings the clusters
  * forward without any colour key. Node radius scales with citation count so the
- * hubs read immediately; `<LabelCollisionBehaviour>` keeps the top-cited papers
+ * hubs read immediately; `LabelCollisionBehaviour` keeps the top-cited papers
  * labelled at any zoom while letting the periphery's labels appear only when
  * the user zooms in.
  *
  * The app supplies the batteries bundle (background · graph · d3-force ·
  * pan / zoom / drag / hover / click-select); the story adds the two pieces the
- * bundle doesn't ship — the contour overlay and label collision — as children,
- * and tunes everything else through `config`. Every knob (contour bandwidth /
- * thresholds / opacity, force params, hover degree, …) is editable live from
+ * bundle doesn't ship — the contour overlay and label collision — registered by
+ * id in `onReady`, and tunes everything (theirs included) through `config`.
+ * Every knob (contour bandwidth / thresholds / opacity, force params, hover
+ * degree, …) is editable live from
  * the header's **Settings** toggle, which docks `<CanvasSettingsEditorPanel>`
  * into the app's resizable right region.
  *
@@ -21,9 +22,8 @@
  * `LabelCollisionBehaviour`, brush select (header select-mode picker).
  */
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { DensityContourFillLayer, LabelCollisionBehaviour } from '@invana/canvas-react';
 import {
   CanvasMessageBar,
   CanvasSettingsEditorPanel,
@@ -34,10 +34,11 @@ import {
   useSidePanels
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
-import type { GraphCanvas, GraphData, GraphNode } from '@invana/graph';
+import { LabelCollisionBehaviour, type GraphCanvas, type GraphData, type GraphNode } from '@invana/graph';
 import {
   citations
 } from '@invana/graph-datasets/usecase-demos';
+import { DensityContourFillLayer } from '@invana/graph-layer-d3-contour';
 import { Moon, Settings, Sun } from 'lucide-react';
 
 /** The payload each paper node carries. */
@@ -109,9 +110,14 @@ export const CitationGraphStory: Story = {
           // colour-by-type behaviour must not repaint the fills.
           color: { enabled: false },
           hover: { enabled: true, state: 'hovered', inactiveState: 'dimmed', degree: 1, direction: 'both' },
-          'click-select': { enabled: true, multiple: true, trigger: ['shift'] }
+          'click-select': { enabled: true, multiple: true, trigger: ['shift'] },
+          // Priority-driven label thinning: the top-cited papers keep their
+          // labels, the periphery yields when labels would overlap.
+          'label-collision': { enabled: true }
         },
         layers: {
+          // The density overlay registered in `onReady` — it sits under the graph.
+          density: { bandwidth: 30, thresholds: 12, cellSize: 4, fillOpacity: 0.4, padding: 80, palette: 'inferno' },
           graph: {
             node: {
               style: {
@@ -170,8 +176,32 @@ export const CitationGraphStory: Story = {
       [],
     );
 
+    // `onReady` must be stable — a second registration of the same id throws — so
+    // it reads the config through a ref.
+    const configRef = useRef(config);
+
     const onReady = useCallback((c: GraphCanvas | null) => {
-      c?.showMessage('Hover a paper to trace its citations · open Settings to tune the density overlay');
+      if (!c) return;
+      // Under the graph (`zIndex: -1`); appearance comes from `config.layers.density`.
+      const density = new DensityContourFillLayer({ id: 'density', zIndex: -1, options: { graphLayerId: 'graph' } });
+      c.layers.add(density);
+      // The bands follow node positions, which a layout run changes without the
+      // data changing — so repaint whenever a run settles.
+      c.events.on('layout:run:end', ({ reason }) => {
+        if (reason === 'settled') density.recompute();
+      });
+      // `strategy` / `flickerGuardMs` are read once at construction (`setOptions`
+      // doesn't re-resolve them), so they stay on the constructor.
+      c.behaviours.register(
+        new LabelCollisionBehaviour({ id: 'label-collision', targetLayerId: 'graph', strategy: 'hide', flickerGuardMs: 120 }),
+      );
+      // Config only reaches instances registered when it is applied — re-apply for these.
+      const current = configRef.current;
+      c.update({
+        layers: { density: current.layers!.density! },
+        behaviours: { 'label-collision': current.behaviours!['label-collision']! }
+      });
+      c.showMessage('Hover a paper to trace its citations · open Settings to tune the density overlay');
     }, []);
 
     return (
@@ -204,30 +234,7 @@ export const CitationGraphStory: Story = {
         }}
         footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
         right={dock.region}
-      >
-        {/* The density overlay sits under the graph (`zIndex: -1` by default)
-            and recomputes whenever a layout run settles — the bands follow the
-            node positions, which change without the data changing. */}
-        <DensityContourFillLayer
-          id="density"
-          graphLayerId="graph"
-          bandwidth={30}
-          thresholds={12}
-          cellSize={4}
-          fillOpacity={0.4}
-          padding={80}
-          palette="inferno"
-        />
-
-        {/* Priority-driven label thinning: the top-cited papers keep their
-            labels, the periphery yields when labels would overlap. */}
-        <LabelCollisionBehaviour
-          id="label-collision"
-          targetLayerId="graph"
-          strategy="hide"
-          flickerGuardMs={120}
-        />
-      </GraphCanvasApp>
+      />
     );
   }
 };

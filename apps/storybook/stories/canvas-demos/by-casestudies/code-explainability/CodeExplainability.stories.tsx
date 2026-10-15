@@ -37,8 +37,9 @@
  *    *"what is the shape"* — the same graph, the compact reading.
  * 6. **Open Settings** to re-cut the picture without editing the story: the ELK
  *    direction and spacing, the hover degree, every mounted behaviour. The panel
- *    lists exactly what this canvas registers — which is why the app bundle is
- *    off (`bundle={false}`) and the children below are the whole composition.
+ *    lists exactly what this canvas registers: the app bundle, plus the ELK
+ *    layout, collapse/expand and label re-rasterising that `onReady` registers
+ *    by id. `GraphCanvasApp` takes no children — every setting is in `config`.
  *
  * ### What it makes obvious
  *
@@ -55,25 +56,8 @@
  *   discriminated union and `EdgeShapeOptions` is a flat interface.
  */
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import {
-  BackgroundLayer,
-  BrushSelectBehaviour,
-  CanvasThemeSync,
-  ClickSelectBehaviour,
-  CollapseExpandBehaviour,
-  ColorByBehaviour,
-  DragNodeBehaviour,
-  DragPanBehaviour,
-  ElkLayout,
-  GraphLayer,
-  HoverActivateBehaviour,
-  LassoSelectBehaviour,
-  TextResolutionLODBehaviour,
-  ThemeBehaviour,
-  WheelZoomBehaviour
-} from '@invana/canvas-react';
 import {
   CanvasMessageBar,
   CanvasSettingsEditorPanel,
@@ -85,12 +69,15 @@ import {
 } from '@invana/canvas-ui';
 import { canvasDataflow } from '@invana/graph-datasets';
 import type { CanvasConfig } from '@invana/canvas';
-import type {
-  GraphCanvas,
-  NodeStructureRegistry,
-  NodeStylingRegistry,
-  NodeTypeRegistry
+import {
+  CollapseExpandBehaviour,
+  TextResolutionLODBehaviour,
+  type GraphCanvas,
+  type NodeStructureRegistry,
+  type NodeStylingRegistry,
+  type NodeTypeRegistry
 } from '@invana/graph';
+import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { Moon, Settings, Sun } from 'lucide-react';
 
 
@@ -365,10 +352,9 @@ const CARD_CONFIG: CanvasConfig = {
   activeLayout: 'elk',
   fitOnLoad: false,
   layers: {
-    // The app bundle is off (`bundle={false}` below — it would register a
-    // d3-force layout this story has no use for), so every setting the bundle
-    // used to supply is spelled out here, keyed by the id each JSX child
-    // registers under.
+    // Keyed by the app bundle's ids (`background`, `graph`) and deep-merged over
+    // its `BASE_CONFIG`; the ELK / collapse / label-resolution entries below are
+    // keyed by the ids `onReady` registers them under.
     background: { type: 'pattern', patternType: 'grid', alpha: 0.5 },
     graph: {
       // The frame's structure + styling join the card ones — one registry each,
@@ -376,6 +362,10 @@ const CARD_CONFIG: CanvasConfig = {
       nodeStructureTemplates: { ...structures, ...FRAME_STRUCTURES },
       nodeStylingTemplates: { ...stylings, ...FRAME_STYLINGS },
       nodeTypes,
+      // The bundle's base node template sets a 11px label nudged 4px down; the
+      // package frames' titles are the only plain labels in this look, so pin
+      // them back to the engine's 12px, un-nudged.
+      node: { style: { labelFontSize: 12, labelOffsetY: 0 } },
       edge: {
         style: {
           strokeColor: 0x94a3b8,
@@ -468,9 +458,11 @@ const CARD_CONFIG: CanvasConfig = {
     'label-resolution': { enabled: true },
     // A package frame's +/- toggle and double-click-to-collapse.
     'collapse-expand': { enabled: true },
-    // The sole theme publisher; `<CanvasThemeSync>` pins its mode + family to
-    // the host `<ThemeProvider>`, so the header toggle repaints the canvas.
-    theme: { enabled: true, mode: 'system', active: 'default', accent: 'css-var' }
+    // The sole theme publisher; the bundle's `<CanvasThemeSync>` pins its mode +
+    // family to the host `<ThemeProvider>`, so the header toggle repaints the canvas.
+    theme: { enabled: true, mode: 'system', active: 'default', accent: 'css-var' },
+    // The bundle's staggered entrance stays off, as it always was here.
+    entrance: { enabled: false }
   }
 };
 
@@ -529,10 +521,19 @@ const DOT_CONFIG: CanvasConfig = {
       defaultNodeSize: { width: 20, height: 20 }
     }
   },
-  // Same hand-rolled bundle as CARD_CONFIG (see the note there) — except
+  // Same behaviour set as CARD_CONFIG (see the note there) — except
   // colour-by-type, which is on here because nothing competes for the fill.
   behaviours: {
-    color: { enabled: true },
+    // `ColorByBehaviour`'s own defaults, spelled out: the bundle's base config
+    // swaps in a different palette and turns edge colouring off.
+    color: {
+      enabled: true,
+      colorEdges: true,
+      palette: [
+        0x3b82f6, 0xef4444, 0x10b981, 0xf59e0b, 0x8b5cf6, 0xec4899, 0x06b6d4, 0xeab308, 0x14b8a6,
+        0xa3e635, 0xf97316, 0x6366f1
+      ]
+    },
     // Frames are scenery here too, by the same engine default — see the note
     // in CARD_CONFIG. `inactiveState: 'dimmed'` is on in this look, which is
     // what made the stray frame hover so loud before the default landed.
@@ -554,7 +555,8 @@ const DOT_CONFIG: CanvasConfig = {
     // ordinary label decorations rather than composite parts, and at 10px they
     // are the first thing to go soft on a zoom-in.
     'label-resolution': { enabled: true },
-    theme: { enabled: true, mode: 'system', active: 'default', accent: 'css-var' }
+    theme: { enabled: true, mode: 'system', active: 'default', accent: 'css-var' },
+    entrance: { enabled: false }
   }
 };
 
@@ -592,17 +594,56 @@ export const CodeExplainabilityStory: Story = {
       () => (look === 'cards' ? CARD_CONFIG : DOT_CONFIG),
       [look],
     );
+    // `onReady` stays stable (a new identity would re-register by the same id
+    // and throw), so it reads the look's config through a ref. A look switch
+    // remounts the engine (`instanceKey`) and runs `onReady` again with this
+    // already pointing at the new look.
+    const configRef = useRef(config);
+    configRef.current = config;
 
     const onReady = useCallback((c: GraphCanvas | null) => {
       if (!c) return;
+      // The bundle has no ELK, collapse/expand or label re-rasteriser, so register
+      // them by id; every option they take lives in `config`.
+      //
+      // No `nodeSize` callback on ELK. Each of its old branches is answered
+      // without a function: containers are sized from their children (or
+      // `groupSizeFloor`), leaves are measured from their resolved shape (a card
+      // declares `264 × 132`, a dot `radius: 8`), and the fallback for a node whose
+      // shape can't be measured is `defaultNodeSize` in `config.layouts.elk`.
+      const elk = new ElkLayout({ id: 'elk', targetLayerId: 'graph' });
+      // Fit off the layout's own `end` event. `config.fitOnLoad` is off (it
+      // measures before a one-shot layout resolves — `docs/autofit-bounds-rfc.md`),
+      // and a hand-rolled `setTimeout(fitView, 400)` is the same bug on a timer:
+      // ELK's solve time moves with the look, so the timer fires mid-solve and
+      // frames a near-empty bbox — ~770% on the dot look. `end` is the only
+      // signal that can't be early.
+      elk.events.on('end', ({ reason }) => {
+        // Cancelled, or a re-flow that leaves the camera alone (a frame opening
+        // or closing), or one that frames itself — not a framing moment.
+        if (reason === 'stopped' || elk.runOptions.preserveCamera || elk.runOptions.fitCamera) return;
+        // `fitOnLoad` turned on from Settings owns the camera instead.
+        if (c.autoFitArmed) return;
+        // One frame later: positions reach the renderer on the coalesced flush.
+        requestAnimationFrame(() => c.fitView(60));
+      });
+      c.layouts.add(elk);
+      // A package frame's +/- toggle has no listener until this is registered —
+      // and neither does double-click. Behaviours never auto-enable (root rule 7).
+      c.behaviours.register(new CollapseExpandBehaviour({ id: 'collapse-expand', targetLayerId: 'graph' }));
+      // Crisp text on zoom-in.
+      c.behaviours.register(new TextResolutionLODBehaviour({ id: 'label-resolution', targetLayerId: 'graph' }));
+      // Config only reaches instances registered when it is applied — re-apply for these.
+      const cfg = configRef.current;
+      c.update({
+        layouts: { elk: cfg.layouts!.elk! },
+        behaviours: {
+          'collapse-expand': cfg.behaviours!['collapse-expand']!,
+          'label-resolution': cfg.behaviours!['label-resolution']!
+        },
+        activeLayout: cfg.activeLayout
+      });
       c.showMessage('Hover a symbol to isolate its 1-hop neighbourhood');
-      // No fit here. `config.fitOnLoad` is off (it measures before a one-shot
-      // layout resolves — `docs/autofit-bounds-rfc.md`), and a hand-rolled
-      // `setTimeout(fitView, 400)` is the same bug on a timer: ELK's solve time
-      // moves with the look, so the timer fires mid-solve and frames a near-empty
-      // bbox — ~770% on the dot look. `<ElkLayout fitPadding={60}>` fits off the
-      // layout's own `end` event instead, which is the only signal that can't be
-      // early.
     }, []);
 
     return (
@@ -610,12 +651,6 @@ export const CodeExplainabilityStory: Story = {
         data={data}
         config={config}
         onReady={onReady}
-        // `bundle={false}` — the batteries-included bundle registers a
-        // d3-force layout, and this graph is laid out by ELK alone. Turning it
-        // off makes the children below the *whole* canvas, which is also what
-        // keeps the settings panel honest: it lists exactly what's mounted, so
-        // a layout nothing points at never shows up as an editable surface.
-        bundle={false}
         // The switch below is not a config *tweak*: cards and dots differ in
         // which node templates exist at all. `config` is applied with
         // `canvas.update()`, which deep-merges (`Canvas.ts:761`) — and
@@ -661,55 +696,7 @@ export const CodeExplainabilityStory: Story = {
         }}
         footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
         right={dock.region}
-      >
-        {/* With the bundle off, these children *are* the canvas — the same set
-            `GraphCanvasApp` would have mounted, minus the force layout, plus
-            ELK and collapse/expand. Every option comes from `config`, keyed by
-            the id each one registers under. */}
-        <BackgroundLayer id="background" />
-        <GraphLayer id="graph" data={data} />
-        <ColorByBehaviour id="color" targetLayerId="graph" />
-        {/* The sole theme publisher + the sync that drives its mode/family off
-            the host `<ThemeProvider>` — that pair is what makes the header's
-            sun/moon toggle repaint the canvas and not just the chrome. */}
-        <ThemeBehaviour id="theme" />
-        <CanvasThemeSync />
-        <DragPanBehaviour id="pan" />
-        <WheelZoomBehaviour id="wheel" />
-        <DragNodeBehaviour id="drag-node" targetLayerId="graph" />
-        <HoverActivateBehaviour id="hover" targetLayerId="graph" />
-        <ClickSelectBehaviour id="click-select" targetLayerId="graph" />
-        <BrushSelectBehaviour id="brush-select" targetLayerId="graph" />
-        <LassoSelectBehaviour id="lasso-select" targetLayerId="graph" />
-        {/* The one layout, named by `config.activeLayout`. Every option it takes
-            now lives in `config.layouts.elk` — nothing rides the `options` prop,
-            so the Settings panel drives all of it (wrapper options are
-            init-only; config wins by id).
-
-            No `nodeSize` callback. It used to hand ELK a per-node box, but each
-            of its three branches is now answered without a function:
-
-            - **Containers** never needed it. `ElkLayout` discards a container's
-              own box and sizes it from its children (or from the declared floor
-              via `groupSizeFloor`), so the `{ 0, 0 }` branch was dead code.
-            - **Leaves** are measured from their resolved shape — a card
-              structure declares `264 × 132`, a dot `radius: 8`.
-            - The **fallback**, for a node whose shape can't be measured, is
-              `defaultNodeSize` in `config.layouts.elk` — the same numbers, as
-              JSON. It is consulted only when resolution fails, so it can't
-              override a correct measurement.
-
-            `direction` / spacing / sizing all live in `config.layouts.elk` now,
-            which is also what lets the Settings panel drive them. */}
-        <ElkLayout id="elk" targetLayerId="graph" fitPadding={60} />
-        {/* A package frame's +/- toggle has no listener until this is mounted —
-            and neither does double-click, which `doubleClickToToggle` already
-            enables by default. Behaviours never auto-enable (root rule 7). */}
-        <CollapseExpandBehaviour id="collapse-expand" targetLayerId="graph" enabled />
-        {/* Crisp text on zoom-in. The wrapper's default id is `label-lod`; this
-            one is named for the id `config.behaviours` keys it under. */}
-        <TextResolutionLODBehaviour id="label-resolution" targetLayerId="graph" />
-      </GraphCanvasApp>
+      />
     );
   }
 };

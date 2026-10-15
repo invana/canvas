@@ -278,6 +278,15 @@ return <GraphCanvasApp data={data} config={config} onReady={onReady} header={…
 - **Re-apply is required, not optional.** `update()` only reaches instances that
   exist when it runs; without the re-apply the instance keeps its defaults and a
   behaviour stays disabled (`enabled: true` is applied through config, rule 7).
+- **`onReady` must be stable** (`useCallback(…, [])`). `GraphCanvasApp` re-runs it
+  whenever its identity changes, and a second `add` / `register` of the same id
+  throws. Later `config` changes reach the registered instances through the app,
+  so `onReady` only needs the initial slices.
+- **A layer that follows a header toggle** (minimap, density overlay) is added /
+  removed in a `useEffect` on `[canvas, on]`, with `canvas` held in state set by
+  `onReady`. The canvas applies `config.layers.<id>` as the layer lands. Don't
+  toggle with `setVisible`: today it doesn't hide `MiniMapLayer`. Reference:
+  `code-kg/CompositeCards`.
 - **Bundle classes need no registration** — configure them by their bundle id
   (`behaviours.hover`, `behaviours.color`, `layers.background`, …). To turn one off,
   `enabled: false`.

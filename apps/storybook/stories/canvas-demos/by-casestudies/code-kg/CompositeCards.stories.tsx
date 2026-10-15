@@ -9,10 +9,12 @@
  * to the `kind: 'composite'` shape) so the card itself surfaces the node's data
  * — label, complexity, name, summary, file path, line range. The card's accent bar + border colour follow
  * the active palette (entity **type** or the 8 architectural **clusters**), both
- * offered by the header's *Colour by* switch. `<ElkLayout>` is mounted as a
- * child and run via `config.activeLayout`; the header's **direction** picker
- * re-runs it, the **types** picker rebuilds `data`, and **Settings** docks
- * `<CanvasSettingsEditorPanel>` over the rest.
+ * offered by the header's *Colour by* switch. `ElkLayout` (which the app
+ * bundle doesn't ship) is registered as `elk` in `onReady` and run via
+ * `config.activeLayout`; the header's **direction** picker re-runs it, the
+ * **types** picker rebuilds `data`, and **Settings** docks
+ * `<CanvasSettingsEditorPanel>` over the rest. `GraphCanvasApp` takes no
+ * children — every layout / layer setting is in `config`.
  *
  * Edges use the obstacle-aware `manhattan` router: the renderer collects every
  * card as an obstacle and A*-routes each edge through the lanes ELK reserved
@@ -43,9 +45,8 @@
  * `docs/rfcs/feat/2026-09-21-only-colour-can-be-driven-by-a-second-data-field.md`.
  */
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ElkLayout, MiniMapLayer } from '@invana/canvas-react';
 import {
   CanvasMessageBar,
   CanvasSettingsEditorPanel,
@@ -56,16 +57,17 @@ import {
   useSidePanels
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
-import type {
-  GraphCanvas,
-  GraphData,
-  NodeStructureRegistry,
-  NodeStylingRegistry,
-  NodeTypeRegistry,
-  TemplateColor,
-  ValueLookup
+import {
+  MiniMapLayer,
+  type GraphCanvas,
+  type GraphData,
+  type NodeStructureRegistry,
+  type NodeStylingRegistry,
+  type NodeTypeRegistry,
+  type TemplateColor,
+  type ValueLookup
 } from '@invana/graph';
-import type { ElkDirection } from '@invana/graph-layout-elkjs';
+import { ElkLayout, type ElkDirection } from '@invana/graph-layout-elkjs';
 import {
   invanaCodeKg
 } from '@invana/graph-datasets/usecase-demos';
@@ -93,6 +95,10 @@ export const CompositeCardsStory: Story = {
     const [labels, setLabels] = useState<ReadonlySet<InvanaCodeNodeLabel>>(() => new Set(ALL_LABELS));
     const [direction, setDirection] = useState<ElkDirection>('RIGHT');
     const [minimapOn, setMinimapOn] = useState(true);
+    // The live engine, lifted out of the app so the minimap toggle can add /
+    // remove its layer. `data` / `config` are memoised, so this extra render
+    // never re-seeds the canvas.
+    const [canvas, setCanvas] = useState<GraphCanvas | null>(null);
 
     const dock = useSidePanels(
       [
@@ -304,7 +310,7 @@ export const CompositeCardsStory: Story = {
       };
 
       return {
-        // The ELK layout mounted as a child below owns the arrangement.
+        // The ELK layout registered in `onReady` owns the arrangement.
         activeLayout: 'elk',
         behaviours: {
           // The card carries its own colour — nothing else may repaint it.
@@ -376,11 +382,37 @@ export const CompositeCardsStory: Story = {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [colorMode, direction]);
 
+    // `onReady` must stay stable (`[]` deps), so it reads the config through a
+    // ref; later config changes reach the registered instances through the app.
+    const configRef = useRef(config);
+    configRef.current = config;
+
     const onReady = useCallback((c: GraphCanvas | null) => {
-      c?.showMessage(
+      setCanvas(c);
+      if (!c) return;
+      // The bundle has no ELK — register it by id. Every option it takes,
+      // including the `defaultNodeSize` that replaced its `nodeSize` callback,
+      // comes from `config.layouts.elk`.
+      c.layouts.add(new ElkLayout({ id: 'elk', targetLayerId: 'graph' }));
+      // Config only reaches instances registered when it is applied — re-apply
+      // for this one, and re-point `activeLayout` so it runs.
+      const cfg = configRef.current;
+      c.update({ layouts: { elk: cfg.layouts!.elk! }, activeLayout: cfg.activeLayout });
+      c.showMessage(
         `${invanaCodeKg.project.name} · ${invanaCodeKg.nodes.length} entities · ${invanaCodeKg.edges.length} relations`,
       );
     }, []);
+
+    // The minimap follows the header toggle, so it is added / removed here
+    // rather than once in `onReady`. Its look comes from
+    // `config.layers.minimap`, which the canvas applies to a layer as it lands.
+    useEffect(() => {
+      if (!canvas || !minimapOn) return;
+      canvas.layers.add(
+        new MiniMapLayer({ id: 'minimap', options: { graphLayerId: 'graph', backgroundLayerId: 'background' } }),
+      );
+      return () => canvas.layers.remove('minimap');
+    }, [canvas, minimapOn]);
 
     return (
       <GraphCanvasApp
@@ -455,15 +487,7 @@ export const CompositeCardsStory: Story = {
         }}
         footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
         right={dock.region}
-      >
-        {/* Registered as `elk`; `config.activeLayout` runs it once data is in,
-            and re-runs it whenever the direction patch lands. Every option it
-            takes — including the `defaultNodeSize` that replaced its `nodeSize`
-            callback — comes from `config.layouts.elk`. */}
-        <ElkLayout id="elk" targetLayerId="graph" fitPadding={80} />
-
-        {minimapOn && <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />}
-      </GraphCanvasApp>
+      />
     );
   }
 };

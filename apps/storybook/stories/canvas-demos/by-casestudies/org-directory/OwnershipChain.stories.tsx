@@ -26,9 +26,8 @@
  * overlapping.
  */
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ElkLayout, TextResolutionLODBehaviour } from '@invana/canvas-react';
 import {
   CanvasMessageBar,
   CanvasSettingsEditorPanel,
@@ -42,6 +41,7 @@ import type { CanvasConfig } from '@invana/canvas';
 import {
   IDCard,
   OrganisationCard,
+  TextResolutionLODBehaviour,
   type CompositeShapeOption,
   type GraphCanvas,
   type GraphData,
@@ -49,7 +49,7 @@ import {
   type IDCardData,
   type OrganisationCardData
 } from '@invana/graph';
-import type { ElkDirection } from '@invana/graph-layout-elkjs';
+import { ElkLayout, type ElkDirection } from '@invana/graph-layout-elkjs';
 import { Moon, Settings, Sun, UserCheck } from 'lucide-react';
 
 const meta: Meta = { title: 'canvas-demos/by-casestudies/org-directory/OwnershipChain' };
@@ -135,7 +135,10 @@ export const OwnershipChainStory: Story = {
           // Each card paints itself from its own data — nothing else may recolour it.
           color: { enabled: false },
           hover: { enabled: true, state: 'highlighted', degree: 1, direction: 'both' },
-          'click-select': { enabled: true, multiple: true, trigger: ['shift'] }
+          'click-select': { enabled: true, multiple: true, trigger: ['shift'] },
+          // These cards are dense with small text, so keep it crisp as the
+          // camera zooms rather than letting it resolve to mush.
+          'label-lod': { enabled: true }
         },
         layers: {
           background: { type: 'pattern', patternType: 'dots', size: 1.2, spacing: 26, alpha: 0.7 },
@@ -164,8 +167,36 @@ export const OwnershipChainStory: Story = {
       [cardOf, direction],
     );
 
+    // `onReady` must be stable — a second registration of the same id throws — so
+    // it reads the current config and card builder through refs. Later `config`
+    // changes (the direction picker) reach the registered instances through the app.
+    const configRef = useRef(config);
+    configRef.current = config;
+    const cardOfRef = useRef(cardOf);
+    cardOfRef.current = cardOf;
+
+    // The app bundle has no ELK or label-resolution, so register them here by id;
+    // all their settings come from `config`.
     const onReady = useCallback((c: GraphCanvas | null) => {
-      c?.showMessage('Who controls Halcyon Trading, and is its signatory authorised today?');
+      if (!c) return;
+      c.layouts.add(
+        new ElkLayout({
+          id: 'elk',
+          targetLayerId: 'graph',
+          // The cards auto-size from their data, so ELK is told each node's real
+          // box. A function, so it can't ride `config` — it stays on the constructor.
+          nodeSize: (n) => { const card = cardOfRef.current(n); return { width: card.width, height: card.height }; }
+        }),
+      );
+      c.behaviours.register(new TextResolutionLODBehaviour({ id: 'label-lod', targetLayerId: 'graph' }));
+      // Config only reaches instances registered when it is applied — re-apply for these.
+      const current = configRef.current;
+      c.update({
+        layouts: { elk: current.layouts!.elk! },
+        behaviours: { 'label-lod': current.behaviours!['label-lod']! },
+        activeLayout: current.activeLayout
+      });
+      c.showMessage('Who controls Halcyon Trading, and is its signatory authorised today?');
     }, []);
 
     return (
@@ -214,19 +245,7 @@ export const OwnershipChainStory: Story = {
         }}
         footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
         right={dock.region}
-      >
-        {/* The cards auto-size, so ELK is told each node's real box. */}
-        <ElkLayout
-          id="elk"
-          targetLayerId="graph"
-          fitPadding={80}
-          options={{ nodeSize: (n) => { const c = cardOf(n); return { width: c.width, height: c.height }; } }}
-        />
-
-        {/* These cards are dense with small text, so keep it crisp as the
-            camera zooms rather than letting it resolve to mush. */}
-        <TextResolutionLODBehaviour />
-      </GraphCanvasApp>
+      />
     );
   }
 };

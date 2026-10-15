@@ -3,8 +3,8 @@
  * Augment-style code intelligence overview, composed from `<GraphCanvasApp>`.
  * The same real `invanaCodeKg` graph its two siblings render (`DotsForce`,
  * `CompositeCards`), narrowed to the **file-level import DAG**: 242 source files
- * and the 590 `imports` between them, laid out by `<ElkLayout>` `layered`
- * (pointed at by `config.activeLayout`).
+ * and the 590 `imports` between them, laid out by `ElkLayout` `layered`
+ * (registered as `elk` in `onReady` and pointed at by `config.activeLayout`).
  *
  * Per-file test coverage and error counts ride along as node **badges** bound to
  * each record's data, so the picture doubles as a code-health dashboard. (Those
@@ -42,9 +42,8 @@
  * for navigation on larger codebases.
  */
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ElkLayout, MiniMapLayer } from '@invana/canvas-react';
 import {
   CanvasMessageBar,
   CanvasSettingsEditorPanel,
@@ -55,14 +54,15 @@ import {
   useSidePanels
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
-import type {
-  GraphCanvas,
-  GraphData,
-  NodeStructureRegistry,
-  NodeStylingRegistry,
-  NodeTypeRegistry
+import {
+  MiniMapLayer,
+  type GraphCanvas,
+  type GraphData,
+  type NodeStructureRegistry,
+  type NodeStylingRegistry,
+  type NodeTypeRegistry
 } from '@invana/graph';
-import type { ElkDirection } from '@invana/graph-layout-elkjs';
+import { ElkLayout, type ElkDirection } from '@invana/graph-layout-elkjs';
 import { invanaCodeKg } from '@invana/graph-datasets/usecase-demos';
 import { Map, Moon, Settings, Sun } from 'lucide-react';
 
@@ -75,6 +75,10 @@ export const HealthBadgesStory: Story = {
   render: function Render() {
     const [direction, setDirection] = useState<ElkDirection>('RIGHT');
     const [minimapOn, setMinimapOn] = useState(true);
+    // The live engine, lifted out of the app so the minimap toggle can add /
+    // remove its layer. `data` / `config` are memoised, so this extra render
+    // never re-seeds the canvas.
+    const [canvas, setCanvas] = useState<GraphCanvas | null>(null);
 
     const dock = useSidePanels(
       [
@@ -205,7 +209,7 @@ export const HealthBadgesStory: Story = {
       };
 
       return {
-        // The ELK layout mounted as a child below owns the arrangement.
+        // The ELK layout registered in `onReady` owns the arrangement.
         activeLayout: 'elk',
         behaviours: {
           /**
@@ -300,9 +304,35 @@ export const HealthBadgesStory: Story = {
       };
     }, [direction]);
 
+    // `onReady` must stay stable (`[]` deps), so it reads the config through a
+    // ref; later config changes (the direction picker) reach the registered
+    // instances through the app.
+    const configRef = useRef(config);
+    configRef.current = config;
+
     const onReady = useCallback((c: GraphCanvas | null) => {
-      c?.showMessage('Badges show test coverage · red circle = open errors');
+      setCanvas(c);
+      if (!c) return;
+      // The bundle has no ELK — register it by id; its options come from
+      // `config.layouts.elk`.
+      c.layouts.add(new ElkLayout({ id: 'elk', targetLayerId: 'graph' }));
+      // Config only reaches instances registered when it is applied — re-apply
+      // for this one, and re-point `activeLayout` so it runs.
+      const cfg = configRef.current;
+      c.update({ layouts: { elk: cfg.layouts!.elk! }, activeLayout: cfg.activeLayout });
+      c.showMessage('Badges show test coverage · red circle = open errors');
     }, []);
+
+    // The minimap follows the header toggle, so it is added / removed here
+    // rather than once in `onReady`. Its look comes from
+    // `config.layers.minimap`, which the canvas applies to a layer as it lands.
+    useEffect(() => {
+      if (!canvas || !minimapOn) return;
+      canvas.layers.add(
+        new MiniMapLayer({ id: 'minimap', options: { graphLayerId: 'graph', backgroundLayerId: 'background' } }),
+      );
+      return () => canvas.layers.remove('minimap');
+    }, [canvas, minimapOn]);
 
     return (
       <GraphCanvasApp
@@ -350,13 +380,7 @@ export const HealthBadgesStory: Story = {
         }}
         footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
         right={dock.region}
-      >
-        {/* Registered as `elk`; `config.activeLayout` runs it once data is in,
-            and re-runs it whenever the direction patch lands. */}
-        <ElkLayout id="elk" targetLayerId="graph" fitPadding={80} />
-
-        {minimapOn && <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />}
-      </GraphCanvasApp>
+      />
     );
   }
 };

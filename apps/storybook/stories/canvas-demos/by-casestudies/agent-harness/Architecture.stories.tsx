@@ -54,18 +54,22 @@
  *
  * Positions are authored (`activeLayout: ''`) — the arrangement *is* the
  * diagram, so every node carries its coordinate from the source drawing.
+ *
+ * `GraphCanvasApp` takes no children: the bundle has no label re-rasteriser, so
+ * `onReady` registers `TextResolutionLODBehaviour` as `text-resolution-lod` and
+ * it takes its settings from `config.behaviours`.
  */
 
 import { useCallback, useMemo } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import type {
-  GraphCanvas,
-  GraphData,
-  NodeStructureRegistry,
-  NodeStylingRegistry,
-  NodeTypeRegistry,
+import {
+  TextResolutionLODBehaviour,
+  type GraphCanvas,
+  type GraphData,
+  type NodeStructureRegistry,
+  type NodeStylingRegistry,
+  type NodeTypeRegistry,
 } from '@invana/graph';
-import { TextResolutionLODBehaviour } from '@invana/canvas-react';
 import { GraphCanvasApp, GraphControlsToolbar } from '@invana/canvas-ui';
 import { ThemeProvider } from '@invana/themes';
 
@@ -445,6 +449,10 @@ export const ArchitectureStory: Story = {
         // here says so, and none needs to.
         color: { enabled: false },
         hover: { enabled: true, state: 'highlighted', degree: 1 },
+        // Re-rasterise label glyphs on zoom-in so the diagram's small captions
+        // stay crisp when inspected up close. Tiered (not per-step) so a zoom
+        // pass pays at most one re-raster. Registered in `onReady`.
+        'text-resolution-lod': { enabled: true },
       },
     }), [structures, stylings, types]);
 
@@ -452,6 +460,12 @@ export const ArchitectureStory: Story = {
       if (!canvas) return;
       const graph = canvas.layers.get('graph');
       if (!graph) return;
+
+      // The bundle has no label re-rasteriser — register it by id. Config only
+      // reaches instances registered when it is applied, so re-apply its slice.
+      // `config` is memoised over stable registries, so the first value is the one.
+      canvas.behaviours.register(new TextResolutionLODBehaviour({ id: 'text-resolution-lod', targetLayerId: 'graph' }));
+      canvas.update({ behaviours: { 'text-resolution-lod': config.behaviours['text-resolution-lod'] } });
 
       // Connectors paint below every shape, so inside a *filled* frame an
       // edge (and its label) would vanish under the frame. Raise them all —
@@ -474,6 +488,7 @@ export const ArchitectureStory: Story = {
           },
         },
       });
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (
@@ -483,12 +498,7 @@ export const ArchitectureStory: Story = {
           config={config}
           onReady={onReady}
           header={{ title: 'Agent harness — architecture', center: <GraphControlsToolbar /> }}
-        >
-          {/* Re-rasterise label glyphs on zoom-in so the diagram's small
-              captions stay crisp when inspected up close. Tiered (not
-              per-step) so a zoom pass pays at most one re-raster. */}
-          <TextResolutionLODBehaviour id="text-resolution-lod" targetLayerId="graph" enabled />
-        </GraphCanvasApp>
+        />
       </ThemeProvider>
     );
   },

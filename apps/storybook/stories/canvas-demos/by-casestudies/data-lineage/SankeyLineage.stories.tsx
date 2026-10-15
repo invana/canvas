@@ -6,7 +6,8 @@
  * lineage chain — `degree: 12` is comfortably deeper than the DAG — so a viewer
  * can trace where a record came from and where it ends up.
  *
- * The `<D3SankeyLayout>` is mounted as a child and pointed at by
+ * `D3SankeyLayout` is registered as `sankey` in `onReady` (the app bundle has
+ * none), takes its settings from `config.layouts.sankey`, and is pointed at by
  * `config.activeLayout`; it writes the node rects **and** the per-edge ribbon
  * hints, so the graph's own style config only supplies what the layout doesn't.
  * The header's **volume format** picker re-labels the ribbons (a data rebuild),
@@ -22,9 +23,8 @@
  * flow value, edge-port anchors (Sankey default), deep-chain hover emphasis.
  */
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { D3SankeyLayout } from '@invana/canvas-react';
 import {
   CanvasMessageBar,
   CanvasSettingsEditorPanel,
@@ -37,6 +37,7 @@ import {
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData } from '@invana/graph';
 import { ukEnergyFlowAsGraph } from '@invana/graph-datasets';
+import { D3SankeyLayout } from '@invana/graph-layout-d3-sankey';
 import { Moon, Settings, Sun } from 'lucide-react';
 
 const meta: Meta = { title: 'canvas-demos/by-casestudies/data-lineage/SankeyLineage' };
@@ -120,7 +121,7 @@ export const SankeyLineageStory: Story = {
 
     const config: CanvasConfig = useMemo(
       () => ({
-        // The sankey layout mounted as a child below owns the arrangement.
+        // The sankey layout registered in `onReady` below owns the arrangement.
         activeLayout: 'sankey',
         behaviours: {
           // Category colours are stamped per item above.
@@ -191,8 +192,19 @@ export const SankeyLineageStory: Story = {
       [],
     );
 
+    // `onReady` must be stable — a second registration of the same id throws — so
+    // it reads the config through a ref.
+    const configRef = useRef(config);
+
+    // Registered as `sankey`; `config.activeLayout` runs it once data is in, and
+    // again whenever the volume format rebuilds `data`.
     const onReady = useCallback((c: GraphCanvas | null) => {
-      c?.showMessage('Hover any node to light its full upstream + downstream lineage');
+      if (!c) return;
+      c.layouts.add(new D3SankeyLayout({ id: 'sankey', targetLayerId: 'graph' }));
+      // Config only reaches instances registered when it is applied — re-apply for it.
+      const current = configRef.current;
+      c.update({ layouts: { sankey: current.layouts!.sankey! }, activeLayout: current.activeLayout });
+      c.showMessage('Hover any node to light its full upstream + downstream lineage');
     }, []);
 
     return (
@@ -232,11 +244,7 @@ export const SankeyLineageStory: Story = {
         }}
         footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
         right={dock.region}
-      >
-        {/* Registered as `sankey`; `config.activeLayout` runs it once data is
-            in, and again whenever the volume format rebuilds `data`. */}
-        <D3SankeyLayout id="sankey" targetLayerId="graph" fitPadding={80} />
-      </GraphCanvasApp>
+      />
     );
   }
 };

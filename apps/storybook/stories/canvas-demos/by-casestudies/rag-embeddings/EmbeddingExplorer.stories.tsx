@@ -2,7 +2,7 @@
  * **RAG Embedding Explorer** — vector-DB topology view in the style of
  * Pinecone / Weaviate / LangSmith's embedding explorer, composed from
  * `<GraphCanvasApp>`. ~400 synthetic 2D-projected chunks land on the canvas; a
- * `<DensityContourFillLayer>` paints the cluster topology beneath them; hover
+ * `DensityContourFillLayer` paints the cluster topology beneath them; hover
  * reveals the chunk text; the header's select-mode picker arms the **lasso** so
  * a sub-cluster can be pulled into a selection set.
  *
@@ -12,14 +12,18 @@
  * are all editable live from the header's **Settings** toggle, which docks
  * `<CanvasSettingsEditorPanel>` into the app's right region.
  *
+ * `GraphCanvasApp` takes no children: the density layer isn't in the app
+ * bundle, so `onReady` registers it by id and re-applies its `config` slice.
+ * The minimap follows the header toggle, so an effect adds / removes it; its
+ * look comes from `config.layers.minimap`.
+ *
  * Exercises: `DensityContourFillLayer` + `GraphLayer` composition,
  * pre-positioned data (no layout pass), hover-driven label reveal, lasso
  * select, `MiniMapLayer`.
  */
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { DensityContourFillLayer, MiniMapLayer } from '@invana/canvas-react';
 import {
   CanvasMessageBar,
   CanvasSettingsEditorPanel,
@@ -30,7 +34,8 @@ import {
   useSidePanels
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
-import type { GraphCanvas, GraphData, GraphNode } from '@invana/graph';
+import { MiniMapLayer, type GraphCanvas, type GraphData, type GraphNode } from '@invana/graph';
+import { DensityContourFillLayer } from '@invana/graph-layer-d3-contour';
 import {
   ragEmbeddings
 } from '@invana/graph-datasets/usecase-demos';
@@ -150,6 +155,15 @@ export const EmbeddingExplorerStory: Story = {
               }
             }
           },
+          // Density bands under the points — registered in `onReady`.
+          density: {
+            bandwidth: 32,
+            thresholds: 12,
+            cellSize: 4,
+            fillOpacity: 0.45,
+            padding: 80,
+            palette: 'magma'
+          },
           minimap: { position: 'bottom-right', width: 220, height: 160 }
         }
       }),
@@ -158,15 +172,37 @@ export const EmbeddingExplorerStory: Story = {
       [],
     );
 
+    const [canvas, setCanvas] = useState<GraphCanvas | null>(null);
+
     const onReady = useCallback((c: GraphCanvas | null) => {
+      setCanvas(c);
       if (!c) return;
+      // Not in the app bundle, so registered here by id; its settings come
+      // from `config`. The density layer paints under the points (`zIndex: -1`,
+      // init-only). Nothing moves the nodes here, so it paints off the authored
+      // positions and needs no re-run on layout end.
+      c.layers.add(new DensityContourFillLayer({ id: 'density', zIndex: -1, options: { graphLayerId: 'graph' } }));
+      // Config only reaches instances registered when it is applied, so re-apply it.
+      c.update({ layers: { density: config.layers!.density! } });
       // `fitView` frames the union of every world layer's bounds — the same
       // fitter as the Fit button. One frame later, so the just-loaded scene has
       // flushed its bounds. (The engine's `fitOnLoad` waits on a layout run,
       // and our truthy `'none'` activeLayout means none ever happens.)
       requestAnimationFrame(() => c.fitView(80));
       c.showMessage('Hover a chunk for its text · pick Lasso in the header to grab a cluster');
-    }, []);
+      // `config` is a `[]`-memo, so listing it keeps `onReady` stable.
+    }, [config]);
+
+    // The minimap follows the header toggle, so it is added / removed here
+    // rather than once in `onReady`. Its look comes from
+    // `config.layers.minimap`, which the canvas applies to a layer as it lands.
+    useEffect(() => {
+      if (!canvas || !minimapOn) return;
+      canvas.layers.add(
+        new MiniMapLayer({ id: 'minimap', options: { graphLayerId: 'graph', backgroundLayerId: 'background' } }),
+      );
+      return () => canvas.layers.remove('minimap');
+    }, [canvas, minimapOn]);
 
     return (
       <GraphCanvasApp
@@ -206,22 +242,7 @@ export const EmbeddingExplorerStory: Story = {
         }}
         footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
         right={dock.region}
-      >
-        {/* Under the points (`zIndex: -1` by default). Nothing moves the nodes
-            here, so it paints once off the authored positions. */}
-        <DensityContourFillLayer
-          id="density"
-          graphLayerId="graph"
-          bandwidth={32}
-          thresholds={12}
-          cellSize={4}
-          fillOpacity={0.45}
-          padding={80}
-          palette="magma"
-        />
-
-        {minimapOn && <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />}
-      </GraphCanvasApp>
+      />
     );
   }
 };

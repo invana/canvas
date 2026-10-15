@@ -12,6 +12,9 @@
  * identity, which re-seeds the graph and re-runs the ELK layout. The **Settings**
  * toggle docks `<CanvasSettingsEditorPanel>` for the ELK params and behaviours.
  *
+ * `GraphCanvasApp` takes no children: the bundle has no ELK, so `onReady`
+ * registers it as `elk` and every ELK setting comes from `config.layouts.elk`.
+ *
  * Exercises: `ElkLayout` `layered` `DOWN`, per-kind node shape, state-config
  * styling on `error` / `pending`, animated edge decorations
  * (`flow-particles-connector`, `marching-ants-connector`), per-edge labels read
@@ -20,7 +23,6 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ElkLayout } from '@invana/canvas-react';
 import {
   CanvasMessageBar,
   CanvasSettingsEditorPanel,
@@ -32,6 +34,7 @@ import {
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
 import type { EdgeDecorationSpec, EdgeStyle, GraphCanvas, GraphData, NodeShapeOptions } from '@invana/graph';
+import { ElkLayout } from '@invana/graph-layout-elkjs';
 import {
   agentTrace
 } from '@invana/graph-datasets/usecase-demos';
@@ -244,8 +247,16 @@ export const AgentTraceStory: Story = {
       [],
     );
 
+    // The bundle has no ELK — register it as `elk` here; `config.activeLayout` runs it
+    // once data is in and re-runs it on every preset swap. Config only reaches
+    // instances registered when it is applied, so re-apply its slice for this one.
+    // `config` is memoised with no deps, so the first value is the one to apply.
     const onReady = useCallback((c: GraphCanvas | null) => {
-      c?.showMessage('Switch traces from the header — happy path · error + retry · multi-tool branch');
+      if (!c) return;
+      c.layouts.add(new ElkLayout({ id: 'elk', targetLayerId: 'graph' }));
+      c.update({ layouts: { elk: config.layouts!.elk! }, activeLayout: config.activeLayout });
+      c.showMessage('Switch traces from the header — happy path · error + retry · multi-tool branch');
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (
@@ -285,11 +296,7 @@ export const AgentTraceStory: Story = {
         }}
         footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
         right={dock.region}
-      >
-        {/* Registered as `elk`; `config.activeLayout` runs it once data is in,
-            and re-runs it on every preset swap. */}
-        <ElkLayout id="elk" targetLayerId="graph" fitPadding={80} />
-      </GraphCanvasApp>
+      />
     );
   }
 };

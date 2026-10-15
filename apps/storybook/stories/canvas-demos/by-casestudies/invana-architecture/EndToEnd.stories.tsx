@@ -105,14 +105,19 @@
  * own `fill`, so the box fill is set as `bgFill` on the layer template —
  * otherwise `GraphCanvasApp`'s default slate `bgFill: 0x94a3b8` paints every box.
  *
+ * **`GraphCanvasApp` takes no children.** Force, ELK, the +/− collapse toggles
+ * and the minimap aren't in the app bundle, so `onReady` registers them by id
+ * and re-applies their `config` slices — every setting stays in `config`.
+ *
  * **The header's four dock toggles open the visualisation's own state.** Three
  * panels share the app's resizable `right` region (one at a time, `useSidePanels`
  * activity-bar style), and a fourth drives the `bottom` region:
  *
  *   - **Settings** (`CanvasSettingsEditorPanel`) — every mounted layer,
  *     behaviour and layout, schema-driven and live. That includes the Force and
- *     ELK option bags registered in `onReady`, so both solvers the Layout picker
- *     runs are tunable here rather than by editing this file.
+ *     ELK layouts registered in `onReady` (their options live in
+ *     `config.layouts`), so both solvers the Layout picker runs are tunable here
+ *     rather than by editing this file.
  *   - **Node styling** (`StylingViewPanel`) — one row per node type (`stage` ·
  *     `box`): colour, size, label key, held as a serialisable `TypeStylingPatch`
  *     in story state (the stand-in for Invana's persisted canvas record). It
@@ -146,6 +151,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   BUILT_IN_STRUCTURES,
   BUILT_IN_STYLINGS,
+  CollapseExpandBehaviour,
+  MiniMapLayer,
   type GraphCanvas,
   type GraphData,
   type GraphEdge,
@@ -158,7 +165,6 @@ import {
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { invanaArchitecture } from '@invana/graph-datasets/usecase-demos';
-import { CollapseExpandBehaviour, MiniMapLayer } from '@invana/canvas-react';
 import {
   CanvasMessageBar,
   CanvasSettingsEditorPanel,
@@ -407,6 +413,42 @@ export const EndToEndStory: Story = {
           // already publish the `default` palette for whichever mode the header
           // toggle is in. Using the `light`/`dark` *shorthand* here would publish
           // an empty palette instead, and nothing on the page would recolour.
+          //
+          // The +/− group toggles. Not in the app bundle, so `onReady` registers
+          // it by id; `enabled` arrives from here (behaviours never auto-enable).
+          collapse: { enabled: true }
+        },
+        // The two solvers behind the header's Layout picker. Neither is in the
+        // app bundle — `onReady` registers them by id and hands them these
+        // slices; the picker then only flips `activeLayout`.
+        layouts: {
+          // Force clusters group members toward a shared centroid; that's
+          // attraction, not containment, so the frames stretch to follow rather
+          // than boxing their contents. Static (`animate: false`) because a
+          // diagram this size takes a visible few seconds to stop wandering
+          // otherwise.
+          force: {
+            animate: false,
+            cluster: { strength: 0.4 },
+            charge: { strength: -1200 },
+            link: { distance: 120 },
+            collide: {},
+            center: { x: 0, y: 0 }
+          },
+          // ELK is the one engine here with native containment: each stage
+          // becomes a real compound node. `includeGroups` defaults on, and the
+          // frame insets come from each group's own `padding` / `headerHeight` —
+          // so the tab keeps its band instead of having members packed into it.
+          // Edge routing is left unset deliberately: turning it on writes
+          // orthogonal waypoints into every edge's stored style, which would
+          // outlive a switch back to the authored diagram and replace its smooth
+          // arrows.
+          elk: {
+            algorithm: 'layered',
+            direction: 'RIGHT',
+            nodeSpacing: 32,
+            layerSpacing: 90
+          }
         }
       };
     }, []);
@@ -439,7 +481,7 @@ export const EndToEndStory: Story = {
           icon: Settings,
           label: 'Settings',
           // Every mounted layer / behaviour / layout, schema-driven and live —
-          // including the Force and ELK option bags registered in `onReady`, so
+          // including the Force and ELK layouts registered in `onReady`, so
           // the two solvers the header picker runs are tunable without a reload.
           render: (c) => (
             <CanvasSettingsEditorPanel canvas={c} className="border-0 bg-transparent shadow-none" />
@@ -618,48 +660,34 @@ export const EndToEndStory: Story = {
       }
       authoredRef.current = { ids: authoredIds, xy: new Float32Array(authoredXY) };
 
-      // Registered after `init`, which is the same thing canvas-react's layout
-      // wrappers do from their mount effect — `canvas.update({ activeLayout })`
-      // re-wires and runs whichever id is named.
-      //
-      // Force clusters group members toward a shared centroid; that's attraction,
-      // not containment, so the frames stretch to follow rather than boxing their
-      // contents. Static (`animate: false`) because a diagram this size takes a
-      // visible few seconds to stop wandering otherwise.
-      const force = new D3ForceLayout({
-        id: 'force',
-        targetLayerId: 'graph',
-        animate: false,
-        cluster: { strength: 0.4 },
-        charge: { strength: -1200 },
-        link: { distance: 120 },
-        collide: {},
-        center: { x: 0, y: 0 }
-      });
-      // ELK is the one engine here with native containment: each stage becomes a
-      // real compound node. `includeGroups` defaults on, and the frame insets come
-      // from each group's own `padding` / `headerHeight` — so the tab keeps its
-      // band instead of having members packed into it. Edge routing is left unset
-      // deliberately: turning it on writes orthogonal waypoints into every edge's
-      // stored style, which would outlive a switch back to the authored diagram
-      // and replace its smooth arrows.
-      const elk = new ElkLayout({
-        id: 'elk',
-        targetLayerId: 'graph',
-        algorithm: 'layered',
-        direction: 'RIGHT',
-        nodeSpacing: 32,
-        layerSpacing: 90
-      });
+      // ── What the app bundle doesn't ship, registered by id ───────────────
+      // Constructors carry only identity + wiring; every setting is in
+      // `config` (`layouts.force` / `layouts.elk` / `behaviours.collapse`).
+      // `canvas.update({ activeLayout })` later re-wires and runs whichever
+      // layout id the picker names.
+      const force = new D3ForceLayout({ id: 'force', targetLayerId: 'graph' });
+      const elk = new ElkLayout({ id: 'elk', targetLayerId: 'graph' });
       for (const layout of [force, elk]) {
         canvas.layouts.add(layout);
         layout.events.on('end', () => canvas.fitView(60));
       }
+      canvas.behaviours.register(new CollapseExpandBehaviour({ id: 'collapse', targetLayerId: 'graph' }));
+      canvas.layers.add(
+        new MiniMapLayer({ id: 'minimap', options: { graphLayerId: 'graph', backgroundLayerId: 'background' } }),
+      );
+      // Config only reaches instances registered when it is applied, so re-apply
+      // it for these.
+      canvas.update({
+        layouts: { force: config.layouts.force, elk: config.layouts.elk },
+        behaviours: { collapse: config.behaviours.collapse },
+        activeLayout: config.activeLayout
+      });
 
       canvas.showMessage(
         'Hover a stage to raise it · click − to collapse it · Layout, Settings, Styling, Structure and Data are in the header',
       );
-    }, []);
+      // `config` is a `[]`-memo, so listing it keeps `onReady` stable.
+    }, [config]);
 
     return (
       // The app reads light/dark from a host `<ThemeProvider>` via `useTheme()`, and
@@ -710,10 +738,7 @@ export const EndToEndStory: Story = {
         right={dock.region}
         // The dataset JSON. Same hook, the app's other resizable region.
         bottom={dataDock.region}
-      >
-        <CollapseExpandBehaviour id="collapse" targetLayerId="graph" />
-        <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />
-      </GraphCanvasApp>
+      />
     );
   }
 };

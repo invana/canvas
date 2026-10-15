@@ -1,7 +1,7 @@
 /**
  * **Microservices Topology** — Datadog / Istio / Linkerd-style service map,
  * dressed in the `<GraphCanvasApp>` shell. ~20 services across a SaaS stack laid
- * out with ELK `layered` (mounted as a `<ElkLayout>` child and pointed at by
+ * out with ELK `layered` (registered as `elk` in `onReady` and pointed at by
  * `config.activeLayout`); the health state of each service (healthy / degraded /
  * down) drives node styling via state-configs; each edge's RPS scales the stroke
  * width and its error rate picks the stroke colour; degraded edges carry an
@@ -21,7 +21,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ElkLayout, MiniMapLayer } from '@invana/canvas-react';
 import {
   CanvasMessageBar,
   CanvasSettingsEditorPanel,
@@ -32,7 +31,15 @@ import {
   useSidePanels
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
-import type { EdgeDecorationSpec, EdgeStyle, GraphCanvas, GraphData, GraphLayer } from '@invana/graph';
+import {
+  MiniMapLayer,
+  type EdgeDecorationSpec,
+  type EdgeStyle,
+  type GraphCanvas,
+  type GraphData,
+  type GraphLayer
+} from '@invana/graph';
+import { ElkLayout } from '@invana/graph-layout-elkjs';
 import {
   microservices
 } from '@invana/graph-datasets/usecase-demos';
@@ -56,7 +63,7 @@ export const ServiceTopologyStory: Story = {
     const [minimapOn, setMinimapOn] = useState(true);
     const [simulateOn, setSimulateOn] = useState(false);
     // The live engine, lifted out of the app so the simulation effect can write
-    // to the graph store. `data` / `config` are memoised, so this extra render
+    // to the graph store and the minimap toggle can add / remove its layer. `data` / `config` are memoised, so this extra render
     // never re-seeds the canvas.
     const [canvas, setCanvas] = useState<GraphCanvas | null>(null);
 
@@ -200,7 +207,7 @@ export const ServiceTopologyStory: Story = {
 
     const config: CanvasConfig = useMemo(
       () => ({
-        // The ELK layout mounted as a child below owns the arrangement.
+        // The ELK layout registered in `onReady` owns the arrangement.
         activeLayout: 'elk',
         behaviours: {
           // Tier colours are stamped per node above.
@@ -292,11 +299,31 @@ export const ServiceTopologyStory: Story = {
       };
     }, [simulateOn, canvas, healthStates]);
 
+    // The minimap follows the header toggle, so it is added / removed here
+    // rather than once in `onReady`. Its look comes from
+    // `config.layers.minimap`, which the canvas applies to a layer as it lands.
+    useEffect(() => {
+      if (!canvas || !minimapOn) return;
+      canvas.layers.add(
+        new MiniMapLayer({ id: 'minimap', options: { graphLayerId: 'graph', backgroundLayerId: 'background' } }),
+      );
+      return () => canvas.layers.remove('minimap');
+    }, [canvas, minimapOn]);
+
     const onReady = useCallback((c: GraphCanvas | null) => {
       setCanvas(c);
       if (!c) return;
+      // The bundle has no ELK — register it by id; its options come from
+      // `config.layouts.elk`. The app's `fitOnLoad` frames the graph once the
+      // run settles.
+      c.layouts.add(new ElkLayout({ id: 'elk', targetLayerId: 'graph' }));
+      // Config only reaches instances registered when it is applied — re-apply
+      // for this one, and re-point `activeLayout` so it runs.
+      c.update({ layouts: { elk: config.layouts!.elk! }, activeLayout: config.activeLayout });
       c.showMessage('Edge width = RPS · colour = error rate · toggle the incident simulation in the header');
-    }, []);
+      // `config` is memoised with no deps, so it never changes identity and
+      // `onReady` stays stable — a second `add` of `elk` would throw.
+    }, [config]);
 
     return (
       <GraphCanvasApp
@@ -345,15 +372,7 @@ export const ServiceTopologyStory: Story = {
         }}
         footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
         right={dock.region}
-      >
-        {/* Registered as `elk`; `config.activeLayout` runs it once data is in.
-            `fitPadding` frames the graph when the solve completes — the app's
-            own `fitOnLoad` fires against the pre-layout positions, so an
-            async layout has to own the final fit. */}
-        <ElkLayout id="elk" targetLayerId="graph" fitPadding={80} />
-
-        {minimapOn && <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />}
-      </GraphCanvasApp>
+      />
     );
   }
 };

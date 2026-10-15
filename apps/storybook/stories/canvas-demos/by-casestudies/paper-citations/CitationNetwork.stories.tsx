@@ -9,7 +9,7 @@
  * Composed from `<GraphCanvasApp>`: the bundle brings background · graph ·
  * d3-force · pan / zoom / drag / hover, and the story feeds it a subject-colour
  * resolver through `config`. Two header toggles sit beside the theme switch — a
- * **density overlay** (mount / unmount of `<DensityContourFillLayer>`, showing
+ * **density overlay** (shows / hides a `DensityContourFillLayer`, showing
  * where the citation hubs sit) and **Settings**, which docks
  * `<CanvasSettingsEditorPanel>` into the resizable right region so the force
  * params, the contour, and every behaviour are editable live.
@@ -17,11 +17,14 @@
  * Exercises: `D3ForceLayout` on a real dataset at scale (~2.7k nodes, ~10k
  * edges), bezier edges with low alpha for the additive-blending look,
  * colour-by-subject resolver, optional density contour overlay.
+ *
+ * `GraphCanvasApp` takes no children: the density layer isn't in the app
+ * bundle and it follows the header toggle, so an effect adds / removes it; its
+ * settings come from `config.layers.density`.
  */
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { DensityContourFillLayer } from '@invana/canvas-react';
 import {
   CanvasMessageBar,
   CanvasSettingsEditorPanel,
@@ -33,6 +36,7 @@ import {
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
 import type { GraphCanvas, GraphData, GraphNode } from '@invana/graph';
+import { DensityContourFillLayer } from '@invana/graph-layer-d3-contour';
 import { paperCitations } from '@invana/graph-datasets/usecase-demos';
 import { Layers, Moon, Settings, Sun } from 'lucide-react';
 
@@ -70,9 +74,9 @@ export const CitationNetworkStory: Story = {
     // blue-500 — the single-colour "watercolor" tone the edges also use.
     const DEFAULT_FILL = 0x3b82f6;
 
-    // The density overlay is a header toggle: mounting / unmounting the layer is
-    // the declarative equivalent of flipping `layer.visible`.
+    // The density overlay is a header toggle; the layer is added / removed with it.
     const [densityOn, setDensityOn] = useState(false);
+    const [canvas, setCanvas] = useState<GraphCanvas | null>(null);
 
     const dock = useSidePanels(
       [
@@ -156,6 +160,15 @@ export const CitationNetworkStory: Story = {
                 dimmed: { strokeAlpha: 0.04 }
               }
             }
+          },
+          // The citation-hub density overlay — added by the header toggle.
+          density: {
+            bandwidth: 20,
+            thresholds: 10,
+            cellSize: 4,
+            fillOpacity: 0.4,
+            padding: 80,
+            palette: 'blues'
           }
         },
         layouts: {
@@ -178,8 +191,28 @@ export const CitationNetworkStory: Story = {
     );
 
     const onReady = useCallback((c: GraphCanvas | null) => {
+      setCanvas(c);
       c?.showMessage(`${paperCitations.nodes.length} papers · ${paperCitations.edges.length} citations`);
     }, []);
+
+    // The density overlay isn't in the app bundle and follows the header toggle,
+    // so it is added / removed here. Its settings come from
+    // `config.layers.density`, which the canvas applies to a layer as it lands;
+    // `zIndex: -1` (init-only) paints the bands under the nodes.
+    useEffect(() => {
+      if (!canvas || !densityOn) return;
+      const density = new DensityContourFillLayer({ id: 'density', zIndex: -1, options: { graphLayerId: 'graph' } });
+      canvas.layers.add(density);
+      // The bands are derived from node *positions*, which a layout run moves
+      // without changing the data — so repaint when a run settles.
+      const off = canvas.events.on('layout:run:end', ({ reason }) => {
+        if (reason === 'settled') density.recompute();
+      });
+      return () => {
+        off();
+        canvas.layers.remove('density');
+      };
+    }, [canvas, densityOn]);
 
     return (
       <GraphCanvasApp
@@ -219,22 +252,7 @@ export const CitationNetworkStory: Story = {
         }}
         footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
         right={dock.region}
-      >
-        {/* Toggled from the header. It recomputes on every settled layout run,
-            so the bands follow the nodes rather than their start positions. */}
-        {densityOn && (
-          <DensityContourFillLayer
-            id="density"
-            graphLayerId="graph"
-            bandwidth={20}
-            thresholds={10}
-            cellSize={4}
-            fillOpacity={0.4}
-            padding={80}
-            palette="blues"
-          />
-        )}
-      </GraphCanvasApp>
+      />
     );
   }
 };

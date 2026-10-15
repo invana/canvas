@@ -36,14 +36,18 @@
  *
  * Exercises: `D3ForceLayout` at real scale, serialisable colour- and
  * size-by-field,
- * `labelMinZoom` + `<TextResolutionLODBehaviour>` to keep 602 labels legible
+ * `labelMinZoom` + `TextResolutionLODBehaviour` to keep 602 labels legible
  * *and* crisp, 1-hop hover emphasis, shift+click multi-select, and a
  * `MiniMapLayer`.
+ *
+ * `GraphCanvasApp` takes no children: the label-resolution behaviour isn't in
+ * the app bundle, so `onReady` registers it by id and re-applies its `config`
+ * slice. The minimap follows the header toggle, so an effect adds / removes it;
+ * its look comes from `config.layers.minimap`.
  */
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { MiniMapLayer, TextResolutionLODBehaviour } from '@invana/canvas-react';
 import {
   CanvasMessageBar,
   CanvasSettingsEditorPanel,
@@ -54,6 +58,7 @@ import {
   useSidePanels
 } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
+import { MiniMapLayer, TextResolutionLODBehaviour } from '@invana/graph';
 import type {
   GraphCanvas,
   GraphData,
@@ -215,7 +220,16 @@ export const DotsForceStory: Story = {
           },
           hover: { enabled: true, state: 'highlighted', degree: 1, direction: 'both' },
           'click-select': { enabled: true, multiple: true, trigger: ['shift'] },
-          'label-lod': { enabled: true }
+          // Labels appear at 0.6× (`labelMinZoom`); this re-rasters them at 4×
+          // once you pass 1.6× so the text you zoomed in to read stays crisp.
+          // It never hides / shows labels — only their texture resolution.
+          'label-lod': {
+            enabled: true,
+            levels: [
+              { minZoom: 0, multiplier: 1 },
+              { minZoom: 1.6, multiplier: 4 },
+            ]
+          }
         },
         layers: {
           background: { type: 'pattern', patternType: 'dots', size: 1.2, spacing: 26, alpha: 0.7 },
@@ -274,13 +288,7 @@ export const DotsForceStory: Story = {
               }
             }
           },
-          minimap: { position: 'bottom-right', width: 220, height: 160 },
-          'label-lod': {
-            levels: [
-              { minZoom: 0, multiplier: 1 },
-              { minZoom: 1.6, multiplier: 4 },
-            ]
-          }
+          minimap: { position: 'bottom-right', width: 220, height: 160 }
         },
         layouts: {
           'graph-force': {
@@ -297,11 +305,35 @@ export const DotsForceStory: Story = {
       };
     }, [colorMode]);
 
+    // The config as first rendered. `onReady` only needs the initial slice of
+    // what it registers (it doesn't depend on `colorMode`); later `config` changes
+    // reach the registered instances through the app's `config` prop.
+    const initialConfig = useRef(config);
+    const [canvas, setCanvas] = useState<GraphCanvas | null>(null);
+
     const onReady = useCallback((c: GraphCanvas | null) => {
-      c?.showMessage(
+      setCanvas(c);
+      if (!c) return;
+      // Not in the app bundle, so registered here by id; its settings come
+      // from `config`. Config only reaches instances registered when it is
+      // applied, so re-apply it.
+      c.behaviours.register(new TextResolutionLODBehaviour({ id: 'label-lod', targetLayerId: 'graph' }));
+      c.update({ behaviours: { 'label-lod': initialConfig.current.behaviours!['label-lod']! } });
+      c.showMessage(
         `${invanaCodeKg.project.name} · ${invanaCodeKg.nodes.length} entities · ${invanaCodeKg.edges.length} relations`,
       );
     }, []);
+
+    // The minimap follows the header toggle, so it is added / removed here
+    // rather than once in `onReady`. Its look comes from
+    // `config.layers.minimap`, which the canvas applies to a layer as it lands.
+    useEffect(() => {
+      if (!canvas || !minimapOn) return;
+      canvas.layers.add(
+        new MiniMapLayer({ id: 'minimap', options: { graphLayerId: 'graph', backgroundLayerId: 'background' } }),
+      );
+      return () => canvas.layers.remove('minimap');
+    }, [canvas, minimapOn]);
 
     return (
       <GraphCanvasApp
@@ -368,14 +400,7 @@ export const DotsForceStory: Story = {
         }}
         footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
         right={dock.region}
-      >
-        {/* Labels appear at 0.6× (`labelMinZoom`); this re-rasters them at 4×
-            once you pass 1.6× so the text you zoomed in to read stays crisp.
-            It never hides / shows labels — only their texture resolution. */}
-        <TextResolutionLODBehaviour id="label-lod" targetLayerId="graph" />
-
-        {minimapOn && <MiniMapLayer id="minimap" graphLayerId="graph" backgroundLayerId="background" />}
-      </GraphCanvasApp>
+      />
     );
   }
 };
