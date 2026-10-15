@@ -239,6 +239,54 @@ and the RFC behind it,
 [`docs/rfcs/feat/2026-09-21-per-type-presentation-is-only-expressible-as-callbacks.md`](../../docs/rfcs/feat/2026-09-21-per-type-presentation-is-only-expressible-as-callbacks.md).
 It went from seven resolvers + a layout callback to zero.
 
+### `canvas-demos/` — `GraphCanvasApp` takes JSON, not children
+
+A `canvas-demos/` story drives `GraphCanvasApp` with **data only**: `data`, `config`
+(every layer / behaviour / layout setting), and — when the story is a walkthrough —
+a playbook JSON. **No child components inside `<GraphCanvasApp>`**: no `<ElkLayout>`,
+`<FocusBehaviour>`, `<TextResolutionLODBehaviour>` or any other canvas-react wrapper.
+
+Why: the config is what a saved visualisation *is* (see the rule above). Wrappers
+scatter the settings across JSX props, so the story shows a picture that `config`
+alone can't reproduce. Kept in `config`, every setting is in one JSON value that the
+settings panel, "Show code" and a save/load all see.
+
+**The pattern.** The app bundle registers a fixed set (`background`, `graph`, the
+`graph-force` layout, pan / wheel / drag-node / hover / select / theme / colour /
+entrance). Anything else is **registered by id in `onReady`**, from the class's own
+package, and gets its settings from `config`:
+
+```tsx
+const onReady = useCallback((canvas: GraphCanvas | null) => {
+  if (!canvas) return;
+  canvas.layouts.add(new ElkLayout({ id: 'elk', targetLayerId: 'graph' }));
+  canvas.behaviours.register(new FocusBehaviour({ id: 'focus', targetLayerId: 'graph' }));
+  // Config only reaches instances registered when it is applied — re-apply for these.
+  canvas.update({
+    layouts: { elk: config.layouts!.elk! },
+    behaviours: { focus: config.behaviours!.focus! },
+    activeLayout: config.activeLayout
+  });
+}, []);
+
+return <GraphCanvasApp data={data} config={config} onReady={onReady} header={…} right={…} />;
+```
+
+- **Constructors take only what they must:** `id`, `targetLayerId`, and init-only
+  wiring (`onData`). Every other option lives in `config.layouts.<id>` /
+  `config.behaviours.<id>` / `config.layers.<id>`.
+- **Re-apply is required, not optional.** `update()` only reaches instances that
+  exist when it runs; without the re-apply the instance keeps its defaults and a
+  behaviour stays disabled (`enabled: true` is applied through config, rule 7).
+- **Bundle classes need no registration** — configure them by their bundle id
+  (`behaviours.hover`, `behaviours.color`, `layers.background`, …). To turn one off,
+  `enabled: false`.
+- **UI goes in the slot props** (`header`, `footer`, `right`, `bottom`) — those are
+  props, not children. Read the live canvas from the slot's render-fn `ctx.canvas`.
+
+**Worked reference:** `stories/canvas-demos/tools/AnalystAssistant.stories.tsx` —
+`data` + `config` + `playbook`, four classes registered in `onReady`, no children.
+
 ### Layout-package stories — `graph-layouts/<flavour>/...`
 
 Stories for any `@invana/graph-layout-<flavour>` package live under a *single* shared parent folder, namespaced by the package suffix (the package name with the `graph-layout-` prefix stripped):
