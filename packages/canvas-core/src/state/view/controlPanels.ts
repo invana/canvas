@@ -228,6 +228,11 @@ export interface ControlPanelSpec {
    */
   stretch?: boolean;
   /**
+   * A fixed width in px, the items spread across it — a bar matched to what it
+   * sits under (the minimap). Default: as wide as its items.
+   */
+  width?: number;
+  /**
    * The panel's surface. `true` draws the card (background, border, shadow);
    * `'hairline'` a border hairline on a translucent background, no shadow — the
    * light toolbar row that lets the drawing show through; `false` nothing.

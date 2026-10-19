@@ -178,11 +178,13 @@ function ControlPanelView({
   const orientation = spec.orientation ?? defaultOrientation(spec.position);
   const surface = spec.surface ?? true;
   const fill = stretches(spec);
+  const width = spec.width;
 
   return (
     // The positioner lets the canvas keep every pointer event its content doesn't claim.
     <div style={{ ...placement(spec), zIndex, pointerEvents: 'none' }}>
       <div
+        style={width !== undefined ? { width } : undefined}
         className={cn(
           'pointer-events-auto flex transition-opacity duration-300',
           fill ? 'h-full w-full' : 'shrink-0',
@@ -193,8 +195,15 @@ function ControlPanelView({
         {/* The panel lays its items out itself — a tight row or column, 4 px
             apart — rather than in the kit's nav shell, which is full-width as a
             row and a 45 px rail as a column. Canvas chrome is the kit's small
-            control size (GC21), every control in a row alike. */}
-        <div className={cn('flex items-center gap-0.5', orientation === 'vertical' && 'flex-col')}>
+            control size (GC21), every control in a row alike. A fixed width
+            spreads the items across it. */}
+        <div
+          className={cn(
+            'flex items-center gap-0.5',
+            orientation === 'vertical' && 'flex-col',
+            width !== undefined && 'w-full justify-between',
+          )}
+        >
           <ToolbarSizeContext.Provider value="sm">
             <ToolbarItems items={items} orientation={orientation} tooltipSide={tooltipSideFor(spec.position)} bare />
           </ToolbarSizeContext.Provider>

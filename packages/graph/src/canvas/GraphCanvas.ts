@@ -270,6 +270,10 @@ export class GraphCanvas extends Canvas {
    * doesn't either — `CollapseExpandBehaviour` owns that re-flow (anchored,
    * opt-in via `relayoutOnToggle`).
    *
+   * A node that arrives **pinned** was put where it is by hand (the Add tool, *Add
+   * a node here*), so a flush that adds only pinned nodes leaves the board — and
+   * the camera — alone: the drawing does not re-flow under the pointer.
+   *
    * Data-triggered runs follow the layout's {@link Layout.onData}: throttled
    * to one run per `throttleMs` (leading + trailing), and with
    * `preserveCamera` they leave the view where it is.
@@ -307,11 +311,19 @@ export class GraphCanvas extends Canvas {
       lastRun = now();
       void this.runLayout(activeId, this.pendingRun);
     }
+    // `node:add` fires per id before the flush's `data:changed`, so the ids of
+    // this flush's additions are collected here and judged there.
+    const added: string[] = [];
+    const offAdd = layer.store.events.on('node:add', ({ nodeId }) => void added.push(nodeId));
     const off = layer.events.on('data:changed', (e) => {
-      if (e.addedNodes > 0 || e.removedNodes > 0 || e.hiddenNodes > 0 || e.shownNodes > 0) onDataChange();
+      const placedByHand = added.length > 0 && added.every((id) => layer.store.isPinned(id));
+      added.length = 0;
+      const unplaced = e.addedNodes > 0 && !placedByHand;
+      if (unplaced || e.removedNodes > 0 || e.hiddenNodes > 0 || e.shownNodes > 0) onDataChange();
     });
     this.offActiveLayout = () => {
       off();
+      offAdd();
       if (trailing !== undefined) clearTimeout(trailing);
     };
   }

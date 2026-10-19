@@ -32,15 +32,16 @@ export interface EntityEditorTarget {
   id: string;
   /** Effective (resolved) label text. Empty for edges (they have no label field). */
   label: string;
-  /** The element's free-form `type` tag. Present for edges (`'' ` when unset). */
+  /** The element's free-form `type` tag (`''` when unset). */
   type?: string;
   /** Current `data` as a flat string map (non-string values are stringified). */
   data: Record<string, string>;
   /**
    * Write the editor's values back to the store, undoable as one entry when
    * there is a graph history (a direct mutation otherwise). Replaces
-   * `data` wholesale. A **node** also overwrites `style.labelText` (spreading the
-   * prior style); an **edge** writes its `type` instead — edges have no label.
+   * `data` wholesale and writes `type` when the values carry one. A **node**
+   * also overwrites `style.labelText` (spreading the prior style); edges have
+   * no label.
    */
   commit: (values: PropertiesEditorValues) => void;
   /**
@@ -104,12 +105,17 @@ export function useEntityEditor(
       return { kind: 'node', id: single.id, label: '', type, data: toStringMap(node.data), commit };
     }
 
-    const commit = ({ label: nextLabel, data }: PropertiesEditorValues): void => {
+    const commit = ({ label: nextLabel, type: nextType, data }: PropertiesEditorValues): void => {
       const prior = (node.style ?? {}) as Partial<NodeStyle>;
-      const patch: Partial<GraphNode> = { style: { ...prior, labelText: nextLabel }, data };
+      const patch: Partial<GraphNode> = { data };
+      // Only an edited label is written: a label drawn by a resolver (the id, a
+      // name) seeds the field blank, and saving that blank must not erase it.
+      if (nextLabel !== label) patch.style = { ...prior, labelText: nextLabel };
+      if (nextType !== undefined) patch.type = nextType;
       store.batch(() => store.updateNode(single.id, patch), { title: 'edit node' });
     };
-    return { kind: 'node', id: single.id, label, data: toStringMap(node.data), commit };
+    const type = (node.type as string | undefined) ?? '';
+    return { kind: 'node', id: single.id, label, type, data: toStringMap(node.data), commit };
   }
 
   const edge = store.getEdge(single.id);

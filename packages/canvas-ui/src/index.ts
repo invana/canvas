@@ -986,6 +986,17 @@ export type { HistoryViewPanelProps } from './view-panels/history';
 export { ElementInspectorViewPanel } from './view-panels/element-inspector';
 export type { ElementInspectorViewPanelProps } from './view-panels/element-inspector';
 
+// The Properties panel: the clicked element read-only, or — on *Edit*, or
+// `editProperties` from a menu or a drawing tool — its generated editor.
+export {
+  PropertiesViewPanel,
+  editProperties,
+  stopEditingProperties,
+  usePropertiesEditing,
+  propertiesKey,
+} from './view-panels/properties';
+export type { PropertiesViewPanelProps } from './view-panels/properties';
+
 // ─── Per-type styling ────────────────────────────────────────────────────────
 // Colour · label key · size/width for every node/edge **type the canvas is
 // painting**, read reactively from `useDerivedSchema`. Controlled for

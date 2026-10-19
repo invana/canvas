@@ -23,7 +23,8 @@ export interface ToolbarItemsProps {
   /**
    * Render the items alone, without the Nav shell — for a control that sits
    * inside another toolbar row (a widget's one toggle), where a second,
-   * full-width shell would stretch the row. Default `false`.
+   * full-width shell would stretch the row. Default `false`. The row draws the
+   * border, so a dropdown here is the kit's inline (borderless) trigger.
    */
   bare?: boolean;
   /** Control size. Default: the region's (`ToolbarSizeContext`, `'md'`). */
@@ -64,7 +65,7 @@ function renderButton(
 }
 
 /** Render a `select` item as a design-kit `RichSelect` (was `OptionPicker`). */
-function renderSelect(key: string, item: ToolbarSelectItem, tipSide: TooltipSide): ReactNode {
+function renderSelect(key: string, item: ToolbarSelectItem, tipSide: TooltipSide, inline: boolean): ReactNode {
   const { label, value, options, icons, onChange, align = 'start', tooltip, renderTrigger, triggerLabelOnly, disabled } = item;
   const richOptions: RichSelectOption[] = Object.keys(options).map((k) => ({
     value: k,
@@ -82,6 +83,7 @@ function renderSelect(key: string, item: ToolbarSelectItem, tipSide: TooltipSide
       tooltip={tooltip ?? label}
       tooltipSide={item.tooltipSide ?? tipSide}
       disabled={disabled}
+      {...(inline ? { appearance: 'inline' as const } : {})}
       renderValue={
         renderTrigger
           ? () => renderTrigger()
@@ -214,7 +216,7 @@ export function ToolbarItems({
       case 'select':
         return item.display === 'segmented'
           ? renderSegmented(key, item, tipSide)
-          : renderSelect(key, item, tipSide);
+          : renderSelect(key, item, tipSide, bare);
       case 'divider':
         return (
           <Separator

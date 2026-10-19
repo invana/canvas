@@ -12,6 +12,17 @@
  * | right-click | the board, a node, a relationship, a selection — each headed by what it is for | `<BoardContextMenus>` · `<BoardLayoutPopover>` (*Layout…* at the pointer) |
  * | footer | the hint, and the pan | `view-readout` (`show: 'pan'`) |
  *
+ * **Edit.** *Add node* (N): click the board to drop a node. *Connect* (C): drag
+ * from a node onto another to draw a relationship — or, with any tool, hold
+ * Shift and drag, as in the Modeller's stitching. While connecting a press on a
+ * node draws, it does not move the node. A new node is pinned where it was
+ * dropped, so the board does not re-flow.
+ *
+ * **Properties.** Clicking a node or a relationship opens it in *Properties*
+ * (`PropertiesViewPanel`), read-only. In Edit, the panel's *Edit*, *Edit
+ * properties* on the right-click menu, or drawing the element turns it into its
+ * editor (`editProperties`); Apply saves and returns to the view.
+ *
  * **Modes.** Explore · Edit · Annotate are work modes; Focus (⌘\) leaves the
  * drawing alone, the picker fading until the pointer moves; Present walks the
  * board's playbook — the row is the picker and ◀ n/N ▶, the presenter at the
@@ -21,15 +32,23 @@
  * *Expand neighbours* pulls the selected node's neighbours in from the rest of
  * Les Misérables — the stand-in for the engine's expansion run.
  *
- * Not built yet: Annotate's tools (no annotation layer draws them), editing a
- * property in Edit (Properties shows the selection, read-only), and exporting an
- * image of the selection (the engine captures the view or the whole board).
+ * Not built yet: Annotate's tools (no annotation layer draws them), and exporting
+ * an image of the selection (the engine captures the view or the whole board).
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Canvas, CanvasConfig } from '@invana/canvas';
-import { selectedElementIds, type ClickSelectBehaviour, type GraphCanvas, type GraphData, type GraphLayer } from '@invana/graph';
+import {
+  selectedElementIds,
+  type ClickInspectBehaviour as ClickInspect,
+  type ClickSelectBehaviour,
+  type GraphCanvas,
+  type GraphData,
+  type GraphEdge,
+  type GraphLayer,
+  type GraphNode
+} from '@invana/graph';
 import {
   BoardModes,
   ClickInspectBehaviour,
@@ -39,6 +58,7 @@ import {
   ElkLayout,
   MiniMapLayer,
   NodeCentralityBehaviour,
+  useBoardMode,
   useCanvas,
   type BoardModeSpec
 } from '@invana/canvas-react';
@@ -50,14 +70,15 @@ import {
   BoardPanels,
   CommandPalette,
   ControlItems,
-  ElementInspectorViewPanel,
   ExportViewPanel,
   GraphCanvasApp,
   HISTORY_CONTROL_ITEMS,
   HistoryViewPanel,
   LegendViewPanel,
   PlaybookPresenterBar,
+  PropertiesViewPanel,
   StylingViewPanel,
+  editProperties,
   type BoardContextMenusProps,
   type BoardPanelSpec,
   type ControlWidget
@@ -146,6 +167,12 @@ function Explorer() {
     });
     // Annotate's tools are drawn so the mode reads whole; no layer draws them yet.
     c.commands.register('annotate.tool', { label: 'Not built yet', isEnabled: () => false, run: () => {} });
+    // A node press either moves the node or draws from it — never both.
+    c.behaviours.get('drag-node')?.setModes?.(['select', 'add', 'delete']);
+    // A click shows the element in Properties.
+    c.behaviours.get<ClickInspect>('click-inspect')?.events.on('inspect:change', (t) => {
+      if (t !== null) openPanel(c, 'properties');
+    });
   }, []);
 
   /** Leaving a mode puts its tools down: back to Select, and the minimap only where there are tools. */
@@ -181,8 +208,8 @@ function Explorer() {
         id: 'properties',
         title: 'Properties',
         icon: 'properties',
-        modes: ['edit'],
-        render: (c) => <ElementInspectorViewPanel canvas={c as GraphCanvas} />
+        modes: ['explore', 'edit'],
+        render: (c) => <PropertiesPanel canvas={c} />
       },
       {
         id: 'notes',
@@ -229,12 +256,12 @@ function Explorer() {
   return (
     <GraphCanvasApp data={data} showHeader={false} config={CONFIG} onReady={onReady} controlPanels={{ widgets }}>
       <BoardModeBridge onModeChange={onModeChange} />
+      <EditKeys />
       <ElkLayout id="elk" targetLayerId="graph" />
       <NodeCentralityBehaviour id="size-by-connections" enabled={false} />
       {/* What Properties reads: the clicked element. */}
       <ClickInspectBehaviour id="click-inspect" targetLayerId="graph" />
-      <CreateNodeBehaviour id="create-node" targetLayerId="graph" modes={['add']} />
-      <DrawEdgeBehaviour id="draw-edge" targetLayerId="graph" modes={['connect']} />
+      <EditTools />
       <MiniMapLayer
         backgroundLayerId="background"
         position="bottom-left"
@@ -293,6 +320,7 @@ function Explorer() {
         id="dock"
         position="bottom-left"
         offset={EDGE}
+        width={DOCK_W}
         surface="hairline"
         modes={WORK}
         items={[
@@ -314,8 +342,14 @@ function Explorer() {
       <ControlPanel
         id="hint"
         placement="footer-left"
-        modes={WORK}
+        modes={['explore', 'annotate']}
         items={[{ type: 'text', text: 'Right-click anything for its actions · ⌘K for every command' }]}
+      />
+      <ControlPanel
+        id="hint-edit"
+        placement="footer-left"
+        modes={['edit']}
+        items={[{ type: 'text', text: 'Add node (N): click the board · Connect (C): drag node to node — or Shift-drag with any tool' }]}
       />
       <ControlPanel id="readout" placement="footer-right" items={[{ type: 'widget', widget: 'view-readout', options: { show: 'pan' } }]} />
 
@@ -330,6 +364,79 @@ function Explorer() {
 function BoardModeBridge({ onModeChange }: { onModeChange: (mode: string, canvas: Canvas) => void }) {
   const canvas = useCanvas();
   return <BoardModes modes={MODES} escapeTo="explore" onModeChange={(m) => onModeChange(m, canvas)} />;
+}
+
+/**
+ * Edit's keys: N picks *Add node*, C *Connect*, and holding Shift connects until
+ * it is let go — the tool in hand comes back. Only in Edit, and never while
+ * typing in a field.
+ */
+function EditKeys() {
+  const canvas = useCanvas();
+  useEffect(() => {
+    let held: string | null = null;
+    const editing = () => canvas.commands.value('board.mode') === 'edit';
+    const typing = (e: KeyboardEvent) => e.target instanceof HTMLElement && e.target.closest('input, textarea, [contenteditable]') !== null;
+    const tool = (value: string) => void canvas.commands.run('tool.active', { value });
+    const release = () => {
+      if (held === null) return;
+      tool(held);
+      held = null;
+    };
+    const down = (e: KeyboardEvent) => {
+      if (!editing() || typing(e) || e.metaKey || e.ctrlKey || e.altKey) return;
+      const current = String(canvas.commands.value('tool.active') ?? 'select');
+      if (e.key === 'Shift') {
+        if (held === null && current !== 'connect') {
+          held = current;
+          tool('connect');
+        }
+      } else if (e.key === 'n' || e.key === 'N') tool(current === 'add' ? 'select' : 'add');
+      else if (e.key === 'c' || e.key === 'C') tool(current === 'connect' ? 'select' : 'connect');
+    };
+    const up = (e: KeyboardEvent) => e.key === 'Shift' && release();
+    window.addEventListener('keydown', down);
+    window.addEventListener('keyup', up);
+    window.addEventListener('blur', release);
+    return () => {
+      window.removeEventListener('keydown', down);
+      window.removeEventListener('keyup', up);
+      window.removeEventListener('blur', release);
+    };
+  }, [canvas]);
+  return null;
+}
+
+/**
+ * Edit's drawing tools. A dropped node is a pinned character where the click
+ * was; a drawn relationship is a scene shared. Either opens in *Properties*.
+ */
+function EditTools() {
+  const canvas = useCanvas();
+  return (
+    <>
+      <CreateNodeBehaviour
+        id="create-node"
+        targetLayerId="graph"
+        modes={['add']}
+        createNode={(world) => newCharacter(world)}
+        onNodeCreate={(n) => editElement(canvas, 'node', n.id)}
+      />
+      <DrawEdgeBehaviour
+        id="draw-edge"
+        targetLayerId="graph"
+        modes={['connect']}
+        createEdge={(source, target) => newScene(source, target)}
+        onEdgeCreate={(e) => editElement(canvas, 'edge', e.id)}
+      />
+    </>
+  );
+}
+
+/** *Properties*: read-only in Explore, editable in Edit. */
+function PropertiesPanel({ canvas }: { canvas: Canvas }) {
+  const mode = useBoardMode(canvas);
+  return <PropertiesViewPanel canvas={canvas} editable={mode === 'edit'} />;
 }
 
 /** Annotate's tools — drawn, not built yet. */
@@ -372,7 +479,7 @@ const NODE_MENU: NonNullable<BoardContextMenusProps['node']> = ({ canvas, id, ty
   { separator: true },
   { id: 'copy-id', label: 'Copy id', shortcut: '⌘C', onClick: () => void navigator.clipboard?.writeText(id) },
   { separator: true, modes: ['edit'] },
-  { id: 'edit-properties', label: 'Edit properties', shortcut: '↵', modes: ['edit'], onClick: () => openPanel(canvas, 'properties') },
+  { id: 'edit-properties', label: 'Edit properties', shortcut: '↵', modes: ['edit'], onClick: () => editElement(canvas, 'node', id) },
   { command: 'graph.erase', label: 'Delete', shortcut: '⌫', destructive: true, modes: ['edit'] }
 ];
 
@@ -389,6 +496,7 @@ const EDGE_MENU: NonNullable<BoardContextMenusProps['edge']> = ({ canvas, id, ty
   { id: 'hide', label: 'Hide', onClick: () => graph(canvas)?.store.setEdgeHidden(id, true) },
   ...(type ? [{ id: 'hide-type', label: `Hide every ${type}`, onClick: () => hideType(canvas, 'edge', type) }] : []),
   { separator: true, modes: ['edit'] },
+  { id: 'edit-properties', label: 'Edit properties', modes: ['edit'], onClick: () => editElement(canvas, 'edge', id) },
   { command: 'graph.erase', label: 'Delete', shortcut: '⌫', destructive: true, modes: ['edit'] }
 ];
 
@@ -417,10 +525,30 @@ function openPanel(canvas: Canvas, id: string): void {
 }
 
 let added = 0;
+/** A new character, pinned where it was dropped — the board does not re-flow around it. */
+function newCharacter(at: { x: number; y: number }): GraphNode {
+  added += 1;
+  return { id: `New character ${added}`, type: 'character', position: { x: at.x, y: at.y }, pinned: true };
+}
+
+let drawn = 0;
+/** A drawn relationship: a scene the two share. */
+function newScene(source: string, target: string): GraphEdge {
+  drawn += 1;
+  return { id: `drawn-${drawn}`, type: 'co-appears-with', source, target };
+}
+
+/** Open an element's editor in *Properties*. */
+function editElement(canvas: Canvas, kind: 'node' | 'edge', id: string): void {
+  editProperties(canvas, { kind, id });
+  openPanel(canvas, 'properties');
+}
+
 /** *Add a node here* — a new character where the menu was opened. */
 function addNodeAt(canvas: GraphCanvas, at: { x: number; y: number }): void {
-  added += 1;
-  graph(canvas)?.store.addData({ nodes: [{ id: `New character ${added}`, type: 'character', position: { x: at.x, y: at.y } }], edges: [] });
+  const node = newCharacter(at);
+  graph(canvas)?.store.addData({ nodes: [node], edges: [] });
+  editElement(canvas, 'node', node.id);
 }
 
 /**

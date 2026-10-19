@@ -30,9 +30,12 @@ export interface InspectorPanelProps {
 }
 
 /**
+ * @deprecated Use `PropertiesViewPanel` — the same editor, behind a read-only view
+ * and an *Edit*, in a board's panel rail.
+ *
  * Self-wiring **inspector** — shows a {@link PropertiesEditor} for the single
- * node/edge the user clicked to edit and commits edits (label + `data`, plus
- * `type` + reverse for edges) back to the store undoably. The property-editing
+ * node/edge the user clicked to edit and commits edits (`type` + `data`, a
+ * node's label, an edge's reverse) back to the store undoably. The property-editing
  * analogue of `CanvasControlsToolbar`: drop it inside `<Canvas>` and it appears
  * whenever an element is clicked for editing, and renders nothing otherwise.
  *
@@ -61,10 +64,10 @@ export function InspectorPanel({
   if (!target) return null;
 
   const isEdge = target.kind === 'edge';
-  // The `type` field shows for edges always, and for nodes too in `typeAsLabel`
-  // mode; the `label` field shows only for nodes when NOT in `typeAsLabel` mode.
-  const showTypeField = typeAsLabel || isEdge;
-  const showLabelField = !showTypeField && (showLabel ?? true);
+  // Every element edits its `type`; a node also edits its `label`, except in
+  // `typeAsLabel` mode, where the type is the drawn label.
+  const showTypeField = true;
+  const showLabelField = !isEdge && !typeAsLabel && (showLabel ?? true);
   const editor = (
     <PropertiesEditor
       key={`${target.kind}:${target.id}`}

@@ -69,6 +69,8 @@ export interface ElementInspectorViewPanelProps {
    * kit: canvas-ui never learns what a dataset is, the host renders it.
    */
   renderExtra?: (element: GraphNode | GraphEdge, kind: 'node' | 'edge') => ReactNode;
+  /** Controls beside **Focus** in the header — a host's *Edit*. */
+  actions?: ReactNode;
   /** Extra classes for the panel root. */
   className?: string;
 }
@@ -207,6 +209,7 @@ function ElementInspectorViewPanelContent({
   elementId,
   focusZoom = 2,
   renderExtra,
+  actions,
   className,
 }: ElementInspectorViewPanelProps & { canvas: GraphCanvas }) {
   const layer = canvas.layers.get<GraphLayer>(layerId) ?? undefined;
@@ -279,17 +282,20 @@ function ElementInspectorViewPanelContent({
         <span className="text-muted-foreground min-w-0 truncate text-sm">
           {controlled ? 'Inspecting' : resolved ? `Clicked ${resolved.kind}` : 'No element'}
         </span>
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={!resolved}
-          onClick={focusInspected}
-          title="Frame this element on the canvas"
-          className="shrink-0 gap-1.5 [&_svg]:size-3.5"
-        >
-          <Crosshair className="text-muted-foreground/70" />
-          Focus
-        </Button>
+        <div className="flex shrink-0 items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={!resolved}
+            onClick={focusInspected}
+            title="Frame this element on the canvas"
+            className="shrink-0 gap-1.5 [&_svg]:size-3.5"
+          >
+            <Crosshair className="text-muted-foreground/70" />
+            Focus
+          </Button>
+          {resolved && actions}
+        </div>
       </div>
 
       <Separator />
