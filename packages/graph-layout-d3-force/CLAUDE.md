@@ -76,6 +76,12 @@ Three files, one shared implementation:
   boundary), dispatches to a lazily-created / reused worker, and drops stale
   results via a monotonic `solveToken` when a newer run supersedes an in-flight one.
 
+**Progress.** The solver reports every `PROGRESS_EVERY` (10) ticks; the worker posts
+`{ token, done, total }` and the layout re-emits it as the `progress` event (the
+canvas forwards it as `layout:run:progress`) while the token is current. It is
+**not** a `tick`: the graph layer reveals nodes on the first `tick`, and progress
+writes no positions.
+
 **Fallback is mandatory and silent.** No `Worker` global (Node / SSR / tests),
 factory throws, or a worker runtime error → `solveForces` runs synchronously on
 the main thread (correct, just blocking). Override the worker via

@@ -91,6 +91,8 @@ export interface CanvasGlobalEvents {
     fitCamera?: boolean;
   };
   'layout:run:tick': { id: string; progress?: number; preserveCamera?: boolean; fitCamera?: boolean };
+  /** An off-screen solve advanced — `done` of `total` iterations. Nothing is drawn until `layout:run:tick` / `end`. */
+  'layout:run:progress': { id: string; layerId: string; done: number; total: number };
 
   // ── render / canvas — lifecycle (engine/renderer-emitted) ───────────────────
   'canvas:renderer:ready': { backend: string; capabilities?: Record<string, unknown> };

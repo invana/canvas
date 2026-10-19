@@ -50,6 +50,7 @@ import {
   type GroupSeparationInput,
   type ForceSolveInput,
   type ForceSolveParams,
+  type ForceSolveProgress,
   type ForceSolveRequest,
   type ForceSolveResponse,
 } from './forceSolver';
@@ -685,14 +686,23 @@ export class D3ForceLayout extends Layout<GraphLayer> {
    * positions. Falls back to a synchronous solve on the main thread when no
    * worker is available. The `input` is retained (not transferred) so a worker
    * `onerror` can still complete the run synchronously.
+   *
+   * The solve's progress is re-emitted as `progress` while its run is current.
    */
   private dispatchSolve(input: ForceSolveInput, token: number): Promise<Float32Array> {
     const worker = this.getWorker();
-    if (!worker) return Promise.resolve(solveForces(input));
+    if (!worker) return Promise.resolve(solveForces(input, this.progressFor(token)));
     return new Promise<Float32Array>((resolve) => {
       this.pendingSolves.set(token, { resolve, input });
       worker.postMessage({ token, input } satisfies ForceSolveRequest);
     });
+  }
+
+  /** A progress reporter for the solve `token` — silent once a newer run supersedes it. */
+  private progressFor(token: number): (done: number, total: number) => void {
+    return (done, total) => {
+      if (token === this.solveToken) this.events.emit('progress', { done, total });
+    };
   }
 
   /**
@@ -711,7 +721,12 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     try {
       const factory = this.opts.workerFactory ?? defaultForceWorkerFactory;
       const worker = factory();
-      worker.onmessage = (event: MessageEvent<ForceSolveResponse>) => {
+      worker.onmessage = (event: MessageEvent<ForceSolveResponse | ForceSolveProgress>) => {
+        if (!('positions' in event.data)) {
+          const { token, done, total } = event.data;
+          this.progressFor(token)(done, total);
+          return;
+        }
         const pending = this.pendingSolves.get(event.data.token);
         if (!pending) return; // superseded / unknown token
         this.pendingSolves.delete(event.data.token);
@@ -720,7 +735,9 @@ export class D3ForceLayout extends Layout<GraphLayer> {
       worker.onerror = () => {
         this.workerBroken = true;
         this.worker = null;
-        for (const [, pending] of this.pendingSolves) pending.resolve(solveForces(pending.input));
+        for (const [token, pending] of this.pendingSolves) {
+          pending.resolve(solveForces(pending.input, this.progressFor(token)));
+        }
         this.pendingSolves.clear();
       };
       this.worker = worker;

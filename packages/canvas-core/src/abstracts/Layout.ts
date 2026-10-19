@@ -80,6 +80,15 @@ export type LayoutEvents = {
    * {@link LayoutRunOptions.fitCamera} run follows with the camera.
    */
   transition: { progress: number };
+  /**
+   * An off-screen solve advanced: `done` of `total` iterations are finished.
+   * Emitted by iterative layouts that settle before drawing (d3-force with
+   * `animate: false`), so a UI can say why the canvas is still empty.
+   *
+   * Separate from `tick` on purpose: `tick` means "positions were written",
+   * and the graph layer reveals nodes on it — progress writes nothing.
+   */
+  progress: { done: number; total: number };
   end: { reason: LayoutEndReason };
 };
 
