@@ -19,6 +19,10 @@ export interface CommandOption {
   label: string;
   /** Icon name, resolved by the UI kit's icon registry. */
   icon?: string;
+  /** Offered but not pickable now. A control shows it dimmed, with {@link description} as the reason. */
+  disabled?: boolean;
+  /** One line under the label — for a disabled option, why it is off. */
+  description?: string;
 }
 
 /**

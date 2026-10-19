@@ -23,6 +23,11 @@
  *     curve-through-control-point styles (`straight` / `smooth` / `bundle`)
  *     get a perpendicular offset. Override via `basis`.
  *
+ * Only `waypoints` and the anchor opts are written, never `pathType`: the
+ * layer resolves `shape` field by field, so a fanned edge keeps the layer's
+ * edge type. Its own waypoint also beats a layout's route for that edge
+ * (`GraphLayer.setLayoutGeometry`), as any per-edge style does.
+ *
  * Default `enabled: false` — register, then explicitly enable. Matches the
  * project rule that no behaviour auto-activates.
  *

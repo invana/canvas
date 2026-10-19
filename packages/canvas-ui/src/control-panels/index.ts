@@ -6,6 +6,8 @@ export { ControlItems, useControlItems } from './ControlItems';
 export type { ControlItemsProps, UseControlItemsOptions } from './ControlItems';
 export { DEFAULT_CONTROL_ICONS } from './icons';
 export { DEFAULT_CONTROL_WIDGETS, controlWidgetOptionsSpecs } from './widgets';
+export { CHROME_CONTROL_WIDGETS, PlaybookPresentButton } from './chromeWidgets';
+export type { PlaybookPresentButtonProps } from './chromeWidgets';
 export { defineControlItems } from './defineControlItems';
 export type { AuthoredControlItemSpec, ControlCommandName } from './defineControlItems';
 export type { ControlWidget, ControlWidgetOptionsSpec, ControlWidgetProps } from './widgets';

@@ -131,6 +131,26 @@ export interface LayoutRunOptions {
    * it already owns the camera. Ignored when {@link preserveCamera} is set.
    */
   fitCamera?: boolean | { padding?: number };
+  /**
+   * Solve from scratch: ignore the nodes' stored positions as starting points
+   * (pinned nodes still hold). For an iterative layout that settles from where
+   * the nodes are, a settled graph otherwise falls straight back into the same
+   * arrangement, and a graph laid out by another layout keeps that layout's
+   * crossings. Honoured by `D3ForceLayout`; a one-shot layout computes from
+   * scratch anyway.
+   */
+  reseed?: boolean;
+}
+
+/** How {@link Layout.setOptions} applies a patch. */
+export interface LayoutSetOptions {
+  /**
+   * Re-run a layout that has already run, so the change shows. Default `true`.
+   * `false` when the same write is about to run the layout anyway — a canvas
+   * passes it for the layout an `activeLayout` write names — so a switch is one
+   * run, carrying that run's options.
+   */
+  rerun?: boolean;
 }
 
 /**
@@ -212,10 +232,10 @@ export abstract class Layout<TLayer extends Layer<any, any, any, any> = Layer<an
 
   /**
    * Live-reconfigure. Called by `Canvas.update({ layouts: { id: patch } })`.
-   * Default no-op; iterative layouts (e.g. `D3ForceLayout`) override to merge
-   * the patch and re-heat a running simulation.
+   * Default no-op; layouts override to merge the patch and, unless
+   * `opts.rerun` is `false`, re-run so the change shows.
    */
-  setOptions(_patch: unknown): void {
+  setOptions(_patch: unknown, _opts?: LayoutSetOptions): void {
     /* default no-op */
   }
 

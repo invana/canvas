@@ -62,7 +62,7 @@ function ControlPanelForm({
   useEffect(() => {
     const from = lastPlacement.current;
     lastPlacement.current = placement;
-    if ((from === 'canvas') !== (placement === 'canvas')) setValue('panel.surface', placement === 'canvas');
+    if ((from === 'canvas') !== (placement === 'canvas')) setValue('panel.surface', placement === 'canvas' ? 'card' : 'none');
   }, [placement, setValue]);
   const [errors, setErrors] = useState<ControlPanelFormError[]>([]);
 

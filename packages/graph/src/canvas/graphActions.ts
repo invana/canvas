@@ -96,7 +96,7 @@ export function pasteAndSelect(canvas: Canvas, clipboard: GraphClipboard, clickS
 }
 
 /** The layer's current edge `shape` template, or `{}`. */
-function edgeShape(layer: GraphLayer): EdgeShapeOptions {
+export function edgeShape(layer: GraphLayer): EdgeShapeOptions {
   const shape = (layer.edgeDefaults as { shape?: unknown } | undefined)?.shape;
   return (shape && typeof shape === 'object' ? shape : {}) as EdgeShapeOptions;
 }

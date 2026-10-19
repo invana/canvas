@@ -6,9 +6,26 @@
 
 export { GraphCanvas } from './GraphCanvas';
 export type { GraphCanvasOptions } from './GraphCanvas';
-export { DEFAULT_EDGE_TYPES, DEFAULT_EDGE_TYPE_LABELS, eraseCommand, registerGraphEditCommands } from './graphCommands';
+export {
+  DEFAULT_EDGE_TYPES,
+  DEFAULT_EDGE_TYPE_LABELS,
+  eraseCommand,
+  layoutPresetOptions,
+  registerGraphEditCommands,
+} from './graphCommands';
+export {
+  DEFAULT_LAYOUT_PRESETS,
+  expandLayoutPreset,
+  remapLayoutPresets,
+  type LayoutPresetDirection,
+  type LayoutPresetEdge,
+  type LayoutPresetExpansion,
+  type LayoutPresetPatch,
+  type LayoutPresetSpec,
+} from './layoutPresets';
 export type {
   GraphEditAccess,
+  GraphLayoutPresetAccess,
   GraphCommandMap,
   GraphCanvasCommandMap,
   EditCommandName,

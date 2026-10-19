@@ -44,6 +44,11 @@ const config: StorybookConfig = {
     return mergeConfig(config, {
       plugins: [tailwindcss()],
       resolve: {
+        // One React: a design-kit checkout linked into `node_modules/@invana/*`
+        // (to try an unreleased kit change) resolves it from its own
+        // `node_modules`, and two copies break every hook. A no-op while the kit
+        // comes from npm.
+        dedupe: ['react', 'react-dom'],
         alias: [
           // Upstream packaging bug: `@invana/themes@0.0.6`'s `dist/index.js`
           // does `import { cn } from '@invana/ui/lib/utils'`, but

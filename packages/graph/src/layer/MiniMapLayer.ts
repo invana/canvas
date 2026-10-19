@@ -243,6 +243,7 @@ export class MiniMapLayer extends ScreenLayer<
     this.bgGfx = ctx.createOverlay(`${this.id}:bg`, 'screen');
     this.worldGfx = ctx.createOverlay(`${this.id}:world`, 'screen');
     this.viewportGfx = ctx.createOverlay(`${this.id}:viewport`, 'screen');
+    this.onVisibleChange(this.visible);
 
     if (this.opts.enableDrag) this.wireInteractions();
 
@@ -714,6 +715,18 @@ export class MiniMapLayer extends ScreenLayer<
   // ─── Interactions ───────────────────────────────────────────────────────
 
   /**
+   * The minimap paints on its own three overlays, not on the layer's surface,
+   * so whole-layer visibility (`setVisible`, the Layers card's eye, a
+   * `layer.visible` toggle) hides those too.
+   */
+  protected override onVisibleChange(value: boolean): void {
+    super.onVisibleChange(value);
+    this.bgGfx?.setVisible(value);
+    this.worldGfx?.setVisible(value);
+    this.viewportGfx?.setVisible(value);
+  }
+
+  /**
    * Pointer handling on the canvas element rather than on a pixi display object.
    *
    * The engine forbids raw backend events outside the renderer (root rule 6),
@@ -725,7 +738,10 @@ export class MiniMapLayer extends ScreenLayer<
     const el = this.ctxRef?.canvasElement;
     if (!el) return;
 
-    const onDown = (e: PointerEvent): void => this.onMiniPointerDown(e);
+    // A hidden minimap takes no clicks: the canvas under it gets them.
+    const onDown = (e: PointerEvent): void => {
+      if (this.visible) this.onMiniPointerDown(e);
+    };
     const onMove = (e: PointerEvent): void => this.onMiniPointerMove(e);
     const onUp = (): void => this.onMiniPointerUp();
 

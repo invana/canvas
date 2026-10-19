@@ -123,9 +123,13 @@ export interface ElkLayoutOptions extends OneShotLayoutOptions {
   edgeSpacing?: number;
   /**
    * `elk.edgeRouting`. When set, ELK computes node-avoiding edge geometry and
-   * `ElkLayout` writes the resulting bend points back as each edge's
-   * `style.shape.waypoints` (with `pathType: 'orth'`). Leaving it unset keeps
-   * the previous behaviour — only node positions are written, no edge geometry.
+   * `ElkLayout` hands each route to the layer as **layout geometry**
+   * (`GraphLayer.setLayoutGeometry`) — never onto the edge — typed by the mode:
+   * `ORTHOGONAL` → `orth`, `SPLINES` → `spline` (the points are Bézier control
+   * points), `POLYLINE` → `straight`. A route draws only under a layer edge
+   * type of its family (Straight · Curved · Orthogonal), so the layer's edge
+   * type still decides, and it is cleared when another layout runs. Unset:
+   * only node positions are written. Ignored by `radial`.
    *
    * `'ORTHOGONAL'` is the intended value for `layered` graphs. Routing assumes
    * nodes whose `node.position` is their CENTRE (circle natively; the
@@ -133,6 +137,26 @@ export interface ElkLayoutOptions extends OneShotLayoutOptions {
    * (e.g. `rect`) would render offset from the computed routes.
    */
   edgeRouting?: 'ORTHOGONAL' | 'POLYLINE' | 'SPLINES';
+  /**
+   * The node a rooted algorithm starts from. `layered`: the node is put in the
+   * first layer (`elk.layered.layering.layerConstraint: FIRST`). `radial`: the node is
+   * the centre. Ignored when it isn't a top-level node of the run.
+   *
+   * Unset, the root follows `resolveLayoutRoot` from `@invana/graph`:
+   * `layered` starts from the nodes with no incoming edge and names one only
+   * when there are none (the selection, else the most-connected node);
+   * `radial` centres on the selection, else the most-connected node.
+   */
+  rootNodeId?: string;
+  /**
+   * How the root is chosen when {@link rootNodeId} is unset. `'auto'` (the
+   * default) follows the rule above; `'selection'` starts from the first
+   * selected node, read when the run starts, and falls back to the rule when
+   * nothing is selected.
+   */
+  root?: 'auto' | 'selection';
+  /** `elk.radial.radius` — the gap between a `radial` layout's rings. ELK's default is small (about 60). */
+  ringSpacing?: number;
   /** `elk.padding` — graph-level padding. */
   padding?: ElkPadding;
 

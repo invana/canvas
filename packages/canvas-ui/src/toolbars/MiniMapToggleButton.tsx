@@ -42,6 +42,8 @@ export function MiniMapToggleButton({
     <>
       <ToolbarItems
         orientation="horizontal"
+        // One button, placed inside whatever row holds it.
+        bare
         items={[
           {
             type: 'toggle',

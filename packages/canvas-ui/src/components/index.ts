@@ -18,6 +18,7 @@ export type {
   SettingsSection,
 } from './CanvasSettingsBrowser';
 export { ToolbarItems } from './ToolbarItems';
+export { ToolbarSizeContext, iconButtonSize, useToolbarSize, type ToolbarSize } from './toolbarSize';
 export type { ToolbarItemsProps } from './ToolbarItems';
 export { applyIconOverrides } from './ToolbarItem';
 export type {

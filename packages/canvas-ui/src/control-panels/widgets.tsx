@@ -8,6 +8,8 @@ import { DevInfoToggleButton, type DevInfoToggleButtonProps } from '../toolbars/
 import { ExportImageToolbar, type ExportImageToolbarProps } from '../toolbars/ExportImageToolbar';
 import { ExportStateToolbar, type ExportStateToolbarProps } from '../toolbars/ExportStateToolbar';
 import { MiniMapToggleButton, type MiniMapToggleButtonProps } from '../toolbars/MiniMapToggleButton';
+import { CHROME_CONTROL_WIDGETS } from './chromeWidgets';
+import { DEFAULT_CONTROL_ICONS } from './icons';
 
 /** Props every control-panel widget receives. */
 export interface ControlWidgetProps {
@@ -109,15 +111,21 @@ PanPadWidget.optionsSpec = {
 // UI-rich controls (a hover-card form, a control that mounts its own layer) are
 // widgets: the spec names them, their `options` are the component's props.
 
-/** Export-as-image trigger + hover card. `options` → `ExportImageToolbarProps`. */
+/**
+ * Export-as-image trigger + hover card. `options` → `ExportImageToolbarProps`,
+ * with the trigger icon named by `options.icon` from the icon registry.
+ */
 function ExportImageWidget({ canvas, options }: ControlWidgetProps) {
-  return <ExportImageToolbar {...(options as ExportImageToolbarProps | undefined)} canvas={canvas} />;
+  const { icon, ...rest } = (options ?? {}) as ExportImageToolbarProps & { icon?: string };
+  const triggerIcon = icon ? DEFAULT_CONTROL_ICONS[icon] : undefined;
+  return <ExportImageToolbar {...rest} {...(triggerIcon ? { triggerIcon } : {})} canvas={canvas} />;
 }
 // The JSON-able `ExportImageToolbarProps`; `defaultValue` (a settings object) stays JSON.
 ExportImageWidget.optionsSpec = {
   formats: { kind: 'strings', label: 'Formats', description: 'Offered formats, in order: png, jpg, webp, svg.', default: ['png', 'jpg', 'webp', 'svg'] },
   filename: { kind: 'string', label: 'Filename', default: 'canvas' },
   label: { kind: 'string', label: 'Label', default: 'Export' },
+  icon: { kind: 'string', label: 'Icon', description: 'An icon-registry name, e.g. `image`.', default: 'download' },
   triggerText: { kind: 'string', label: 'Trigger text' },
   align: {
     kind: 'enum',
@@ -156,4 +164,5 @@ export const DEFAULT_CONTROL_WIDGETS: Readonly<Record<string, ControlWidget>> = 
   'export-state': ExportStateWidget,
   'minimap-toggle': MiniMapToggleWidget,
   'devinfo-toggle': DevInfoToggleWidget,
+  ...CHROME_CONTROL_WIDGETS,
 };

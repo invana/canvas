@@ -34,6 +34,8 @@ export { bezierPathStyle } from './pathStyles/bezier';
 export { quadraticPathStyle } from './pathStyles/quadratic';
 export { bumpRadialPathStyle } from './pathStyles/bumpRadial';
 export { bumpHorizontalPathStyle } from './pathStyles/bumpHorizontal';
+export { bumpVerticalPathStyle } from './pathStyles/bumpVertical';
+export { splinePathStyle } from './pathStyles/spline';
 export { smoothPathStyle } from './pathStyles/smooth';
 export { stepRadialPathStyle } from './pathStyles/stepRadial';
 export { bundlePathStyle } from './pathStyles/bundle';

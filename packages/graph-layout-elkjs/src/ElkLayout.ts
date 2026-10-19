@@ -60,12 +60,15 @@ import {
   groupInsets,
   groupSizeFloor,
   isMergedEdgeId,
+  resolveLayoutRoot,
   resolveNodeSize,
+  type EdgePathType,
   type GraphLayer,
   type GraphNode,
-  type EdgeStyle,
   type GroupForestNode,
+  type LayoutEdge,
   type LayoutPositions,
+  type LayoutRoute,
 } from '@invana/graph';
 
 import type {
@@ -89,6 +92,20 @@ const FALLBACK_NODE_SIZE: NodeSize = { width: 40, height: 40 };
  * promises, so it's gated rather than global.
  */
 const CROSS_HIERARCHY_ALGORITHMS = new Set(['layered']);
+
+/**
+ * The path type each `edgeRouting` mode's points are drawn with. `SPLINES`
+ * sections are Bézier control points (start, `3k − 1` bends, end), which only
+ * `spline` reads as such.
+ */
+const ROUTE_PATH_TYPE: Record<NonNullable<ElkLayoutOptions['edgeRouting']>, EdgePathType> = {
+  ORTHOGONAL: 'orth',
+  SPLINES: 'spline',
+  POLYLINE: 'straight',
+};
+
+/** Prefix of the edges `radialTree` adds to hang a component off the centre. */
+const RADIAL_LINK_PREFIX = '__radial:';
 
 export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
   override readonly kind = 'elk-layout';
@@ -185,19 +202,39 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
     // their own lane in `onPositionsApplied`.
     const isFeedback = this.opts.feedbackEdges;
     const feedbackIds: string[] = [];
-    const edges: ElkExtendedEdge[] = [];
+    const forward: LayoutEdge[] = [];
     for (const e of collectLayoutEdges(layer, placeable)) {
       const stored = isFeedback ? store.getEdge(e.id) : undefined;
       if (stored && isFeedback?.(stored)) {
         feedbackIds.push(e.id);
         continue;
       }
-      edges.push({ id: e.id, sources: [e.source], targets: [e.target] });
+      forward.push(e);
+    }
+
+    // 3b. The root. `radial` lays out a tree around one centre, so it gets a
+    //     spanning tree pointed outward from it (see `radialTree`). `layered`
+    //     starts from its sources on its own and only needs a root named when
+    //     the caller asked for one or the graph has no source.
+    const algorithm = this.opts.algorithm ?? 'layered';
+    const topLevel = children.map((c) => c.id);
+    const rootId =
+      algorithm === 'radial' || algorithm === 'layered'
+        ? this.resolveRoot(layer, topLevel, forward, algorithm === 'radial' ? 'centre' : 'tree')
+        : undefined;
+    const edges: ElkExtendedEdge[] =
+      algorithm === 'radial' && rootId !== undefined
+        ? radialTree(topLevel, forward, rootId)
+        : forward.map((e) => ({ id: e.id, sources: [e.source], targets: [e.target] }));
+    if (algorithm === 'layered' && rootId !== undefined) {
+      const root = children.find((c) => c.id === rootId);
+      if (root) root.layoutOptions = { ...root.layoutOptions, 'elk.layered.layering.layerConstraint': 'FIRST' };
     }
 
     // 4. Build the ELK graph + merge convenience options with the free-form
     //    passthrough (passthrough wins).
     const graph: ElkNode = { id: 'root', layoutOptions: buildLayoutOptions(this.opts, nests), children, edges };
+    if (algorithm === 'radial') graph.layoutOptions!['elk.radial.centerOnRoot'] = 'true';
 
     // 4b. A re-flow (an anchored run — e.g. after a group frame toggles) keeps
     //     the current order instead of re-solving from scratch: seed every box
@@ -239,19 +276,45 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
     };
     walk(result, 0, 0);
 
-    // Thread routed edges to onPositionsApplied (only when edge routing is on).
-    // Feedback edges need routing whether or not `edgeRouting` is on — they were
-    // never handed to ELK, so nothing else will place them.
-    const routing = this.opts.edgeRouting !== undefined;
-    const meta: ElkRouteMeta | null =
-      routing || feedbackIds.length > 0
-        ? {
-            edges: routing ? ((result.edges ?? []) as ElkExtendedEdge[]) : [],
-            rects,
-            feedbackIds,
-          }
+    // Thread the edge geometry to onPositionsApplied. ELK's own routes only when
+    // `edgeRouting` is on, and never for `radial`, whose tree edges are not the
+    // store's (some point the other way, some are links this layout invented).
+    // Feedback edges are routed whether or not `edgeRouting` is on — they were
+    // never handed to ELK, so nothing else places them.
+    const routePathType =
+      this.opts.edgeRouting !== undefined && algorithm !== 'radial'
+        ? ROUTE_PATH_TYPE[this.opts.edgeRouting]
         : null;
+    const centre = algorithm === 'radial' && rootId !== undefined ? rects.get(rootId) : undefined;
+    const meta: ElkRouteMeta = {
+      edges: routePathType ? ((result.edges ?? []) as ElkExtendedEdge[]) : [],
+      routePathType,
+      rects,
+      feedbackIds,
+      ...(centre ? { origin: { x: centre.cx, y: centre.cy } } : {}),
+    };
     return { ids, positions: new Float32Array(xy), meta };
+  }
+
+  /**
+   * The root this run starts from: {@link ElkLayoutOptions.rootNodeId} when it
+   * names a top-level node of this run, else the shared rule
+   * (`resolveLayoutRoot`) — for `'tree'` that is `undefined` while the graph
+   * has sources.
+   */
+  private resolveRoot(
+    layer: GraphLayer,
+    topLevel: readonly string[],
+    edges: readonly LayoutEdge[],
+    rule: 'tree' | 'centre',
+  ): string | undefined {
+    const named = this.opts.rootNodeId;
+    if (named !== undefined && topLevel.includes(named)) return named;
+    if (this.opts.root === 'selection') {
+      const selected = topLevel.find((id) => layer.store.nodeStatesOf(id).includes('selected'));
+      if (selected !== undefined) return selected;
+    }
+    return resolveLayoutRoot(layer, topLevel, edges, rule);
   }
 
   /**
@@ -335,20 +398,20 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
     }));
     const rects = new Map<string, ElkNodeRect>();
     for (const [id, r] of route.rects) rects.set(id, { ...r, cx: r.cx + dx, cy: r.cy + dy });
-    return { ...route, edges, rects };
+    return { ...route, edges, rects, ...(route.origin ? { origin: shift(route.origin) } : {}) };
   }
 
   /**
-   * When ELK edge routing is on, read back each edge's computed bend points and
-   * write them as `style.shape.waypoints` (pathType 'orth') — once node positions
-   * have settled, in their own flush.
+   * Hand this run's edge geometry to the layer as **layout geometry**
+   * (`GraphLayer.setLayoutGeometry`) once node positions have settled: ELK's
+   * routes when `edgeRouting` is on, typed by {@link ROUTE_PATH_TYPE}, the
+   * feedback lanes, and — for `radial` — the centre as the frame origin that
+   * `bump-radial` curves around. Nothing is written onto the edges, so the
+   * geometry ends with this layout: the next run of another layout clears it.
    *
-   * This must NOT share a flush with the position write: a position flush marks
-   * every incident connector dirty and re-routes them via a plain
-   * `updateConnector(id, {})` at flush end; bundling the waypoint write into that
-   * same flush lets that re-route run alongside the waypoint-applying `edge:update`,
-   * and the routed path doesn't stick. A separate flush (no concurrent node moves)
-   * mirrors the hover/`rerenderEdge` path that applies cleanly.
+   * The geometry is read when each edge resolves its style, which happens
+   * after the position flush has moved the shapes, so the route and the
+   * boundary anchors agree without a separate flush.
    *
    * ELK works in the same coordinate frame as the stored centres, and — for
    * centre-origin shapes (circle, and `composite` via GraphLayer's centre-fit) —
@@ -356,42 +419,46 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
    * the cards without any per-edge offset.
    */
   protected override onPositionsApplied(layer: GraphLayer, meta: unknown): void {
-    const route = meta as ElkRouteMeta | null;
-    if (!route) return;
-    const { edges: routedEdges, rects, feedbackIds } = route;
-    const store = layer.store;
-    store.batch(() => {
-      routeFeedbackEdges(store, rects, feedbackIds, this.opts);
-      for (const e of routedEdges) {
+    const run = meta as ElkRouteMeta | null;
+    if (!run) {
+      layer.setLayoutGeometry(this, {});
+      return;
+    }
+    const routes = new Map<string, LayoutRoute>();
+    routeFeedbackEdges(layer.store, run.rects, run.feedbackIds, this.opts, routes);
+    if (run.routePathType) {
+      for (const e of run.edges) {
         // A merged id stands for several store edges that collapsed onto the
         // same endpoint pair (members of a collapsed group). It addresses none
-        // of them, so there is no edge to write this route onto.
+        // of them, so there is no edge to route.
         if (isMergedEdgeId(e.id)) continue;
-        // Use the FULL section path — startPoint + bends + endPoint — not just
-        // the interior bends. The start/end points sit on the node border where
-        // ELK's route leaves/enters perpendicularly, so the `orth` router connects
-        // the boundary-anchored endpoints to them without inventing a spurious
-        // out-and-back corner. (Interior bends only made orth L-bend across a long
-        // misaligned first/last leg → visible "peaks" at both ends.)
+        // An edge ELK returned no section for has no route, and draws as the
+        // layer's edge type says.
         const section = e.sections?.[0];
-        const waypoints = section
-          ? [section.startPoint, ...(section.bendPoints ?? []), section.endPoint].map((p) => ({
-              x: p.x,
-              y: p.y,
-            }))
-          : [];
-        const prev = (store.getEdge(e.id)?.style as EdgeStyle | undefined) ?? {};
-        // NOTE: pinning both endpoints to ELK's ports with the `edge-port`
-        // anchor was tried here and reverted — that anchor answers the outward
-        // face normal as its tangent, and it makes the endpoint coincide with
-        // the first/last waypoint. Together those pointed every arrowhead back
-        // into its own node. The short border-hugging leg this leaves behind is
-        // the lesser defect; see the History section of
+        if (!section) continue;
+        // The FULL section path — startPoint + bends + endPoint — not just the
+        // interior bends. The start/end points sit on the node border where
+        // ELK's route leaves/enters perpendicularly, so the `orth` router
+        // connects the boundary-anchored endpoints to them without inventing a
+        // spurious out-and-back corner, and a `SPLINES` section is a complete
+        // Bézier chain only with both ends.
+        //
+        // Pinning both endpoints to ELK's ports with the `edge-port` anchor was
+        // tried and reverted — that anchor answers the outward face normal as
+        // its tangent, and it makes the endpoint coincide with the first/last
+        // waypoint, which pointed every arrowhead back into its own node. See
+        // the History section of
         // rfc:fix-2026-09-13-edge-arrow-style-fields-are-never-read.
-        store.internal.updateEdge(e.id, {
-          style: { ...prev, shape: { ...(prev.shape ?? {}), pathType: 'orth', waypoints } },
-        });
+        const waypoints = [section.startPoint, ...(section.bendPoints ?? []), section.endPoint].map((p) => ({
+          x: p.x,
+          y: p.y,
+        }));
+        routes.set(e.id, { pathType: run.routePathType, waypoints });
       }
+    }
+    layer.setLayoutGeometry(this, {
+      ...(routes.size > 0 ? { routes } : {}),
+      ...(run.origin ? { frame: { origin: run.origin } } : {}),
     });
   }
 }
@@ -421,6 +488,7 @@ function routeFeedbackEdges(
   rects: ReadonlyMap<string, ElkNodeRect>,
   feedbackIds: readonly string[],
   opts: ElkLayoutOptions,
+  routes: Map<string, LayoutRoute>,
 ): void {
   if (feedbackIds.length === 0) return;
 
@@ -462,11 +530,70 @@ function routeFeedbackEdges(
           { x: lane, y: from.cy },
           { x: lane, y: to.cy },
         ];
-    const prev = (store.getEdge(id)?.style as EdgeStyle | undefined) ?? {};
-    store.internal.updateEdge(id, {
-      style: { ...prev, shape: { ...(prev.shape ?? {}), pathType: 'orth', waypoints } },
-    });
+    routes.set(id, { pathType: 'orth', waypoints });
   });
+}
+
+/**
+ * A spanning tree of the drawn graph for ELK `radial`, which needs a tree:
+ * handed a cyclic graph it stacks nodes onto a few points.
+ *
+ * Breadth-first from `rootId` over the edges taken as undirected, each tree
+ * edge pointed parent → child, so `rootId` is the only node with no incoming
+ * edge and ELK centres it. Each further component hangs off the root by an
+ * invented link to that component's most-connected node. Edges left out of
+ * the tree are still drawn — ELK just doesn't place by them. Only edges
+ * between top-level nodes take part; a group's members are placed inside it.
+ */
+function radialTree(
+  nodes: readonly string[],
+  edges: readonly LayoutEdge[],
+  rootId: string,
+): ElkExtendedEdge[] {
+  const inScope = new Set(nodes);
+  const adjacent = new Map<string, Array<{ id: string; other: string }>>();
+  for (const e of edges) {
+    if (e.source === e.target || !inScope.has(e.source) || !inScope.has(e.target)) continue;
+    (adjacent.get(e.source) ?? adjacent.set(e.source, []).get(e.source)!).push({ id: e.id, other: e.target });
+    (adjacent.get(e.target) ?? adjacent.set(e.target, []).get(e.target)!).push({ id: e.id, other: e.source });
+  }
+  const out: ElkExtendedEdge[] = [];
+  const seen = new Set<string>();
+  const grow = (from: string): void => {
+    seen.add(from);
+    const queue = [from];
+    for (let i = 0; i < queue.length; i++) {
+      const parent = queue[i]!;
+      for (const { id, other } of adjacent.get(parent) ?? []) {
+        if (seen.has(other)) continue;
+        seen.add(other);
+        out.push({ id, sources: [parent], targets: [other] });
+        queue.push(other);
+      }
+    }
+  };
+  const component = (from: string): string[] => {
+    const members = [from];
+    const local = new Set(members);
+    for (let i = 0; i < members.length; i++) {
+      for (const { other } of adjacent.get(members[i]!) ?? []) {
+        if (!local.has(other)) {
+          local.add(other);
+          members.push(other);
+        }
+      }
+    }
+    return members;
+  };
+  grow(rootId);
+  for (const id of nodes) {
+    if (seen.has(id)) continue;
+    const members = component(id);
+    const hub = members.reduce((a, b) => ((adjacent.get(b)?.length ?? 0) > (adjacent.get(a)?.length ?? 0) ? b : a));
+    out.push({ id: `${RADIAL_LINK_PREFIX}${hub}`, sources: [rootId], targets: [hub] });
+    grow(hub);
+  }
+  return out;
 }
 
 /** Absolute centre + extent of one ELK-placed node, in canvas coordinates. */
@@ -477,12 +604,17 @@ interface ElkNodeRect {
   readonly h: number;
 }
 
-/** What `computeLayout` threads to `onPositionsApplied` when routing is on. */
+/** What `computeLayout` threads to `onPositionsApplied`: the run's edge geometry. */
 interface ElkRouteMeta {
+  /** ELK's routed edges; empty unless {@link routePathType} is set. */
   readonly edges: ElkExtendedEdge[];
+  /** The path type ELK's routes draw with, or `null` when this run routes nothing. */
+  readonly routePathType: EdgePathType | null;
   readonly rects: ReadonlyMap<string, ElkNodeRect>;
   /** Edges withheld from ELK, routed by {@link routeFeedbackEdges} instead. */
   readonly feedbackIds: readonly string[];
+  /** The radial centre — the frame origin `bump-radial` curves around. */
+  readonly origin?: { readonly x: number; readonly y: number };
 }
 
 
@@ -523,6 +655,7 @@ function buildLayoutOptions(opts: ElkLayoutOptions, nests = false): LayoutOption
   if (opts.edgeNodeSpacing !== undefined) out['elk.spacing.edgeNode'] = String(opts.edgeNodeSpacing);
   if (opts.edgeSpacing !== undefined) out['elk.spacing.edgeEdge'] = String(opts.edgeSpacing);
   if (opts.edgeRouting !== undefined) out['elk.edgeRouting'] = opts.edgeRouting;
+  if (opts.ringSpacing !== undefined) out['elk.radial.radius'] = String(opts.ringSpacing);
   if (opts.padding !== undefined) out['elk.padding'] = formatPadding(opts.padding);
   if (opts.layoutOptions) Object.assign(out, opts.layoutOptions);
   return out;

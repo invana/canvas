@@ -222,10 +222,34 @@ export interface ControlPanelSpec {
    * Default `false`.
    */
   stretch?: boolean;
-  /** Draw the card surface (background, border, shadow). Default `true` over the canvas, `false` in a header / footer rail. */
-  surface?: boolean;
+  /**
+   * The panel's surface. `true` draws the card (background, border, shadow);
+   * `'hairline'` a border hairline on a translucent background, no shadow — the
+   * light toolbar row that lets the drawing show through; `false` nothing.
+   * Default `true` over the canvas, `false` in a header / footer rail.
+   */
+  surface?: boolean | 'hairline';
   /** Show the panel. Default `true`. */
   visible?: boolean;
+  /**
+   * Let the panel fold down to a few of its items — the "tools off" row. A
+   * trailing *Hide the tools* control folds it to the items whose `key` is in
+   * `keep`, followed by *Show the tools*, which opens it again. Whether it is
+   * folded is the viewer's, held by the drawing surface; {@link collapsed}
+   * only says how it starts.
+   */
+  collapsible?: {
+    /** Keys of the items that stay while folded, in their order in `items`. */
+    keep: string[];
+    /** Default `Show the tools`. */
+    showLabel?: string;
+    /** Default `Hide the tools`. */
+    hideLabel?: string;
+    /** Ids of other panels hidden while this one is folded — "nothing else floats". */
+    hides?: string[];
+  };
+  /** With {@link collapsible}: start folded. Default `false`. */
+  collapsed?: boolean;
   /** The panel's items, in order. */
   items: ControlItemSpec[];
 }

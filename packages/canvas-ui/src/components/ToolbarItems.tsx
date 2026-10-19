@@ -5,6 +5,7 @@ import { Tooltipped } from './Tooltipped';
 import { ACTIVE_CLASS, ACTIVE_MENU_ITEM_CLASS, ACTIVE_SEGMENT_STYLE } from './styles';
 import type { ToolbarIcon, TooltipSide } from './types';
 import type { ToolbarButtonItem, ToolbarItem, ToolbarSelectItem, ToolbarToggleItem } from './ToolbarItem';
+import { iconButtonSize, useToolbarSize, type ToolbarSize } from './toolbarSize';
 
 export interface ToolbarItemsProps {
   /** The declarative item list to compile into controls. */
@@ -19,6 +20,14 @@ export interface ToolbarItemsProps {
   tooltipSide?: TooltipSide;
   /** Forwarded to the Nav shell container. */
   className?: string;
+  /**
+   * Render the items alone, without the Nav shell — for a control that sits
+   * inside another toolbar row (a widget's one toggle), where a second,
+   * full-width shell would stretch the row. Default `false`.
+   */
+  bare?: boolean;
+  /** Control size. Default: the region's (`ToolbarSizeContext`, `'md'`). */
+  size?: ToolbarSize;
 }
 
 /** Render an icon-button / labelled-button (shared by `button` + `toggle`). */
@@ -33,20 +42,21 @@ function renderButton(
     disabled?: boolean;
     onClick: () => void;
     tooltipSide: TooltipSide;
+    size: ToolbarSize;
   },
 ): ReactNode {
-  const { icon: Icon, iconClass, label, text, active = false, disabled = false, onClick, tooltipSide } = opts;
+  const { icon: Icon, iconClass, label, text, active = false, disabled = false, onClick, tooltipSide, size } = opts;
   return (
     <Tooltipped key={key} label={label} side={tooltipSide}>
       <Button
         variant="ghost"
-        size={text ? 'sm' : 'icon'}
+        size={text ? 'sm' : iconButtonSize(size)}
         aria-label={label}
         disabled={disabled}
         onClick={onClick}
         className={active ? ACTIVE_CLASS : undefined}
       >
-        <Icon size={16} className={iconClass} />
+        <Icon className={iconClass} />
         {text ?? null}
       </Button>
     </Tooltipped>
@@ -132,7 +142,7 @@ function renderSegmented(key: string, item: ToolbarSelectItem, tipSide: TooltipS
               aria-label={optLabel}
               style={k === value ? ACTIVE_SEGMENT_STYLE : undefined}
             >
-              {Icon ? <Icon size={16} className={item.iconClass} /> : optLabel}
+              {Icon ? <Icon className={item.iconClass} /> : optLabel}
             </ToggleGroupItem>
           </Tooltipped>
         );
@@ -163,7 +173,11 @@ export function ToolbarItems({
   orientation = 'horizontal',
   tooltipSide,
   className,
+  bare = false,
+  size: sizeProp,
 }: ToolbarItemsProps) {
+  const regionSize = useToolbarSize();
+  const size = sizeProp ?? regionSize;
   const tipSide: TooltipSide = tooltipSide ?? (orientation === 'vertical' ? 'right' : 'bottom');
 
   const nodes: ReactNode[] = items.map((item, i) => {
@@ -179,6 +193,7 @@ export function ToolbarItems({
           ...(it.disabled !== undefined ? { disabled: it.disabled } : {}),
           onClick: it.onClick,
           tooltipSide: it.tooltipSide ?? tipSide,
+          size,
         });
       }
       case 'toggle': {
@@ -193,6 +208,7 @@ export function ToolbarItems({
           ...(it.disabled !== undefined ? { disabled: it.disabled } : {}),
           onClick: it.onToggle,
           tooltipSide: it.tooltipSide ?? tipSide,
+          size,
         });
       }
       case 'select':
@@ -204,7 +220,11 @@ export function ToolbarItems({
           <Separator
             key={key}
             orientation={orientation === 'vertical' ? 'horizontal' : 'vertical'}
-            className={orientation === 'vertical' ? 'w-6 self-center' : 'h-6 self-center'}
+            className={
+              orientation === 'vertical'
+                ? cn(size === 'sm' ? 'w-4' : 'w-6', 'self-center')
+                : cn(size === 'sm' ? 'h-4' : 'h-6', 'self-center')
+            }
           />
         );
       case 'custom':
@@ -213,6 +233,7 @@ export function ToolbarItems({
   });
 
   const content = <>{nodes}</>;
+  if (bare) return content;
   return orientation === 'vertical' ? (
     <NavVertical top={content} className={className} />
   ) : (

@@ -126,6 +126,9 @@ export class GraphStore implements DataSource {
    * Neither is authored data, so neither is serialised.
    */
   private collapseHidden: Set<string> = new Set();
+  /** Node and edge types the owning layer hides whole — see {@link setTypesHidden}. */
+  private hiddenNodeTypes: ReadonlySet<string> = new Set();
+  private hiddenEdgeTypes: ReadonlySet<string> = new Set();
   private _placementPending = false;
   private readonly edgeMap: Map<string, GraphEdge> = new Map();
   private readonly childrenIndex: Map<string, Set<string>> = new Map();
@@ -197,6 +200,13 @@ export class GraphStore implements DataSource {
    */
   private pendingNodeVisibility: Map<string, boolean> = new Map();
   private pendingEdgeVisibility: Map<string, boolean> = new Map();
+  /**
+   * Elements whose *derived* visibility changed (a hidden type) — announced on
+   * the next flush like explicit visibility, but not counted as hides/shows:
+   * those counts re-run the active layout, and a layout still places these.
+   */
+  private pendingDerivedNodes: Set<string> = new Set();
+  private pendingDerivedEdges: Set<string> = new Set();
 
   /** Depth of nested `batch()` calls. Flushes only on outermost exit. */
   private batchDepth = 0;
@@ -965,7 +975,8 @@ export class GraphStore implements DataSource {
    * 1. **live** — the node exists;
    * 2. **not explicitly hidden** — {@link isNodeHidden}, the authored flag;
    * 3. **not withheld** — hidden under a collapsed ancestor
-   *    ({@link isCollapseHidden}), or not yet placed while a layout owns
+   *    ({@link isCollapseHidden}), of a type the layer hides
+   *    ({@link setTypesHidden}), or not yet placed while a layout owns
    *    placement ({@link placementPending}).
    *
    * Terms 3's inputs are *derived*, pushed in by the owning layer rather than
@@ -987,8 +998,53 @@ export class GraphStore implements DataSource {
     if (!this.nodeMap.has(id)) return false;
     if (this.isNodeHidden(id)) return false;
     if (this.collapseHidden.has(id)) return false;
+    if (this.isNodeTypeHidden(id)) return false;
     if (this.isPlacementWithheld(id)) return false;
     return true;
+  }
+
+  /**
+   * Hide whole node and edge **types** — every element of a listed type, now
+   * and when more arrive. A derived input like collapse: the owning layer
+   * pushes it from its `hiddenTypes` option (which is what an undo, an export
+   * or a walkthrough step carries), so it is never serialised here. Replaced
+   * wholesale; the next flush fires `node:visibility` / `edge:visibility` for
+   * the elements whose type flipped (a node's edges follow it through the
+   * layer's cascade), without counting them as hides or shows.
+   */
+  setTypesHidden(nodeTypes: Iterable<string>, edgeTypes: Iterable<string>): void {
+    const nextNode = new Set(nodeTypes);
+    const nextEdge = new Set(edgeTypes);
+    const flipped = (prev: ReadonlySet<string>, next: ReadonlySet<string>): Set<string> => {
+      const out = new Set<string>();
+      for (const t of next) if (!prev.has(t)) out.add(t);
+      for (const t of prev) if (!next.has(t)) out.add(t);
+      return out;
+    };
+    const nodeFlips = flipped(this.hiddenNodeTypes, nextNode);
+    const edgeFlips = flipped(this.hiddenEdgeTypes, nextEdge);
+    if (nodeFlips.size === 0 && edgeFlips.size === 0) return;
+    // Assign before emitting, as `setCollapseHidden` does.
+    this.hiddenNodeTypes = nextNode;
+    this.hiddenEdgeTypes = nextEdge;
+    if (nodeFlips.size > 0) {
+      for (const [id, node] of this.nodeMap) if (nodeFlips.has(node.type)) this.pendingDerivedNodes.add(id);
+    }
+    if (edgeFlips.size > 0) {
+      for (const [id, edge] of this.edgeMap) if (edgeFlips.has(edge.type)) this.pendingDerivedEdges.add(id);
+    }
+    this.scheduleFlushIfNeeded();
+  }
+
+  /** The node and edge types hidden whole ({@link setTypesHidden}). */
+  hiddenTypes(): { node: ReadonlySet<string>; edge: ReadonlySet<string> } {
+    return { node: this.hiddenNodeTypes, edge: this.hiddenEdgeTypes };
+  }
+
+  private isNodeTypeHidden(id: string): boolean {
+    if (this.hiddenNodeTypes.size === 0) return false;
+    const node = this.nodeMap.get(id);
+    return node !== undefined && this.hiddenNodeTypes.has(node.type);
   }
 
   /**
@@ -1123,6 +1179,9 @@ export class GraphStore implements DataSource {
     const cold = this.edgeMap.get(id);
     if (!cold) return false;
     if (this.isEdgeHidden(id)) return false;
+    // A hidden type hides its edges, and an edge whose endpoint's type is hidden.
+    if (this.hiddenEdgeTypes.size > 0 && this.hiddenEdgeTypes.has(cold.type)) return false;
+    if (this.isNodeTypeHidden(cold.source) || this.isNodeTypeHidden(cold.target)) return false;
     // The two derived terms are deliberately asymmetric here, because what they
     // mean for an edge is different:
     //
@@ -2297,6 +2356,10 @@ export class GraphStore implements DataSource {
     this.pendingEdgeStates = new Map();
     this.pendingNodeVisibility = new Map();
     this.pendingEdgeVisibility = new Map();
+    const derivedNodes = this.pendingDerivedNodes;
+    const derivedEdges = this.pendingDerivedEdges;
+    this.pendingDerivedNodes = new Set();
+    this.pendingDerivedEdges = new Set();
     this.counters = emptyCounters();
 
     if (
@@ -2310,7 +2373,9 @@ export class GraphStore implements DataSource {
       nodeStates.size === 0 &&
       edgeStates.size === 0 &&
       nodeVisibility.size === 0 &&
-      edgeVisibility.size === 0
+      edgeVisibility.size === 0 &&
+      derivedNodes.size === 0 &&
+      derivedEdges.size === 0
     ) {
       return;
     }
@@ -2350,6 +2415,12 @@ export class GraphStore implements DataSource {
     }
     for (const [id, hidden] of edgeVisibility) {
       this.events.emit('edge:visibility', { edgeId: id, hidden });
+    }
+    for (const id of derivedNodes) {
+      if (this.nodeMap.has(id)) this.events.emit('node:visibility', { nodeId: id, hidden: !this.isNodeVisible(id) });
+    }
+    for (const id of derivedEdges) {
+      if (this.edgeMap.has(id)) this.events.emit('edge:visibility', { edgeId: id, hidden: !this.isEdgeVisible(id) });
     }
 
     // DataSource (D13) — project this flush's topology/position deltas into a

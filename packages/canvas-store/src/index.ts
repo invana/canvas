@@ -34,6 +34,7 @@ export type { CameraTransform } from '@invana/canvas-core';
 export {
   defaultCanvasView,
   type CanvasView,
+  type CanvasLayoutPreset,
   type CanvasSceneOptions,
   createActions,
   type CanvasActions,

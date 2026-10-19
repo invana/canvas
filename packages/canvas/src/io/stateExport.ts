@@ -283,6 +283,8 @@ export function importCanvasState(
     behaviours: definition.behaviours,
     layouts: definition.layouts,
     ...(definition.activeLayout !== null ? { activeLayout: definition.activeLayout } : {}),
+    // Snapshots from before layout presets existed carry none.
+    layoutPreset: definition.layoutPreset ?? null,
     ...(scene.fitOnLoad !== undefined ? { fitOnLoad: scene.fitOnLoad } : {}),
     ...(scene.fitAnimation !== undefined ? { fitAnimation: scene.fitAnimation } : {}),
     ...(scene.entrance !== undefined ? { entrance: scene.entrance } : {}),

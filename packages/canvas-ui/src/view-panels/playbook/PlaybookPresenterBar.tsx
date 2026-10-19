@@ -8,12 +8,18 @@
 // no Save as step, no JSON. It is a plain block; the host positions it over or
 // beside the canvas (D-26). ← / → step only while focus is inside the bar, so it
 // never takes the canvas's own keys (D-27).
+//
+// `variant="compact"` is the bar a host shows while a toolbar carries the moves
+// (`PlaybookStepper`): the step's title as the prompt it answers, its narration
+// beside an avatar, and one dot per step. No buttons — ◀ ▶ ✕ are the
+// toolbar's — and no position count, which the stepper already shows.
 
 import type { Canvas } from '@invana/canvas';
 import { CanvasContext, usePlaybook } from '@invana/canvas-react';
 import { Button, Card, cn } from '@invana/ui';
+import type { CanvasConfig, StepSpec } from '@invana/canvas';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useCallback, useContext, useRef, useState, type KeyboardEvent } from 'react';
+import { useCallback, useContext, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 
 export interface PlaybookPresenterBarProps {
   /**
@@ -25,6 +31,16 @@ export interface PlaybookPresenterBarProps {
   showDots?: boolean;
   /** Extra classes for the bar root — typically the host's positioning. */
   className?: string;
+  /**
+   * `deck` (default): title, narration, ◀ Previous / Next ▶, dots, `Step n / N`.
+   * `compact`: the title as a prompt bubble, the narration, the dots — the moves
+   * live in a `PlaybookStepper`.
+   */
+  variant?: 'deck' | 'compact';
+  /** Compact only: what leads the title — e.g. an expand or edit glyph for a step no one asked. */
+  renderTitleIcon?: (step: StepSpec<CanvasConfig>) => ReactNode;
+  /** Compact only: the avatar beside the narration. */
+  narrationIcon?: ReactNode;
 }
 
 /** Keys that step forward / back while focus is inside the bar (F39). */
@@ -62,6 +78,9 @@ function PlaybookPresenterBarContent({
   canvas,
   showDots = true,
   className,
+  variant = 'deck',
+  renderTitleIcon,
+  narrationIcon,
 }: PlaybookPresenterBarProps & { canvas: Canvas }) {
   const { steps, current, index, canNext, canPrevious, next, previous, goTo } = usePlaybook(canvas);
 
@@ -99,6 +118,65 @@ function PlaybookPresenterBarContent({
     },
     [canNext, canPrevious, next, previous, run],
   );
+
+  const dots = (
+    <div className="flex min-w-0 flex-1 flex-wrap items-center justify-center gap-0.5">
+      {showDots &&
+        steps.map((step, i) => (
+          <Button
+            key={step.id}
+            variant="ghost"
+            size="icon"
+            disabled={busy}
+            title={`${i + 1}. ${step.title}`}
+            aria-label={`Go to step ${i + 1}: ${step.title}`}
+            aria-current={i === index ? 'step' : undefined}
+            onClick={() => {
+              if (i !== index) void run(() => goTo(step.id));
+            }}
+            className="size-5"
+          >
+            <span
+              className={cn(
+                'size-2 rounded-full',
+                i === index ? 'bg-primary' : i < index ? 'bg-primary/40' : 'bg-muted-foreground/30',
+              )}
+            />
+          </Button>
+        ))}
+    </div>
+  );
+
+  if (variant === 'compact') {
+    return (
+      <Card
+        role="group"
+        aria-label="Playbook presenter"
+        tabIndex={0}
+        onKeyDown={onKeyDown}
+        className={cn('focus-visible:ring-ring flex flex-col gap-2 p-3 outline-none focus-visible:ring-2', className)}
+      >
+        {current ? (
+          <>
+            <div className="flex items-center gap-2" aria-live="polite">
+              {renderTitleIcon?.(current)}
+              <span className="bg-accent rounded-sm px-2 py-1">{current.title}</span>
+            </div>
+            {current.narration && (
+              <div className={cn('flex items-start gap-2', busy && 'opacity-50')}>
+                {narrationIcon}
+                <p className="line-clamp-4 leading-relaxed">{current.narration}</p>
+              </div>
+            )}
+          </>
+        ) : (
+          <span className="text-muted-foreground">{steps.length === 0 ? 'No steps' : 'Start'}</span>
+        )}
+        {error && <p className="text-destructive text-sm">{error}</p>}
+        {dots}
+      </Card>
+    );
+  }
 
   return (
     <Card

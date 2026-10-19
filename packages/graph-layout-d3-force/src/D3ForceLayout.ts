@@ -36,7 +36,7 @@ import {
   type SimulationNodeDatum,
 } from 'd3-force';
 
-import { Layout, type LayoutOptions, type LayoutRunOptions } from '@invana/canvas-core';
+import { Layout, type LayoutOptions, type LayoutRunOptions, type LayoutSetOptions } from '@invana/canvas-core';
 import { collectLayoutEdges, groupInsets, isPlaceableNode, type GraphLayer, type GraphNode } from '@invana/graph';
 
 import type { D3ForceLayoutOptions } from './types';
@@ -140,9 +140,9 @@ export class D3ForceLayout extends Layout<GraphLayer> {
    * first `apply()` there's nothing to re-run, so it just stores the patch.
    * Called by `Canvas.update({ layouts: { id: patch } })`.
    */
-  override setOptions(patch: Partial<D3ForceLayoutOptions>): void {
+  override setOptions(patch: Partial<D3ForceLayoutOptions>, opts?: LayoutSetOptions): void {
     this.opts = mergeDeep(this.opts, patch);
-    if (this.lastLayer) void this.apply(this.lastLayer);
+    if (this.lastLayer && opts?.rerun !== false) void this.apply(this.lastLayer);
   }
 
   /** Snapshot of the current (merged) force options — seeds a settings editor. */
@@ -159,6 +159,7 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     this.stop();
     this.lastLayer = layer;
     this.runOptions = run;
+    layer.beginLayoutRun(this);
     return this.opts.animate === false ? this.runStatic(layer) : this.runLive(layer);
   }
 
@@ -311,6 +312,9 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     const fixed = new Uint8Array(count);
     const indexOf = new Map<string, number>();
     let seededCount = 0;
+    // A reseeded run starts every free node unplaced, so the solver scatters
+    // them afresh instead of settling back into the arrangement they hold.
+    const reseed = this.runOptions.reseed === true;
     for (let i = 0; i < count; i++) {
       const n = nodeList[i]!;
       ids[i] = n.id;
@@ -323,7 +327,7 @@ export class D3ForceLayout extends Layout<GraphLayer> {
         seeded[i] = 1;
         fixed[i] = 1;
         seededCount++;
-      } else if (pos && (pos.x !== 0 || pos.y !== 0)) {
+      } else if (!reseed && pos && (pos.x !== 0 || pos.y !== 0)) {
         // Real stored position. (0, 0) is the column default; leaving it
         // un-seeded lets the solver scatter colocated nodes apart.
         positions[i * 2] = pos.x;
@@ -440,6 +444,7 @@ export class D3ForceLayout extends Layout<GraphLayer> {
     // derivedly, so a plain `hidden` check would simulate invisible nodes and
     // let them push the visible graph around.
     const includeHidden = this.opts.includeHidden === true;
+    const reseed = this.runOptions.reseed === true;
     for (const n of store.nodes()) {
       if (!isPlaceableNode(layer, n, includeHidden)) continue;
       const pos = store.getPosition(n.id);
@@ -455,7 +460,7 @@ export class D3ForceLayout extends Layout<GraphLayer> {
         node.x = px;
         node.y = py;
         this.pinnedIds.add(n.id);
-      } else if (pos && (pos.x !== 0 || pos.y !== 0)) {
+      } else if (!reseed && pos && (pos.x !== 0 || pos.y !== 0)) {
         // Only seed if the store has a real position. (0, 0) is treated as
         // the typed-array default; leaving x/y `undefined` lets
         // `forceSimulation` phyllotaxis-scatter the cluster — without it,

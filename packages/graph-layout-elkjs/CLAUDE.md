@@ -115,13 +115,23 @@ for the full catalogue.
 ## Edge routing
 
 `edgeRouting: 'ORTHOGONAL' | 'POLYLINE' | 'SPLINES'` does two things: it sets
-`elk.edgeRouting`, and (unlike the other convenience fields) it reads ELK's
-computed bend points back out of `result.edges[].sections[0].bendPoints` and
-writes them onto each edge as `style.shape.waypoints` (with `pathType: 'orth'`),
-spreading any prior edge style. The `orth` router then replays them, so edges
-follow ELK's node-avoiding routes instead of cutting across nodes — the way to
-keep edges off nodes at scale (the client-side `manhattan` obstacle router
-can't, see `code-kg` stories).
+`elk.edgeRouting`, and (unlike the other convenience fields) it reads each
+edge's full section (start, bends, end) back out of `result.edges[]` and hands
+the routes to the layer as **layout geometry** (`GraphLayer.setLayoutGeometry`).
+Nothing is written onto the edges: the routes are cleared when another layout
+runs, and never reach an export. Each route's type follows the mode —
+`ORTHOGONAL` → `orth`, `SPLINES` → `spline` (ELK's points are Bézier control
+points), `POLYLINE` → `straight` — and draws only under a layer edge type of
+its family (Straight · Curved · Orthogonal), so the layer's edge type still
+decides. Edges follow ELK's node-avoiding routes instead of cutting across
+nodes — the way to keep edges off nodes at scale (the client-side `manhattan`
+obstacle router can't, see `code-kg` stories).
+
+`algorithm: 'radial'` lays out a spanning tree of the drawn graph around one
+centre (`rootNodeId`, else the selection, else the most-connected node — the
+rule is `resolveLayoutRoot` in `@invana/graph`), and writes the centre as the
+frame origin `bump-radial` curves around. The ring gap is
+`elk.radial.radius` (pass it through `layoutOptions`).
 
 Coordinate caveat: routing assumes nodes whose `node.position` is their
 **centre** (so the rendered node occupies exactly ELK's node box and bend

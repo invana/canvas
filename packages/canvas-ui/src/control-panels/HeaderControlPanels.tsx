@@ -6,6 +6,7 @@ import { useControlPanels, useResolvedCanvas } from '@invana/canvas-react';
 import { ToolbarItems, type ToolbarIcon } from '../components';
 import { useControlItems } from './ControlItems';
 import type { ControlWidget } from './widgets';
+import { surfaceClass } from './surface';
 
 /** A rail region a panel can be placed in — left, centre or right. */
 export type HeaderRegion = 'left' | 'center' | 'right';
@@ -60,7 +61,7 @@ function RailPanelView({
 }) {
   const items = useControlItems(spec.items, { canvas, ...(icons ? { icons } : {}), ...(widgets ? { widgets } : {}) });
   return (
-    <div className={cn('flex shrink-0', spec.surface === true && 'rounded-md border border-border bg-background p-0.5')}>
+    <div className={cn('flex shrink-0', spec.surface === true ? 'rounded-md border border-border bg-background p-0.5' : surfaceClass(spec.surface ?? false))}>
       {/* Tooltips open away from the window edge the rail sits on. */}
       <ToolbarItems items={items} orientation="horizontal" tooltipSide={rail === 'header' ? 'bottom' : 'top'} />
     </div>

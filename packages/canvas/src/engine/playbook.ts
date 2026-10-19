@@ -143,7 +143,7 @@ const copy = <T>(value: T): T => (value === undefined ? value : (JSON.parse(JSON
  * to one option merge into its final value.
  *
  * - `settings`: `definition.{layers,behaviours,layouts}.<id>[.<key>]`,
- *   `activeLayout`, `controlPanels.<id>` (a removed panel → `null`) and the
+ *   `activeLayout`, `layoutPreset`, `controlPanels.<id>` (a removed panel → `null`) and the
  *   scene keys `canvas.update` takes (`fitOnLoad`, `fitAnimation`, `entrance`,
  *   `defaultViewMode`). A removed option can't be written by `canvas.update`
  *   and is left out; `theme` and `templates` have no `update` key yet.
@@ -167,6 +167,7 @@ export function describeViewParts(
       const [root, section, id, field] = path;
       if (root === 'definition') {
         if (section === 'activeLayout') settings['activeLayout'] = state.definition.activeLayout;
+        else if (section === 'layoutPreset') settings['layoutPreset'] = copy(state.definition.layoutPreset) ?? null;
         else if (section === 'controlPanels' && id !== undefined) {
           const panels = (settings['controlPanels'] ??= {}) as Record<string, unknown>;
           panels[id] = copy(state.definition.controlPanels[id]) ?? null;

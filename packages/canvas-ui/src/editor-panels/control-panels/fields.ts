@@ -17,6 +17,18 @@ const PLACEMENTS = [
   { label: 'Footer · right', value: 'footer-right' },
 ];
 
+/** The panel's surface, as a select. */
+const SURFACE_FIELD: FieldConfig = {
+  name: 'surface',
+  type: 'select',
+  label: 'Surface',
+  options: [
+    { label: 'Card', value: 'card' },
+    { label: 'Hairline', value: 'hairline' },
+    { label: 'None', value: 'none' },
+  ],
+};
+
 /**
  * Panel-level fields: placement, position (anchor or insets), offset, flow and
  * chrome. A function of the current values so only the fields that apply show
@@ -27,7 +39,7 @@ export function controlPanelFields(positionMode: string, placement = 'canvas'): 
   if (placement !== 'canvas') {
     return [
       placementField,
-      { name: 'surface', type: 'boolean', label: 'Card surface', control: 'checkbox' },
+      SURFACE_FIELD,
       { name: 'visible', type: 'boolean', label: 'Visible', control: 'checkbox' },
     ];
   }
@@ -67,7 +79,7 @@ export function controlPanelFields(positionMode: string, placement = 'canvas'): 
       ],
     },
     { name: 'stretch', type: 'boolean', label: 'Stretch along the edge', control: 'checkbox' },
-    { name: 'surface', type: 'boolean', label: 'Card surface', control: 'checkbox' },
+    SURFACE_FIELD,
     { name: 'visible', type: 'boolean', label: 'Visible', control: 'checkbox' },
   ];
 }

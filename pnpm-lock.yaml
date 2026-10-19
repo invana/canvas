@@ -53,11 +53,11 @@ importers:
   apps/storybook:
     dependencies:
       '@invana/blocks':
-        specifier: ^0.0.32
-        version: 0.0.32(d63c4e3c531b2d6fc6ea98edd0c30525)
+        specifier: ^0.0.35
+        version: 0.0.35(c9dec940aad492c2dd5c1b3b0bdb978e)
       '@invana/boards':
-        specifier: ^0.0.32
-        version: 0.0.32(f83181042982ac0ead5fe259c24c13a2)
+        specifier: ^0.0.35
+        version: 0.0.35(52483cc866db3d80ea5bdc7f9396870b)
       '@invana/canvas':
         specifier: workspace:*
         version: link:../../packages/canvas
@@ -77,11 +77,11 @@ importers:
         specifier: workspace:*
         version: link:../../packages/canvas-ui
       '@invana/charts':
-        specifier: ^0.0.32
-        version: 0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/tables@0.0.32(@invana/forms@0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+        specifier: ^0.0.35
+        version: 0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/tables@0.0.35(@invana/forms@0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@invana/editor':
-        specifier: ^0.0.32
-        version: 0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+        specifier: ^0.0.35
+        version: 0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@invana/graph':
         specifier: workspace:*
         version: link:../../packages/graph
@@ -113,17 +113,17 @@ importers:
         specifier: workspace:*
         version: link:../../packages/graph-layout-geometric
       '@invana/styling':
-        specifier: ^0.0.32
-        version: 0.0.32(tailwindcss@4.3.2)
+        specifier: ^0.0.35
+        version: 0.0.35(tailwindcss@4.3.2)
       '@invana/tables':
-        specifier: ^0.0.32
-        version: 0.0.32(@invana/forms@0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+        specifier: ^0.0.35
+        version: 0.0.35(@invana/forms@0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@invana/themes':
-        specifier: ^0.0.32
-        version: 0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+        specifier: ^0.0.35
+        version: 0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@invana/ui':
-        specifier: ^0.0.32
-        version: 0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
+        specifier: ^0.0.35
+        version: 0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
       '@opentelemetry/api':
         specifier: ^1.9.0
         version: 1.9.1
@@ -162,8 +162,8 @@ importers:
         version: 19.3.0(react@19.3.0)
     devDependencies:
       '@invana/forms':
-        specifier: ^0.0.32
-        version: 0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0)
+        specifier: ^0.0.35
+        version: 0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0)
       '@invana/renderer-pixijs':
         specifier: workspace:*
         version: link:../../packages/renderer-pixijs
@@ -262,14 +262,14 @@ importers:
         specifier: workspace:*
         version: link:../canvas-ui
       '@invana/forms':
-        specifier: ^0.0.32
-        version: 0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0)
+        specifier: ^0.0.35
+        version: 0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0)
       '@invana/graph':
         specifier: workspace:*
         version: link:../graph
       '@invana/ui':
-        specifier: ^0.0.32
-        version: 0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
+        specifier: ^0.0.35
+        version: 0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
@@ -451,11 +451,11 @@ importers:
   packages/canvas-ui:
     devDependencies:
       '@invana/blocks':
-        specifier: ^0.0.32
-        version: 0.0.32(b2fa55b51c1863e55b07665089a186b9)
+        specifier: ^0.0.35
+        version: 0.0.35(ecdbf610abd935f85d76f4e64335b1ae)
       '@invana/boards':
-        specifier: ^0.0.32
-        version: 0.0.32(6cd35c4d711fa3d72913330a71e6f099)
+        specifier: ^0.0.35
+        version: 0.0.35(e37a3493e9af1e821b70d66ac2e48434)
       '@invana/canvas':
         specifier: workspace:*
         version: link:../canvas
@@ -463,14 +463,14 @@ importers:
         specifier: workspace:*
         version: link:../canvas-react
       '@invana/charts':
-        specifier: ^0.0.32
-        version: 0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/tables@0.0.32(@invana/forms@0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+        specifier: ^0.0.35
+        version: 0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/tables@0.0.35(@invana/forms@0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@invana/editor':
-        specifier: ^0.0.32
-        version: 0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+        specifier: ^0.0.35
+        version: 0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@invana/forms':
-        specifier: ^0.0.32
-        version: 0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0)
+        specifier: ^0.0.35
+        version: 0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0)
       '@invana/graph':
         specifier: workspace:*
         version: link:../graph
@@ -478,17 +478,17 @@ importers:
         specifier: workspace:*
         version: link:../graph-layout-d3-force
       '@invana/styling':
-        specifier: ^0.0.32
-        version: 0.0.32(tailwindcss@4.3.2)
+        specifier: ^0.0.35
+        version: 0.0.35(tailwindcss@4.3.2)
       '@invana/tables':
-        specifier: ^0.0.32
-        version: 0.0.32(@invana/forms@0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+        specifier: ^0.0.35
+        version: 0.0.35(@invana/forms@0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@invana/themes':
-        specifier: ^0.0.32
-        version: 0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+        specifier: ^0.0.35
+        version: 0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@invana/ui':
-        specifier: ^0.0.32
-        version: 0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
+        specifier: ^0.0.35
+        version: 0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
@@ -1477,54 +1477,54 @@ packages:
   '@iconify/types@2.0.0':
     resolution: {integrity: sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg==}
 
-  '@invana/blocks@0.0.32':
-    resolution: {integrity: sha512-ze+q2b8adw8XETal9AX26nMVFljZEF0Xc36T1C/hgtegxWUwL9csgzlb3UFQQ3h7j9iMVcCD3kc6IXNXd9Mz6w==}
+  '@invana/blocks@0.0.35':
+    resolution: {integrity: sha512-E1MZPCfWucV1vuVjgkkF/90haZwnsNu72yJAO6tII3uznYHH/83ELt/fdUC/U0QBWc8ajzua1Wz0vcXFJSXtXg==}
     peerDependencies:
-      '@invana/charts': 0.0.32
-      '@invana/forms': 0.0.32
-      '@invana/styling': 0.0.32
-      '@invana/tables': 0.0.32
-      '@invana/ui': 0.0.32
+      '@invana/charts': 0.0.35
+      '@invana/forms': 0.0.35
+      '@invana/styling': 0.0.35
+      '@invana/tables': 0.0.35
+      '@invana/ui': 0.0.35
       react: ^18 || ^19
       react-dom: ^18 || ^19
       react-hook-form: ^7
 
-  '@invana/boards@0.0.32':
-    resolution: {integrity: sha512-NTje56FfqryIeAeBoByjnpy5rTlgFfZDIMV+fJtZcajExJ3puKK2dyrO7ylJFQkZ9ZrtJz4SMlM7A9uvbqE9kg==}
+  '@invana/boards@0.0.35':
+    resolution: {integrity: sha512-1deLpPF1yFGQvBXf0TOxqogBrTx2JXVXhnzwvJb3M0zg/+slVe2sV3iJoXnWjupAgJi/cYA55DDFu0SKW0Cr4g==}
     peerDependencies:
-      '@invana/blocks': 0.0.32
-      '@invana/charts': 0.0.32
-      '@invana/editor': 0.0.32
-      '@invana/forms': 0.0.32
-      '@invana/styling': 0.0.32
-      '@invana/tables': 0.0.32
-      '@invana/ui': 0.0.32
+      '@invana/blocks': 0.0.35
+      '@invana/charts': 0.0.35
+      '@invana/editor': 0.0.35
+      '@invana/forms': 0.0.35
+      '@invana/styling': 0.0.35
+      '@invana/tables': 0.0.35
+      '@invana/ui': 0.0.35
       react: ^18 || ^19
       react-dom: ^18 || ^19
       react-hook-form: ^7
 
-  '@invana/charts@0.0.32':
-    resolution: {integrity: sha512-U/2uU1iYjqsPGjHmqH5+5CvjRzdFQoBV9kGFMxAOPviBOdsSuZ74y3FRb34hiOCBw2v4aU2vNnKQ2yJabUL7iQ==}
+  '@invana/charts@0.0.35':
+    resolution: {integrity: sha512-eOdmqo1v3xPGQceuVHeqB7YURdA5AmoO1vERdU8x0/a5mW+KjhiYTXLy4O6TxdMijwhkIRvSHdzR7P4zA+f4Ow==}
     peerDependencies:
-      '@invana/styling': 0.0.32
-      '@invana/tables': 0.0.32
-      '@invana/ui': 0.0.32
+      '@invana/styling': 0.0.35
+      '@invana/tables': 0.0.35
+      '@invana/ui': 0.0.35
       react: ^18 || ^19
       react-dom: ^18 || ^19
 
-  '@invana/editor@0.0.32':
-    resolution: {integrity: sha512-iCW0hmMX10A0XD4RpKclXjBNMGeJKG5gFg+v3v2/dv/EmIoSw+aDLr80eLtcLDmoOF96dubwH6fJf3esQZcmTw==}
+  '@invana/editor@0.0.35':
+    resolution: {integrity: sha512-hSJqz9MY6Cq7KC/XdceFkACEq5AJn1T5foBAKmahzKTp9TFxM4ax6sG2lYvHd23xPzu+nCKoGMcDfYpuZV5vWA==}
     peerDependencies:
-      '@invana/styling': 0.0.32
-      '@invana/ui': 0.0.32
+      '@invana/styling': 0.0.35
+      '@invana/ui': 0.0.35
       react: ^18 || ^19
       react-dom: ^18 || ^19
 
-  '@invana/forms@0.0.32':
-    resolution: {integrity: sha512-Jfm2dsqzZRISr0DTTilsUtfPh7jw6z58yE6ZbqMT9UA6qXZoonx/E+7hscasnQREmvZ+Q39VtfOzlv/L4G04iA==}
+  '@invana/forms@0.0.35':
+    resolution: {integrity: sha512-5sfkzyaAEu0J5IDVTa34sjpyQdtC4UibrYE0Tj5WNd5YuoT7E/TdpOEzW6PYbnQzO8nx0XegEVIURPEHergUYg==}
     peerDependencies:
-      '@invana/styling': 0.0.32
-      '@invana/ui': 0.0.32
+      '@invana/styling': 0.0.35
+      '@invana/ui': 0.0.35
       react: ^18 || ^19
       react-dom: ^18 || ^19
       react-hook-form: ^7
@@ -1534,12 +1534,17 @@ packages:
     peerDependencies:
       tailwindcss: ^4.1.18
 
-  '@invana/tables@0.0.32':
-    resolution: {integrity: sha512-cZ/gDlJx/OEvVXL7e29jsAukJxZYZ6SZHcD8Ig1ZdD7cgz4CrlJeqPCanQZobv8qT2rrUDUNLiLQmZFRnti2ng==}
+  '@invana/styling@0.0.35':
+    resolution: {integrity: sha512-NOpFASzfFqUUVbs+MppT9pFflPEEIvYrTSlpp6E/Cdoxy3s0rFkYPi/onfX1hhw3QTI+Jf3E9CX3Bkpok0fQGA==}
     peerDependencies:
-      '@invana/forms': 0.0.32
-      '@invana/styling': 0.0.32
-      '@invana/ui': 0.0.32
+      tailwindcss: ^4.1.18
+
+  '@invana/tables@0.0.35':
+    resolution: {integrity: sha512-hTPPbuTI2ED2blBJIdB6U8zuTMU5vn+8YP/oiBIeOI0doW+O3/UImLRMtQeiSoMNcyk97wcSxCkpxkFjuB+I4w==}
+    peerDependencies:
+      '@invana/forms': 0.0.35
+      '@invana/styling': 0.0.35
+      '@invana/ui': 0.0.35
       react: ^18 || ^19
       react-dom: ^18 || ^19
 
@@ -1551,8 +1556,22 @@ packages:
       react: ^18 || ^19
       react-dom: ^18 || ^19
 
+  '@invana/themes@0.0.35':
+    resolution: {integrity: sha512-DIVLQ2fIo5OLmvcq4WhX2fmgTcz3k6Vhopp/EHf2uerRtC9hHNLVhIeAjI+BbzQkpq4zvVmY2dpdoYD3fj4XHA==}
+    peerDependencies:
+      '@invana/styling': 0.0.35
+      '@invana/ui': 0.0.35
+      react: ^18 || ^19
+      react-dom: ^18 || ^19
+
   '@invana/ui@0.0.32':
     resolution: {integrity: sha512-TZ2iYUSBOs38PrgTvhK3nJtLHSiEq1XCtuEIAkfS2cLKykSDNU6twOqI6N2H4WcqURxea1qIKdp/HvJAqEb/FA==}
+    peerDependencies:
+      react: ^18 || ^19
+      react-dom: ^18 || ^19
+
+  '@invana/ui@0.0.35':
+    resolution: {integrity: sha512-SMSl8SIyVdjKtKomWwZPnsg67Q/0OK9idK4weJR8GqvF/7A5ENgSgxJuMUdhKc7ex6AAwVY8PAfKjqd/St09UQ==}
     peerDependencies:
       react: ^18 || ^19
       react-dom: ^18 || ^19
@@ -6334,90 +6353,90 @@ snapshots:
 
   '@iconify/types@2.0.0': {}
 
-  '@invana/blocks@0.0.32(b2fa55b51c1863e55b07665089a186b9)':
+  '@invana/blocks@0.0.35(c9dec940aad492c2dd5c1b3b0bdb978e)':
     dependencies:
-      '@invana/charts': 0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/tables@0.0.32(@invana/forms@0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@invana/forms': 0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0)
-      '@invana/styling': 0.0.32(tailwindcss@4.3.2)
-      '@invana/tables': 0.0.32(@invana/forms@0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@invana/ui': 0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
-      react: 19.3.0
-      react-dom: 19.3.0(react@19.3.0)
-      react-hook-form: 7.76.0(react@19.3.0)
-
-  '@invana/blocks@0.0.32(d63c4e3c531b2d6fc6ea98edd0c30525)':
-    dependencies:
-      '@invana/charts': 0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/tables@0.0.32(@invana/forms@0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@invana/forms': 0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0)
-      '@invana/styling': 0.0.32(tailwindcss@4.3.2)
-      '@invana/tables': 0.0.32(@invana/forms@0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@invana/ui': 0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
+      '@invana/charts': 0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/tables@0.0.35(@invana/forms@0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@invana/forms': 0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0)
+      '@invana/styling': 0.0.35(tailwindcss@4.3.2)
+      '@invana/tables': 0.0.35(@invana/forms@0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@invana/ui': 0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
       react-hook-form: 7.81.0(react@19.3.0)
 
-  '@invana/boards@0.0.32(6cd35c4d711fa3d72913330a71e6f099)':
+  '@invana/blocks@0.0.35(ecdbf610abd935f85d76f4e64335b1ae)':
     dependencies:
-      '@invana/blocks': 0.0.32(b2fa55b51c1863e55b07665089a186b9)
-      '@invana/charts': 0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/tables@0.0.32(@invana/forms@0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@invana/editor': 0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@invana/forms': 0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0)
-      '@invana/styling': 0.0.32(tailwindcss@4.3.2)
-      '@invana/tables': 0.0.32(@invana/forms@0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@invana/ui': 0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
-      lucide-react: 1.24.0(react@19.3.0)
+      '@invana/charts': 0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/tables@0.0.35(@invana/forms@0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@invana/forms': 0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0)
+      '@invana/styling': 0.0.35(tailwindcss@4.3.2)
+      '@invana/tables': 0.0.35(@invana/forms@0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@invana/ui': 0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
       react-hook-form: 7.76.0(react@19.3.0)
 
-  '@invana/boards@0.0.32(f83181042982ac0ead5fe259c24c13a2)':
+  '@invana/boards@0.0.35(52483cc866db3d80ea5bdc7f9396870b)':
     dependencies:
-      '@invana/blocks': 0.0.32(d63c4e3c531b2d6fc6ea98edd0c30525)
-      '@invana/charts': 0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/tables@0.0.32(@invana/forms@0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@invana/editor': 0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@invana/forms': 0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0)
-      '@invana/styling': 0.0.32(tailwindcss@4.3.2)
-      '@invana/tables': 0.0.32(@invana/forms@0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@invana/ui': 0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
+      '@invana/blocks': 0.0.35(c9dec940aad492c2dd5c1b3b0bdb978e)
+      '@invana/charts': 0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/tables@0.0.35(@invana/forms@0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@invana/editor': 0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@invana/forms': 0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0)
+      '@invana/styling': 0.0.35(tailwindcss@4.3.2)
+      '@invana/tables': 0.0.35(@invana/forms@0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@invana/ui': 0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
       lucide-react: 1.24.0(react@19.3.0)
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
       react-hook-form: 7.81.0(react@19.3.0)
 
-  '@invana/charts@0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/tables@0.0.32(@invana/forms@0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+  '@invana/boards@0.0.35(e37a3493e9af1e821b70d66ac2e48434)':
     dependencies:
-      '@invana/styling': 0.0.32(tailwindcss@4.3.2)
-      '@invana/tables': 0.0.32(@invana/forms@0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@invana/ui': 0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
+      '@invana/blocks': 0.0.35(ecdbf610abd935f85d76f4e64335b1ae)
+      '@invana/charts': 0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/tables@0.0.35(@invana/forms@0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@invana/editor': 0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@invana/forms': 0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0)
+      '@invana/styling': 0.0.35(tailwindcss@4.3.2)
+      '@invana/tables': 0.0.35(@invana/forms@0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@invana/ui': 0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
+      lucide-react: 1.24.0(react@19.3.0)
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
+      react-hook-form: 7.76.0(react@19.3.0)
+
+  '@invana/charts@0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/tables@0.0.35(@invana/forms@0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+    dependencies:
+      '@invana/styling': 0.0.35(tailwindcss@4.3.2)
+      '@invana/tables': 0.0.35(@invana/forms@0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@invana/ui': 0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
       uplot: 1.6.32
 
-  '@invana/charts@0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/tables@0.0.32(@invana/forms@0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+  '@invana/charts@0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/tables@0.0.35(@invana/forms@0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     dependencies:
-      '@invana/styling': 0.0.32(tailwindcss@4.3.2)
-      '@invana/tables': 0.0.32(@invana/forms@0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@invana/ui': 0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
+      '@invana/styling': 0.0.35(tailwindcss@4.3.2)
+      '@invana/tables': 0.0.35(@invana/forms@0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@invana/ui': 0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
       uplot: 1.6.32
 
-  '@invana/editor@0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+  '@invana/editor@0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     dependencies:
       '@codemirror/commands': 6.11.1
       '@codemirror/language': 6.12.4
       '@codemirror/legacy-modes': 6.5.4
       '@codemirror/state': 6.7.6
       '@codemirror/view': 6.43.13
-      '@invana/styling': 0.0.32(tailwindcss@4.3.2)
-      '@invana/ui': 0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
+      '@invana/styling': 0.0.35(tailwindcss@4.3.2)
+      '@invana/ui': 0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
 
-  '@invana/forms@0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0)':
+  '@invana/forms@0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0)':
     dependencies:
-      '@invana/styling': 0.0.32(tailwindcss@4.3.2)
-      '@invana/ui': 0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
+      '@invana/styling': 0.0.35(tailwindcss@4.3.2)
+      '@invana/ui': 0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
       '@radix-ui/react-checkbox': 1.3.7(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@radix-ui/react-label': 2.1.11(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@radix-ui/react-radio-group': 1.4.3(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -6434,10 +6453,10 @@ snapshots:
       - '@types/react'
       - '@types/react-dom'
 
-  '@invana/forms@0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0)':
+  '@invana/forms@0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0)':
     dependencies:
-      '@invana/styling': 0.0.32(tailwindcss@4.3.2)
-      '@invana/ui': 0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
+      '@invana/styling': 0.0.35(tailwindcss@4.3.2)
+      '@invana/ui': 0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
       '@radix-ui/react-checkbox': 1.3.7(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@radix-ui/react-label': 2.1.11(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@radix-ui/react-radio-group': 1.4.3(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -6458,29 +6477,33 @@ snapshots:
     dependencies:
       tailwindcss: 4.3.2
 
-  '@invana/tables@0.0.32(@invana/forms@0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+  '@invana/styling@0.0.35(tailwindcss@4.3.2)':
+    dependencies:
+      tailwindcss: 4.3.2
+
+  '@invana/tables@0.0.35(@invana/forms@0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     dependencies:
       '@dnd-kit/core': 6.3.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@dnd-kit/modifiers': 9.0.0(@dnd-kit/core@6.3.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0)
       '@dnd-kit/sortable': 10.0.0(@dnd-kit/core@6.3.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0)
       '@dnd-kit/utilities': 3.2.2(react@19.3.0)
-      '@invana/forms': 0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0)
-      '@invana/styling': 0.0.32(tailwindcss@4.3.2)
-      '@invana/ui': 0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
+      '@invana/forms': 0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.76.0(react@19.3.0))(react@19.3.0)
+      '@invana/styling': 0.0.35(tailwindcss@4.3.2)
+      '@invana/ui': 0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
       '@tanstack/react-table': 8.21.3(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       lucide-react: 1.24.0(react@19.3.0)
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
 
-  '@invana/tables@0.0.32(@invana/forms@0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+  '@invana/tables@0.0.35(@invana/forms@0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0))(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     dependencies:
       '@dnd-kit/core': 6.3.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@dnd-kit/modifiers': 9.0.0(@dnd-kit/core@6.3.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0)
       '@dnd-kit/sortable': 10.0.0(@dnd-kit/core@6.3.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0)
       '@dnd-kit/utilities': 3.2.2(react@19.3.0)
-      '@invana/forms': 0.0.32(@invana/styling@0.0.32(tailwindcss@4.3.2))(@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0)
-      '@invana/styling': 0.0.32(tailwindcss@4.3.2)
-      '@invana/ui': 0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
+      '@invana/forms': 0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-hook-form@7.81.0(react@19.3.0))(react@19.3.0)
+      '@invana/styling': 0.0.35(tailwindcss@4.3.2)
+      '@invana/ui': 0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
       '@tanstack/react-table': 8.21.3(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       lucide-react: 1.24.0(react@19.3.0)
       react: 19.3.0
@@ -6493,7 +6516,59 @@ snapshots:
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
 
+  '@invana/themes@0.0.35(@invana/styling@0.0.35(tailwindcss@4.3.2))(@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+    dependencies:
+      '@invana/styling': 0.0.35(tailwindcss@4.3.2)
+      '@invana/ui': 0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
+
   '@invana/ui@0.0.32(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)':
+    dependencies:
+      '@hookform/resolvers': 5.4.0(react-hook-form@7.81.0(react@19.3.0))
+      '@radix-ui/react-accordion': 1.2.16(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-alert-dialog': 1.1.19(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-avatar': 1.2.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-checkbox': 1.3.7(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-dialog': 1.1.19(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-dropdown-menu': 2.1.20(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-hover-card': 1.1.19(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-label': 2.1.11(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-menubar': 1.1.20(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-navigation-menu': 1.2.18(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-popover': 1.1.19(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-progress': 1.1.12(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-radio-group': 1.4.3(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-scroll-area': 1.2.14(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-select': 2.3.3(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-separator': 1.1.11(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-slider': 1.4.3(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-slot': 1.3.0(@types/react@19.3.0)(react@19.3.0)
+      '@radix-ui/react-switch': 1.3.3(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-tabs': 1.1.17(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-toggle': 1.1.14(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-toggle-group': 1.1.15(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-tooltip': 1.2.12(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@shadcn/react': 0.3.1(@types/react@19.3.0)(react@19.3.0)
+      class-variance-authority: 0.7.1
+      clsx: 2.1.1
+      cmdk: 1.1.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      embla-carousel-react: 8.6.0(react@19.3.0)
+      lucide-react: 1.24.0(react@19.3.0)
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
+      react-hook-form: 7.81.0(react@19.3.0)
+      react-resizable-panels: 4.12.2(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      sonner: 2.0.7(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      tailwind-merge: 3.6.0
+      tailwindcss-animate: 1.0.7(tailwindcss@4.3.2)
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - '@types/react'
+      - '@types/react-dom'
+      - tailwindcss
+
+  '@invana/ui@0.0.35(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.2)':
     dependencies:
       '@hookform/resolvers': 5.4.0(react-hook-form@7.81.0(react@19.3.0))
       '@radix-ui/react-accordion': 1.2.16(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)

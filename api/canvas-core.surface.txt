@@ -1,7 +1,7 @@
 # @invana/canvas-core — public API surface (generated; do not hand-edit)
 # Regenerate: pnpm build && node scripts/check-api-surface.mjs --write
 
-## . (395 exports)
+## . (399 exports)
 AnchorCtx
 AnchorShapeRef
 AnchorSpec
@@ -31,6 +31,7 @@ CanvasContext
 CanvasEvent
 CanvasEventBus
 CanvasGlobalEvents
+CanvasLayoutPreset
 CanvasSceneOptions
 CanvasStore
 CanvasThemeState
@@ -163,6 +164,7 @@ LayoutOptions
 LayoutRegistry
 LayoutRegistryOptions
 LayoutRunOptions
+LayoutSetOptions
 LiquidFillDecorationStyle
 Listener
 LocalSpec
@@ -297,6 +299,7 @@ boundsOfSpec
 boundsOfStar
 bumpHorizontalPathStyle
 bumpRadialPathStyle
+bumpVerticalPathStyle
 bundlePathStyle
 centerAnchor
 collapsedSpec
@@ -380,6 +383,7 @@ shallowEqual
 shapeSpecToSvg
 silhouettePortAnchor
 smoothPathStyle
+splinePathStyle
 starVertices
 stepRadialPathStyle
 straightRouter

@@ -12,7 +12,7 @@
  * - shapes      — `ShapeCtor`             (built-ins: circle, rect, arrow)
  * - routers     — `IRouter`               (built-ins: straight, orth, orthogonal,
  *                                          manhattan, metro, er, oneSide)
- * - pathStyles  — `IPathStyle`            (built-ins: normal, rounded, bezier, bump-radial, bump-horizontal, step-radial, smooth, bundle, loop-curve, loop-polyline)
+ * - pathStyles  — `IPathStyle`            (built-ins: normal, rounded, bezier, bump-radial, bump-horizontal, bump-vertical, step-radial, smooth, spline, bundle, loop-curve, loop-polyline)
  * - anchors     — `IAnchor`               (built-ins: center, boundary, perpendicular)
  * - decorations — shape / connector       (built-ins: glow)
  *
@@ -33,7 +33,7 @@
 
 import { Container, RenderLayer } from 'pixi.js';
 import { PickingIndex } from '@invana/canvas-store';
-import { DEFAULT_ENDPOINT_BADGE_GAP_PX, bezierPathStyle, boundaryAnchor, bumpHorizontalPathStyle, bumpRadialPathStyle, bundlePathStyle, centerAnchor, connectorGeometryKey, connectorToSvg, edgePortAnchor, erRouter, loopCurvePathStyle, loopPolylinePathStyle, manhattanRouter, metroRouter, normalPathStyle, oneSideRouter, orthRouter, perpendicularAnchor, quadraticPathStyle, resolveBadgePosition, resolveConnectorBadgePosition, resolveLabelScale, roundedPathStyle, samplePath, shapeSpecToSvg, silhouettePortAnchor, smoothPathStyle, stepRadialPathStyle, straightRouter, trimPathEnds } from '@invana/canvas-core';
+import { DEFAULT_ENDPOINT_BADGE_GAP_PX, bezierPathStyle, boundaryAnchor, bumpHorizontalPathStyle, bumpRadialPathStyle, bumpVerticalPathStyle, bundlePathStyle, centerAnchor, connectorGeometryKey, connectorToSvg, edgePortAnchor, erRouter, loopCurvePathStyle, loopPolylinePathStyle, manhattanRouter, metroRouter, normalPathStyle, oneSideRouter, orthRouter, perpendicularAnchor, quadraticPathStyle, resolveBadgePosition, resolveConnectorBadgePosition, resolveLabelScale, roundedPathStyle, samplePath, shapeSpecToSvg, silhouettePortAnchor, smoothPathStyle, splinePathStyle, stepRadialPathStyle, straightRouter, trimPathEnds } from '@invana/canvas-core';
 import { ConnectorInstance } from './mounted/ConnectorInstance';
 import { ShapeInstance } from './mounted/ShapeInstance';
 import type { BadgeOptions, Camera, IElementRenderer, LabelSizePolicy, LabelSizeTarget, ShapeDisplayOverride } from '@invana/canvas-core';
@@ -463,9 +463,12 @@ export class PrimitivesRenderer implements HitGeometrySource, IElementRenderer {
     this.registerPathStyle('quadratic', quadraticPathStyle);
     this.registerPathStyle('bump-radial', bumpRadialPathStyle);
     this.registerPathStyle('bump-horizontal', bumpHorizontalPathStyle);
+    this.registerPathStyle('bump-vertical', bumpVerticalPathStyle);
     this.registerPathStyle('bundle', bundlePathStyle);
     this.registerPathStyle('step-radial', stepRadialPathStyle);
     this.registerPathStyle('smooth', smoothPathStyle);
+    // A layout engine's own curve, read as Bézier control points (ELK SPLINES).
+    this.registerPathStyle('spline', splinePathStyle);
     // Self-loop pathStyles — draw a petal / U-stub anchored at the first
     // polyline point. Pair with `router: 'straight'` and a connector whose
     // source and target reference the same shape.

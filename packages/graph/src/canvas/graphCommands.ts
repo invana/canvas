@@ -10,9 +10,12 @@
  * | `graph.edgeType` | `{ layerId?, types?, value }` (default `'graph'`, {@link DEFAULT_EDGE_TYPES}) | choice |
  * | `graph.clear` | `{ layerId? }` (default `'graph'`) | button — one undoable `'clear'` entry in `canvas.history` |
  * | `graph.redraw` | `{ layerId? }` (default `'graph'`) | button — re-project the layer |
+ * | `graph.typeVisible` | `{ layerId?, kind, type }` — `kind` is `'node'` or `'edge'` | toggle — active while the type is drawn; one undoable `edit:type-visibility` write of the layer's `hiddenTypes` |
  * | `graph.erase` | `{ layerId?, clickSelectId? }` (default `'graph'` / `'click-select'`) | button — deletes the click-selection when there is one (active), else clears the layer via `graph.clear`; undoable |
  * | `clipboard.cut` / `.copy` / `.paste` / `.delete` | `{ layerId?, clickSelectId? }` | button — over the layer's `GraphClipboard` and the click-selection; undoable |
  * | `layout.activate` | `{ value }` | choice — overrides the engine's so the facade's auto-run is the only run |
+ * | `layout.preset` | `{ value, overrides? }` | choice — `GraphCanvas.applyLayoutPreset`; a preset whose layout isn't registered, or whose `maxNodes` the board exceeds, is offered disabled with the reason |
+ * | `layout.presetRun` | — | button — *Run again*: `GraphCanvas.runLayoutPreset` |
  * | `tool.active` | `{ tools?, value }` — the modeller tool = `view.interaction.viewMode` | choice; also a per-tool toggle (active while the mode is `args.value`) |
  * | `tool.nodeKind` | `{ kinds?, value }` — `viewModeArgs.nodeKind`; `kinds` maps key → label | choice, enabled while the tool is `add` |
  *
@@ -40,6 +43,7 @@ import {
   selectedElementIds,
   setEdgePathType,
 } from './graphActions';
+import type { LayoutPresetSpec } from './layoutPresets';
 import { resolveSelectMode, selectModePatch } from './selectMode';
 
 /**
@@ -59,8 +63,10 @@ export const DEFAULT_EDGE_TYPE_LABELS: Record<string, string> = {
   manhattan: 'Manhattan',
   'bump-radial': 'Bump (radial)',
   'bump-horizontal': 'Bump (horizontal)',
+  'bump-vertical': 'Bump (vertical)',
   'step-radial': 'Step (radial)',
   bundle: 'Bundled',
+  spline: 'Spline',
 };
 
 /** Default `select.mode` modes: click needs no behaviour; brush / lasso enable theirs. */
@@ -158,6 +164,7 @@ export interface GraphCommandMap {
   'graph.edgeType': { layerId?: string; types?: string[]; value?: string } | undefined;
   'graph.clear': LayerArgs;
   'graph.redraw': LayerArgs;
+  'graph.typeVisible': { layerId?: string; kind: 'node' | 'edge'; type: string } | undefined;
   'graph.erase': SelectionArgs;
   'clipboard.cut': SelectionArgs;
   'clipboard.copy': SelectionArgs;
@@ -166,6 +173,8 @@ export interface GraphCommandMap {
   'tool.active': { value?: string; tools?: string[] } | undefined;
   'tool.nodeKind': { value?: string; kinds?: Record<string, string> } | undefined;
   'layout.activate': { value?: string } | undefined;
+  'layout.preset': { value?: string; overrides?: Record<string, string> } | undefined;
+  'layout.presetRun': undefined;
 }
 
 /**
@@ -181,6 +190,13 @@ export type GraphCanvasCommandMap = Omit<EngineCommandMap, keyof GraphCommandMap
 export interface GraphEditAccess {
   /** The `GraphClipboard` over graph layer `layerId`'s store, or `null`. */
   clipboard(layerId: string): GraphClipboard | null;
+}
+
+/** How the preset commands reach their canvas's presets — `GraphCanvas`. */
+export interface GraphLayoutPresetAccess {
+  layoutPresets(): readonly LayoutPresetSpec[];
+  applyLayoutPreset(id: string, overrides?: Readonly<Record<string, string>>): void;
+  runLayoutPreset(): Promise<void>;
 }
 
 /** The click-select behaviour id a command reads (`args.clickSelectId`, default `'click-select'`). */
@@ -238,8 +254,10 @@ const selectModes = (args: unknown) => arg<Record<string, string>>(args, 'modes'
 
 /** The graph commands that don't touch the per-layer edit state. */
 type StatelessGraphCommands = {
-  [K in Exclude<keyof GraphCommandMap, keyof EditCommands>]: CanvasCommand<Canvas, GraphCommandMap[K]>;
+  [K in Exclude<keyof GraphCommandMap, keyof EditCommands | PresetCommandName>]: CanvasCommand<Canvas, GraphCommandMap[K]>;
 };
+/** The preset commands — over the canvas's presets, see {@link GraphLayoutPresetAccess}. */
+type PresetCommandName = 'layout.preset' | 'layout.presetRun';
 /** The graph commands over the per-layer clipboard — see {@link registerGraphEditCommands}. */
 export type EditCommandName =
   | 'graph.clear'
@@ -309,6 +327,30 @@ const GRAPH_COMMANDS: StatelessGraphCommands = {
       setEdgePathType(layer, next);
     },
   },
+  'graph.typeVisible': {
+    label: 'Show type',
+    args: {
+      ...LAYER_ARG,
+      kind: { kind: 'enum', label: 'Kind', options: [{ value: 'node', label: 'Node' }, { value: 'edge', label: 'Relationship' }], required: true },
+      type: { kind: 'string', label: 'Type', required: true },
+    },
+    isEnabled: (canvas, args) => graphLayer(canvas, args) !== undefined && !!arg<string>(args, 'type'),
+    isActive: (canvas, args) => {
+      const layer = graphLayer(canvas, args);
+      const kind = arg<'node' | 'edge'>(args, 'kind') ?? 'node';
+      const type = arg<string>(args, 'type');
+      return !!layer && !!type && !layer.hiddenTypes[kind].includes(type);
+    },
+    run: (canvas, args) => {
+      const layer = graphLayer(canvas, args);
+      const kind = arg<'node' | 'edge'>(args, 'kind') ?? 'node';
+      const type = arg<string>(args, 'type');
+      if (!layer || !type) return;
+      const hidden = layer.hiddenTypes;
+      hidden[kind] = hidden[kind].includes(type) ? hidden[kind].filter((t) => t !== type) : [...hidden[kind], type];
+      canvas.update({ layers: { [layer.id]: { hiddenTypes: hidden } } }, 'edit:type-visibility');
+    },
+  },
   'graph.redraw': {
     label: 'Redraw',
     args: LAYER_ARG,
@@ -376,6 +418,7 @@ const GRAPH_META: { [K in keyof GraphCommandMap]: Pick<CanvasCommand<Canvas>, 'c
   'graph.edgeType': { category: 'View', keywords: ['routing', 'curved', 'straight', 'orthogonal'] },
   'graph.clear': { category: 'Edit', keywords: ['empty', 'remove all', 'reset'] },
   'graph.redraw': { category: 'View', keywords: ['refresh', 'repaint'] },
+  'graph.typeVisible': { category: 'View', keywords: ['hide type', 'show type', 'legend', 'filter'] },
   'graph.erase': { category: 'Edit', keywords: ['delete', 'remove'] },
   'clipboard.cut': { category: 'Edit' },
   'clipboard.copy': { category: 'Edit', keywords: ['duplicate'] },
@@ -384,17 +427,74 @@ const GRAPH_META: { [K in keyof GraphCommandMap]: Pick<CanvasCommand<Canvas>, 'c
   'tool.active': { category: 'Tools', keywords: ['select', 'add', 'connect', 'delete', 'mode'] },
   'tool.nodeKind': { category: 'Tools', keywords: ['shape'] },
   'layout.activate': { category: 'Layout', keywords: ['switch layout'] },
+  'layout.preset': { category: 'Layout', keywords: ['network', 'tree', 'flow', 'radial', 'preset'] },
+  'layout.presetRun': { category: 'Layout', keywords: ['run again', 'relayout'] },
 };
 
 /**
  * Register every graph command on `registry` (overriding same-named engine
  * built-ins), with the clipboard commands over `access`.
  */
-export function registerGraphCommands(registry: CommandRegistry<Canvas>, access: GraphEditAccess): void {
+export function registerGraphCommands(
+  registry: CommandRegistry<Canvas>,
+  access: GraphEditAccess & GraphLayoutPresetAccess,
+): void {
   for (const [name, command] of Object.entries(GRAPH_COMMANDS)) {
     registry.register(name, { ...GRAPH_META[name as keyof GraphCommandMap], ...command });
   }
+  for (const [name, command] of Object.entries(presetCommands(access))) {
+    registry.register(name, { ...GRAPH_META[name as keyof GraphCommandMap], ...command });
+  }
   registerGraphEditCommands(registry, access);
+}
+
+/**
+ * The preset picker's options: one per preset, disabled — with the reason as
+ * its `description` — when its layout isn't registered, or the layout's target
+ * layer has more nodes than the preset's `maxNodes`.
+ */
+export function layoutPresetOptions(canvas: Canvas, presets: readonly LayoutPresetSpec[]): CommandOption[] {
+  return presets.map((p) => {
+    const option: CommandOption = { value: p.id, label: p.label, icon: `layout-${p.id}` };
+    const layout = canvas.layouts.get(p.layoutId);
+    if (!layout) return { ...option, disabled: true, description: `Needs the \`${p.layoutId}\` layout` };
+    const target = layout.targetLayerId ? canvas.layers.get<GraphLayer>(layout.targetLayerId) : undefined;
+    const count = target?.store?.nodeCount() ?? 0;
+    if (p.maxNodes !== undefined && count > p.maxNodes) {
+      return {
+        ...option,
+        disabled: true,
+        description: `Draws up to ${p.maxNodes.toLocaleString()} nodes · this board has ${count.toLocaleString()}`,
+      };
+    }
+    return option;
+  });
+}
+
+function presetCommands(access: GraphLayoutPresetAccess): Record<PresetCommandName, CanvasCommand<Canvas>> {
+  return {
+    'layout.preset': {
+      label: 'Layout preset',
+      args: {
+        value: { kind: 'string', label: 'Preset', pick: true },
+        overrides: { kind: 'json', label: 'Options', description: 'Option key → value, over the preset\'s defaults' },
+      },
+      value: (canvas) => canvas.store.view.getState().definition.layoutPreset?.id ?? null,
+      options: (canvas) => layoutPresetOptions(canvas, access.layoutPresets()),
+      isEnabled: () => access.layoutPresets().length > 0,
+      run: (canvas, args) => {
+        const id = arg<string>(args, 'value');
+        if (!id) return;
+        if (layoutPresetOptions(canvas, access.layoutPresets()).find((o) => o.value === id)?.disabled) return;
+        access.applyLayoutPreset(id, arg<Record<string, string>>(args, 'overrides') ?? {});
+      },
+    },
+    'layout.presetRun': {
+      label: 'Run again',
+      isEnabled: (canvas) => canvas.store.view.getState().definition.activeLayout !== null,
+      run: () => access.runLayoutPreset(),
+    },
+  };
 }
 
 /** Options for {@link registerGraphEditCommands}. */

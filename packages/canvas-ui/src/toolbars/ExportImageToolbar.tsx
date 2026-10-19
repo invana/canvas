@@ -11,6 +11,7 @@ import type {
 } from '../components';
 import { useCanvasImageExport } from '@invana/canvas-react';
 import type { DownloadImageExportOptions } from '@invana/canvas-react';
+import { iconButtonSize, useToolbarSize } from '../components/toolbarSize';
 
 // The image-format union lives with the dumb `ExportImagePanel` building block;
 // re-exported here so the toolbar's props type is self-contained.
@@ -74,6 +75,7 @@ export function ExportImageToolbar({
   canvas,
   className,
 }: ExportImageToolbarProps) {
+  const toolbarSize = useToolbarSize();
   const { download } = useCanvasImageExport(canvas);
   const [value, setValue] = useState<ExportImagePanelValue>({ ...DEFAULT_VALUE, ...defaultValue });
 
@@ -100,11 +102,11 @@ export function ExportImageToolbar({
       <HoverCardTrigger asChild>
         <Button
           variant="ghost"
-          size={triggerText ? 'sm' : 'icon'}
+          size={triggerText ? 'sm' : iconButtonSize(toolbarSize)}
           aria-label={label}
           className={className}
         >
-          <TriggerIcon size={16} />
+          <TriggerIcon />
           {triggerText}
         </Button>
       </HoverCardTrigger>

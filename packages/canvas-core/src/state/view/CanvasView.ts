@@ -20,6 +20,13 @@ import type { CameraIntent } from '../log/types';
  * this layer — the engine and the schema-driven editors give them concrete shape,
  * and the kernel stays domain-free (it treats element `style` as opaque).
  */
+/** A layout preset by id, and the options changed over its defaults. */
+export interface CanvasLayoutPreset {
+  id: string;
+  /** Option key → chosen value, only where it differs from the preset's default. */
+  overrides?: Record<string, string>;
+}
+
 export interface CanvasView {
   /** "What the visualisation IS" — persisted, converged (a CRDT doc later). */
   definition: {
@@ -33,6 +40,13 @@ export interface CanvasView {
     layouts: Record<string, Record<string, unknown>>;
     /** Id of the active layout among {@link layouts}, or `null`. */
     activeLayout: string | null;
+    /**
+     * The layout preset the layout, edge and layout-option slices were last set
+     * from, and the options changed over it — `null` when none was applied. The
+     * expanded slices are what take effect; this names them, for the picker,
+     * *Reset to preset* and a replayed walkthrough step.
+     */
+    layoutPreset: CanvasLayoutPreset | null;
     /** Authored node/edge templates (designer output). */
     templates: unknown[];
     /** Theme **config** (registry + active family + mode + accent). The *resolved* theme is derived. */
@@ -192,6 +206,7 @@ export function defaultCanvasView(): CanvasView {
       behaviours: {},
       layouts: {},
       activeLayout: null,
+      layoutPreset: null,
       templates: [],
       theme: {},
       controlPanels: {},

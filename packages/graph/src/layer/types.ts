@@ -68,12 +68,16 @@ export type EdgePathType =
   | 'quadratic'
   | 'bump-radial'
   | 'bump-horizontal'
+  | 'bump-vertical'
   | 'step-radial'
   | 'orth'
   | 'manhattan'
   | 'rounded'
   | 'smooth'
   | 'bundle'
+  // A layout engine's own curve: `waypoints` are its Bézier control points
+  // (ELK `SPLINES` routes).
+  | 'spline'
   // Self-loop variants — use when `source === target`. Path geometry is
   // generated from `pathStyleOpts` (angle, radius/stubLength, width/gap)
   // anchored at the host node; the anchor/router pair is degenerate for a
@@ -1257,6 +1261,27 @@ export interface EdgeShapeOptions {
   readonly waypoints?: ReadonlyArray<{ readonly x: number; readonly y: number }>;
 }
 
+/** One edge's path as a layout computed it: the type it was routed for, and its points. */
+export interface LayoutRoute {
+  readonly pathType: EdgePathType;
+  readonly waypoints: ReadonlyArray<{ readonly x: number; readonly y: number }>;
+}
+
+/** Where a layout's drawing is centred. Polar path types (`bump-radial`, `step-radial`) curve around `origin`. */
+export interface LayoutFrame {
+  readonly origin: { readonly x: number; readonly y: number };
+}
+
+/**
+ * The edge geometry one layout run produced — written with
+ * `GraphLayer.setLayoutGeometry`, never stored on the edges.
+ */
+export interface LayoutGeometry {
+  /** Routes by edge id. An edge with no entry draws as its style says. */
+  readonly routes?: ReadonlyMap<string, LayoutRoute>;
+  readonly frame?: LayoutFrame;
+}
+
 /**
  * Flat-prefixed style bag for an edge. Edges have one stroke (the path), so
  * stroke fields are unprefixed. Arrow ends and label keep their distinct
@@ -1447,6 +1472,15 @@ export const DEFAULT_EDGE_STATES: Readonly<Record<CanonicalStateName, EdgeStyle>
 
 /** Constructor options for `GraphLayer`. */
 export interface GraphLayerOptions {
+  /**
+   * Node and edge **types** drawn hidden — every element of a listed type, and
+   * those that arrive later; an edge whose endpoint's type is hidden goes with
+   * it. A layer option, so hiding a type through `canvas.update` is one undo
+   * step, rides an export and is captured by a walkthrough step. Each list is
+   * replaced whole. The legend and the `graph.typeVisible` command write it.
+   */
+  hiddenTypes?: { node?: string[]; edge?: string[] };
+
   /**
    * Optional pre-built store. If omitted, the layer creates its own with
    * default options (`flushMode: 'sync'`, `unknownEndpoint: 'throw'`). Pass

@@ -61,6 +61,9 @@ export {
   type EdgeBadgePlacement,
   type EdgeOption,
   type EdgeShapeOptions,
+  type LayoutFrame,
+  type LayoutGeometry,
+  type LayoutRoute,
   type EdgeStyle,
   type GroupOptions,
   type NodeBadge,
@@ -93,7 +96,11 @@ export {
   DEFAULT_EDGE_TYPES,
   DEFAULT_EDGE_TYPE_LABELS,
   eraseCommand,
+  layoutPresetOptions,
   registerGraphEditCommands,
+  DEFAULT_LAYOUT_PRESETS,
+  expandLayoutPreset,
+  remapLayoutPresets,
   resolveSelectMode,
   selectModePatch,
   clearGraphLayer,
@@ -108,6 +115,12 @@ export {
 export type {
   GraphCanvasOptions,
   GraphEditAccess,
+  GraphLayoutPresetAccess,
+  LayoutPresetDirection,
+  LayoutPresetEdge,
+  LayoutPresetExpansion,
+  LayoutPresetPatch,
+  LayoutPresetSpec,
   GraphCommandMap,
   GraphCanvasCommandMap,
   EditCommandName,
@@ -141,6 +154,8 @@ export {
   type LayoutEdge,
   type LayoutNodeSize,
 } from './layout/groups';
+
+export { resolveLayoutRoot, type LayoutRootRule } from './layout/roots';
 
 export {
   type HistoryOp,

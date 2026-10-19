@@ -32,7 +32,7 @@ import {
   useState,
 } from 'react';
 import { deepMerge, type CanvasConfig, type CanvasTelemetryConfig } from '@invana/canvas';
-import type { GraphCanvas, GraphData } from '@invana/graph';
+import { DEFAULT_LAYOUT_PRESETS, remapLayoutPresets, type GraphCanvas, type GraphData, type LayoutPresetSpec } from '@invana/graph';
 import { useTheme } from '@invana/themes';
 
 // Aliased: the engine type `GraphCanvas` (from `@invana/graph`) is used in this
@@ -81,6 +81,17 @@ export interface GraphCanvasAppControlContext {
 
 /** Id of the registered active layout, pointed at by `activeLayout`. */
 const ACTIVE_LAYOUT_ID = 'graph-force';
+
+/**
+ * The layout presets the bundle offers: `@invana/graph`'s defaults with
+ * *Network* on the bundle's force (`graph-force`). The ELK presets name the
+ * layout id `elk`, which the bundle doesn't register: add an `<ElkLayout
+ * id="elk" targetLayerId="graph" />` child to offer them — until then the
+ * picker shows them disabled, with the reason.
+ */
+export const LAYOUT_PRESETS: readonly LayoutPresetSpec[] = remapLayoutPresets(DEFAULT_LAYOUT_PRESETS, {
+  network: ACTIVE_LAYOUT_ID,
+});
 
 /**
  * The bundle's default config — **every** per-instance setting lives here, keyed
@@ -197,6 +208,19 @@ function cx(...parts: Array<string | false | undefined>): string {
 
 // ─── Internal bridges (null-rendering <Canvas> children) ──────────────────────
 
+/**
+ * Gives the canvas the bundle's {@link LAYOUT_PRESETS}. A child, so it lands
+ * before the root applies `config` — a `config.layoutPreset` then expands
+ * against these ids.
+ */
+function BundleLayoutPresets() {
+  const canvas = useGraphCanvas();
+  useEffect(() => {
+    canvas?.setLayoutPresets(LAYOUT_PRESETS);
+  }, [canvas]);
+  return null;
+}
+
 /** Publishes the initialised engine up to the orchestrator's lifted context. */
 function CanvasReady({ onReady }: { onReady: (canvas: GraphCanvas | null) => void }) {
   const canvas = useGraphCanvas();
@@ -266,6 +290,7 @@ function GraphCanvasAppMain({
               `config.fitOnLoad` one-shot is the single fitter (and centres even
               when no layout runs). */}
           <D3ForceLayout id={ACTIVE_LAYOUT_ID} targetLayerId="graph" fitPadding={null} />
+          <BundleLayoutPresets />
           {/* The sole theme publisher + the shared host-theme sync that drives its
               mode/active from the host `<ThemeProvider>`. Every theme-aware layer
               recolours off the published palette. */}

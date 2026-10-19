@@ -30,9 +30,9 @@
   },
   "devDependencies": {
     "@invana/canvas-ui": "workspace:*",
-    "@invana/forms": "^0.0.32",
+    "@invana/forms": "^0.0.35",
     "@invana/graph": "workspace:*",
-    "@invana/ui": "^0.0.32",
+    "@invana/ui": "^0.0.35",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/react": "^19.2.17",

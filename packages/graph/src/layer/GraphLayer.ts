@@ -37,11 +37,13 @@ import {
   type EdgeOption,
   type ArrowShape,
   type EdgePathType,
+  type EdgeShapeOptions,
   type EdgeStyle,
   type GraphData,
   type GraphLayerEvents,
   type GraphLayerOptions,
   type GroupOptions,
+  type LayoutGeometry,
   type NodeBadge,
   type NodeDecorationSpec,
   type NodeOption,
@@ -99,6 +101,12 @@ function pathTypeToRouterPathStyle(t: EdgePathType): { router: string; pathStyle
       return { router: 'straight', pathStyle: 'bump-radial' };
     case 'bump-horizontal':
       return { router: 'straight', pathStyle: 'bump-horizontal' };
+    case 'bump-vertical':
+      return { router: 'straight', pathStyle: 'bump-vertical' };
+    case 'spline':
+      // The waypoints are the curve's control points, so they must reach the
+      // pathStyle untouched — `straight` is the router that passes them through.
+      return { router: 'straight', pathStyle: 'spline' };
     case 'step-radial':
       return { router: 'straight', pathStyle: 'step-radial' };
     case 'orth':
@@ -123,6 +131,46 @@ function pathTypeToRouterPathStyle(t: EdgePathType): { router: string; pathStyle
       return { router: 'straight', pathStyle: t };
   }
 }
+
+/**
+ * The Edges option's three families. A layout's route is honoured only by a
+ * path type of its own family — an orthogonal route never draws under
+ * *Straight*. Types with no family (`step-radial`, `bundle`, the loops) take
+ * no route.
+ */
+type EdgeFamily = 'straight' | 'curved' | 'orthogonal';
+const EDGE_FAMILY: Partial<Record<EdgePathType, EdgeFamily>> = {
+  straight: 'straight',
+  bezier: 'curved',
+  quadratic: 'curved',
+  'bump-horizontal': 'curved',
+  'bump-vertical': 'curved',
+  'bump-radial': 'curved',
+  spline: 'curved',
+  orth: 'orthogonal',
+  rounded: 'orthogonal',
+  smooth: 'orthogonal',
+  manhattan: 'orthogonal',
+};
+
+/**
+ * Path types whose router + pathStyle draw *through* `waypoints`. Under a route,
+ * one of these keeps itself; the rest (`bezier`, `bump-*`, …) ignore waypoints,
+ * so they yield to the route's own type.
+ */
+const DRAWS_THROUGH_WAYPOINTS: ReadonlySet<EdgePathType> = new Set<EdgePathType>([
+  'straight',
+  'orth',
+  'rounded',
+  'smooth',
+  'manhattan',
+  'spline',
+]);
+
+/** Path types that curve around a polar origin, filled from the layout frame. */
+const POLAR_PATH_TYPES: ReadonlySet<EdgePathType> = new Set<EdgePathType>(['bump-radial', 'step-radial']);
+
+type MutableEdgeShape = { -readonly [K in keyof EdgeShapeOptions]: EdgeShapeOptions[K] };
 
 // ─── State (none for now) ──────────────────────────────────────────────────
 
@@ -208,6 +256,13 @@ export class GraphLayer extends WorldLayer<
    * start of a canvas's life.
    */
   private layoutHasRun = false;
+
+  /** Edge geometry of the last layout run — see {@link setLayoutGeometry}. */
+  private layoutGeometry: LayoutGeometry = {};
+  /** The layout instance that wrote {@link layoutGeometry}; `null` when empty. */
+  private layoutGeometryOwner: { readonly id: string } | null = null;
+  /** `activeLayout` as last seen, to clear geometry when it changes. */
+  private seenActiveLayoutId: string | null | undefined;
   /** Pending {@link PLACEMENT_GRACE_MS} timer — see {@link evaluatePlacementPending}. */
   private placementGrace: ReturnType<typeof setTimeout> | undefined;
 
@@ -334,6 +389,7 @@ export class GraphLayer extends WorldLayer<
     // construction unit tests are unaffected; a caller can still pass their own
     // `store`.) Trade-off: graph updates land on the next frame, not synchronously.
     this.store = opts.options.store ?? new GraphStore({ id: this.id, flushMode: 'frame' });
+    if (opts.options.hiddenTypes) this.setHiddenTypes(opts.options.hiddenTypes);
     // v3 G6-aligned layer template — single source of truth for style /
     // state catalogue. Both fields are resolver-aware via the
     // `ResolvableNodeStyle` / `ResolvableEdgeStyle` shape. The canonical
@@ -389,8 +445,19 @@ export class GraphLayer extends WorldLayer<
     // 'settled' that never comes would strand the graph behind the grace timer.
     this.subs.push(ctx.events.on('layout:run:end', ({ id }) => liftGate(id)));
     // `activeLayout` can be assigned after mount; re-evaluate when it changes.
+    // An `activeLayout` change also retires the geometry of a layout that is
+    // no longer the active one.
+    this.seenActiveLayoutId = this.activeLayoutId();
     this.subs.push(
-      ctx.store.view.subscribe(() => this.evaluatePlacementPending()),
+      ctx.store.view.subscribe(() => {
+        this.evaluatePlacementPending();
+        const active = this.activeLayoutId();
+        if (active === this.seenActiveLayoutId) return;
+        this.seenActiveLayoutId = active;
+        if (this.layoutGeometryOwner && this.layoutGeometryOwner.id !== active) {
+          this.clearLayoutGeometry();
+        }
+      }),
     );
     this.evaluatePlacementPending();
     // Register the store as this source on the kernel (D13, Phase 3.2). The store
@@ -1012,6 +1079,73 @@ export class GraphLayer extends WorldLayer<
   }
 
   /**
+   * Announce that `layout` is starting a run on this layer. Every layout that
+   * places this layer's nodes calls it first thing in `apply` — the run may
+   * not come through `Canvas.runLayout` (`useLayout` and the React layout
+   * wrappers call `apply` directly), so the layer can't learn it from the bus.
+   *
+   * A run by any instance other than the one that wrote the current
+   * {@link setLayoutGeometry} clears that geometry: routes are computed for
+   * positions the new layout is about to move. A re-run of the same instance
+   * keeps its routes until it writes new ones, so a re-flow doesn't flash
+   * straight edges mid-glide.
+   */
+  beginLayoutRun(layout: { readonly id: string }): void {
+    if (this.layoutGeometryOwner !== null && this.layoutGeometryOwner !== layout) {
+      this.clearLayoutGeometry();
+    }
+  }
+
+  /**
+   * Replace the layout geometry — routes by edge id and the frame — with what
+   * `layout`'s run just computed, and redraw the edges it touches.
+   *
+   * Layout geometry is **not edge data**: it never reaches the store, an
+   * export or a snapshot, and it is cleared when another layout runs
+   * ({@link beginLayoutRun}) or `activeLayout` moves to another id. It sits
+   * between the layer template and each edge's own style in
+   * {@link resolveEdgeStyle}, and a route is honoured only by a path type of
+   * its own family (Straight · Curved · Orthogonal) — so the layer's edge
+   * type still decides the shape, and an edge's own `shape` still wins.
+   *
+   * Call it once positions have settled. Pass `{}` to drop this layout's
+   * geometry (a run that routed nothing).
+   */
+  setLayoutGeometry(layout: { readonly id: string }, geometry: LayoutGeometry): void {
+    const touched = this.layoutGeometryEdgeIds();
+    this.layoutGeometry = geometry;
+    this.layoutGeometryOwner = geometry.routes || geometry.frame ? layout : null;
+    this.rerenderLayoutGeometry(touched);
+  }
+
+  /** Drop the layout geometry, whoever wrote it, and redraw the edges it touched. */
+  clearLayoutGeometry(): void {
+    if (this.layoutGeometryOwner === null) return;
+    const touched = this.layoutGeometryEdgeIds();
+    this.layoutGeometry = {};
+    this.layoutGeometryOwner = null;
+    this.rerenderLayoutGeometry(touched);
+  }
+
+  /** Edges the current geometry affects: the routed ones, or all of them under a frame. */
+  private layoutGeometryEdgeIds(): Iterable<string> | 'all' {
+    if (this.layoutGeometry.frame) return 'all';
+    return this.layoutGeometry.routes ? [...this.layoutGeometry.routes.keys()] : [];
+  }
+
+  private rerenderLayoutGeometry(before: Iterable<string> | 'all'): void {
+    const after = this.layoutGeometryEdgeIds();
+    if (before === 'all' || after === 'all') {
+      for (const edge of this.store.edges()) this.rerenderEdge(edge.id);
+    } else {
+      const ids = new Set(before);
+      for (const id of after) ids.add(id);
+      for (const id of ids) this.rerenderEdge(id);
+    }
+    this.events.emit('style:changed', { scope: 'edge' });
+  }
+
+  /**
    * Patch the layer-level state *catalogues* (`options.node.state` /
    * `options.edge.state`) — the named overlays applied while a state is active
    * (`hover`, `selected`, …). Entries are merged by name (shallow, per the
@@ -1051,6 +1185,8 @@ export class GraphLayer extends WorldLayer<
    * {@link setStateConfigs}. Called by `GraphCanvas.update()` per id.
    */
   setOptions(patch: Partial<GraphLayerOptions>): void {
+    // A key present but `undefined` is an undo back to before the first hide.
+    if ('hiddenTypes' in patch) this.setHiddenTypes(patch.hiddenTypes ?? { node: [], edge: [] });
     if (patch.node?.style) this.setNodeDefaults(patch.node.style as Partial<NodeStyle>);
     if (patch.edge?.style) this.setEdgeDefaults(patch.edge.style as Partial<EdgeStyle>);
     if (patch.node?.state || patch.edge?.state) {
@@ -1075,6 +1211,22 @@ export class GraphLayer extends WorldLayer<
       templatesChanged = true;
     }
     if (templatesChanged && this.mounted) this.redraw();
+  }
+
+  /**
+   * Hide whole node / edge types ({@link GraphLayerOptions.hiddenTypes}). A list
+   * left out keeps its current value. Prefer writing the option through
+   * `canvas.update`, which records it; this applies it to the store.
+   */
+  setHiddenTypes(types: { node?: readonly string[]; edge?: readonly string[] }): void {
+    const current = this.store.hiddenTypes();
+    this.store.setTypesHidden(types.node ?? current.node, types.edge ?? current.edge);
+  }
+
+  /** The node and edge types currently hidden whole. */
+  get hiddenTypes(): { node: string[]; edge: string[] } {
+    const { node, edge } = this.store.hiddenTypes();
+    return { node: [...node], edge: [...edge] };
   }
 
   /** Read-only snapshot of the current node template style (resolved per node at render). */
@@ -1205,26 +1357,74 @@ export class GraphLayer extends WorldLayer<
   }
 
   /** Sibling of {@link resolveNodeStyle} for edges. Public for the same reason. */
+  /**
+   * Order: layer template → layout geometry → the edge's own `style` → active
+   * states. Every field merges shallowly except `shape`, which merges field by
+   * field, so an edge that sets only `shape.waypoints` keeps the layer's
+   * `pathType`. See {@link setLayoutGeometry} for when a route applies.
+   */
   resolveEdgeStyle(edge: GraphEdge): Partial<EdgeStyle> {
-    const merged: Partial<EdgeStyle> = {};
-    if (this.edgeOption?.style) {
-      Object.assign(merged, resolveEdgeStyleFields(this.edgeOption.style, edge));
-    }
-    Object.assign(merged, (edge.style as Partial<EdgeStyle> | undefined) ?? {});
+    const merged: { -readonly [K in keyof EdgeStyle]?: EdgeStyle[K] } = {};
+    const template = this.edgeOption?.style
+      ? resolveEdgeStyleFields(this.edgeOption.style, edge)
+      : undefined;
+    if (template) Object.assign(merged, template);
+    const own = edge.style as Partial<EdgeStyle> | undefined;
+    if (own) Object.assign(merged, own);
+    const shape = this.resolveEdgeShape(edge.id, template?.shape, own?.shape);
+    if (shape) merged.shape = shape;
 
     const activeStates = this.store.edgeStatesOf(edge.id);
     if (activeStates.length > 0) {
       const perEdgeCatalogue = edge.state as Readonly<Record<string, EdgeStyle>> | undefined;
+      const overlay = (o: Partial<EdgeStyle>): void => {
+        const before = merged.shape;
+        Object.assign(merged, o);
+        if (o.shape && before) merged.shape = { ...before, ...o.shape };
+      };
       for (const name of activeStates) {
         const layerOverlay = this.edgeOption?.state?.[name];
-        if (layerOverlay) {
-          Object.assign(merged, resolveEdgeStyleFields(layerOverlay, edge));
-        }
+        if (layerOverlay) overlay(resolveEdgeStyleFields(layerOverlay, edge));
         const perEdgeOverlay = perEdgeCatalogue?.[name];
-        if (perEdgeOverlay) Object.assign(merged, perEdgeOverlay);
+        if (perEdgeOverlay) overlay(perEdgeOverlay);
       }
     }
     return merged;
+  }
+
+  /**
+   * Merge an edge's `shape`: template, then the layout's route and frame, then
+   * the edge's own fields.
+   *
+   * The route applies only when the requested `pathType` (the edge's, else the
+   * template's) is unset or of the route's family. Then a requested type that
+   * draws through waypoints keeps itself, and one that ignores them yields to
+   * the route's type; the edge's own `waypoints` still beat the route's. A
+   * polar path type takes the frame's origin unless the edge sets its own.
+   */
+  private resolveEdgeShape(
+    edgeId: string,
+    template: EdgeShapeOptions | undefined,
+    own: EdgeShapeOptions | undefined,
+  ): EdgeShapeOptions | undefined {
+    const route = this.layoutGeometry.routes?.get(edgeId);
+    const frame = this.layoutGeometry.frame;
+    if (!route && !frame) return template && own ? { ...template, ...own } : (own ?? template);
+
+    const shape: MutableEdgeShape = { ...template, ...own };
+    const requested = shape.pathType;
+    if (route) {
+      const family = requested === undefined ? undefined : EDGE_FAMILY[requested];
+      if (requested === undefined || (family !== undefined && family === EDGE_FAMILY[route.pathType])) {
+        shape.pathType =
+          requested !== undefined && DRAWS_THROUGH_WAYPOINTS.has(requested) ? requested : route.pathType;
+        shape.waypoints = own?.waypoints ?? route.waypoints;
+      }
+    }
+    if (frame && shape.pathType && POLAR_PATH_TYPES.has(shape.pathType) && own?.pathStyleOpts?.['origin'] === undefined) {
+      shape.pathStyleOpts = { ...shape.pathStyleOpts, origin: frame.origin };
+    }
+    return shape;
   }
 
   /**
@@ -1862,8 +2062,11 @@ export class GraphLayer extends WorldLayer<
       target: { kind: 'shape', shapeId: targetShapeId, anchor: targetAnchorSpec },
       router,
       pathStyle,
-      ...(pathStyleOpts && Object.keys(pathStyleOpts).length > 0 ? { pathStyleOpts } : {}),
-      ...(waypoints && waypoints.length > 0 ? { waypoints } : {}),
+      // Always emitted, `undefined` when absent: `updateConnector` merges a
+      // partial spec, so an omitted key would keep the previous value — a route
+      // cleared from the layout geometry would stay drawn.
+      pathStyleOpts: Object.keys(pathStyleOpts).length > 0 ? pathStyleOpts : undefined,
+      waypoints: waypoints && waypoints.length > 0 ? waypoints : undefined,
       stroke: {
         color: strokeColor,
         width: strokeWidth,

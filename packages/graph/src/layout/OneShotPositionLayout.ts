@@ -6,6 +6,7 @@ import {
   type EasingName,
   type LayoutOptions,
   type LayoutRunOptions,
+  type LayoutSetOptions,
   type PositionTransition,
 } from '@invana/canvas';
 
@@ -118,11 +119,11 @@ export abstract class OneShotPositionLayout<
    * (the one-shot analog of `D3ForceLayout` re-heating its simulation). Before
    * the first `apply()` it just records the options (no premature run).
    */
-  override setOptions(patch: Partial<TOpts>): void {
+  override setOptions(patch: Partial<TOpts>, opts?: LayoutSetOptions): void {
     this.opts = { ...this.opts, ...patch };
     if (patch.transition !== undefined) this.transition = patch.transition;
     if (patch.transitionEase !== undefined) this.transitionEase = patch.transitionEase;
-    if (this.lastLayer) void this.apply(this.lastLayer);
+    if (this.lastLayer && opts?.rerun !== false) void this.apply(this.lastLayer);
   }
 
   /**
@@ -188,6 +189,7 @@ export abstract class OneShotPositionLayout<
     this.stop();
     this.lastLayer = layer;
     this.runOptions = run;
+    layer.beginLayoutRun(this);
     const token = ++this.runToken;
     this.running = true;
     this.events.emit('start', {});

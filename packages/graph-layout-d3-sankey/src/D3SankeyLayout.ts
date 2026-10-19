@@ -89,6 +89,7 @@ export class D3SankeyLayout extends Layout<GraphLayer> {
   async apply(layer: GraphLayer, run: LayoutRunOptions = {}): Promise<void> {
     this.stop();
     this.runOptions = run;
+    layer.beginLayoutRun(this);
     const store = layer.store;
 
     // 1. Snapshot store → d3-sankey inputs. Sankey expects nodes with an

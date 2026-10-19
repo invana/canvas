@@ -58,7 +58,8 @@ export interface ControlPanelFields {
   /** `'auto'` = the renderer's default for the anchor. */
   orientation: 'auto' | 'horizontal' | 'vertical';
   stretch: boolean;
-  surface: boolean;
+  /** `ControlPanelSpec.surface`, as a choice. */
+  surface: 'card' | 'hairline' | 'none';
   visible: boolean;
 }
 

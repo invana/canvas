@@ -1,11 +1,13 @@
-import type { CSSProperties, ReactNode } from 'react';
+import { useMemo, useState, type CSSProperties, type ReactNode } from 'react';
+import { ChevronDown, ChevronLeft } from 'lucide-react';
 import type { Canvas, ControlPanelAnchor, ControlPanelSpec } from '@invana/canvas';
 import { cn } from '@invana/ui';
 import { useControlPanels, useResolvedCanvas } from '@invana/canvas-react';
 
-import { ToolbarItems, type ToolbarIcon, type TooltipSide } from '../components';
+import { ToolbarSizeContext, ToolbarItems, type ToolbarIcon, type ToolbarItem, type TooltipSide } from '../components';
 import { useControlItems } from './ControlItems';
 import type { ControlWidget } from './widgets';
+import { surfaceClass } from './surface';
 
 export interface ControlPanelsProps {
   /** Extra / overriding icons by name, merged over {@link DEFAULT_CONTROL_ICONS}. */
@@ -87,14 +89,43 @@ function ControlPanelView({
   icons,
   widgets,
   zIndex,
+  folded,
+  onFold,
 }: {
   spec: ControlPanelSpec;
   canvas: Canvas;
   icons?: Record<string, ToolbarIcon>;
   widgets?: Record<string, ControlWidget>;
   zIndex: number;
+  /**
+   * Whether a collapsible panel is folded. The viewer's, not the spec's: a host
+   * re-writes its spec whenever its items change, which would undo a fold kept there.
+   */
+  folded: boolean;
+  onFold: (folded: boolean) => void;
 }) {
-  const items = useControlItems(spec.items, { canvas, ...(icons ? { icons } : {}), ...(widgets ? { widgets } : {}) });
+  const fold = spec.collapsible;
+  const shown = useMemo(
+    () => (fold && folded ? spec.items.filter((it) => it.key !== undefined && fold.keep.includes(it.key)) : spec.items),
+    [spec.items, fold, folded],
+  );
+  const controls = useControlItems(shown, { canvas, ...(icons ? { icons } : {}), ...(widgets ? { widgets } : {}) });
+  const items: ToolbarItem[] = fold
+    ? [
+        ...controls,
+        { type: 'divider', key: 'fold-divider' },
+        folded
+          ? {
+              type: 'button',
+              key: 'fold',
+              icon: ChevronDown,
+              label: fold.showLabel ?? 'Show the tools',
+              text: fold.showLabel ?? 'Show the tools',
+              onClick: () => onFold(false),
+            }
+          : { type: 'button', key: 'fold', icon: ChevronLeft, label: fold.hideLabel ?? 'Hide the tools', onClick: () => onFold(true) },
+      ]
+    : controls;
 
   const orientation = spec.orientation ?? defaultOrientation(spec.position);
   const surface = spec.surface ?? true;
@@ -107,10 +138,18 @@ function ControlPanelView({
         className={cn(
           'pointer-events-auto flex',
           fill ? 'h-full w-full' : 'shrink-0',
-          surface && 'rounded-md border border-border bg-background p-0.5 shadow-sm',
+          surfaceClass(surface),
         )}
       >
-        <ToolbarItems items={items} orientation={orientation} tooltipSide={tooltipSideFor(spec.position)} />
+        {/* The panel lays its items out itself — a tight row or column, 4 px
+            apart — rather than in the kit's nav shell, which is full-width as a
+            row and a 45 px rail as a column. Canvas chrome is the kit's small
+            control size (GC21), every control in a row alike. */}
+        <div className={cn('flex items-center gap-0.5', orientation === 'vertical' && 'flex-col')}>
+          <ToolbarSizeContext.Provider value="sm">
+            <ToolbarItems items={items} orientation={orientation} tooltipSide={tooltipSideFor(spec.position)} bare />
+          </ToolbarSizeContext.Provider>
+        </div>
       </div>
     </div>
   );
@@ -134,12 +173,29 @@ function ControlPanelView({
 export function ControlPanels({ icons, widgets, zIndex = 5, canvas }: ControlPanelsProps): ReactNode {
   const resolved = useResolvedCanvas(canvas);
   const panels = useControlPanels(resolved);
+  // Which collapsible panels are folded — held here, not per panel, so a folded
+  // panel can hide the ones its `collapsible.hides` names.
+  const [folded, setFolded] = useState<Record<string, boolean>>({});
+  const isFolded = (id: string, spec: ControlPanelSpec) => folded[id] ?? spec.collapsed === true;
+  const hidden = new Set<string>();
+  for (const [id, spec] of Object.entries(panels)) {
+    if (spec.collapsible && isFolded(id, spec)) for (const other of spec.collapsible.hides ?? []) hidden.add(other);
+  }
 
   return (
     <>
       {Object.entries(panels).map(([id, spec]) =>
-        spec.visible === false || (spec.placement ?? 'canvas') !== 'canvas' ? null : (
-          <ControlPanelView key={id} spec={spec} canvas={resolved} icons={icons} widgets={widgets} zIndex={zIndex} />
+        spec.visible === false || hidden.has(id) || (spec.placement ?? 'canvas') !== 'canvas' ? null : (
+          <ControlPanelView
+            key={id}
+            spec={spec}
+            canvas={resolved}
+            icons={icons}
+            widgets={widgets}
+            zIndex={zIndex}
+            folded={isFolded(id, spec)}
+            onFold={(next) => setFolded((f) => ({ ...f, [id]: next }))}
+          />
         ),
       )}
     </>

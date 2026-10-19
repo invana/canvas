@@ -10,7 +10,7 @@
  * See `unified-canvas-options-plan.md`.
  */
 
-import type { ControlPanelSpec, EasingName } from '@invana/canvas-core';
+import type { CanvasLayoutPreset, ControlPanelSpec, EasingName } from '@invana/canvas-core';
 
 /** Per-instance options keyed by id. Each value is the instance's own option bag. */
 export interface CanvasConfig {
@@ -26,6 +26,15 @@ export interface CanvasConfig {
    * auto-runs it when the target layer's data changes.
    */
   activeLayout?: string;
+  /**
+   * A layout preset by id, and the options changed over its defaults
+   * (`definition.layoutPreset`); `null` clears it. The base canvas only records
+   * it. A `GraphCanvas` expands it in the same write into the `activeLayout`,
+   * `layouts` and edge-shape slices that take effect — so a preset in a
+   * declarative config, an import or a walkthrough step acts just as
+   * `GraphCanvas.applyLayoutPreset` does.
+   */
+  layoutPreset?: CanvasLayoutPreset | null;
   /**
    * Floating control panels over the canvas, keyed by panel id. Each spec
    * **replaces** that panel whole (items don't merge); `null` removes it. Pure

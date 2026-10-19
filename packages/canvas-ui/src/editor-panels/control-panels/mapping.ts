@@ -178,7 +178,8 @@ export function panelToForm(
     orientation: spec.orientation ?? 'auto',
     stretch: spec.stretch ?? false,
     // The card surface is on by default over the canvas, off in the header.
-    surface: spec.surface ?? placement === 'canvas',
+    surface:
+      spec.surface === 'hairline' ? 'hairline' : (spec.surface ?? placement === 'canvas') ? 'card' : 'none',
     visible: spec.visible ?? true,
   };
   return { panel, items: spec.items.map((item) => itemToForm(item, descriptors, widgetDescriptors)) };
@@ -383,7 +384,7 @@ export function formToPanel(
       spec: {
         kind: 'control-panel',
         placement: p.placement,
-        ...(p.surface ? { surface: true } : {}),
+        ...(p.surface === 'card' ? { surface: true } : p.surface === 'hairline' ? { surface: 'hairline' as const } : {}),
         ...(p.visible ? {} : { visible: false }),
         items,
       },
@@ -396,7 +397,7 @@ export function formToPanel(
     ...(p.positionMode === 'anchor' && !(ox === 8 && oy === 8) ? { offset: ox === oy ? ox : { x: ox, y: oy } } : {}),
     ...(p.orientation !== 'auto' ? { orientation: p.orientation } : {}),
     ...(p.stretch ? { stretch: true } : {}),
-    ...(p.surface ? {} : { surface: false }),
+    ...(p.surface === 'card' ? {} : { surface: p.surface === 'hairline' ? ('hairline' as const) : false }),
     ...(p.visible ? {} : { visible: false }),
     items,
   };

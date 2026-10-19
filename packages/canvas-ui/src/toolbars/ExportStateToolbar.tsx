@@ -6,6 +6,7 @@ import { Download, FileJson, Upload } from 'lucide-react';
 import { ExportStatePanel } from '../components';
 import type { ToolbarIcon } from '../components';
 import { useCanvasStateJson } from '@invana/canvas-react';
+import { iconButtonSize, useToolbarSize } from '../components/toolbarSize';
 
 export interface ExportStateToolbarProps {
   /** Download filename stem. `.json` is appended. Default `'canvas-state'`. */
@@ -64,6 +65,7 @@ export function ExportStateToolbar({
   canvas,
   className,
 }: ExportStateToolbarProps) {
+  const toolbarSize = useToolbarSize();
   const { download, import: importState } = useCanvasStateJson(canvas);
   const [restore, setRestore] = useState(restoreView);
 
@@ -75,11 +77,11 @@ export function ExportStateToolbar({
       <HoverCardTrigger asChild>
         <Button
           variant="ghost"
-          size={triggerText ? 'sm' : 'icon'}
+          size={triggerText ? 'sm' : iconButtonSize(toolbarSize)}
           aria-label={label}
           className={className}
         >
-          <TriggerIcon size={16} />
+          <TriggerIcon />
           {triggerText}
         </Button>
       </HoverCardTrigger>

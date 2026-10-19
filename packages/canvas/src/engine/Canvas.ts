@@ -208,6 +208,8 @@ export interface CanvasOptions {
 
 /** Actions starting with this are user edits, recorded by `Canvas.history`. */
 const EDIT_ACTION_PREFIX = 'edit:';
+
+const NO_LAYOUTS: ReadonlySet<string> = new Set();
 /** Same-action edits closer together than this merge into one undo step. */
 const EDIT_MERGE_MS = 600;
 /** A `Canvas.history` undo / redo of a user edit (the log's replay action names). */
@@ -1270,7 +1272,7 @@ export class Canvas {
    */
   update(patch: CanvasConfig, action = 'canvas:update'): void {
     if (action.startsWith(EDIT_ACTION_PREFIX)) this._writeBaseline(patch);
-    this._applyToInstances(patch);
+    this._applyToInstances(patch, this.layoutsRunBy(patch));
 
     // `store.view.definition` is the single source of truth for serialisable
     // config (no parallel `this.config`). Per-id deep-merge so untouched slices
@@ -1286,6 +1288,7 @@ export class Canvas {
         s.definition.layouts[id] = deepMerge(s.definition.layouts[id] ?? {}, o) as Record<string, unknown>;
       }
       if (patch.activeLayout !== undefined) s.definition.activeLayout = patch.activeLayout;
+      if (patch.layoutPreset !== undefined) s.definition.layoutPreset = patch.layoutPreset;
       // A panel spec replaces whole (its `items` list has no per-field merge);
       // `null` removes the panel.
       for (const [id, spec] of Object.entries(patch.controlPanels ?? {})) {
@@ -1319,7 +1322,20 @@ export class Canvas {
    * live instances (no store write). Shared by {@link update} and the undo
    * reconciler.
    */
-  private _applyToInstances(patch: Pick<CanvasConfig, 'layers' | 'behaviours' | 'layouts'>): void {
+  /**
+   * The layouts a config write will run by itself, so their `setOptions` must
+   * not re-run them as well — one switch, one run, with that run's options.
+   * The base canvas runs nothing on a write; `GraphCanvas` answers the
+   * `activeLayout` the write names, which it re-wires and runs.
+   */
+  protected layoutsRunBy(_patch: CanvasConfig): ReadonlySet<string> {
+    return NO_LAYOUTS;
+  }
+
+  private _applyToInstances(
+    patch: Pick<CanvasConfig, 'layers' | 'behaviours' | 'layouts'>,
+    runsAnyway: ReadonlySet<string> = NO_LAYOUTS,
+  ): void {
     for (const [id, options] of Object.entries(patch.layers ?? {})) {
       configurable(this.layers.get(id))?.setOptions(options);
     }
@@ -1339,7 +1355,7 @@ export class Canvas {
       }
     }
     for (const [id, options] of Object.entries(patch.layouts ?? {})) {
-      this.layouts.get(id)?.setOptions(options);
+      this.layouts.get(id)?.setOptions(options, runsAnyway.has(id) ? { rerun: false } : undefined);
     }
   }
 
@@ -1398,12 +1414,13 @@ export class Canvas {
       }
       if (Object.keys(out).length > 0) patch[section] = out;
     }
-    this._applyToInstances(patch);
+    const reannounce = prev.activeLayout !== next.activeLayout && next.activeLayout !== null;
+    this._applyToInstances(patch, reannounce ? this.layoutsRunBy({ activeLayout: next.activeLayout! }) : NO_LAYOUTS);
     if (prev.canvas.fitAnimation !== next.canvas.fitAnimation) this._fitAnimation = next.canvas.fitAnimation;
     // Re-announce a reverted active layout through `update` (a same-value store
     // write, unrecorded), so a subclass that wires it — `GraphCanvas` — re-wires.
-    if (prev.activeLayout !== next.activeLayout && next.activeLayout !== null) {
-      this.update({ activeLayout: next.activeLayout }, 'canvas:update:reconcile');
+    if (reannounce) {
+      this.update({ activeLayout: next.activeLayout! }, 'canvas:update:reconcile');
     }
   }
 
@@ -1425,6 +1442,7 @@ export class Canvas {
       behaviours: d.behaviours,
       layouts: d.layouts,
       ...(d.activeLayout !== null ? { activeLayout: d.activeLayout } : {}),
+      ...(d.layoutPreset ? { layoutPreset: d.layoutPreset } : {}),
       ...(Object.keys(d.controlPanels).length > 0 ? { controlPanels: d.controlPanels } : {}),
       ...(d.canvas.fitOnLoad !== undefined ? { fitOnLoad: d.canvas.fitOnLoad } : {}),
       ...(d.canvas.fitAnimation !== undefined ? { fitAnimation: d.canvas.fitAnimation } : {}),

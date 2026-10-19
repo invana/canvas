@@ -25,18 +25,22 @@
  * ```
  */
 
-import { Canvas } from '@invana/canvas';
-import type { Behaviour, CanvasConfig, CanvasOptions, CommandRegistry, Layer, Layout } from '@invana/canvas';
+import { Canvas, deepMerge } from '@invana/canvas';
+import type { Behaviour, CanvasConfig, CanvasOptions, CommandRegistry, Layer, Layout, LayoutRunOptions } from '@invana/canvas';
 
 import { GraphClipboard } from '../clipboard/GraphClipboard';
 import { GraphLayer } from '../layer/GraphLayer';
 import type { Vec2 } from '../store';
+import { edgeShape } from './graphActions';
 import { registerGraphCommands, type GraphCanvasCommandMap } from './graphCommands';
+import { DEFAULT_LAYOUT_PRESETS, expandLayoutPreset, type LayoutPresetSpec } from './layoutPresets';
 
-/** Construction options for {@link GraphCanvas}: the engine's, plus the clipboard. */
+/** Construction options for {@link GraphCanvas}: the engine's, plus the clipboard and the layout presets. */
 export interface GraphCanvasOptions extends CanvasOptions {
   /** Every `GraphLayer` gets a `GraphClipboard`; `pasteOffset` shifts pasted nodes (default `{ x: 24, y: 24 }`). */
   clipboard?: { pasteOffset?: Vec2 };
+  /** The presets `applyLayoutPreset` and the `layout.preset` command offer. Default {@link DEFAULT_LAYOUT_PRESETS}. */
+  layoutPresets?: readonly LayoutPresetSpec[];
 }
 
 /** What `GraphCanvas` keeps per `GraphLayer`. */
@@ -57,6 +61,9 @@ export class GraphCanvas extends Canvas {
   /** Per graph layer id, its clipboard and bridges (see the constructor). */
   private readonly editState = new Map<string, GraphLayerEditState>();
   private readonly clipboardOptions: { pasteOffset?: Vec2 };
+  private presets: readonly LayoutPresetSpec[];
+  /** Options for the run the next `activeLayout` wiring starts — set by a preset switch. */
+  private pendingRun: LayoutRunOptions | undefined;
 
   /**
    * Adds the graph commands (`select.mode`, `graph.edgeType`, `graph.clear`,
@@ -71,7 +78,13 @@ export class GraphCanvas extends Canvas {
   constructor(opts: GraphCanvasOptions = {}) {
     super(opts);
     this.clipboardOptions = opts.clipboard ?? {};
-    registerGraphCommands(this.commands, { clipboard: (layerId) => this.clipboard(layerId) });
+    this.presets = opts.layoutPresets ?? DEFAULT_LAYOUT_PRESETS;
+    registerGraphCommands(this.commands, {
+      clipboard: (layerId) => this.clipboard(layerId),
+      layoutPresets: () => this.presets,
+      applyLayoutPreset: (id, overrides) => this.applyLayoutPreset(id, overrides),
+      runLayoutPreset: () => this.runLayoutPreset(),
+    });
     this.events.on('scene:layer:add', ({ id }) => {
       this.disposeEditState(id);
       const layer = this.layers.get(id);
@@ -104,14 +117,113 @@ export class GraphCanvas extends Canvas {
     return this.layouts.get<T>(id);
   }
 
+  /** The layout presets this canvas offers. */
+  get layoutPresets(): readonly LayoutPresetSpec[] {
+    return this.presets;
+  }
+
+  /**
+   * Replace the layout presets — e.g. {@link DEFAULT_LAYOUT_PRESETS} remapped
+   * to the ids this host registered its layouts under (`remapLayoutPresets`).
+   */
+  setLayoutPresets(presets: readonly LayoutPresetSpec[]): void {
+    this.presets = presets;
+    this.commands.invalidate();
+  }
+
+  /**
+   * Switch to layout preset `id` with the options in `overrides` changed over
+   * its defaults, as one undo step (action `edit:layout-preset`) that a
+   * walkthrough step captures. The switch runs the layout once, framing the
+   * result and — for a preset with `reseed` (Network) — solving from scratch.
+   * See {@link update} for what a preset write expands to.
+   */
+  applyLayoutPreset(id: string, overrides: Readonly<Record<string, string>> = {}): void {
+    this.pendingRun = expandLayoutPreset(this.presets, id, overrides)?.run;
+    try {
+      this.update({ layoutPreset: { id, overrides: { ...overrides } } }, 'edit:layout-preset');
+    } finally {
+      this.pendingRun = undefined;
+    }
+  }
+
+  /**
+   * *Run again*: run the active layout as the active preset's switch does —
+   * framed, and from scratch for a preset with `reseed` — so a settled force
+   * finds a new arrangement rather than falling back into the one it has.
+   * Without a preset, runs the active layout plainly.
+   */
+  runLayoutPreset(): Promise<void> {
+    const active = this.get().activeLayout;
+    if (!active) return Promise.resolve();
+    const preset = this.store.view.getState().definition.layoutPreset;
+    const expansion = preset ? expandLayoutPreset(this.presets, preset.id, preset.overrides) : null;
+    return this.runLayout(active, expansion?.layoutId === active ? expansion.run : undefined);
+  }
+
+  /** The `activeLayout` a write names is re-wired and run by {@link wireActiveLayout}. */
+  protected override layoutsRunBy(patch: CanvasConfig): ReadonlySet<string> {
+    return patch.activeLayout !== undefined ? new Set([patch.activeLayout]) : super.layoutsRunBy(patch);
+  }
+
   override async init(opts: CanvasOptions): Promise<void> {
     await super.init(opts);
     this.wireActiveLayout();
   }
 
+  /**
+   * The engine's `update`, plus: a write carrying `layoutPreset` is **expanded**
+   * before it lands — the preset's layout becomes `activeLayout`, its options
+   * (merged over any the write already carries for that layout) go to
+   * `layouts[layoutId]`, the layer's edge `pathType` to its `edge.style.shape`,
+   * and `layoutPreset` is stored with only the overrides that differ from the
+   * defaults. So a preset acts the same however it arrives: the picker
+   * ({@link applyLayoutPreset}), a declarative `config`, an import, or a
+   * replayed walkthrough step. A preset that can't expand (unknown id, layout
+   * not registered) is recorded as given.
+   */
   override update(patch: CanvasConfig, action?: string): void {
-    super.update(patch, action);
-    if (patch.activeLayout !== undefined) this.wireActiveLayout();
+    const expanded = patch.layoutPreset ? this.expandPresetPatch(patch, patch.layoutPreset) : patch;
+    super.update(expanded, action);
+    if (expanded.activeLayout !== undefined) this.wireActiveLayout();
+  }
+
+  private expandPresetPatch(patch: CanvasConfig, preset: NonNullable<CanvasConfig['layoutPreset']>): CanvasConfig {
+    const expansion = expandLayoutPreset(this.presets, preset.id, preset.overrides);
+    const layout = expansion ? this.layouts.get(expansion.layoutId) : undefined;
+    const layer = layout?.targetLayerId ? this.layers.get<GraphLayer>(layout.targetLayerId) : undefined;
+    if (!expansion || !(layer instanceof GraphLayer)) return patch;
+
+    const layers = { ...patch.layers };
+    if (expansion.edge) {
+      // The layer's shape, with the preset-owned option keys replaced.
+      const current = edgeShape(layer);
+      const opts: Record<string, unknown> = { ...current.pathStyleOpts };
+      for (const key of expansion.edgeOptionKeys) delete opts[key];
+      Object.assign(opts, expansion.edge.pathStyleOpts);
+      const shape = {
+        ...current,
+        pathType: expansion.edge.pathType,
+        pathStyleOpts: Object.keys(opts).length > 0 ? opts : undefined,
+      };
+      const own = layers[layer.id] ?? {};
+      const edge = (own['edge'] as Record<string, unknown> | undefined) ?? {};
+      const style = (edge['style'] as Record<string, unknown> | undefined) ?? {};
+      layers[layer.id] = { ...own, edge: { ...edge, style: { ...style, shape } } };
+    }
+    return {
+      ...patch,
+      activeLayout: expansion.layoutId,
+      layouts: {
+        ...patch.layouts,
+        [expansion.layoutId]: deepMerge(patch.layouts?.[expansion.layoutId] ?? {}, expansion.layout) as Record<string, unknown>,
+      },
+      layers,
+      layoutPreset: {
+        id: preset.id,
+        ...(Object.keys(expansion.overrides).length > 0 ? { overrides: expansion.overrides } : {}),
+      },
+    };
   }
 
   override destroy(): void {
@@ -193,7 +305,7 @@ export class GraphCanvas extends Canvas {
 
     if (layer.store.nodeCount() > 0) {
       lastRun = now();
-      void this.runLayout(activeId);
+      void this.runLayout(activeId, this.pendingRun);
     }
     const off = layer.events.on('data:changed', (e) => {
       if (e.addedNodes > 0 || e.removedNodes > 0 || e.hiddenNodes > 0 || e.shownNodes > 0) onDataChange();

@@ -912,8 +912,36 @@ export type { SelectionViewPanelProps } from './view-panels/selection';
 // canvas from context or an optional `canvas` prop. `PlaybookPresenterBar` (F20):
 // the same playbook as a deck — title, narration, n / N, ◀ / ▶, a dot per step,
 // ← / → while focused; steps only, no authoring.
-export { PlaybookViewPanel, PlaybookPresenterBar } from './view-panels/playbook';
-export type { PlaybookViewPanelProps, PlaybookPresenterBarProps } from './view-panels/playbook';
+export { PlaybookViewPanel, PlaybookPresenterBar, PlaybookStepper } from './view-panels/playbook';
+export type { PlaybookViewPanelProps, PlaybookPresenterBarProps, PlaybookStepperProps } from './view-panels/playbook';
+// Layout presets: the cards, the active preset's options, and the panel that
+// holds both — the Layout popover's body (`layout-presets` widget).
+export {
+  LayoutPresetsViewPanel,
+  LayoutPresetPicker,
+  LayoutPresetOptions,
+  LayoutPresetReset,
+  LayoutPresetThumbnail,
+  hasOverrides,
+  DEFAULT_LAYOUT_PRESET_CARDS,
+  DEFAULT_LAYOUT_PRESET_DEFAULTS,
+  DEFAULT_LAYOUT_PRESET_OPTIONS,
+} from './view-panels/layout-presets';
+export type {
+  LayoutPresetsViewPanelProps,
+  LayoutPresetPickerProps,
+  LayoutPresetOptionsProps,
+  LayoutPresetResetProps,
+  LayoutPresetThumbnailProps,
+  LayoutPresetCard,
+  LayoutPresetChoice,
+  LayoutPresetOption,
+  LayoutPresetPicture,
+  LayoutPresetValue,
+} from './view-panels/layout-presets';
+// What the colours on the board mean, with live counts per type.
+export { GraphLegend } from './view-panels/legend';
+export type { GraphLegendProps } from './view-panels/legend';
 export { HistoryViewPanel } from './view-panels/history';
 export type { HistoryViewPanelProps } from './view-panels/history';
 
@@ -1014,6 +1042,8 @@ export {
   useControlItems,
   DEFAULT_CONTROL_ICONS,
   DEFAULT_CONTROL_WIDGETS,
+  CHROME_CONTROL_WIDGETS,
+  PlaybookPresentButton,
   controlWidgetOptionsSpecs,
   defineControlItems,
   CANVAS_CONTROL_ITEMS,
@@ -1043,6 +1073,7 @@ export {
   type UseControlItemsOptions,
   type ControlWidget,
   type ControlWidgetProps,
+  type PlaybookPresentButtonProps,
   type ControlWidgetOptionsSpec,
   type AuthoredControlItemSpec,
   type ControlCommandName,
@@ -1053,7 +1084,7 @@ export {
 // `@invana/canvas-react`'s headless hooks/context.
 
 // ─── App (batteries-included composition) ────────────────────────────────────
-export { GraphCanvasApp, CanvasThemeSync, graphCanvasAppBaseConfig } from './apps';
+export { GraphCanvasApp, CanvasThemeSync, graphCanvasAppBaseConfig, graphCanvasAppLayoutPresets } from './apps';
 // The engine half on its own (rfc:feat-2026-10-05-graph-canvas-app-engine-is-welded-to-its-layout):
 // a root that owns + scopes the engine, and a surface that draws it — for hosts
 // that lay the canvas out themselves, such as a board panel.
