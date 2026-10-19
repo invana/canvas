@@ -8,8 +8,6 @@
 
 export { Panel } from './Panel';
 export type { PanelProps } from './Panel';
-export { PanelContent } from './PanelContent';
-export type { PanelContentProps } from './PanelContent';
 export { CanvasSettingsBrowser } from './CanvasSettingsBrowser';
 export type {
   CanvasSettingsBrowserProps,

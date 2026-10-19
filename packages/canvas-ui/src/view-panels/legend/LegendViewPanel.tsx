@@ -1,4 +1,4 @@
-// GraphLegend — what the colours on the board mean: the kit's `Legend`, fed with
+// LegendViewPanel — what the colours on the board mean: the kit's `Legend`, fed with
 // the graph layer's node and relationship types and a live count of each.
 // Nodes first as dots, then relationships as lines.
 //
@@ -13,6 +13,9 @@
 // that type through the `graph.typeVisible` command — one undoable write of the
 // layer's `hiddenTypes`, so it also holds for nodes an expansion brings in — and
 // the entry stays, muted, to bring it back. A hidden type keeps its count.
+//
+// Bare content, like every `view-panels/` surface — the board's rail opens it in
+// a `FloatingPanel` (`BoardPanels`), which carries the title.
 
 import type { GraphCanvas, GraphEdge, GraphLayer, GraphNode } from '@invana/graph';
 import { Eyebrow, Legend, LegendItem, cn } from '@invana/ui';
@@ -20,14 +23,14 @@ import { useEffect, useRef, useState } from 'react';
 
 import { nodeSwatchColor } from '../element-display';
 
-export interface GraphLegendProps {
+export interface LegendViewPanelProps {
   /** The live canvas (null until it is ready). */
   canvas: GraphCanvas | null;
   /** GraphLayer to read. Default `'graph'`. */
   layerId?: string;
   /** Colour per type; return `undefined` to fall back to the drawn swatch. */
   colorForType?: (type: string, kind: 'node' | 'edge') => string | undefined;
-  /** Heading. Default `Legend`; `null` for none. */
+  /** Heading inside the content. Default none — the panel around it has the title. */
   title?: string | null;
   /** Entries toggle their type's visibility. Default `true`. */
   toggleTypes?: boolean;
@@ -43,7 +46,7 @@ interface Row {
 }
 
 /** Node and relationship types with live counts, coloured as drawn. */
-export function GraphLegend({ canvas, layerId = 'graph', colorForType, title = 'Legend', toggleTypes = true, className }: GraphLegendProps) {
+export function LegendViewPanel({ canvas, layerId = 'graph', colorForType, title = null, toggleTypes = true, className }: LegendViewPanelProps) {
   const [rows, setRows] = useState<{ nodes: Row[]; edges: Row[] }>({ nodes: [], edges: [] });
   const frame = useRef<number | null>(null);
   const colorRef = useRef(colorForType);
@@ -75,7 +78,9 @@ export function GraphLegend({ canvas, layerId = 'graph', colorForType, title = '
     };
   }, [canvas, layerId]);
 
-  if (rows.nodes.length === 0 && rows.edges.length === 0) return null;
+  if (rows.nodes.length === 0 && rows.edges.length === 0) {
+    return <p className={cn('text-muted-foreground px-1 py-4 text-center text-sm', className)}>Nothing drawn yet.</p>;
+  }
   const toggle = (kind: 'node' | 'edge', r: Row) =>
     toggleTypes && canvas
       ? {
@@ -87,10 +92,14 @@ export function GraphLegend({ canvas, layerId = 'graph', colorForType, title = '
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>
       {title && <Eyebrow>{title}</Eyebrow>}
+      {rows.nodes.length > 0 && <Eyebrow>Nodes</Eyebrow>}
       <Legend orientation="column">
         {rows.nodes.map((r) => (
           <LegendItem key={`n-${r.type}`} kind="dot" color={r.color} label={r.type} count={r.count.toLocaleString()} {...toggle('node', r)} />
         ))}
+      </Legend>
+      {rows.edges.length > 0 && <Eyebrow>Relationships</Eyebrow>}
+      <Legend orientation="column">
         {rows.edges.map((r) => (
           <LegendItem key={`e-${r.type}`} kind="line" color={r.color} label={r.type} count={r.count.toLocaleString()} {...toggle('edge', r)} />
         ))}

@@ -88,7 +88,7 @@ function ColorControl({
  * distinguishable.
  *
  * Bare content, like every `view-panels/` surface — wrap it in a `<Panel>` +
- * `<PanelContent>` for the floating-card chrome.
+ * the kit's `<FloatingPanel>` for the floating-card chrome.
  */
 export function StylingViewPanel({
   canvas: explicit,

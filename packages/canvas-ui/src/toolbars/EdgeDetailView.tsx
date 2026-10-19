@@ -44,7 +44,7 @@ function resolveEndpoint(ctx: ViewContext, id: string | undefined): EdgeEndpoint
  * {@link PropertyDetailView}. The card title is tinted with the edge's resolved
  * stroke colour.
  *
- * Like {@link NodeDetailView} it is bare content — wrap it in a `<PanelContent>`
+ * Like {@link NodeDetailView} it is bare content — wrap it in the kit's `<PanelContent>`
  * (inside a `<Panel>`) for the surface, header, and close.
  */
 export function EdgeDetailView({

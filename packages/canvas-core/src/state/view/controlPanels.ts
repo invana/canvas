@@ -47,6 +47,11 @@ export type ControlPanelPosition = ControlPanelAnchor | ControlPanelInsets;
 interface ControlItemBase {
   /** Stable key within the panel; defaults to the item's index. */
   key?: string;
+  /**
+   * The board modes the item shows in (the `board.mode` command's value). Default:
+   * every mode. A board with no modes shows it.
+   */
+  modes?: string[];
 }
 
 /**
@@ -231,6 +236,18 @@ export interface ControlPanelSpec {
   surface?: boolean | 'hairline';
   /** Show the panel. Default `true`. */
   visible?: boolean;
+  /**
+   * The board modes the panel shows in — the `board.mode` command's value, a
+   * viewer's choice that is never saved with the board. Default: every mode. A
+   * board with no modes shows it.
+   */
+  modes?: string[];
+  /**
+   * `'idle'` fades the panel while the pointer rests over the board and brings it
+   * back on any movement — chrome that should not compete with the drawing
+   * (Focus, Present). Default: always shown.
+   */
+  fade?: 'idle';
   /**
    * Let the panel fold down to a few of its items — the "tools off" row. A
    * trailing *Hide the tools* control folds it to the items whose `key` is in

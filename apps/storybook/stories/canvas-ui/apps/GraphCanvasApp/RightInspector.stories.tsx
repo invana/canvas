@@ -18,7 +18,9 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ClickViewBehaviour, type ViewContext } from '@invana/canvas-react';
-import { EdgeDetailView, GraphCanvasApp, GraphControlsToolbar, NodeDetailView, PanelContent, ThemeToggle } from '@invana/canvas-ui';
+import { EdgeDetailView, GraphCanvasApp, GraphControlsToolbar, NodeDetailView, ThemeToggle } from '@invana/canvas-ui';
+import { PanelContent } from '@invana/ui';
+import { X } from 'lucide-react';
 import { lesMiserables } from '@invana/graph-datasets';
 
 const meta: Meta = { title: 'canvas-ui/apps/GraphCanvasApp/RightInspector' };
@@ -38,11 +40,7 @@ function RightInspectorApp() {
   // empty-state hint otherwise. `PanelContent` owns the header bar + close ✕; the
   // AppLayoutV2 right section already provides the resizable/collapsible container.
   const rightPanel = view ? (
-    <PanelContent
-      header={view.kind === 'edge' ? 'Edge Detail' : 'Node Detail'}
-      onClose={view.close}
-      fill
-    >
+    <PanelContent titleText={view.kind === 'edge' ? 'Edge Detail' : 'Node Detail'} headerActions={[{ name: 'Close', icon: X, onClick: view.close }]}>
       {view.kind === 'edge' ? <EdgeDetailView ctx={view} /> : <NodeDetailView ctx={view} />}
     </PanelContent>
   ) : (

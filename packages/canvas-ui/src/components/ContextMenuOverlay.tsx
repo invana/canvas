@@ -1,7 +1,7 @@
-import type { CSSProperties } from 'react';
+import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import type { MenuItem } from '@invana/ui';
 
-import { MenuItemList } from './MenuItemList';
+import { MenuItemList, type MenuHeader } from './MenuItemList';
 
 export interface ContextMenuOverlayProps {
   /** Left offset in px, relative to the positioned ancestor (the `<Canvas>` host). */
@@ -10,6 +10,8 @@ export interface ContextMenuOverlayProps {
   y: number;
   /** Menu tree to render (per-target; leaves carry their own `onClick`). */
   items: MenuItem[];
+  /** What the menu is for, above its rows. */
+  header?: MenuHeader;
   /** Stacking order; default `1000` so the menu floats over canvas chrome. */
   zIndex?: number;
   /** Extra inline style merged onto the positioned wrapper. */
@@ -30,14 +32,28 @@ export interface ContextMenuOverlayProps {
  * **prevents the native context menu** on a right-click over itself. Leaf items
  * close the menu via their own `onClick`.
  */
-export function ContextMenuOverlay({ x, y, items, zIndex = 1000, style }: ContextMenuOverlayProps) {
+export function ContextMenuOverlay({ x, y, items, header, zIndex = 1000, style }: ContextMenuOverlayProps) {
+  // Opened near the board's right or bottom edge, the menu opens up / left of the
+  // pointer instead, so it never runs off the board.
+  const ref = useRef<HTMLDivElement>(null);
+  const [at, setAt] = useState({ left: x, top: y });
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const host = el?.offsetParent as HTMLElement | null | undefined;
+    if (!el || !host) return setAt({ left: x, top: y });
+    const { offsetWidth: w, offsetHeight: h } = el;
+    const left = x + w > host.clientWidth ? Math.max(4, x - w) : x;
+    const top = y + h > host.clientHeight ? Math.max(4, host.clientHeight - h - 4) : y;
+    setAt({ left, top });
+  }, [x, y, items, header]);
   return (
     <div
-      style={{ position: 'absolute', left: x, top: y, zIndex, ...style }}
+      ref={ref}
+      style={{ position: 'absolute', left: at.left, top: at.top, zIndex, ...style }}
       onPointerDown={(ev) => ev.stopPropagation()}
       onContextMenu={(ev) => ev.preventDefault()}
     >
-      <MenuItemList items={items} />
+      <MenuItemList items={items} {...(header ? { header } : {})} />
     </div>
   );
 }

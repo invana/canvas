@@ -1,8 +1,8 @@
-import { useMemo, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { ChevronDown, ChevronLeft } from 'lucide-react';
-import type { Canvas, ControlPanelAnchor, ControlPanelSpec } from '@invana/canvas';
+import type { Canvas, ControlItemSpec, ControlPanelAnchor, ControlPanelSpec } from '@invana/canvas';
 import { cn } from '@invana/ui';
-import { useControlPanels, useResolvedCanvas } from '@invana/canvas-react';
+import { inBoardMode, useBoardMode, useControlPanels, useResolvedCanvas } from '@invana/canvas-react';
 
 import { ToolbarSizeContext, ToolbarItems, type ToolbarIcon, type ToolbarItem, type TooltipSide } from '../components';
 import { useControlItems } from './ControlItems';
@@ -82,6 +82,50 @@ function placement(spec: ControlPanelSpec): CSSProperties {
   return style;
 }
 
+/**
+ * The items that show in board mode `mode`, with the dividers that would now
+ * lead, trail or double up removed — a group hidden by its mode takes its
+ * separator with it.
+ */
+export function itemsInMode(items: readonly ControlItemSpec[], mode: string | null): ControlItemSpec[] {
+  const out: ControlItemSpec[] = [];
+  for (const item of items) {
+    if (!inBoardMode(item.modes, mode)) continue;
+    if (item.type === 'divider' && (out.length === 0 || out[out.length - 1]!.type === 'divider')) continue;
+    out.push(item);
+  }
+  while (out.length > 0 && out[out.length - 1]!.type === 'divider') out.pop();
+  return out;
+}
+
+/** How long the pointer rests before an `fade: 'idle'` panel fades. */
+const IDLE_MS = 2000;
+
+/** `true` once the pointer has rested `IDLE_MS` over the page; any movement wakes it. */
+function usePointerIdle(on: boolean): boolean {
+  const [idle, setIdle] = useState(false);
+  useEffect(() => {
+    if (!on) {
+      setIdle(false);
+      return;
+    }
+    let timer = setTimeout(() => setIdle(true), IDLE_MS);
+    const wake = () => {
+      setIdle(false);
+      clearTimeout(timer);
+      timer = setTimeout(() => setIdle(true), IDLE_MS);
+    };
+    window.addEventListener('pointermove', wake);
+    window.addEventListener('keydown', wake);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('pointermove', wake);
+      window.removeEventListener('keydown', wake);
+    };
+  }, [on]);
+  return idle;
+}
+
 /** One panel: its specs resolved by {@link useControlItems}, pinned over the canvas. */
 function ControlPanelView({
   spec,
@@ -91,8 +135,11 @@ function ControlPanelView({
   zIndex,
   folded,
   onFold,
+  mode,
 }: {
   spec: ControlPanelSpec;
+  /** The board's mode; items limited to other modes are left out. */
+  mode: string | null;
   canvas: Canvas;
   icons?: Record<string, ToolbarIcon>;
   widgets?: Record<string, ControlWidget>;
@@ -105,10 +152,11 @@ function ControlPanelView({
   onFold: (folded: boolean) => void;
 }) {
   const fold = spec.collapsible;
-  const shown = useMemo(
-    () => (fold && folded ? spec.items.filter((it) => it.key !== undefined && fold.keep.includes(it.key)) : spec.items),
-    [spec.items, fold, folded],
-  );
+  const shown = useMemo(() => {
+    const items = itemsInMode(spec.items, mode);
+    return fold && folded ? items.filter((it) => it.key !== undefined && fold.keep.includes(it.key)) : items;
+  }, [spec.items, fold, folded, mode]);
+  const idle = usePointerIdle(spec.fade === 'idle');
   const controls = useControlItems(shown, { canvas, ...(icons ? { icons } : {}), ...(widgets ? { widgets } : {}) });
   const items: ToolbarItem[] = fold
     ? [
@@ -136,9 +184,10 @@ function ControlPanelView({
     <div style={{ ...placement(spec), zIndex, pointerEvents: 'none' }}>
       <div
         className={cn(
-          'pointer-events-auto flex',
+          'pointer-events-auto flex transition-opacity duration-300',
           fill ? 'h-full w-full' : 'shrink-0',
           surfaceClass(surface),
+          idle && 'opacity-35 focus-within:opacity-100 hover:opacity-100',
         )}
       >
         {/* The panel lays its items out itself — a tight row or column, 4 px
@@ -173,6 +222,7 @@ function ControlPanelView({
 export function ControlPanels({ icons, widgets, zIndex = 5, canvas }: ControlPanelsProps): ReactNode {
   const resolved = useResolvedCanvas(canvas);
   const panels = useControlPanels(resolved);
+  const mode = useBoardMode(resolved);
   // Which collapsible panels are folded — held here, not per panel, so a folded
   // panel can hide the ones its `collapsible.hides` names.
   const [folded, setFolded] = useState<Record<string, boolean>>({});
@@ -185,7 +235,7 @@ export function ControlPanels({ icons, widgets, zIndex = 5, canvas }: ControlPan
   return (
     <>
       {Object.entries(panels).map(([id, spec]) =>
-        spec.visible === false || hidden.has(id) || (spec.placement ?? 'canvas') !== 'canvas' ? null : (
+        spec.visible === false || hidden.has(id) || !inBoardMode(spec.modes, mode) || (spec.placement ?? 'canvas') !== 'canvas' ? null : (
           <ControlPanelView
             key={id}
             spec={spec}
@@ -194,6 +244,7 @@ export function ControlPanels({ icons, widgets, zIndex = 5, canvas }: ControlPan
             widgets={widgets}
             zIndex={zIndex}
             folded={isFolded(id, spec)}
+            mode={mode}
             onFold={(next) => setFolded((f) => ({ ...f, [id]: next }))}
           />
         ),

@@ -9,14 +9,16 @@
 
 import { select, type Canvas, type CanvasLayoutPreset } from '@invana/canvas';
 import { useCommandStates, usePlaybook } from '@invana/canvas-react';
-import { Button, Popover, PopoverContent, PopoverTrigger, Tooltip, TooltipContent, TooltipTrigger } from '@invana/ui';
+import { Button, FloatingPanel, Popover, PopoverContent, PopoverTrigger, Tooltip, TooltipContent, TooltipTrigger } from '@invana/ui';
 import { ChevronDown, Expand, Network, Shrink, Presentation, Workflow, Orbit, Share2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ComponentType } from 'react';
 
 import { ToolbarItems } from '../components';
 import { DEFAULT_LAYOUT_PRESET_CARDS, LayoutPresetsViewPanel, type LayoutPresetValue } from '../view-panels/layout-presets';
 import { PlaybookStepper } from '../view-panels/playbook/PlaybookStepper';
-import { GraphLegend } from '../view-panels/legend';
+import { LegendViewPanel } from '../view-panels/legend';
+import { BoardModePicker } from '../board/BoardModePicker';
+import { ZoomField } from '../board/ZoomField';
 import type { GraphCanvas } from '@invana/graph';
 import type { ControlWidgetOptionsSpec, ControlWidgetProps } from './widgets';
 
@@ -39,19 +41,34 @@ const PRESET_ICONS: Record<string, ComponentType<{ className?: string }>> = {
  * are read back from `definition.layoutPreset`, so undo, an import and a
  * walkthrough step all show here.
  */
-function LayoutPresetsWidget({ canvas }: ControlWidgetProps) {
+/**
+ * The `layout.preset` binding the preset cards need — the active preset and its
+ * overrides, the cards the command offers (a disabled one with its reason), and
+ * the pick / *Run again* runners. Shared by the toolbar's popover and the board
+ * menu's *Layout…* card, so the two never disagree.
+ */
+export function useLayoutPresetCards(canvas: Canvas) {
   const { states, run } = useCommandStates([{ command: 'layout.preset' }, { command: 'layout.presetRun' }], canvas);
   const preset = useLayoutPreset(canvas);
   const value: LayoutPresetValue = { presetId: preset?.id ?? '', overrides: preset?.overrides ?? {} };
-
   const offered = states[0]?.options ?? [];
   const presets = DEFAULT_LAYOUT_PRESET_CARDS.flatMap((card) => {
     const option = offered.find((o) => o.value === card.id);
     if (!option) return [];
     return [{ ...card, label: option.label, ...(option.disabled ? { disabledReason: option.description ?? 'Unavailable' } : {}) }];
   });
+  return {
+    value,
+    presets,
+    label: presets.find((p) => p.id === value.presetId)?.label ?? 'Layout',
+    onChange: (next: LayoutPresetValue) => void run('layout.preset', { value: next.presetId, overrides: next.overrides }),
+    ...(states[1]?.enabled ? { onRunAgain: () => void run('layout.presetRun') } : {}),
+  };
+}
+
+function LayoutPresetsWidget({ canvas }: ControlWidgetProps) {
+  const { value, presets, label, onChange, onRunAgain } = useLayoutPresetCards(canvas);
   const Icon = PRESET_ICONS[value.presetId] ?? Share2;
-  const label = presets.find((p) => p.id === value.presetId)?.label ?? 'Layout';
 
   return (
     <Popover>
@@ -67,12 +84,7 @@ function LayoutPresetsWidget({ canvas }: ControlWidgetProps) {
         <TooltipContent>Layout · {label}</TooltipContent>
       </Tooltip>
       <PopoverContent align="start" className="w-auto p-0">
-        <LayoutPresetsViewPanel
-          value={value}
-          presets={presets}
-          onChange={(next) => run('layout.preset', { value: next.presetId, overrides: next.overrides })}
-          {...(states[1]?.enabled ? { onRunAgain: () => run('layout.presetRun') } : {})}
-        />
+        <LayoutPresetsViewPanel value={value} presets={presets} onChange={onChange} {...(onRunAgain ? { onRunAgain } : {})} />
       </PopoverContent>
     </Popover>
   );
@@ -126,7 +138,8 @@ function viewCentre(canvas: Canvas) {
  * the camera as it moves — drag, wheel, the zoom buttons, a fit — read at most
  * once a frame.
  */
-function ViewReadoutWidget({ canvas }: ControlWidgetProps) {
+function ViewReadoutWidget({ canvas, options }: ControlWidgetProps) {
+  const panOnly = options?.show === 'pan';
   const [view, setView] = useState(() => viewCentre(canvas));
   useEffect(() => {
     let frame: number | null = null;
@@ -151,11 +164,22 @@ function ViewReadoutWidget({ canvas }: ControlWidgetProps) {
   const fmt = (n: number) => n.toLocaleString().replace('-', '−');
   return (
     <span className="text-sm whitespace-nowrap tabular-nums text-muted-foreground">
-      Zoom {Math.round(view.zoom * 100)}% · Pan {fmt(view.x)}, {fmt(view.y)}
+      {panOnly ? null : `Zoom ${Math.round(view.zoom * 100)}% · `}Pan {fmt(view.x)}, {fmt(view.y)}
     </span>
   );
 }
-ViewReadoutWidget.optionsSpec = {} satisfies ControlWidgetOptionsSpec;
+ViewReadoutWidget.optionsSpec = {
+  show: {
+    kind: 'enum',
+    label: 'Show',
+    default: 'zoom-pan',
+    description: 'The pan alone when the zoom is on the board (`zoom-field`).',
+    options: [
+      { value: 'zoom-pan', label: 'Zoom and pan' },
+      { value: 'pan', label: 'Pan' },
+    ],
+  },
+} satisfies ControlWidgetOptionsSpec;
 
 /** Full screen for the canvas host — the browser Fullscreen API. */
 function FullscreenWidget() {
@@ -202,16 +226,26 @@ function positionedHost(el: HTMLElement | null): HTMLElement | null {
   return document.documentElement;
 }
 
-/** The board's legend — `GraphLegend` on a card, for a panel with no surface. */
+/** The board's legend on the kit's floating panel, for a control panel with no surface. */
 function GraphLegendWidget({ canvas, options }: ControlWidgetProps) {
   return (
-    <GraphLegend
-      canvas={canvas as GraphCanvas}
-      layerId={(options?.layerId as string) ?? 'graph'}
-      className="bg-background/90 w-48 rounded-md border border-border p-2"
-    />
+    <FloatingPanel title="Legend" className="w-60">
+      <LegendViewPanel canvas={canvas as GraphCanvas} layerId={(options?.layerId as string) ?? 'graph'} className="p-2" />
+    </FloatingPanel>
   );
 }
+
+/** The board's mode picker (`board.mode`). */
+function BoardModeWidget({ canvas }: ControlWidgetProps) {
+  return <BoardModePicker canvas={canvas} />;
+}
+BoardModeWidget.optionsSpec = {} satisfies ControlWidgetOptionsSpec;
+
+/** − · the zoom field · + (`camera.zoomTo`). */
+function ZoomFieldWidget({ canvas }: ControlWidgetProps) {
+  return <ZoomField canvas={canvas} />;
+}
+ZoomFieldWidget.optionsSpec = {} satisfies ControlWidgetOptionsSpec;
 GraphLegendWidget.optionsSpec = {
   layerId: { kind: 'string', label: 'Graph layer', default: 'graph' },
 } satisfies ControlWidgetOptionsSpec;
@@ -223,4 +257,6 @@ export const CHROME_CONTROL_WIDGETS = {
   'view-readout': ViewReadoutWidget,
   fullscreen: FullscreenWidget,
   'graph-legend': GraphLegendWidget,
+  'board-mode': BoardModeWidget,
+  'zoom-field': ZoomFieldWidget,
 };

@@ -45,7 +45,7 @@ function pinStyle(position: PanelPosition, offset: number): CSSProperties {
  * ancestor** (e.g. the `<Canvas>` host, which is `position: relative`), and
  * stacks its children horizontally or vertically. It is a **pure positioner** —
  * it draws no surface and owns no header / close; wrap content in a
- * {@link PanelContent} for that chrome.
+ * the kit's `PanelContent` (docked) or `FloatingPanel` (over the board) for that chrome.
  *
  * Engine-agnostic and reference-free: it needs no `Canvas` instance — with
  * multiple canvases on one page you simply render one `<Panel>` inside each
@@ -58,7 +58,7 @@ function pinStyle(position: PanelPosition, offset: number): CSSProperties {
  * controls still reach the canvas underneath.
  *
  * **Side docks (`position: 'left' | 'right'`):** the panel spans the full height
- * and the content wrapper fills it (a {@link PanelContent fill} child then owns
+ * and the content wrapper fills it (the kit's `PanelContent` child then owns
  * its own scroll). Here `style` is applied to the **positioner** (so
  * `style={{ top: 40, bottom: 25 }}` insets the dock below floating chrome); for
  * the other positions `style` lands on the content wrapper.

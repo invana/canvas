@@ -40,7 +40,6 @@ import {
   GraphControlsToolbar,
   GraphNodeContextMenu,
   GraphStatusBar,
-  PanelContent,
   SchemaEditorPanel,
   ToolbarItems,
   useSidePanels,
@@ -56,8 +55,8 @@ import type {
 } from '@invana/graph';
 import type { ElkDirection } from '@invana/graph-layout-elkjs';
 import { starSchema } from '@invana/graph-datasets/usecase-demos';
-import { Button, Card } from '@invana/ui';
-import { Moon, Settings, Sun } from 'lucide-react';
+import { Button, Card, PanelContent } from '@invana/ui';
+import { Moon, Settings, Sun, X } from 'lucide-react';
 
 const meta: Meta = { title: 'canvas-demos/by-casestudies/data-model/SchemaTable' };
 export default meta;
@@ -373,7 +372,7 @@ export const SchemaTableStory: Story = {
     const rightRegion = editing
       ? {
           content: (
-            <PanelContent header="Edit schema" onClose={() => setEditing(null)} fill>
+            <PanelContent titleText="Edit schema" headerActions={[{ name: 'Close', icon: X, onClick: () => setEditing(null) }]}>
               <SchemaEditorPanel
                 key={editing}
                 defaults={((): NodeSchema => {

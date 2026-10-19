@@ -53,8 +53,9 @@ import {
 import { D3HierarchyLayout } from '@invana/graph-layout-d3-hierarchy';
 import { D3SankeyLayout } from '@invana/graph-layout-d3-sankey';
 import { ClickViewBehaviour, MiniMapLayer, type ViewContext } from '@invana/canvas-react';
-import { CanvasMessageBar, GraphCanvasApp, GraphControlsToolbar, GraphStatusBar, EdgeDetailView, NodeDetailView, Panel, PanelContent, ToolbarItems } from '@invana/canvas-ui';
-import { Moon, Sun } from 'lucide-react';
+import { CanvasMessageBar, GraphCanvasApp, GraphControlsToolbar, GraphStatusBar, EdgeDetailView, NodeDetailView, Panel, ToolbarItems } from '@invana/canvas-ui';
+import { PanelContent } from '@invana/ui';
+import { Moon, Sun, X } from 'lucide-react';
 
 const meta: Meta = { title: 'canvas-demos/tools/GraphVisualiser' };
 export default meta;
@@ -308,7 +309,7 @@ export const GraphVisualiserStory: Story = {
           targetLayerId="graph"
           panel={(ctx: ViewContext) => (
             <Panel position="right">
-              <PanelContent header={ctx.kind === 'edge' ? 'Edge Detail' : 'Node Detail'} onClose={ctx.close} fill>
+              <PanelContent titleText={ctx.kind === 'edge' ? 'Edge Detail' : 'Node Detail'} headerActions={[{ name: 'Close', icon: X, onClick: ctx.close }]} className="w-[320px] border">
                 {ctx.kind === 'edge' ? <EdgeDetailView ctx={ctx} /> : <NodeDetailView ctx={ctx} />}
               </PanelContent>
             </Panel>

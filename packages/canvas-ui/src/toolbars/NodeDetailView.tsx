@@ -15,7 +15,7 @@ export interface NodeDetailViewProps extends BaseDetailViewProps {
  * node's resolved fill colour.
  *
  * It is **bare content** — no surface, placement, or close of its own. Drop it
- * into a `<PanelContent>` (inside a `<Panel>`) which provides the surface,
+ * into the kit's `<PanelContent>` (inside a `<Panel>`) which provides the surface,
  * header, and close. Add or override a data-type rendering via `renderers`.
  *
  * ```tsx

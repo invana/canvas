@@ -74,6 +74,8 @@ export type { MapLayerProps } from './layers/MapLayer';
 // ─── Behaviours ──────────────────────────────────────────────────────────
 // Camera / canvas-scoped
 // Control panels — headless registrar (the UI kit's <ControlPanels> draws them)
+export { BoardModes, useBoardMode, inBoardMode, BOARD_MODE_COMMAND } from './board/BoardModes';
+export type { BoardModesProps, BoardModeSpec, BoardModeOption } from './board/BoardModes';
 export { ControlPanel } from './control-panels/ControlPanel';
 export type { ControlPanelProps } from './control-panels/ControlPanel';
 export { controlPanelSlots } from './control-panels/slots';

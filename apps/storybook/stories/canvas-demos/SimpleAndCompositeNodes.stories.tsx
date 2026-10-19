@@ -19,9 +19,10 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useTheme } from '@invana/themes';
-import { RichSelect } from '@invana/ui';
+import { PanelContent, RichSelect } from '@invana/ui';
+import { X } from 'lucide-react';
 import { ClickViewBehaviour, HoverElementPreviewBehaviour, type LayoutFactory } from '@invana/canvas-react';
-import { EdgeDetailView, GraphCanvasApp, GraphControlsToolbar, HoverElementPreviewCard, MiniMapToggleButton, NodeDetailView, Panel, PanelContent, ThemeToggle, type GraphCanvasAppControlContext } from '@invana/canvas-ui';
+import { EdgeDetailView, GraphCanvasApp, GraphControlsToolbar, HoverElementPreviewCard, MiniMapToggleButton, NodeDetailView, Panel, ThemeToggle, type GraphCanvasAppControlContext } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
 import type {
   FreeformStructure,
@@ -206,7 +207,7 @@ export const SimpleAndCompositeNodesStory: Story = {
           targetLayerId="graph"
           panel={(ctx) => (
             <Panel position="right" style={{ top: 12, bottom: 12 }}>
-              <PanelContent header={ctx.label} onClose={ctx.close} fill width={300}>
+              <PanelContent titleText={ctx.label} headerActions={[{ name: 'Close', icon: X, onClick: ctx.close }]} className="w-[300px] border">
                 {ctx.kind === 'edge' ? (
                   <EdgeDetailView ctx={ctx} />
                 ) : (

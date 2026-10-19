@@ -1,10 +1,11 @@
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import type { Canvas, ControlPanelPlacement, ControlPanelSpec } from '@invana/canvas';
 import { cn } from '@invana/ui';
-import { useControlPanels, useResolvedCanvas } from '@invana/canvas-react';
+import { inBoardMode, useBoardMode, useControlPanels, useResolvedCanvas } from '@invana/canvas-react';
 
 import { ToolbarItems, type ToolbarIcon } from '../components';
 import { useControlItems } from './ControlItems';
+import { itemsInMode } from './ControlPanels';
 import type { ControlWidget } from './widgets';
 import { surfaceClass } from './surface';
 
@@ -59,7 +60,9 @@ function RailPanelView({
   icons?: Record<string, ToolbarIcon>;
   widgets?: Record<string, ControlWidget>;
 }) {
-  const items = useControlItems(spec.items, { canvas, ...(icons ? { icons } : {}), ...(widgets ? { widgets } : {}) });
+  const mode = useBoardMode(canvas);
+  const shown = useMemo(() => itemsInMode(spec.items, mode), [spec.items, mode]);
+  const items = useControlItems(shown, { canvas, ...(icons ? { icons } : {}), ...(widgets ? { widgets } : {}) });
   return (
     <div className={cn('flex shrink-0', spec.surface === true ? 'rounded-md border border-border bg-background p-0.5' : surfaceClass(spec.surface ?? false))}>
       {/* Tooltips open away from the window edge the rail sits on. */}
@@ -83,11 +86,12 @@ export function RegionControlPanels({ rail, region, icons, widgets, canvas }: Re
   const resolved = useResolvedCanvas(canvas);
   const panels = useControlPanels(resolved);
   const placement: ControlPanelPlacement = `${rail}-${region}`;
+  const mode = useBoardMode(resolved);
 
   return (
     <>
       {Object.entries(panels).map(([id, spec]) =>
-        spec.visible === false || spec.placement !== placement ? null : (
+        spec.visible === false || spec.placement !== placement || !inBoardMode(spec.modes, mode) ? null : (
           <RailPanelView key={id} spec={spec} canvas={resolved} rail={rail} icons={icons} widgets={widgets} />
         ),
       )}

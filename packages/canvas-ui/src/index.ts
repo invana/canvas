@@ -940,8 +940,36 @@ export type {
   LayoutPresetValue,
 } from './view-panels/layout-presets';
 // What the colours on the board mean, with live counts per type.
-export { GraphLegend } from './view-panels/legend';
-export type { GraphLegendProps } from './view-panels/legend';
+// ─── The board, context menu first ───────────────────────────────────────
+// The mode picker (`board.mode`, from canvas-react's `<BoardModes>`), the panel
+// rail and its one floating panel (`board.panel`), the Layout card at the
+// pointer (`board.layoutPresets`), the view dock's zoom field, and the board's
+// right-click menus with their headers and per-mode entries.
+export {
+  BoardModePicker,
+  BoardPanels,
+  BOARD_PANEL_COMMAND,
+  BoardLayoutPopover,
+  BOARD_LAYOUT_COMMAND,
+  ZoomField,
+} from './board';
+export type { BoardModePickerProps, BoardPanelsProps, BoardPanelSpec, ZoomFieldProps } from './board';
+export { BoardContextMenus, menuItems as boardMenuItems } from './menus/BoardContextMenus';
+export type {
+  BoardContextMenusProps,
+  BoardMenuEntry,
+  BoardMenuCommand,
+  BoardMenuAction,
+  BoardMenuSeparator,
+  BoardTargetMenuContext,
+  BoardSelectionMenuContext,
+} from './menus/BoardContextMenus';
+export type { MenuHeader } from './components/MenuItemList';
+export { ExportViewPanel, exportGraphData } from './view-panels/export';
+export type { ExportViewPanelProps, ExportedData, ExportedNode, ExportedEdge } from './view-panels/export';
+export { useLayoutPresetCards } from './control-panels/chromeWidgets';
+export { LegendViewPanel } from './view-panels/legend';
+export type { LegendViewPanelProps } from './view-panels/legend';
 export { HistoryViewPanel } from './view-panels/history';
 export type { HistoryViewPanelProps } from './view-panels/history';
 
@@ -1170,7 +1198,6 @@ export type { SidePanelDef, UseSidePanelsOptions, UseSidePanelsResult } from './
 // the shared tooltip helper; the rest are standalone panels.
 export {
   Panel,
-  PanelContent,
   ToolbarItems,
   applyIconOverrides,
   Tooltipped,
@@ -1200,7 +1227,6 @@ export {
 } from './components';
 export type {
   PanelProps,
-  PanelContentProps,
   PanelPosition,
   CanvasSettingsBrowserProps,
   SettingsEditorDescriptor,

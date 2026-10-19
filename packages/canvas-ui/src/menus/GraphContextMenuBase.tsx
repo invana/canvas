@@ -6,6 +6,7 @@ import type { MenuItem } from '@invana/ui';
 import { useCanvas } from '@invana/canvas-react';
 import { ContextMenuBehaviour } from '@invana/canvas-react';
 import { ContextMenuOverlay } from '../components/ContextMenuOverlay';
+import type { MenuHeader } from '../components/MenuItemList';
 import { useContextMenu } from '@invana/canvas-react';
 
 /**
@@ -91,8 +92,8 @@ interface GraphContextMenuRootProps extends GraphContextMenuCommonProps {
   id: string;
   /** Transient state to mark the right-clicked node/edge while open (node/edge only). */
   state?: string | null;
-  /** Build the menu tree from the right-click event + shared context. */
-  build: (event: ContextMenuEvent, base: GraphContextMenuContext) => MenuItem[];
+  /** Build the menu tree — or the tree and its header — from the right-click event + shared context. */
+  build: (event: ContextMenuEvent, base: GraphContextMenuContext) => MenuItem[] | { items: MenuItem[]; header?: MenuHeader };
 }
 
 /**
@@ -117,7 +118,7 @@ export function GraphContextMenuRoot({
   build,
 }: GraphContextMenuRootProps) {
   const canvas = useCanvas();
-  const { menu, open, close } = useContextMenu<MenuItem[]>();
+  const { menu, open, close } = useContextMenu<{ items: MenuItem[]; header?: MenuHeader }>();
 
   const onContextMenu = useCallback(
     (event: ContextMenuEvent): void => {
@@ -133,8 +134,13 @@ export function GraphContextMenuRoot({
         const select = canvas.behaviours.get<ClickSelectBehaviour>(selectTarget);
         if (select && !select.isSelected(event.id)) select.select(event.id, target === 'edge' ? 'connector' : 'shape');
       }
-      const items = build(event, base);
-      open(event.screen.x, event.screen.y, autoClose ? withAutoClose(items, close) : items);
+      const built = build(event, base);
+      const { items, header } = Array.isArray(built) ? { items: built, header: undefined } : built;
+      if (items.length === 0) return;
+      open(event.screen.x, event.screen.y, {
+        items: autoClose ? withAutoClose(items, close) : items,
+        ...(header ? { header } : {}),
+      });
     },
     [canvas, build, autoClose, open, close, selectTarget, target],
   );
@@ -150,7 +156,14 @@ export function GraphContextMenuRoot({
         onContextMenu={onContextMenu}
       />
       {menu && (
-        <ContextMenuOverlay x={menu.x} y={menu.y} items={menu.items} zIndex={zIndex} style={style} />
+        <ContextMenuOverlay
+          x={menu.x}
+          y={menu.y}
+          items={menu.items.items}
+          {...(menu.items.header ? { header: menu.items.header } : {})}
+          zIndex={zIndex}
+          style={style}
+        />
       )}
     </>
   );

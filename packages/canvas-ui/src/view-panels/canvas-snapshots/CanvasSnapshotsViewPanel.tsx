@@ -498,7 +498,7 @@ function SnapshotRow({
  * anything interactive would nest inside a button.
  *
  * Bare content, like every `view-panels/` surface — wrap it in a `<Panel>` +
- * `<PanelContent>` for the floating-card chrome.
+ * the kit's `<FloatingPanel>` for the floating-card chrome.
  */
 export function CanvasSnapshotsViewPanel({
   canvas,

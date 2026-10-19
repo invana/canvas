@@ -43,7 +43,7 @@ export interface DetailCardProps {
  * Dumb, engine-agnostic **content layout** for an element detail panel: title ·
  * type badge, id subtitle, fixed identity rows, then a body slot. It is **bare**
  * — no surface of its own (border / bg / shadow); wrap it in a
- * {@link PanelContent} (or any container) that provides the surface. The chrome
+ * the kit's `PanelContent` or `FloatingPanel` (or any container) that provides the surface. The chrome
  * counterpart of the body component (`PropertyDetailView`). Chrome (`Badge`,
  * optional `Button`) comes from `@invana/ui`; everything else is design-kit tokens.
  */

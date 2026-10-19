@@ -1,2 +1,2 @@
-export { GraphLegend } from './GraphLegend';
-export type { GraphLegendProps } from './GraphLegend';
+export { LegendViewPanel } from './LegendViewPanel';
+export type { LegendViewPanelProps } from './LegendViewPanel';
