@@ -73,6 +73,16 @@ export interface ForceSolveResponse {
   positions: Float32Array;
 }
 
+/** Worker progress envelope: `done` of `total` ticks solved for the matching `token`. */
+export interface ForceSolveProgress {
+  token: number;
+  done: number;
+  total: number;
+}
+
+/** Ticks between two progress reports — often enough to read as motion, rare enough to cost nothing. */
+export const PROGRESS_EVERY = 10;
+
 /** Fully transferable solve input — safe to `postMessage` to a Worker. */
 export interface ForceSolveInput {
   /** Node count. */
@@ -292,8 +302,14 @@ export function makeClusterForce<N extends SimulationNodeDatum>(
  *
  * Tick count matches d3's own stop condition: `alpha(t) = alpha0·(1−decay)^t`
  * decayed to `alphaMin`, capped at 1000 for pathological configs.
+ *
+ * `onProgress`, when given, is called every {@link PROGRESS_EVERY} ticks and
+ * once on the last, with the ticks done and the total.
  */
-export function solveForces(input: ForceSolveInput): Float32Array {
+export function solveForces(
+  input: ForceSolveInput,
+  onProgress?: (done: number, total: number) => void,
+): Float32Array {
   const { count, positions, seeded, fixed, links, radii, clusters, separation, params } = input;
 
   const nodes: SolveNode[] = new Array(count);
@@ -329,7 +345,10 @@ export function solveForces(input: ForceSolveInput): Float32Array {
     decay > 0 && decay < 1
       ? Math.min(1000, Math.max(1, Math.ceil(Math.log(sim.alphaMin() / sim.alpha()) / Math.log(decay))))
       : 300;
-  for (let i = 0; i < ticks; i++) sim.tick();
+  for (let i = 1; i <= ticks; i++) {
+    sim.tick();
+    if (onProgress && (i % PROGRESS_EVERY === 0 || i === ticks)) onProgress(i, ticks);
+  }
 
   const out = new Float32Array(count * 2);
   for (let i = 0; i < count; i++) {

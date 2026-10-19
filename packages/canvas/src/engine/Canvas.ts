@@ -1504,6 +1504,10 @@ export class Canvas {
     const offTick = layout.events.on('tick', () => {
       this.events.emit('layout:run:tick', { id: layout.id, ...cameraFlags });
     });
+    // An off-screen solve's progress, for "why is the canvas empty" UIs.
+    const offProgress = layout.events.on('progress', ({ done, total }) => {
+      this.events.emit('layout:run:progress', { id: layout.id, layerId, done, total });
+    });
 
     this._runsInFlight++;
     return layout.apply(target as never, run).finally(() => {
@@ -1511,6 +1515,7 @@ export class Canvas {
       offStart();
       offEnd();
       offTick();
+      offProgress();
       offTransition();
     });
   }
