@@ -852,13 +852,11 @@ export class GraphStore implements DataSource {
     yCol[slot] = pos.y;
     // Any write is a placement — from here on this node has a real position.
     const flagsCol = this.nodeCols.column('flags');
-    flagsCol[slot] = flagsCol[slot]! | FLAG_PLACED;
+    const shown = this.markPlaced(id, flagsCol, slot);
     this.nodeCols.touch();
     this._version++;
-    if (!opts?.silent) {
-      this.enqueueNodeUpdate(id, { position: { x: pos.x, y: pos.y } });
-      this.scheduleFlushIfNeeded();
-    }
+    if (!opts?.silent) this.enqueueNodeUpdate(id, { position: { x: pos.x, y: pos.y } });
+    if (!opts?.silent || shown) this.scheduleFlushIfNeeded();
   }
 
   /**
@@ -878,6 +876,7 @@ export class GraphStore implements DataSource {
     const yCol = this.nodeCols.column('y');
     const flagsCol = this.nodeCols.column('flags');
     const silent = !!opts?.silent;
+    let shown = false;
     for (let i = 0; i < ids.length; i++) {
       const slot = this.nodeCols.slot(ids[i]!);
       if (slot === undefined) continue;
@@ -885,14 +884,30 @@ export class GraphStore implements DataSource {
       const y = xy[i * 2 + 1]!;
       xCol[slot] = x;
       yCol[slot] = y;
-      flagsCol[slot] = flagsCol[slot]! | FLAG_PLACED;
+      if (this.markPlaced(ids[i]!, flagsCol, slot)) shown = true;
       if (!silent) {
         this.enqueueNodeUpdate(ids[i]!, { position: { x, y } });
       }
     }
     this.nodeCols.touch();
     this._version++;
-    if (!silent) this.scheduleFlushIfNeeded();
+    if (!silent || shown) this.scheduleFlushIfNeeded();
+  }
+
+  /**
+   * Flag a node placed. While {@link placementPending} holds, an unplaced node
+   * is not visible, so its first placement changes its visibility: queue it so
+   * the next flush says so and the layer draws it. A position write alone only
+   * moves a shape, and the gate lifting announces only nodes still unplaced —
+   * a layout that places every node and ends in one beat would leave them all
+   * drawn hidden. Returns whether a visibility change was queued.
+   */
+  private markPlaced(id: string, flagsCol: { [i: number]: number }, slot: number): boolean {
+    const flags = flagsCol[slot]!;
+    flagsCol[slot] = flags | FLAG_PLACED;
+    if (!this._placementPending || flags & FLAG_PLACED) return false;
+    this.pendingDerivedNodes.add(id);
+    return true;
   }
 
   setPinned(id: string, pinned: boolean): void {

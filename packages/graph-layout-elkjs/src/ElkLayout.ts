@@ -117,6 +117,12 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
    * Promise because the no-worker fallback needs an async dynamic import.
    */
   private elkInstance?: Promise<ElkInstance>;
+  /**
+   * Rejects when the worker reports an error — its script did not load (a bad
+   * URL, an HTML fallback) or threw. `elk-api` listens for replies only, so a
+   * dead worker would leave every solve pending for ever; a run races this.
+   */
+  private workerFailed?: { readonly promise: Promise<never>; dead: boolean };
 
   constructor(opts: ElkLayoutOptions = {}) {
     // `ElkLayoutOptions` extends `OneShotLayoutOptions`, so `id` / `targetLayerId`
@@ -129,8 +135,9 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
   /**
    * Lazily construct (and memoise) the ELK instance. Prefers the worker-backed
    * `elk-api` build so the solve stays off the main thread; falls back to the
-   * synchronous `elk.bundled.js` only when no `Worker` global exists or worker
-   * construction throws synchronously (Node / SSR / test runners).
+   * synchronous `elk.bundled.js` when no `Worker` global exists, when worker
+   * construction throws (Node / SSR / test runners), or when the worker fails
+   * after it was made (see {@link solve}).
    */
   private getElk(): Promise<ElkInstance> {
     return (this.elkInstance ??= this.createElk());
@@ -142,17 +149,54 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
         const factory = this.opts.workerFactory ?? defaultElkWorkerFactory;
         // `elk-api`'s ctor calls the factory eagerly, so a thrown worker
         // construction is caught here and drops us to the sync fallback.
-        return new ELK({ workerFactory: factory });
+        return new ELK({ workerFactory: (url) => this.watch(factory(url)) });
       } catch {
         /* fall through to the synchronous bundle */
       }
     }
-    // No Worker (Node / SSR / tests) or worker construction failed: use the
-    // in-process build. Dynamically imported so the 1.6 MB bundle stays out of
-    // the worker-path code chunk. This re-introduces main-thread blocking, but
-    // only where workers don't exist at all.
-    const { default: BundledELK } = await import('elkjs/lib/elk.bundled.js');
-    return new BundledELK();
+    return bundledElk();
+  }
+
+  /** Arm {@link workerFailed} on `worker`'s first error. */
+  private watch(worker: Worker): Worker {
+    let reject!: (err: Error) => void;
+    const promise = new Promise<never>((_, r) => (reject = r));
+    // Observed by every run's race; never an unhandled rejection on its own.
+    promise.catch(() => {});
+    const watched = { promise, dead: false };
+    worker.addEventListener(
+      'error',
+      (e) => {
+        e.preventDefault();
+        watched.dead = true;
+        reject(new Error(`ElkLayout: the ELK worker failed (${e.message || 'its script did not load'})`));
+      },
+      { once: true },
+    );
+    this.workerFailed = watched;
+    return worker;
+  }
+
+  /**
+   * Run ELK. A worker that fails is dropped for the synchronous build and the
+   * same graph solved again, so a layout never hangs on a dead worker.
+   */
+  private async solve(graph: ElkNode): Promise<ElkNode> {
+    const elk = await this.getElk();
+    const watched = this.workerFailed;
+    if (!watched) return elk.layout(graph);
+    try {
+      return await Promise.race([elk.layout(graph), watched.promise]);
+    } catch (err) {
+      // A solve's own error is not the worker's: only a dead worker falls back.
+      if (!watched.dead) throw err;
+      if (this.workerFailed === watched) {
+        (elk as { terminateWorker?: () => void }).terminateWorker?.();
+        this.workerFailed = undefined;
+        this.elkInstance = bundledElk();
+      }
+      return (await this.getElk()).layout(graph);
+    }
   }
 
   /**
@@ -248,8 +292,7 @@ export class ElkLayout extends OneShotPositionLayout<ElkLayoutOptions> {
     }
 
     // 5. Dispatch ELK (async; runs in a worker — see class docs).
-    const elk = await this.getElk();
-    const result = await elk.layout(graph);
+    const result = await this.solve(graph);
 
     // 6. ELK reports child coordinates **relative to their parent**, so flatten
     //    by accumulating offsets: absolute top-left → canvas centre. Group
@@ -619,17 +662,33 @@ interface ElkRouteMeta {
 
 
 /**
- * Default Web Worker factory: load elkjs's worker build relative to this
- * module. The `new Worker(new URL(specifier, import.meta.url))` form is the
- * web-standard worker pattern that modern bundlers (Vite, webpack 5, Rollup)
- * statically detect and rewrite to a bundled worker asset. `elk-worker.min.js`
- * is a classic worker script, hence `{ type: 'classic' }`.
+ * Default Web Worker factory: elkjs's worker build, shipped beside this module
+ * as `dist/elk-worker.min.js`. A relative `new URL('./…', import.meta.url)` is
+ * correct unbundled and is the form bundlers (Vite, webpack 5, Rollup) detect
+ * and emit as a worker asset; a bare package specifier in the URL is neither.
+ * `elk-worker.min.js` is a classic worker script, hence `{ type: 'classic' }`.
  */
 function defaultElkWorkerFactory(): Worker {
-  return new Worker(new URL('elkjs/lib/elk-worker.min.js', import.meta.url), {
-    type: 'classic',
-  });
+  return new Worker(new URL('./elk-worker.min.js', import.meta.url), { type: 'classic' });
 }
+
+/**
+ * The in-process ELK build. Dynamically imported so the 1.6 MB bundle stays out
+ * of the worker path; main-thread-blocking, so only where a worker cannot run.
+ * `elk.bundled.js` is a UMD: as CommonJS its export is the class (with a
+ * `default` on it); served raw as ESM it has no exports and sets `ELK` on the
+ * global instead — all three are accepted.
+ */
+async function bundledElk(): Promise<ElkInstance> {
+  const mod = (await import('elkjs/lib/elk.bundled.js')) as unknown as {
+    default?: ElkCtor & { default?: ElkCtor };
+  };
+  const Ctor = mod.default?.default ?? mod.default ?? (globalThis as { ELK?: ElkCtor }).ELK;
+  if (!Ctor) throw new Error('ElkLayout: elkjs/lib/elk.bundled.js exported no ELK constructor');
+  return new Ctor();
+}
+
+type ElkCtor = new () => ElkInstance;
 
 /**
  * Merge the convenience option fields and the free-form `layoutOptions`

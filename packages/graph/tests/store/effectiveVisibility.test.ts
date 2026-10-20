@@ -149,6 +149,36 @@ describe('GraphStore — effective visibility', () => {
     expect(seen.map((e) => e.nodeId)).toEqual(['unplaced']);
   });
 
+  it('says a node placed under the gate is now visible, even when the gate lifts in the same beat', () => {
+    const store = new GraphStore();
+    store.addNodesBulk([{ id: 'a', type: 'thing' }, { id: 'b', type: 'thing' }]);
+    store.setPlacementPending(true);
+    store.flush();
+    const seen: Array<{ nodeId: string; hidden: boolean }> = [];
+    store.events.on('node:visibility', (e) => seen.push(e));
+    // An un-animated layout: every node placed, then the run ends.
+    store.setPositionsBulk(['a', 'b'], new Float32Array([1, 1, 2, 2]));
+    store.setPlacementPending(false);
+    store.flush();
+    expect(seen).toEqual([
+      { nodeId: 'a', hidden: false },
+      { nodeId: 'b', hidden: false },
+    ]);
+  });
+
+  it('does not re-announce a node placed again', () => {
+    const store = new GraphStore();
+    store.addNodesBulk([{ id: 'a', type: 'thing' }]);
+    store.setPlacementPending(true);
+    store.setPosition('a', { x: 1, y: 1 });
+    store.flush();
+    const seen: unknown[] = [];
+    store.events.on('node:visibility', (e) => seen.push(e));
+    store.setPosition('a', { x: 2, y: 2 });
+    store.flush();
+    expect(seen).toEqual([]);
+  });
+
   it('is idempotent on the placement flag', () => {
     const store = makeStore();
     store.setPlacementPending(true);

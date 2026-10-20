@@ -50,9 +50,9 @@ export function paletteToEdgeDefaults(p: RolePalette): Partial<EdgeStyle> {
 }
 
 /**
- * Per-group-node frame recolour: body fill follows `cardBg`, frame border
- * follows `divider`. Written per-instance (the engine has no group template),
- * layered over each group node's current style.
+ * Group-frame colours from the theme: body fill follows `cardBg`, frame border
+ * follows `divider`. The layer resolves them under a frame's type binding and
+ * its own `style`, so an authored frame colour wins.
  */
 export function paletteToGroupStyle(p: RolePalette): Partial<NodeStyle> {
   const out: Record<string, number> = {};

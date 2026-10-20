@@ -140,6 +140,40 @@ export function useCanvasEngine<T extends Canvas>(
     }
   }, [canvas, config]);
 
+  // An instance that registers after the config landed gets its slice back.
+  // StrictMode remounts a newly mounted child — unregisters it and registers a
+  // fresh instance built from props — but not this root, so the effect above
+  // does not run again; a `key` change on a child does the same. The slice is
+  // read from the definition, which also holds what was edited since. It lands
+  // a microtask late, after the wrapper's own `enabled` write in the same flush.
+  useEffect(() => {
+    if (!canvas) return;
+    const replay = (section: 'layers' | 'behaviours' | 'layouts', id: string): void => {
+      queueMicrotask(() => {
+        if (!canvas.isInitialised) return;
+        const definition = canvas.store.view.getState().definition;
+        const slice = definition[section][id];
+        // The active layout is wired to an instance, so a new instance of it
+        // is wired again — the old one was removed with its wiring.
+        const active = section === 'layouts' && definition.activeLayout === id;
+        if ((slice && Object.keys(slice).length > 0) || active) {
+          canvas.update({
+            ...(slice && Object.keys(slice).length > 0 ? { [section]: { [id]: slice } } : {}),
+            ...(active ? { activeLayout: id } : {}),
+          });
+        }
+      });
+    };
+    const offs = [
+      canvas.events.on('scene:layer:add', ({ id }) => replay('layers', id)),
+      canvas.events.on('scene:behaviour:register', ({ id }) => replay('behaviours', id)),
+      canvas.events.on('scene:layout:add', ({ id }) => replay('layouts', id)),
+    ];
+    return () => {
+      for (const off of offs) off();
+    };
+  }, [canvas]);
+
   // `ref.current` surfaces the live value (null until init resolves, then the
   // initialised canvas); the cast satisfies useImperativeHandle's `R extends T`.
   useImperativeHandle(ref, () => canvas as T, [canvas]);

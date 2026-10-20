@@ -233,15 +233,17 @@ export interface ElkLayoutOptions extends OneShotLayoutOptions {
    * visible when a one-shot algorithm re-runs on every streaming update. The
    * worker keeps the main thread responsive while ELK works.
    *
-   * The default factory does
-   * `new Worker(new URL('elkjs/lib/elk-worker.min.js', import.meta.url), { type: 'classic' })`,
-   * which modern bundlers (Vite, webpack 5, Rollup) resolve and bundle as a
-   * worker asset. Override this when your bundler needs a different idiom to
-   * locate the worker (e.g. Vite's `new ElkWorker()` from a `?worker` import).
+   * The default factory loads `dist/elk-worker.min.js`, shipped beside the
+   * bundle, with `new Worker(new URL('./elk-worker.min.js', import.meta.url))`
+   * — the form bundlers (Vite, webpack 5, Rollup) emit as a worker asset. In
+   * Vite dev, exclude `@invana/graph-layout-elkjs` from `optimizeDeps` so the
+   * URL stays beside the bundle. Override only for a bundler that needs
+   * another idiom.
    *
-   * When no `Worker` global exists (Node, SSR, test runners) or worker
-   * construction throws, `ElkLayout` falls back to the synchronous
-   * `elkjs/lib/elk.bundled.js` build — correct, but main-thread-blocking.
+   * When no `Worker` global exists (Node, SSR, test runners), worker
+   * construction throws, or the worker fails (its script did not load),
+   * `ElkLayout` falls back to the synchronous `elkjs/lib/elk.bundled.js` build
+   * — correct, but main-thread-blocking. A run never waits on a dead worker.
    */
   workerFactory?: (url?: string) => Worker;
 }

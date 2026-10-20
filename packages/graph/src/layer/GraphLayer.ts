@@ -370,6 +370,20 @@ export class GraphLayer extends WorldLayer<
   /** Current resolved palette (role → number), used to resolve per-type
    * templates. Seeded from the default theme until a theme is published. */
   private themePalette: RolePalette = FALLBACK_PALETTE;
+  /**
+   * Group-frame fill and border from the active theme. Resolved under a frame's
+   * type binding and its own `style`, so an authored frame colour survives a
+   * theme switch and a frame with none follows the theme.
+   */
+  private groupThemeStyle: Partial<NodeStyle> = {};
+  /**
+   * The theme's node and edge colours — labels, borders, edge strokes. Resolved
+   * under the layer template, so a colour the template sets (a config, a
+   * per-type resolver) survives a theme switch and one it leaves unset follows
+   * the theme.
+   */
+  private themeNodeDefaults: Partial<NodeStyle> = {};
+  private themeEdgeDefaults: Partial<EdgeStyle> = {};
 
   /** Detaches the store from the canvas's operation log; set on mount. */
   private detachLog: (() => void) | undefined;
@@ -731,25 +745,24 @@ export class GraphLayer extends WorldLayer<
     // empty (shorthand) publish. Set before any re-render reads it.
     this.themePalette = { ...FALLBACK_PALETTE, ...palette };
 
-    const nodePatch = paletteToNodeDefaults(palette);
-    if (hasAny(nodePatch)) this.setNodeDefaults(nodePatch);
-    const edgePatch = paletteToEdgeDefaults(palette);
-    if (hasAny(edgePatch)) this.setEdgeDefaults(edgePatch);
-
+    // Group frames read this at resolve time — set before any re-render below.
+    // Never written into a node's own `style`: that is authored data, and the
+    // theme's colour would overwrite the author's and travel with an export.
     const groupPatch = paletteToGroupStyle(palette);
-    if (hasAny(groupPatch)) {
-      for (const node of this.store.nodes()) {
-        if (!this.isGroupNode(node)) continue;
-        const prevStyle = (node.style ?? {}) as NodeStyle;
-        // Derived from the theme, not authored: never recorded (RFC F6).
-        this.store.internal.updateNode(node.id, { style: { ...prevStyle, ...groupPatch } });
-      }
-    }
+    if (hasAny(groupPatch)) this.groupThemeStyle = groupPatch;
 
-    // Per-type templates resolve roles → numbers, so a theme switch must
-    // recompile them. `setNodeDefaults` above already re-rendered when it had a
-    // patch; if it didn't (empty palette) but types are configured, redraw.
-    if (this.nodeTypes && !hasAny(nodePatch)) this.redraw();
+    const nodePatch = paletteToNodeDefaults(palette);
+    if (hasAny(nodePatch)) this.themeNodeDefaults = nodePatch;
+    const edgePatch = paletteToEdgeDefaults(palette);
+    if (hasAny(edgePatch)) this.themeEdgeDefaults = edgePatch;
+
+    // Theme colours, per-type templates (roles → numbers) and group frames all
+    // resolve at render time, so a theme switch re-renders.
+    if (hasAny(nodePatch) || hasAny(edgePatch) || hasAny(groupPatch) || this.nodeTypes) {
+      this.redraw();
+      this.events.emit('style:changed', { scope: 'node' });
+      this.events.emit('style:changed', { scope: 'edge' });
+    }
   }
 
   /**
@@ -1309,17 +1322,24 @@ export class GraphLayer extends WorldLayer<
    */
   resolveNodeStyle(node: GraphNode): Partial<NodeStyle> {
     const merged: Partial<NodeStyle> = {};
+    assignNodeStyle(merged, this.themeNodeDefaults);
     if (this.nodeOption?.style) {
       assignNodeStyle(merged, resolveNodeStyleFields(this.nodeOption.style, node));
     }
     // Per-type template (structure + styling + bindings) sits above the layer
     // template and below per-node style: a node of a bound `type` gets its
     // card/simple skeleton + role-resolved colours, still overridable per node.
-    if (this.nodeTypes && node.type) {
-      const binding = this.nodeTypes[node.type];
-      if (binding) assignNodeStyle(merged, this.resolveTypeBinding(node, binding));
+    const binding = this.nodeTypes && node.type ? this.nodeTypes[node.type] : undefined;
+    const typed = binding ? this.resolveTypeBinding(node, binding) : undefined;
+    // A group frame's theme colours sit above the layer template and below its
+    // type binding and its own `style`, so either of those can colour a frame.
+    // Not `isGroupNode`: that resolves through here.
+    const own = (node.style as Partial<NodeStyle> | undefined) ?? {};
+    if ((own.group ?? typed?.group ?? merged.group) !== undefined) {
+      assignNodeStyle(merged, this.groupThemeStyle);
     }
-    assignNodeStyle(merged, (node.style as Partial<NodeStyle> | undefined) ?? {});
+    if (typed) assignNodeStyle(merged, typed);
+    assignNodeStyle(merged, own);
 
     const activeStates = this.store.nodeStatesOf(node.id);
     if (activeStates.length > 0) {
@@ -1364,7 +1384,7 @@ export class GraphLayer extends WorldLayer<
    * `pathType`. See {@link setLayoutGeometry} for when a route applies.
    */
   resolveEdgeStyle(edge: GraphEdge): Partial<EdgeStyle> {
-    const merged: { -readonly [K in keyof EdgeStyle]?: EdgeStyle[K] } = {};
+    const merged: { -readonly [K in keyof EdgeStyle]?: EdgeStyle[K] } = { ...this.themeEdgeDefaults };
     const template = this.edgeOption?.style
       ? resolveEdgeStyleFields(this.edgeOption.style, edge)
       : undefined;
