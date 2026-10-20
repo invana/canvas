@@ -107,12 +107,16 @@ export function useControlItems(
     it.type === 'command' || it.type === 'toggle' || it.type === 'choice' ? [{ command: it.command, args: it.args }] : [],
   );
   const { states, run } = useCommandStates(refs, resolved);
+  // A toggle's badge reads its own command's value, one ref per badged toggle.
+  const badgeRefs: CommandRef[] = items.flatMap((it) => (it.type === 'toggle' && it.badge ? [{ command: it.badge }] : []));
+  const { states: badgeStates } = useCommandStates(badgeRefs, resolved);
   useWarnUnavailable(
     resolved,
     refs.flatMap((r, i) => (states[i]?.available === false ? [r.command] : [])),
   );
 
   let c = 0;
+  let b = 0;
   return items.flatMap((it: ControlItemSpec, i): ToolbarItem[] => {
     const key = it.key ?? `${it.type}-${i}`;
     switch (it.type) {
@@ -139,10 +143,12 @@ export function useControlItems(
         const icon = (it.icon ? iconMap[it.icon] : undefined) ?? NoIcon;
         const activeIcon = it.activeIcon ? iconMap[it.activeIcon] : undefined;
         const suffix = st?.available === false ? UNAVAILABLE : '';
+        const badge = it.badge ? badgeStates[b++]?.value : null;
         return [{
           type: 'toggle',
           key,
           icon,
+          ...(badge ? { badge } : {}),
           ...(activeIcon ? { activeIcon } : {}),
           label: `${it.label}${suffix}`,
           ...(it.activeLabel !== undefined ? { activeLabel: `${it.activeLabel}${suffix}` } : {}),

@@ -271,8 +271,9 @@ export class GraphCanvas extends Canvas {
    * opt-in via `relayoutOnToggle`).
    *
    * A node that arrives **pinned** was put where it is by hand (the Add tool, *Add
-   * a node here*), so a flush that adds only pinned nodes leaves the board — and
-   * the camera — alone: the drawing does not re-flow under the pointer.
+   * a node here*), so a flush that adds or removes only such nodes leaves the
+   * board — and the camera — alone: the drawing does not re-flow under the
+   * pointer, and undoing a drop does not either.
    *
    * Data-triggered runs follow the layout's {@link Layout.onData}: throttled
    * to one run per `throttleMs` (leading + trailing), and with
@@ -311,19 +312,33 @@ export class GraphCanvas extends Canvas {
       lastRun = now();
       void this.runLayout(activeId, this.pendingRun);
     }
-    // `node:add` fires per id before the flush's `data:changed`, so the ids of
-    // this flush's additions are collected here and judged there.
+    // `node:add` / `node:remove` fire per id before the flush's `data:changed`,
+    // so this flush's ids are collected here and judged there. A removed node is
+    // gone by then, so whether it was placed by hand is remembered from its add.
+    const handPlaced = new Set<string>();
     const added: string[] = [];
-    const offAdd = layer.store.events.on('node:add', ({ nodeId }) => void added.push(nodeId));
+    const removed: string[] = [];
+    const offAdd = layer.store.events.on('node:add', ({ nodeId }) => {
+      added.push(nodeId);
+      if (layer.store.isPinned(nodeId)) handPlaced.add(nodeId);
+    });
+    const offRemove = layer.store.events.on('node:remove', ({ nodeId }) => void removed.push(nodeId));
     const off = layer.events.on('data:changed', (e) => {
-      const placedByHand = added.length > 0 && added.every((id) => layer.store.isPinned(id));
+      const byHand = (ids: string[], count: number) => ids.length === count && ids.every((id) => handPlaced.has(id));
+      const reflow =
+        (e.addedNodes > 0 && !byHand(added, e.addedNodes)) ||
+        (e.removedNodes > 0 && !byHand(removed, e.removedNodes)) ||
+        e.hiddenNodes > 0 ||
+        e.shownNodes > 0;
+      for (const id of removed) handPlaced.delete(id);
       added.length = 0;
-      const unplaced = e.addedNodes > 0 && !placedByHand;
-      if (unplaced || e.removedNodes > 0 || e.hiddenNodes > 0 || e.shownNodes > 0) onDataChange();
+      removed.length = 0;
+      if (reflow) onDataChange();
     });
     this.offActiveLayout = () => {
       off();
       offAdd();
+      offRemove();
       if (trailing !== undefined) clearTimeout(trailing);
     };
   }

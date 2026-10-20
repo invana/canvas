@@ -6,8 +6,8 @@
  *
  * | Where | What | canvas-ui |
  * |---|---|---|
- * | top-left | the mode picker, then the mode's tools — Select ▾ (Select · Lasso · Box); in Edit *Add node* · *Connect*; in Annotate its tools, not built yet | `<BoardModes>` (canvas-react) · `board-mode` widget · `select.mode` / `tool.active` items with `modes` |
- * | top-right | the panel rail — Legend · Styling · History, Properties (Edit) or Notes (Annotate), a line, Export — and one floating panel left of it | `<BoardPanels>` · `LegendViewPanel` · `StylingViewPanel` · `HistoryViewPanel` · `ElementInspectorViewPanel` · `ExportViewPanel` |
+ * | top-left | the mode picker, then the mode's tools — Select ▾ (Select · Lasso · Box); in Edit *Add node* · *Connect*; in Annotate its tools, not built yet; in both, Undo · Redo · Redraw | `<BoardModes>` (canvas-react) · `board-mode` widget · `select.mode` / `tool.active` items with `modes` |
+ * | top-right | the panel rail — Legend · Styling · History · Properties, Notes (Annotate), Changes with its count (Edit, or while unsaved), a line, Export — and one floating panel left of it | `<BoardPanels>` · `LegendViewPanel` · `StylingViewPanel` · `HistoryViewPanel` · `PropertiesViewPanel` · `ChangesViewPanel` · `ExportViewPanel` |
  * | bottom-left | the view dock: the minimap over − · the zoom field ▾ · + · Fit · lock | `MiniMapLayer` · `zoom-field` widget |
  * | right-click | the board, a node, a relationship, a selection — each headed by what it is for | `<BoardContextMenus>` · `<BoardLayoutPopover>` (*Layout…* at the pointer) |
  * | footer | the hint, and the pan | `view-readout` (`show: 'pan'`) |
@@ -17,6 +17,15 @@
  * Shift and drag, as in the Modeller's stitching. While connecting a press on a
  * node draws, it does not move the node. A new node is pinned where it was
  * dropped, so the board does not re-flow.
+ *
+ * **Unsaved changes.** What is added, edited or deleted is marked until saved
+ * (`UnsavedChangesBehaviour`): new is dashed at half fill, edited gains a dot,
+ * deleted stays as a ghost (`UnsavedGhostLayer`). The rail's **Changes** button
+ * carries the count (`unsaved.count`) and opens the Changes panel
+ * (`ChangesViewPanel`): added · edited · deleted, each revertible, Discard all ·
+ * Save. It is Edit's, and every work mode's while something is unsaved. Save
+ * runs the story's `unsaved.save`, a stand-in for the engine's write. *Expand
+ * neighbours* writes as `engine`, so what it pulls in is not unsaved.
  *
  * **Properties.** Clicking a node or a relationship opens it in *Properties*
  * (`PropertiesViewPanel`), read-only. In Edit, the panel's *Edit*, *Edit
@@ -43,6 +52,8 @@ import {
   selectedElementIds,
   type ClickInspectBehaviour as ClickInspect,
   type ClickSelectBehaviour,
+  UNSAVED_COUNT_COMMAND,
+  type UnsavedChangesBehaviour as UnsavedChanges,
   type GraphCanvas,
   type GraphData,
   type GraphEdge,
@@ -58,6 +69,8 @@ import {
   ElkLayout,
   MiniMapLayer,
   NodeCentralityBehaviour,
+  UnsavedChangesBehaviour,
+  UnsavedGhostLayer,
   useBoardMode,
   useCanvas,
   type BoardModeSpec
@@ -68,6 +81,8 @@ import {
   BoardContextMenus,
   BoardLayoutPopover,
   BoardPanels,
+  ChangesCount,
+  ChangesViewPanel,
   CommandPalette,
   ControlItems,
   ExportViewPanel,
@@ -78,6 +93,7 @@ import {
   PlaybookPresenterBar,
   PropertiesViewPanel,
   StylingViewPanel,
+  UNSAVED_SAVE_COMMAND,
   editProperties,
   type BoardContextMenusProps,
   type BoardPanelSpec,
@@ -165,6 +181,14 @@ function Explorer() {
       isEnabled: (cv) => selectedElementIds(cv, 'click-select').nodeIds.length > 0,
       run: (cv) => expandSelection(cv as GraphCanvas)
     });
+    // The stand-in for the engine's write: a moment's wait, then the board is saved.
+    c.commands.register(UNSAVED_SAVE_COMMAND, {
+      label: 'Save changes',
+      run: async (cv) => {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        cv.behaviours.get<UnsavedChanges>('unsaved-changes')?.markSaved();
+      }
+    });
     // Annotate's tools are drawn so the mode reads whole; no layer draws them yet.
     c.commands.register('annotate.tool', { label: 'Not built yet', isEnabled: () => false, run: () => {} });
     // A node press either moves the node or draws from it — never both.
@@ -210,6 +234,16 @@ function Explorer() {
         icon: 'properties',
         modes: ['explore', 'edit'],
         render: (c) => <PropertiesPanel canvas={c} />
+      },
+      {
+        id: 'changes',
+        title: 'Changes',
+        icon: 'changes',
+        modes: ['edit'],
+        alsoWhen: UNSAVED_COUNT_COMMAND,
+        badge: UNSAVED_COUNT_COMMAND,
+        count: <ChangesCount />,
+        render: (c) => <ChangesViewPanel canvas={c} saveTarget="Saves to the stand-in backend · Les Misérables" />
       },
       {
         id: 'notes',
@@ -262,6 +296,9 @@ function Explorer() {
       {/* What Properties reads: the clicked element. */}
       <ClickInspectBehaviour id="click-inspect" targetLayerId="graph" />
       <EditTools />
+      {/* What is not saved yet: marked on the graph, deletions drawn as ghosts under it. */}
+      <UnsavedChangesBehaviour />
+      <UnsavedGhostLayer />
       <MiniMapLayer
         backgroundLayerId="background"
         position="bottom-left"
@@ -295,7 +332,12 @@ function Explorer() {
           { type: 'divider', modes: ['edit', 'annotate'] },
           { type: 'toggle', key: 'add', command: 'tool.active', args: { value: 'add' }, icon: 'node-add', label: 'Add node (N)', modes: ['edit'] },
           { type: 'toggle', key: 'connect', command: 'tool.active', args: { value: 'connect' }, icon: 'connect', label: 'Connect (C)', modes: ['edit'] },
-          ...ANNOTATE_TOOLS
+          ...ANNOTATE_TOOLS,
+          // While changing the board: step back, step forward, and draw it again.
+          { type: 'divider', modes: ['edit', 'annotate'] },
+          { type: 'command', key: 'undo', command: 'history.undo', icon: 'undo', label: 'Undo (⌘Z)', modes: ['edit', 'annotate'] },
+          { type: 'command', key: 'redo', command: 'history.redo', icon: 'redo', label: 'Redo (⇧⌘Z)', modes: ['edit', 'annotate'] },
+          { type: 'command', key: 'redraw', command: 'graph.redraw', icon: 'refresh', label: 'Redraw', modes: ['edit', 'annotate'] }
         ]}
       />
       {/* The row, while viewing: the picker alone (Focus), or with the stepper (Present); faded until the pointer moves. */}
@@ -568,8 +610,14 @@ function expandSelection(canvas: GraphCanvas): void {
   }
   const after = new Set([...drawn, ...added]);
   const drawnEdges = new Set([...layer.store.edges()].map((e) => e.id));
-  layer.store.addData({
-    nodes: lesMiserables.nodes.filter((n) => added.has(n.id)),
-    edges: lesMiserables.edges.filter((e) => !drawnEdges.has(e.id) && after.has(e.source) && after.has(e.target))
-  });
+  // Data from the backend, not a change of the viewer's: written as the engine.
+  layer.store.applyDelta(
+    {
+      added: {
+        nodes: lesMiserables.nodes.filter((n) => added.has(n.id)),
+        edges: lesMiserables.edges.filter((e) => !drawnEdges.has(e.id) && after.has(e.source) && after.has(e.target))
+      }
+    },
+    { actor: 'engine', title: 'expand neighbours' }
+  );
 }

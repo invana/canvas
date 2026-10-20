@@ -59,6 +59,8 @@ export type { DevInfoLayerProps } from './layers/DevInfoLayer';
 
 export { MiniMapLayer } from './layers/MiniMapLayer';
 export type { MiniMapLayerProps } from './layers/MiniMapLayer';
+export { UnsavedGhostLayer } from './layers/UnsavedGhostLayer';
+export type { UnsavedGhostLayerProps } from './layers/UnsavedGhostLayer';
 
 // Overlay layers from the `@invana/graph-layer-*` packages. Each imports its own
 // (optional-peer) package, so a consumer only installs the ones it renders.
@@ -169,6 +171,8 @@ export { FocusBehaviour } from './behaviours/FocusBehaviour';
 export type { FocusBehaviourProps } from './behaviours/FocusBehaviour';
 export { FisheyeBehaviour } from './behaviours/FisheyeBehaviour';
 export type { FisheyeBehaviourProps } from './behaviours/FisheyeBehaviour';
+export { UnsavedChangesBehaviour } from './behaviours/UnsavedChangesBehaviour';
+export type { UnsavedChangesBehaviourProps } from './behaviours/UnsavedChangesBehaviour';
 export { NodeCentralityBehaviour } from './behaviours/NodeCentralityBehaviour';
 export type { NodeCentralityBehaviourProps } from './behaviours/NodeCentralityBehaviour';
 export { NodeLabelLODBehaviour } from './behaviours/NodeLabelLODBehaviour';
@@ -207,6 +211,7 @@ export {
   useSelection,
   useInspectTarget,
   useBehaviourInstance,
+  useUnsavedChanges,
   useViewTarget,
   useHoverElementPreview,
   useViewData,

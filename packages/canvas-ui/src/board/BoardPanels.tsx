@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Canvas, CommandOption, ControlItemSpec } from '@invana/canvas';
-import { ControlPanel, inBoardMode, useBoardMode, useCanvas } from '@invana/canvas-react';
+import { ControlPanel, inBoardMode, useBoardMode, useCanvas, useCommandStates } from '@invana/canvas-react';
 import { FloatingPanel } from '@invana/ui';
 
 /** The command that opens a board panel: `run({ value: id })` toggles it, `value` is the open one. */
@@ -24,6 +24,13 @@ export interface BoardPanelSpec {
   modes?: string[];
   /** Draw a line above its rail icon — Export sits apart from the views. */
   separatorBefore?: boolean;
+  /** A command whose value is drawn as a badge on its rail icon — `unsaved.count`. */
+  badge?: string;
+  /**
+   * A command that offers the panel outside its `modes` while it has a value —
+   * Changes is Edit's, and every work mode's while something is unsaved.
+   */
+  alsoWhen?: string;
 }
 
 export interface BoardPanelsProps {
@@ -88,22 +95,34 @@ export function BoardPanels({ panels, defaultOpen = null, onOpenChange, offset =
   }, [canvas]);
   useEffect(() => canvas.commands.invalidate(), [canvas, open]);
 
-  const items: ControlItemSpec[] = panels.flatMap((p): ControlItemSpec[] => [
-    ...(p.separatorBefore ? [{ type: 'divider' as const, ...(p.modes ? { modes: p.modes } : {}) }] : []),
-    {
-      type: 'toggle',
-      key: p.id,
-      command: BOARD_PANEL_COMMAND,
-      args: { value: p.id },
-      icon: p.icon,
-      label: p.title,
-      ...(p.modes ? { modes: p.modes } : {}),
-    },
-  ]);
+  // A panel with `alsoWhen` drops its modes while that command has a value.
+  const when = panels.filter((p) => p.alsoWhen);
+  const { states: whenStates } = useCommandStates(when.map((p) => ({ command: p.alsoWhen! })), canvas);
+  const modesOf = (p: BoardPanelSpec): string[] | undefined => {
+    const i = when.indexOf(p);
+    return i >= 0 && whenStates[i]?.value ? undefined : p.modes;
+  };
+
+  const items: ControlItemSpec[] = panels.flatMap((p): ControlItemSpec[] => {
+    const pm = modesOf(p);
+    return [
+      ...(p.separatorBefore ? [{ type: 'divider' as const, ...(pm ? { modes: pm } : {}) }] : []),
+      {
+        type: 'toggle',
+        key: p.id,
+        command: BOARD_PANEL_COMMAND,
+        args: { value: p.id },
+        icon: p.icon,
+        label: p.title,
+        ...(pm ? { modes: pm } : {}),
+        ...(p.badge ? { badge: p.badge } : {}),
+      },
+    ];
+  });
   const everywhere = panels.some((p) => !p.modes);
   const railModes = modes ?? (everywhere ? undefined : [...new Set(panels.flatMap((p) => p.modes ?? []))]);
 
-  const shown = panels.find((p) => p.id === open && inBoardMode(p.modes, mode) && inBoardMode(railModes, mode));
+  const shown = panels.find((p) => p.id === open && inBoardMode(modesOf(p), mode) && inBoardMode(railModes, mode));
 
   return (
     <>

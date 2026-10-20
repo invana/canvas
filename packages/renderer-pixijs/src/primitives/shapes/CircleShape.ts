@@ -31,6 +31,13 @@ export class CircleShape extends ShapeBase<CircleSpec> {
 
     const dashArray = style?.dashArray ?? spec.stroke?.dashArray;
     if (dashArray && dashArray[0] > 0 && dashArray[1] > 0) {
+      // A decoration's dash (`style`) is an outline only; a node's own dashed
+      // stroke still fills its body.
+      if (!style?.dashArray) {
+        const body = () => void g.regularPoly(0, 0, r, Math.max(32, Math.ceil((Math.PI * 2 * r) / 4)));
+        body();
+        applyFill(g, spec, style, this.host, this.bounds(), body);
+      }
       emitDashedStroke(g, sampleCircleOutline(r), {
         color: style?.color ?? spec.stroke?.color ?? 0x000000,
         alpha: style?.alpha ?? spec.stroke?.alpha ?? 1,

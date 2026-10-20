@@ -159,6 +159,17 @@ export type {
 export { fisheyeDisplace } from './fisheye';
 export type { FisheyeDisplacement } from './fisheye';
 
+export {
+  UnsavedChangesBehaviour,
+  UNSAVED_COUNT_COMMAND,
+  UNSAVED_NEW_STATE,
+  UNSAVED_EDITED_STATE,
+} from './UnsavedChangesBehaviour';
+export type {
+  UnsavedChangesBehaviourOptions,
+  UnsavedChangesSummary,
+  UnsavedChangesEventMap,
+} from './UnsavedChangesBehaviour';
 export { NodeCentralityBehaviour } from './NodeCentralityBehaviour';
 export type {
   NodeCentralityBehaviourOptions,

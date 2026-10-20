@@ -102,6 +102,11 @@ export interface ControlToggleItemSpec extends ControlItemBase {
   label: string;
   /** Tooltip + label while active. Defaults to {@link label}. */
   activeLabel?: string;
+  /**
+   * A command whose `value` is drawn as a badge on the icon — a count, such as
+   * the unsaved changes. Nothing is drawn while its value is `null` or `''`.
+   */
+  badge?: string;
 }
 
 /** One option of a {@link ControlChoiceItemSpec}. */

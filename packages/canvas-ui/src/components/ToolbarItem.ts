@@ -50,6 +50,8 @@ export interface ToolbarButtonItem extends ToolbarItemBase {
  */
 export interface ToolbarToggleItem extends ToolbarItemBase {
   type: 'toggle';
+  /** A count drawn on the icon's corner (the unsaved changes); nothing when absent. */
+  badge?: string;
   /** Icon shown while inactive (and while active, unless `activeIcon` is set). */
   icon: ToolbarIcon;
   /** Icon shown while active. Defaults to `icon` — active styling alone signals state. */

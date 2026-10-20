@@ -17,7 +17,7 @@ relations:
 |---|---|
 | Motivation | The Explorer board's row carried ~25 controls; Edit / Annotate / Focus / Present had no home |
 | Design | Board **modes** (a viewer's choice, never saved) decide what shows; a **panel rail** opens one floating panel; a **view dock** holds the minimap and zoom; **right-click menus** carry every verb |
-| Rows | F1–F14 implemented; F15–F17 deferred |
+| Rows | F1–F14, F16, F18–F20 implemented; F15, F17 deferred |
 | Open decisions | none — D1–D6 accepted in review of the Explorer Canvas Panels design canvas |
 
 ## 1. Motivation
@@ -67,8 +67,11 @@ relations:
 | F13 | defect | implemented | `pkg:@invana/ui` `MenuItem` | `disabled`, `destructive`, `separator` | menu rows | kit not released | — |
 | F14 | defect | implemented | `file:packages/canvas-ui/src/components/PanelContent.tsx` (deleted) | canvas-ui's `PanelContent` retired for the kit's `PanelContent` / `FloatingPanel` | one panel surface | **breaking** | F12 |
 | F15 | defect | deferred | Annotate | notes, shapes, arrows, text, highlight | — | needs an annotation layer — its own RFC | — |
-| F16 | defect | deferred | Edit › Properties | editing a property (today `ElementInspectorViewPanel`, read-only) | — | — | — |
+| F16 | defect | implemented | `file:packages/canvas-ui/src/view-panels/properties/PropertiesViewPanel.tsx`, `components/PropertiesEditor.tsx` | Properties: the clicked element read-only, *Edit* (or `editProperties` from a menu or a drawing tool) swaps in the editor generated from `@invana/forms`; `InspectorPanel` deprecated | — | needs the kit's `keyvalue` field | — |
 | F17 | defect | deferred | image export of the selection | a world-rect capture area in `sym:Canvas.export` | — | engine change | — |
+| F18 | defect | implemented | `story:canvas-demos/tools/CanvasExplorer` | Edit: Shift-drag connects with any tool, N / C pick the tools, a node press either moves or draws; Edit and Annotate add Undo · Redo · Redraw to the row | — | — | F2 |
+| F19 | defect | implemented | `file:packages/graph/src/canvas/GraphCanvas.ts` | a flush that adds or removes only nodes placed by hand (pinned on arrival) does not re-run the layout | a drop, and its undo, stay put | — | — |
+| F20 | dressing | implemented | `file:packages/canvas-core/src/state/view/controlPanels.ts`, `control-panels/ControlPanels.tsx`, `components/ToolbarItems.tsx` | `width` on a control panel (the dock bar matches the minimap); a dropdown inside a row is the kit's borderless trigger | — | — | — |
 
 ## 5. Blast radius
 
@@ -113,3 +116,4 @@ relations:
 |---|---|---|---|
 | 2026-10-20 | Opened as the record of the board's chrome, after review of the Explorer Canvas Panels canvas | accepted | D1–D6 from that review |
 | 2026-10-20 | F1–F14 written; component stories and CanvasExplorer rewritten; V1–V7 pass | implemented | not committed |
+| 2026-10-20 | F16, F18–F20 built in review of the Edit mode; unsaved changes split out | implemented | `rfc:feat-2026-10-20-an-unsaved-change-looks-saved` |

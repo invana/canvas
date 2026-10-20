@@ -328,6 +328,11 @@ export class GraphStore implements DataSource {
     return this.log;
   }
 
+  /** The source id this store's data parts carry in {@link operationLog} (`''` while detached). */
+  get operationLogSourceId(): string {
+    return this.logSourceId;
+  }
+
   /** Hear {@link attachLog} (a new log, or `undefined` on detach). Returns the unsubscribe. */
   onLogAttached(listener: (log: OperationLog | undefined) => void): () => void {
     this.logListeners.add(listener);

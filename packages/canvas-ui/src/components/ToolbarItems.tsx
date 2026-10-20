@@ -41,24 +41,33 @@ function renderButton(
     text?: string;
     active?: boolean;
     disabled?: boolean;
+    badge?: string;
     onClick: () => void;
     tooltipSide: TooltipSide;
     size: ToolbarSize;
   },
 ): ReactNode {
-  const { icon: Icon, iconClass, label, text, active = false, disabled = false, onClick, tooltipSide, size } = opts;
+  const { icon: Icon, iconClass, label, text, active = false, disabled = false, badge, onClick, tooltipSide, size } = opts;
   return (
     <Tooltipped key={key} label={label} side={tooltipSide}>
       <Button
         variant="ghost"
         size={text ? 'sm' : iconButtonSize(size)}
-        aria-label={label}
+        aria-label={badge ? `${label} (${badge})` : label}
         disabled={disabled}
         onClick={onClick}
-        className={active ? ACTIVE_CLASS : undefined}
+        className={cn(active && ACTIVE_CLASS, badge && 'relative overflow-visible')}
       >
         <Icon className={iconClass} />
         {text ?? null}
+        {badge ? (
+          <span
+            aria-hidden="true"
+            className="bg-warning text-warning-foreground ring-background pointer-events-none absolute -top-1.5 -right-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] leading-none font-semibold tabular-nums ring-2"
+          >
+            {badge}
+          </span>
+        ) : null}
       </Button>
     </Tooltipped>
   );
@@ -207,6 +216,7 @@ export function ToolbarItems({
           ...(it.iconClass !== undefined ? { iconClass: it.iconClass } : {}),
           label,
           active: it.active,
+          ...(it.badge ? { badge: it.badge } : {}),
           ...(it.disabled !== undefined ? { disabled: it.disabled } : {}),
           onClick: it.onToggle,
           tooltipSide: it.tooltipSide ?? tipSide,

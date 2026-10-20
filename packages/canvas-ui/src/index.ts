@@ -997,6 +997,12 @@ export {
 } from './view-panels/properties';
 export type { PropertiesViewPanelProps } from './view-panels/properties';
 
+// Unsaved changes: the rail's Changes panel over `UnsavedChangesBehaviour` —
+// added · edited · deleted, each revertible, Discard all · Save; Save runs the
+// host's `unsaved.save` command. The rail badge reads `unsaved.count`.
+export { ChangesViewPanel, ChangesCount, UNSAVED_SAVE_COMMAND } from './view-panels/changes';
+export type { ChangesViewPanelProps } from './view-panels/changes';
+
 // ─── Per-type styling ────────────────────────────────────────────────────────
 // Colour · label key · size/width for every node/edge **type the canvas is
 // painting**, read reactively from `useDerivedSchema`. Controlled for

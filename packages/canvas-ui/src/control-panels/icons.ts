@@ -17,7 +17,6 @@ import {
   Presentation,
   Rows3,
   ScanEye,
-  Share2,
   SquarePen,
   StickyNote,
   Type,
@@ -63,6 +62,7 @@ import {
   X,
   ZoomIn,
   ZoomOut,
+  Diff,
 } from 'lucide-react';
 
 import { createElement } from 'react';
@@ -146,10 +146,11 @@ export const DEFAULT_CONTROL_ICONS: Readonly<Record<string, ToolbarIcon>> = {
   palette: Palette,
   history: History,
   properties: Rows3,
+  changes: Diff,
   minimap: MapIcon,
   // board tools
   'node-add': CirclePlus,
-  connect: Share2,
+  connect: Spline,
   shape: SquarePen,
   arrow: ArrowUpRight,
   text: Type,
