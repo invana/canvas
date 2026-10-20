@@ -336,6 +336,7 @@ export {
   ROSE_THEME,
   MINIMAL_THEME,
   cssColorToNumber,
+  readCssColor,
   resolveAccentVar,
   themeFamily,
 } from './theme';

@@ -19,7 +19,7 @@ relations:
 | Motivation | Studio, the first product on canvas, holds ~2,900 lines of generic canvas code: three boards copied from stories, five engine workarounds, three theme paths, two colour hashes, four copies of controlled selection |
 | Design | Canvas owns every board, behaviour, panel, menu and engine rule; a host passes data, configuration and **seams** (callbacks for what needs its backend). Nothing a second product would need stays in Studio |
 | Rows | P0 F1–F4 · P1 F5–F16, F37–F40 · P2 F17–F20 · P3 F21–F24 · P4 F25–F31 · P5 F32–F36 — all accepted |
-| Row status | proposed 0 · accepted 16 · implemented 23 · deferred 1 · landed 0 |
+| Row status | proposed 0 · accepted 12 · implemented 26 · deferred 2 · landed 0 |
 | Open decisions | none — D1–D6 accepted in review on 2026-10-20 |
 
 ## 1. Motivation
@@ -99,10 +99,10 @@ relations:
 
 | ID | Kind | Status | File/target | Change | Effect | Risk | Depends on |
 |---|---|---|---|---|---|---|---|
-| F21 | defect | accepted | `pkg:@invana/graph` theme | one `readCssColor(var)` probe (hsl, oklch, hex) | five copies become one | — | — |
-| F22 | defect | accepted | canvas-react `sym:CanvasThemeSync` | a `tokens` map (design-kit names by default) → background, labels, edges, minimap, categorical palette | Studio's three paths become one | how every board looks in each theme | F21 |
-| F23 | defect | accepted | `pkg:@invana/graph` `sym:typeColor` | one stable hash onto the theme's categorical slots; explicit colour first | legend, paint and panels agree | colours shift once | F22 |
-| F24 | defect | accepted | graph theme colour binding | `{ bind: 'data.hue' }` resolves to a live categorical slot | ER frame hues follow the theme | — | F22 |
+| F21 | defect | implemented | `pkg:@invana/graph` `sym:readCssColor` | one probe (hsl, oklch, hex, `var()`), cached per theme stamp; `resolveAccentVar` and the unsaved-changes colours use it | five copies become one | — | — |
+| F22 | defect | implemented | canvas-react `sym:CanvasThemeSync` `source: 'tokens'`; graph `sym:MiniMapLayer` role colours | the palette read from the host's tokens (`sym:DESIGN_KIT_TOKENS`, overridable); a minimap colour may name a palette role; `GraphBoard theme="tokens"` | Studio's three paths become one | none for `source: 'library'`, the default | F21 |
+| F23 | defect | implemented | canvas-ui `sym:typeColor` | design-kit's slot hash (`colorSlotByString`) read live from `--color-data-N`; the fixed palette only where those tokens are unset | legend, paint and Studio's type lists agree | canvas-ui stories' type colours shift once | F21 |
+| F24 | defect | deferred | graph theme colour binding | `{ bind: 'data.hue' }` resolves to a live categorical slot | ER frame hues follow the theme — lands with F25, the schema board that uses it | — | F22, F25 |
 
 **P4 — schema (ER) and DAG boards**
 
@@ -170,3 +170,4 @@ relations:
 | 2026-10-20 | The schema board frames its graph low in the viewport — before and after P0 | accepted | for F25 |
 | 2026-10-20 | P1 written: `sym:GraphBoard`, presets, `defaultBoardMenus`, `defaultBoardPanels`, status sections; the story and Studio's Explorer render it; F20 (`useUnsavedGuard`) brought forward | implemented | F38 deferred; F39–F40 added while building |
 | 2026-10-20 | P2 written: `unsavedToEditOps`, `adoptBackendIds`, `saveUnsaved` in graph (3 tests); Studio's save is the API call and its hidden keys; verified live — a node saved to Neo4j and read back | implemented | — |
+| 2026-10-20 | P3 written: `readCssColor`, `CanvasThemeSync source: 'tokens'`, minimap role colours, `typeColor` on design-kit's slot; Studio's theme bridge, palette hook and `typeColor.ts` deleted; Explorer, model board and plans verified in Studio | implemented | F24 moves to P4 |

@@ -53,7 +53,7 @@ import {
 import type { HistoryOp } from '../history/types';
 import { GraphLayer } from '../layer/GraphLayer';
 import type { EdgeStyle, NodeStyle } from '../layer/types';
-import { cssColorToNumber } from '../theme/accent';
+import { readCssColor } from '../theme/accent';
 import type { GraphEdge, GraphNode } from '../store/types';
 
 /** The command whose value is the unsaved count as text (`null` while saved) — a rail badge reads it. */
@@ -567,12 +567,5 @@ function same(a: unknown, b: unknown): boolean {
  * `hsl(…)`, `oklch(…)` or a hex, and a computed `color` is always `rgb(…)`.
  */
 function themeColor(name: string): number | undefined {
-  if (typeof document === 'undefined' || typeof getComputedStyle !== 'function' || !document.body) return undefined;
-  const probe = document.createElement('span');
-  probe.style.color = `var(${name})`;
-  probe.style.display = 'none';
-  document.body.appendChild(probe);
-  const rgb = getComputedStyle(probe).color;
-  probe.remove();
-  return probe.style.color && rgb ? cssColorToNumber(rgb) : undefined;
+  return readCssColor(`var(${name})`);
 }

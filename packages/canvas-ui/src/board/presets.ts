@@ -162,6 +162,11 @@ export function boardConfig(colorFor: (type: string, kind: 'node' | 'edge') => n
     activeLayout: BOARD_IDS.layout,
     layers: {
       [BOARD_IDS.background]: { type: 'pattern', patternType: 'dots', alpha: 0.5 },
+      [BOARD_IDS.minimap]: {
+        borderColor: { role: 'divider', fallback: 0x444444 },
+        viewportFill: { role: 'accent', fallback: 0x4a90d9 },
+        viewportStroke: { role: 'accent', fallback: 0x2a70b9 },
+      },
       [BOARD_IDS.graph]: {
         node: {
           style: {

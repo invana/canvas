@@ -15,7 +15,7 @@ export {
   ROSE_THEME,
   MINIMAL_THEME,
 } from './themes';
-export { cssColorToNumber, resolveAccentVar } from './accent';
+export { cssColorToNumber, readCssColor, resolveAccentVar } from './accent';
 export { themeFamily } from './family';
 export {
   type RolePalette,

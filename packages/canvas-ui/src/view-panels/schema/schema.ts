@@ -13,7 +13,8 @@ import type {
   NodeStyle,
   SchemaNodeType,
 } from '@invana/graph';
-import { schemaTableCard } from '@invana/graph';
+import { readCssColor, schemaTableCard } from '@invana/graph';
+import { colorSlotByString } from '@invana/styling/color';
 
 // Re-export the domain schema surface so canvas-ui consumers can import it here.
 export type {
@@ -33,16 +34,23 @@ export type SchemaNodeMode = 'simple' | 'table';
 /** Connector routing for the metagraph edges (a subset of {@link EdgePathType}). */
 export type SchemaEdgeRouting = Extract<EdgePathType, 'straight' | 'orth' | 'bezier'>;
 
-/** A small, stable palette for tinting node-type discs / table headers (0xRRGGBB). */
-const TYPE_PALETTE = [
-  0x3b82f6, 0xef4444, 0xf59e0b, 0x10b981, 0x8b5cf6, 0x06b6d4, 0xec4899, 0xeab308, 0x14b8a6, 0xa3e635,
-] as const;
+/** The palette for a page without design-kit's data tokens (0xRRGGBB), one per slot. */
+const TYPE_PALETTE = [0x3b82f6, 0xef4444, 0xf59e0b, 0x10b981, 0x8b5cf6, 0x06b6d4, 0xec4899, 0xeab308] as const;
 
-/** Deterministic colour for a type name — same name → same colour across renders. */
+/** A colour no theme sets — what a `var()` falls back to when its token is unset. */
+const UNSET = 'rgb(1, 2, 3)';
+const UNSET_NUMBER = 0x010203;
+
+/**
+ * A type's colour — the same one everywhere it is drawn: the board, the legend,
+ * a type list's dot. The name hashes to one of design-kit's eight data slots
+ * (`colorSlotByString`), read live from `--color-data-N` so it follows the
+ * theme; on a page without those tokens the slot picks from a fixed palette.
+ */
 export function typeColor(name: string): number {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
-  return TYPE_PALETTE[h % TYPE_PALETTE.length]!;
+  const slot = colorSlotByString(name);
+  const live = readCssColor(`var(--color-data-${slot}, ${UNSET})`);
+  return live !== undefined && live !== UNSET_NUMBER ? live : TYPE_PALETTE[slot - 1]!;
 }
 
 /** Prefix for the metagraph node id minted from a node-type name. */

@@ -40,7 +40,11 @@ export type MiniMapPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom
  * `{ light, dark }` pair to swap based on the layer's `mode` — so the minimap
  * can track the canvas theme the same way {@link BackgroundLayer} does.
  */
-export type MiniMapColor = number | { light: number; dark: number };
+export type MiniMapColor =
+  | number
+  | { light: number; dark: number }
+  /** A role of the active theme's palette (`divider`, `accent`), and the colour while no theme names it. */
+  | { role: string; fallback: number };
 
 /**
  * Mode selector for light/dark colour resolution. `'auto'` follows the host's
@@ -71,7 +75,8 @@ export interface MiniMapLayerOptions {
   backgroundLayerId?: string;
   /**
    * Background fill used when {@link backgroundLayerId} is unset / unresolved. A
-   * `0xRRGGBB` or a `{ light, dark }` pair resolved against `mode`. Default
+   * `0xRRGGBB`, a `{ light, dark }` pair resolved against `mode`, or a palette
+   * `{ role, fallback }` that follows the theme. Default
    * `0x1a1a2e`.
    */
   backgroundColor?: MiniMapColor;
@@ -695,6 +700,7 @@ export class MiniMapLayer extends ScreenLayer<
   /** Resolve a scalar or `{ light, dark }` colour against the current mode. */
   private resolveColor(c: MiniMapColor): number {
     if (typeof c === 'number') return c;
+    if ('role' in c) return this.ctxRef?.theme.current()?.palette[c.role] ?? c.fallback;
     return this.getResolvedKind() === 'dark' ? c.dark : c.light;
   }
 

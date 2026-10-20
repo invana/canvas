@@ -142,12 +142,13 @@ export interface GraphBoardProps {
   styling?: TypeStylingPatch;
   onStylingChange?: (next: TypeStylingPatch) => void;
   /**
-   * Follow the host page's theme — background, labels, borders, edges — through
-   * `ThemeBehaviour` + `CanvasThemeSync` (a `@invana/themes` `ThemeProvider`
-   * ancestor is required). Default `true`; `false` for a host that themes the
-   * canvas itself.
+   * Follow the host page's theme — background, labels, borders, the minimap —
+   * through `ThemeBehaviour` + `CanvasThemeSync` (a `@invana/themes`
+   * `ThemeProvider` ancestor is required). `true` (default) takes the canvas
+   * library's palette for the host's theme family; `'tokens'` reads the host
+   * page's own CSS tokens; `false` leaves the canvas to the host.
    */
-  theme?: boolean;
+  theme?: boolean | 'tokens';
   /** Size each node by its connection count, from the start. Default `false`; the Styling panel toggles it. */
   sizeByConnections?: boolean;
   /** Hover lights a node's neighbours (`1`) or the node alone (`0`). Default `1`. */
@@ -300,7 +301,7 @@ export function GraphBoard({
       {theme && (
         <>
           <ThemeBehaviour id="theme" />
-          <CanvasThemeSync />
+          <CanvasThemeSync source={theme === 'tokens' ? 'tokens' : 'library'} />
         </>
       )}
       <BackgroundLayer id={BOARD_IDS.background} />
