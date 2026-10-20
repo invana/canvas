@@ -89,7 +89,7 @@ export function ZoomField({ canvas, presets = [50, 100, 200], ladder = LADDER, m
               step(e.key === 'ArrowUp' ? 1 : -1);
             }
           }}
-          className="w-11 border-0 bg-transparent px-1.5 text-xs tabular-nums shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+          className="w-14 border-0 bg-transparent px-1.5 text-xs tabular-nums shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
         />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

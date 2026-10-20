@@ -9,6 +9,7 @@
 
 export { GraphStore } from './GraphStore';
 export { readValueKey } from './valueKey';
+export { isReadableId, READABLE_LABEL_KEYS, readableLabel } from './readableLabel';
 export { UNKNOWN_TYPE } from './types';
 export type {
   EdgeDirection,

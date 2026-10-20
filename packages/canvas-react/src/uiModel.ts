@@ -5,7 +5,7 @@
 //
 // The `@invana/canvas-ui` renderer (`ToolbarItems`) and building blocks own the
 // **public** copies of these types (`components/ToolbarItem.ts` /
-// `components/types.ts` / `components/PropertiesEditor.tsx`). These are pure,
+// `components/types.ts` / `components/ElementEditorPanel.tsx`). These are pure,
 // structurally-identical mirrors kept here so the headless hooks can type their
 // return values **without importing `@invana/canvas-ui`** (which would create a
 // dependency cycle — the dependency runs canvas-ui → canvas-react, never back).
@@ -94,9 +94,9 @@ export type ToolbarItem =
 
 /**
  * The values a properties editor edits: a label + a flat string→string data map.
- * Mirror of the canvas-ui `PropertiesEditorValues`.
+ * Mirror of the canvas-ui `ElementEditorValues`.
  */
-export interface PropertiesEditorValues {
+export interface ElementEditorValues {
   label: string;
   type?: string;
   data: Record<string, string>;

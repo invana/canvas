@@ -77,6 +77,7 @@ The dash is the signal and the colour only backs it, so it reads without colour 
 | F12 | defect | deferred | composite (card) nodes | a dashed card, the edited value in amber on the card, a ghost card — drawn on the review canvas; needs dashed strokes on rect / composite shapes in the renderer | — | renderer change | F8 |
 | F8 | defect | implemented | `file:packages/renderer-pixijs/src/primitives/shapes/CircleShape.ts` | a node's own dashed stroke no longer drops its fill (a decoration's dash stays outline-only) | the new node and its ghost read as nodes | ellipse, polygon, arc, path and tabbed-rect still drop it; rect has no dash | — |
 | F7 | dressing | implemented | `story:canvas-demos/tools/CanvasExplorer` | tracker on, the bar in the footer, a stand-in save | — | — | F1–F6 |
+| F13 | defect | implemented | `file:packages/canvas-ui/src/view-panels/changes/ChangesViewPanel.tsx`, `pkg:@invana/ui` `DiffRow` | the panel as reviewed: rows on the kit's `DiffRow marker="chip"` (+ ✎ − in an amber square, muted for a deletion), a line under the name (*New airport*, `runways 2 → 3`, *Deleted with MUC*), the picked row marked, revert kept out of the row's button and hidden while saving; banners with an icon, *Try again* inside the failure; *Saved just now* after a save; a new element without a type says *Needs a type* and Save waits for it | — | kit not released | F9 |
 
 ## 5. Blast radius
 
@@ -114,3 +115,4 @@ The dash is the signal and the colour only backs it, so it reads without colour 
 | 2026-10-20 | Opened from review of the Explorer board's Edit mode | accepted | D1–D5 accepted |
 | 2026-10-20 | F1–F8 built; V1–V3 pass | implemented | not committed |
 | 2026-10-20 | The footer bar became the rail's Changes panel (D3) after review of the Explorer Board Changes canvas; F9–F11 built, F12 deferred | implemented | Invana Products EX-20 |
+| 2026-10-20 | F13: the Changes panel brought to the reviewed design | implemented | not committed |

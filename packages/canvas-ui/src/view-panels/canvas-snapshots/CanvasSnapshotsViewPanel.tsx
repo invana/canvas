@@ -220,7 +220,7 @@ const DAY_MS = 86_400_000;
  * The rename field. A styled native `<input>`: the `@invana/ui` build this package
  * resolves exports no plain `Input` (only `SearchInput` / `CommandInput` /
  * `SidebarInput`, all carrying semantics this field doesn't want), so the same
- * answer `PropertiesEditor` reached applies here — design-token classes on a bare
+ * answer `ElementEditorPanel` reached applies here — design-token classes on a bare
  * input, no hand-rolled CSS.
  */
 const RENAME_INPUT_CLASS =

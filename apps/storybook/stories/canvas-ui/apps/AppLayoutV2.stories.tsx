@@ -25,7 +25,7 @@
  * (`StylingViewPanel`) · its **layers** (`LayersViewPanel`) · its saved
  * **snapshots** (`CanvasSnapshotsViewPanel`) · **find** (`FindInCanvasViewPanel`,
  * a locate) · its live **selection** (`SelectionViewPanel`, read off the kernel
- * store) · the selected **element** in detail (`ElementInspectorViewPanel`,
+ * store) · the selected **element** in detail (`ElementViewPanel`,
  * read-only, revealed automatically when you click a node or an edge) · its
  * parked **filters** (`CanvasFiltersViewPanel`, a hide). The shell is *outside* every board's canvas
  * context, so each board publishes its engine up through `onReady` and the panels
@@ -94,7 +94,7 @@ import {
   CanvasSettingsEditorPanel,
   CanvasSnapshotsViewPanel,
   FindInCanvasViewPanel,
-  ElementInspectorViewPanel,
+  ElementViewPanel,
   GraphBackgroundContextMenu,
   GraphCanvasApp,
   GraphContextMenu,
@@ -1107,7 +1107,7 @@ export const AppLayoutV2Story: Story = {
                     // reveals this tab (see the effect above).
                     ...tab('element', 'Element'),
                     icon: ScanSearch,
-                    content: <ElementInspectorViewPanel canvas={activeCanvas} />,
+                    content: <ElementViewPanel canvas={activeCanvas} />,
                   },
                   {
                     // The elements parked out of the board — right-click → Hide

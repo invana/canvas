@@ -19,7 +19,7 @@
 // Like `FindInCanvasViewPanel` / `CanvasFiltersViewPanel` it takes a *live*
 // `GraphCanvas` and stays within the package's import rules — `@invana/graph` is
 // imported for **types only** (label resolution lives in `../element-display`,
-// shared with `ElementInspectorViewPanel` so a row and its detail card can never
+// shared with `ElementViewPanel` so a row and its detail card can never
 // disagree about an element's name) and all chrome is `@invana/ui`.
 // Row content tracks the data stream (`node:update` / `node:remove` / … coalesced
 // per animation frame) so a renamed or deleted selected element never shows a

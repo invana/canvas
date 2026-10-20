@@ -4,7 +4,7 @@
  *
  * Selection and inspection are different concerns: selection drives highlighting
  * and multi-element drag (and may hold many elements at once); inspection feeds a
- * property editor (`InspectorPanel`), which only ever edits **one** element. This
+ * element panel (`ElementViewPanel` in canvas-ui), which only ever edits **one** element. This
  * behaviour is the authority for the latter — it remembers the last element
  * clicked and clears on a background click — so the editor never has to reach
  * into the selection set (where a multi-select would leave it with nothing single

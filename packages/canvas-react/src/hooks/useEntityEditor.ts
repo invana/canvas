@@ -9,7 +9,7 @@ import type {
 
 import { useResolvedCanvas } from './useResolvedCanvas';
 import { useInspectTarget } from './useInspectTarget';
-import type { PropertiesEditorValues } from '../uiModel';
+import type { ElementEditorValues } from '../uiModel';
 
 export interface UseEntityEditorOptions {
   /** GraphLayer to read/write. Default `'graph'`. */
@@ -43,7 +43,7 @@ export interface EntityEditorTarget {
    * also overwrites `style.labelText` (spreading the prior style); edges have
    * no label.
    */
-  commit: (values: PropertiesEditorValues) => void;
+  commit: (values: ElementEditorValues) => void;
   /**
    * Swap an edge's `source`/`target` (reverse its direction). Present only for
    * edges; undoable as one entry when there is a graph history.
@@ -71,8 +71,8 @@ function toStringMap(data: unknown): Record<string, string> {
  * one labelled entry in `canvas.history` (`'edit node'`, `'edit edge'`,
  * `'reverse edge'`).
  *
- * The view (`<PropertiesEditor>`) and placement (`<Panel>`) are the consumer's —
- * see {@link InspectorPanel} for the turnkey wiring.
+ * The view (`<ElementEditorPanel>`) and placement are the consumer's — canvas-ui's
+ * `ElementViewPanel` is the turnkey wiring.
  */
 export function useEntityEditor(
   options: UseEntityEditorOptions = {},
@@ -96,7 +96,7 @@ export function useEntityEditor(
       // One `type` field, mirrored to the displayed `labelText`. Seed it from the
       // node's `type`, falling back to its current label so existing text shows.
       const type = (node.type as string | undefined) ?? label;
-      const commit = ({ type: nextType, data }: PropertiesEditorValues): void => {
+      const commit = ({ type: nextType, data }: ElementEditorValues): void => {
         const value = nextType ?? '';
         const prior = (node.style ?? {}) as Partial<NodeStyle>;
         const patch: Partial<GraphNode> = { type: value, style: { ...prior, labelText: value }, data };
@@ -105,7 +105,7 @@ export function useEntityEditor(
       return { kind: 'node', id: single.id, label: '', type, data: toStringMap(node.data), commit };
     }
 
-    const commit = ({ label: nextLabel, type: nextType, data }: PropertiesEditorValues): void => {
+    const commit = ({ label: nextLabel, type: nextType, data }: ElementEditorValues): void => {
       const prior = (node.style ?? {}) as Partial<NodeStyle>;
       const patch: Partial<GraphNode> = { data };
       // Only an edited label is written: a label drawn by a resolver (the id, a
@@ -125,7 +125,7 @@ export function useEntityEditor(
   // otherwise the edge inspector edits `type` + `data` only.
   const edgeLabel = (layer.resolveEdgeStyle(edge).labelText as string | undefined) ?? '';
   const type = (edge.type as string | undefined) ?? (typeAsLabel ? edgeLabel : '');
-  const commit = ({ type: nextType, data }: PropertiesEditorValues): void => {
+  const commit = ({ type: nextType, data }: ElementEditorValues): void => {
     const value = nextType ?? '';
     const patch: Partial<GraphEdge> = { data };
     if (nextType !== undefined) patch.type = value;

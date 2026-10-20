@@ -17,8 +17,8 @@
  *     the canvas message channel (replacing the standalone modeller's bottom-centre
  *     hint panel).
  *
- * Clicking a single node / edge (Select tool) opens a `PropertiesViewPanel`
- * (top-right) showing it read-only; its *Edit* — or *Edit properties…* on the
+ * Clicking a single node / edge (Select tool) opens an `ElementViewPanel`
+ * (top-right) showing it read-only; its *Edit* — or *Edit node…* / *Edit relationship…* on the
  * right-click menu, or drawing the element — turns it into the editor for its
  * `type` (mirrored to the drawn label via `typeAsLabel`) + key/value properties;
  * edges add a Reverse-direction button. Apply commits an undoable update and
@@ -44,7 +44,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Circle, Square, Diamond, Sun, Moon } from 'lucide-react';
 import { BackgroundLayer, GraphLayer, DragPanBehaviour, WheelZoomBehaviour, DragNodeBehaviour, ClickSelectBehaviour, ClickInspectBehaviour, CreateNodeBehaviour, DrawEdgeBehaviour, EraseBehaviour, ParallelEdgeBehaviour, GraphToolProvider, useGraphCanvas, useGraphCanvasUpdate, useTool, useFitContent, useClearGraph, useEntityEditor } from '@invana/canvas-react';
-import { CanvasMessageBar, GraphNodeContextMenu, GraphEdgeContextMenu, GraphBackgroundContextMenu, GraphCanvasApp, ModellerToolbar, Panel, PropertiesViewPanel, editProperties, GraphStatusBar, ToolbarItems } from '@invana/canvas-ui';
+import { CanvasMessageBar, GraphNodeContextMenu, GraphEdgeContextMenu, GraphBackgroundContextMenu, GraphCanvasApp, ModellerToolbar, Panel, ElementViewPanel, editElement, GraphStatusBar, ToolbarItems } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas-react';
 import type { GraphCanvasAppControlContext, GraphNodeMenuContext, GraphEdgeMenuContext, GraphBackgroundMenuContext, ToolbarItem } from '@invana/canvas-ui';
 import { FloatingPanel, type MenuItem } from '@invana/ui';
@@ -84,19 +84,19 @@ const SHAPE_ICONS = { circle: Circle, rect: Square, diamond: Diamond } as const;
  * Self-loops (source === target) are excluded — they use loop routing, not
  * the parallel-edge bow.
  */
-/** The Properties panel, floating top-right while a node or edge is clicked. */
-function ModellerProperties() {
+/** The Element panel, floating top-right while a node or edge is clicked. */
+function ModellerElement() {
   const canvas = useGraphCanvas();
   const target = useEntityEditor({}, canvas);
   if (!canvas || !target) return null;
   return (
     <Panel position="top-right" orientation="vertical">
       <FloatingPanel
-        title="Properties"
+        title="Element"
         className="w-72"
         onClose={() => canvas.behaviours.get<graph.ClickInspectBehaviour>('click-inspect')?.clear()}
       >
-        <PropertiesViewPanel canvas={canvas} typeAsLabel />
+        <ElementViewPanel canvas={canvas} editable typeAsLabel />
       </FloatingPanel>
     </Panel>
   );
@@ -276,11 +276,11 @@ function DrawingTools() {
       return [
         {
           id: 'edit',
-          label: 'Edit properties…',
+          label: 'Edit node…',
           // arm Select so the inspector + drag are live
           onClick: () => {
             setTool('select');
-            editProperties(canvas, { kind: 'node', id });
+            editElement(canvas, { kind: 'node', id });
           }
         },
         {
@@ -315,11 +315,11 @@ function DrawingTools() {
       return [
         {
           id: 'edit',
-          label: 'Edit properties…',
+          label: 'Edit relationship…',
           // arm Select so the inspector is live
           onClick: () => {
             setTool('select');
-            editProperties(canvas, { kind: 'edge', id });
+            editElement(canvas, { kind: 'edge', id });
           }
         },
         { id: 'reverse', label: 'Reverse direction', onClick: () => store.reverseEdge(id) },
@@ -363,7 +363,7 @@ function DrawingTools() {
       {/* Mode-gated — only `enabled` flips; nothing remounts. */}
       <DragNodeBehaviour targetLayerId="graph" enabled={tool === 'select'} />
       <ClickSelectBehaviour targetLayerId="graph" enabled={tool === 'select'} multiple={false} />
-      {/* Click target for the Properties panel — a dedicated behaviour so
+      {/* Click target for the Element panel — a dedicated behaviour so
           the editor follows the last-clicked node/edge regardless of the
           (multi-)selection ClickSelect maintains for dragging. */}
       <ClickInspectBehaviour targetLayerId="graph" enabled={tool === 'select'} />
@@ -378,13 +378,13 @@ function DrawingTools() {
             style: { shape: SHAPES[nodeKindRef.current] ?? SHAPES.circle, labelText: String(n) }
           };
         }}
-        onNodeCreate={(n) => canvas && editProperties(canvas, { kind: 'node', id: n.id })}
+        onNodeCreate={(n) => canvas && editElement(canvas, { kind: 'node', id: n.id }, { isNew: true })}
       />
       <DrawEdgeBehaviour
         targetLayerId="graph"
         enabled={tool === 'connect'}
         allowSelfLoop
-        onEdgeCreate={(e) => canvas && editProperties(canvas, { kind: 'edge', id: e.id })}
+        onEdgeCreate={(e) => canvas && editElement(canvas, { kind: 'edge', id: e.id }, { isNew: true })}
       />
       <EraseBehaviour targetLayerId="graph" enabled={tool === 'delete'} />
       {/* Fan out edges that share a node pair (drawn either direction). */}
@@ -394,7 +394,7 @@ function DrawingTools() {
           its `type` (shown as the drawn label in modelling) + key/value
           properties; edges add a reverse-direction button. `typeAsLabel` mirrors
           the type to the label for both. Reads the click-inspect target above. */}
-      <ModellerProperties />
+      <ModellerElement />
 
       {/* Right-click menus — one component per target, each owning its own
           behaviour + overlay + dismissal. Builders defined above (they need the

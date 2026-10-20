@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useCanvas } from '@invana/canvas-react';
 import { FloatingPanel } from '@invana/ui';
 
@@ -13,6 +13,8 @@ export const BOARD_LAYOUT_COMMAND = 'board.layoutPresets';
 
 /** The card's width, px — what a point near the right edge is held back by. */
 const W = 340;
+/** The least gap kept between the card and the board's edge, px. */
+const EDGE = 12;
 
 /**
  * The Layout card where it was asked for — the preset cards and their options,
@@ -59,17 +61,39 @@ export function BoardLayoutPopover() {
     };
   }, [at]);
 
+  // Where the menu was opened, held inside the board on every side — measured
+  // once the card is drawn, so its height is known.
+  const [place, setPlace] = useState<{ left: number; top: number; maxHeight?: number } | null>(null);
+  useLayoutEffect(() => {
+    if (!at) return setPlace(null);
+    const el = ref.current;
+    const host = el?.offsetParent as HTMLElement | null | undefined;
+    if (!el || !host) return setPlace({ left: at.x, top: at.y });
+    const left = Math.max(EDGE, Math.min(at.x, host.clientWidth - W - EDGE));
+    const top = Math.max(EDGE, Math.min(at.y, host.clientHeight - el.offsetHeight - EDGE));
+    // A board shorter than the card scrolls the card.
+    setPlace({ left, top, maxHeight: host.clientHeight - 2 * EDGE });
+  }, [at, card.label]);
+
   if (!at) return null;
-  const host = ref.current?.offsetParent as HTMLElement | null | undefined;
-  const maxX = (host?.clientWidth ?? Number.POSITIVE_INFINITY) - W - 12;
   return (
     <div
       ref={ref}
       className="pointer-events-auto absolute z-[8]"
-      // Where the menu was opened, held inside the board.
-      style={{ left: Math.max(12, Math.min(at.x, maxX)), top: Math.max(12, at.y), width: W }}
+      style={{
+        left: place?.left ?? at.x,
+        top: place?.top ?? at.y,
+        width: W,
+        ...(place?.maxHeight ? { maxHeight: place.maxHeight, overflowY: 'auto' as const } : {}),
+        // Hidden for the one layout pass before it is placed.
+        visibility: place ? 'visible' : 'hidden',
+      }}
     >
-      <FloatingPanel title="Layout" aside={card.label} onClose={() => setAt(null)}>
+      <FloatingPanel
+        title="Layout"
+        {...(card.label && card.label !== 'Layout' ? { aside: card.label } : {})}
+        onClose={() => setAt(null)}
+      >
         <LayoutPresetsViewPanel
           value={card.value}
           presets={card.presets}

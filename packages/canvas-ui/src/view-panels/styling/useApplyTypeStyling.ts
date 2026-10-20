@@ -65,7 +65,7 @@ export function useApplyTypeStyling(
       const edge = (layer.edgeDefaults ?? {}) as Record<string, unknown>;
       before.current = {
         layer,
-        node: { bgFill: node['bgFill'], size: node['size'] },
+        node: { bgFill: node['bgFill'], size: node['size'], labelText: node['labelText'] },
         edge: { strokeColor: edge['strokeColor'], strokeWidth: edge['strokeWidth'] },
         owned: new Set(),
       };
@@ -95,8 +95,8 @@ export function useApplyTypeStyling(
     // Installing a `labelText` resolver *replaces* whatever the layer template
     // held, so don't install one until the patch actually has a label key to
     // honour — otherwise merely opening the panel would wipe a canvas's
-    // configured labels. Once installed, a type without a key falls back to
-    // `'id'` rather than to nothing.
+    // configured labels. Once installed, a type without a key keeps the
+    // template's label, and `'id'` when the template had none.
     const anyLabelKey = Object.values(nodeTypes).some((s) => s.labelKey);
 
     // `as unknown as` matching `ColorByBehaviour`: the setter's parameter is the
@@ -120,9 +120,13 @@ export function useApplyTypeStyling(
       ...(anyLabelKey
         ? {
             labelText: (n: GraphNode) => {
-              // `'id'` is what "Label: default" means for a type that hasn't
-              // chosen one: a node's identity is the label every graph can show.
-              const value = readValueKey(n, nodeTypes[n.type]?.labelKey ?? 'id');
+              const key = nodeTypes[n.type]?.labelKey;
+              // "Label: default" for a type that hasn't chosen a key is the
+              // template's label; a node's identity when there is none.
+              if (!key && prior.node['labelText'] !== undefined) {
+                return resolveField(prior.node['labelText'] as never, n);
+              }
+              const value = readValueKey(n, key ?? 'id');
               return value === undefined || value === null ? undefined : String(value);
             },
           }

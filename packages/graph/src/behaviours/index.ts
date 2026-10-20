@@ -165,6 +165,8 @@ export {
   UNSAVED_NEW_STATE,
   UNSAVED_EDITED_STATE,
 } from './UnsavedChangesBehaviour';
+export { adoptBackendIds, saveUnsaved, unsavedToEditOps } from './unsavedEdits';
+export type { EditOp, SaveUnsavedOptions, UnsavedToEditOpsOptions } from './unsavedEdits';
 export type {
   UnsavedChangesBehaviourOptions,
   UnsavedChangesSummary,
@@ -191,6 +193,7 @@ export { ImageLODBehaviour } from './ImageLODBehaviour';
 export type { ImageLODBehaviourOptions } from './ImageLODBehaviour';
 export { EdgeLODBehaviour } from './EdgeLODBehaviour';
 export type { EdgeLODBehaviourOptions, EdgeLODKeepBy } from './EdgeLODBehaviour';
+export { EDGE_DENSITY, edgeAlphaForCount, edgesThinned, thinsEdges } from './edgeDensity';
 
 export { ThemeBehaviour } from './ThemeBehaviour';
 export type { ThemeBehaviourOptions } from './ThemeBehaviour';

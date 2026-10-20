@@ -4,7 +4,7 @@
 // so it stays a refactor of presentation, not a public API.
 //
 // These were duplicated in `SelectionViewPanel` and then again in
-// `ElementInspectorViewPanel` — the third copy is what unblocked the extraction
+// `ElementViewPanel` — the third copy is what unblocked the extraction
 // (`rfc:feat-2026-09-11-nothing-lists-what-is-selected` F10 / D-7). Keeping one
 // copy matters beyond line count: the name a row shows and the name its detail
 // card shows must be the *same* name, or the master/detail pair reads as two
@@ -83,3 +83,9 @@ export function nodeSwatchColor(style: Partial<NodeStyle>): string | undefined {
     (typeof style.bgStrokeColor === 'number' ? style.bgStrokeColor : undefined);
   return c === undefined ? undefined : hexColor(c);
 }
+
+/**
+ * The type the store gives an element written without one (`UNKNOWN_TYPE` in
+ * `@invana/graph`, which this package imports for types only): no type yet.
+ */
+export const NO_TYPE = 'unknown';

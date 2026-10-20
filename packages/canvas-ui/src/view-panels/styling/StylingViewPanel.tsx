@@ -2,7 +2,7 @@
 // size/width.
 //
 // The other style surfaces in this package edit either one *element*
-// (`toolbars/InspectorPanel` → `PropertiesEditor`) or one *style object*
+// (`ElementViewPanel` → `ElementEditorPanel`) or one *style object*
 // (`editor-panels/node-style`). This one edits the **types the canvas is
 // currently painting**: it reads them from `useDerivedSchema` (so a type appears
 // the moment data carrying it loads, and its property keys become the

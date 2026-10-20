@@ -111,7 +111,7 @@ export function BoardModes({ modes, defaultMode, onModeChange, escapeTo }: Board
   const home = escapeTo === undefined ? first : escapeTo;
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
-      if (typing(e.target)) return;
+      if (e.defaultPrevented || typing(e.target) || inOverlay(e.target)) return;
       const { mode: current, modes: list } = latest.current;
       const go = (next: string) => void canvas.commands.run(BOARD_MODE_COMMAND, { value: next });
       for (const m of list) {
@@ -129,6 +129,15 @@ export function BoardModes({ modes, defaultMode, onModeChange, escapeTo }: Board
   }, [canvas, home]);
 
   return null;
+}
+
+/**
+ * A keystroke meant for an open overlay — a menu, a listbox, a dialog — whose
+ * Esc closes it, and must not also leave the mode.
+ */
+function inOverlay(target: EventTarget | null): boolean {
+  const el = target as HTMLElement | null;
+  return !!el?.closest?.('[role="menu"], [role="listbox"], [role="dialog"], [role="alertdialog"], [data-radix-popper-content-wrapper]');
 }
 
 /** A keystroke meant for a field, not the board. */

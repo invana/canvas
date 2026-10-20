@@ -7,6 +7,7 @@ import {
   Cable,
   CirclePlus,
   CircleDot,
+  GitCommitVertical,
   Compass,
   Highlighter,
   History,
@@ -156,4 +157,5 @@ export const DEFAULT_CONTROL_ICONS: Readonly<Record<string, ToolbarIcon>> = {
   text: Type,
   highlight: Highlighter,
   'size-by-connections': CircleDot,
+  versions: GitCommitVertical,
 };

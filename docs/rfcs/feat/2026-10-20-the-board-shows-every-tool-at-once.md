@@ -72,6 +72,13 @@ relations:
 | F18 | defect | implemented | `story:canvas-demos/tools/CanvasExplorer` | Edit: Shift-drag connects with any tool, N / C pick the tools, a node press either moves or draws; Edit and Annotate add Undo · Redo · Redraw to the row | — | — | F2 |
 | F19 | defect | implemented | `file:packages/graph/src/canvas/GraphCanvas.ts` | a flush that adds or removes only nodes placed by hand (pinned on arrival) does not re-run the layout | a drop, and its undo, stay put | — | — |
 | F20 | dressing | implemented | `file:packages/canvas-core/src/state/view/controlPanels.ts`, `control-panels/ControlPanels.tsx`, `components/ToolbarItems.tsx` | `width` on a control panel (the dock bar matches the minimap); a dropdown inside a row is the kit's borderless trigger | — | — | — |
+| F21 | defect | implemented | `story:canvas-demos/tools/CanvasExplorer`, `file:packages/canvas-ui/src/board/ZoomField.tsx` | the view dock is 200 px wide and the zoom field 56 px, so `121%` is not clipped; rail panels are 320 px | — | — | F10, F20 |
+| F22 | defect | implemented | `file:packages/canvas-ui/src/view-panels/properties/PropertiesViewPanel.tsx`, `editing.ts`, `components/PropertiesEditor.tsx`, `pkg:@invana/forms` text field | a drawn node or relationship opens as *New node* / *New relationship*: id made up, type asked for (first, focused, offered from the board's types, required); Cancel takes it off the board; the editor no longer closes on the panel's first render; a relationship's editor shows its ends, From and To, read-only, with *Reverse direction* beside them | `editProperties(…, { isNew })`; `PropertiesEditor` `requireType` · `typeSuggestions` | kit not released | F16, F18 |
+| F23 | defect | implemented | `file:packages/canvas-ui/src/view-panels/element/ElementViewPanel.tsx`, `components/ElementEditorPanel.tsx` | one name for what is drawn: `ElementViewPanel` (the read-only view and, when `editable`, the editor switch — was `PropertiesViewPanel` + `ElementInspectorViewPanel`) and `ElementEditorPanel` (the form — was `PropertiesEditor`); `editElement` · `stopEditingElement` · `useElementEditing` · `elementKey`; `ElementEditorValues`; `InspectorPanel` deleted; the rail panel is *Element*; `editable` defaults to `false` | **breaking rename**, no aliases | every caller of the old names | F16, F22 |
+| F24 | defect | implemented | `file:packages/canvas-ui/src/components/ElementEditorPanel.tsx`, `view-panels/element/ElementViewPanel.tsx`, `pkg:@invana/forms` `keyvalue` | keys from the model: `schema` (types, each with its keys and their kinds) and `strictSchema` on both panels; a type's keys become its rows, *Add property* lists the keys not set, changing the type swaps the keys and names those dropped, a blank value is not saved; strict picks the type and keys from the model only; each key once, always | `ElementTypeSchema`, `ElementSchemaKey`; kit `options` · `strictKeys` · `uniqueKeys` on `keyvalue` | kit not released | F22, F23 |
+| F25 | defect | implemented | `file:packages/canvas-react/src/board/BoardModes.tsx` | Esc inside an open menu, listbox or dialog closes it and no longer also leaves the mode | — | — | F2 |
+| F26 | defect | implemented | `file:packages/canvas-ui/src/view-panels/element/ElementViewPanel.tsx`, `components/ElementEditorPanel.tsx`, `view-panels/changes/ChangesViewPanel.tsx`, `story:canvas-ui/view-panels/ElementPanelsWithoutABackend` | every act of the panels is a prop a host may take, so they work with a backend or none: `ElementViewPanel` `onApply` · `onCancel` · `onDelete` (a *Delete* in the editor, `deletable`) · `onEditingChange`; `ElementEditorPanel` `onReset` · `onDelete` · controlled `values` / `onChange`; `ChangesViewPanel` `onSave(changes)` (then marked saved) · `onDiscard` · `onRevert`. Left out, each does the default — the board store, the `unsaved.save` command | `ElementEdit`, `ElementTarget` | — | F22, F24 |
+| F27 | dressing | implemented | `file:packages/canvas-react/src/board/BoardToolKeys.tsx` | a mode's tools on keys — N · C, Shift held connects — as `<BoardToolKeys>`, out of the story | `BoardToolKeys` | — | F18 |
 
 ## 5. Blast radius
 
@@ -109,6 +116,13 @@ relations:
 | D4 | Where do panels open? | under the row · a rail top-right | a rail top-right, one floating panel left of it | accepted |
 | D5 | Export data format | board file · CSV · JSON `{ nodes, edges }` | JSON `{ nodes, edges }` only, `exported-data.json` | accepted |
 | D6 | Annotate now? | build the layer · show the mode, tools disabled | tools disabled; the layer is its own RFC (F15) | accepted |
+| D7 | A drawn element's type | a default per tool · asked for | asked for: a type cannot be guessed; the id can | accepted |
+| D8 | Leaving a new element's editor without a type | remove it · keep it, untyped | Cancel removes it; any other way out keeps it, and the Changes panel holds Save until it has a type | accepted |
+| D9 | Where type suggestions come from | the board's types · the graph's schema | the board's types; the schema is the host's once Studio adopts the board | accepted |
+| D10 | Can a relationship's ends be changed in its editor? | editable From / To · read-only | read-only, Reverse beside them: other ends make another relationship, drawn again | accepted |
+| D11 | What the panel and its form are called | Properties · Inspector · Element | *Element*: what the canvas draws — a node, a relationship, later a group; `ElementViewPanel` + `ElementEditorPanel`, one panel holding both | accepted |
+| D12 | Property keys: from a schema or free? | free · from the schema · a flag | a flag — `strictSchema`: a host with a model (Studio) is strict, the library alone is open; keys are unique in both | accepted |
+| D13 | Who decides what Apply, Save, Cancel, Delete do? | the panel · the host · both | both: the panel has a default that needs no backend (the board store), and every act is a prop that hands it to the host | accepted |
 
 ## 8. History
 
@@ -117,3 +131,7 @@ relations:
 | 2026-10-20 | Opened as the record of the board's chrome, after review of the Explorer Canvas Panels canvas | accepted | D1–D6 from that review |
 | 2026-10-20 | F1–F14 written; component stories and CanvasExplorer rewritten; V1–V7 pass | implemented | not committed |
 | 2026-10-20 | F16, F18–F20 built in review of the Edit mode; unsaved changes split out | implemented | `rfc:feat-2026-10-20-an-unsaved-change-looks-saved` |
+| 2026-10-20 | F21–F22 and D7–D9 from review of the Edit mode in the story | implemented | not committed |
+| 2026-10-20 | F23, D10–D11: the relationship's ends in its editor; Properties renamed Element | implemented | not committed |
+| 2026-10-20 | F24–F25, D12: keys from the model, unique keys; Esc in an overlay | implemented | not committed; Invana Products EX-21 |
+| 2026-10-20 | F26–F27, D13: panels usable with or without a backend; tool keys out of the story | implemented | not committed |

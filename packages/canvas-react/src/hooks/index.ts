@@ -92,3 +92,4 @@ export { useCommandStates } from './useCommandStates';
 export type { CommandRef, CommandState } from './useCommandStates';
 export { useUnsavedChanges } from './useUnsavedChanges';
 export type { UnsavedChanges } from './useUnsavedChanges';
+export { useUnsavedGuard } from './useUnsavedGuard';

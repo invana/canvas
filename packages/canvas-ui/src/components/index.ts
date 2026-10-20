@@ -2,7 +2,7 @@
 // renderer compiles `ToolbarItem[]` (produced by the builder hooks) straight to
 // `@invana/ui` chrome — there are no per-control wrapper components anymore.
 // `Panel` positions overlays; `Tooltipped` is the shared tooltip helper;
-// `PropertiesEditor` / `DetailCard` / `PropertyDetailView` / `CanvasMessageBar`
+// `ElementEditorPanel` / `DetailCard` / `PropertyDetailView` / `CanvasMessageBar`
 // / `GraphStatusBar` / `ContextMenuOverlay` are standalone panels, not toolbar
 // controls. `propertyRenderers` is the extensible property value-rendering registry.
 
@@ -46,8 +46,8 @@ export type {
 } from './ExportImagePanel';
 export { ExportStatePanel } from './ExportStatePanel';
 export type { ExportStatePanelProps } from './ExportStatePanel';
-export { PropertiesEditor } from './PropertiesEditor';
-export type { PropertiesEditorProps, PropertiesEditorValues } from './PropertiesEditor';
+export { ElementEditorPanel } from './ElementEditorPanel';
+export type { ElementEditorPanelProps, ElementEditorValues, ElementSchemaKey, ElementTypeSchema } from './ElementEditorPanel';
 export { DetailCard } from './DetailCard';
 export type { DetailCardProps, DetailRow } from './DetailCard';
 export { PropertyDetailView } from './PropertyDetailView';
@@ -71,6 +71,7 @@ export type {
 } from './RendererCapabilityBanner';
 export { GraphStatusBar } from './GraphStatusBar';
 export type { GraphStatusBarProps } from './GraphStatusBar';
+export { MessageStatus, RendererStatus, ViewStatus } from './StatusSections';
 export { ContextMenuOverlay } from './ContextMenuOverlay';
 export { MenuItemList } from './MenuItemList';
 export type { MenuItemListProps } from './MenuItemList';

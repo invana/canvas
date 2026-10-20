@@ -952,8 +952,42 @@ export {
   BoardLayoutPopover,
   BOARD_LAYOUT_COMMAND,
   ZoomField,
+  // The board as one component, and its presets for a host that composes its own.
+  GraphBoard,
+  defaultBoardMenus,
+  defaultBoardPanels,
+  GRAPH_EXPAND_COMMAND,
+  hideType,
+  newBoardElementId,
+  openBoardPanel,
+  openElementEditor,
+  ANNOTATE_TOOL_COMMAND,
+  ANNOTATE_TOOLS,
+  BOARD_CENTRALITY,
+  BOARD_DOCK,
+  BOARD_DOCK_ITEMS,
+  BOARD_EDGE,
+  BOARD_IDS,
+  BOARD_LAYOUT_PRESETS,
+  BOARD_MODES,
+  BOARD_ROW_ITEMS,
+  BOARD_VIEW_ROW_ITEMS,
+  boardConfig,
+  VIEW_MODES,
+  WORK_MODES,
 } from './board';
-export type { BoardModePickerProps, BoardPanelsProps, BoardPanelSpec, ZoomFieldProps } from './board';
+export type {
+  BoardModePickerProps,
+  BoardPanelsProps,
+  BoardPanelSpec,
+  ZoomFieldProps,
+  BoardMenuExtras,
+  DefaultBoardMenusOptions,
+  DefaultBoardPanelsOptions,
+  GraphBoardLayoutRun,
+  GraphBoardPolicies,
+  GraphBoardProps,
+} from './board';
 export { BoardContextMenus, menuItems as boardMenuItems } from './menus/BoardContextMenus';
 export type {
   BoardContextMenusProps,
@@ -973,29 +1007,23 @@ export type { LegendViewPanelProps } from './view-panels/legend';
 export { HistoryViewPanel } from './view-panels/history';
 export type { HistoryViewPanelProps } from './view-panels/history';
 
-// ─── Element inspector ───────────────────────────────────────────────────────
-// A read-only card for the element the user **clicked** — identity, endpoints
-// (edges), `data` properties, element state, and a Focus action. Driven by
-// `ClickInspectBehaviour` (register and enable one; it is in no default bundle),
-// or by an explicit `elementId`. Deliberately NOT the selection: a selection holds
-// many elements, an inspector has room for one. `SelectionViewPanel` answers the
-// other question — what is selected.
-// Read-only by design: EDITING an element is `InspectorPanel` + `PropertiesEditor`
-// (a floating toolbar surface over the same behaviour); this is the LOOKING path,
-// so inspecting a value can never overwrite it.
-export { ElementInspectorViewPanel } from './view-panels/element-inspector';
-export type { ElementInspectorViewPanelProps } from './view-panels/element-inspector';
-
-// The Properties panel: the clicked element read-only, or — on *Edit*, or
-// `editProperties` from a menu or a drawing tool — its generated editor.
+// ─── Element ─────────────────────────────────────────────────────────────────
+// One drawn element, node or relationship. `ElementViewPanel` shows the element
+// the user **clicked** (`ClickInspectBehaviour`, or an explicit `elementId`) —
+// identity, ends, `data` properties, state, Focus — and, when `editable`, swaps
+// in its `ElementEditorPanel` on *Edit* or `editElement` from a menu or a drawing
+// tool. Deliberately NOT the selection: a selection holds many elements, this
+// panel has room for one; `SelectionViewPanel` answers what is selected.
 export {
-  PropertiesViewPanel,
-  editProperties,
-  stopEditingProperties,
-  usePropertiesEditing,
-  propertiesKey,
-} from './view-panels/properties';
-export type { PropertiesViewPanelProps } from './view-panels/properties';
+  ElementViewPanel,
+  editElement,
+  elementKey,
+  isEditingNewElement,
+  stopEditingElement,
+  useElementEditing,
+  useElementPanel,
+} from './view-panels/element';
+export type { ElementEdit, ElementFooter, ElementPanelState, ElementTarget, ElementViewPanelProps, UseElementPanelOptions } from './view-panels/element';
 
 // Unsaved changes: the rail's Changes panel over `UnsavedChangesBehaviour` —
 // added · edited · deleted, each revertible, Discard all · Save; Save runs the
@@ -1167,7 +1195,6 @@ export {
   ExportImageToolbar,
   ExportStateToolbar,
   ClearCanvasToolbar,
-  InspectorPanel,
   NodeDetailView,
   EdgeDetailView,
   dockCardClassName,
@@ -1192,7 +1219,6 @@ export type {
   ExportImageFormatKey,
   ExportStateToolbarProps,
   ClearCanvasToolbarProps,
-  InspectorPanelProps,
   NodeDetailViewProps,
   EdgeDetailViewProps,
   BaseDetailViewProps,
@@ -1228,7 +1254,10 @@ export {
   CanvasMessageBar,
   RendererCapabilityBanner,
   GraphStatusBar,
-  PropertiesEditor,
+  MessageStatus,
+  RendererStatus,
+  ViewStatus,
+  ElementEditorPanel,
   DetailCard,
   PropertyDetailView,
   EdgeEndpoints,
@@ -1269,8 +1298,10 @@ export type {
   RendererCapabilities,
   RendererCapabilityBannerProps,
   GraphStatusBarProps,
-  PropertiesEditorProps,
-  PropertiesEditorValues,
+  ElementEditorPanelProps,
+  ElementEditorValues,
+  ElementSchemaKey,
+  ElementTypeSchema,
   DetailCardProps,
   DetailRow,
   PropertyDetailViewProps,

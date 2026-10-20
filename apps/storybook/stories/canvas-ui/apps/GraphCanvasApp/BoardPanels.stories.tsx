@@ -10,10 +10,10 @@
  * | Legend | `LegendViewPanel` — click a type to hide it | — | every |
  * | Styling | `StylingViewPanel` | *Size by connections* | every |
  * | Canvas history | `HistoryViewPanel` | undo · redo | every |
- * | Properties | `ElementInspectorViewPanel` | — | Edit |
+ * | Element | `ElementViewPanel` | — | Edit |
  * | Export | `ExportViewPanel` — Image or Data | — | every, after a line |
  *
- * Switch the mode from the row to see Properties join the rail in Edit. ⌘K lists
+ * Switch the mode from the row to see Element join the rail in Edit. ⌘K lists
  * *Panel* too — the rail is a command, not a private toggle.
  */
 
@@ -26,7 +26,7 @@ import {
   BoardPanels,
   CommandPalette,
   ControlItems,
-  ElementInspectorViewPanel,
+  ElementViewPanel,
   ExportViewPanel,
   GraphCanvasApp,
   HISTORY_CONTROL_ITEMS,
@@ -77,11 +77,11 @@ export const BoardPanelsStory: Story = {
           render: (c) => <HistoryViewPanel canvas={c} showUndoRedo={false} />
         },
         {
-          id: 'properties',
-          title: 'Properties',
+          id: 'element',
+          title: 'Element',
           icon: 'properties',
           modes: ['edit'],
-          render: (c) => <ElementInspectorViewPanel canvas={c as GraphCanvas} />
+          render: (c) => <ElementViewPanel canvas={c as GraphCanvas} editable />
         },
         { id: 'export', title: 'Export', icon: 'download', separatorBefore: true, render: (c) => <ExportViewPanel canvas={c} filename="twitter" /> }
       ],
@@ -92,7 +92,7 @@ export const BoardPanelsStory: Story = {
       <GraphCanvasApp data={data} config={CONFIG} header={{ title: 'BoardPanels' }}>
         <BoardModes modes={MODES} />
         <NodeCentralityBehaviour id="size-by-connections" enabled={false} />
-        {/* What Properties reads: the clicked element. */}
+        {/* What the Element panel reads: the clicked element. */}
         <ClickInspectBehaviour id="click-inspect" targetLayerId="graph" />
         <ControlPanel id="row" position="top-left" offset={12} surface="hairline" items={[{ type: 'widget', widget: 'board-mode' }]} />
         <BoardPanels panels={panels} defaultOpen="legend" offset={12} />

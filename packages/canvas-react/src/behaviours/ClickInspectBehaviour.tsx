@@ -16,7 +16,7 @@ export interface ClickInspectBehaviourProps
 /**
  * Declarative wrapper for `@invana/graph` `ClickInspectBehaviour` — tracks the
  * single node/edge clicked for editing, decoupled from selection. Pair with
- * `<InspectorPanel>` (which reads this behaviour's target by id).
+ * `<ElementViewPanel>` (which reads this behaviour's target by id).
  *
  * `enabled` is reactive; other options are init-only — change `id` / `targetLayerId`.
  */
