@@ -40,12 +40,7 @@ export type CompositeFrame =
  * resolved against the live palette. The two are distinguishable at runtime by
  * `typeof`, which is what lets a value→colour map hold either.
  */
-/**
- * A colour in a template: a literal, a theme role, or any other key the active
- * palette carries — `warning`, `success`, `categorical.3`. A key the palette
- * lacks resolves to nothing, so the element's own role or literal shows.
- */
-export type TemplateColor = number | ColorRole | (string & {});
+export type TemplateColor = number | ColorRole;
 
 /**
  * One band of a {@link ValueLookup.bands} scale: a half-open numeric interval

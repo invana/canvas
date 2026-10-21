@@ -955,14 +955,6 @@ export interface GroupOptions {
    */
   readonly autoFit?: boolean;
   /**
-   * A **member frame**: the node ids this frame wraps, without making it their
-   * parent. With `autoFit` the frame tracks their bounds instead of its
-   * children's, and follows them as they move; layouts never place the frame
-   * itself (`isPlaceableNode`). For a frame drawn round records that already
-   * belong elsewhere — an annotation's group.
-   */
-  readonly members?: readonly string[];
-  /**
    * When `true`, `GroupResizeBehaviour` mounts corner / radial handle
    * decorations on this group and lets the user drag to resize. Composes
    * with `autoFit` per the floor rule on `width` / `height` / `radius`.
@@ -1488,6 +1480,13 @@ export interface GraphLayerOptions {
    * replaced whole. The legend and the `graph.typeVisible` command write it.
    */
   hiddenTypes?: { node?: string[]; edge?: string[] };
+
+  /**
+   * Node and edge **types** left out of {@link GraphLayer.exportData} — scenery
+   * a host draws into the graph that is not data, so a saved state never
+   * carries it. Replaced whole by `setOptions`.
+   */
+  exportSkipTypes?: readonly string[];
 
   /**
    * Optional pre-built store. If omitted, the layer creates its own with

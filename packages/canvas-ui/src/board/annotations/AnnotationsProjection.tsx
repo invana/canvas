@@ -10,7 +10,7 @@
  * | note · value | a card node beside its first record, a dashed `annotates` link to it |
  * | note · value, shown as badges | one count pill per record, linked to it |
  * | highlight | an `annotation-<colour>` ring on each record, and on the relationships among them |
- * | group | a member frame round its records — never their parent |
+ * | group | a frame round its records, painted by a `GroupFramesLayer` under the graph — never a node, never their parent |
  *
  * Every write is unrecorded (`store.internal`): undo never reaches a card, and
  * the unsaved tracker never counts one. A new card on a settled board is placed
@@ -27,13 +27,15 @@ import {
   ANNOTATION_CARD_WIDTH,
   ANNOTATION_COUNT_TYPE,
   ANNOTATION_EDGE_TYPE,
-  ANNOTATION_GROUP_TYPE,
   ANNOTATION_NODE_TYPE,
+  ANNOTATION_TYPES,
   ANNOTATION_VALUE_CARD_HEIGHT,
   ANNOTATION_VALUE_TYPE,
   annotationTemplates,
+  GroupFramesLayer,
   isAnnotationElement,
   placeBeside,
+  type GroupFrame,
   type EdgeStyle,
   type GraphEdge,
   type GraphLayer,
@@ -60,8 +62,8 @@ const NO_LABEL = { labelText: '' } as NodeStyle;
 
 /** The card node drawn for an annotation. */
 export const annotationNodeId = (id: string) => `${ANNOTATION_NODE_TYPE}:${id}`;
-/** The frame node drawn for a group annotation. */
-export const annotationGroupId = (id: string) => `${ANNOTATION_GROUP_TYPE}:${id}`;
+/** The layer the group annotations' frames are painted on, under the graph. */
+export const ANNOTATION_FRAMES_LAYER = 'annotation-frames';
 /** The annotation a drawn element stands for — `null` for a count pill or a record. */
 export function annotationIdOf(node: { id: string; type?: string | undefined; data?: unknown } | undefined): string | null {
   if (!node || !isAnnotationElement(node) || node.type === ANNOTATION_COUNT_TYPE) return null;
@@ -86,10 +88,12 @@ function fmt(v: unknown): string {
   return String(v);
 }
 
-/** The card templates and the highlight rings, once per layer instance. */
+const colorMap = () => Object.fromEntries(COLORS.map((c) => [c, colorOf(c)])) as Record<AnnotationColor, number>;
+
+/** The card templates, kept out of a saved state, and the highlight rings — once per layer instance. */
 function install(layer: GraphLayer, done: WeakSet<GraphLayer>): void {
   if (done.has(layer)) return;
-  layer.setOptions(annotationTemplates());
+  layer.setOptions({ ...annotationTemplates(colorMap()), exportSkipTypes: ANNOTATION_TYPES });
   layer.setStateConfigs(ringStyles());
   done.add(layer);
 }
@@ -125,13 +129,30 @@ export function AnnotationsProjection() {
   );
 
   // The templates the cards draw with, and a ring per colour — on each layer
-  // instance once, and the rings again on every theme change (their colour is the theme's).
+  // instance once, and both again on every theme change (their colours are the theme's).
   useEffect(() => {
     const layer = canvas.layers.get<GraphLayer>(BOARD_IDS.graph);
     if (!layer) return;
+    if (installed.current.has(layer)) layer.setOptions(annotationTemplates(colorMap()));
     install(layer, installed.current);
     layer.setStateConfigs(ringStyles());
   }, [canvas, themeStamp]);
+
+  // The frames layer, under the graph, while the board is up. A click on a
+  // frame's header opens its group in the panel, in any mode.
+  const { select, openPanel } = ctx;
+  useEffect(() => {
+    const frames = new GroupFramesLayer({ id: ANNOTATION_FRAMES_LAYER, zIndex: -1, options: { graphLayerId: BOARD_IDS.graph } });
+    canvas.layers.add(frames);
+    const off = frames.events.on('frame:click', ({ frameId }) => {
+      select(frameId);
+      openPanel({ kind: 'detail', id: frameId });
+    });
+    return () => {
+      off();
+      canvas.layers.remove(ANNOTATION_FRAMES_LAYER);
+    };
+  }, [canvas, select, openPanel]);
   useEffect(() => canvas.events.on('theme:change', () => setThemeStamp((s) => s + 1)), [canvas]);
 
   useEffect(() => {
@@ -150,6 +171,8 @@ export function AnnotationsProjection() {
     const nodeStates = new Map<string, Set<string>>();
     const edgeStates = new Map<string, Set<string>>();
     const counts = new Map<string, { n: number; color: AnnotationColor }>();
+    const frames: GroupFrame[] = [];
+    const heading = readCssColor('var(--color-foreground)');
     const dashed = (color: AnnotationColor): Partial<EdgeStyle> => ({
       strokeColor: colorOf(color),
       strokeWidth: 1.2,
@@ -171,22 +194,13 @@ export function AnnotationsProjection() {
       if (a.kind === 'group') {
         const members = a.records.filter((r) => r.kind === 'node' && loadedNode(r.id)).map((r) => r.id);
         if (members.length === 0) continue;
-        const id = annotationGroupId(a.id);
-        nodes.set(id, {
-          size: { width: 40, height: 40 },
-          node: {
-            id,
-            type: ANNOTATION_GROUP_TYPE,
-            data: {
-              annotationId: a.id,
-              color: a.color,
-              label: `${a.label || 'Group'} · ${members.length < a.records.length ? `${members.length} of ${a.records.length}` : `${members.length} records`}`,
-            },
-            style: {
-              group: { autoFit: true, padding: 26, headerHeight: 24, members, showToggle: false },
-              ...(members.length < a.records.length ? { bgStrokeDashArray: [5, 4] } : {}),
-            } as NodeStyle,
-          },
+        frames.push({
+          id: a.id,
+          members,
+          label: `${a.label || 'Group'} · ${members.length < a.records.length ? `${members.length} of ${a.records.length}` : `${members.length} records`}`,
+          color: colorOf(a.color),
+          ...(heading !== undefined ? { labelColor: heading } : {}),
+          dashed: members.length < a.records.length,
         });
         continue;
       }
@@ -292,6 +306,8 @@ export function AnnotationsProjection() {
         updated: { nodes: updatedNodes, edges: updatedEdges },
       });
     }
+
+    canvas.layers.get<GroupFramesLayer>(ANNOTATION_FRAMES_LAYER)?.setFrames(frames);
 
     // Highlights: each record's annotation rings, exactly.
     store.internal.run(() => {

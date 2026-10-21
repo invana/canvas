@@ -7,18 +7,20 @@
  * |---|---|---|
  * | card | {@link ANNOTATION_NODE_TYPE} · {@link ANNOTATION_VALUE_TYPE} | a note, or a value with its line, beside its record |
  * | count | {@link ANNOTATION_COUNT_TYPE} | a record's annotations as one pill, when the board shows badges |
- * | group | {@link ANNOTATION_GROUP_TYPE} | a member frame round its records (`group.members`) — never their parent |
  * | link | {@link ANNOTATION_EDGE_TYPE} | the dashed line from a card to its record |
+ *
+ * A group annotation is not an element: it is a frame a `GroupFramesLayer`
+ * paints round its records.
  *
  * They are presentation, never data: {@link isAnnotationElement} is the one
  * guard every reader of "all nodes" uses — edit ops, the unsaved tracker,
  * legends, counts, export — and they are written as {@link ANNOTATION_ACTOR},
- * which the unsaved tracker counts as saved.
+ * which the unsaved tracker counts as saved. {@link ANNOTATION_TYPES} is the
+ * list a layer's `exportSkipTypes` takes, so a saved state never carries them.
  *
  * {@link annotationTemplates} is the structure / styling / binding set a layer
- * takes (`layer.setOptions(annotationTemplates())`); colours are palette keys
- * (`warning` · `primary` · `success` · `destructive` · `muted`) a token sync
- * publishes, with {@link ANNOTATION_PALETTE_FALLBACK} under any other theme.
+ * takes (`layer.setOptions(annotationTemplates(colors))`), drawn in the colours
+ * the host resolves from its theme — call it again on a theme change.
  */
 
 import type { FreeformStructure, NodeStructureRegistry, NodeStylingRegistry, NodeTypeRegistry, ValueLookup, TemplateColor } from '../template/types';
@@ -29,8 +31,6 @@ export const ANNOTATION_NODE_TYPE = 'annotation';
 export const ANNOTATION_VALUE_TYPE = 'annotation.value';
 /** A record's annotations as one count pill. */
 export const ANNOTATION_COUNT_TYPE = 'annotation.count';
-/** A group annotation: a member frame round its records. */
-export const ANNOTATION_GROUP_TYPE = 'annotation.group';
 /** The dashed link from a card to its record. */
 export const ANNOTATION_EDGE_TYPE = 'annotates';
 /** The actor annotation elements are written as — counted as saved. */
@@ -39,33 +39,13 @@ export const ANNOTATION_ACTOR = 'annotations';
 /** An annotation's colour, by name. */
 export type AnnotationColorName = 'amber' | 'blue' | 'green' | 'red' | 'grey';
 
-/** The palette key each colour reads. */
-export const ANNOTATION_PALETTE_KEY: Record<AnnotationColorName, string> = {
-  amber: 'warning',
-  blue: 'primary',
-  green: 'success',
-  red: 'destructive',
-  grey: 'muted',
-};
-
-/** The palette keys' values under a theme that does not publish them. */
-export const ANNOTATION_PALETTE_FALLBACK: Readonly<Record<string, number>> = {
-  warning: 0xd97706,
-  primary: 0x2563eb,
-  success: 0x16a34a,
-  destructive: 0xdc2626,
-};
+/** Every node and edge type an annotation is drawn as. */
+export const ANNOTATION_TYPES: readonly string[] = [ANNOTATION_NODE_TYPE, ANNOTATION_VALUE_TYPE, ANNOTATION_COUNT_TYPE, ANNOTATION_EDGE_TYPE];
 
 /** True for a node or edge the board drew for an annotation — never a record. */
 export function isAnnotationElement(el: { type?: string | undefined } | undefined | null): boolean {
   const t = el?.type;
-  return (
-    t === ANNOTATION_NODE_TYPE ||
-    t === ANNOTATION_VALUE_TYPE ||
-    t === ANNOTATION_COUNT_TYPE ||
-    t === ANNOTATION_GROUP_TYPE ||
-    t === ANNOTATION_EDGE_TYPE
-  );
+  return t === ANNOTATION_NODE_TYPE || t === ANNOTATION_VALUE_TYPE || t === ANNOTATION_COUNT_TYPE || t === ANNOTATION_EDGE_TYPE;
 }
 
 /** The records among `elements` — every annotation element left out. */
@@ -91,18 +71,13 @@ export interface AnnotationCardData {
   valueLine?: string;
 }
 
-const COLOR: ValueLookup<TemplateColor> = {
-  bind: 'data.color',
-  map: ANNOTATION_PALETTE_KEY as Record<string, TemplateColor>,
-  fallback: 'muted',
-};
 
 /** The card's width; its height is {@link ANNOTATION_CARD_HEIGHT} or, with a value line, {@link ANNOTATION_VALUE_CARD_HEIGHT}. */
 export const ANNOTATION_CARD_WIDTH = 224;
 export const ANNOTATION_CARD_HEIGHT = 92;
 export const ANNOTATION_VALUE_CARD_HEIGHT = 112;
 
-function card(name: string, withValue: boolean): FreeformStructure {
+function card(name: string, withValue: boolean, COLOR: ValueLookup<TemplateColor>): FreeformStructure {
   const height = withValue ? ANNOTATION_VALUE_CARD_HEIGHT : ANNOTATION_CARD_HEIGHT;
   // Freeform text `y` is the line box's top less its leading — these keep the lines inside the card.
   const bodyY = withValue ? 32 : 14;
@@ -153,7 +128,7 @@ function card(name: string, withValue: boolean): FreeformStructure {
 }
 
 /** A record's annotations as one pill: `3`. */
-const countPill: FreeformStructure = {
+const countPill = (COLOR: ValueLookup<TemplateColor>): FreeformStructure => ({
   name: 'annotation.count',
   kind: 'freeform',
   width: 28,
@@ -163,47 +138,31 @@ const countPill: FreeformStructure = {
   strokeLookup: COLOR,
   strokeWidth: 1.5,
   elements: [{ id: 'count', type: 'text', x: 14, y: -6, bind: 'data.count', anchor: 'center', fontSize: 11, fontWeight: 700, colorLookup: COLOR }],
-};
+});
 
 /**
- * The templates a layer takes to draw annotation elements — merge them with
- * `layer.setOptions(annotationTemplates())`.
+ * The templates a layer takes to draw annotation elements, in `colors` — merge
+ * them with `layer.setOptions(annotationTemplates(colors))`.
  */
-export function annotationTemplates(): {
+export function annotationTemplates(colors: Readonly<Record<AnnotationColorName, number>>): {
   nodeStructureTemplates: NodeStructureRegistry;
   nodeStylingTemplates: NodeStylingRegistry;
   nodeTypes: NodeTypeRegistry;
 } {
+  const COLOR: ValueLookup<TemplateColor> = { bind: 'data.color', map: { ...colors }, fallback: colors.grey };
   return {
     nodeStructureTemplates: {
-      'annotation.card': card('annotation.card', false),
-      'annotation.valueCard': card('annotation.valueCard', true),
-      'annotation.count': countPill,
-      'annotation.frame': {
-        name: 'annotation.frame',
-        kind: 'simple',
-        shape: { kind: 'rect', width: 40, height: 40, cornerRadius: 8 },
-        slots: { label: true },
-      },
+      'annotation.card': card('annotation.card', false, COLOR),
+      'annotation.valueCard': card('annotation.valueCard', true, COLOR),
+      'annotation.count': countPill(COLOR),
     },
     nodeStylingTemplates: {
       'annotation.plain': { name: 'annotation.plain' },
-      'annotation.frame': {
-        name: 'annotation.frame',
-        fillRole: 'muted',
-        fillLookup: COLOR,
-        fillAlpha: 0.06,
-        strokeRole: 'stroke',
-        strokeLookup: COLOR,
-        strokeWidth: 1.5,
-        label: { fontSize: 11, fontWeight: 700, colorRole: 'heading', placement: 'inside-top-left' },
-      },
     },
     nodeTypes: {
       [ANNOTATION_NODE_TYPE]: { structure: 'annotation.card', styling: 'annotation.plain', bindings: {} },
       [ANNOTATION_VALUE_TYPE]: { structure: 'annotation.valueCard', styling: 'annotation.plain', bindings: {} },
       [ANNOTATION_COUNT_TYPE]: { structure: 'annotation.count', styling: 'annotation.plain', bindings: {} },
-      [ANNOTATION_GROUP_TYPE]: { structure: 'annotation.frame', styling: 'annotation.frame', bindings: { label: 'data.label' } },
     },
   };
 }

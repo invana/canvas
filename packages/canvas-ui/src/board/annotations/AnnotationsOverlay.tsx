@@ -18,13 +18,13 @@
 
 import { useBoardMode, useCommandStates, useGraphCanvas } from '@invana/canvas-react';
 import { Input, Textarea } from '@invana/forms';
-import { type GraphLayer, isAnnotationElement, resolveNodeSize } from '@invana/graph';
+import { type GraphLayer, type GroupFramesLayer, isAnnotationElement, resolveNodeSize } from '@invana/graph';
 import { type AnnotationColor, Button, cn } from '@invana/ui';
 import { Trash2 } from 'lucide-react';
 import { type KeyboardEvent, type PointerEvent, type ReactNode, useEffect, useRef, useState } from 'react';
 
 import { BOARD_IDS } from '../presets';
-import { annotationGroupId, annotationNodeId } from './AnnotationsProjection';
+import { ANNOTATION_FRAMES_LAYER, annotationNodeId } from './AnnotationsProjection';
 import { DRAFT_ID, recordsOf, useAnnotations } from './AnnotationsProvider';
 import type { BoardAnnotation } from './types';
 
@@ -108,8 +108,11 @@ export function AnnotationsOverlay(_props: AnnotationsOverlayProps) {
   const boxOfAnnotation = (a: BoardAnnotation): ScreenBox | null => {
     if (a.kind === 'note' || a.kind === 'value') return boxOf(annotationNodeId(a.id));
     if (a.kind === 'group') {
-      const frame = boxOf(annotationGroupId(a.id));
-      if (frame) return frame;
+      const f = canvas.layers.get<GroupFramesLayer>(ANNOTATION_FRAMES_LAYER)?.frameBounds(a.id);
+      if (f) {
+        const c = cam.toScreen(f.x, f.y);
+        return { x: c.x, y: c.y, w: f.width * cam.scale, h: f.height * cam.scale };
+      }
     }
     const boxes = a.records.map((r) => boxOf(r.id)).filter((b): b is ScreenBox => b !== null);
     if (!boxes.length) return null;

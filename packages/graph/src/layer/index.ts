@@ -11,6 +11,7 @@ export type {
   MiniMapMode,
   MiniMapKind,
 } from './MiniMapLayer';
+export { GroupFramesLayer, type GroupFrame, type GroupFrameHit, type GroupFramesLayerEvents, type GroupFramesLayerOptions } from './GroupFramesLayer';
 export { GraphLegendLayer } from './GraphLegendLayer';
 export type {
   GraphLegendLayerOptions,

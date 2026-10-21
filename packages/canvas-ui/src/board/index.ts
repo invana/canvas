@@ -60,12 +60,12 @@ export type {
   SchemaDetailLevel,
 } from './schema';
 export {
+  ANNOTATION_FRAMES_LAYER,
   ANNOTATION_TOKEN,
   AnnotationsOverlay,
   AnnotationsProjection,
   AnnotationsProvider,
   DEFAULT_ANNOTATION_VIEW,
-  annotationGroupId,
   annotationIdOf,
   annotationNodeId,
   useAnnotations,

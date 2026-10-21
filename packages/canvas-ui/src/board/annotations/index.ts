@@ -8,7 +8,7 @@ export {
   whereOf,
 } from './AnnotationsProvider';
 export { AnnotationsOverlay, type AnnotationsOverlayProps } from './AnnotationsOverlay';
-export { AnnotationsProjection, annotationGroupId, annotationIdOf, annotationNodeId } from './AnnotationsProjection';
+export { ANNOTATION_FRAMES_LAYER, AnnotationsProjection, annotationIdOf, annotationNodeId } from './AnnotationsProjection';
 export {
   ANNOTATION_TOKEN,
   DEFAULT_ANNOTATION_VIEW,

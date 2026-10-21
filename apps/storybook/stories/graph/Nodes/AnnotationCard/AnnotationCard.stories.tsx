@@ -1,5 +1,5 @@
 /**
- * **An annotation drawn in the graph** — the structures `annotationTemplates()`
+ * **An annotation drawn in the graph** — the structures `annotationTemplates(colors)`
  * gives a layer, on their own:
  *
  * | Node type | Draws |
@@ -8,8 +8,8 @@
  * | `annotation.value` | the same with the value's line — `group  3 · was 9` |
  * | `annotation.count` | a record's annotations as one pill |
  *
- * Colours are palette keys (`warning` · `primary` · `success` · `destructive` ·
- * `muted`): the theme toggle in the header recolours every card.
+ * The host passes the colours, resolved from its theme (the board reads the
+ * design-kit tokens); the theme toggle in the header recolours the cards' surface and text.
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
@@ -26,7 +26,7 @@ type Story = StoryObj;
 
 const CONFIG = {
   fitOnLoad: true,
-  layers: { graph: annotationTemplates() },
+  layers: { graph: annotationTemplates({ amber: 0xd97706, blue: 0x2563eb, green: 0x16a34a, red: 0xdc2626, grey: 0x6b7280 }) },
   behaviours: { theme: { enabled: true, mode: 'document' } }
 } as unknown as CanvasConfig;
 
