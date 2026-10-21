@@ -95,6 +95,12 @@ export interface ValueLookup<T> {
   readonly map?: Readonly<Record<string, T>>;
   /** Numeric bands; first match wins. See {@link ValueBand}. */
   readonly bands?: readonly ValueBand<T>[];
+  /**
+   * Colour lookups only: the bound value is a **1-based slot** into the active
+   * theme's categorical ramp, wrapping past its end — so a record carries
+   * `hue: 3` and its colour follows every theme. Consulted after {@link map}.
+   */
+  readonly categorical?: boolean;
   /** Used when neither {@link map} nor {@link bands} matched. */
   readonly fallback?: T;
 }
@@ -364,6 +370,13 @@ export interface NodeStylingTemplate {
   strokeRole?: ColorRole;
   stroke?: number;
   strokeWidth?: number;
+  /**
+   * Fill from a record field — a frame washed in its model's hue. Wins over
+   * {@link fillRole} / {@link fill} when it resolves. `simple` structures.
+   */
+  fillLookup?: ValueLookup<TemplateColor>;
+  /** Border from a record field; wins over {@link strokeRole} / {@link stroke}. `simple` structures. */
+  strokeLookup?: ValueLookup<TemplateColor>;
 
   /**
    * Opacity of the **fill only**, `0`–`1`. Default opaque.

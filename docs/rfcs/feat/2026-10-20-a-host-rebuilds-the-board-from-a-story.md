@@ -19,8 +19,8 @@ relations:
 | Motivation | Studio, the first product on canvas, holds ~2,900 lines of generic canvas code: three boards copied from stories, five engine workarounds, three theme paths, two colour hashes, four copies of controlled selection |
 | Design | Canvas owns every board, behaviour, panel, menu and engine rule; a host passes data, configuration and **seams** (callbacks for what needs its backend). Nothing a second product would need stays in Studio |
 | Rows | P0 F1–F4 · P1 F5–F16, F37–F40 · P2 F17–F20 · P3 F21–F24 · P4 F25–F31 · P5 F32–F36 — all accepted |
-| Row status | proposed 0 · accepted 12 · implemented 26 · deferred 2 · landed 0 |
-| Open decisions | none — D1–D6 accepted in review on 2026-10-20 |
+| Row status | proposed 0 · accepted 6 · implemented 33 · deferred 1 · landed 0 |
+| Open decisions | none — D1–D6 accepted in review on 2026-10-20, D7–D9 on 2026-10-21 |
 
 ## 1. Motivation
 
@@ -102,19 +102,35 @@ relations:
 | F21 | defect | implemented | `pkg:@invana/graph` `sym:readCssColor` | one probe (hsl, oklch, hex, `var()`), cached per theme stamp; `resolveAccentVar` and the unsaved-changes colours use it | five copies become one | — | — |
 | F22 | defect | implemented | canvas-react `sym:CanvasThemeSync` `source: 'tokens'`; graph `sym:MiniMapLayer` role colours | the palette read from the host's tokens (`sym:DESIGN_KIT_TOKENS`, overridable); a minimap colour may name a palette role; `GraphBoard theme="tokens"` | Studio's three paths become one | none for `source: 'library'`, the default | F21 |
 | F23 | defect | implemented | canvas-ui `sym:typeColor` | design-kit's slot hash (`colorSlotByString`) read live from `--color-data-N`; the fixed palette only where those tokens are unset | legend, paint and Studio's type lists agree | canvas-ui stories' type colours shift once | F21 |
-| F24 | defect | deferred | graph theme colour binding | `{ bind: 'data.hue' }` resolves to a live categorical slot | ER frame hues follow the theme — lands with F25, the schema board that uses it | — | F22, F25 |
+| F24 | defect | implemented | graph `sym:ValueLookup` `categorical` | `{ bind: 'data.hue', categorical: true }` resolves slot N (1-based, wrapping) to the theme's categorical ramp; `GraphLayer` keeps the ramp from `theme:change` | ER hues follow the theme with no host re-hue — lands with F25, the schema board that uses it | — | F22, F25 |
 
 **P4 — schema (ER) and DAG boards**
 
 | ID | Kind | Status | File/target | Change | Effect | Risk | Depends on |
 |---|---|---|---|---|---|---|---|
-| F25 | defect | accepted | canvas-ui `sym:SchemaBoard` | framed types, ELK, Detail switcher, settings dock, connect with a host veto | M2 | new public surface | F1–F4, F24 |
-| F26 | defect | accepted | canvas-ui `sym:useDetailTemplates` | Detail levels as config patches, per-type bindings | one mechanism for ER and DAG | — | — |
-| F27 | defect | accepted | `pkg:@invana/graph` `sym:schemaTableCard` | header, icon, one row per property with a type chip | Studio's `schemaCard` goes | how schema stories look | — |
-| F28 | defect | accepted | `pkg:@invana/graph` group frame style | frame wash and border from a hue | — | — | F24 |
-| F29 | defect | accepted | canvas-ui schema hover card | a type's properties on hover | — | — | — |
+| F25 | defect | implemented | canvas-ui `sym:SchemaBoard` | framed types, ELK, Detail switcher, settings dock, connect with a host veto | M2 | new public surface | F1–F4, F24 |
+| F26 | defect | implemented | canvas-ui `sym:useDetailTemplates` | Detail levels as config patches, per-type bindings | one mechanism for ER and DAG | — | — |
+| F27 | defect | implemented | `pkg:@invana/graph` `sym:schemaCardStructure` · `sym:schemaTypeChip` | a freeform structure template: hue-washed header, icon, title, subtitle, description, one row per property (type chip, name, `key`, type); one chip table shared with `sym:schemaTableCard` | Studio's `schemaCard` goes | how schema stories look | F24 |
+| F28 | defect | implemented | `pkg:@invana/graph` `sym:NodeStylingTemplate` `fillLookup` · `strokeLookup` | a simple structure's fill and border from a record field — a frame washed in its model's hue | Studio's per-node `frameStyle` goes | — | F24 |
+| F29 | defect | implemented | canvas-ui `sym:renderSchemaNode` | a type's description and one row per property on hover | Studio's `renderModelNode` goes | — | — |
 | F30 | defect | accepted | canvas-ui `sym:LayeredDagBoard` | left→right DAG: column seeding, tone map, legend from keys, connect | Studio's `LayeredCanvas` and `TaskFlowCanvas` pass data | — | F1–F3, F26 |
-| F31 | defect | accepted | `pkg:@invana/canvas` fit | a maximum fit zoom | no host re-fit capped at 100% | — | — |
+| F31 | defect | implemented | `pkg:@invana/canvas` `fitCamera.maxZoom` · `fitView(padding, maxZoom)` | a fit never zooms past `maxZoom` | no host re-fit capped at 100% | — | — |
+
+**P4 surfaces** — the shapes the rows above publish
+
+| Surface | Shape | Default | Notes |
+|---|---|---|---|
+| `sym:SchemaBoard` `data` | `GraphData` — frames (`group` stylings) and types; a type's `data` is `sym:SchemaTypeData` | — | edges carry their own style (a host's dash) |
+| `sym:SchemaBoard` `config` | the whole `CanvasConfig` the board mounts on | — | structures, stylings, layouts, behaviours |
+| `sym:SchemaBoard` `detail` | `sym:DetailTemplates` — `{ templates: Record<level, Partial<CanvasConfig>>, options: Record<level, label>, initial }` | no Detail switcher | |
+| `sym:SchemaBoard` `connect` | `{ onConnect(sourceId, targetId) => refusal \| null, label, panel: ReactNode \| null, panelLabel, onClosePanel }` | no connect tool | a drag never adds an edge; a refusal shows in the message bar; **Shift** connects while held; an accepted drag opens `panel` in the dock |
+| `sym:SchemaBoard` `selected` · `onSelect` | `{ kind: 'node' \| 'edge', id } \| null` | uncontrolled | one element at a time; an empty click clears |
+| `sym:SchemaBoard` `renderNode` · `renderEdge` | hover card renderers | `sym:renderSchemaNode` · `sym:renderSchemaEdge` | a frame has no card |
+| `sym:SchemaBoard` `schemaCard` | `sym:SchemaCardOptions` — `{ subtitle?: string }` (`{data.x}` interpolated) | `{data.frame}` | for the `schema:*` structure |
+| `sym:SchemaBoard` `title` · `message` · `height` · `preference` · `dockSection` · `headerClassName` | pass-through to `sym:GraphCanvasApp` | — | |
+| `sym:SchemaTypeData` | `{ label, description?, icon?, frame?, hue?, properties: { name, type, identity?, tags?: string[] }[] }` | — | `hue` is a categorical slot (F24) |
+| `sym:detailConfig(base, templates, level, data, opts)` | pure: the level's patch merged over `base`; the `*` node type expands into one binding per type without its own; a structure named `prefix:*` becomes `prefix:<type>`, built by `opts.structures[prefix](node)` | `schema` → `sym:schemaCardStructure` | `sym:useDetailTemplates` applies it live: patch, re-run the active layout with `fitCamera` |
+| `sym:ValueLookup.categorical` | `true` — the bound value is a 1-based slot into the theme's ramp | — | `map` still wins when both are set |
 
 **P5 — the rest**
 
@@ -147,8 +163,9 @@ relations:
 | V1 | pass | `test`, `check-types`, `lint`, `check-api-surface`, boundaries; storybook `tsc` | graph, canvas-react, canvas-ui, graph-layout-elkjs | clean (392 graph tests) | F1–F16, F20, F37, F39, F40 |
 | V2 | pass | Playwright walk | `story:canvas-demos/tools/CanvasExplorer` on `sym:GraphBoard` | Explore, Edit (a dropped node opens as new; Changes counts it), Present (stepper, narration); no console errors | F5–F16 |
 | V3 | pass | Studio `turbo run check-types`, Biome, the board e2e | invana `studio/` | green; Tree preset lays out; Edit → Add node → typed from the model → Save → read back from Neo4j; probe removed | F5–F16, F20 |
-| V4 | pending | Playwright walk | schema and DAG stories; Studio Modeller and a task view | unchanged look, no console errors | F25–F31 |
+| V4 | partial | Playwright walk | schema story at each Detail; Studio All models (High · Medium · Low, a stitch drag opening the declare card) and one model's board (ME25 · ME26) | same hues and cards as before; no console errors — DAG story and a task view wait on F30 | F24–F29, F31 |
 | V5 | pending | control: a board with no modes | `story:canvas-ui/apps/GraphCanvasApp/RightInspector` | unchanged | F5, F9 |
+| V6 | pass | a story per piece, walked in Playwright with no console errors | `story:canvas-ui/apps/SchemaBoard/*` ×4 · `…/DetailTemplates` · `…/GraphBoard/*` ×3 · `story:canvas-ui/editors/ElementEditorPanel/*` ×3 · `story:canvas-ui/components/StatusSections` · `story:canvas-react/board/BoardToolKeys` · `story:canvas-react/hooks/UseUnsavedGuard` · `story:graph/Nodes/SchemaCard` · `story:graph/Groups/HueFrames` · `story:graph/Behaviours/UnsavedEdits/SaveUnsaved` | each renders its states; `fitMaxZoom: 1` holds a small graph at 100 % | F5–F31 |
 
 ## 7. Decisions
 
@@ -160,6 +177,9 @@ relations:
 | D4 | Engine-specific vocabulary (provenance keys, *Ask about*, the backend's expand filters) | in canvas · in the host | in the host, through `hiddenKeys`, `renderExtra`, `footer` and menu `extra` | accepted |
 | D5 | Theme tokens | hard-coded in graph · a map | a map in graph; canvas-react defaults it to the design-kit names | accepted |
 | D6 | Order | at once · in phases | phases P0–P5; each leaves Studio green | accepted |
+| D7 | The schema card | extend the composite `sym:schemaTableCard` · a freeform structure generator | freeform: Detail levels bind types to structures, and only structures take theme roles and lookups; the composite stays for per-row hover, sharing one chip table | accepted |
+| D8 | The DAG boards | one `sym:LayeredDagBoard` · one per Studio board | one: Detail templates (task flow) and a tone map + legend (layered) are both its props | accepted |
+| D9 | P4's order | at once · schema first, then DAG | schema first (F24–F29, F31), then F30; each half leaves Studio green | accepted |
 
 ## 8. History
 
@@ -171,3 +191,6 @@ relations:
 | 2026-10-20 | P1 written: `sym:GraphBoard`, presets, `defaultBoardMenus`, `defaultBoardPanels`, status sections; the story and Studio's Explorer render it; F20 (`useUnsavedGuard`) brought forward | implemented | F38 deferred; F39–F40 added while building |
 | 2026-10-20 | P2 written: `unsavedToEditOps`, `adoptBackendIds`, `saveUnsaved` in graph (3 tests); Studio's save is the API call and its hidden keys; verified live — a node saved to Neo4j and read back | implemented | — |
 | 2026-10-20 | P3 written: `readCssColor`, `CanvasThemeSync source: 'tokens'`, minimap role colours, `typeColor` on design-kit's slot; Studio's theme bridge, palette hook and `typeColor.ts` deleted; Explorer, model board and plans verified in Studio | implemented | F24 moves to P4 |
+| 2026-10-21 | P4 surfaces written; D7–D9 accepted; F24 un-deferred for F25 | accepted | — |
+| 2026-10-21 | P4 schema half written: `sym:SchemaBoard` with `SCHEMA_BOARD_CONFIG` / `SCHEMA_DETAIL` presets, `sym:detailConfig` · `sym:useDetailTemplates`, `sym:schemaCardStructure` · `sym:schemaTypeChip`, the categorical lookup, styling fill/stroke lookups, `fitCamera.maxZoom`; the GlobalModel story renders the board (its Force view goes — the board is ELK only); Studio's model config, JSON and hover card deleted. The low framing was the Model tab's panel not filling its row — a design-kit board renderer defect, fixed there | implemented | F30 next |
+| 2026-10-21 | Stories written for every piece P1–P4 added (V6); `CLAUDE.md` rule 11 now requires a story per canvas piece in the same change. The board annotations (`rfc:feat-2026-10-21-the-board-cannot-show-what-people-noted-on-the-data`) are another session's, in progress — their stories are owed by that RFC | implemented | — |

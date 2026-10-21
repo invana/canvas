@@ -152,6 +152,55 @@ export function resolveLookup<T>(
   return lookup.fallback;
 }
 
+/** The palette key a categorical slot is published under — `categorical.1` … */
+const CATEGORICAL_PREFIX = 'categorical.';
+
+/**
+ * A theme's categorical ramp as palette keys, `categorical.1` … `categorical.N`,
+ * so a colour lookup resolves a slot against the same palette as a role.
+ */
+export function categoricalPaletteKeys(ramp: readonly number[]): Record<string, number> {
+  return Object.fromEntries(ramp.map((c, i) => [`${CATEGORICAL_PREFIX}${i + 1}`, c]));
+}
+
+const rampLength = new WeakMap<RolePalette, number>();
+
+/** Slot `value` (1-based, wrapping) of the palette's categorical ramp. */
+function categoricalColor(palette: RolePalette, value: unknown): number | undefined {
+  const slot = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN;
+  if (!Number.isInteger(slot) || slot < 1) return undefined;
+  let n = rampLength.get(palette);
+  if (n === undefined) {
+    n = 0;
+    while (palette[`${CATEGORICAL_PREFIX}${n + 1}`] !== undefined) n++;
+    rampLength.set(palette, n);
+  }
+  if (n === 0) return undefined;
+  return palette[`${CATEGORICAL_PREFIX}${((slot - 1) % n) + 1}`];
+}
+
+/**
+ * A colour {@link ValueLookup} against a record and the palette: the `map`
+ * first, then the categorical slot, then `bands`, then `fallback`.
+ */
+export function resolveColorLookup(
+  lookup: ValueLookup<TemplateColor> | undefined,
+  node: GraphNode,
+  palette: RolePalette,
+  fallbackBind?: string,
+): number | undefined {
+  if (!lookup) return undefined;
+  if (lookup.categorical) {
+    const path = lookup.bind ?? fallbackBind;
+    const value = path !== undefined ? resolvePath(node, path) : undefined;
+    if (!(lookup.map && value != null && lookup.map[String(value)] !== undefined)) {
+      const hit = categoricalColor(palette, value);
+      if (hit !== undefined) return hit;
+    }
+  }
+  return templateColor(resolveLookup(lookup, node, fallbackBind), palette);
+}
+
 /** A {@link TemplateColor} — literal number or role name — against the palette. */
 function templateColor(value: TemplateColor | undefined, palette: RolePalette): number | undefined {
   if (value === undefined) return undefined;
@@ -170,7 +219,7 @@ function lookupColor(
   node: GraphNode,
   palette: RolePalette,
 ): number | undefined {
-  const hit = templateColor(resolveLookup(lookup, node), palette);
+  const hit = resolveColorLookup(lookup, node, palette);
   if (hit !== undefined) return hit;
   return color(role, direct, palette);
 }
@@ -254,7 +303,7 @@ export function compileBadges(
 
     // The badge's own `bind` is the lookup's default field, so a coverage pill
     // names `data.coverage` once and bands it here.
-    const fill = templateColor(resolveLookup(t.fillLookup, node, t.bind), palette);
+    const fill = resolveColorLookup(t.fillLookup, node, palette, t.bind);
     badge.fill = fill ?? color(t.fillRole, t.fill, palette);
     if (badge.fill === undefined) delete badge.fill;
     const stroke = color(t.strokeColorRole, t.strokeColor, palette);
@@ -285,7 +334,7 @@ export function compileSimple(
 ): Partial<NodeStyle> {
   const out: Record<string, unknown> = { shape: struct.shape };
 
-  const fill = color(styling?.fillRole, styling?.fill, palette);
+  const fill = lookupColor(styling?.fillLookup, styling?.fillRole, styling?.fill, node, palette);
   if (fill !== undefined) {
     // `fillAlpha` goes on the fill layer, never on `bgAlpha` — that one is the
     // whole shape's opacity and would fade the border with it, which is how a
@@ -295,7 +344,7 @@ export function compileSimple(
         ? { kind: 'solid', color: fill, alpha: styling.fillAlpha }
         : fill;
   }
-  const stroke = color(styling?.strokeRole, styling?.stroke, palette);
+  const stroke = lookupColor(styling?.strokeLookup, styling?.strokeRole, styling?.stroke, node, palette);
   if (stroke !== undefined) {
     out.bgStrokeColor = stroke;
     out.bgStrokeWidth = styling?.strokeWidth ?? 1.5;

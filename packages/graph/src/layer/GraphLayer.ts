@@ -72,6 +72,7 @@ import {
   compileFreeform,
   compileSimple,
   compileSize,
+  categoricalPaletteKeys,
 } from '../template/compile';
 import { BUILT_IN_STRUCTURES, BUILT_IN_STYLINGS } from '../template/structures';
 import type {
@@ -83,7 +84,8 @@ import type {
 
 /** Fallback palette (default theme, light) used before any theme is published,
  * so role-based node templates always resolve to concrete numbers. */
-const { categorical: _fallbackCategorical, ...FALLBACK_PALETTE } = DEFAULT_THEME.light;
+const { categorical: FALLBACK_CATEGORICAL, ...FALLBACK_ROLES } = DEFAULT_THEME.light;
+const FALLBACK_PALETTE: RolePalette = { ...FALLBACK_ROLES, ...categoricalPaletteKeys(FALLBACK_CATEGORICAL) };
 
 /**
  * Translate a {@link EdgePathType} shortcut into the canvas `router` +
@@ -698,10 +700,10 @@ export class GraphLayer extends WorldLayer<
     // Recolour from the active theme. The `ThemeBehaviour` is the sole
     // publisher; we re-resolve the base node/edge defaults + group frames from
     // its palette so the whole graph stays in sync on every theme switch.
-    this.subs.push(ctx.events.on('theme:change', (theme) => this.applyTheme(theme.palette)));
+    this.subs.push(ctx.events.on('theme:change', (theme) => this.applyTheme(theme.palette, theme.categorical)));
     // Adopt any theme already published before this layer mounted.
     const currentTheme = ctx.theme.current();
-    if (currentTheme) this.applyTheme(currentTheme.palette);
+    if (currentTheme) this.applyTheme(currentTheme.palette, currentTheme.categorical);
 
     // A drag writes positions every frame, unrecorded; journal the gesture
     // once, on release, as one "move" entry.
@@ -739,11 +741,16 @@ export class GraphLayer extends WorldLayer<
    * empty palette is a no-op. Per-type styling templates (Phase B) layer their
    * role-based styling on top of this base.
    */
-  private applyTheme(palette: Readonly<Record<string, number>>): void {
+  private applyTheme(palette: Readonly<Record<string, number>>, categorical?: readonly number[]): void {
     // Keep a complete palette (published over the default fallback) so per-type
     // templates always resolve every role to a number, even from a partial /
-    // empty (shorthand) publish. Set before any re-render reads it.
-    this.themePalette = { ...FALLBACK_PALETTE, ...palette };
+    // empty (shorthand) publish. Set before any re-render reads it. The
+    // categorical ramp rides along as `categorical.N`, for slot lookups.
+    this.themePalette = {
+      ...FALLBACK_PALETTE,
+      ...palette,
+      ...(categorical && categorical.length > 0 ? categoricalPaletteKeys(categorical) : {}),
+    };
 
     // Group frames read this at resolve time — set before any re-render below.
     // Never written into a node's own `style`: that is authored data, and the

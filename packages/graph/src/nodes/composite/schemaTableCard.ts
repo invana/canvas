@@ -4,6 +4,7 @@ import type { CompositeShapeOption } from '../../layer/types';
 import { CompositeCard, type CardFrame } from './base';
 import { CARD_BG, CARD_STROKE, iconifyUrl } from './shared';
 import type { SchemaTableData } from './types';
+import { schemaTypeChip } from '../../template/schemaCard';
 
 /** Full configuration for a {@link SchemaTableCard} — edit any field to re-style. */
 export interface SchemaTableCardSpec {
@@ -64,28 +65,7 @@ export class SchemaTableCard extends CompositeCard<SchemaTableCardSpec, SchemaTa
 
   /** Colour-coded chip glyph + colour for a field's data type. Override to remap. */
   protected typeChip(type: string): { char: string; color: number } {
-    switch (type.toLowerCase()) {
-      case 'string':
-      case 'text':
-      case 'varchar':
-      case 'uuid':
-        return { char: 'Abc', color: 0x3b82f6 };
-      case 'number':
-      case 'float':
-        return { char: '#', color: 0x22c55e };
-      case 'integer':
-      case 'int':
-        return { char: '123', color: 0x22c55e };
-      case 'date':
-      case 'datetime':
-      case 'timestamp':
-        return { char: '◷', color: 0xf59e0b };
-      case 'boolean':
-      case 'bool':
-        return { char: '01', color: 0xa855f7 };
-      default:
-        return { char: '•', color: 0x64748b };
-    }
+    return schemaTypeChip(type);
   }
 
   /** Header band (icon + title). */

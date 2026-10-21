@@ -126,11 +126,12 @@ export interface LayoutRunOptions {
    * the camera and stops the follow.
    *
    * `true` fits with the default padding (80 screen px); `{ padding }` sets
-   * it. Fitters that would otherwise frame on `end` (the `fitOnLoad`
+   * it, and `{ maxZoom }` stops the fit zooming in past that scale (`1` keeps
+   * a small graph at its drawn size). Fitters that would otherwise frame on `end` (the `fitOnLoad`
    * auto-fitter, the React layout wrappers' `fitPadding`) skip such a run —
    * it already owns the camera. Ignored when {@link preserveCamera} is set.
    */
-  fitCamera?: boolean | { padding?: number };
+  fitCamera?: boolean | { padding?: number; maxZoom?: number };
   /**
    * Solve from scratch: ignore the nodes' stored positions as starting points
    * (pinned nodes still hold). For an iterative layout that settles from where

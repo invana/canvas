@@ -34,3 +34,28 @@ export {
   VIEW_MODES,
   WORK_MODES,
 } from './presets';
+export {
+  SchemaBoard,
+  detailConfig,
+  useDetailTemplates,
+  renderSchemaEdge,
+  renderSchemaNode,
+  SCHEMA_BOARD_CONFIG,
+  SCHEMA_DETAIL,
+  SCHEMA_FRAME_EMPTY_TYPE,
+  SCHEMA_FRAME_TYPE,
+  SCHEMA_LAYER,
+  SCHEMA_WILDCARD,
+} from './schema';
+export type {
+  SchemaBoardConnect,
+  SchemaBoardProps,
+  SchemaBoardSelection,
+  DetailConfigOptions,
+  DetailStructureBuilder,
+  DetailTemplates,
+  DetailTemplatesState,
+  UseDetailTemplatesOptions,
+  SchemaEdgeData,
+  SchemaDetailLevel,
+} from './schema';

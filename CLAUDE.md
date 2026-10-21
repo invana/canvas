@@ -227,7 +227,9 @@ Turbo pipeline: `build` depends on `^build`, outputs `dist/**`. All packages use
 8. Cross-layer dependencies are declared as explicit `*LayerId` option fields. Don't infer "the only graph layer".
 9. Write TSDoc on all classes, public methods, and non-obvious variables.
 10. **Do not write tests for `packages/canvas`.** No test files in that package unless explicitly asked.
-11. **Do NOT create or modify Storybook stories unless I explicitly ask in the current message.** Shipping a new engine primitive (shape, connector, anchor, router, pathStyle, marker, decoration, effect, layer, behaviour, layout, graph-layer feature, control, etc.) does **not** require a story — land the code without one and don't offer to add one unprompted. Only when I ask for a story do you write it, and then place it per the namespacing in `apps/storybook/CLAUDE.md`. Path map (for when a story **is** requested):
+11. **Every piece written in canvas ships with its own story, in the same change.** A component, view panel, editor panel, board, hook, layer, behaviour, layout, structure template or graph-layer feature gets a story of its own — one story per file, one file per state that matters (empty, refusal, each level, each mode). Rendering inside a case-study demo (`canvas-demos/…`) does not count: a demo hides the piece's own states. A piece another session is still writing gets its stories from that session. Place it per the namespacing in `apps/storybook/CLAUDE.md` and the path map:
+    - component / board → `canvas-ui/{apps,components,editors,view-panels}/<Piece>/`
+    - headless board piece or hook → `canvas-react/{board,hooks,behaviours}/`
     - shape → `Canvas/Concepts/Shapes/`
     - connector / anchor / router / pathStyle / marker → `Canvas/Connectors/{Anchors,Routers,PathStyles,ConnectorTypes}/`
     - decoration → `Canvas/Decorations/{Shapes,Connectors}/`

@@ -741,10 +741,14 @@ export class Canvas {
    * No-op when there's nothing with real extent to fit.
    *
    * @param padding Screen-px margin around the content. Default `80`.
+   * @param maxZoom  The fit never zooms in past this — a small graph keeps its
+   *                 drawn size instead of filling the viewport. Default: no cap.
    */
-  fitView(padding = 80): void {
+  fitView(padding = 80, maxZoom?: number): void {
     const rect = this._contentBounds();
-    if (rect) this.camera.fitContent(rect, padding);
+    if (!rect) return;
+    if (maxZoom === undefined) this.camera.fitContent(rect, padding);
+    else this.camera.setTransform(this._fitTransform(rect, padding, maxZoom));
   }
 
   /**
@@ -775,11 +779,11 @@ export class Canvas {
    * the zoom that fits `rect` inside the padded viewport, centred on it. Not
    * clamped — `Camera.setTransform` / `animateTo` clamp on write.
    */
-  private _fitTransform(rect: Rect, padding: number): { x: number; y: number; zoom: number } {
+  private _fitTransform(rect: Rect, padding: number, maxZoom = Infinity): { x: number; y: number; zoom: number } {
     const cam = this.camera;
     const availW = Math.max(1, cam.screenWidth - padding * 2);
     const availH = Math.max(1, cam.screenHeight - padding * 2);
-    const zoom = Math.min(availW / Math.max(1, rect.width), availH / Math.max(1, rect.height));
+    const zoom = Math.min(maxZoom, availW / Math.max(1, rect.width), availH / Math.max(1, rect.height));
     const cx = rect.x + rect.width / 2;
     const cy = rect.y + rect.height / 2;
     return { x: cam.screenWidth / 2 - cx * zoom, y: cam.screenHeight / 2 - cy * zoom, zoom };
@@ -805,7 +809,7 @@ export class Canvas {
    * one this follow last wrote, the follow stands down for the rest of the
    * run and `settle` does nothing.
    */
-  private _followRun(padding: number): {
+  private _followRun(padding: number, maxZoom?: number): {
     step: (progress: number) => void;
     settle: () => void;
   } {
@@ -839,7 +843,7 @@ export class Canvas {
       const rect = this._contentBounds();
       if (!rect) return;
       stepped = true;
-      const fit = this._fitTransform(rect, padding);
+      const fit = this._fitTransform(rect, padding, maxZoom);
       const p = Math.min(1, Math.max(0, progress));
       const zoom = Math.exp(Math.log(z0) + (Math.log(Math.max(1e-9, fit.zoom)) - Math.log(z0)) * p);
       const c1x = (W / 2 - fit.x) / fit.zoom;
@@ -860,7 +864,7 @@ export class Canvas {
       // the positions are written, and edge geometry reaches the renderer on
       // the next flush.
       if (stepped) return;
-      requestAnimationFrame(() => this.fitView(padding));
+      requestAnimationFrame(() => this.fitView(padding, maxZoom));
     };
 
     return { step, settle };
@@ -1482,6 +1486,7 @@ export class Canvas {
       typeof run?.fitCamera === 'object' && run.fitCamera.padding !== undefined
         ? run.fitCamera.padding
         : 80;
+    const fitMaxZoom = typeof run?.fitCamera === 'object' ? run.fitCamera.maxZoom : undefined;
     const cameraFlags = {
       ...(preserveCamera ? { preserveCamera } : {}),
       ...(fitCamera ? { fitCamera } : {}),
@@ -1489,7 +1494,7 @@ export class Canvas {
     let follow: ReturnType<Canvas['_followRun']> | null = null;
     const offStart = layout.events.on('start', ({ nodeCount, edgeCount, animate }) => {
       // Capture the camera the follow blends *from* at the moment the run starts.
-      if (fitCamera) follow = this._followRun(fitPadding);
+      if (fitCamera) follow = this._followRun(fitPadding, fitMaxZoom);
       // Reactive run-status (source of truth for any "is a layout running?" UI —
       // toolbars read `runtime.layout.running`), then the bus event.
       this.store.actions.layoutStatus.begin(layout.id, animate ?? false);

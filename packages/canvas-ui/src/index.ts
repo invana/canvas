@@ -988,6 +988,34 @@ export type {
   GraphBoardPolicies,
   GraphBoardProps,
 } from './board';
+// The schema (ER) board: frames of types, ELK, Detail levels as config patches,
+// connect with the host's veto. `detailConfig` / `useDetailTemplates` are the
+// Detail mechanism any board reuses.
+export {
+  SchemaBoard,
+  detailConfig,
+  useDetailTemplates,
+  renderSchemaEdge,
+  renderSchemaNode,
+  SCHEMA_BOARD_CONFIG,
+  SCHEMA_DETAIL,
+  SCHEMA_FRAME_EMPTY_TYPE,
+  SCHEMA_FRAME_TYPE,
+  SCHEMA_LAYER,
+  SCHEMA_WILDCARD,
+} from './board';
+export type {
+  SchemaBoardConnect,
+  SchemaBoardProps,
+  SchemaBoardSelection,
+  DetailConfigOptions,
+  DetailStructureBuilder,
+  DetailTemplates,
+  DetailTemplatesState,
+  UseDetailTemplatesOptions,
+  SchemaEdgeData,
+  SchemaDetailLevel,
+} from './board';
 export { BoardContextMenus, menuItems as boardMenuItems } from './menus/BoardContextMenus';
 export type {
   BoardContextMenusProps,
