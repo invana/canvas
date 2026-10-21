@@ -59,4 +59,31 @@ export type {
   SchemaEdgeData,
   SchemaDetailLevel,
 } from './schema';
-export * from './annotations';
+export {
+  ANNOTATION_TOKEN,
+  AnnotationsOverlay,
+  AnnotationsProjection,
+  AnnotationsProvider,
+  DEFAULT_ANNOTATION_VIEW,
+  annotationGroupId,
+  annotationIdOf,
+  annotationNodeId,
+  useAnnotations,
+  useAnnotationsOptional,
+  whereOf,
+} from './annotations';
+export type {
+  AnnotationActor,
+  AnnotationAuthorRef,
+  AnnotationDraft,
+  AnnotationHideKey,
+  AnnotationKind,
+  AnnotationPatch,
+  AnnotationRecordRef,
+  AnnotationsContextValue,
+  AnnotationsOverlayProps,
+  AnnotationsPanelView,
+  AnnotationsProviderProps,
+  AnnotationView,
+  BoardAnnotation,
+} from './annotations';

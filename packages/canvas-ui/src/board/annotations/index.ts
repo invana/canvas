@@ -8,5 +8,17 @@ export {
   whereOf,
 } from './AnnotationsProvider';
 export { AnnotationsOverlay, type AnnotationsOverlayProps } from './AnnotationsOverlay';
-export { placeCards, type CardBox, type Rect as AnnotationRect } from './layout';
-export * from './types';
+export { AnnotationsProjection, annotationGroupId, annotationIdOf, annotationNodeId } from './AnnotationsProjection';
+export {
+  ANNOTATION_TOKEN,
+  DEFAULT_ANNOTATION_VIEW,
+  type AnnotationActor,
+  type AnnotationAuthorRef,
+  type AnnotationDraft,
+  type AnnotationHideKey,
+  type AnnotationKind,
+  type AnnotationPatch,
+  type AnnotationRecordRef,
+  type AnnotationView,
+  type BoardAnnotation,
+} from './types';

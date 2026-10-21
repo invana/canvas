@@ -455,3 +455,24 @@ export {
   type SchemaProperty,
   type DeriveSchemaOptions,
 } from './schema';
+
+// ─── Annotations drawn in the graph ─────────────────────────────────────────
+export {
+  ANNOTATION_ACTOR,
+  ANNOTATION_CARD_HEIGHT,
+  ANNOTATION_CARD_WIDTH,
+  ANNOTATION_COUNT_TYPE,
+  ANNOTATION_EDGE_TYPE,
+  ANNOTATION_GROUP_TYPE,
+  ANNOTATION_NODE_TYPE,
+  ANNOTATION_PALETTE_FALLBACK,
+  ANNOTATION_PALETTE_KEY,
+  ANNOTATION_VALUE_CARD_HEIGHT,
+  ANNOTATION_VALUE_TYPE,
+  annotationTemplates,
+  isAnnotationElement,
+  placeBeside,
+  recordsOnly,
+  type AnnotationCardData,
+  type AnnotationColorName,
+} from './annotations';

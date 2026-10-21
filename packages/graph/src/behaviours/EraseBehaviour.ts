@@ -23,6 +23,7 @@ import { Behaviour, type BehaviourOptions, type CanvasContext } from '@invana/ca
 
 import { GraphLayer } from '../layer/GraphLayer';
 import type { GraphEdge, GraphNode } from '../store/types';
+import { isAnnotationElement } from '../annotations/annotations';
 
 /** Which element kinds the eraser removes. */
 export type EraseTargetKind = 'node' | 'edge' | 'both';
@@ -111,7 +112,11 @@ export class EraseBehaviour extends Behaviour<EraseBehaviourOptions> {
     const store = this.layer?.store;
     if (!store) return;
     const node = store.getNode(id);
-    if (!node) return;
+    // An annotation's card is removed through its annotation, never erased as data.
+    if (!node || isAnnotationElement(node)) return;
+    // Its annotation links are the board's drawing — gone unrecorded, never a change.
+    const links = this.incidentEdges(id).filter((e) => isAnnotationElement(e)).map((e) => e.id);
+    if (links.length > 0) store.internal.applyDelta({ removed: { edgeIds: links } });
     const edges = this.incidentEdges(id);
     store.removeNode(id, { cascade: true });
     this.onErase?.({ kind: 'node', node, edges });
@@ -122,7 +127,7 @@ export class EraseBehaviour extends Behaviour<EraseBehaviourOptions> {
     const store = this.layer?.store;
     if (!store) return;
     const edge = store.getEdge(id);
-    if (!edge) return;
+    if (!edge || isAnnotationElement(edge)) return;
     store.removeEdge(id);
     this.onErase?.({ kind: 'edge', edge });
   }

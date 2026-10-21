@@ -34,6 +34,7 @@ import type { Vec2 } from '../store';
 import { edgeShape } from './graphActions';
 import { registerGraphCommands, type GraphCanvasCommandMap } from './graphCommands';
 import { DEFAULT_LAYOUT_PRESETS, expandLayoutPreset, type LayoutPresetSpec } from './layoutPresets';
+import { isAnnotationElement } from '../annotations/annotations';
 
 /** Construction options for {@link GraphCanvas}: the engine's, plus the clipboard and the layout presets. */
 export interface GraphCanvasOptions extends CanvasOptions {
@@ -316,21 +317,37 @@ export class GraphCanvas extends Canvas {
     // so this flush's ids are collected here and judged there. A removed node is
     // gone by then, so whether it was placed by hand is remembered from its add.
     const handPlaced = new Set<string>();
+    // Annotation cards never re-run the layout by coming or going: one placed
+    // beside its record counts as placed by hand, and taking one away (hiding
+    // annotations) leaves the records where they are. A card added with no
+    // place yet — while a layout runs — still joins a run.
+    const annotations = new Set<string>();
+    for (const n of layer.store.nodes()) if (isAnnotationElement(n)) annotations.add(n.id);
     const added: string[] = [];
     const removed: string[] = [];
     const offAdd = layer.store.events.on('node:add', ({ nodeId }) => {
       added.push(nodeId);
+      const node = layer.store.getNode(nodeId);
+      if (isAnnotationElement(node)) {
+        annotations.add(nodeId);
+        if (node?.position) handPlaced.add(nodeId);
+      }
       if (layer.store.isPinned(nodeId)) handPlaced.add(nodeId);
     });
     const offRemove = layer.store.events.on('node:remove', ({ nodeId }) => void removed.push(nodeId));
     const off = layer.events.on('data:changed', (e) => {
       const byHand = (ids: string[], count: number) => ids.length === count && ids.every((id) => handPlaced.has(id));
+      const goneByHand = (ids: string[], count: number) =>
+        ids.length === count && ids.every((id) => handPlaced.has(id) || annotations.has(id));
       const reflow =
         (e.addedNodes > 0 && !byHand(added, e.addedNodes)) ||
-        (e.removedNodes > 0 && !byHand(removed, e.removedNodes)) ||
+        (e.removedNodes > 0 && !goneByHand(removed, e.removedNodes)) ||
         e.hiddenNodes > 0 ||
         e.shownNodes > 0;
-      for (const id of removed) handPlaced.delete(id);
+      for (const id of removed) {
+        handPlaced.delete(id);
+        annotations.delete(id);
+      }
       added.length = 0;
       removed.length = 0;
       if (reflow) onDataChange();

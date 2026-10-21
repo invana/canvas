@@ -14,6 +14,7 @@ import type {
   SchemaEdgeType,
   SchemaNodeType,
 } from './types';
+import { isAnnotationElement } from '../annotations/annotations';
 
 const EMPTY_SCHEMA: GraphSchema = { nodeTypes: [], edgeTypes: [] };
 
@@ -64,6 +65,8 @@ export function deriveSchema(
   const typeOfNode = new Map<string, string>();
   const nodeAgg = new Map<string, { count: number; props: Map<string, Set<string>> }>();
   for (const node of store.nodes()) {
+    // An annotation's card, pill or frame is the board's drawing, not a type in the data.
+    if (isAnnotationElement(node)) continue;
     const t = nodeTypeOf(node);
     typeOfNode.set(node.id, t);
     let agg = nodeAgg.get(t);
@@ -87,6 +90,7 @@ export function deriveSchema(
   // Pass 2 — bucket edges by type, accumulating the from → to node-type pairs.
   const edgeAgg = new Map<string, { count: number; conns: Map<string, SchemaEdgeConnection> }>();
   for (const edge of store.edges()) {
+    if (isAnnotationElement(edge)) continue;
     const t = edgeTypeOf(edge);
     const from = typeOfNode.get(edge.source) ?? 'node';
     const to = typeOfNode.get(edge.target) ?? 'node';

@@ -955,6 +955,14 @@ export interface GroupOptions {
    */
   readonly autoFit?: boolean;
   /**
+   * A **member frame**: the node ids this frame wraps, without making it their
+   * parent. With `autoFit` the frame tracks their bounds instead of its
+   * children's, and follows them as they move; layouts never place the frame
+   * itself (`isPlaceableNode`). For a frame drawn round records that already
+   * belong elsewhere — an annotation's group.
+   */
+  readonly members?: readonly string[];
+  /**
    * When `true`, `GroupResizeBehaviour` mounts corner / radial handle
    * decorations on this group and lets the user drag to resize. Composes
    * with `autoFit` per the floor rule on `width` / `height` / `radius`.

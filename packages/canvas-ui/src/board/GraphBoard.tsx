@@ -83,6 +83,7 @@ import {
   type GraphEdge,
   type GraphLayer as GraphLayerEngine,
   type GraphNode,
+  isAnnotationElement,
   selectedElementIds,
   thinsEdges,
   UNKNOWN_TYPE,
@@ -95,6 +96,7 @@ import { typeColor } from '../view-panels/schema';
 import type { TypeStylingPatch } from '../view-panels/styling/types';
 import { useApplyTypeStyling } from '../view-panels/styling/useApplyTypeStyling';
 import { AnnotationsOverlay } from './annotations/AnnotationsOverlay';
+import { AnnotationsProjection } from './annotations/AnnotationsProjection';
 import { AnnotationsProvider } from './annotations/AnnotationsProvider';
 import type { AnnotationActor, AnnotationDraft, AnnotationPatch, AnnotationView, BoardAnnotation } from './annotations/types';
 import { BoardLayoutPopover } from './BoardLayoutPopover';
@@ -392,6 +394,7 @@ export function GraphBoard({
       <UnsavedChangesBehaviour />
       <UnsavedGhostLayer />
       <BoardToolKeys mode="annotate" keys={ANNOTATE_TOOL_KEYS} hold={null} />
+      <AnnotationsProjection />
       <AnnotationsOverlay panelWidth={panelWidth} />
       <MiniMapLayer
         id={BOARD_IDS.minimap}
@@ -524,13 +527,18 @@ function BoardPolicies({
   expandRef.current = onExpand;
   const canExpand = onExpand !== undefined;
   useEffect(() => {
+    // The selected records — an annotation card has no neighbours to fetch.
+    const pickedRecords = (c: Canvas) => {
+      const store = c.layers.get<GraphLayerEngine>(BOARD_IDS.graph)?.store;
+      return selectedElementIds(c, BOARD_IDS.clickSelect).nodeIds.filter((id) => !isAnnotationElement(store?.getNode(id)));
+    };
     const offs = [
       ...(canExpand
         ? [
             canvas.commands.register(GRAPH_EXPAND_COMMAND, {
               label: 'Expand neighbours',
-              isEnabled: (c) => selectedElementIds(c, BOARD_IDS.clickSelect).nodeIds.length > 0,
-              run: (c) => expandRef.current?.(selectedElementIds(c, BOARD_IDS.clickSelect).nodeIds, c as GraphCanvas),
+              isEnabled: (c) => pickedRecords(c).length > 0,
+              run: (c) => expandRef.current?.(pickedRecords(c), c as GraphCanvas),
             }),
           ]
         : []),
@@ -547,7 +555,12 @@ function BoardPolicies({
     return canvas.behaviours
       .get<ClickInspect>(BOARD_IDS.clickInspect)
       ?.events.on('inspect:change', (t) => {
-        if (t !== null) openBoardPanel(canvas, 'element');
+        if (t === null) return;
+        // An annotation's card, pill or frame opens in the Annotations panel, never as data.
+        const layer = canvas.layers.get<GraphLayerEngine>(BOARD_IDS.graph);
+        const el = t.kind === 'edge' ? layer?.store.getEdge(t.id) : layer?.store.getNode(t.id);
+        if (isAnnotationElement(el)) return;
+        openBoardPanel(canvas, 'element');
       });
   }, [canvas, openElementOnInspect]);
 

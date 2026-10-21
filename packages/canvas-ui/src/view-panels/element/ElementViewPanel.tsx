@@ -29,6 +29,7 @@
 // type is picked from the model and a key from that type's; nothing else can
 // be typed.
 
+import { isAnnotationElement } from '@invana/graph';
 import type { Canvas } from '@invana/canvas';
 import type {
   ClickInspectBehaviour,
@@ -350,6 +351,7 @@ function keptData(
 function typesOn(layer: GraphLayer, kind: 'node' | 'edge'): string[] {
   const seen = new Set<string>();
   for (const el of kind === 'node' ? layer.store.nodes() : layer.store.edges()) {
+    if (isAnnotationElement(el)) continue;
     const t = typeof el.type === 'string' ? el.type.trim() : '';
     if (t && t !== NO_TYPE) seen.add(t);
   }
@@ -799,6 +801,7 @@ function relationshipsOf(
 ): Array<{ dir: 'out' | 'in'; type: string; names: string[] }> {
   const groups = new Map<string, { dir: 'out' | 'in'; type: string; names: string[] }>();
   for (const e of store.edges()) {
+    if (isAnnotationElement(e)) continue;
     const dir = e.source === id ? 'out' : e.target === id ? 'in' : null;
     if (!dir) continue;
     const other = store.getNode(dir === 'out' ? e.target : e.source);

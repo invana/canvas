@@ -54,6 +54,7 @@ import { Behaviour, type BehaviourOptions, type CanvasContext } from '@invana/ca
 import { GraphLayer } from '../layer/GraphLayer';
 import type { NodeStyle } from '../layer/types';
 import type { EdgeDirection, GraphEdge } from '../store/types';
+import { isAnnotationElement } from '../annotations/annotations';
 
 /** Scaling curve used to map raw degree → output size. */
 export type NodeCentralityScale = 'linear' | 'sqrt' | 'log';
@@ -347,14 +348,28 @@ export class NodeCentralityBehaviour extends Behaviour {
     const weighted = this.opts.weightBy !== undefined || this.opts.weightKey !== undefined;
     const degrees: Array<{ id: string; degree: number; style: NodeStyle | undefined }> = [];
     let maxDegree = 0;
+    // Annotation cards are the board's drawing: never sized, and their links
+    // never count towards a record's connections.
+    const annotationLinks = new Map<string, number>();
     for (const node of store.nodes()) {
-      const degree = weighted
+      if (!isAnnotationElement(node)) continue;
+      for (const e of store.edgesOf(node.id, 'both')) {
+        const other = e.source === node.id ? e.target : e.source;
+        // Only a link the record's own count includes — `in` counts it as target, `out` as source.
+        const counted = direction === 'both' || (direction === 'in' ? e.target === other : e.source === other);
+        if (counted) annotationLinks.set(other, (annotationLinks.get(other) ?? 0) + 1);
+      }
+    }
+    for (const node of store.nodes()) {
+      if (isAnnotationElement(node)) continue;
+      const raw = weighted
         ? this.weightedDegree(store, node.id, direction)
         : direction === 'in'
           ? store.inDegree(node.id)
           : direction === 'out'
             ? store.outDegree(node.id)
             : store.inDegree(node.id) + store.outDegree(node.id);
+      const degree = Math.max(0, raw - (annotationLinks.get(node.id) ?? 0));
       if (degree > maxDegree) maxDegree = degree;
       degrees.push({
         id: node.id,

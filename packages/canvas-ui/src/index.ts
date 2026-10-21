@@ -1034,13 +1034,13 @@ export { LegendViewPanel } from './view-panels/legend';
 export type { LegendViewPanelProps } from './view-panels/legend';
 export { AnnotationsCount, AnnotationsViewPanel } from './view-panels/annotations';
 export type { AnnotationsViewPanelProps } from './view-panels/annotations';
-// Annotations on the board — its overlay, its provider and the shape a host maps its rows onto.
+// Annotations on the board — drawn in the graph; the provider, the HTML overlay for writing, and the shape a host maps its rows onto.
 export {
   ANNOTATION_TOKEN,
   AnnotationsOverlay,
   AnnotationsProvider,
   DEFAULT_ANNOTATION_VIEW,
-  placeCards,
+  annotationIdOf,
   useAnnotations,
   useAnnotationsOptional,
   whereOf,
@@ -1059,7 +1059,6 @@ export type {
   AnnotationsProviderProps,
   AnnotationView,
   BoardAnnotation,
-  CardBox,
 } from './board';
 export { HistoryViewPanel } from './view-panels/history';
 export type { HistoryViewPanelProps } from './view-panels/history';

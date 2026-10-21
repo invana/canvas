@@ -38,8 +38,14 @@ import { type ColorRole, readCssColor, type ThemePalette, themeFamily } from '@i
 import { useThemeOptional } from '@invana/themes';
 import { useCanvas } from './CanvasContext';
 
-/** The CSS custom property each palette role is read from, and the categorical ramp's. */
-export type ThemeTokenMap = Record<ColorRole, string> & { categorical: readonly string[] };
+/**
+ * The CSS custom property each palette role is read from, the categorical
+ * ramp's, and `extra` palette keys a template may name by key (`warning`).
+ */
+export type ThemeTokenMap = Record<ColorRole, string> & {
+  categorical: readonly string[];
+  extra?: Readonly<Record<string, string>>;
+};
 
 /** Design-kit's token names. */
 export const DESIGN_KIT_TOKENS: ThemeTokenMap = {
@@ -54,6 +60,13 @@ export const DESIGN_KIT_TOKENS: ThemeTokenMap = {
   selectionRing: '--color-ring',
   hoverRing: '--color-primary',
   categorical: [1, 2, 3, 4, 5, 6, 7, 8].map((n) => `--color-data-${n}`),
+  // The status colours an annotation card wears.
+  extra: {
+    warning: '--color-warning',
+    success: '--color-success',
+    destructive: '--color-destructive',
+    primary: '--color-primary',
+  },
 };
 
 /** Fallbacks for a role whose token does not resolve (no DOM yet, an older theme). */
@@ -76,7 +89,13 @@ export function readTokenPalette(tokens: ThemeTokenMap = DESIGN_KIT_TOKENS): The
   const roles = Object.fromEntries(
     (Object.keys(FALLBACK) as ColorRole[]).map((role) => [role, read(tokens[role], FALLBACK[role])]),
   ) as Record<ColorRole, number>;
-  return { ...roles, categorical: tokens.categorical.map((t) => read(t, FALLBACK.accent)) };
+  // An extra key whose token does not resolve is left out — the graph's own fallback stands.
+  const extra: Record<string, number> = {};
+  for (const [key, token] of Object.entries(tokens.extra ?? {})) {
+    const v = readCssColor(`var(${token})`);
+    if (v !== undefined) extra[key] = v;
+  }
+  return { ...extra, ...roles, categorical: tokens.categorical.map((t) => read(t, FALLBACK.accent)) };
 }
 
 export interface CanvasThemeSyncProps {

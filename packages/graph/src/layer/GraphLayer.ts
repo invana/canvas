@@ -66,6 +66,7 @@ import {
   type RolePalette,
 } from '../theme/roles';
 import { DEFAULT_THEME } from '../theme/themes';
+import { ANNOTATION_PALETTE_FALLBACK, isAnnotationElement } from '../annotations/annotations';
 import {
   compileBadges,
   compileCard,
@@ -85,7 +86,11 @@ import type {
 /** Fallback palette (default theme, light) used before any theme is published,
  * so role-based node templates always resolve to concrete numbers. */
 const { categorical: FALLBACK_CATEGORICAL, ...FALLBACK_ROLES } = DEFAULT_THEME.light;
-const FALLBACK_PALETTE: RolePalette = { ...FALLBACK_ROLES, ...categoricalPaletteKeys(FALLBACK_CATEGORICAL) };
+const FALLBACK_PALETTE: RolePalette = {
+  ...ANNOTATION_PALETTE_FALLBACK,
+  ...FALLBACK_ROLES,
+  ...categoricalPaletteKeys(FALLBACK_CATEGORICAL),
+};
 
 /**
  * Translate a {@link EdgePathType} shortcut into the canvas `router` +
@@ -300,6 +305,9 @@ export class GraphLayer extends WorldLayer<
    * mutations within a single batch coalesce to one rerender per group.
    */
   private dirtyGroups: Set<string> = new Set();
+
+  /** Member frames (`group.members`) by id, with the ids each one wraps. */
+  private readonly memberFrames: Map<string, readonly string[]> = new Map();
 
   /**
    * Nodes / edges whose active-state set changed since the last flush — drained
@@ -533,6 +541,8 @@ export class GraphLayer extends WorldLayer<
       s.on('node:add', ({ nodeId }) => {
         const node = this.store.getNode(nodeId);
         if (!node) return;
+        // Before the duplicate-install guard below: a replayed add still names its members.
+        this.trackMemberFrame(node);
         // Frame-coalesced flush (`flushMode: 'frame'`) buffers the initial
         // data's `node:add` events and replays them on the first post-mount
         // flush — *after* onMount's initial-sync loop already installed those
@@ -564,11 +574,16 @@ export class GraphLayer extends WorldLayer<
         // `updateNodeShape` re-resolves the style (incl. document `states` via
         // `store.nodeStatesOf`), so a `states` patch repaints with no mirror.
         this.updateNodeShape(node, patch);
+        // Only a style or type change can make or unmake a member frame —
+        // a position-only patch (every node, every layout frame) never does.
+        if (Object.keys(patch).some((k) => k !== 'position')) this.trackMemberFrame(node);
         // A position patch on a child propagates up to any auto-fit group
         // ancestor; their frames re-shrink / grow on the next flush.
         if (patch.position && node.parentId) {
           this.markGroupAncestorsDirty(node.parentId);
         }
+        // A member moving moves the member frames round it.
+        if (patch.position) this.markMemberFramesDirty(nodeId);
         // A re-parent triggers a recompute on the *new* parent chain. We
         // can't reach the *previous* parent through the patch alone (the
         // store has already mutated the index), so old-parent shrinkage
@@ -586,6 +601,8 @@ export class GraphLayer extends WorldLayer<
         }
       }),
       s.on('node:remove', ({ nodeId }) => {
+        this.memberFrames.delete(nodeId);
+        this.markMemberFramesDirty(nodeId);
         this.dirtyStateNodes.delete(nodeId);
         this.nodeDecorationSlots.delete(nodeId);
         this.nodeBadgeSlots.delete(nodeId);
@@ -934,7 +951,12 @@ export class GraphLayer extends WorldLayer<
    * through {@link importData}.
    */
   exportData(): GraphData {
-    return { nodes: [...this.store.nodes()], edges: [...this.store.edges()] };
+    // Annotation cards, counts, frames and links are the board's drawing of
+    // its host's annotations — redrawn from them, never part of the data.
+    return {
+      nodes: [...this.store.nodes()].filter((n) => !isAnnotationElement(n)),
+      edges: [...this.store.edges()].filter((e) => !isAnnotationElement(e)),
+    };
   }
 
   /**
@@ -2255,6 +2277,7 @@ export class GraphLayer extends WorldLayer<
   }
 
   private installNodeShape(node: GraphNode): void {
+    this.trackMemberFrame(node);
     if (!this._renderer) return;
     this.publishSpec(node.id, this.nodeSpec(node));
     this.syncNodeLabel(node.id);
@@ -2821,6 +2844,33 @@ export class GraphLayer extends WorldLayer<
   }
 
   /**
+   * True for a **member frame** — a group whose `group.members` names the
+   * nodes it wraps without parenting them. Layouts skip it: its place is its
+   * members' bounds.
+   */
+  isMemberFrame(node: GraphNode): boolean {
+    return (this.resolveNodeStyle(node).group?.members?.length ?? 0) > 0;
+  }
+
+  /** Keep {@link memberFrames} in step with a node's resolved `group.members`. */
+  private trackMemberFrame(node: GraphNode): void {
+    const members = this.resolveNodeStyle(node).group?.members;
+    if (members && members.length > 0) {
+      const prev = this.memberFrames.get(node.id);
+      this.memberFrames.set(node.id, members);
+      if (prev !== members) this.dirtyGroups.add(node.id);
+    } else this.memberFrames.delete(node.id);
+  }
+
+  /** Every member frame that wraps `nodeId` re-fits on the next flush. */
+  private markMemberFramesDirty(nodeId: string): void {
+    if (this.memberFrames.size === 0) return;
+    for (const [frameId, members] of this.memberFrames) {
+      if (members.includes(nodeId)) this.dirtyGroups.add(frameId);
+    }
+  }
+
+  /**
    * True when this node is a group frame **and** the {@link COLLAPSED_STATE}
    * state is active on it — from the store's presence set (what
    * `CollapseExpandBehaviour` toggles) or the node's document `states[]`
@@ -3130,9 +3180,12 @@ export class GraphLayer extends WorldLayer<
     let maxX = -Infinity;
     let maxY = -Infinity;
     let any = false;
-    for (const childId of this.store.childrenOf(groupId)) {
+    // A member frame wraps its members; any other group its children.
+    const members = this.memberFrames.get(groupId);
+    for (const childId of members ?? this.store.childrenOf(groupId)) {
       const child = this.store.getNode(childId);
       if (!child) continue;
+      if (members && (child.hidden || this.collapsedAncestor(childId) !== undefined)) continue;
       const spec = this.nodeSpec(child);
       const local = renderer.boundsOfSpec(spec);
       if (!local) continue;

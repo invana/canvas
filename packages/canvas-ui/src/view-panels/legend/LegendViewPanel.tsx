@@ -17,6 +17,7 @@
 // Bare content, like every `view-panels/` surface — the board's rail opens it in
 // a `FloatingPanel` (`BoardPanels`), which carries the title.
 
+import { recordsOnly } from '@invana/graph';
 import type { GraphCanvas, GraphEdge, GraphLayer, GraphNode } from '@invana/graph';
 import { Eyebrow, Legend, LegendItem, cn } from '@invana/ui';
 import { useEffect, useRef, useState } from 'react';
@@ -60,8 +61,8 @@ export function LegendViewPanel({ canvas, layerId = 'graph', colorForType, title
       frame.current = null;
       const hidden = layer.hiddenTypes;
       setRows({
-        nodes: tally(layer.store.nodes(), hidden.node, (n: GraphNode) => colorRef.current?.(n.type ?? '', 'node') ?? nodeSwatchColor(layer.resolveNodeStyle(n))),
-        edges: tally(layer.store.edges(), hidden.edge, (e: GraphEdge) => colorRef.current?.(e.type ?? '', 'edge')),
+        nodes: tally(recordsOnly(layer.store.nodes()), hidden.node, (n: GraphNode) => colorRef.current?.(n.type ?? '', 'node') ?? nodeSwatchColor(layer.resolveNodeStyle(n))),
+        edges: tally(recordsOnly(layer.store.edges()), hidden.edge, (e: GraphEdge) => colorRef.current?.(e.type ?? '', 'edge')),
       });
     };
     const schedule = () => {

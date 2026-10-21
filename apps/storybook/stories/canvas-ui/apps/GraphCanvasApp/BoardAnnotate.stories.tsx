@@ -5,9 +5,9 @@
  * drag around two or more nodes, then name it. A click on empty board says
  * *Annotations go on data*: nothing floats free.
  *
- * Cards sit beside their records and follow them through layout, pan and zoom;
- * none covers another, a group's label, the row, the rail, an open panel or the
- * dock. Select one for its format bar: colour, delete (yours only).
+ * Cards are nodes in the graph: each is placed beside its record, linked to it
+ * by a dashed edge, and laid out with the data on the next layout run. Select
+ * one for its format bar: colour, delete (yours only).
  *
  * The story is the host: it keeps the annotations in state and writes what the
  * board hands it.

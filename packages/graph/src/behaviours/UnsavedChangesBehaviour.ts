@@ -56,6 +56,11 @@ import type { EdgeStyle, NodeStyle } from '../layer/types';
 import { readCssColor } from '../theme/accent';
 import type { GraphEdge, GraphNode } from '../store/types';
 
+import { ANNOTATION_ACTOR } from '../annotations/annotations';
+
+/** Writes already saved: the backend's own, and the board's annotation drawing. */
+const DEFAULT_SAVED_ACTORS: readonly string[] = ['engine', ANNOTATION_ACTOR];
+
 /** The command whose value is the unsaved count as text (`null` while saved) — a rail badge reads it. */
 export const UNSAVED_COUNT_COMMAND = 'unsaved.count';
 
@@ -72,7 +77,8 @@ export interface UnsavedChangesBehaviourOptions extends BehaviourOptions {
   targetLayerId: string;
   /**
    * Actors whose log entries are already saved — data that came from the
-   * backend (an expansion, a feed). Default `['engine']`.
+   * backend (an expansion, a feed). Default `['engine', 'annotations']` — the
+   * board's annotation drawing is never a change to the data.
    */
   savedActors?: readonly string[];
   /**
@@ -342,7 +348,7 @@ export class UnsavedChangesBehaviour extends Behaviour<UnsavedChangesBehaviourOp
 
   /** This store's ops in `entry`, or none for an actor whose writes are already saved. */
   private opsOf(entry: LogEntry): HistoryOp[] {
-    const savedActors = this._options.savedActors ?? ['engine'];
+    const savedActors = this._options.savedActors ?? DEFAULT_SAVED_ACTORS;
     if (savedActors.includes(entry.actor)) return [];
     const source = this.layer?.store.operationLogSourceId;
     const out: HistoryOp[] = [];

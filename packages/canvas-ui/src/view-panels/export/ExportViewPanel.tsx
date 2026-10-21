@@ -10,6 +10,7 @@
 // Bare content, like every `view-panels/` surface — the board's rail opens it in
 // a `FloatingPanel` (`BoardPanels`).
 
+import { isAnnotationElement } from '@invana/graph';
 import { useState } from 'react';
 import type { Canvas } from '@invana/canvas';
 import type { GraphEdge, GraphLayer, GraphNode } from '@invana/graph';
@@ -76,7 +77,7 @@ export function exportGraphData(layer: GraphLayer, nodeIds?: readonly string[]):
   const nodeSet = nodeIds ? new Set(nodeIds) : null;
   const nodes: ExportedNode[] = [];
   for (const n of layer.store.nodes() as Iterable<GraphNode>) {
-    if (n.hidden || (nodeSet && !nodeSet.has(n.id))) continue;
+    if (n.hidden || isAnnotationElement(n) || (nodeSet && !nodeSet.has(n.id))) continue;
     nodes.push({ id: n.id, type: n.type, ...(n.data !== undefined ? { data: n.data } : {}), ...(n.position ? { position: n.position } : {}) });
   }
   const kept = new Set(nodes.map((n) => n.id));

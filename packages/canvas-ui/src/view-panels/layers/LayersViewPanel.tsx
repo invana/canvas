@@ -23,6 +23,7 @@
 // The panel refreshes on the store's `node:visibility` / `edge:visibility`
 // events and the canvas bus `scene:layer:visibilitychange`.
 
+import { recordsOnly } from '@invana/graph';
 import type {
   ClickSelectBehaviour,
   GraphCanvas,
@@ -515,7 +516,7 @@ function buildItems(canvas: GraphCanvas | null, ctx: RowCtx): TreeItem[] {
         // A hidden graph layer strikes every descendant row (the whole subtree
         // is not painted), regardless of each element's own hidden flag.
         const forceHidden = !graphLayer.visible;
-        const nodes = groupByType(store.nodes(), {
+        const nodes = groupByType(recordsOnly(store.nodes()), {
           prefix: 'graph:node',
           kind: 'node',
           typeIcon: Circle,
@@ -525,7 +526,7 @@ function buildItems(canvas: GraphCanvas | null, ctx: RowCtx): TreeItem[] {
           forceHidden,
           ctx,
         });
-        const edges = groupByType(store.edges(), {
+        const edges = groupByType(recordsOnly(store.edges()), {
           prefix: 'graph:edge',
           kind: 'edge',
           typeIcon: Spline,

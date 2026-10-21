@@ -26,6 +26,7 @@ import type { Canvas } from '@invana/canvas';
 import type { GraphLayer } from '../layer/GraphLayer';
 import type { GraphStore } from '../store/GraphStore';
 import type { GraphEdge, GraphNode } from '../store/types';
+import { isAnnotationElement } from '../annotations/annotations';
 import type { UnsavedChangesBehaviour } from './UnsavedChangesBehaviour';
 
 /** One edit, in the order a backend applies them. */
@@ -151,7 +152,8 @@ export function unsavedToEditOps(
   }
   // Nodes before the relationships that may name them.
   adds.sort((a, b) => (a.op === b.op ? 0 : a.op === 'add_node' ? -1 : 1));
-  return [...removes, ...adds, ...updates];
+  // Annotation cards, counts, frames and links are the board's drawing, never data.
+  return [...removes, ...adds, ...updates].filter((op) => !isAnnotationElement(op));
 }
 
 /**

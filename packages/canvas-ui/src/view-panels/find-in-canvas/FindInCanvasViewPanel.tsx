@@ -17,6 +17,7 @@
 // coalesced per animation frame), so the field dropdown and the results stay in
 // sync as the graph changes; matching itself is pure and runs per render.
 
+import { recordsOnly } from '@invana/graph';
 import type { ClickSelectBehaviour, GraphCanvas, GraphEdge, GraphLayer, GraphNode, NodeStyle } from '@invana/graph';
 import {
   Button,
@@ -302,7 +303,8 @@ export function FindInCanvasViewPanel({
       return;
     }
     let frame = 0;
-    const recompute = (): void => setSnapshot({ nodes: [...store.nodes()], edges: [...store.edges()] });
+    const recompute = (): void =>
+      setSnapshot({ nodes: recordsOnly(store.nodes()), edges: recordsOnly(store.edges()) });
     const schedule = (): void => {
       if (frame) return;
       frame = requestAnimationFrame(() => {

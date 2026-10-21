@@ -14,11 +14,12 @@
 
 import type { Canvas } from '@invana/canvas';
 import { useBoardMode, useGraphCanvas } from '@invana/canvas-react';
-import type { ClickInspectBehaviour, GraphLayer } from '@invana/graph';
+import { type ClickInspectBehaviour, type GraphLayer, isAnnotationElement } from '@invana/graph';
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { BOARD_PANEL_COMMAND } from '../BoardPanels';
 import { BOARD_IDS } from '../presets';
+import { annotationIdOf } from './AnnotationsProjection';
 import {
   type AnnotationActor,
   type AnnotationDraft,
@@ -208,26 +209,27 @@ export function AnnotationsProvider({
   );
   const saveRef = useRef(save);
   saveRef.current = save;
-  const commit = useCallback(
-    (text: string, label?: string) => {
-      setDraft((d) => {
-        if (!d) return null;
-        const says = text.trim();
-        if ((d.kind === 'note' || d.kind === 'value') && !says) return null;
-        saveRef.current({
-          kind: d.kind,
-          records: [...d.records],
-          ...(d.prop ? { prop: d.prop } : {}),
-          ...(d.valueThen !== undefined ? { valueThen: d.valueThen } : {}),
-          text: says,
-          label: (label ?? d.label ?? '').trim(),
-          color: d.color,
-        });
-        return null;
-      });
-    },
-    [],
-  );
+  // The draft as last rendered — read by `commit`, so the save happens once,
+  // outside a state updater (StrictMode runs updaters twice).
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
+  const commit = useCallback((text: string, label?: string) => {
+    const d = draftRef.current;
+    draftRef.current = null;
+    setDraft(null);
+    if (!d) return;
+    const says = text.trim();
+    if ((d.kind === 'note' || d.kind === 'value') && !says) return;
+    saveRef.current({
+      kind: d.kind,
+      records: [...d.records],
+      ...(d.prop ? { prop: d.prop } : {}),
+      ...(d.valueThen !== undefined ? { valueThen: d.valueThen } : {}),
+      text: says,
+      label: (label ?? d.label ?? '').trim(),
+      color: d.color,
+    });
+  }, []);
   const cancel = useCallback(() => setDraft(null), []);
   const update = useCallback(
     (id: string, patch: AnnotationPatch) => {
@@ -281,7 +283,22 @@ export function AnnotationsProvider({
   useEffect(() => {
     const inspect = canvas.behaviours.get<ClickInspectBehaviour>(BOARD_IDS.clickInspect);
     return inspect?.events.on('inspect:change', (t) => {
-      if (!t || modeRef.current !== 'annotate') return;
+      if (!t) return;
+      // A card, a frame or a count pill — in any mode, it opens in the panel.
+      const layer = canvas.layers.get<GraphLayer>(BOARD_IDS.graph);
+      const drawn = t.kind === 'node' ? layer?.store.getNode(t.id) : undefined;
+      if (drawn && isAnnotationElement(drawn)) {
+        const id = annotationIdOf(drawn);
+        const record = (drawn.data as { recordId?: string } | undefined)?.recordId;
+        setTimeout(() => {
+          if (id) {
+            setSelectedId(id);
+            openPanel({ kind: 'detail', id });
+          } else if (record) openPanel({ kind: 'record', recordId: record });
+        }, 0);
+        return;
+      }
+      if (modeRef.current !== 'annotate') return;
       if (canvas.commands.value('tool.active') && canvas.commands.value('tool.active') !== 'select') return;
       // After the board's own reaction to the click, so the panel it opens is this one.
       setTimeout(() => openPanel({ kind: 'record', recordId: t.id }), 0);
@@ -331,8 +348,9 @@ function useLoadedIds(canvas: Canvas): ReadonlySet<string> {
       layer ??= canvas.layers.get<GraphLayer>(BOARD_IDS.graph);
       if (!layer) return;
       const next = new Set<string>();
-      for (const n of layer.store.nodes()) next.add(n.id);
-      for (const e of layer.store.edges()) next.add(e.id);
+      // The board's own annotation drawing is not a record.
+      for (const n of layer.store.nodes()) if (!isAnnotationElement(n)) next.add(n.id);
+      for (const e of layer.store.edges()) if (!isAnnotationElement(e)) next.add(e.id);
       setIds((prev) => (same(prev, next) ? prev : next));
     };
     const schedule = () => {
