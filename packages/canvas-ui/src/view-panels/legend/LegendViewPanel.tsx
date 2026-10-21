@@ -22,6 +22,7 @@ import { Eyebrow, Legend, LegendItem, cn } from '@invana/ui';
 import { useEffect, useRef, useState } from 'react';
 
 import { nodeSwatchColor } from '../element-display';
+import { LegendAnnotations } from './LegendAnnotations';
 
 export interface LegendViewPanelProps {
   /** The live canvas (null until it is ready). */
@@ -104,6 +105,7 @@ export function LegendViewPanel({ canvas, layerId = 'graph', colorForType, title
           <LegendItem key={`e-${r.type}`} kind="line" color={r.color} label={r.type} count={r.count.toLocaleString()} {...toggle('edge', r)} />
         ))}
       </Legend>
+      <LegendAnnotations canvas={canvas} />
     </div>
   );
 }

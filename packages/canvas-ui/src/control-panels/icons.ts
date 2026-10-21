@@ -4,6 +4,8 @@ import {
   ArrowRight,
   ArrowUp,
   ArrowUpRight,
+  BoxSelect,
+  MessageSquareText,
   Cable,
   CirclePlus,
   CircleDot,
@@ -140,6 +142,8 @@ export const DEFAULT_CONTROL_ICONS: Readonly<Record<string, ToolbarIcon>> = {
   compass: Compass,
   pencil: Pencil,
   'sticky-note': StickyNote,
+  'annotation-group': BoxSelect,
+  annotations: MessageSquareText,
   'scan-eye': ScanEye,
   presentation: Presentation,
   // board panels

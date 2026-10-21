@@ -19,7 +19,7 @@ export type { BoardMenuExtras, DefaultBoardMenusOptions } from './boardMenus';
 export { defaultBoardPanels } from './defaultBoardPanels';
 export type { DefaultBoardPanelsOptions } from './defaultBoardPanels';
 export {
-  ANNOTATE_TOOL_COMMAND,
+  ANNOTATE_TOOL_KEYS,
   ANNOTATE_TOOLS,
   BOARD_CENTRALITY,
   BOARD_DOCK,
@@ -59,3 +59,4 @@ export type {
   SchemaEdgeData,
   SchemaDetailLevel,
 } from './schema';
+export * from './annotations';

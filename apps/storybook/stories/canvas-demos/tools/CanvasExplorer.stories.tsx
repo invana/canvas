@@ -6,12 +6,12 @@
  *
  * The whole board is one component, `<GraphBoard>` (canvas-ui); this story
  * passes it data, a model, a save, an expansion and a playbook — what a host
- * knows — and adds one panel of its own (*Notes*, Annotate's).
+ * knows.
  *
  * | Where | What | canvas-ui |
  * |---|---|---|
- * | top-left | the mode picker, then the mode's tools — Select ▾ (Select · Lasso · Box); in Edit *Add node* · *Connect*; in Annotate its tools, not built yet; in both, Undo · Redo · Redraw | `BOARD_ROW_ITEMS` · `BOARD_VIEW_ROW_ITEMS` |
- * | top-right | the panel rail — Legend · Styling · History · Element, Notes (Annotate), Changes with its count (Edit, or while unsaved), a line, Export — and one floating panel left of it | `defaultBoardPanels` + `panels` |
+ * | top-left | the mode picker, then the mode's tools — Select ▾ (Select · Lasso · Box); in Edit *Add node* · *Connect*; in Annotate *Annotate* · *Highlight* · *Group*; in both, Undo · Redo · Redraw | `BOARD_ROW_ITEMS` · `BOARD_VIEW_ROW_ITEMS` |
+ * | top-right | the panel rail — Legend · Styling · History · Element · Annotations, Changes with its count (Edit, or while unsaved), a line, Export — and one floating panel left of it | `defaultBoardPanels` |
  * | bottom-left | the view dock: the minimap over − · the zoom field ▾ · + · Fit · lock | `BOARD_DOCK_ITEMS` |
  * | right-click | the board, a node, a relationship, a selection — each headed by what it is for | `defaultBoardMenus` · `<BoardLayoutPopover>` (*Layout…* at the pointer) |
  *
@@ -51,18 +51,21 @@
  * *Expand neighbours* pulls the selected node's neighbours in from the rest of
  * Les Misérables — the stand-in for the engine's expansion run.
  *
- * Not built yet: Annotate's tools (no annotation layer draws them), and exporting
- * an image of the selection (the engine captures the view or the whole board).
+ * **Annotate.** The board keeps its own annotations here (no `annotations`
+ * prop): pick Annotate and write on a node, a relationship, a value, a set or a
+ * group — see `canvas-ui/apps/GraphCanvasApp/BoardAnnotate` for a host that keeps them.
+ *
+ * Not built yet: exporting an image of the selection (the engine captures the
+ * view or the whole board).
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useMemo } from 'react';
 import type { CanvasConfig } from '@invana/canvas';
 import { selectedElementIds, type GraphCanvas, type GraphData, type GraphLayer } from '@invana/graph';
-import { GraphBoard, type BoardPanelSpec } from '@invana/canvas-ui';
+import { GraphBoard } from '@invana/canvas-ui';
 import { lesMiserables } from '@invana/graph-datasets';
-import { EmptyState } from '@invana/ui';
-import { Sparkles, StickyNote } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 const meta: Meta = { title: 'canvas-demos/tools/CanvasExplorer' };
 export default meta;
@@ -118,23 +121,6 @@ const MODEL = {
   edgeTypes: [{ type: 'co-appears-with', keys: [{ key: 'value', kind: 'number' }, { key: 'chapter', kind: 'text' }] }]
 };
 
-/** Annotate's own panel — drawn so the mode reads whole. */
-const NOTES: BoardPanelSpec = {
-  id: 'notes',
-  title: 'Notes',
-  icon: 'sticky-note',
-  modes: ['annotate'],
-  render: () => (
-    <EmptyState icon={<StickyNote />} title="No notes yet" description="Notes, shapes and highlights over the graph are not built yet." />
-  )
-};
-
-/** Notes sits before Export. */
-const withNotes = (rail: BoardPanelSpec[]) => {
-  const at = rail.findIndex((p) => p.id === 'export');
-  return [...rail.slice(0, at), NOTES, ...rail.slice(at)];
-};
-
 /** The stand-in for the engine's write: a moment's wait, then the board is saved. */
 const save = () => new Promise<void>((resolve) => setTimeout(resolve, 600));
 
@@ -168,7 +154,6 @@ function Explorer() {
         narrationIcon={NARRATION_ICON}
         onExpand={(_ids, canvas) => expandSelection(canvas)}
         panelOptions={PANEL_OPTIONS}
-        panels={withNotes}
       />
     </div>
   );

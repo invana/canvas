@@ -961,7 +961,7 @@ export {
   newBoardElementId,
   openBoardPanel,
   openElementEditor,
-  ANNOTATE_TOOL_COMMAND,
+  ANNOTATE_TOOL_KEYS,
   ANNOTATE_TOOLS,
   BOARD_CENTRALITY,
   BOARD_DOCK,
@@ -1032,6 +1032,35 @@ export type { ExportViewPanelProps, ExportedData, ExportedNode, ExportedEdge } f
 export { useLayoutPresetCards } from './control-panels/chromeWidgets';
 export { LegendViewPanel } from './view-panels/legend';
 export type { LegendViewPanelProps } from './view-panels/legend';
+export { AnnotationsCount, AnnotationsViewPanel } from './view-panels/annotations';
+export type { AnnotationsViewPanelProps } from './view-panels/annotations';
+// Annotations on the board — its overlay, its provider and the shape a host maps its rows onto.
+export {
+  ANNOTATION_TOKEN,
+  AnnotationsOverlay,
+  AnnotationsProvider,
+  DEFAULT_ANNOTATION_VIEW,
+  placeCards,
+  useAnnotations,
+  useAnnotationsOptional,
+  whereOf,
+} from './board';
+export type {
+  AnnotationActor,
+  AnnotationAuthorRef,
+  AnnotationDraft,
+  AnnotationHideKey,
+  AnnotationKind,
+  AnnotationPatch,
+  AnnotationRecordRef,
+  AnnotationsContextValue,
+  AnnotationsOverlayProps,
+  AnnotationsPanelView,
+  AnnotationsProviderProps,
+  AnnotationView,
+  BoardAnnotation,
+  CardBox,
+} from './board';
 export { HistoryViewPanel } from './view-panels/history';
 export type { HistoryViewPanelProps } from './view-panels/history';
 

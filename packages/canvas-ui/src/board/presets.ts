@@ -28,7 +28,7 @@ import {
 export const BOARD_MODES: readonly BoardModeSpec[] = [
   { id: 'explore', label: 'Explore', icon: 'compass', description: 'Look, ask and expand' },
   { id: 'edit', label: 'Edit', icon: 'pencil', description: 'Add, change and delete data' },
-  { id: 'annotate', label: 'Annotate', icon: 'sticky-note', description: 'Notes and shapes over the graph' },
+  { id: 'annotate', label: 'Annotate', icon: 'sticky-note', description: 'Annotate the data: records, values, paths' },
   {
     id: 'focus',
     label: 'Focus',
@@ -61,24 +61,27 @@ export const BOARD_IDS = {
   clickInspect: 'click-inspect',
 } as const;
 
-/** The command Annotate's tools run — registered disabled by `GraphBoard`. */
-export const ANNOTATE_TOOL_COMMAND = 'annotate.tool';
+/** Annotate's keys: A · H · G toggle the tools, as N · C do Edit's. */
+export const ANNOTATE_TOOL_KEYS = { a: 'annotate', h: 'highlight', g: 'group' } as const;
 
-/** Annotate's tools — drawn so the mode reads whole; disabled until a layer draws them. */
+/**
+ * Annotate's tools, on `tool.active` like Edit's: *Annotate* a node or a
+ * relationship, *Highlight* a node or a drag over several, *Group* a drag
+ * around two or more. Every annotation is on data — there is no free shape.
+ */
 export const ANNOTATE_TOOLS: readonly ControlItemSpec[] = (
   [
-    ['note', 'sticky-note', 'Note (S)'],
-    ['shape', 'shape', 'Shape (R)'],
-    ['arrow', 'arrow', 'Arrow (A)'],
-    ['text', 'text', 'Text (T)'],
+    ['annotate', 'sticky-note', 'Annotate (A)'],
     ['highlight', 'highlight', 'Highlight (H)'],
+    ['group', 'annotation-group', 'Group (G)'],
   ] as const
-).map(([key, icon, label]) => ({
-  type: 'command' as const,
-  key,
-  command: ANNOTATE_TOOL_COMMAND,
+).map(([value, icon, label]) => ({
+  type: 'toggle' as const,
+  key: `annotate-${value}`,
+  command: 'tool.active',
+  args: { value },
   icon,
-  label: `${label} — not built yet`,
+  label,
   modes: ['annotate'],
 }));
 

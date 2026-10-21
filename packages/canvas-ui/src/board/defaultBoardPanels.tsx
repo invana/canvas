@@ -1,6 +1,6 @@
 /**
  * The board's rail panels, as `BoardPanels` takes them: Legend · Styling ·
- * History · Element · Changes · Export, in that order.
+ * History · Element · Annotations · Changes · Export, in that order.
  *
  * Each panel takes its own props from {@link DefaultBoardPanelsOptions}, so a
  * host adds what only it knows — a model to edit against, a save, a block
@@ -14,6 +14,7 @@ import { useBoardMode } from '@invana/canvas-react';
 import { type GraphCanvas, UNSAVED_COUNT_COMMAND } from '@invana/graph';
 import type { ReactNode } from 'react';
 import { ControlItems, HISTORY_CONTROL_ITEMS } from '../control-panels';
+import { AnnotationsCount, AnnotationsViewPanel } from '../view-panels/annotations';
 import { ChangesCount, ChangesViewPanel, type ChangesViewPanelProps } from '../view-panels/changes';
 import { ElementViewPanel, type ElementViewPanelProps } from '../view-panels/element';
 import { ExportViewPanel, type ExportViewPanelProps } from '../view-panels/export';
@@ -86,6 +87,13 @@ export function defaultBoardPanels(options: DefaultBoardPanelsOptions): BoardPan
       icon: 'properties',
       modes: ['explore', 'edit'],
       render: (c) => <BoardElementPanel canvas={c} {...element} />,
+    },
+    {
+      id: 'annotations',
+      title: 'Annotations',
+      icon: 'annotations',
+      count: <AnnotationsCount />,
+      render: (c) => <AnnotationsViewPanel className="p-2" canvas={c} />,
     },
     {
       id: 'changes',

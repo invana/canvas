@@ -14,7 +14,8 @@
  * | Where | What | From |
  * |---|---|---|
  * | top-left | the mode picker, then the mode's tools | {@link BOARD_ROW_ITEMS} · {@link BOARD_VIEW_ROW_ITEMS} |
- * | top-right | the rail — Legend · Styling · History · Element · Changes · Export | {@link defaultBoardPanels} |
+ * | top-right | the rail — Legend · Styling · History · Element · Annotations · Changes · Export | {@link defaultBoardPanels} |
+ * | over the graph | the annotations on the records it has loaded — cards, highlights, groups | {@link AnnotationsOverlay} |
  * | bottom-left | the minimap over zoom · fit · lock | {@link BOARD_DOCK_ITEMS} |
  * | bottom | in Present, the step's question and answer | `PlaybookPresenterBar` |
  * | right-click | board · node · relationship · selection | {@link defaultBoardMenus} |
@@ -93,12 +94,15 @@ import { PlaybookPresenterBar } from '../view-panels/playbook';
 import { typeColor } from '../view-panels/schema';
 import type { TypeStylingPatch } from '../view-panels/styling/types';
 import { useApplyTypeStyling } from '../view-panels/styling/useApplyTypeStyling';
+import { AnnotationsOverlay } from './annotations/AnnotationsOverlay';
+import { AnnotationsProvider } from './annotations/AnnotationsProvider';
+import type { AnnotationActor, AnnotationDraft, AnnotationPatch, AnnotationView, BoardAnnotation } from './annotations/types';
 import { BoardLayoutPopover } from './BoardLayoutPopover';
 import { type BoardPanelSpec, BoardPanels } from './BoardPanels';
 import { type BoardMenuExtras, defaultBoardMenus, GRAPH_EXPAND_COMMAND, newBoardElementId, openBoardPanel, openElementEditor } from './boardMenus';
 import { type DefaultBoardPanelsOptions, defaultBoardPanels } from './defaultBoardPanels';
 import {
-  ANNOTATE_TOOL_COMMAND,
+  ANNOTATE_TOOL_KEYS,
   BOARD_CENTRALITY,
   BOARD_DOCK,
   BOARD_DOCK_ITEMS,
@@ -169,6 +173,22 @@ export interface GraphBoardProps {
   onExpand?: (nodeIds: string[], canvas: GraphCanvas) => void;
   /** The steps Present walks through. */
   playbook?: PlaybookSpec<CanvasConfig>;
+  /**
+   * What is said about the records — drawn beside the ones loaded, listed in
+   * the Annotations panel. Controlled with the callbacks below; without them
+   * the board keeps its own.
+   */
+  annotations?: readonly BoardAnnotation[];
+  onAnnotationCreate?: (draft: AnnotationDraft) => void | Promise<unknown>;
+  onAnnotationUpdate?: (id: string, patch: AnnotationPatch) => void | Promise<unknown>;
+  onAnnotationDelete?: (id: string) => void | Promise<unknown>;
+  /** *Load* on an annotation whose records are not on the board. */
+  onLoadRecords?: (ids: string[]) => void;
+  /** How annotations show — the Legend's switches and density. Saved by the host with the board. */
+  annotationView?: AnnotationView;
+  onAnnotationViewChange?: (next: AnnotationView) => void;
+  /** Who is looking: may they annotate, may they save the board's view. */
+  annotationActor?: AnnotationActor;
   /** Beside the presenter's narration. */
   narrationIcon?: ReactNode;
   policies?: GraphBoardPolicies;
@@ -224,6 +244,14 @@ export function GraphBoard({
   panelWidth = 320,
   onExpand,
   playbook,
+  annotations,
+  onAnnotationCreate,
+  onAnnotationUpdate,
+  onAnnotationDelete,
+  onLoadRecords,
+  annotationView,
+  onAnnotationViewChange,
+  annotationActor,
   narrationIcon,
   policies,
   onReady,
@@ -272,6 +300,18 @@ export function GraphBoard({
   }, [canvas, edgeCount]);
 
   const menuProps = useMemo(() => defaultBoardMenus(menus ? { extra: menus } : {}), [menus]);
+  // A person who may not annotate sees Annotate in the picker, off, with why.
+  const canAnnotate = annotationActor?.canWrite !== false;
+  const whyNot = annotationActor?.whyNot;
+  const boardModes = useMemo(
+    () =>
+      (modes as BoardModeSpec[]).map((m) =>
+        m.id === 'annotate' && !canAnnotate
+          ? { ...m, disabled: true, description: whyNot ?? 'You can view annotations — ask an admin to annotate' }
+          : m,
+      ),
+    [modes, canAnnotate, whyNot],
+  );
   const rail = useMemo(() => {
     const defaults = defaultBoardPanels({ ...panelOptions, styling, onStylingChange: setStyling });
     return panels ? panels(defaults) : defaults;
@@ -298,6 +338,16 @@ export function GraphBoard({
       config={merged}
       className={className ?? 'h-full w-full'}
     >
+      <AnnotationsProvider
+        {...(annotations ? { annotations } : {})}
+        {...(onAnnotationCreate ? { onCreate: onAnnotationCreate } : {})}
+        {...(onAnnotationUpdate ? { onUpdate: onAnnotationUpdate } : {})}
+        {...(onAnnotationDelete ? { onDelete: onAnnotationDelete } : {})}
+        {...(onLoadRecords ? { onLoadRecords } : {})}
+        {...(annotationView ? { view: annotationView } : {})}
+        {...(onAnnotationViewChange ? { onViewChange: onAnnotationViewChange } : {})}
+        {...(annotationActor ? { actor: annotationActor } : {})}
+      >
       {theme && (
         <>
           <ThemeBehaviour id="theme" />
@@ -335,12 +385,14 @@ export function GraphBoard({
       <ClickViewBehaviour id="click-view" targetLayerId={BOARD_IDS.graph} />
       <TextResolutionLODBehaviour id="label-lod" targetLayerId={BOARD_IDS.graph} />
 
-      <BoardModes modes={modes as BoardModeSpec[]} escapeTo="explore" />
+      <BoardModes modes={boardModes} escapeTo="explore" />
       <BoardToolKeys />
       <ClickInspectBehaviour id={BOARD_IDS.clickInspect} targetLayerId={BOARD_IDS.graph} />
       <EditTools />
       <UnsavedChangesBehaviour />
       <UnsavedGhostLayer />
+      <BoardToolKeys mode="annotate" keys={ANNOTATE_TOOL_KEYS} hold={null} />
+      <AnnotationsOverlay panelWidth={panelWidth} />
       <MiniMapLayer
         id={BOARD_IDS.minimap}
         backgroundLayerId={BOARD_IDS.background}
@@ -408,6 +460,7 @@ export function GraphBoard({
       <ControlPanels widgets={widgets} />
       {/* Last child: publishes the engine once everything registered. */}
       <BoardReady onReady={ready} />
+      </AnnotationsProvider>
     </GraphCanvasRoot>
   );
 }
@@ -472,7 +525,6 @@ function BoardPolicies({
   const canExpand = onExpand !== undefined;
   useEffect(() => {
     const offs = [
-      canvas.commands.register(ANNOTATE_TOOL_COMMAND, { label: 'Not built yet', isEnabled: () => false, run: () => {} }),
       ...(canExpand
         ? [
             canvas.commands.register(GRAPH_EXPAND_COMMAND, {
