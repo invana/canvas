@@ -149,6 +149,17 @@ describe('Behaviour — modes (interaction-mode gating)', () => {
     expect(b.getOptions().enabled).toBe(true);
   });
 
+  it("a '!' entry excludes a mode and keeps every other", () => {
+    const ctx = makeContext();
+    const b = new LiveProbe({ id: 'drag', enabled: true, modes: ['!hand'] });
+    b.register(ctx);
+    expect(b.live).toBe(true);
+    ctx.store.actions.viewMode.set('hand');
+    expect(b.live).toBe(false);
+    ctx.store.actions.viewMode.set('connect');
+    expect(b.live).toBe(true);
+  });
+
   it('enabled: false wins over a matching mode', () => {
     const ctx = makeContext();
     const b = new LiveProbe({ id: 'draw', modes: ['connect'] });

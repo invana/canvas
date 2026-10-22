@@ -18,6 +18,7 @@ import { DEFAULT_LAYOUT_PRESET_CARDS, LayoutPresetsViewPanel, type LayoutPresetV
 import { PlaybookStepper } from '../view-panels/playbook/PlaybookStepper';
 import { LegendViewPanel } from '../view-panels/legend';
 import { BoardModePicker } from '../board/BoardModePicker';
+import { PointerTools } from '../board/PointerTools';
 import { ZoomField } from '../board/ZoomField';
 import type { GraphCanvas } from '@invana/graph';
 import type { ControlWidgetOptionsSpec, ControlWidgetProps } from './widgets';
@@ -241,6 +242,12 @@ function BoardModeWidget({ canvas }: ControlWidgetProps) {
 }
 BoardModeWidget.optionsSpec = {} satisfies ControlWidgetOptionsSpec;
 
+/** Select ▾ · Hand — the pointer tools. */
+function PointerToolsWidget({ canvas }: ControlWidgetProps) {
+  return <PointerTools canvas={canvas} />;
+}
+PointerToolsWidget.optionsSpec = {} satisfies ControlWidgetOptionsSpec;
+
 /** − · the zoom field · + (`camera.zoomTo`). */
 function ZoomFieldWidget({ canvas }: ControlWidgetProps) {
   return <ZoomField canvas={canvas} />;
@@ -258,5 +265,6 @@ export const CHROME_CONTROL_WIDGETS = {
   fullscreen: FullscreenWidget,
   'graph-legend': GraphLegendWidget,
   'board-mode': BoardModeWidget,
+  'pointer-tools': PointerToolsWidget,
   'zoom-field': ZoomFieldWidget,
 };

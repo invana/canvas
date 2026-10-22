@@ -123,6 +123,21 @@ export function AnnotationsOverlay(_props: AnnotationsOverlayProps) {
 
   // ── the tools ─────────────────────────────────────────────────────────────
   const toolOn = annotating && ctx.actor.canWrite && (tool === 'annotate' || tool === 'highlight' || tool === 'group');
+  // A tool takes the board's drags, not its wheel: zoom and trackpad pan pass
+  // through to the canvas. Native and non-passive, so the page never scrolls.
+  const catcher = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = catcher.current;
+    const target = canvas.renderer?.canvasElement;
+    if (!el || !target) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      target.dispatchEvent(new WheelEvent('wheel', e));
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [canvas, toolOn]);
+
   const records = () => [...(layer?.store.nodes() ?? [])].filter((n) => !isAnnotationElement(n) && !n.hidden);
   const hit = (x: number, y: number): { id: string; kind: 'node' | 'edge' } | null => {
     let best: { id: string; d: number } | null = null;
@@ -241,6 +256,7 @@ export function AnnotationsOverlay(_props: AnnotationsOverlayProps) {
 
       {toolOn && (
         <div
+          ref={catcher}
           className="pointer-events-auto absolute inset-0 cursor-crosshair"
           onPointerDown={onDown}
           onPointerMove={onMove}

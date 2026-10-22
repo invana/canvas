@@ -77,6 +77,9 @@ export interface BehaviourOptions {
    * suspended — its `onDisable` runs, `enabled` is unchanged — and resumes when
    * the mode comes back. E.g. `modes: ['connect']` on an edge-drawing behaviour
    * makes the modeller's Connect tool switch it on and off with no host wiring.
+   * A `'!'` entry excludes a mode: `modes: ['!hand']` is live in every mode but
+   * `'hand'`. Positive and `'!'` entries combine — listed modes, minus the
+   * excluded ones.
    */
   modes?: readonly string[];
 }
@@ -215,7 +218,9 @@ export abstract class Behaviour<TOptions extends BehaviourOptions = BehaviourOpt
   /** Is `mode` one this behaviour is live in? */
   private matchesMode(mode: string): boolean {
     const modes = this._options.modes;
-    return modes === undefined || modes.includes(mode);
+    if (modes === undefined) return true;
+    if (modes.includes(`!${mode}`)) return false;
+    return !modes.some((m) => !m.startsWith('!')) || modes.includes(mode);
   }
 
   /**

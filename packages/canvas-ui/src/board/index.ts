@@ -1,5 +1,7 @@
 export { BoardModePicker } from './BoardModePicker';
 export type { BoardModePickerProps } from './BoardModePicker';
+export { PointerTools, HAND_TOOL, POINTER_SELECT_OPTIONS } from './PointerTools';
+export type { PointerToolsProps, PointerSelectOption } from './PointerTools';
 export { BoardPanels, BOARD_PANEL_COMMAND } from './BoardPanels';
 export type { BoardPanelsProps, BoardPanelSpec } from './BoardPanels';
 export { BoardLayoutPopover, BOARD_LAYOUT_COMMAND } from './BoardLayoutPopover';

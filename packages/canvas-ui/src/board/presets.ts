@@ -9,7 +9,7 @@
  * | Region | Preset |
  * |---|---|
  * | modes | {@link BOARD_MODES} — Explore · Edit · Annotate work; Focus · Present view |
- * | top-left, working | {@link BOARD_ROW_ITEMS} — the picker, Select ▾, Edit's and Annotate's tools, undo · redo · redraw |
+ * | top-left, working | {@link BOARD_ROW_ITEMS} — the picker, Select ▾ · Hand, Edit's and Annotate's tools, undo · redo · redraw |
  * | top-left, viewing | {@link BOARD_VIEW_ROW_ITEMS} — the picker; in Present, the stepper |
  * | bottom-left | {@link BOARD_DOCK_ITEMS} under the minimap — zoom, fit, lock |
  */
@@ -89,18 +89,7 @@ export const ANNOTATE_TOOLS: readonly ControlItemSpec[] = (
 export const BOARD_ROW_ITEMS: readonly ControlItemSpec[] = [
   { type: 'widget', widget: 'board-mode' },
   { type: 'divider' },
-  {
-    type: 'choice',
-    key: 'select-mode',
-    command: 'select.mode',
-    label: 'Select',
-    display: 'dropdown',
-    options: [
-      { value: 'click', label: 'Select', icon: 'pointer' },
-      { value: 'lasso', label: 'Lasso select', icon: 'lasso' },
-      { value: 'brush', label: 'Box select', icon: 'select-box' },
-    ],
-  },
+  { type: 'widget', widget: 'pointer-tools' },
   { type: 'divider', modes: ['edit', 'annotate'] },
   { type: 'toggle', key: 'add', command: 'tool.active', args: { value: 'add' }, icon: 'node-add', label: 'Add node (N)', modes: ['edit'] },
   { type: 'toggle', key: 'connect', command: 'tool.active', args: { value: 'connect' }, icon: 'connect', label: 'Connect (C)', modes: ['edit'] },

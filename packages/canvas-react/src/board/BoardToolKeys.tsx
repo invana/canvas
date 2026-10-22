@@ -3,7 +3,7 @@
 // A mode that draws (Edit: *Add node*, *Connect*) picks its tools from the
 // keyboard: a key toggles its tool on and back to Select, and a held key — Shift
 // for *Connect* — switches to a tool until it is let go, when the tool in hand
-// comes back. Only while the board is in `mode`, never while typing in a field,
+// comes back. Only while the board is in `mode` (one, or several), never while typing in a field,
 // never with ⌘ / Ctrl / Alt. Renders nothing; drives the `tool.active` command,
 // so the row's toggles and these keys always agree.
 
@@ -13,8 +13,8 @@ import { useCanvas } from '../CanvasContext';
 import { BOARD_MODE_COMMAND } from './BoardModes';
 
 export interface BoardToolKeysProps {
-  /** The board mode the keys belong to. Default `'edit'`. */
-  mode?: string;
+  /** The board mode, or modes, the keys belong to. Default `'edit'`. */
+  mode?: string | readonly string[];
   /** Key → tool it toggles. Default `{ n: 'add', c: 'connect' }` (case ignored). */
   keys?: Readonly<Record<string, string>>;
   /** A key held down switches to this tool until it is let go. Default Shift → `'connect'`; `null` turns it off. */
@@ -33,6 +33,7 @@ const DEFAULT_HOLD = { key: 'Shift', tool: 'connect' } as const;
  * <BoardModes modes={MODES} />
  * <BoardToolKeys />                          // N · C · hold Shift, in Edit
  * <BoardToolKeys mode="annotate" keys={{ s: 'note', r: 'shape' }} hold={null} />
+ * <BoardToolKeys mode={['explore', 'edit']} keys={{}} hold={{ key: ' ', tool: 'hand' }} />  // hold Space to pan
  * ```
  */
 export function BoardToolKeys({ mode = 'edit', keys = DEFAULT_KEYS, hold = DEFAULT_HOLD, rest = 'select' }: BoardToolKeysProps) {
@@ -40,7 +41,8 @@ export function BoardToolKeys({ mode = 'edit', keys = DEFAULT_KEYS, hold = DEFAU
   useEffect(() => {
     const byKey = new Map(Object.entries(keys).map(([k, tool]) => [k.toLowerCase(), tool]));
     let held: string | null = null;
-    const active = () => canvas.commands.value(BOARD_MODE_COMMAND) === mode;
+    const modes: readonly string[] = typeof mode === 'string' ? [mode] : mode;
+    const active = () => modes.includes(String(canvas.commands.value(BOARD_MODE_COMMAND)));
     const typing = (e: KeyboardEvent) =>
       e.target instanceof HTMLElement && e.target.closest('input, textarea, select, [contenteditable]') !== null;
     const tool = (value: string) => void canvas.commands.run('tool.active', { value });
@@ -53,6 +55,8 @@ export function BoardToolKeys({ mode = 'edit', keys = DEFAULT_KEYS, hold = DEFAU
       if (!active() || typing(e) || e.metaKey || e.ctrlKey || e.altKey) return;
       const current = String(canvas.commands.value('tool.active') ?? rest);
       if (hold && e.key === hold.key) {
+        // The held key is the board's — Space must not also press a focused button.
+        e.preventDefault();
         if (held === null && current !== hold.tool) {
           held = current;
           tool(hold.tool);

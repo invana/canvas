@@ -947,6 +947,9 @@ export type {
 // right-click menus with their headers and per-mode entries.
 export {
   BoardModePicker,
+  PointerTools,
+  HAND_TOOL,
+  POINTER_SELECT_OPTIONS,
   BoardPanels,
   BOARD_PANEL_COMMAND,
   BoardLayoutPopover,
@@ -978,6 +981,8 @@ export {
 } from './board';
 export type {
   BoardModePickerProps,
+  PointerToolsProps,
+  PointerSelectOption,
   BoardPanelsProps,
   BoardPanelSpec,
   ZoomFieldProps,

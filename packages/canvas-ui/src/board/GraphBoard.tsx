@@ -68,6 +68,7 @@ import {
   UnsavedGhostLayer,
   useBoardMode,
   useCanvasEvent,
+  useCommandStates,
   useGraphCanvas,
   useUnsavedGuard,
   useViewContext,
@@ -103,6 +104,7 @@ import { BoardLayoutPopover } from './BoardLayoutPopover';
 import { type BoardPanelSpec, BoardPanels } from './BoardPanels';
 import { type BoardMenuExtras, defaultBoardMenus, GRAPH_EXPAND_COMMAND, newBoardElementId, openBoardPanel, openElementEditor } from './boardMenus';
 import { type DefaultBoardPanelsOptions, defaultBoardPanels } from './defaultBoardPanels';
+import { HAND_TOOL } from './PointerTools';
 import {
   ANNOTATE_TOOL_KEYS,
   BOARD_CENTRALITY,
@@ -377,13 +379,13 @@ export function GraphBoard({
       />
 
       <DragPanBehaviour id="pan" />
-      <DragNodeBehaviour id="drag-node" targetLayerId={BOARD_IDS.graph} />
+      <DragNodeBehaviour id="drag-node" targetLayerId={BOARD_IDS.graph} modes={NOT_HAND} />
       <WheelZoomBehaviour id="wheel" />
       <PinchZoomBehaviour id="pinch" />
       <HoverActivateBehaviour id="hover" targetLayerId={BOARD_IDS.graph} degree={hoverDegree} state="highlighted" />
       <ClickSelectBehaviour id={BOARD_IDS.clickSelect} targetLayerId={BOARD_IDS.graph} multiple />
-      <BrushSelectBehaviour id="brush-select" targetLayerId={BOARD_IDS.graph} />
-      <LassoSelectBehaviour id="lasso-select" targetLayerId={BOARD_IDS.graph} />
+      <BrushSelectBehaviour id="brush-select" targetLayerId={BOARD_IDS.graph} modes={NOT_HAND} />
+      <LassoSelectBehaviour id="lasso-select" targetLayerId={BOARD_IDS.graph} modes={NOT_HAND} />
       <ClickViewBehaviour id="click-view" targetLayerId={BOARD_IDS.graph} />
       <TextResolutionLODBehaviour id="label-lod" targetLayerId={BOARD_IDS.graph} />
 
@@ -394,6 +396,8 @@ export function GraphBoard({
       <UnsavedChangesBehaviour />
       <UnsavedGhostLayer />
       <BoardToolKeys mode="annotate" keys={ANNOTATE_TOOL_KEYS} hold={null} />
+      <BoardToolKeys mode={WORK_MODES} keys={NO_KEYS} hold={SPACE_HAND} />
+      <HandCursor />
       <AnnotationsProjection />
       <AnnotationsOverlay panelWidth={panelWidth} />
       <MiniMapLayer
@@ -574,6 +578,30 @@ function BoardPolicies({
   }, [canvas, mode, modeTidy]);
   return null;
 }
+
+/** Live in every tool but Hand: in Hand a drag only pans. */
+const NOT_HAND = [`!${HAND_TOOL}`];
+const NO_KEYS = {};
+/** Holding Space borrows Hand from whatever tool is in hand. */
+const SPACE_HAND = { key: ' ', tool: HAND_TOOL };
+
+/** The open hand over the board while Hand is in hand; the pan shows the closed one. */
+function HandCursor() {
+  const canvas = useGraphCanvas();
+  const { states } = useCommandStates(TOOL_REFS, canvas);
+  const panning = states[0]?.value === HAND_TOOL;
+  useEffect(() => {
+    const el = canvas.renderer?.canvasElement;
+    if (!el || !panning) return;
+    const before = el.style.cursor;
+    el.style.cursor = 'grab';
+    return () => {
+      el.style.cursor = before;
+    };
+  }, [canvas, panning]);
+  return null;
+}
+const TOOL_REFS = [{ command: 'tool.active' }] as const;
 
 /** Leaving a mode puts its tools down: back to Select, the minimap only where there are tools, Present on step 1. */
 function tidyForMode(canvas: Canvas, mode: string): void {
