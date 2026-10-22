@@ -47,6 +47,27 @@ export {
   SCHEMA_LAYER,
   SCHEMA_WILDCARD,
 } from './schema';
+export {
+  LayeredDagBoard,
+  DagLegend,
+  DAG_BOARD_CONFIG,
+  DAG_LAYER,
+  DAG_LAYOUT,
+  DAG_TONES,
+  dagEdgeStyle,
+  dagNodeStyle,
+} from './dag';
+export type {
+  LayeredDagBoardProps,
+  DagBoardConnect,
+  DagBoardSelection,
+  DagLegendKey,
+  DagLegendProps,
+  DagLegendSpec,
+  DagEdgeData,
+  DagNodeData,
+  DagTones,
+} from './dag';
 export type {
   SchemaBoardConnect,
   SchemaBoardProps,

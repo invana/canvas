@@ -113,7 +113,7 @@ relations:
 | F27 | defect | implemented | `pkg:@invana/graph` `sym:schemaCardStructure` · `sym:schemaTypeChip` | a freeform structure template: hue-washed header, icon, title, subtitle, description, one row per property (type chip, name, `key`, type); one chip table shared with `sym:schemaTableCard` | Studio's `schemaCard` goes | how schema stories look | F24 |
 | F28 | defect | implemented | `pkg:@invana/graph` `sym:NodeStylingTemplate` `fillLookup` · `strokeLookup` | a simple structure's fill and border from a record field — a frame washed in its model's hue | Studio's per-node `frameStyle` goes | — | F24 |
 | F29 | defect | implemented | canvas-ui `sym:renderSchemaNode` | a type's description and one row per property on hover | Studio's `renderModelNode` goes | — | — |
-| F30 | defect | accepted | canvas-ui `sym:LayeredDagBoard` | left→right DAG: column seeding, tone map, legend from keys, connect | Studio's `LayeredCanvas` and `TaskFlowCanvas` pass data | — | F1–F3, F26 |
+| F30 | defect | implemented | canvas-ui `sym:LayeredDagBoard` | left→right DAG: column seeding, tone map, legend from keys, connect | Studio's `LayeredCanvas` and `TaskFlowCanvas` pass data | — | F1–F3, F26 |
 | F31 | defect | implemented | `pkg:@invana/canvas` `fitCamera.maxZoom` · `fitView(padding, maxZoom)` | a fit never zooms past `maxZoom` | no host re-fit capped at 100% | — | — |
 
 **P4 surfaces** — the shapes the rows above publish
@@ -131,6 +131,14 @@ relations:
 | `sym:SchemaTypeData` | `{ label, description?, icon?, frame?, hue?, properties: { name, type, identity?, tags?: string[] }[] }` | — | `hue` is a categorical slot (F24) |
 | `sym:detailConfig(base, templates, level, data, opts)` | pure: the level's patch merged over `base`; the `*` node type expands into one binding per type without its own; a structure named `prefix:*` becomes `prefix:<type>`, built by `opts.structures[prefix](node)` | `schema` → `sym:schemaCardStructure` | `sym:useDetailTemplates` applies it live: patch, re-run the active layout with `fitCamera` |
 | `sym:ValueLookup.categorical` | `true` — the bound value is a 1-based slot into the theme's ramp | — | `map` still wins when both are set |
+| `sym:LayeredDagBoard` `data` | `GraphData`; a node's `data.column` seeds its place before any layout (column × 190, row × 90), `data.text` · `data.tone` · `data.disabled` draw it on the default config; an edge's `data.label` · `data.dashed` · `data.highlight` | — | a node with its own `position` keeps it |
+| `sym:LayeredDagBoard` `config` · `detail` | as `sym:SchemaBoard`'s; `detail` with one level hides the switcher | `sym:DAG_BOARD_CONFIG` — ELK layered, left → right; no Detail | with the default config the board draws nodes and edges from `tones` (D10) |
+| `sym:LayeredDagBoard` `tones` | `Record<string, number>` — a tone's colour | `sym:DAG_TONES` (`muted` · `queued` · `info` · `running` · `success` · `warning` · `error`) | also colours the legend's dots |
+| `sym:LayeredDagBoard` `legend` | `{ keys: { swatch: 'node' \| 'edge', tone?, dashed?, label }[], note? }` — a strip at the bottom | none | `error` replaces its copy, in the destructive colour |
+| `sym:LayeredDagBoard` `chrome` | `'app'` — header (title, Detail, settings dock) and footer · `'panel'` — the canvas alone, with the legend and the connect switch over it | `'app'` | Studio's work panels are `'panel'`, the task flow `'app'` |
+| `sym:LayeredDagBoard` `layout` | `'layered'` runs ELK · `'fixed'` keeps the seeded columns | `'layered'` | a fit never zooms past 100% |
+| `sym:LayeredDagBoard` `connect` | `{ onConnect(sourceId, targetId) => refusal \| null, label, hint? }` | no connect tool | the edge comes from the host's data; `hint` replaces the legend's note while connecting |
+| `sym:LayeredDagBoard` `selected` · `onSelect` · `renderNode` · `renderEdge` · `title` · `message` · `emptyHint` · `height` | as `sym:SchemaBoard`'s; `emptyHint` is shown in place of a board with no nodes | — | |
 
 **P5 — the rest**
 
@@ -163,9 +171,10 @@ relations:
 | V1 | pass | `test`, `check-types`, `lint`, `check-api-surface`, boundaries; storybook `tsc` | graph, canvas-react, canvas-ui, graph-layout-elkjs | clean (392 graph tests) | F1–F16, F20, F37, F39, F40 |
 | V2 | pass | Playwright walk | `story:canvas-demos/tools/CanvasExplorer` on `sym:GraphBoard` | Explore, Edit (a dropped node opens as new; Changes counts it), Present (stepper, narration); no console errors | F5–F16 |
 | V3 | pass | Studio `turbo run check-types`, Biome, the board e2e | invana `studio/` | green; Tree preset lays out; Edit → Add node → typed from the model → Save → read back from Neo4j; probe removed | F5–F16, F20 |
-| V4 | partial | Playwright walk | schema story at each Detail; Studio All models (High · Medium · Low, a stitch drag opening the declare card) and one model's board (ME25 · ME26) | same hues and cards as before; no console errors — DAG story and a task view wait on F30 | F24–F29, F31 |
+| V4 | partial | Playwright walk | schema story at each Detail; Studio All models (High · Medium · Low, a stitch drag opening the declare card) and one model's board (ME25 · ME26) | same hues and cards as before; no console errors | F24–F29, F31 |
 | V5 | pending | control: a board with no modes | `story:canvas-ui/apps/GraphCanvasApp/RightInspector` | unchanged | F5, F9 |
 | V6 | pass | a story per piece, walked in Playwright with no console errors | `story:canvas-ui/apps/SchemaBoard/*` ×4 · `…/DetailTemplates` · `…/GraphBoard/*` ×3 · `story:canvas-ui/editors/ElementEditorPanel/*` ×3 · `story:canvas-ui/components/StatusSections` · `story:canvas-react/board/BoardToolKeys` · `story:canvas-react/hooks/UseUnsavedGuard` · `story:graph/Nodes/SchemaCard` · `story:graph/Groups/HueFrames` · `story:graph/Behaviours/UnsavedEdits/SaveUnsaved` | each renders its states; `fitMaxZoom: 1` holds a small graph at 100 % | F5–F31 |
+| V7 | pass | Playwright walk | `story:canvas-ui/apps/LayeredDagBoard/*` ×5, `story:canvas-demos/by-casestudies/workflow/WorkflowPlan`; Studio: a plan's Flow (Circles → Cards), a project's Branches | panel face: tones, legend, seeded columns, `fixed` keeps them; connect: a loop refused in the strip, an accepted edge drawn from the host's data; app face: Detail switches live; every fit at most 100%, framed on first open; no console errors; Studio's plan-page, projects, impact and agents specs as before (19 pass; the known `⋯ opens` failure unchanged) | F30 |
 
 ## 7. Decisions
 
@@ -180,6 +189,8 @@ relations:
 | D7 | The schema card | extend the composite `sym:schemaTableCard` · a freeform structure generator | freeform: Detail levels bind types to structures, and only structures take theme roles and lookups; the composite stays for per-row hover, sharing one chip table | accepted |
 | D8 | The DAG boards | one `sym:LayeredDagBoard` · one per Studio board | one: Detail templates (task flow) and a tone map + legend (layered) are both its props | accepted |
 | D9 | P4's order | at once · schema first, then DAG | schema first (F24–F29, F31), then F30; each half leaves Studio green | accepted |
+| D10 | How the default DAG face draws | node-type templates · tone resolvers on the layer | resolvers on the layer: a disabled step is hollow, faded and dashed, which no styling lookup expresses; a host with its own `config` (the task flow) draws by its templates instead | accepted |
+| D11 | Studio's two DAG canvases | delete and call the board everywhere · keep each as a data mapping | keep `LayeredCanvas` and `TaskFlowCanvas` as data mappings over the board — their nine callers do not change, and the kind's legend copy stays Studio's | accepted |
 
 ## 8. History
 
@@ -194,3 +205,5 @@ relations:
 | 2026-10-21 | P4 surfaces written; D7–D9 accepted; F24 un-deferred for F25 | accepted | — |
 | 2026-10-21 | P4 schema half written: `sym:SchemaBoard` with `SCHEMA_BOARD_CONFIG` / `SCHEMA_DETAIL` presets, `sym:detailConfig` · `sym:useDetailTemplates`, `sym:schemaCardStructure` · `sym:schemaTypeChip`, the categorical lookup, styling fill/stroke lookups, `fitCamera.maxZoom`; the GlobalModel story renders the board (its Force view goes — the board is ELK only); Studio's model config, JSON and hover card deleted. The low framing was the Model tab's panel not filling its row — a design-kit board renderer defect, fixed there | implemented | F30 next |
 | 2026-10-21 | Stories written for every piece P1–P4 added (V6); `CLAUDE.md` rule 11 now requires a story per canvas piece in the same change. The board annotations (`rfc:feat-2026-10-21-the-board-cannot-show-what-people-noted-on-the-data`) are another session's, in progress — their stories are owed by that RFC | implemented | — |
+| 2026-10-22 | P4 DAG half designed: `sym:LayeredDagBoard` surfaces; D10, D11 accepted | accepted | — |
+| 2026-10-22 | P4 DAG half written: `sym:LayeredDagBoard` (`chrome` app · panel, tones, `sym:DagLegend`, seeded columns, `layout` fixed, connect with a veto, Detail); `WorkflowPlan` renders it (its Force switch goes — the board is ELK only); Studio's `LayeredCanvas` and `TaskFlowCanvas` are data mappings over it (D11). Found while building: the first run lays out before the data lands, and the canvas's own re-layout as it lands carries no fit — the board frames every settled run, capped, and refits on a resize until the camera is moved; `ElkLayout`'s uncapped end fit is off. `sym:SchemaBoard` shares the first-run gap and does not yet frame on settle | implemented | P5 not started |

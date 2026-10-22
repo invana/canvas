@@ -1016,6 +1016,29 @@ export type {
   SchemaEdgeData,
   SchemaDetailLevel,
 } from './board';
+// The DAG board: left to right, columns seeded, tones and a legend strip, or a
+// host's own templates with Detail levels; connect with the host's veto.
+export {
+  LayeredDagBoard,
+  DagLegend,
+  DAG_BOARD_CONFIG,
+  DAG_LAYER,
+  DAG_LAYOUT,
+  DAG_TONES,
+  dagEdgeStyle,
+  dagNodeStyle,
+} from './board';
+export type {
+  LayeredDagBoardProps,
+  DagBoardConnect,
+  DagBoardSelection,
+  DagLegendKey,
+  DagLegendProps,
+  DagLegendSpec,
+  DagEdgeData,
+  DagNodeData,
+  DagTones,
+} from './board';
 export { BoardContextMenus, menuItems as boardMenuItems } from './menus/BoardContextMenus';
 export type {
   BoardContextMenusProps,
