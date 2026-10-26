@@ -128,8 +128,7 @@ export class PixiRenderer implements IRenderer {
         // Defense in depth for what `resolveRenderPreference` can't predict: a
         // browser that advertises WebGPU but throws *during* init (a blocklisted
         // adapter / driver). Tear the half-built app down and retry once on
-        // WebGL. WebKit's failure is at render time, not init, which is why the
-        // preference must be resolved up front.
+        // WebGL. Render-time failures are handled by the render guard instead.
         if (preference !== 'webgpu') throw err;
         this.app.destroy(true);
         this.app = new Application();

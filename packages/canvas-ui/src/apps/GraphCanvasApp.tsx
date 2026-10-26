@@ -178,8 +178,8 @@ export interface GraphCanvasAppProps {
    */
   telemetry?: CanvasTelemetryConfig;
   /**
-   * Pin the render backend (`'webgl'` where WebGPU is known to crash, e.g.
-   * WebKit). Read once at init — re-key with {@link instanceKey} to change it.
+   * Pin the render backend (e.g. `'webgl'` where WebGPU is known to crash).
+   * Read once at init — re-key with {@link instanceKey} to change it.
    * Default: auto-resolved (WebGPU, falling back to WebGL).
    */
   preference?: RenderPreference;
