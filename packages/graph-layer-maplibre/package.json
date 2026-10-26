@@ -23,14 +23,12 @@
     "maplibre-gl": "^4.7.1"
   },
   "peerDependencies": {
-    "@invana/canvas": "workspace:*",
-    "pixi.js": "^8.21.0"
+    "@invana/canvas": "workspace:*"
   },
   "devDependencies": {
     "@invana/canvas": "workspace:*",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "pixi.js": "^8.21.0",
     "tsup": "^8.3.5",
     "typescript": "5.9.2"
   },

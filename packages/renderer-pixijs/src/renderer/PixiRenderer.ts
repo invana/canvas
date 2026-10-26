@@ -109,6 +109,10 @@ export class PixiRenderer implements IRenderer {
       backgroundColor: opts.background ?? 0,
       powerPreference: opts.powerPreference ?? 'high-performance',
       hello: false,
+      // Since pixi 8.22, Tab activates pixi's accessibility overlay by default.
+      // Nothing we draw is marked `accessible`, so it would be an empty overlay
+      // hijacking the host page's Tab — keep it off until shapes opt in.
+      accessibilityOptions: { activateOnTab: false },
       // The engine owns the only rAF (G3). Pixi must not start a render loop of
       // its own, or there would be two clocks disagreeing about frame order.
       autoStart: false,
