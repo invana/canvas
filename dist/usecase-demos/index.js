@@ -1,0 +1,28875 @@
+import { UNKNOWN_TYPE } from '@invana/graph';
+
+// src/usecase-demos/agent-trace/data.ts
+var refundQuery = {
+  id: "refund-query",
+  name: "Refund query (happy path)",
+  nodes: [
+    { id: "start", type: "output", data: { kind: "output", label: 'User: "I was charged twice"', status: "success", durationMs: 0 } },
+    { id: "classify", type: "llm", data: { kind: "llm", label: "classifyIntent", status: "success", durationMs: 412, tokens: 184 } },
+    { id: "fetchOrder", type: "tool", data: { kind: "tool", label: "GET /orders/123", status: "success", durationMs: 78 } },
+    { id: "fetchPayments", type: "tool", data: { kind: "tool", label: "GET /payments?order=123", status: "success", durationMs: 91 } },
+    { id: "analyzeCharges", type: "llm", data: { kind: "llm", label: "analyzeCharges", status: "success", durationMs: 638, tokens: 412 } },
+    { id: "decideRefund", type: "decision", data: { kind: "decision", label: "eligible? yes", status: "success", durationMs: 12 } },
+    { id: "issueRefund", type: "tool", data: { kind: "tool", label: "POST /refunds", status: "success", durationMs: 204 } },
+    { id: "composeReply", type: "llm", data: { kind: "llm", label: "composeReply", status: "success", durationMs: 521, tokens: 286 } },
+    { id: "response", type: "output", data: { kind: "output", label: "Refund processed \u2713", status: "success", durationMs: 0 } }
+  ],
+  edges: [
+    { type: "invokes", id: "r1", source: "start", target: "classify", data: { kind: "calls" } },
+    { type: "invokes", id: "r2", source: "classify", target: "fetchOrder", data: { kind: "calls" } },
+    { type: "invokes", id: "r3", source: "classify", target: "fetchPayments", data: { kind: "calls" } },
+    { type: "invokes", id: "r4", source: "fetchOrder", target: "analyzeCharges", data: { kind: "returns" } },
+    { type: "invokes", id: "r5", source: "fetchPayments", target: "analyzeCharges", data: { kind: "returns" } },
+    { type: "invokes", id: "r6", source: "analyzeCharges", target: "decideRefund", data: { kind: "calls" } },
+    { type: "invokes", id: "r7", source: "decideRefund", target: "issueRefund", data: { kind: "branch" } },
+    { type: "invokes", id: "r8", source: "issueRefund", target: "composeReply", data: { kind: "returns" } },
+    { type: "invokes", id: "r9", source: "composeReply", target: "response", data: { kind: "calls" } }
+  ]
+};
+var knowledgeLookup = {
+  id: "knowledge-lookup",
+  name: "Knowledge lookup (error + retry)",
+  nodes: [
+    { id: "start", type: "output", data: { kind: "output", label: `User: "What's our SOC2 policy?"`, status: "success", durationMs: 0 } },
+    { id: "classify", type: "llm", data: { kind: "llm", label: "classifyIntent", status: "success", durationMs: 387, tokens: 162 } },
+    { id: "searchKb", type: "tool", data: { kind: "tool", label: "GET /kb/search \u2192 504", status: "error", durationMs: 5012 } },
+    { id: "retrySearch", type: "tool", data: { kind: "tool", label: "GET /kb/search (retry)", status: "success", durationMs: 142 } },
+    { id: "rankResults", type: "llm", data: { kind: "llm", label: "rankResults", status: "success", durationMs: 489, tokens: 318 } },
+    { id: "fetchDoc", type: "tool", data: { kind: "tool", label: "GET /kb/docs/SOC2 \u2192 404", status: "error", durationMs: 88 } },
+    { id: "fallbackSearch", type: "tool", data: { kind: "tool", label: "GET /kb/search?q=SOC2 compliance", status: "success", durationMs: 156 } },
+    { id: "summarize", type: "llm", data: { kind: "llm", label: "summarize", status: "success", durationMs: 712, tokens: 524 } },
+    { id: "citationCheck", type: "decision", data: { kind: "decision", label: "cited? yes", status: "success", durationMs: 9 } },
+    { id: "response", type: "output", data: { kind: "output", label: "Reply with citations", status: "success", durationMs: 0 } }
+  ],
+  edges: [
+    { type: "invokes", id: "k1", source: "start", target: "classify", data: { kind: "calls" } },
+    { type: "invokes", id: "k2", source: "classify", target: "searchKb", data: { kind: "calls" } },
+    { type: "invokes", id: "k3", source: "searchKb", target: "retrySearch", data: { kind: "branch" } },
+    { type: "invokes", id: "k4", source: "retrySearch", target: "rankResults", data: { kind: "returns" } },
+    { type: "invokes", id: "k5", source: "rankResults", target: "fetchDoc", data: { kind: "calls" } },
+    { type: "invokes", id: "k6", source: "fetchDoc", target: "fallbackSearch", data: { kind: "branch" } },
+    { type: "invokes", id: "k7", source: "fallbackSearch", target: "summarize", data: { kind: "returns" } },
+    { type: "invokes", id: "k8", source: "summarize", target: "citationCheck", data: { kind: "calls" } },
+    { type: "invokes", id: "k9", source: "citationCheck", target: "response", data: { kind: "branch" } }
+  ]
+};
+var multiToolDecision = {
+  id: "multi-tool-decision",
+  name: "Multi-tool decision (branching)",
+  nodes: [
+    { id: "start", type: "output", data: { kind: "output", label: 'User: "Refactor auth or billing?"', status: "success", durationMs: 0 } },
+    { id: "classify", type: "llm", data: { kind: "llm", label: "classifyIntent", status: "success", durationMs: 401, tokens: 174 } },
+    { id: "fetchRepo", type: "tool", data: { kind: "tool", label: "GET /repo/stats", status: "success", durationMs: 132 } },
+    { id: "fetchIssues", type: "tool", data: { kind: "tool", label: "GET /issues?label=tech-debt", status: "success", durationMs: 211 } },
+    { id: "fetchOwners", type: "tool", data: { kind: "tool", label: "GET /codeowners", status: "success", durationMs: 84 } },
+    { id: "analyzeRepo", type: "llm", data: { kind: "llm", label: "analyzeRepo", status: "success", durationMs: 542, tokens: 388 } },
+    { id: "analyzeIssues", type: "llm", data: { kind: "llm", label: "analyzeIssues", status: "success", durationMs: 612, tokens: 442 } },
+    { id: "analyzeOwners", type: "llm", data: { kind: "llm", label: "analyzeOwners", status: "success", durationMs: 318, tokens: 224 } },
+    { id: "weighOptions", type: "decision", data: { kind: "decision", label: "score: auth > billing", status: "success", durationMs: 18 } },
+    { id: "chooseAuth", type: "output", data: { kind: "output", label: "Recommend: refactor auth", status: "success", durationMs: 0 } },
+    { id: "chooseBilling", type: "output", data: { kind: "output", label: "Defer: billing", status: "pending", durationMs: 0 } },
+    { id: "composeReply", type: "llm", data: { kind: "llm", label: "composeReply", status: "success", durationMs: 678, tokens: 512 } },
+    { id: "response", type: "output", data: { kind: "output", label: "Recommendation delivered", status: "success", durationMs: 0 } }
+  ],
+  edges: [
+    { type: "invokes", id: "m1", source: "start", target: "classify", data: { kind: "calls" } },
+    { type: "invokes", id: "m2", source: "classify", target: "fetchRepo", data: { kind: "calls" } },
+    { type: "invokes", id: "m3", source: "classify", target: "fetchIssues", data: { kind: "calls" } },
+    { type: "invokes", id: "m4", source: "classify", target: "fetchOwners", data: { kind: "calls" } },
+    { type: "invokes", id: "m5", source: "fetchRepo", target: "analyzeRepo", data: { kind: "returns" } },
+    { type: "invokes", id: "m6", source: "fetchIssues", target: "analyzeIssues", data: { kind: "returns" } },
+    { type: "invokes", id: "m7", source: "fetchOwners", target: "analyzeOwners", data: { kind: "returns" } },
+    { type: "invokes", id: "m8", source: "analyzeRepo", target: "weighOptions", data: { kind: "calls" } },
+    { type: "invokes", id: "m9", source: "analyzeIssues", target: "weighOptions", data: { kind: "calls" } },
+    { type: "invokes", id: "m10", source: "analyzeOwners", target: "weighOptions", data: { kind: "calls" } },
+    { type: "invokes", id: "m11", source: "weighOptions", target: "chooseAuth", data: { kind: "branch" } },
+    { type: "invokes", id: "m12", source: "weighOptions", target: "chooseBilling", data: { kind: "branch" } },
+    { type: "invokes", id: "m13", source: "chooseAuth", target: "composeReply", data: { kind: "calls" } },
+    { type: "invokes", id: "m14", source: "composeReply", target: "response", data: { kind: "calls" } }
+  ]
+};
+var agentTrace = [
+  refundQuery,
+  knowledgeLookup,
+  multiToolDecision
+];
+agentTrace[0];
+var settings = {
+  activeLayout: "elk",
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: "rect", width: 168, height: 40, cornerRadius: 8 },
+          bgStrokeColor: 16777215,
+          bgStrokeWidth: 1.5,
+          labelColor: 16777215,
+          labelFontSize: 11,
+          labelFontWeight: 600,
+          labelPlacement: "center"
+        }
+      },
+      edge: {
+        style: {
+          shape: { pathType: "rounded", pathStyleOpts: { radius: 8 } },
+          strokeColor: 9741240,
+          strokeWidth: 1.3,
+          arrowTargetShape: "triangle",
+          arrowTargetSize: 8
+        }
+      }
+    }
+  },
+  layouts: {
+    elk: {
+      algorithm: "layered",
+      direction: "DOWN",
+      nodeSpacing: 28,
+      layerSpacing: 70
+    }
+  },
+  behaviours: {
+    color: { enabled: true, colorEdges: false },
+    hover: {
+      enabled: true,
+      state: "highlighted",
+      degree: 1,
+      direction: "both"
+    }
+  }
+};
+
+// src/usecase-demos/rag-embeddings/data.ts
+var CLUSTER_NAMES = ["auth", "billing", "search", "infra", "ml"];
+var SNIPPETS = {
+  auth: [
+    "JWT token expiration handling and clock-skew guard",
+    "OAuth2 refresh flow with PKCE",
+    "session cookie SameSite=strict rationale",
+    "MFA enrollment for new tenants",
+    "password reset token TTL discussion",
+    "SAML assertion signature validation",
+    "role-based access control matrix",
+    "rate-limit on /login endpoint",
+    "audit log of failed sign-in attempts",
+    "SSO redirect URL allowlist",
+    "CSRF double-submit cookie pattern",
+    "service-account credential rotation"
+  ],
+  billing: [
+    "monthly invoice generation cron",
+    "pro-rated subscription cancellation",
+    "tax calculation by jurisdiction",
+    "failed payment retry strategy",
+    "refund eligibility window",
+    "currency conversion at billing time",
+    "usage-based metering rollup",
+    "dunning email cadence",
+    "invoice PDF templating",
+    "Stripe webhook idempotency",
+    "credit note vs. refund difference",
+    "plan upgrade mid-cycle proration"
+  ],
+  search: [
+    "BM25 vs TF-IDF ranking trade-offs",
+    "query parser handles boolean operators",
+    "synonym expansion via thesaurus",
+    "autocomplete with prefix trie",
+    "fuzzy matching edit-distance threshold",
+    "faceted search aggregation buckets",
+    "reranker model fine-tuning notes",
+    "index sharding strategy",
+    "stop-word filtering per language",
+    "phrase query slop parameter",
+    "spell-correction candidates",
+    "search result snippet highlighting"
+  ],
+  infra: [
+    "Kubernetes pod scheduling priorities",
+    "load balancer health-check tuning",
+    "service mesh mTLS rollout",
+    "horizontal pod autoscaler thresholds",
+    "PV claim retention policy",
+    "cert-manager renewal cadence",
+    "Prometheus scrape interval",
+    "Grafana dashboard for p99 latency",
+    "log shipper backpressure",
+    "cluster upgrade canary plan",
+    "IAM role for service account",
+    "network policy egress allowlist"
+  ],
+  ml: [
+    "embedding model fine-tuning loop",
+    "vector similarity cosine vs dot",
+    "RAG retrieval top-k tuning",
+    "chunking strategy: sliding window",
+    "evaluation harness for retrieval",
+    "prompt template versioning",
+    "context-window budget allocation",
+    "temperature ablation study",
+    "hallucination rate by domain",
+    "fine-tune dataset sourcing",
+    "reranker latency budget",
+    "model serving GPU bin-pack"
+  ]
+};
+var SOURCES = {
+  auth: "docs/security/auth.md",
+  billing: "docs/billing/overview.md",
+  search: "docs/search/internals.md",
+  infra: "runbooks/infra.md",
+  ml: "docs/ml/rag.md"
+};
+var CENTERS = [
+  { cluster: "auth", cx: -260, cy: -180, spread: 70, count: 78 },
+  { cluster: "billing", cx: 240, cy: -150, spread: 80, count: 84 },
+  { cluster: "search", cx: 280, cy: 180, spread: 65, count: 72 },
+  { cluster: "infra", cx: -200, cy: 220, spread: 75, count: 80 },
+  { cluster: "ml", cx: 0, cy: 0, spread: 55, count: 66 }
+];
+var OUTLIER_COUNT = 22;
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = a + 1831565813 >>> 0;
+    let t = a;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function gauss(rng) {
+  const u = 1 - rng();
+  const v = rng();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+function buildDataset() {
+  const rng = mulberry32(1380009736);
+  const nodes3 = [];
+  let i = 0;
+  for (const c of CENTERS) {
+    const snippets = SNIPPETS[c.cluster];
+    for (let k = 0; k < c.count; k++) {
+      const x = c.cx + gauss(rng) * c.spread;
+      const y = c.cy + gauss(rng) * c.spread;
+      const text = snippets[Math.floor(rng() * snippets.length)];
+      nodes3.push({
+        id: `n${i++}`,
+        type: c.cluster,
+        position: { x, y },
+        data: { cluster: c.cluster, text, source: SOURCES[c.cluster] }
+      });
+    }
+  }
+  for (let k = 0; k < OUTLIER_COUNT; k++) {
+    const cluster = CLUSTER_NAMES[Math.floor(rng() * CLUSTER_NAMES.length)];
+    const snippets = SNIPPETS[cluster];
+    nodes3.push({
+      id: `n${i++}`,
+      type: cluster,
+      position: { x: (rng() - 0.5) * 900, y: (rng() - 0.5) * 700 },
+      data: {
+        cluster,
+        text: snippets[Math.floor(rng() * snippets.length)],
+        source: SOURCES[cluster]
+      }
+    });
+  }
+  return { nodes: nodes3, edges: [] };
+}
+var ragEmbeddings = buildDataset();
+var settings2 = {
+  activeLayout: "",
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: "circle", radius: 3.5 },
+          bgStrokeWidth: 0,
+          bgAlpha: 0.85,
+          showLabel: false
+        }
+      }
+    }
+  },
+  behaviours: {
+    color: { enabled: true, colorEdges: false },
+    "drag-node": { enabled: false },
+    hover: { enabled: true, state: "highlighted", degree: 0 }
+  }
+};
+
+// src/usecase-demos/microservices/data.ts
+var nodes = [
+  // ── Edge / gateway ──
+  { id: "api-gateway", type: "gateway", data: { tier: "gateway", health: "healthy", rps: 5800 } },
+  // ── API tier ──
+  { id: "auth-api", type: "api", data: { tier: "api", health: "healthy", rps: 920 } },
+  { id: "user-api", type: "api", data: { tier: "api", health: "healthy", rps: 1200 } },
+  { id: "product-api", type: "api", data: { tier: "api", health: "healthy", rps: 1450 } },
+  { id: "order-api", type: "api", data: { tier: "api", health: "degraded", rps: 680 } },
+  { id: "billing-api", type: "api", data: { tier: "api", health: "healthy", rps: 240 } },
+  { id: "search-api", type: "api", data: { tier: "api", health: "healthy", rps: 980 } },
+  // ── Logic tier ──
+  { id: "payment-service", type: "logic", data: { tier: "logic", health: "degraded", rps: 320 } },
+  { id: "notification-service", type: "logic", data: { tier: "logic", health: "healthy", rps: 510 } },
+  { id: "recommendation-service", type: "logic", data: { tier: "logic", health: "healthy", rps: 720 } },
+  { id: "fraud-detector", type: "logic", data: { tier: "logic", health: "down", rps: 0 } },
+  { id: "inventory-service", type: "logic", data: { tier: "logic", health: "healthy", rps: 280 } },
+  // ── Data tier ──
+  { id: "user-db", type: "data", data: { tier: "data", health: "healthy", rps: 2400 } },
+  { id: "order-db", type: "data", data: { tier: "data", health: "healthy", rps: 1100 } },
+  { id: "product-db", type: "data", data: { tier: "data", health: "healthy", rps: 1600 } },
+  { id: "cache", type: "data", data: { tier: "data", health: "healthy", rps: 4200 } },
+  { id: "queue", type: "data", data: { tier: "data", health: "healthy", rps: 1800 } },
+  { id: "search-index", type: "data", data: { tier: "data", health: "healthy", rps: 750 } },
+  // ── External / SaaS dependencies ──
+  { id: "stripe-adapter", type: "external", data: { tier: "external", health: "healthy", rps: 180 } },
+  { id: "ses-mailer", type: "external", data: { tier: "external", health: "healthy", rps: 340 } }
+];
+var edges = [
+  // gateway fan-out
+  { type: "calls", id: "g1", source: "api-gateway", target: "auth-api", data: { rps: 920, errorRate: 2e-3 } },
+  { type: "calls", id: "g2", source: "api-gateway", target: "user-api", data: { rps: 1200, errorRate: 4e-3 } },
+  { type: "calls", id: "g3", source: "api-gateway", target: "product-api", data: { rps: 1450, errorRate: 3e-3 } },
+  { type: "calls", id: "g4", source: "api-gateway", target: "order-api", data: { rps: 680, errorRate: 0.082 } },
+  { type: "calls", id: "g5", source: "api-gateway", target: "billing-api", data: { rps: 240, errorRate: 0.011 } },
+  { type: "calls", id: "g6", source: "api-gateway", target: "search-api", data: { rps: 980, errorRate: 5e-3 } },
+  // auth-api
+  { type: "calls", id: "a1", source: "auth-api", target: "user-db", data: { rps: 720, errorRate: 1e-3 } },
+  { type: "calls", id: "a2", source: "auth-api", target: "cache", data: { rps: 920, errorRate: 8e-4 } },
+  // user-api
+  { type: "calls", id: "u1", source: "user-api", target: "user-db", data: { rps: 1100, errorRate: 2e-3 } },
+  { type: "calls", id: "u2", source: "user-api", target: "cache", data: { rps: 1200, errorRate: 5e-4 } },
+  // product-api
+  { type: "calls", id: "p1", source: "product-api", target: "product-db", data: { rps: 1450, errorRate: 1e-3 } },
+  { type: "calls", id: "p2", source: "product-api", target: "cache", data: { rps: 1400, errorRate: 4e-4 } },
+  // order-api (degraded — high err on fraud + payment)
+  { type: "calls", id: "o1", source: "order-api", target: "order-db", data: { rps: 660, errorRate: 0.012 } },
+  { type: "calls", id: "o2", source: "order-api", target: "payment-service", data: { rps: 480, errorRate: 0.094 } },
+  { type: "calls", id: "o3", source: "order-api", target: "notification-service", data: { rps: 220, errorRate: 6e-3 } },
+  { type: "calls", id: "o4", source: "order-api", target: "fraud-detector", data: { rps: 410, errorRate: 0.984 } },
+  { type: "calls", id: "o5", source: "order-api", target: "inventory-service", data: { rps: 280, errorRate: 8e-3 } },
+  { type: "calls", id: "o6", source: "order-api", target: "queue", data: { rps: 320, errorRate: 1e-3 } },
+  // billing-api
+  { type: "calls", id: "b1", source: "billing-api", target: "payment-service", data: { rps: 200, errorRate: 0.088 } },
+  { type: "calls", id: "b2", source: "billing-api", target: "queue", data: { rps: 220, errorRate: 2e-3 } },
+  // search-api
+  { type: "calls", id: "s1", source: "search-api", target: "search-index", data: { rps: 870, errorRate: 3e-3 } },
+  { type: "calls", id: "s2", source: "search-api", target: "recommendation-service", data: { rps: 540, errorRate: 7e-3 } },
+  // payment-service
+  { type: "calls", id: "pm1", source: "payment-service", target: "stripe-adapter", data: { rps: 320, errorRate: 0.071 } },
+  { type: "calls", id: "pm2", source: "payment-service", target: "queue", data: { rps: 280, errorRate: 4e-3 } },
+  // notification-service
+  { type: "calls", id: "n1", source: "notification-service", target: "ses-mailer", data: { rps: 340, errorRate: 6e-3 } },
+  { type: "calls", id: "n2", source: "notification-service", target: "queue", data: { rps: 510, errorRate: 2e-3 } },
+  // recommendation-service
+  { type: "calls", id: "r1", source: "recommendation-service", target: "user-db", data: { rps: 360, errorRate: 1e-3 } },
+  { type: "calls", id: "r2", source: "recommendation-service", target: "product-db", data: { rps: 380, errorRate: 1e-3 } },
+  { type: "calls", id: "r3", source: "recommendation-service", target: "cache", data: { rps: 720, errorRate: 4e-4 } },
+  // fraud-detector (down — its outbound calls all error)
+  { type: "calls", id: "f1", source: "fraud-detector", target: "user-db", data: { rps: 0, errorRate: 1 } },
+  { type: "calls", id: "f2", source: "fraud-detector", target: "order-db", data: { rps: 0, errorRate: 1 } },
+  { type: "calls", id: "f3", source: "fraud-detector", target: "cache", data: { rps: 0, errorRate: 1 } },
+  // inventory-service
+  { type: "calls", id: "i1", source: "inventory-service", target: "product-db", data: { rps: 280, errorRate: 2e-3 } },
+  { type: "calls", id: "i2", source: "inventory-service", target: "queue", data: { rps: 220, errorRate: 1e-3 } }
+];
+var microservices = { nodes, edges };
+var settings3 = {
+  activeLayout: "graph-force",
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: "rect", width: 132, height: 34, cornerRadius: 6 },
+          bgStrokeColor: 16777215,
+          bgStrokeWidth: 1.5,
+          labelColor: 16777215,
+          labelFontSize: 11,
+          labelFontWeight: 600,
+          labelPlacement: "center"
+        }
+      },
+      edge: {
+        style: {
+          strokeColor: 9741240,
+          strokeWidth: 1.2,
+          strokeAlpha: 0.7,
+          arrowTargetShape: "triangle",
+          arrowTargetSize: 7
+        }
+      }
+    }
+  },
+  layouts: {
+    "graph-force": {
+      charge: { strength: -900 },
+      link: { distance: 160 },
+      collide: {},
+      animate: false
+    }
+  },
+  behaviours: {
+    color: { enabled: true, colorEdges: false },
+    hover: {
+      enabled: true,
+      state: "highlighted",
+      degree: 1,
+      direction: "both"
+    },
+    "click-select": { enabled: true, multiple: true }
+  }
+};
+
+// src/usecase-demos/ontology/data.ts
+var nodes2 = [
+  // ── Companies ──
+  { id: "stripe", type: "company", data: { kind: "company", name: "Stripe" } },
+  { id: "anthropic", type: "company", data: { kind: "company", name: "Anthropic" } },
+  { id: "openai", type: "company", data: { kind: "company", name: "OpenAI" } },
+  { id: "figma", type: "company", data: { kind: "company", name: "Figma" } },
+  { id: "linear", type: "company", data: { kind: "company", name: "Linear" } },
+  // ── People ──
+  { id: "patrick-collison", type: "person", data: { kind: "person", name: "Patrick Collison" } },
+  { id: "john-collison", type: "person", data: { kind: "person", name: "John Collison" } },
+  { id: "dario-amodei", type: "person", data: { kind: "person", name: "Dario Amodei" } },
+  { id: "daniela-amodei", type: "person", data: { kind: "person", name: "Daniela Amodei" } },
+  { id: "sam-altman", type: "person", data: { kind: "person", name: "Sam Altman" } },
+  { id: "greg-brockman", type: "person", data: { kind: "person", name: "Greg Brockman" } },
+  { id: "dylan-field", type: "person", data: { kind: "person", name: "Dylan Field" } },
+  { id: "karri-saarinen", type: "person", data: { kind: "person", name: "Karri Saarinen" } },
+  // ── Products ──
+  { id: "stripe-payments", type: "product", data: { kind: "product", name: "Stripe Payments" } },
+  { id: "stripe-atlas", type: "product", data: { kind: "product", name: "Stripe Atlas" } },
+  { id: "claude", type: "product", data: { kind: "product", name: "Claude" } },
+  { id: "chatgpt", type: "product", data: { kind: "product", name: "ChatGPT" } },
+  { id: "gpt-4", type: "product", data: { kind: "product", name: "GPT-4" } },
+  { id: "figma-design", type: "product", data: { kind: "product", name: "Figma Design" } },
+  { id: "figma-dev-mode", type: "product", data: { kind: "product", name: "Figma Dev Mode" } },
+  { id: "linear-app", type: "product", data: { kind: "product", name: "Linear" } },
+  // ── Locations ──
+  { id: "san-francisco", type: "location", data: { kind: "location", name: "San Francisco" } },
+  { id: "new-york", type: "location", data: { kind: "location", name: "New York" } },
+  { id: "seattle", type: "location", data: { kind: "location", name: "Seattle" } },
+  { id: "london", type: "location", data: { kind: "location", name: "London" } },
+  // ── Industries ──
+  { id: "payments", type: "industry", data: { kind: "industry", name: "Payments" } },
+  { id: "ai-research", type: "industry", data: { kind: "industry", name: "AI Research" } },
+  { id: "design-tools", type: "industry", data: { kind: "industry", name: "Design Tools" } },
+  { id: "productivity", type: "industry", data: { kind: "industry", name: "Productivity" } }
+];
+var edges2 = [
+  // founded
+  { type: "relates-to", id: "f1", source: "patrick-collison", target: "stripe", data: { kind: "founded" } },
+  { type: "relates-to", id: "f2", source: "john-collison", target: "stripe", data: { kind: "founded" } },
+  { type: "relates-to", id: "f3", source: "dario-amodei", target: "anthropic", data: { kind: "founded" } },
+  { type: "relates-to", id: "f4", source: "daniela-amodei", target: "anthropic", data: { kind: "founded" } },
+  { type: "relates-to", id: "f5", source: "sam-altman", target: "openai", data: { kind: "founded" } },
+  { type: "relates-to", id: "f6", source: "greg-brockman", target: "openai", data: { kind: "founded" } },
+  { type: "relates-to", id: "f7", source: "dylan-field", target: "figma", data: { kind: "founded" } },
+  { type: "relates-to", id: "f8", source: "karri-saarinen", target: "linear", data: { kind: "founded" } },
+  // ceo_of
+  { type: "relates-to", id: "c1", source: "patrick-collison", target: "stripe", data: { kind: "ceo_of" } },
+  { type: "relates-to", id: "c2", source: "dario-amodei", target: "anthropic", data: { kind: "ceo_of" } },
+  { type: "relates-to", id: "c3", source: "sam-altman", target: "openai", data: { kind: "ceo_of" } },
+  { type: "relates-to", id: "c4", source: "dylan-field", target: "figma", data: { kind: "ceo_of" } },
+  { type: "relates-to", id: "c5", source: "karri-saarinen", target: "linear", data: { kind: "ceo_of" } },
+  // works_at (non-founders / past)
+  { type: "relates-to", id: "w1", source: "daniela-amodei", target: "anthropic", data: { kind: "works_at" } },
+  { type: "relates-to", id: "w2", source: "greg-brockman", target: "openai", data: { kind: "works_at" } },
+  { type: "relates-to", id: "w3", source: "john-collison", target: "stripe", data: { kind: "works_at" } },
+  // builds
+  { type: "relates-to", id: "b1", source: "stripe", target: "stripe-payments", data: { kind: "builds" } },
+  { type: "relates-to", id: "b2", source: "stripe", target: "stripe-atlas", data: { kind: "builds" } },
+  { type: "relates-to", id: "b3", source: "anthropic", target: "claude", data: { kind: "builds" } },
+  { type: "relates-to", id: "b4", source: "openai", target: "chatgpt", data: { kind: "builds" } },
+  { type: "relates-to", id: "b5", source: "openai", target: "gpt-4", data: { kind: "builds" } },
+  { type: "relates-to", id: "b6", source: "figma", target: "figma-design", data: { kind: "builds" } },
+  { type: "relates-to", id: "b7", source: "figma", target: "figma-dev-mode", data: { kind: "builds" } },
+  { type: "relates-to", id: "b8", source: "linear", target: "linear-app", data: { kind: "builds" } },
+  // headquartered_in
+  { type: "relates-to", id: "h1", source: "stripe", target: "san-francisco", data: { kind: "headquartered_in" } },
+  { type: "relates-to", id: "h2", source: "anthropic", target: "san-francisco", data: { kind: "headquartered_in" } },
+  { type: "relates-to", id: "h3", source: "openai", target: "san-francisco", data: { kind: "headquartered_in" } },
+  { type: "relates-to", id: "h4", source: "figma", target: "san-francisco", data: { kind: "headquartered_in" } },
+  { type: "relates-to", id: "h5", source: "linear", target: "san-francisco", data: { kind: "headquartered_in" } },
+  // operates_in
+  { type: "relates-to", id: "o1", source: "stripe", target: "payments", data: { kind: "operates_in" } },
+  { type: "relates-to", id: "o2", source: "anthropic", target: "ai-research", data: { kind: "operates_in" } },
+  { type: "relates-to", id: "o3", source: "openai", target: "ai-research", data: { kind: "operates_in" } },
+  { type: "relates-to", id: "o4", source: "figma", target: "design-tools", data: { kind: "operates_in" } },
+  { type: "relates-to", id: "o5", source: "linear", target: "productivity", data: { kind: "operates_in" } },
+  // competes_with — directed but read as bi-directional rivalry
+  { type: "relates-to", id: "x1", source: "anthropic", target: "openai", data: { kind: "competes_with" } },
+  { type: "relates-to", id: "x2", source: "openai", target: "anthropic", data: { kind: "competes_with" } }
+];
+var coreIds = [
+  "stripe",
+  "anthropic",
+  "openai",
+  "figma",
+  "linear",
+  "patrick-collison",
+  "dario-amodei",
+  "sam-altman",
+  "dylan-field",
+  "karri-saarinen"
+];
+var ontology = {
+  nodes: nodes2,
+  edges: edges2,
+  coreIds
+};
+var settings4 = {
+  activeLayout: "graph-force",
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: "circle", radius: 10 },
+          bgStrokeWidth: 1.5,
+          labelFontSize: 11,
+          labelPlacement: "bottom",
+          labelOffsetY: 4
+        }
+      },
+      edge: {
+        style: {
+          strokeWidth: 1.2,
+          strokeAlpha: 0.7,
+          arrowTargetShape: "triangle",
+          arrowTargetSize: 7
+        }
+      }
+    }
+  },
+  layouts: {
+    "graph-force": {
+      charge: { strength: -420 },
+      link: { distance: 110 },
+      collide: {},
+      animate: false
+    }
+  },
+  behaviours: {
+    color: { enabled: true, colorEdges: false },
+    hover: { enabled: true, state: "highlighted", degree: 1 },
+    "click-select": { enabled: true, multiple: true }
+  }
+};
+
+// src/usecase-demos/citations/data.ts
+var TOPICS = [
+  "transformers",
+  "diffusion-models",
+  "reinforcement-learning",
+  "graph-neural-networks",
+  "vision-language"
+];
+var TOPIC_SLUGS = {
+  transformers: "tfm",
+  "diffusion-models": "diff",
+  "reinforcement-learning": "rl",
+  "graph-neural-networks": "gnn",
+  "vision-language": "vlm"
+};
+var TOPIC_TITLE_FRAGS = {
+  transformers: [
+    "Scaling Laws",
+    "Mixture-of-Experts",
+    "Long-Context Attention",
+    "Rotary Embeddings",
+    "Distilled Encoders",
+    "Sparse Attention",
+    "KV-Cache Compression",
+    "Speculative Decoding",
+    "Pre-training Recipes",
+    "Tokenizer Studies",
+    "Position Bias",
+    "Layer-Norm Variants"
+  ],
+  "diffusion-models": [
+    "Latent Diffusion",
+    "Score Matching",
+    "Consistency Models",
+    "Flow Matching",
+    "Classifier-Free Guidance",
+    "DDIM Sampling",
+    "Cascaded Resolutions",
+    "Conditional Priors",
+    "Video Diffusion",
+    "Audio Diffusion",
+    "Inverse Problems",
+    "Training Stability"
+  ],
+  "reinforcement-learning": [
+    "Offline RL",
+    "Direct Preference Optimization",
+    "Reward Modelling",
+    "World Models",
+    "Decision Transformer",
+    "Exploration Bonuses",
+    "Hierarchical Policies",
+    "PPO Variants",
+    "Constitutional AI",
+    "Multi-Agent Coordination",
+    "Sample Efficiency",
+    "Self-Play"
+  ],
+  "graph-neural-networks": [
+    "Message Passing",
+    "Spectral Filters",
+    "Graph Transformers",
+    "Heterogeneous Graphs",
+    "Subgraph Sampling",
+    "Equivariant GNNs",
+    "Knowledge-Graph Reasoning",
+    "Link Prediction",
+    "GraphSAGE",
+    "Attention Pooling",
+    "Over-smoothing",
+    "Scalability"
+  ],
+  "vision-language": [
+    "CLIP Variants",
+    "Visual Question Answering",
+    "Image Captioning",
+    "Multimodal Pre-training",
+    "Region Grounding",
+    "Document Understanding",
+    "Video-Language",
+    "Open-Vocabulary Detection",
+    "Vision Transformers",
+    "Cross-Modal Alignment",
+    "Compositional Reasoning",
+    "Few-Shot Vision"
+  ]
+};
+var PAPERS_PER_TOPIC = 30;
+var YEAR_MIN = 2018;
+var YEAR_MAX = 2025;
+function mulberry322(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = a + 1831565813 >>> 0;
+    let t = a;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function gauss2(rng) {
+  const u = 1 - rng();
+  const v = rng();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+var paper = (n) => n.data;
+function buildDataset2() {
+  const rng = mulberry322(202876688);
+  const nodes3 = [];
+  for (const topic of TOPICS) {
+    const frags = TOPIC_TITLE_FRAGS[topic];
+    const slug = TOPIC_SLUGS[topic];
+    for (let i = 0; i < PAPERS_PER_TOPIC; i++) {
+      const yearSpan = YEAR_MAX - YEAR_MIN + 1;
+      const year = YEAR_MIN + Math.floor(rng() * yearSpan);
+      const raw = Math.exp(2.5 + gauss2(rng) * 1);
+      const citationsCount = Math.min(900, Math.max(1, Math.round(raw)));
+      const fragA = frags[Math.floor(rng() * frags.length)];
+      const fragB = frags[Math.floor(rng() * frags.length)];
+      const title = fragA === fragB ? fragA : `${fragA}: ${fragB}`;
+      nodes3.push({
+        id: `${slug}-${i}`,
+        type: topic,
+        data: { topic, title, year, citationsCount }
+      });
+    }
+  }
+  const byTopic = /* @__PURE__ */ new Map();
+  for (const t of TOPICS) byTopic.set(t, []);
+  for (const n of nodes3) byTopic.get(paper(n).topic).push(n);
+  const edges3 = [];
+  let edgeCounter = 0;
+  for (const src of nodes3) {
+    const fanout = 2 + Math.floor(rng() * 3);
+    const used = /* @__PURE__ */ new Set([src.id]);
+    for (let k = 0; k < fanout; k++) {
+      const intra = rng() < 0.7;
+      const pool = intra ? byTopic.get(paper(src).topic) : nodes3;
+      const candidates = pool.filter((n) => paper(n).year < paper(src).year && !used.has(n.id));
+      if (candidates.length === 0) continue;
+      const totalW = candidates.reduce((acc, n) => acc + paper(n).citationsCount + 1, 0);
+      let r = rng() * totalW;
+      let target;
+      for (const c of candidates) {
+        r -= paper(c).citationsCount + 1;
+        if (r <= 0) {
+          target = c;
+          break;
+        }
+      }
+      if (!target) target = candidates[candidates.length - 1];
+      used.add(target.id);
+      edges3.push({
+        type: "cites",
+        id: `c${edgeCounter++}`,
+        source: src.id,
+        target: target.id,
+        data: { kind: "cites" }
+      });
+    }
+  }
+  return { nodes: nodes3, edges: edges3 };
+}
+var citations = buildDataset2();
+var settings5 = {
+  activeLayout: "graph-force",
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: "circle", radius: 5 },
+          bgStrokeWidth: 0,
+          showLabel: false
+        }
+      },
+      edge: {
+        style: {
+          strokeColor: 9741240,
+          strokeWidth: 0.6,
+          strokeAlpha: 0.3,
+          arrowTargetShape: "triangle",
+          arrowTargetSize: 5
+        }
+      }
+    }
+  },
+  layouts: {
+    "graph-force": {
+      charge: { strength: -160 },
+      link: { distance: 50 },
+      collide: {},
+      animate: false
+    }
+  },
+  behaviours: {
+    color: { enabled: true, colorEdges: false },
+    hover: {
+      enabled: true,
+      state: "highlighted",
+      inactiveState: "dimmed",
+      degree: 1,
+      direction: "both"
+    }
+  }
+};
+
+// src/usecase-demos/paper-citations/data.ts
+var SUBJECT_WEIGHTS = [
+  { subject: "Neural_Networks", weight: 818 },
+  { subject: "Probabilistic_Methods", weight: 426 },
+  { subject: "Genetic_Algorithms", weight: 418 },
+  { subject: "Theory", weight: 351 },
+  { subject: "Case_Based", weight: 298 },
+  { subject: "Reinforcement_Learning", weight: 217 },
+  { subject: "Rule_Learning", weight: 180 }
+];
+var TITLE_HEADS = [
+  "Adaptive",
+  "Bayesian",
+  "Compositional",
+  "Distributed",
+  "Efficient",
+  "Generalised",
+  "Hierarchical",
+  "Incremental",
+  "Kernel-based",
+  "Latent",
+  "Modular",
+  "Nonparametric",
+  "Online",
+  "Probabilistic",
+  "Recursive",
+  "Sparse",
+  "Structured",
+  "Unsupervised",
+  "Variational",
+  "Robust",
+  "Scalable",
+  "Approximate"
+];
+var TITLE_MIDS = [
+  "inductive",
+  "symbolic",
+  "connectionist",
+  "evolutionary",
+  "stochastic",
+  "analogical",
+  "discriminative",
+  "generative",
+  "relational",
+  "temporal",
+  "multi-agent",
+  "case-based"
+];
+var TITLE_TAILS = [
+  "learning",
+  "inference",
+  "search",
+  "classification",
+  "reasoning",
+  "planning",
+  "optimisation",
+  "representation",
+  "generalisation",
+  "control",
+  "induction",
+  "retrieval",
+  "abstraction",
+  "credit assignment"
+];
+function mulberry323(seed) {
+  let s = seed;
+  return () => {
+    s |= 0;
+    s = s + 1831565813 | 0;
+    let t = Math.imul(s ^ s >>> 15, 1 | s);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function pick(rng, xs) {
+  return xs[Math.floor(rng() * xs.length)];
+}
+function generatePaperCitations(options = {}) {
+  const papers = options.papers ?? 2708;
+  const citations2 = options.citations ?? 10556;
+  const intraSubjectRatio = options.intraSubjectRatio ?? 0.81;
+  const rng = mulberry323(options.seed ?? 2708);
+  const totalWeight = SUBJECT_WEIGHTS.reduce((s, w) => s + w.weight, 0);
+  const subjectFor = (i) => {
+    const target = (i + 0.5) / papers * totalWeight;
+    let acc = 0;
+    for (const w of SUBJECT_WEIGHTS) {
+      acc += w.weight;
+      if (target <= acc) return w.subject;
+    }
+    return SUBJECT_WEIGHTS[0].subject;
+  };
+  const nodes3 = [];
+  const bySubject = /* @__PURE__ */ new Map();
+  for (let i = 0; i < papers; i++) {
+    const subject = subjectFor((i * 1103515245 + 12345) % papers);
+    nodes3.push({
+      id: `p${i}`,
+      type: subject,
+      data: {
+        subject,
+        title: `${pick(rng, TITLE_HEADS)} ${pick(rng, TITLE_MIDS)} ${pick(rng, TITLE_TAILS)}`,
+        year: 1988 + Math.floor(i / papers * 12)
+      }
+    });
+    const bucket = bySubject.get(subject) ?? [];
+    bucket.push(i);
+    bySubject.set(subject, bucket);
+  }
+  const edges3 = [];
+  const seen = /* @__PURE__ */ new Set();
+  const citedCount = new Int32Array(papers);
+  let guard = 0;
+  while (edges3.length < citations2 && guard < citations2 * 40) {
+    guard++;
+    const source = Math.floor(rng() * papers * 0.9) + Math.floor(papers * 0.1);
+    if (source >= papers) continue;
+    const subject = nodes3[source].type;
+    let target;
+    if (rng() < intraSubjectRatio) {
+      const bucket = bySubject.get(subject);
+      const a = pick(rng, bucket);
+      const b = pick(rng, bucket);
+      target = (citedCount[a] ?? 0) >= (citedCount[b] ?? 0) ? a : b;
+    } else {
+      target = Math.floor(rng() * papers);
+    }
+    if (target >= source) continue;
+    const key = `${source}>${target}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    citedCount[target] = (citedCount[target] ?? 0) + 1;
+    edges3.push({ id: `c${edges3.length}`, type: "CITES", source: `p${source}`, target: `p${target}`, data: {} });
+  }
+  return { nodes: nodes3, edges: edges3 };
+}
+var paperCitations = generatePaperCitations();
+var settings6 = {
+  activeLayout: "graph-force",
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: "circle", radius: 3 },
+          bgStrokeWidth: 0,
+          showLabel: false
+        }
+      },
+      edge: {
+        style: {
+          strokeColor: 9741240,
+          strokeWidth: 0.4,
+          strokeAlpha: 0.12,
+          arrowTargetShape: "none"
+        }
+      }
+    }
+  },
+  layouts: {
+    "graph-force": {
+      charge: { strength: -60 },
+      link: { distance: 30 },
+      collide: {},
+      animate: false
+    }
+  },
+  behaviours: {
+    color: { enabled: true, colorEdges: false },
+    hover: {
+      enabled: true,
+      state: "highlighted",
+      inactiveState: "dimmed",
+      degree: 1,
+      direction: "both"
+    }
+  }
+};
+
+// src/usecase-demos/computing-pioneers/data.ts
+var computingPioneers = {
+  nodes: [
+    { id: "ada", type: "Person", data: { name: "Ada Lovelace", role: "Mathematician", avatar: "ada" } },
+    { id: "alan", type: "Person", data: { name: "Alan Turing", role: "Computer Scientist", avatar: "alan" } },
+    { id: "grace", type: "Person", data: { name: "Grace Hopper", role: "Rear Admiral", avatar: "grace" } },
+    { id: "tim", type: "Person", data: { name: "Tim Berners-Lee", role: "Engineer", avatar: "tim" } },
+    { id: "cambridge", type: "Organization", data: { name: "Univ. of Cambridge", founded: "est. 1209" } },
+    { id: "cern", type: "Organization", data: { name: "CERN", founded: "est. 1954" } },
+    { id: "ae", type: "Concept", data: { name: "Analytical Engine" } },
+    { id: "tm", type: "Concept", data: { name: "Turing Machine" } },
+    { id: "cobol", type: "Concept", data: { name: "COBOL" } },
+    { id: "www", type: "Concept", data: { name: "World Wide Web" } }
+  ],
+  edges: [
+    { id: "e1", type: "DESIGNED", source: "ada", target: "ae" },
+    { id: "e2", type: "DESCRIBED", source: "alan", target: "tm" },
+    { id: "e3", type: "CREATED", source: "grace", target: "cobol" },
+    { id: "e4", type: "INVENTED", source: "tim", target: "www" },
+    { id: "e5", type: "STUDIED_AT", source: "alan", target: "cambridge" },
+    { id: "e6", type: "WORKED_AT", source: "tim", target: "cern" },
+    { id: "e7", type: "INFLUENCED", source: "ada", target: "alan" }
+  ]
+};
+var settings7 = {
+  activeLayout: "graph-force",
+  fitOnLoad: true,
+  layouts: {
+    "graph-force": {
+      charge: { strength: -1400 },
+      link: { distance: 220 },
+      collide: { radius: 130 },
+      animate: false
+    }
+  },
+  behaviours: {
+    color: { enabled: false },
+    hover: { enabled: true, state: "highlighted", degree: 1 },
+    "click-select": { enabled: true, multiple: true }
+  }
+};
+
+// src/usecase-demos/invana-architecture/data.ts
+var invanaArchitecture = {
+  nodes: [
+    // ── Stage frames ──────────────────────────────────────────────────────
+    { id: "simulation", type: "stage", states: ["stage"], position: { x: 1202, y: 84 }, style: { labelText: "5 \xB7 Simulation Layer \u2014 weigh it first" } },
+    { id: "memory", type: "stage", states: ["stage"], position: { x: 792, y: 210 }, style: { labelText: "Memory" } },
+    { id: "decision", type: "stage", states: ["stage"], position: { x: 1242, y: 260 }, style: { labelText: "4 \xB7 Decision Runtime \u2014 decide" } },
+    { id: "learning", type: "stage", states: ["stage"], position: { x: 16, y: 288 }, style: { labelText: "8 \xB7 Learning Layer \u2014 learn" } },
+    { id: "observe", type: "stage", states: ["stage"], position: { x: 1518, y: 372 }, style: { labelText: "7 \xB7 Observe" } },
+    { id: "audit", type: "stage", states: ["stage"], position: { x: 1818, y: 392 }, style: { labelText: "Audit Layer" } },
+    { id: "context", type: "stage", states: ["stage"], position: { x: 1192, y: 476 }, style: { labelText: "3 \xB7 Context Layer \u2014 define the system" } },
+    { id: "data-sources", type: "stage", states: ["stage"], position: { x: 210, y: 494 }, style: { labelText: "1 \xB7 Data Sources" } },
+    { id: "reversibility", type: "stage", states: ["stage"], position: { x: 1818, y: 562 }, style: { labelText: "Reversibility Layer" } },
+    { id: "ingestion", type: "stage", states: ["stage"], position: { x: 498, y: 660 }, style: { labelText: "2 \xB7 Ingestion" } },
+    { id: "action", type: "stage", states: ["stage"], position: { x: 1518, y: 722 }, style: { labelText: "6 \xB7 Action \u2014 act, reversibly" } },
+    // ── 5 · Simulation Layer ──────────────────────────────────────────────
+    { id: "sim-strategy", type: "box", parentId: "simulation", position: { x: 1216, y: 126 }, style: { labelText: "Strategy Generation" }, data: { width: 142, height: 28 } },
+    { id: "sim-model", type: "box", parentId: "simulation", position: { x: 1216, y: 184 }, style: { labelText: "Forward Model /\nDomain Simulator" }, data: { width: 136, height: 40 } },
+    { id: "sim-score", type: "box", parentId: "simulation", position: { x: 1518, y: 184 }, style: { labelText: "Performance &\nImpact Scoring" }, data: { width: 130, height: 40 } },
+    // ── Memory ────────────────────────────────────────────────────────────
+    { id: "mem-episodes", type: "box", parentId: "memory", position: { x: 806, y: 252 }, style: { labelText: "Experience /\nEpisode Store" }, data: { width: 130, height: 40 } },
+    { id: "mem-weights", type: "box", parentId: "memory", position: { x: 806, y: 318 }, style: { labelText: "Updated Policy &\nStrategy Weights" }, data: { width: 130, height: 40 } },
+    // ── 4 · Decision Runtime ──────────────────────────────────────────────
+    { id: "dec-policy", type: "box", parentId: "decision", position: { x: 1256, y: 330 }, style: { labelText: "Policy" }, data: { width: 62, height: 28 } },
+    { id: "dec-agents", type: "box", parentId: "decision", position: { x: 1518, y: 314 }, style: { labelText: "AI Assistants / Agents\n(LLM + tools)" }, data: { width: 150, height: 40 } },
+    { id: "dec-gates", type: "box", parentId: "decision", position: { x: 1828, y: 302 }, style: { labelText: "Confidence &\nApproval Gates\n(human-in-the-loop)" }, data: { width: 148, height: 52 } },
+    // ── 8 · Learning Layer ────────────────────────────────────────────────
+    { id: "lrn-reward", type: "box", parentId: "learning", position: { x: 30, y: 330 }, style: { labelText: "Reward Computation\n(predicted vs actual)" }, data: { width: 152, height: 40 } },
+    { id: "lrn-credit", type: "box", parentId: "learning", position: { x: 272, y: 336 }, style: { labelText: "Credit Assignment" }, data: { width: 132, height: 28 } },
+    { id: "lrn-reinforced", type: "box", parentId: "learning", position: { x: 514, y: 336 }, style: { labelText: "Reinforced Learnings" }, data: { width: 146, height: 28 } },
+    // ── 7 · Observe ───────────────────────────────────────────────────────
+    { id: "obs-outcome", type: "box", parentId: "observe", position: { x: 1532, y: 414 }, style: { labelText: "Outcome collection\n(back from the world)" }, data: { width: 150, height: 40 } },
+    // ── Audit Layer ───────────────────────────────────────────────────────
+    { id: "aud-lineage", type: "box", parentId: "audit", position: { x: 1832, y: 434 }, style: { labelText: "Provenance & Lineage" }, data: { width: 146, height: 28 } },
+    { id: "aud-log", type: "box", parentId: "audit", position: { x: 1832, y: 490 }, style: { labelText: "Append-only\nDecision Log" }, data: { width: 146, height: 40 } },
+    // ── 3 · Context Layer ─────────────────────────────────────────────────
+    { id: "ctx-obj", type: "box", parentId: "context", position: { x: 1206, y: 518 }, style: { labelText: "Objectives & Rewards\n(what 'good' means)" }, data: { width: 158, height: 40 } },
+    { id: "ctx-ontology", type: "box", parentId: "context", position: { x: 1206, y: 588 }, style: { labelText: "Ontology\n(entities \xB7 relationships\n\xB7 rules \xB7 constraints)" }, data: { width: 158, height: 52 } },
+    { id: "ctx-kg", type: "box", parentId: "context", position: { x: 1518, y: 590 }, style: { labelText: "Knowledge Graph\n(live world state)" }, data: { width: 138, height: 40 } },
+    // ── 1 · Data Sources ──────────────────────────────────────────────────
+    { id: "ds-apis", type: "box", parentId: "data-sources", position: { x: 274, y: 536 }, style: { labelText: "APIs & Services" }, data: { width: 122, height: 28 } },
+    { id: "ds-db", type: "box", parentId: "data-sources", position: { x: 274, y: 590 }, style: { labelText: "Databases\n(SQL / NoSQL)" }, data: { width: 122, height: 40 } },
+    { id: "ds-graph", type: "box", parentId: "data-sources", position: { x: 224, y: 658 }, style: { labelText: "Graph DBs\n(Neo4j \xB7 JanusGraph \xB7 ArcadeDB)" }, data: { width: 222, height: 40 } },
+    { id: "ds-files", type: "box", parentId: "data-sources", position: { x: 274, y: 726 }, style: { labelText: "Files & Documents" }, data: { width: 122, height: 28 } },
+    { id: "ds-streams", type: "box", parentId: "data-sources", position: { x: 274, y: 780 }, style: { labelText: "Event Streams\n(Kafka \xB7 queues)" }, data: { width: 122, height: 40 } },
+    { id: "ds-sensors", type: "box", parentId: "data-sources", position: { x: 250, y: 848 }, style: { labelText: "Sensors / IoT / Telemetry" }, data: { width: 170, height: 28 } },
+    // ── Reversibility Layer ───────────────────────────────────────────────
+    { id: "rev-state", type: "box", parentId: "reversibility", position: { x: 1832, y: 604 }, style: { labelText: "Event-sourced State" }, data: { width: 146, height: 28 } },
+    { id: "rev-undo", type: "box", parentId: "reversibility", position: { x: 1832, y: 660 }, style: { labelText: "Undo / Rollback" }, data: { width: 146, height: 28 } },
+    // ── 2 · Ingestion ─────────────────────────────────────────────────────
+    { id: "in-etl", type: "box", parentId: "ingestion", position: { x: 520, y: 706 }, style: { labelText: "Connectors & ETL" }, data: { width: 132, height: 28 } },
+    { id: "in-schema", type: "box", parentId: "ingestion", position: { x: 808, y: 706 }, style: { labelText: "Schema Mapping" }, data: { width: 128, height: 28 } },
+    { id: "in-entity", type: "box", parentId: "ingestion", position: { x: 1222, y: 702 }, style: { labelText: "Entity Resolution\n& Dedup" }, data: { width: 128, height: 40 } },
+    { id: "in-cdc", type: "box", parentId: "ingestion", position: { x: 512, y: 760 }, style: { labelText: "Change Data Capture\n(streaming)" }, data: { width: 148, height: 40 } },
+    // ── 6 · Action ────────────────────────────────────────────────────────
+    { id: "act-exec", type: "box", parentId: "action", position: { x: 1532, y: 764 }, style: { labelText: "Action Executor" }, data: { width: 138, height: 28 } },
+    { id: "act-effectors", type: "box", parentId: "action", position: { x: 1828, y: 764 }, style: { labelText: "Effectors \u2192 real systems" }, data: { width: 152, height: 28 } },
+    { id: "act-inverse", type: "box", parentId: "action", position: { x: 1828, y: 820 }, style: { labelText: "Compensating Inverse" }, data: { width: 152, height: 28 } }
+  ],
+  edges: [
+    // 1 · sources → ingestion
+    { id: "e-apis-etl", type: "flow", source: "ds-apis", target: "in-etl", data: { dashed: false } },
+    { id: "e-db-etl", type: "flow", source: "ds-db", target: "in-etl", data: { dashed: false } },
+    { id: "e-graph-etl", type: "flow", source: "ds-graph", target: "in-etl", data: { dashed: false } },
+    { id: "e-files-etl", type: "flow", source: "ds-files", target: "in-etl", data: { dashed: false } },
+    { id: "e-streams-cdc", type: "flow", source: "ds-streams", target: "in-cdc", data: { dashed: false } },
+    { id: "e-sensors-cdc", type: "flow", source: "ds-sensors", target: "in-cdc", data: { dashed: false } },
+    // 2 · ingestion chain → the knowledge graph
+    { id: "e-etl-schema", type: "flow", source: "in-etl", target: "in-schema", data: { dashed: false } },
+    { id: "e-schema-entity", type: "flow", source: "in-schema", target: "in-entity", data: { dashed: false } },
+    { id: "e-entity-kg", type: "flow", source: "in-entity", target: "ctx-kg", data: { caption: "2 \xB7 normalize \u2192 graph", dashed: false } },
+    { id: "e-cdc-kg", type: "flow", source: "in-cdc", target: "ctx-kg", data: { dashed: false } },
+    // 3 · context → the runtime
+    { id: "e-ontology-kg", type: "flow", source: "ctx-ontology", target: "ctx-kg", data: { caption: "shapes", dashed: true } },
+    { id: "e-kg-agents", type: "flow", source: "ctx-kg", target: "dec-agents", data: { caption: "3 \xB7 grounded context", dashed: false } },
+    // 4 · simulate before acting
+    { id: "e-weights-strategy", type: "flow", source: "mem-weights", target: "sim-strategy", data: { caption: "reweight strategies", dashed: false } },
+    { id: "e-strategy-score", type: "flow", source: "sim-strategy", target: "sim-score", data: { dashed: false } },
+    { id: "e-score-model", type: "flow", source: "sim-score", target: "sim-model", data: { caption: "4 \xB7 simulate", dashed: false } },
+    { id: "e-score-agents", type: "flow", source: "sim-score", target: "dec-agents", data: { caption: "ranked strategies", dashed: false } },
+    { id: "e-policy-agents", type: "flow", source: "dec-policy", target: "dec-agents", data: { dashed: true } },
+    { id: "e-agents-gates", type: "flow", source: "dec-agents", target: "dec-gates", data: { dashed: false } },
+    // 5–6 · act, reversibly → observe
+    { id: "e-agents-exec", type: "flow", source: "dec-agents", target: "act-exec", data: { caption: "5 \xB7 approved action", dashed: true } },
+    { id: "e-exec-effectors", type: "flow", source: "act-exec", target: "act-effectors", data: { dashed: false } },
+    { id: "e-exec-inverse", type: "flow", source: "act-exec", target: "act-inverse", data: { dashed: false } },
+    { id: "e-effectors-observe", type: "flow", source: "act-effectors", target: "obs-outcome", data: { caption: "6 \xB7 real-world effects", dashed: true } },
+    // 7–8 · learn from the outcome
+    { id: "e-observe-reward", type: "flow", source: "obs-outcome", target: "lrn-reward", data: { caption: "7", dashed: false } },
+    { id: "e-reward-credit", type: "flow", source: "lrn-reward", target: "lrn-credit", data: { dashed: false } },
+    { id: "e-credit-reinforced", type: "flow", source: "lrn-credit", target: "lrn-reinforced", data: { dashed: false } },
+    { id: "e-reinforced-memory", type: "flow", source: "lrn-reinforced", target: "mem-episodes", data: { caption: "8 \xB7 store outcome", dashed: false } },
+    // 9 · memory feeds the runtime back
+    { id: "e-weights-policy", type: "flow", source: "mem-weights", target: "dec-policy", data: { caption: "9 \xB7 update policy \u2014 learn from mistakes", dashed: false } },
+    { id: "e-episodes-agents", type: "flow", source: "mem-episodes", target: "dec-agents", data: { caption: "recall past episodes", dashed: true } },
+    { id: "e-weights-objectives", type: "flow", source: "mem-weights", target: "ctx-obj", data: { caption: "refine objectives", dashed: false } },
+    // side layers — everything is logged and undoable
+    { id: "e-agents-lineage", type: "flow", source: "dec-agents", target: "aud-lineage", data: { dashed: true } },
+    { id: "e-agents-log", type: "flow", source: "dec-agents", target: "aud-log", data: { dashed: true } },
+    { id: "e-exec-state", type: "flow", source: "act-exec", target: "rev-state", data: { dashed: true } },
+    { id: "e-inverse-undo", type: "flow", source: "act-inverse", target: "rev-undo", data: { dashed: true } }
+  ]
+};
+var settings8 = {
+  activeLayout: "",
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          bgFill: 16777215,
+          bgStrokeColor: 10265519,
+          bgStrokeWidth: 1,
+          labelAlign: "center",
+          labelColor: 1120295,
+          labelFontSize: 11,
+          labelLineHeight: 14
+        }
+      },
+      edge: {
+        style: {
+          strokeColor: 10265519,
+          strokeWidth: 1,
+          arrowTargetShape: "triangle",
+          arrowTargetSize: 7,
+          shape: {
+            pathType: "smooth",
+            sourceAnchor: "boundary",
+            targetAnchor: "boundary"
+          },
+          labelColor: 4144966,
+          labelFontSize: 10,
+          labelAutoRotate: false,
+          labelBackgroundFill: 16777215,
+          labelBackgroundPadding: 2
+        }
+      }
+    }
+  },
+  behaviours: {
+    color: { enabled: false },
+    hover: { enabled: true, state: "highlighted", degree: 1 },
+    // `collapse` and `click-select` both claim `pointer+click`; selection stands
+    // down so the stage +/- toggles win.
+    "click-select": { enabled: false }
+  }
+};
+var modellerSeed = {
+  nodes: [
+    { id: "a", type: UNKNOWN_TYPE, position: { x: -120, y: -60 }, style: { labelText: "A" } },
+    { id: "b", type: UNKNOWN_TYPE, position: { x: 120, y: -60 }, style: { labelText: "B" } },
+    { id: "c", type: UNKNOWN_TYPE, position: { x: 0, y: 90 }, style: { labelText: "C" } }
+  ],
+  edges: [{ id: "a-b", type: UNKNOWN_TYPE, source: "a", target: "b" }]
+};
+var settings9 = {
+  activeLayout: "",
+  fitOnLoad: false,
+  layers: {
+    background: { type: "pattern", patternType: "grid" },
+    graph: {
+      node: {
+        style: {
+          shape: { kind: "circle", radius: 22 },
+          bgFill: 3900150,
+          bgStrokeWidth: 2,
+          labelColor: 16317180,
+          labelFontSize: 13,
+          labelPlacement: "center"
+        }
+      },
+      edge: { style: { strokeWidth: 2 } }
+    }
+  },
+  behaviours: { color: { enabled: false }, "drag-node": { enabled: true } }
+};
+
+// src/usecase-demos/star-schema/data.ts
+var starSchema = {
+  nodes: [
+    {
+      id: "dim_customer",
+      type: "Dimension",
+      data: {
+        name: "Dim_Customer",
+        icon: "lucide/users",
+        headerColor: 2450411,
+        fields: [
+          { name: "CustomerId", type: "integer" },
+          { name: "CustomerName", type: "string" },
+          { name: "Phone", type: "string" },
+          { name: "RegistrationDate", type: "date" },
+          { name: "TotalCustomers", type: "integer" },
+          { name: "NorthAmerica", type: "boolean" }
+        ]
+      }
+    },
+    {
+      id: "dim_date",
+      type: "Dimension",
+      data: {
+        name: "Dim_Date",
+        icon: "lucide/calendar",
+        headerColor: 2450411,
+        fields: [
+          { name: "DateId", type: "integer" },
+          { name: "Date", type: "date" },
+          { name: "Month", type: "string" },
+          { name: "Year", type: "integer" }
+        ]
+      }
+    },
+    {
+      id: "dim_supplier",
+      type: "Dimension",
+      data: {
+        name: "Dim_Supplier",
+        icon: "lucide/truck",
+        headerColor: 2450411,
+        fields: [
+          { name: "SupplierId", type: "integer" },
+          { name: "CompanyName", type: "string" },
+          { name: "Phone", type: "string" }
+        ]
+      }
+    },
+    {
+      id: "fact_order",
+      type: "Fact",
+      data: {
+        name: "Fact_Customer_Order",
+        icon: "lucide/sigma",
+        headerColor: 8141549,
+        fields: [
+          { name: "OrderId", type: "integer" },
+          { name: "CustomerId", type: "integer" },
+          { name: "DateId", type: "integer" },
+          { name: "SupplierId", type: "integer" },
+          { name: "Quantity", type: "integer" },
+          { name: "Profit", type: "number" }
+        ]
+      }
+    }
+  ],
+  edges: [
+    { id: "f-customer", type: "REFERENCES", source: "fact_order", target: "dim_customer", data: { foreignKey: "CustomerId" } },
+    { id: "f-date", type: "REFERENCES", source: "fact_order", target: "dim_date", data: { foreignKey: "DateId" } },
+    { id: "f-supplier", type: "REFERENCES", source: "fact_order", target: "dim_supplier", data: { foreignKey: "SupplierId" } }
+  ]
+};
+var settings10 = {
+  activeLayout: "layout",
+  fitOnLoad: true,
+  layers: {
+    background: {
+      type: "pattern",
+      patternType: "dots",
+      size: 1.5,
+      spacing: 24,
+      alpha: 0.85
+    },
+    graph: {
+      node: { style: { bgStrokeWidth: 0 } },
+      edge: {
+        style: {
+          strokeColor: 6583435,
+          strokeWidth: 1.4,
+          strokeDashArray: [5, 4],
+          arrowTargetShape: "none",
+          shape: { pathType: "orth" }
+        }
+      }
+    }
+  },
+  layouts: {
+    layout: {
+      algorithm: "layered",
+      direction: "RIGHT",
+      nodeSpacing: 60,
+      layerSpacing: 140,
+      padding: 40
+    }
+  },
+  behaviours: {
+    // The card carries its own colours — nothing else may repaint it.
+    color: { enabled: false },
+    hover: { enabled: true },
+    "drag-node": { enabled: true }
+  }
+};
+
+// src/usecase-demos/invana-code-kg/knowledge-graph.json
+var knowledge_graph_default = {
+  project: {
+    name: "Invana",
+    languages: [
+      "css",
+      "html",
+      "json",
+      "mako",
+      "markdown",
+      "python",
+      "toml",
+      "typescript"
+    ],
+    frameworks: [
+      "FastAPI",
+      "SQLAlchemy",
+      "Alembic",
+      "React",
+      "React Router",
+      "Vite",
+      "TailwindCSS",
+      "Zustand",
+      "TanStack Query",
+      "PixiJS",
+      "CodeMirror",
+      "Biome"
+    ],
+    description: "Invana is an open-source graph intelligence platform that turns structured knowledge graphs into interactive decision simulation environments. This graph covers the engine (Python/FastAPI backend) and studio (React 19/TypeScript frontend) apps.",
+    analyzedAt: "2026-05-25T12:49:45.668Z",
+    gitCommitHash: "63eaf5c4bfba02fd958b1c8591cf044a5337d97a"
+  },
+  nodes: [
+    {
+      id: "file:studio/src/main.tsx",
+      type: "file",
+      data: {
+        name: "main.tsx",
+        filePath: "studio/src/main.tsx",
+        summary: "Application entry point that bootstraps React, the router, query client, and auth store hydration into the DOM.",
+        tags: [
+          "entry-point",
+          "bootstrap",
+          "react"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-ui",
+        coverage: 87,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/ErrorPage.tsx",
+      type: "file",
+      data: {
+        name: "ErrorPage.tsx",
+        filePath: "studio/src/pages/ErrorPage.tsx",
+        summary: "Router error boundary page rendering a friendly message for route-level errors and 404s.",
+        tags: [
+          "component",
+          "page",
+          "error-handling",
+          "routing"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-ui",
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/ErrorPage.tsx:ErrorPage",
+      type: "function",
+      data: {
+        name: "ErrorPage",
+        filePath: "studio/src/pages/ErrorPage.tsx",
+        summary: "Renders a route error view, distinguishing 404s from generic failures using the router error.",
+        tags: [
+          "component",
+          "error-handling",
+          "react"
+        ],
+        complexity: "simple",
+        lineRange: [
+          9,
+          49
+        ],
+        cluster: null,
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/auth/LoginPage.tsx",
+      type: "file",
+      data: {
+        name: "LoginPage.tsx",
+        filePath: "studio/src/pages/auth/LoginPage.tsx",
+        summary: "Login page with email/password form that authenticates via the auth API and redirects on success.",
+        tags: [
+          "component",
+          "page",
+          "auth",
+          "form"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-ui",
+        coverage: 86,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/auth/LoginPage.tsx:LoginPage",
+      type: "function",
+      data: {
+        name: "LoginPage",
+        filePath: "studio/src/pages/auth/LoginPage.tsx",
+        summary: "Handles credential entry and submission, surfacing form errors and navigating on successful login.",
+        tags: [
+          "component",
+          "auth",
+          "form",
+          "react"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          10,
+          85
+        ],
+        cluster: null,
+        coverage: 68,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/auth/RegisterPage.tsx",
+      type: "file",
+      data: {
+        name: "RegisterPage.tsx",
+        filePath: "studio/src/pages/auth/RegisterPage.tsx",
+        summary: "Registration page with live username availability hints, validation, and account creation through the auth API.",
+        tags: [
+          "component",
+          "page",
+          "auth",
+          "form"
+        ],
+        complexity: "complex",
+        cluster: "layer:studio-ui",
+        coverage: 47,
+        errors: 1
+      }
+    },
+    {
+      id: "function:studio/src/pages/auth/RegisterPage.tsx:RegisterPage",
+      type: "function",
+      data: {
+        name: "RegisterPage",
+        filePath: "studio/src/pages/auth/RegisterPage.tsx",
+        summary: "Manages registration form state, validation, username checks, and submission to create a new account.",
+        tags: [
+          "component",
+          "auth",
+          "form",
+          "validation"
+        ],
+        complexity: "complex",
+        lineRange: [
+          18,
+          194
+        ],
+        cluster: null,
+        coverage: 59,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/auth/RegisterPage.tsx:UsernameHint",
+      type: "function",
+      data: {
+        name: "UsernameHint",
+        filePath: "studio/src/pages/auth/RegisterPage.tsx",
+        summary: "Renders contextual availability/validation feedback for the chosen username.",
+        tags: [
+          "component",
+          "validation",
+          "react"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          196,
+          221
+        ],
+        cluster: null,
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/GraphCreatePage.tsx",
+      type: "file",
+      data: {
+        name: "GraphCreatePage.tsx",
+        filePath: "studio/src/pages/graphs/GraphCreatePage.tsx",
+        summary: "Page for creating a new graph, with name-to-slug derivation and submission via the graphs mutation hook.",
+        tags: [
+          "component",
+          "page",
+          "graphs",
+          "form"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-ui",
+        coverage: 62,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/GraphCreatePage.tsx:GraphCreatePage",
+      type: "function",
+      data: {
+        name: "GraphCreatePage",
+        filePath: "studio/src/pages/graphs/GraphCreatePage.tsx",
+        summary: "Renders the graph creation form, auto-slugifying the name and creating the graph on submit.",
+        tags: [
+          "component",
+          "graphs",
+          "form",
+          "react"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          19,
+          154
+        ],
+        cluster: null,
+        coverage: 80,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/GraphCreatePage.tsx:slugify",
+      type: "function",
+      data: {
+        name: "slugify",
+        filePath: "studio/src/pages/graphs/GraphCreatePage.tsx",
+        summary: "Converts a free-text graph name into a URL-safe slug.",
+        tags: [
+          "utility",
+          "slug",
+          "formatting"
+        ],
+        complexity: "simple",
+        lineRange: [
+          9,
+          15
+        ],
+        cluster: null,
+        coverage: 93,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/platform/PlatformEventsPage.tsx",
+      type: "file",
+      data: {
+        name: "PlatformEventsPage.tsx",
+        filePath: "studio/src/pages/platform/PlatformEventsPage.tsx",
+        summary: "Admin page presenting the platform-wide event feed with action/graph filters and a live stream overlay.",
+        tags: [
+          "component",
+          "page",
+          "events",
+          "admin"
+        ],
+        complexity: "complex",
+        cluster: "layer:studio-ui",
+        coverage: 46,
+        errors: 2
+      }
+    },
+    {
+      id: "function:studio/src/pages/platform/PlatformEventsPage.tsx:PlatformEventsPage",
+      type: "function",
+      data: {
+        name: "PlatformEventsPage",
+        filePath: "studio/src/pages/platform/PlatformEventsPage.tsx",
+        summary: "Renders the global event feed for admins, combining queried history with the live stream and filters.",
+        tags: [
+          "component",
+          "events",
+          "admin",
+          "react"
+        ],
+        complexity: "complex",
+        lineRange: [
+          15,
+          94
+        ],
+        cluster: null,
+        coverage: 57,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/platform/PlatformEventsPage.tsx:EventRow",
+      type: "function",
+      data: {
+        name: "EventRow",
+        filePath: "studio/src/pages/platform/PlatformEventsPage.tsx",
+        summary: "Renders a single platform event row with actor, action, graph context, and timestamp.",
+        tags: [
+          "component",
+          "events",
+          "react"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          159,
+          204
+        ],
+        cluster: null,
+        coverage: 64,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/settings/ProfileSettingsPage.tsx",
+      type: "file",
+      data: {
+        name: "ProfileSettingsPage.tsx",
+        filePath: "studio/src/pages/settings/ProfileSettingsPage.tsx",
+        summary: "User profile settings page with tabs for basic info, password change, and account deletion, wired to the auth API.",
+        tags: [
+          "component",
+          "page",
+          "settings",
+          "auth"
+        ],
+        complexity: "complex",
+        cluster: "layer:studio-ui",
+        coverage: 58,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/settings/ProfileSettingsPage.tsx:ProfileSettingsPage",
+      type: "function",
+      data: {
+        name: "ProfileSettingsPage",
+        filePath: "studio/src/pages/settings/ProfileSettingsPage.tsx",
+        summary: "Tabbed profile settings shell coordinating basic info, password, and danger-zone tabs.",
+        tags: [
+          "component",
+          "settings",
+          "react"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          30,
+          80
+        ],
+        cluster: null,
+        coverage: 72,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/settings/ProfileSettingsPage.tsx:BasicInfoTab",
+      type: "function",
+      data: {
+        name: "BasicInfoTab",
+        filePath: "studio/src/pages/settings/ProfileSettingsPage.tsx",
+        summary: "Editable profile fields with username availability checks, change cooldown, and save handling.",
+        tags: [
+          "component",
+          "settings",
+          "form",
+          "validation"
+        ],
+        complexity: "complex",
+        lineRange: [
+          92,
+          250
+        ],
+        cluster: null,
+        coverage: 68,
+        errors: 1
+      }
+    },
+    {
+      id: "function:studio/src/pages/settings/ProfileSettingsPage.tsx:PasswordTab",
+      type: "function",
+      data: {
+        name: "PasswordTab",
+        filePath: "studio/src/pages/settings/ProfileSettingsPage.tsx",
+        summary: "Password change form validating the current and new passwords and submitting to the auth API.",
+        tags: [
+          "component",
+          "settings",
+          "auth",
+          "form"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          310,
+          382
+        ],
+        cluster: null,
+        coverage: 70,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/settings/ProfileSettingsPage.tsx:DangerZoneTab",
+      type: "function",
+      data: {
+        name: "DangerZoneTab",
+        filePath: "studio/src/pages/settings/ProfileSettingsPage.tsx",
+        summary: "Account deletion flow with email confirmation guard before invoking the delete account API.",
+        tags: [
+          "component",
+          "settings",
+          "auth",
+          "destructive"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          386,
+          482
+        ],
+        cluster: null,
+        coverage: 71,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/router.tsx",
+      type: "file",
+      data: {
+        name: "router.tsx",
+        filePath: "studio/src/router.tsx",
+        summary: "Central React Router configuration mapping auth, graph, platform, and settings routes with lazy loading and protection.",
+        tags: [
+          "routing",
+          "entry-point",
+          "configuration",
+          "react"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-ui",
+        coverage: 65,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/services/api/auth.ts",
+      type: "file",
+      data: {
+        name: "auth.ts",
+        filePath: "studio/src/services/api/auth.ts",
+        summary: "Authentication API client exposing login, register, profile, password, and account-deletion endpoints plus the GraphRole enum.",
+        tags: [
+          "service",
+          "api-handler",
+          "auth",
+          "client"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-data",
+        coverage: 67,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/services/api/client.ts",
+      type: "file",
+      data: {
+        name: "client.ts",
+        filePath: "studio/src/services/api/client.ts",
+        summary: "Core HTTP client with typed request helper, token refresh handling, error normalization, and the shared ApiError type.",
+        tags: [
+          "service",
+          "http-client",
+          "error-handling",
+          "auth"
+        ],
+        complexity: "moderate",
+        languageNotes: "Centralizes access-token registration and automatic refresh-on-401 retry for all API modules.",
+        cluster: "layer:studio-data",
+        coverage: 65,
+        errors: 1
+      }
+    },
+    {
+      id: "class:studio/src/services/api/client.ts:ApiError",
+      type: "class",
+      data: {
+        name: "ApiError",
+        filePath: "studio/src/services/api/client.ts",
+        summary: "Error subclass carrying HTTP status and normalized detail for failed API requests.",
+        tags: [
+          "error-handling",
+          "type-definition",
+          "service"
+        ],
+        complexity: "simple",
+        lineRange: [
+          19,
+          27
+        ],
+        cluster: null,
+        coverage: 95,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/services/api/client.ts:request",
+      type: "function",
+      data: {
+        name: "request",
+        filePath: "studio/src/services/api/client.ts",
+        summary: "Generic typed fetch wrapper that attaches auth, parses responses, and throws ApiError on failure.",
+        tags: [
+          "service",
+          "http-client",
+          "request"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          142,
+          159
+        ],
+        cluster: null,
+        coverage: 78,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/services/api/client.ts:attemptRefresh",
+      type: "function",
+      data: {
+        name: "attemptRefresh",
+        filePath: "studio/src/services/api/client.ts",
+        summary: "Attempts to refresh the access token on a 401, coordinating concurrent retries.",
+        tags: [
+          "service",
+          "auth",
+          "token-refresh"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          62,
+          85
+        ],
+        cluster: null,
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/services/api/client.ts:formatErrorDetail",
+      type: "function",
+      data: {
+        name: "formatErrorDetail",
+        filePath: "studio/src/services/api/client.ts",
+        summary: "Normalizes varied API error response shapes into a human-readable detail string.",
+        tags: [
+          "utility",
+          "error-handling",
+          "serialization"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          96,
+          114
+        ],
+        cluster: null,
+        coverage: 70,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/services/api/events.ts",
+      type: "file",
+      data: {
+        name: "events.ts",
+        filePath: "studio/src/services/api/events.ts",
+        summary: "Events API client for fetching graph-scoped and global event feeds with query-parameter filters.",
+        tags: [
+          "service",
+          "api-handler",
+          "events",
+          "client"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-data",
+        coverage: 89,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/services/api/graph-membership.ts",
+      type: "file",
+      data: {
+        name: "graph-membership.ts",
+        filePath: "studio/src/services/api/graph-membership.ts",
+        summary: "Graph membership API client for listing members, managing roles, and creating/redeeming invitations.",
+        tags: [
+          "service",
+          "api-handler",
+          "membership",
+          "client"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-data",
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/stores/auth.store.ts",
+      type: "file",
+      data: {
+        name: "auth.store.ts",
+        filePath: "studio/src/stores/auth.store.ts",
+        summary: "Zustand store holding authenticated user, tokens, and session state, persisting and rehydrating auth across reloads.",
+        tags: [
+          "store",
+          "auth",
+          "state",
+          "singleton"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-data",
+        coverage: 71,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/types/auth.ts",
+      type: "file",
+      data: {
+        name: "auth.ts",
+        filePath: "studio/src/types/auth.ts",
+        summary: "Shared TypeScript types for users, sessions, credentials, graph roles, and membership used across the auth layer.",
+        tags: [
+          "type-definition",
+          "auth",
+          "membership"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-types",
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/types/events.ts",
+      type: "file",
+      data: {
+        name: "events.ts",
+        filePath: "studio/src/types/events.ts",
+        summary: "Shared TypeScript types describing platform/graph event records and their filter parameters.",
+        tags: [
+          "type-definition",
+          "events"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-types",
+        coverage: 80,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/App.tsx",
+      type: "file",
+      data: {
+        name: "App.tsx",
+        filePath: "studio/src/App.tsx",
+        summary: "Root application shell that composes the global header (via useAppHeader) around the routed page content.",
+        tags: [
+          "component",
+          "entry-point",
+          "layout",
+          "react"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-ui",
+        coverage: 78,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/App.tsx:App",
+      type: "function",
+      data: {
+        name: "App",
+        filePath: "studio/src/App.tsx",
+        summary: "Top-level React component rendering the app header and outlet for nested routes.",
+        tags: [
+          "component",
+          "layout",
+          "react"
+        ],
+        complexity: "simple",
+        lineRange: [
+          6,
+          47
+        ],
+        cluster: null,
+        coverage: 99,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/components/FullscreenToggle.tsx",
+      type: "file",
+      data: {
+        name: "FullscreenToggle.tsx",
+        filePath: "studio/src/components/FullscreenToggle.tsx",
+        summary: "UI control that toggles browser fullscreen mode using the Fullscreen API.",
+        tags: [
+          "component",
+          "react",
+          "ui-control",
+          "event-handler"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-ui",
+        coverage: 94,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/FullscreenToggle.tsx:FullscreenToggle",
+      type: "function",
+      data: {
+        name: "FullscreenToggle",
+        filePath: "studio/src/components/FullscreenToggle.tsx",
+        summary: "Button component that requests or exits document fullscreen and tracks current state.",
+        tags: [
+          "component",
+          "event-handler",
+          "react"
+        ],
+        complexity: "simple",
+        lineRange: [
+          5,
+          39
+        ],
+        cluster: null,
+        coverage: 97,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/components/ProtectedRoute.tsx",
+      type: "file",
+      data: {
+        name: "ProtectedRoute.tsx",
+        filePath: "studio/src/components/ProtectedRoute.tsx",
+        summary: "Route guard that redirects unauthenticated users to the login page before rendering protected children.",
+        tags: [
+          "component",
+          "auth",
+          "routing",
+          "guard"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-ui",
+        coverage: 96,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/components/RoleGate.tsx",
+      type: "file",
+      data: {
+        name: "RoleGate.tsx",
+        filePath: "studio/src/components/RoleGate.tsx",
+        summary: "Authorization wrapper that conditionally renders children only when the current user holds a required graph role.",
+        tags: [
+          "component",
+          "auth",
+          "authorization",
+          "guard"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-ui",
+        coverage: 96,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/RoleGate.tsx:RoleGate",
+      type: "function",
+      data: {
+        name: "RoleGate",
+        filePath: "studio/src/components/RoleGate.tsx",
+        summary: "Renders children when the authenticated user satisfies the required role, otherwise a fallback.",
+        tags: [
+          "component",
+          "authorization",
+          "react"
+        ],
+        complexity: "simple",
+        lineRange: [
+          20,
+          39
+        ],
+        cluster: null,
+        coverage: 90,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/components/ThemeToggle.tsx",
+      type: "file",
+      data: {
+        name: "ThemeToggle.tsx",
+        filePath: "studio/src/components/ThemeToggle.tsx",
+        summary: "UI control that switches between light and dark theme modes.",
+        tags: [
+          "component",
+          "react",
+          "ui-control",
+          "theme"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-ui",
+        coverage: 94,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/components/forms/FormError.tsx",
+      type: "file",
+      data: {
+        name: "FormError.tsx",
+        filePath: "studio/src/components/forms/FormError.tsx",
+        summary: "Reusable inline form error display used across authentication and settings forms.",
+        tags: [
+          "component",
+          "form",
+          "validation",
+          "react"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-ui",
+        coverage: 80,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/forms/FormError.tsx:FormError",
+      type: "function",
+      data: {
+        name: "FormError",
+        filePath: "studio/src/components/forms/FormError.tsx",
+        summary: "Renders a styled error message when an error value is present, otherwise nothing.",
+        tags: [
+          "component",
+          "form",
+          "validation"
+        ],
+        complexity: "simple",
+        lineRange: [
+          19,
+          32
+        ],
+        cluster: null,
+        coverage: 91,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/components/header/UserMenu.tsx",
+      type: "file",
+      data: {
+        name: "UserMenu.tsx",
+        filePath: "studio/src/components/header/UserMenu.tsx",
+        summary: "Header dropdown showing the current user with profile, settings, and logout actions, role-gated where needed.",
+        tags: [
+          "component",
+          "header",
+          "auth",
+          "menu"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-ui",
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/header/UserMenu.tsx:UserMenu",
+      type: "function",
+      data: {
+        name: "UserMenu",
+        filePath: "studio/src/components/header/UserMenu.tsx",
+        summary: "User account dropdown menu wiring auth state, navigation, and logout into header actions.",
+        tags: [
+          "component",
+          "menu",
+          "auth",
+          "react"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          28,
+          131
+        ],
+        cluster: null,
+        coverage: 66,
+        errors: 1
+      }
+    },
+    {
+      id: "file:studio/src/components/header/useAppHeader.tsx",
+      type: "file",
+      data: {
+        name: "useAppHeader.tsx",
+        filePath: "studio/src/components/header/useAppHeader.tsx",
+        summary: "Hook that assembles the global app header model \u2014 breadcrumb segments, toggles, and user menu \u2014 from the current route and auth state.",
+        tags: [
+          "hook",
+          "header",
+          "breadcrumb",
+          "navigation"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-ui",
+        coverage: 63,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/header/useAppHeader.tsx:useAppHeader",
+      type: "function",
+      data: {
+        name: "useAppHeader",
+        filePath: "studio/src/components/header/useAppHeader.tsx",
+        summary: "Builds the header configuration object combining breadcrumbs, theme/fullscreen toggles, and the user menu.",
+        tags: [
+          "hook",
+          "header",
+          "navigation",
+          "react"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          34,
+          70
+        ],
+        cluster: null,
+        coverage: 78,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/header/useAppHeader.tsx:Breadcrumb",
+      type: "function",
+      data: {
+        name: "Breadcrumb",
+        filePath: "studio/src/components/header/useAppHeader.tsx",
+        summary: "Renders breadcrumb navigation links from computed path segments.",
+        tags: [
+          "component",
+          "breadcrumb",
+          "navigation"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          85,
+          121
+        ],
+        cluster: null,
+        coverage: 62,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/header/useAppHeader.tsx:computeSegments",
+      type: "function",
+      data: {
+        name: "computeSegments",
+        filePath: "studio/src/components/header/useAppHeader.tsx",
+        summary: "Derives ordered breadcrumb segments from the current pathname, username, and optional override.",
+        tags: [
+          "utility",
+          "breadcrumb",
+          "navigation"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          132,
+          162
+        ],
+        cluster: null,
+        coverage: 68,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/header/useAppHeader.tsx:graphRestSegments",
+      type: "function",
+      data: {
+        name: "graphRestSegments",
+        filePath: "studio/src/components/header/useAppHeader.tsx",
+        summary: "Maps the trailing path portion under a graph root into labeled breadcrumb segments.",
+        tags: [
+          "utility",
+          "breadcrumb",
+          "navigation"
+        ],
+        complexity: "simple",
+        lineRange: [
+          165,
+          181
+        ],
+        cluster: null,
+        coverage: 96,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/components/settings/sections/EventsSection.tsx",
+      type: "file",
+      data: {
+        name: "EventsSection.tsx",
+        filePath: "studio/src/components/settings/sections/EventsSection.tsx",
+        summary: "Graph-scoped activity feed combining a paginated events query with a live event stream, with filtering and detail expansion.",
+        tags: [
+          "component",
+          "events",
+          "feed",
+          "settings"
+        ],
+        complexity: "complex",
+        cluster: "layer:studio-ui",
+        coverage: 46,
+        errors: 3
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/EventsSection.tsx:EventsSection",
+      type: "function",
+      data: {
+        name: "EventsSection",
+        filePath: "studio/src/components/settings/sections/EventsSection.tsx",
+        summary: "Top-level events section that merges queried and streamed events and renders the filtered list.",
+        tags: [
+          "component",
+          "events",
+          "feed",
+          "react"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          36,
+          83
+        ],
+        cluster: null,
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/EventsSection.tsx:EventRow",
+      type: "function",
+      data: {
+        name: "EventRow",
+        filePath: "studio/src/components/settings/sections/EventsSection.tsx",
+        summary: "Renders a single event entry with actor, action icon, relative time, and expandable details.",
+        tags: [
+          "component",
+          "events",
+          "react"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          131,
+          172
+        ],
+        cluster: null,
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/EventsSection.tsx:DetailsView",
+      type: "function",
+      data: {
+        name: "DetailsView",
+        filePath: "studio/src/components/settings/sections/EventsSection.tsx",
+        summary: "Expanded detail panel rendering structured key/value rows for an event payload.",
+        tags: [
+          "component",
+          "events",
+          "react"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          174,
+          240
+        ],
+        cluster: null,
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/EventsSection.tsx:iconForAction",
+      type: "function",
+      data: {
+        name: "iconForAction",
+        filePath: "studio/src/components/settings/sections/EventsSection.tsx",
+        summary: "Maps an event action string to its corresponding icon for display.",
+        tags: [
+          "utility",
+          "events",
+          "mapping"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          277,
+          304
+        ],
+        cluster: null,
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/components/settings/sections/InvitationsSection.tsx",
+      type: "file",
+      data: {
+        name: "InvitationsSection.tsx",
+        filePath: "studio/src/components/settings/sections/InvitationsSection.tsx",
+        summary: "Graph membership invitations panel listing pending invites and providing dialogs to create new invitations and reveal redeem URLs.",
+        tags: [
+          "component",
+          "invitations",
+          "membership",
+          "settings"
+        ],
+        complexity: "complex",
+        cluster: "layer:studio-ui",
+        coverage: 46,
+        errors: 1
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/InvitationsSection.tsx:InvitationsSection",
+      type: "function",
+      data: {
+        name: "InvitationsSection",
+        filePath: "studio/src/components/settings/sections/InvitationsSection.tsx",
+        summary: "Lists graph invitations and orchestrates create/redeem dialogs against the membership API.",
+        tags: [
+          "component",
+          "invitations",
+          "membership",
+          "react"
+        ],
+        complexity: "complex",
+        lineRange: [
+          33,
+          145
+        ],
+        cluster: null,
+        coverage: 51,
+        errors: 3
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/InvitationsSection.tsx:NewInvitationDialog",
+      type: "function",
+      data: {
+        name: "NewInvitationDialog",
+        filePath: "studio/src/components/settings/sections/InvitationsSection.tsx",
+        summary: "Dialog form for creating a new graph invitation with role selection and validation.",
+        tags: [
+          "component",
+          "dialog",
+          "invitations",
+          "form"
+        ],
+        complexity: "complex",
+        lineRange: [
+          147,
+          245
+        ],
+        cluster: null,
+        coverage: 48,
+        errors: 3
+      }
+    },
+    {
+      id: "file:studio/src/components/settings/sections/MembersInvitationsSection.tsx",
+      type: "file",
+      data: {
+        name: "MembersInvitationsSection.tsx",
+        filePath: "studio/src/components/settings/sections/MembersInvitationsSection.tsx",
+        summary: "Composite settings section that combines the members list and invitations panels under a shared header.",
+        tags: [
+          "component",
+          "membership",
+          "settings",
+          "composite"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-ui",
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/MembersInvitationsSection.tsx:MembersInvitationsSection",
+      type: "function",
+      data: {
+        name: "MembersInvitationsSection",
+        filePath: "studio/src/components/settings/sections/MembersInvitationsSection.tsx",
+        summary: "Renders members and invitations sections together, gated on the user's role.",
+        tags: [
+          "component",
+          "membership",
+          "settings",
+          "react"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          30,
+          76
+        ],
+        cluster: null,
+        coverage: 63,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/components/settings/sections/MembersSection.tsx",
+      type: "file",
+      data: {
+        name: "MembersSection.tsx",
+        filePath: "studio/src/components/settings/sections/MembersSection.tsx",
+        summary: "Lists current graph members with their roles and provides role management/removal actions via the membership API.",
+        tags: [
+          "component",
+          "membership",
+          "settings",
+          "api-handler"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-ui",
+        coverage: 64,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/MembersSection.tsx:MembersSection",
+      type: "function",
+      data: {
+        name: "MembersSection",
+        filePath: "studio/src/components/settings/sections/MembersSection.tsx",
+        summary: "Fetches and renders graph members, allowing role changes and removals scoped to the user's permissions.",
+        tags: [
+          "component",
+          "membership",
+          "react"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          23,
+          151
+        ],
+        cluster: null,
+        coverage: 72,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/hooks/queries/useEvents.ts",
+      type: "file",
+      data: {
+        name: "useEvents.ts",
+        filePath: "studio/src/hooks/queries/useEvents.ts",
+        summary: "TanStack Query hooks for fetching graph-scoped and global platform event feeds.",
+        tags: [
+          "hook",
+          "events",
+          "data-fetching",
+          "query"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-data",
+        coverage: 84,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useEvents.ts:useGraphEventsQuery",
+      type: "function",
+      data: {
+        name: "useGraphEventsQuery",
+        filePath: "studio/src/hooks/queries/useEvents.ts",
+        summary: "Query hook fetching the event feed for a specific graph with optional filters.",
+        tags: [
+          "hook",
+          "events",
+          "query"
+        ],
+        complexity: "simple",
+        lineRange: [
+          15,
+          31
+        ],
+        cluster: null,
+        coverage: 96,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useEvents.ts:useGlobalEventsQuery",
+      type: "function",
+      data: {
+        name: "useGlobalEventsQuery",
+        filePath: "studio/src/hooks/queries/useEvents.ts",
+        summary: "Query hook fetching the platform-wide event feed with optional filters.",
+        tags: [
+          "hook",
+          "events",
+          "query"
+        ],
+        complexity: "simple",
+        lineRange: [
+          33,
+          47
+        ],
+        cluster: null,
+        coverage: 87,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/hooks/useAuth.ts",
+      type: "file",
+      data: {
+        name: "useAuth.ts",
+        filePath: "studio/src/hooks/useAuth.ts",
+        summary: "Central authentication hook exposing the current user, login/logout actions, and role helpers backed by the auth store and API.",
+        tags: [
+          "hook",
+          "auth",
+          "state",
+          "service"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-data",
+        coverage: 74,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/useAuth.ts:useAuth",
+      type: "function",
+      data: {
+        name: "useAuth",
+        filePath: "studio/src/hooks/useAuth.ts",
+        summary: "Provides authenticated user state and login, logout, and role-check operations to components.",
+        tags: [
+          "hook",
+          "auth",
+          "state",
+          "react"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          5,
+          74
+        ],
+        cluster: null,
+        coverage: 86,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/hooks/useEventStream.ts",
+      type: "file",
+      data: {
+        name: "useEventStream.ts",
+        filePath: "studio/src/hooks/useEventStream.ts",
+        summary: "Hook that subscribes to a server-sent event stream of live platform/graph events, authenticated via the current session.",
+        tags: [
+          "hook",
+          "events",
+          "sse",
+          "streaming"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-data",
+        coverage: 71,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/useEventStream.ts:useEventStream",
+      type: "function",
+      data: {
+        name: "useEventStream",
+        filePath: "studio/src/hooks/useEventStream.ts",
+        summary: "Opens and manages a live event stream subscription, delivering parsed events to the caller.",
+        tags: [
+          "hook",
+          "events",
+          "streaming",
+          "react"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          43,
+          87
+        ],
+        cluster: null,
+        coverage: 86,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/modeller/introspector.py",
+      type: "file",
+      data: {
+        name: "introspector.py",
+        filePath: "engine/src/invana/modeller/introspector.py",
+        summary: "Discovers an existing graph database's schema (node/edge labels, properties, indexes, constraints) via a connector and materializes it as a new draft schema version.",
+        tags: [
+          "data-model",
+          "introspection",
+          "schema-definition",
+          "service"
+        ],
+        complexity: "complex",
+        cluster: "layer:modeller",
+        coverage: 50,
+        errors: 1
+      }
+    },
+    {
+      id: "file:engine/src/invana/modeller/json_io.py",
+      type: "file",
+      data: {
+        name: "json_io.py",
+        filePath: "engine/src/invana/modeller/json_io.py",
+        summary: "Exports an active schema version to a portable JSON document and imports such a document back into a new schema version.",
+        tags: [
+          "data-model",
+          "serialization",
+          "schema-definition",
+          "import-export"
+        ],
+        complexity: "complex",
+        cluster: "layer:modeller",
+        coverage: 63,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/modeller/projector.py",
+      type: "file",
+      data: {
+        name: "projector.py",
+        filePath: "engine/src/invana/modeller/projector.py",
+        summary: "Projects the modelled schema's desired indexes and constraints onto a live graph database, gating each operation on connector capabilities and recording the projection result.",
+        tags: [
+          "data-model",
+          "schema-definition",
+          "service",
+          "projection"
+        ],
+        complexity: "complex",
+        cluster: "layer:modeller",
+        coverage: 60,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/modeller/reconciler.py",
+      type: "file",
+      data: {
+        name: "reconciler.py",
+        filePath: "engine/src/invana/modeller/reconciler.py",
+        summary: "Reconciles the application's active schema version with the live database state, handling no-active, app-ahead, and db-ahead drift scenarios via introspection or projection.",
+        tags: [
+          "data-model",
+          "schema-definition",
+          "reconciliation",
+          "service"
+        ],
+        complexity: "complex",
+        cluster: "layer:modeller",
+        coverage: 54,
+        errors: 2
+      }
+    },
+    {
+      id: "file:engine/src/invana/modeller/schemas.py",
+      type: "file",
+      data: {
+        name: "schemas.py",
+        filePath: "engine/src/invana/modeller/schemas.py",
+        summary: "Pydantic request/response and diff models for the modeller API covering property keys, node/edge types, constraints, indexes, versions, projection, introspection, reconciliation, and export.",
+        tags: [
+          "type-definition",
+          "validation",
+          "data-model",
+          "api-schema"
+        ],
+        complexity: "complex",
+        languageNotes: "40 Pydantic models grouped by Create/Response/Update triplets per schema entity.",
+        cluster: "layer:modeller",
+        coverage: 65,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/modeller/validator.py",
+      type: "file",
+      data: {
+        name: "validator.py",
+        filePath: "engine/src/invana/modeller/validator.py",
+        summary: "Runtime schema validator that caches an active schema version and validates vertex/edge create and update payloads against type, property, constraint, and validation-rule definitions.",
+        tags: [
+          "validation",
+          "data-model",
+          "service",
+          "schema-definition"
+        ],
+        complexity: "complex",
+        cluster: "layer:modeller",
+        coverage: 56,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/modeller/versioner.py",
+      type: "file",
+      data: {
+        name: "versioner.py",
+        filePath: "engine/src/invana/modeller/versioner.py",
+        summary: "Computes structural diffs between schema versions, classifies them as major/minor/patch, bumps semver, and activates a version while archiving the prior active one.",
+        tags: [
+          "data-model",
+          "versioning",
+          "diff",
+          "service"
+        ],
+        complexity: "complex",
+        cluster: "layer:modeller",
+        coverage: 54,
+        errors: 1
+      }
+    },
+    {
+      id: "file:engine/src/invana/telemetry/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/telemetry/__init__.py",
+        summary: "Telemetry package init exposing setup helpers via a lazy module __getattr__ to avoid eager import of heavy OpenTelemetry dependencies.",
+        tags: [
+          "package-init",
+          "monitoring",
+          "lazy-import"
+        ],
+        complexity: "simple",
+        languageNotes: "Uses PEP 562 module-level __getattr__ for lazy attribute resolution.",
+        cluster: "layer:engine-platform",
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/telemetry/decorators/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/telemetry/decorators/__init__.py",
+        summary: "Telemetry decorators package init re-exporting the capture_metrics and track decorators.",
+        tags: [
+          "barrel",
+          "package-init",
+          "monitoring"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-platform",
+        coverage: 98,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/telemetry/decorators/capture_metrics.py",
+      type: "file",
+      data: {
+        name: "capture_metrics.py",
+        filePath: "engine/src/invana/telemetry/decorators/capture_metrics.py",
+        summary: "Decorator that records OpenTelemetry metrics (duration, count, errors, in-flight) for sync and async functions, resolving domain-specific instruments and label sets.",
+        tags: [
+          "monitoring",
+          "decorator",
+          "metrics",
+          "middleware"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-platform",
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/telemetry/decorators/track.py",
+      type: "file",
+      data: {
+        name: "track.py",
+        filePath: "engine/src/invana/telemetry/decorators/track.py",
+        summary: "Decorator that wraps functions in an OpenTelemetry span, attaching call metadata, capturing args/result/locals, and emitting duration metrics on success or failure.",
+        tags: [
+          "monitoring",
+          "decorator",
+          "tracing",
+          "middleware"
+        ],
+        complexity: "complex",
+        cluster: "layer:engine-platform",
+        coverage: 65,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/telemetry/metrics.py",
+      type: "file",
+      data: {
+        name: "metrics.py",
+        filePath: "engine/src/invana/telemetry/metrics.py",
+        summary: "Declares the OpenTelemetry metric instruments (counters, histograms, up-down counters) used across the engine's domains.",
+        tags: [
+          "monitoring",
+          "metrics",
+          "configuration"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-platform",
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/telemetry/middleware.py",
+      type: "file",
+      data: {
+        name: "middleware.py",
+        filePath: "engine/src/invana/telemetry/middleware.py",
+        summary: "Starlette middleware that records per-request metrics and attaches request/response context and client IP to telemetry, resolving the matched route from the ASGI scope.",
+        tags: [
+          "monitoring",
+          "middleware",
+          "metrics",
+          "asgi"
+        ],
+        complexity: "complex",
+        cluster: "layer:engine-platform",
+        coverage: 48,
+        errors: 3
+      }
+    },
+    {
+      id: "file:engine/src/invana/telemetry/setup.py",
+      type: "file",
+      data: {
+        name: "setup.py",
+        filePath: "engine/src/invana/telemetry/setup.py",
+        summary: "Bootstraps OpenTelemetry traces, metrics, and logs providers and instruments the FastAPI application with the telemetry middleware.",
+        tags: [
+          "monitoring",
+          "configuration",
+          "setup",
+          "tracing"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-platform",
+        coverage: 72,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/modeller/introspector.py:Introspector",
+      type: "class",
+      data: {
+        name: "Introspector",
+        filePath: "engine/src/invana/modeller/introspector.py",
+        summary: "Reads a live graph database's labels, properties, indexes, and constraints through a connector and persists the discovered structure as a new draft schema version.",
+        tags: [
+          "data-model",
+          "introspection",
+          "schema-definition",
+          "service"
+        ],
+        complexity: "complex",
+        lineRange: [
+          36,
+          252
+        ],
+        cluster: null,
+        coverage: 49,
+        errors: 1
+      }
+    },
+    {
+      id: "class:engine/src/invana/modeller/json_io.py:SchemaExporter",
+      type: "class",
+      data: {
+        name: "SchemaExporter",
+        filePath: "engine/src/invana/modeller/json_io.py",
+        summary: "Serializes an active schema version (property keys, node/edge types, constraints, indexes) into a portable SchemaExport document.",
+        tags: [
+          "serialization",
+          "schema-definition",
+          "import-export"
+        ],
+        complexity: "complex",
+        lineRange: [
+          39,
+          155
+        ],
+        cluster: null,
+        coverage: 51,
+        errors: 3
+      }
+    },
+    {
+      id: "class:engine/src/invana/modeller/json_io.py:SchemaImporter",
+      type: "class",
+      data: {
+        name: "SchemaImporter",
+        filePath: "engine/src/invana/modeller/json_io.py",
+        summary: "Reconstructs a schema version from a SchemaExport document, recreating property keys, node/edge types, constraints, and indexes in the store.",
+        tags: [
+          "serialization",
+          "schema-definition",
+          "import-export"
+        ],
+        complexity: "complex",
+        lineRange: [
+          163,
+          263
+        ],
+        cluster: null,
+        coverage: 66,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/modeller/projector.py:Projector",
+      type: "class",
+      data: {
+        name: "Projector",
+        filePath: "engine/src/invana/modeller/projector.py",
+        summary: "Computes desired indexes/constraints from the schema and applies the missing ones to a live database through capability-gated connector calls, recording a projection.",
+        tags: [
+          "data-model",
+          "schema-definition",
+          "projection",
+          "service"
+        ],
+        complexity: "complex",
+        lineRange: [
+          103,
+          299
+        ],
+        cluster: null,
+        coverage: 66,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/modeller/reconciler.py:Reconciler",
+      type: "class",
+      data: {
+        name: "Reconciler",
+        filePath: "engine/src/invana/modeller/reconciler.py",
+        summary: "Coordinates introspector and projector to bring the active schema version and live database into agreement, computing drift and dispatching on which side is ahead.",
+        tags: [
+          "data-model",
+          "reconciliation",
+          "schema-definition",
+          "service"
+        ],
+        complexity: "complex",
+        lineRange: [
+          51,
+          371
+        ],
+        cluster: null,
+        coverage: 57,
+        errors: 1
+      }
+    },
+    {
+      id: "class:engine/src/invana/modeller/validator.py:SchemaValidator",
+      type: "class",
+      data: {
+        name: "SchemaValidator",
+        filePath: "engine/src/invana/modeller/validator.py",
+        summary: "Caches an active schema and validates vertex/edge create and update payloads against types, effective property mappings, constraints, and validation rules.",
+        tags: [
+          "validation",
+          "data-model",
+          "service",
+          "schema-definition"
+        ],
+        complexity: "complex",
+        lineRange: [
+          207,
+          467
+        ],
+        cluster: null,
+        coverage: 64,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/modeller/validator.py:_validate_rules",
+      type: "function",
+      data: {
+        name: "_validate_rules",
+        filePath: "engine/src/invana/modeller/validator.py",
+        summary: "Validates a single property value against a list of validation rules (regex, range, length, allowed values) collecting any violations.",
+        tags: [
+          "validation",
+          "data-model",
+          "utility"
+        ],
+        complexity: "complex",
+        lineRange: [
+          124,
+          199
+        ],
+        cluster: null,
+        coverage: 59,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/modeller/validator.py:_build_cache",
+      type: "function",
+      data: {
+        name: "_build_cache",
+        filePath: "engine/src/invana/modeller/validator.py",
+        summary: "Builds an in-memory cache of node/edge types, effective mappings, constraints, and subtypes from a schema version for fast validation.",
+        tags: [
+          "validation",
+          "caching",
+          "data-model"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          68,
+          93
+        ],
+        cluster: null,
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/modeller/versioner.py:compute_diff",
+      type: "function",
+      data: {
+        name: "compute_diff",
+        filePath: "engine/src/invana/modeller/versioner.py",
+        summary: "Computes a structural SchemaDiff between two schema versions across property keys, node/edge types, constraints, and indexes, then classifies the change magnitude.",
+        tags: [
+          "data-model",
+          "diff",
+          "versioning"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          215,
+          239
+        ],
+        cluster: null,
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/modeller/versioner.py:_classify",
+      type: "function",
+      data: {
+        name: "_classify",
+        filePath: "engine/src/invana/modeller/versioner.py",
+        summary: "Classifies a schema diff as major, minor, or patch based on which kinds of additions, removals, and modifications occurred.",
+        tags: [
+          "data-model",
+          "versioning",
+          "diff"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          175,
+          212
+        ],
+        cluster: null,
+        coverage: 69,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/modeller/versioner.py:_diff_node_types",
+      type: "function",
+      data: {
+        name: "_diff_node_types",
+        filePath: "engine/src/invana/modeller/versioner.py",
+        summary: "Diffs two sets of node types, reporting added, removed, and modified types with their property-mapping and metadata changes.",
+        tags: [
+          "data-model",
+          "diff",
+          "versioning"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          89,
+          120
+        ],
+        cluster: null,
+        coverage: 70,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/modeller/versioner.py:_diff_edge_types",
+      type: "function",
+      data: {
+        name: "_diff_edge_types",
+        filePath: "engine/src/invana/modeller/versioner.py",
+        summary: "Diffs two sets of edge types, reporting added, removed, and modified types with their property-mapping and metadata changes.",
+        tags: [
+          "data-model",
+          "diff",
+          "versioning"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          123,
+          154
+        ],
+        cluster: null,
+        coverage: 86,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/modeller/versioner.py:Versioner",
+      type: "class",
+      data: {
+        name: "Versioner",
+        filePath: "engine/src/invana/modeller/versioner.py",
+        summary: "Activates a schema version by diffing it against the current active one, bumping semver, archiving the prior active version, and computing version-to-version diffs.",
+        tags: [
+          "data-model",
+          "versioning",
+          "service"
+        ],
+        complexity: "complex",
+        lineRange: [
+          272,
+          355
+        ],
+        cluster: null,
+        coverage: 58,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/telemetry/decorators/capture_metrics.py:capture_metrics",
+      type: "function",
+      data: {
+        name: "capture_metrics",
+        filePath: "engine/src/invana/telemetry/decorators/capture_metrics.py",
+        summary: "Decorator factory that wraps sync or async functions to record duration, count, error, and in-flight metrics for a given domain and operation.",
+        tags: [
+          "monitoring",
+          "decorator",
+          "metrics"
+        ],
+        complexity: "complex",
+        lineRange: [
+          114,
+          174
+        ],
+        cluster: null,
+        coverage: 52,
+        errors: 1
+      }
+    },
+    {
+      id: "function:engine/src/invana/telemetry/decorators/capture_metrics.py:_get_domain_instruments",
+      type: "function",
+      data: {
+        name: "_get_domain_instruments",
+        filePath: "engine/src/invana/telemetry/decorators/capture_metrics.py",
+        summary: "Resolves the set of OpenTelemetry metric instruments associated with a given telemetry domain.",
+        tags: [
+          "monitoring",
+          "metrics",
+          "utility"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          42,
+          88
+        ],
+        cluster: null,
+        coverage: 71,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/telemetry/decorators/capture_metrics.py:_MetricRecorder",
+      type: "class",
+      data: {
+        name: "_MetricRecorder",
+        filePath: "engine/src/invana/telemetry/decorators/capture_metrics.py",
+        summary: "Helper that brackets a function call with before/after-success/after-failure/finally hooks to record metric instruments.",
+        tags: [
+          "monitoring",
+          "metrics",
+          "helper"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          91,
+          111
+        ],
+        cluster: null,
+        coverage: 63,
+        errors: 1
+      }
+    },
+    {
+      id: "function:engine/src/invana/telemetry/decorators/track.py:track",
+      type: "function",
+      data: {
+        name: "track",
+        filePath: "engine/src/invana/telemetry/decorators/track.py",
+        summary: "Decorator factory that wraps sync or async functions in an OpenTelemetry span with configurable capture of args, result, and local variables.",
+        tags: [
+          "monitoring",
+          "decorator",
+          "tracing"
+        ],
+        complexity: "complex",
+        lineRange: [
+          48,
+          102
+        ],
+        cluster: null,
+        coverage: 49,
+        errors: 1
+      }
+    },
+    {
+      id: "function:engine/src/invana/telemetry/decorators/track.py:_on_failure",
+      type: "function",
+      data: {
+        name: "_on_failure",
+        filePath: "engine/src/invana/telemetry/decorators/track.py",
+        summary: "Records an exception on the active span, optionally capturing local variables, and emits a failure-status duration metric.",
+        tags: [
+          "monitoring",
+          "tracing",
+          "error-handling"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          148,
+          170
+        ],
+        cluster: null,
+        coverage: 75,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/telemetry/decorators/track.py:_capture_locals",
+      type: "function",
+      data: {
+        name: "_capture_locals",
+        filePath: "engine/src/invana/telemetry/decorators/track.py",
+        summary: "Extracts and attaches a safe, truncated snapshot of an exception's frame local variables to a span.",
+        tags: [
+          "monitoring",
+          "tracing",
+          "error-handling"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          173,
+          196
+        ],
+        cluster: null,
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/telemetry/middleware.py:TelemetryMiddleware",
+      type: "class",
+      data: {
+        name: "TelemetryMiddleware",
+        filePath: "engine/src/invana/telemetry/middleware.py",
+        summary: "Starlette/ASGI middleware that records per-request metrics and attaches request, response, and client-IP context to telemetry, resolving the matched route from the scope.",
+        tags: [
+          "monitoring",
+          "middleware",
+          "metrics",
+          "asgi"
+        ],
+        complexity: "complex",
+        lineRange: [
+          1,
+          230
+        ],
+        cluster: null,
+        coverage: 45,
+        errors: 1
+      }
+    },
+    {
+      id: "function:engine/src/invana/telemetry/setup.py:setup_telemetry",
+      type: "function",
+      data: {
+        name: "setup_telemetry",
+        filePath: "engine/src/invana/telemetry/setup.py",
+        summary: "Configures OpenTelemetry trace, metric, and log providers based on settings, wiring exporters and resource attributes.",
+        tags: [
+          "monitoring",
+          "setup",
+          "configuration"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          1,
+          60
+        ],
+        cluster: null,
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/telemetry/setup.py:instrument_app",
+      type: "function",
+      data: {
+        name: "instrument_app",
+        filePath: "engine/src/invana/telemetry/setup.py",
+        summary: "Instruments the FastAPI application by installing the telemetry middleware and auto-instrumentations.",
+        tags: [
+          "monitoring",
+          "setup",
+          "asgi"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          1,
+          60
+        ],
+        cluster: null,
+        coverage: 67,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/__init__.py",
+        summary: "Top-level package init for the Invana engine; configures logging on import and exposes the package version and core settings.",
+        tags: [
+          "entry-point",
+          "package-init",
+          "configuration"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-platform",
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/cli/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/cli/__init__.py",
+        summary: "CLI package init that re-exports the Click application object from cli/main.",
+        tags: [
+          "entry-point",
+          "barrel",
+          "cli"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-platform",
+        coverage: 91,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/cli/commands/loader.py",
+      type: "file",
+      data: {
+        name: "loader.py",
+        filePath: "engine/src/invana/cli/commands/loader.py",
+        summary: "Click command that bulk-loads CSV node/edge data into a target graph via a dynamically resolved connector, printing a load summary.",
+        tags: [
+          "cli",
+          "data-pipeline",
+          "command",
+          "loader"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-platform",
+        coverage: 68,
+        errors: 1
+      }
+    },
+    {
+      id: "file:engine/src/invana/cli/commands/migrate.py",
+      type: "file",
+      data: {
+        name: "migrate.py",
+        filePath: "engine/src/invana/cli/commands/migrate.py",
+        summary: "Click command that runs Alembic database migrations against the application state DB.",
+        tags: [
+          "cli",
+          "command",
+          "migration"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-platform",
+        coverage: 84,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/cli/commands/start.py",
+      type: "file",
+      data: {
+        name: "start.py",
+        filePath: "engine/src/invana/cli/commands/start.py",
+        summary: "Click command that launches the FastAPI engine via uvicorn with configurable host, port, and reload options.",
+        tags: [
+          "cli",
+          "command",
+          "entry-point",
+          "server"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-platform",
+        coverage: 89,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/cli/main.py",
+      type: "file",
+      data: {
+        name: "main.py",
+        filePath: "engine/src/invana/cli/main.py",
+        summary: "Root Click CLI group wiring together the init, loader, migrate, and start subcommands plus a version command.",
+        tags: [
+          "cli",
+          "entry-point",
+          "command-group"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-platform",
+        coverage: 100,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/loaders/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/graph/loaders/__init__.py",
+        summary: "Loaders package init re-exporting the CSV loader components.",
+        tags: [
+          "barrel",
+          "package-init",
+          "loader"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/loaders/csv.py",
+      type: "file",
+      data: {
+        name: "csv.py",
+        filePath: "engine/src/invana/graph/loaders/csv.py",
+        summary: "Async CSV loader that parses node/edge CSV files, coerces typed columns, and bulk-creates vertices and edges through a graph connector while tracking per-label stats.",
+        tags: [
+          "data-pipeline",
+          "loader",
+          "serialization",
+          "async"
+        ],
+        complexity: "complex",
+        languageNotes: "Uses async context manager protocol (__aenter__/__aexit__) and batched bulk writes with an in-memory source-id to vertex-id mapping for edge resolution.",
+        cluster: "layer:graph-connectors",
+        coverage: 48,
+        errors: 3
+      }
+    },
+    {
+      id: "file:engine/src/invana/logging/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/logging/__init__.py",
+        summary: "Logging package init re-exporting the configure_logging helper and logging filters.",
+        tags: [
+          "barrel",
+          "package-init",
+          "logging"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-platform",
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/logging/config.py",
+      type: "file",
+      data: {
+        name: "config.py",
+        filePath: "engine/src/invana/logging/config.py",
+        summary: "Defines the dictConfig-based logging configuration and the configure_logging entry point that applies it at startup.",
+        tags: [
+          "logging",
+          "configuration",
+          "utility"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-platform",
+        coverage: 74,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/logging/filters.py",
+      type: "file",
+      data: {
+        name: "filters.py",
+        filePath: "engine/src/invana/logging/filters.py",
+        summary: "Logging filters that suppress noisy third-party loggers and route OTLP/third-party records appropriately.",
+        tags: [
+          "logging",
+          "filter",
+          "utility"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-platform",
+        coverage: 95,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/logging/formatters.py",
+      type: "file",
+      data: {
+        name: "formatters.py",
+        filePath: "engine/src/invana/logging/formatters.py",
+        summary: "JSON log formatter that serializes log records into structured JSON lines including timestamp, level, message, and exception info.",
+        tags: [
+          "logging",
+          "formatter",
+          "serialization"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-platform",
+        coverage: 96,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/modeller/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/modeller/__init__.py",
+        summary: "Modeller package barrel re-exporting the schema store, validator, versioner, projector, reconciler, introspector, and JSON import/export components.",
+        tags: [
+          "barrel",
+          "package-init",
+          "data-model"
+        ],
+        complexity: "moderate",
+        cluster: "layer:modeller",
+        coverage: 78,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/modeller/database.py",
+      type: "file",
+      data: {
+        name: "database.py",
+        filePath: "engine/src/invana/modeller/database.py",
+        summary: "Thin re-export of the engine's database session helpers for use by the modeller's Alembic migrations.",
+        tags: [
+          "barrel",
+          "database",
+          "utility"
+        ],
+        complexity: "simple",
+        cluster: "layer:modeller",
+        coverage: 86,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/modeller/inheritance.py",
+      type: "file",
+      data: {
+        name: "inheritance.py",
+        filePath: "engine/src/invana/modeller/inheritance.py",
+        summary: "Computes node-type inheritance hierarchies, resolving effective property mappings across parents and detecting inheritance cycles and excessive depth.",
+        tags: [
+          "data-model",
+          "validation",
+          "ontology",
+          "inheritance"
+        ],
+        complexity: "moderate",
+        cluster: "layer:modeller",
+        coverage: 62,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/cli/commands/loader.py:_print_summary",
+      type: "function",
+      data: {
+        name: "_print_summary",
+        filePath: "engine/src/invana/cli/commands/loader.py",
+        summary: "Prints a human-readable summary of a CSV load run, listing per-label vertex/edge counts, failures, and errors.",
+        tags: [
+          "cli",
+          "output",
+          "utility"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          10,
+          41
+        ],
+        cluster: null,
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/cli/commands/loader.py:loader_cmd",
+      type: "function",
+      data: {
+        name: "loader_cmd",
+        filePath: "engine/src/invana/cli/commands/loader.py",
+        summary: "Click command entry that resolves a connector class, builds loader config, runs the async CSV load against a graph URI, and prints the result summary.",
+        tags: [
+          "cli",
+          "command",
+          "loader",
+          "entry-point"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          72,
+          119
+        ],
+        cluster: null,
+        coverage: 62,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/cli/commands/migrate.py:migrate_cmd",
+      type: "function",
+      data: {
+        name: "migrate_cmd",
+        filePath: "engine/src/invana/cli/commands/migrate.py",
+        summary: "Runs database migrations for the given database URL, reporting success or raising a Click error on failure.",
+        tags: [
+          "cli",
+          "command",
+          "migration"
+        ],
+        complexity: "simple",
+        lineRange: [
+          14,
+          25
+        ],
+        cluster: null,
+        coverage: 84,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/cli/commands/start.py:start_cmd",
+      type: "function",
+      data: {
+        name: "start_cmd",
+        filePath: "engine/src/invana/cli/commands/start.py",
+        summary: "Starts the FastAPI engine through uvicorn with the supplied host, port, and reload flag.",
+        tags: [
+          "cli",
+          "command",
+          "server",
+          "entry-point"
+        ],
+        complexity: "simple",
+        lineRange: [
+          12,
+          31
+        ],
+        cluster: null,
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graph/loaders/csv.py:_coerce_value",
+      type: "function",
+      data: {
+        name: "_coerce_value",
+        filePath: "engine/src/invana/graph/loaders/csv.py",
+        summary: "Coerces a raw CSV string value into a typed Python value (int, float, bool, string) based on a parsed type hint.",
+        tags: [
+          "serialization",
+          "type-coercion",
+          "utility"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          95,
+          125
+        ],
+        cluster: null,
+        coverage: 65,
+        errors: 1
+      }
+    },
+    {
+      id: "function:engine/src/invana/graph/loaders/csv.py:_parse_node_row",
+      type: "function",
+      data: {
+        name: "_parse_node_row",
+        filePath: "engine/src/invana/graph/loaders/csv.py",
+        summary: "Parses a CSV node row into a label and typed property dict, honoring an optional label override.",
+        tags: [
+          "serialization",
+          "parsing",
+          "utility"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          128,
+          142
+        ],
+        cluster: null,
+        coverage: 68,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graph/loaders/csv.py:_parse_edge_row",
+      type: "function",
+      data: {
+        name: "_parse_edge_row",
+        filePath: "engine/src/invana/graph/loaders/csv.py",
+        summary: "Parses a CSV edge row into a label, source/target ids, and typed property dict, honoring an optional label override.",
+        tags: [
+          "serialization",
+          "parsing",
+          "utility"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          145,
+          161
+        ],
+        cluster: null,
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/loaders/csv.py:LoaderConfig",
+      type: "class",
+      data: {
+        name: "LoaderConfig",
+        filePath: "engine/src/invana/graph/loaders/csv.py",
+        summary: "Configuration dataclass for the CSV loader controlling batch size, source-id retention, error handling, and dry-run mode.",
+        tags: [
+          "data-model",
+          "configuration",
+          "loader"
+        ],
+        complexity: "simple",
+        lineRange: [
+          37,
+          56
+        ],
+        cluster: null,
+        coverage: 88,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/loaders/csv.py:LoaderStats",
+      type: "class",
+      data: {
+        name: "LoaderStats",
+        filePath: "engine/src/invana/graph/loaders/csv.py",
+        summary: "Accumulates per-run load statistics including created/failed counts by label, errors, and elapsed duration.",
+        tags: [
+          "data-model",
+          "metrics",
+          "loader"
+        ],
+        complexity: "simple",
+        lineRange: [
+          60,
+          71
+        ],
+        cluster: null,
+        coverage: 91,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/loaders/csv.py:CSVLoader",
+      type: "class",
+      data: {
+        name: "CSVLoader",
+        filePath: "engine/src/invana/graph/loaders/csv.py",
+        summary: "Async loader that ingests a directory of node and edge CSV files, batching bulk vertex/edge creation through a connector and resolving edge endpoints via a source-id mapping.",
+        tags: [
+          "loader",
+          "data-pipeline",
+          "async",
+          "service"
+        ],
+        complexity: "complex",
+        lineRange: [
+          194,
+          481
+        ],
+        cluster: null,
+        coverage: 47,
+        errors: 3
+      }
+    },
+    {
+      id: "function:engine/src/invana/logging/config.py:configure_logging",
+      type: "function",
+      data: {
+        name: "configure_logging",
+        filePath: "engine/src/invana/logging/config.py",
+        summary: "Applies the logging dictConfig at the requested level, deep-copying and merging an optional override config before installing it.",
+        tags: [
+          "logging",
+          "configuration",
+          "setup"
+        ],
+        complexity: "simple",
+        lineRange: [
+          57,
+          81
+        ],
+        cluster: null,
+        coverage: 92,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/logging/filters.py:SuppressNoisyFilter",
+      type: "class",
+      data: {
+        name: "SuppressNoisyFilter",
+        filePath: "engine/src/invana/logging/filters.py",
+        summary: "Logging filter that drops records from noisy logger namespaces below a threshold.",
+        tags: [
+          "logging",
+          "filter"
+        ],
+        complexity: "simple",
+        lineRange: [
+          22,
+          35
+        ],
+        cluster: null,
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/logging/filters.py:OtlpThirdPartyFilter",
+      type: "class",
+      data: {
+        name: "OtlpThirdPartyFilter",
+        filePath: "engine/src/invana/logging/filters.py",
+        summary: "Logging filter that isolates OTLP and third-party logger records from the application's own log stream.",
+        tags: [
+          "logging",
+          "filter",
+          "monitoring"
+        ],
+        complexity: "simple",
+        lineRange: [
+          38,
+          52
+        ],
+        cluster: null,
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/logging/formatters.py:JSONFormatter",
+      type: "class",
+      data: {
+        name: "JSONFormatter",
+        filePath: "engine/src/invana/logging/formatters.py",
+        summary: "Formats log records as structured JSON lines including ISO timestamp, level, message, and serialized exception traceback.",
+        tags: [
+          "logging",
+          "formatter",
+          "serialization"
+        ],
+        complexity: "simple",
+        lineRange: [
+          10,
+          29
+        ],
+        cluster: null,
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/modeller/inheritance.py:build_hierarchy",
+      type: "function",
+      data: {
+        name: "build_hierarchy",
+        filePath: "engine/src/invana/modeller/inheritance.py",
+        summary: "Walks a node type's parent chain to build its inheritance hierarchy, raising on cycles or excessive depth.",
+        tags: [
+          "data-model",
+          "inheritance",
+          "validation"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          30,
+          60
+        ],
+        cluster: null,
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/modeller/inheritance.py:resolve_effective_mappings",
+      type: "function",
+      data: {
+        name: "resolve_effective_mappings",
+        filePath: "engine/src/invana/modeller/inheritance.py",
+        summary: "Resolves the effective property mappings for a node type by merging mappings inherited from its ancestor chain.",
+        tags: [
+          "data-model",
+          "inheritance",
+          "ontology"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          63,
+          91
+        ],
+        cluster: null,
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/modeller/inheritance.py:get_subtypes",
+      type: "function",
+      data: {
+        name: "get_subtypes",
+        filePath: "engine/src/invana/modeller/inheritance.py",
+        summary: "Returns the set of all subtypes that transitively inherit from the given type name.",
+        tags: [
+          "data-model",
+          "inheritance",
+          "ontology"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          94,
+          109
+        ],
+        cluster: null,
+        coverage: 73,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/auth/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/auth/__init__.py",
+        summary: "Auth package barrel re-exporting the get_current_user dependency for use across routers.",
+        tags: [
+          "entry-point",
+          "barrel",
+          "auth"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-domain",
+        coverage: 84,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/auth/deps.py",
+      type: "file",
+      data: {
+        name: "deps.py",
+        filePath: "engine/src/invana/auth/deps.py",
+        summary: "FastAPI dependencies that decode the JWT, load the User, and enforce authentication and superuser access on protected routes.",
+        tags: [
+          "middleware",
+          "auth",
+          "dependency-injection",
+          "jwt"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-domain",
+        coverage: 71,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/auth/deps.py:get_current_user",
+      type: "function",
+      data: {
+        name: "get_current_user",
+        filePath: "engine/src/invana/auth/deps.py",
+        summary: "get_current_user in deps.py.",
+        tags: [
+          "middleware",
+          "auth",
+          "dependency-injection"
+        ],
+        complexity: "simple",
+        lineRange: [
+          31,
+          78
+        ],
+        cluster: null,
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/auth/jwt.py",
+      type: "file",
+      data: {
+        name: "jwt.py",
+        filePath: "engine/src/invana/auth/jwt.py",
+        summary: "Encodes and decodes HS256 access tokens using the shared secret, raising InvalidTokenError on failure.",
+        tags: [
+          "auth",
+          "jwt",
+          "security",
+          "serialization"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-domain",
+        coverage: 82,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/auth/jwt.py:encode_access_token",
+      type: "function",
+      data: {
+        name: "encode_access_token",
+        filePath: "engine/src/invana/auth/jwt.py",
+        summary: "encode_access_token in jwt.py.",
+        tags: [
+          "auth",
+          "jwt",
+          "security"
+        ],
+        complexity: "simple",
+        lineRange: [
+          30,
+          39
+        ],
+        cluster: null,
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/auth/models.py",
+      type: "file",
+      data: {
+        name: "models.py",
+        filePath: "engine/src/invana/auth/models.py",
+        summary: "SQLAlchemy models for User (with globally unique username) and RefreshToken, the core identity tables.",
+        tags: [
+          "data-model",
+          "auth",
+          "orm"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-domain",
+        coverage: 71,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/auth/models.py:User",
+      type: "class",
+      data: {
+        name: "User",
+        filePath: "engine/src/invana/auth/models.py",
+        summary: "User model/class defined in models.py.",
+        tags: [
+          "data-model",
+          "auth",
+          "orm"
+        ],
+        complexity: "simple",
+        lineRange: [
+          33,
+          60
+        ],
+        cluster: null,
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/auth/passwords.py",
+      type: "file",
+      data: {
+        name: "passwords.py",
+        filePath: "engine/src/invana/auth/passwords.py",
+        summary: "Password hashing and verification via passlib/bcrypt with a weak-password guard.",
+        tags: [
+          "auth",
+          "security",
+          "validation",
+          "password"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-domain",
+        coverage: 97,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/auth/routes.py",
+      type: "file",
+      data: {
+        name: "routes.py",
+        filePath: "engine/src/invana/auth/routes.py",
+        summary: "FastAPI router exposing registration, login, refresh, logout, and self-service account endpoints under /auth.",
+        tags: [
+          "api-handler",
+          "auth",
+          "router"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-domain",
+        coverage: 68,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/auth/routes.py:username_available",
+      type: "function",
+      data: {
+        name: "username_available",
+        filePath: "engine/src/invana/auth/routes.py",
+        summary: "username_available in routes.py.",
+        tags: [
+          "api-handler",
+          "auth",
+          "router"
+        ],
+        complexity: "simple",
+        lineRange: [
+          33,
+          43
+        ],
+        cluster: null,
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/auth/schemas.py",
+      type: "file",
+      data: {
+        name: "schemas.py",
+        filePath: "engine/src/invana/auth/schemas.py",
+        summary: "Pydantic request and response schemas for the auth API, including user, membership, and invitation payloads.",
+        tags: [
+          "schema",
+          "type-definition",
+          "auth",
+          "serialization"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-domain",
+        coverage: 63,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/auth/services.py",
+      type: "file",
+      data: {
+        name: "services.py",
+        filePath: "engine/src/invana/auth/services.py",
+        summary: "Core auth business logic: username validation, invite-based registration, login/refresh/logout, self-service account mutations, and root bootstrap.",
+        tags: [
+          "service",
+          "auth",
+          "business-logic",
+          "validation"
+        ],
+        complexity: "complex",
+        cluster: "layer:engine-domain",
+        coverage: 60,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/auth/services.py:_validate_username_format",
+      type: "function",
+      data: {
+        name: "_validate_username_format",
+        filePath: "engine/src/invana/auth/services.py",
+        summary: "_validate_username_format in services.py.",
+        tags: [
+          "service",
+          "auth",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          71,
+          90
+        ],
+        cluster: null,
+        coverage: 95,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/auth/services.py:check_username_availability",
+      type: "function",
+      data: {
+        name: "check_username_availability",
+        filePath: "engine/src/invana/auth/services.py",
+        summary: "check_username_availability in services.py.",
+        tags: [
+          "service",
+          "auth",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          100,
+          116
+        ],
+        cluster: null,
+        coverage: 96,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/auth/services.py:_list_memberships",
+      type: "function",
+      data: {
+        name: "_list_memberships",
+        filePath: "engine/src/invana/auth/services.py",
+        summary: "_list_memberships in services.py.",
+        tags: [
+          "service",
+          "auth",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          124,
+          148
+        ],
+        cluster: null,
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/auth/services.py:_user_out",
+      type: "function",
+      data: {
+        name: "_user_out",
+        filePath: "engine/src/invana/auth/services.py",
+        summary: "_user_out in services.py.",
+        tags: [
+          "service",
+          "auth",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          151,
+          161
+        ],
+        cluster: null,
+        coverage: 89,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/auth/services.py:register_with_invite",
+      type: "function",
+      data: {
+        name: "register_with_invite",
+        filePath: "engine/src/invana/auth/services.py",
+        summary: "register_with_invite in services.py.",
+        tags: [
+          "service",
+          "auth",
+          "business-logic"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          179,
+          280
+        ],
+        cluster: null,
+        coverage: 84,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/auth/services.py:login",
+      type: "function",
+      data: {
+        name: "login",
+        filePath: "engine/src/invana/auth/services.py",
+        summary: "login in services.py.",
+        tags: [
+          "service",
+          "auth",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          288,
+          325
+        ],
+        cluster: null,
+        coverage: 98,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/auth/services.py:refresh",
+      type: "function",
+      data: {
+        name: "refresh",
+        filePath: "engine/src/invana/auth/services.py",
+        summary: "refresh in services.py.",
+        tags: [
+          "service",
+          "auth",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          328,
+          345
+        ],
+        cluster: null,
+        coverage: 97,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/auth/services.py:logout",
+      type: "function",
+      data: {
+        name: "logout",
+        filePath: "engine/src/invana/auth/services.py",
+        summary: "logout in services.py.",
+        tags: [
+          "service",
+          "auth",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          348,
+          360
+        ],
+        cluster: null,
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/auth/services.py:patch_me",
+      type: "function",
+      data: {
+        name: "patch_me",
+        filePath: "engine/src/invana/auth/services.py",
+        summary: "patch_me in services.py.",
+        tags: [
+          "service",
+          "auth",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          372,
+          420
+        ],
+        cluster: null,
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/auth/services.py:change_password",
+      type: "function",
+      data: {
+        name: "change_password",
+        filePath: "engine/src/invana/auth/services.py",
+        summary: "change_password in services.py.",
+        tags: [
+          "service",
+          "auth",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          423,
+          439
+        ],
+        cluster: null,
+        coverage: 88,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/auth/services.py:delete_me",
+      type: "function",
+      data: {
+        name: "delete_me",
+        filePath: "engine/src/invana/auth/services.py",
+        summary: "delete_me in services.py.",
+        tags: [
+          "service",
+          "auth",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          442,
+          460
+        ],
+        cluster: null,
+        coverage: 78,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/auth/services.py:bootstrap_root",
+      type: "function",
+      data: {
+        name: "bootstrap_root",
+        filePath: "engine/src/invana/auth/services.py",
+        summary: "bootstrap_root in services.py.",
+        tags: [
+          "service",
+          "auth",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          511,
+          542
+        ],
+        cluster: null,
+        coverage: 87,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/auth/tokens.py",
+      type: "file",
+      data: {
+        name: "tokens.py",
+        filePath: "engine/src/invana/auth/tokens.py",
+        summary: "Refresh-token lifecycle helpers: generate, hash, issue, look up, and revoke RefreshToken rows.",
+        tags: [
+          "service",
+          "auth",
+          "security",
+          "token"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-domain",
+        coverage: 78,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/auth/tokens.py:issue_refresh_token",
+      type: "function",
+      data: {
+        name: "issue_refresh_token",
+        filePath: "engine/src/invana/auth/tokens.py",
+        summary: "issue_refresh_token in tokens.py.",
+        tags: [
+          "service",
+          "auth",
+          "security"
+        ],
+        complexity: "simple",
+        lineRange: [
+          30,
+          41
+        ],
+        cluster: null,
+        coverage: 90,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/auth/tokens.py:find_active_refresh_token",
+      type: "function",
+      data: {
+        name: "find_active_refresh_token",
+        filePath: "engine/src/invana/auth/tokens.py",
+        summary: "find_active_refresh_token in tokens.py.",
+        tags: [
+          "service",
+          "auth",
+          "security"
+        ],
+        complexity: "simple",
+        lineRange: [
+          44,
+          55
+        ],
+        cluster: null,
+        coverage: 93,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/cli/commands/init.py",
+      type: "file",
+      data: {
+        name: "init.py",
+        filePath: "engine/src/invana/cli/commands/init.py",
+        summary: "CLI `invana init` command that bootstraps the root superuser account interactively from the command line.",
+        tags: [
+          "cli",
+          "entry-point",
+          "auth",
+          "bootstrap"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-platform",
+        coverage: 62,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/cli/commands/init.py:_validate_username_cli",
+      type: "function",
+      data: {
+        name: "_validate_username_cli",
+        filePath: "engine/src/invana/cli/commands/init.py",
+        summary: "_validate_username_cli in init.py.",
+        tags: [
+          "cli",
+          "entry-point",
+          "auth"
+        ],
+        complexity: "simple",
+        lineRange: [
+          26,
+          38
+        ],
+        cluster: null,
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/cli/commands/init.py:init_cmd",
+      type: "function",
+      data: {
+        name: "init_cmd",
+        filePath: "engine/src/invana/cli/commands/init.py",
+        summary: "init_cmd in init.py.",
+        tags: [
+          "cli",
+          "entry-point",
+          "auth"
+        ],
+        complexity: "simple",
+        lineRange: [
+          53,
+          75
+        ],
+        cluster: null,
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/cli/commands/init.py:_run_init",
+      type: "function",
+      data: {
+        name: "_run_init",
+        filePath: "engine/src/invana/cli/commands/init.py",
+        summary: "_run_init in init.py.",
+        tags: [
+          "cli",
+          "entry-point",
+          "auth"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          78,
+          136
+        ],
+        cluster: null,
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/db.py",
+      type: "file",
+      data: {
+        name: "db.py",
+        filePath: "engine/src/invana/db.py",
+        summary: "Async SQLAlchemy engine and session factory setup, the get_session dependency, and Alembic migration runner.",
+        tags: [
+          "service",
+          "database",
+          "orm",
+          "infrastructure"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-platform",
+        coverage: 87,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/db.py:create_sync_engine",
+      type: "function",
+      data: {
+        name: "create_sync_engine",
+        filePath: "engine/src/invana/db.py",
+        summary: "create_sync_engine in db.py.",
+        tags: [
+          "service",
+          "database",
+          "orm"
+        ],
+        complexity: "simple",
+        lineRange: [
+          40,
+          52
+        ],
+        cluster: null,
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/events/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/events/__init__.py",
+        summary: "Events package barrel exposing the event emission API surface.",
+        tags: [
+          "entry-point",
+          "barrel",
+          "events"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-domain",
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/events/actions.py",
+      type: "file",
+      data: {
+        name: "actions.py",
+        filePath: "engine/src/invana/events/actions.py",
+        summary: "Enumerates the canonical event action constants (e.g. graph.create, skill.update) used across event emission.",
+        tags: [
+          "type-definition",
+          "events",
+          "constants"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-domain",
+        coverage: 68,
+        errors: 1
+      }
+    },
+    {
+      id: "file:engine/src/invana/events/models.py",
+      type: "file",
+      data: {
+        name: "models.py",
+        filePath: "engine/src/invana/events/models.py",
+        summary: "SQLAlchemy Event model plus ActorType enum representing the immutable audit log of system activity.",
+        tags: [
+          "data-model",
+          "events",
+          "audit",
+          "orm"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-domain",
+        coverage: 78,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/events/models.py:Event",
+      type: "class",
+      data: {
+        name: "Event",
+        filePath: "engine/src/invana/events/models.py",
+        summary: "Event model/class defined in models.py.",
+        tags: [
+          "data-model",
+          "events",
+          "audit"
+        ],
+        complexity: "simple",
+        lineRange: [
+          58,
+          94
+        ],
+        cluster: null,
+        coverage: 92,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/events/notify.py",
+      type: "file",
+      data: {
+        name: "notify.py",
+        filePath: "engine/src/invana/events/notify.py",
+        summary: "Postgres LISTEN/NOTIFY daemon and in-process EventBroadcaster that fans live events out to SSE subscribers (RFC-018).",
+        tags: [
+          "service",
+          "events",
+          "streaming",
+          "pub-sub"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-domain",
+        coverage: 65,
+        errors: 1
+      }
+    },
+    {
+      id: "function:engine/src/invana/events/notify.py:iter_frames",
+      type: "function",
+      data: {
+        name: "iter_frames",
+        filePath: "engine/src/invana/events/notify.py",
+        summary: "iter_frames in notify.py.",
+        tags: [
+          "service",
+          "events",
+          "streaming"
+        ],
+        complexity: "simple",
+        lineRange: [
+          189,
+          222
+        ],
+        cluster: null,
+        coverage: 88,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/events/notify.py:EventBroadcaster",
+      type: "class",
+      data: {
+        name: "EventBroadcaster",
+        filePath: "engine/src/invana/events/notify.py",
+        summary: "In-process pub/sub broadcaster fed by a single Postgres LISTEN connection per worker, fanning events to subscriber queues.",
+        tags: [
+          "service",
+          "pub-sub",
+          "streaming",
+          "events"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          54,
+          175
+        ],
+        cluster: null,
+        coverage: 86,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/events/routes.py",
+      type: "file",
+      data: {
+        name: "routes.py",
+        filePath: "engine/src/invana/events/routes.py",
+        summary: "FastAPI router serving paginated event lists and live SSE event streams, both global and graph-scoped.",
+        tags: [
+          "api-handler",
+          "events",
+          "streaming",
+          "router"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-domain",
+        coverage: 69,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/events/routes.py:_sse_response",
+      type: "function",
+      data: {
+        name: "_sse_response",
+        filePath: "engine/src/invana/events/routes.py",
+        summary: "_sse_response in routes.py.",
+        tags: [
+          "api-handler",
+          "events",
+          "streaming"
+        ],
+        complexity: "simple",
+        lineRange: [
+          45,
+          56
+        ],
+        cluster: null,
+        coverage: 89,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/events/routes.py:list_events",
+      type: "function",
+      data: {
+        name: "list_events",
+        filePath: "engine/src/invana/events/routes.py",
+        summary: "list_events in routes.py.",
+        tags: [
+          "api-handler",
+          "events",
+          "streaming"
+        ],
+        complexity: "simple",
+        lineRange: [
+          63,
+          86
+        ],
+        cluster: null,
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/events/routes.py:list_graph_events",
+      type: "function",
+      data: {
+        name: "list_graph_events",
+        filePath: "engine/src/invana/events/routes.py",
+        summary: "list_graph_events in routes.py.",
+        tags: [
+          "api-handler",
+          "events",
+          "streaming"
+        ],
+        complexity: "simple",
+        lineRange: [
+          104,
+          127
+        ],
+        cluster: null,
+        coverage: 98,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/events/schemas.py",
+      type: "file",
+      data: {
+        name: "schemas.py",
+        filePath: "engine/src/invana/events/schemas.py",
+        summary: "Pydantic read schemas for serializing events and event-list responses to the API.",
+        tags: [
+          "schema",
+          "type-definition",
+          "events",
+          "serialization"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-domain",
+        coverage: 78,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/events/services.py",
+      type: "file",
+      data: {
+        name: "services.py",
+        filePath: "engine/src/invana/events/services.py",
+        summary: "Event service that emits audit events with sensitive-field redaction, field diffing, and trace correlation.",
+        tags: [
+          "service",
+          "events",
+          "audit",
+          "business-logic"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-domain",
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/events/services.py:emit_event",
+      type: "function",
+      data: {
+        name: "emit_event",
+        filePath: "engine/src/invana/events/services.py",
+        summary: "emit_event in services.py.",
+        tags: [
+          "service",
+          "events",
+          "audit"
+        ],
+        complexity: "simple",
+        lineRange: [
+          54,
+          93
+        ],
+        cluster: null,
+        coverage: 89,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/events/services.py:diff_changed_fields",
+      type: "function",
+      data: {
+        name: "diff_changed_fields",
+        filePath: "engine/src/invana/events/services.py",
+        summary: "diff_changed_fields in services.py.",
+        tags: [
+          "service",
+          "events",
+          "audit"
+        ],
+        complexity: "simple",
+        lineRange: [
+          99,
+          127
+        ],
+        cluster: null,
+        coverage: 80,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/events/services.py:current_trace_id",
+      type: "function",
+      data: {
+        name: "current_trace_id",
+        filePath: "engine/src/invana/events/services.py",
+        summary: "current_trace_id in services.py.",
+        tags: [
+          "service",
+          "events",
+          "audit"
+        ],
+        complexity: "simple",
+        lineRange: [
+          133,
+          148
+        ],
+        cluster: null,
+        coverage: 96,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/events/store.py",
+      type: "file",
+      data: {
+        name: "store.py",
+        filePath: "engine/src/invana/events/store.py",
+        summary: "Keyset-paginated EventStore providing filtered, cursor-based reads over the event log.",
+        tags: [
+          "service",
+          "events",
+          "database",
+          "pagination"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-domain",
+        coverage: 69,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/events/store.py:_decode_cursor",
+      type: "function",
+      data: {
+        name: "_decode_cursor",
+        filePath: "engine/src/invana/events/store.py",
+        summary: "_decode_cursor in store.py.",
+        tags: [
+          "service",
+          "events",
+          "database"
+        ],
+        complexity: "simple",
+        lineRange: [
+          143,
+          153
+        ],
+        cluster: null,
+        coverage: 95,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/events/store.py:EventStore",
+      type: "class",
+      data: {
+        name: "EventStore",
+        filePath: "engine/src/invana/events/store.py",
+        summary: "Keyset-paginated read store over the event log with filtering and cursor encoding.",
+        tags: [
+          "service",
+          "database",
+          "pagination",
+          "events"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          33,
+          126
+        ],
+        cluster: null,
+        coverage: 84,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graphs/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/graphs/__init__.py",
+        summary: "Graphs package barrel re-exporting the connection manager, models, and store.",
+        tags: [
+          "entry-point",
+          "barrel",
+          "graphs"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-domain",
+        coverage: 90,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graphs/deps.py",
+      type: "file",
+      data: {
+        name: "deps.py",
+        filePath: "engine/src/invana/graphs/deps.py",
+        summary: "Graph-scoped FastAPI dependencies resolving a Graph by username/slug and enforcing member/builder/admin roles and setup completion.",
+        tags: [
+          "middleware",
+          "graphs",
+          "dependency-injection",
+          "authorization"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-domain",
+        coverage: 65,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/deps.py:resolve_graph_by_username_slug",
+      type: "function",
+      data: {
+        name: "resolve_graph_by_username_slug",
+        filePath: "engine/src/invana/graphs/deps.py",
+        summary: "resolve_graph_by_username_slug in deps.py.",
+        tags: [
+          "middleware",
+          "graphs",
+          "dependency-injection"
+        ],
+        complexity: "simple",
+        lineRange: [
+          34,
+          52
+        ],
+        cluster: null,
+        coverage: 84,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/deps.py:get_graph_membership",
+      type: "function",
+      data: {
+        name: "get_graph_membership",
+        filePath: "engine/src/invana/graphs/deps.py",
+        summary: "get_graph_membership in deps.py.",
+        tags: [
+          "middleware",
+          "graphs",
+          "dependency-injection"
+        ],
+        complexity: "simple",
+        lineRange: [
+          55,
+          68
+        ],
+        cluster: null,
+        coverage: 97,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/deps.py:require_graph_setup_complete",
+      type: "function",
+      data: {
+        name: "require_graph_setup_complete",
+        filePath: "engine/src/invana/graphs/deps.py",
+        summary: "require_graph_setup_complete in deps.py.",
+        tags: [
+          "middleware",
+          "graphs",
+          "dependency-injection"
+        ],
+        complexity: "simple",
+        lineRange: [
+          96,
+          117
+        ],
+        cluster: null,
+        coverage: 87,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graphs/encryption.py",
+      type: "file",
+      data: {
+        name: "encryption.py",
+        filePath: "engine/src/invana/graphs/encryption.py",
+        summary: "Fernet helpers to encrypt and decrypt graph connection credentials at rest.",
+        tags: [
+          "security",
+          "encryption",
+          "graphs",
+          "serialization"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-domain",
+        coverage: 97,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/encryption.py:encrypt_credentials",
+      type: "function",
+      data: {
+        name: "encrypt_credentials",
+        filePath: "engine/src/invana/graphs/encryption.py",
+        summary: "encrypt_credentials in encryption.py.",
+        tags: [
+          "security",
+          "encryption",
+          "graphs"
+        ],
+        complexity: "simple",
+        lineRange: [
+          10,
+          20
+        ],
+        cluster: null,
+        coverage: 86,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/encryption.py:decrypt_credentials",
+      type: "function",
+      data: {
+        name: "decrypt_credentials",
+        filePath: "engine/src/invana/graphs/encryption.py",
+        summary: "decrypt_credentials in encryption.py.",
+        tags: [
+          "security",
+          "encryption",
+          "graphs"
+        ],
+        complexity: "simple",
+        lineRange: [
+          23,
+          40
+        ],
+        cluster: null,
+        coverage: 89,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graphs/manager.py",
+      type: "file",
+      data: {
+        name: "manager.py",
+        filePath: "engine/src/invana/graphs/manager.py",
+        summary: "GraphConnectionManager that builds, pools, and reuses live database connectors per graph, surfacing capabilities and introspection.",
+        tags: [
+          "service",
+          "graphs",
+          "connection-pool",
+          "factory"
+        ],
+        complexity: "complex",
+        cluster: "layer:engine-domain",
+        coverage: 67,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graphs/manager.py:GraphConnectionManager",
+      type: "class",
+      data: {
+        name: "GraphConnectionManager",
+        filePath: "engine/src/invana/graphs/manager.py",
+        summary: "Manages a pool of live graph database connectors keyed by graph, with capability resolution and introspection.",
+        tags: [
+          "service",
+          "connection-pool",
+          "factory",
+          "graphs"
+        ],
+        complexity: "complex",
+        lineRange: [
+          53,
+          323
+        ],
+        cluster: null,
+        coverage: 51,
+        errors: 3
+      }
+    },
+    {
+      id: "file:engine/src/invana/graphs/models.py",
+      type: "file",
+      data: {
+        name: "models.py",
+        filePath: "engine/src/invana/graphs/models.py",
+        summary: "SQLAlchemy models for the Graph container, its 1:1 GraphConnection, GraphMember, Invitation, plus role/status enums (RFC-017).",
+        tags: [
+          "data-model",
+          "graphs",
+          "orm"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-domain",
+        coverage: 74,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graphs/models.py:Graph",
+      type: "class",
+      data: {
+        name: "Graph",
+        filePath: "engine/src/invana/graphs/models.py",
+        summary: "Graph model/class defined in models.py.",
+        tags: [
+          "data-model",
+          "graphs",
+          "orm"
+        ],
+        complexity: "simple",
+        lineRange: [
+          85,
+          126
+        ],
+        cluster: null,
+        coverage: 91,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graphs/models.py:GraphConnection",
+      type: "class",
+      data: {
+        name: "GraphConnection",
+        filePath: "engine/src/invana/graphs/models.py",
+        summary: "GraphConnection model/class defined in models.py.",
+        tags: [
+          "data-model",
+          "graphs",
+          "orm"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          134,
+          187
+        ],
+        cluster: null,
+        coverage: 80,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graphs/routes.py",
+      type: "file",
+      data: {
+        name: "routes.py",
+        filePath: "engine/src/invana/graphs/routes.py",
+        summary: "FastAPI router for graph CRUD, membership, invitations, connection management, and connection testing/introspection.",
+        tags: [
+          "api-handler",
+          "graphs",
+          "router"
+        ],
+        complexity: "complex",
+        cluster: "layer:engine-domain",
+        coverage: 51,
+        errors: 1
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/routes.py:_build_connection_read",
+      type: "function",
+      data: {
+        name: "_build_connection_read",
+        filePath: "engine/src/invana/graphs/routes.py",
+        summary: "_build_connection_read in routes.py.",
+        tags: [
+          "api-handler",
+          "graphs",
+          "router"
+        ],
+        complexity: "simple",
+        lineRange: [
+          63,
+          79
+        ],
+        cluster: null,
+        coverage: 94,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/routes.py:_resolve_capabilities",
+      type: "function",
+      data: {
+        name: "_resolve_capabilities",
+        filePath: "engine/src/invana/graphs/routes.py",
+        summary: "_resolve_capabilities in routes.py.",
+        tags: [
+          "api-handler",
+          "graphs",
+          "router"
+        ],
+        complexity: "simple",
+        lineRange: [
+          82,
+          105
+        ],
+        cluster: null,
+        coverage: 86,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/routes.py:patch_graph",
+      type: "function",
+      data: {
+        name: "patch_graph",
+        filePath: "engine/src/invana/graphs/routes.py",
+        summary: "patch_graph in routes.py.",
+        tags: [
+          "api-handler",
+          "graphs",
+          "router"
+        ],
+        complexity: "simple",
+        lineRange: [
+          152,
+          161
+        ],
+        cluster: null,
+        coverage: 91,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/routes.py:update_member_role",
+      type: "function",
+      data: {
+        name: "update_member_role",
+        filePath: "engine/src/invana/graphs/routes.py",
+        summary: "update_member_role in routes.py.",
+        tags: [
+          "api-handler",
+          "graphs",
+          "router"
+        ],
+        complexity: "simple",
+        lineRange: [
+          191,
+          207
+        ],
+        cluster: null,
+        coverage: 88,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/routes.py:remove_member",
+      type: "function",
+      data: {
+        name: "remove_member",
+        filePath: "engine/src/invana/graphs/routes.py",
+        summary: "remove_member in routes.py.",
+        tags: [
+          "api-handler",
+          "graphs",
+          "router"
+        ],
+        complexity: "simple",
+        lineRange: [
+          211,
+          220
+        ],
+        cluster: null,
+        coverage: 82,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/routes.py:create_invitation",
+      type: "function",
+      data: {
+        name: "create_invitation",
+        filePath: "engine/src/invana/graphs/routes.py",
+        summary: "create_invitation in routes.py.",
+        tags: [
+          "api-handler",
+          "graphs",
+          "router"
+        ],
+        complexity: "simple",
+        lineRange: [
+          229,
+          243
+        ],
+        cluster: null,
+        coverage: 87,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/routes.py:delete_invitation",
+      type: "function",
+      data: {
+        name: "delete_invitation",
+        filePath: "engine/src/invana/graphs/routes.py",
+        summary: "delete_invitation in routes.py.",
+        tags: [
+          "api-handler",
+          "graphs",
+          "router"
+        ],
+        complexity: "simple",
+        lineRange: [
+          256,
+          270
+        ],
+        cluster: null,
+        coverage: 84,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/routes.py:put_connection",
+      type: "function",
+      data: {
+        name: "put_connection",
+        filePath: "engine/src/invana/graphs/routes.py",
+        summary: "put_connection in routes.py.",
+        tags: [
+          "api-handler",
+          "graphs",
+          "router"
+        ],
+        complexity: "simple",
+        lineRange: [
+          290,
+          313
+        ],
+        cluster: null,
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/routes.py:delete_connection",
+      type: "function",
+      data: {
+        name: "delete_connection",
+        filePath: "engine/src/invana/graphs/routes.py",
+        summary: "delete_connection in routes.py.",
+        tags: [
+          "api-handler",
+          "graphs",
+          "router"
+        ],
+        complexity: "simple",
+        lineRange: [
+          317,
+          328
+        ],
+        cluster: null,
+        coverage: 98,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/routes.py:update_setup_section",
+      type: "function",
+      data: {
+        name: "update_setup_section",
+        filePath: "engine/src/invana/graphs/routes.py",
+        summary: "update_setup_section in routes.py.",
+        tags: [
+          "api-handler",
+          "graphs",
+          "router"
+        ],
+        complexity: "simple",
+        lineRange: [
+          332,
+          344
+        ],
+        cluster: null,
+        coverage: 87,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/routes.py:test_connection",
+      type: "function",
+      data: {
+        name: "test_connection",
+        filePath: "engine/src/invana/graphs/routes.py",
+        summary: "test_connection in routes.py.",
+        tags: [
+          "api-handler",
+          "graphs",
+          "router"
+        ],
+        complexity: "simple",
+        lineRange: [
+          348,
+          380
+        ],
+        cluster: null,
+        coverage: 84,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/routes.py:ping_connection",
+      type: "function",
+      data: {
+        name: "ping_connection",
+        filePath: "engine/src/invana/graphs/routes.py",
+        summary: "ping_connection in routes.py.",
+        tags: [
+          "api-handler",
+          "graphs",
+          "router"
+        ],
+        complexity: "simple",
+        lineRange: [
+          384,
+          394
+        ],
+        cluster: null,
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/routes.py:introspect_connection",
+      type: "function",
+      data: {
+        name: "introspect_connection",
+        filePath: "engine/src/invana/graphs/routes.py",
+        summary: "introspect_connection in routes.py.",
+        tags: [
+          "api-handler",
+          "graphs",
+          "router"
+        ],
+        complexity: "simple",
+        lineRange: [
+          398,
+          418
+        ],
+        cluster: null,
+        coverage: 91,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graphs/schemas.py",
+      type: "file",
+      data: {
+        name: "schemas.py",
+        filePath: "engine/src/invana/graphs/schemas.py",
+        summary: "Pydantic schemas for graph CRUD, connection setup, and query request/response payloads.",
+        tags: [
+          "schema",
+          "type-definition",
+          "graphs",
+          "serialization"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-domain",
+        coverage: 86,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graphs/schemas.py:GraphConnectionRead",
+      type: "class",
+      data: {
+        name: "GraphConnectionRead",
+        filePath: "engine/src/invana/graphs/schemas.py",
+        summary: "GraphConnectionRead model/class defined in schemas.py.",
+        tags: [
+          "schema",
+          "type-definition",
+          "graphs"
+        ],
+        complexity: "simple",
+        lineRange: [
+          111,
+          133
+        ],
+        cluster: null,
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graphs/services.py",
+      type: "file",
+      data: {
+        name: "services.py",
+        filePath: "engine/src/invana/graphs/services.py",
+        summary: "Core graph business logic: graph CRUD, connection setup with encryption, setup-section tracking, membership, and invitations.",
+        tags: [
+          "service",
+          "graphs",
+          "business-logic"
+        ],
+        complexity: "complex",
+        cluster: "layer:engine-domain",
+        coverage: 54,
+        errors: 2
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/services.py:create_graph",
+      type: "function",
+      data: {
+        name: "create_graph",
+        filePath: "engine/src/invana/graphs/services.py",
+        summary: "create_graph in services.py.",
+        tags: [
+          "service",
+          "graphs",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          52,
+          98
+        ],
+        cluster: null,
+        coverage: 89,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/services.py:list_graphs_for_user",
+      type: "function",
+      data: {
+        name: "list_graphs_for_user",
+        filePath: "engine/src/invana/graphs/services.py",
+        summary: "list_graphs_for_user in services.py.",
+        tags: [
+          "service",
+          "graphs",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          101,
+          110
+        ],
+        cluster: null,
+        coverage: 89,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/services.py:update_graph",
+      type: "function",
+      data: {
+        name: "update_graph",
+        filePath: "engine/src/invana/graphs/services.py",
+        summary: "update_graph in services.py.",
+        tags: [
+          "service",
+          "graphs",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          117,
+          158
+        ],
+        cluster: null,
+        coverage: 92,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/services.py:delete_graph",
+      type: "function",
+      data: {
+        name: "delete_graph",
+        filePath: "engine/src/invana/graphs/services.py",
+        summary: "delete_graph in services.py.",
+        tags: [
+          "service",
+          "graphs",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          161,
+          183
+        ],
+        cluster: null,
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/services.py:put_graph_connection",
+      type: "function",
+      data: {
+        name: "put_graph_connection",
+        filePath: "engine/src/invana/graphs/services.py",
+        summary: "put_graph_connection in services.py.",
+        tags: [
+          "service",
+          "graphs",
+          "business-logic"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          196,
+          272
+        ],
+        cluster: null,
+        coverage: 75,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/services.py:test_connection_credentials",
+      type: "function",
+      data: {
+        name: "test_connection_credentials",
+        filePath: "engine/src/invana/graphs/services.py",
+        summary: "test_connection_credentials in services.py.",
+        tags: [
+          "service",
+          "graphs",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          275,
+          316
+        ],
+        cluster: null,
+        coverage: 93,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/services.py:delete_graph_connection",
+      type: "function",
+      data: {
+        name: "delete_graph_connection",
+        filePath: "engine/src/invana/graphs/services.py",
+        summary: "delete_graph_connection in services.py.",
+        tags: [
+          "service",
+          "graphs",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          319,
+          347
+        ],
+        cluster: null,
+        coverage: 90,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/services.py:_mark_section",
+      type: "function",
+      data: {
+        name: "_mark_section",
+        filePath: "engine/src/invana/graphs/services.py",
+        summary: "_mark_section in services.py.",
+        tags: [
+          "service",
+          "graphs",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          355,
+          369
+        ],
+        cluster: null,
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/services.py:update_setup_section",
+      type: "function",
+      data: {
+        name: "update_setup_section",
+        filePath: "engine/src/invana/graphs/services.py",
+        summary: "update_setup_section in services.py.",
+        tags: [
+          "service",
+          "graphs",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          372,
+          408
+        ],
+        cluster: null,
+        coverage: 93,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/services.py:_serialize_graph",
+      type: "function",
+      data: {
+        name: "_serialize_graph",
+        filePath: "engine/src/invana/graphs/services.py",
+        summary: "_serialize_graph in services.py.",
+        tags: [
+          "service",
+          "graphs",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          418,
+          448
+        ],
+        cluster: null,
+        coverage: 96,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/services.py:list_graph_members",
+      type: "function",
+      data: {
+        name: "list_graph_members",
+        filePath: "engine/src/invana/graphs/services.py",
+        summary: "list_graph_members in services.py.",
+        tags: [
+          "service",
+          "graphs",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          456,
+          474
+        ],
+        cluster: null,
+        coverage: 88,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/services.py:update_graph_member_role",
+      type: "function",
+      data: {
+        name: "update_graph_member_role",
+        filePath: "engine/src/invana/graphs/services.py",
+        summary: "update_graph_member_role in services.py.",
+        tags: [
+          "service",
+          "graphs",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          477,
+          522
+        ],
+        cluster: null,
+        coverage: 100,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/services.py:remove_graph_member",
+      type: "function",
+      data: {
+        name: "remove_graph_member",
+        filePath: "engine/src/invana/graphs/services.py",
+        summary: "remove_graph_member in services.py.",
+        tags: [
+          "service",
+          "graphs",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          525,
+          557
+        ],
+        cluster: null,
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/services.py:create_invitation",
+      type: "function",
+      data: {
+        name: "create_invitation",
+        filePath: "engine/src/invana/graphs/services.py",
+        summary: "create_invitation in services.py.",
+        tags: [
+          "service",
+          "graphs",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          574,
+          614
+        ],
+        cluster: null,
+        coverage: 80,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graphs/services.py:delete_invitation",
+      type: "function",
+      data: {
+        name: "delete_invitation",
+        filePath: "engine/src/invana/graphs/services.py",
+        summary: "delete_invitation in services.py.",
+        tags: [
+          "service",
+          "graphs",
+          "business-logic"
+        ],
+        complexity: "simple",
+        lineRange: [
+          622,
+          643
+        ],
+        cluster: null,
+        coverage: 88,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graphs/store.py",
+      type: "file",
+      data: {
+        name: "store.py",
+        filePath: "engine/src/invana/graphs/store.py",
+        summary: "GraphConnectionStore providing persistence operations for graph connection credentials and config.",
+        tags: [
+          "service",
+          "graphs",
+          "database",
+          "persistence"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-domain",
+        coverage: 80,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graphs/store.py:GraphConnectionStore",
+      type: "class",
+      data: {
+        name: "GraphConnectionStore",
+        filePath: "engine/src/invana/graphs/store.py",
+        summary: "Persistence layer for graph connection credentials and configuration rows.",
+        tags: [
+          "service",
+          "persistence",
+          "database",
+          "graphs"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          26,
+          166
+        ],
+        cluster: null,
+        coverage: 71,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/instructions/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/instructions/__init__.py",
+        summary: "Instructions package marker for graph-scoped agent instruction definitions.",
+        tags: [
+          "entry-point",
+          "barrel",
+          "instructions"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-domain",
+        coverage: 97,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/settings.py",
+      type: "file",
+      data: {
+        name: "settings.py",
+        filePath: "engine/src/invana/settings.py",
+        summary: "Pydantic Settings defining engine configuration (database URL, ports, secrets, telemetry) loaded from environment.",
+        tags: [
+          "config",
+          "configuration",
+          "settings"
+        ],
+        complexity: "moderate",
+        languageNotes: "Engine defaults to port 8200 locally; pydantic-settings sources values from env with computed properties.",
+        cluster: "layer:engine-platform",
+        coverage: 67,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/settings.py:Settings",
+      type: "class",
+      data: {
+        name: "Settings",
+        filePath: "engine/src/invana/settings.py",
+        summary: "Pydantic settings model centralizing engine configuration from environment variables.",
+        tags: [
+          "config",
+          "configuration",
+          "settings"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          20,
+          112
+        ],
+        cluster: null,
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/skills/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/skills/__init__.py",
+        summary: "Package marker for the skills module that manages graph-scoped agent skills.",
+        tags: [
+          "barrel",
+          "entry-point"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-domain",
+        coverage: 93,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/skills/models.py",
+      type: "file",
+      data: {
+        name: "models.py",
+        filePath: "engine/src/invana/skills/models.py",
+        summary: "SQLAlchemy ORM model for graph-scoped agent Skills with audit timestamps.",
+        tags: [
+          "data-model",
+          "orm",
+          "skills"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-domain",
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/skills/models.py:Skill",
+      type: "class",
+      data: {
+        name: "Skill",
+        filePath: "engine/src/invana/skills/models.py",
+        summary: "ORM entity for a graph skill with name, content and timestamps.",
+        tags: [
+          "data-model",
+          "orm",
+          "entity"
+        ],
+        complexity: "simple",
+        lineRange: [
+          26,
+          48
+        ],
+        cluster: null,
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/skills/routes.py",
+      type: "file",
+      data: {
+        name: "routes.py",
+        filePath: "engine/src/invana/skills/routes.py",
+        summary: "FastAPI router exposing graph-scoped CRUD endpoints for Skills, guarded by membership/builder dependencies.",
+        tags: [
+          "api-handler",
+          "router",
+          "skills",
+          "crud"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-domain",
+        coverage: 74,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/skills/routes.py:create_skill",
+      type: "function",
+      data: {
+        name: "create_skill",
+        filePath: "engine/src/invana/skills/routes.py",
+        summary: "POST handler creating a skill within a graph and committing.",
+        tags: [
+          "api-handler",
+          "create"
+        ],
+        complexity: "simple",
+        lineRange: [
+          52,
+          62
+        ],
+        cluster: null,
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/skills/routes.py:update_skill",
+      type: "function",
+      data: {
+        name: "update_skill",
+        filePath: "engine/src/invana/skills/routes.py",
+        summary: "PATCH handler updating a skill after a 404 lookup.",
+        tags: [
+          "api-handler",
+          "update"
+        ],
+        complexity: "simple",
+        lineRange: [
+          77,
+          89
+        ],
+        cluster: null,
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/skills/routes.py:delete_skill",
+      type: "function",
+      data: {
+        name: "delete_skill",
+        filePath: "engine/src/invana/skills/routes.py",
+        summary: "DELETE handler removing a skill and returning 204.",
+        tags: [
+          "api-handler",
+          "delete"
+        ],
+        complexity: "simple",
+        lineRange: [
+          93,
+          103
+        ],
+        cluster: null,
+        coverage: 98,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/skills/routes.py:list_skills",
+      type: "function",
+      data: {
+        name: "list_skills",
+        filePath: "engine/src/invana/skills/routes.py",
+        summary: "GET handler listing skills for a graph.",
+        tags: [
+          "api-handler",
+          "list"
+        ],
+        complexity: "simple",
+        lineRange: [
+          41,
+          48
+        ],
+        cluster: null,
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/skills/routes.py:get_skill",
+      type: "function",
+      data: {
+        name: "get_skill",
+        filePath: "engine/src/invana/skills/routes.py",
+        summary: "GET handler returning a single skill by id or 404.",
+        tags: [
+          "api-handler",
+          "read"
+        ],
+        complexity: "simple",
+        lineRange: [
+          66,
+          73
+        ],
+        cluster: null,
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/skills/schemas.py",
+      type: "file",
+      data: {
+        name: "schemas.py",
+        filePath: "engine/src/invana/skills/schemas.py",
+        summary: "Pydantic request/response schemas for the Skills API (create, update, read, list).",
+        tags: [
+          "type-definition",
+          "validation",
+          "schema"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-domain",
+        coverage: 96,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/skills/schemas.py:SkillRead",
+      type: "class",
+      data: {
+        name: "SkillRead",
+        filePath: "engine/src/invana/skills/schemas.py",
+        summary: "Read schema serializing a skill record for API responses.",
+        tags: [
+          "type-definition",
+          "serialization"
+        ],
+        complexity: "simple",
+        lineRange: [
+          24,
+          34
+        ],
+        cluster: null,
+        coverage: 84,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/skills/services.py",
+      type: "file",
+      data: {
+        name: "services.py",
+        filePath: "engine/src/invana/skills/services.py",
+        summary: "Service layer for Skills: persistence orchestration, 404 handling, and audit event emission.",
+        tags: [
+          "service",
+          "skills",
+          "business-logic"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-domain",
+        coverage: 86,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/skills/services.py:create_skill",
+      type: "function",
+      data: {
+        name: "create_skill",
+        filePath: "engine/src/invana/skills/services.py",
+        summary: "Creates a Skill via the store and emits a creation event.",
+        tags: [
+          "service",
+          "create",
+          "event-handler"
+        ],
+        complexity: "simple",
+        lineRange: [
+          29,
+          60
+        ],
+        cluster: null,
+        coverage: 99,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/skills/services.py:update_skill",
+      type: "function",
+      data: {
+        name: "update_skill",
+        filePath: "engine/src/invana/skills/services.py",
+        summary: "Applies a partial update to a skill, diffs changes and emits an update event.",
+        tags: [
+          "service",
+          "update",
+          "event-handler"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          63,
+          109
+        ],
+        cluster: null,
+        coverage: 73,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/skills/services.py:delete_skill",
+      type: "function",
+      data: {
+        name: "delete_skill",
+        filePath: "engine/src/invana/skills/services.py",
+        summary: "Deletes a skill via the store and emits a deletion event.",
+        tags: [
+          "service",
+          "delete",
+          "event-handler"
+        ],
+        complexity: "simple",
+        lineRange: [
+          112,
+          131
+        ],
+        cluster: null,
+        coverage: 97,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/skills/services.py:get_or_404",
+      type: "function",
+      data: {
+        name: "get_or_404",
+        filePath: "engine/src/invana/skills/services.py",
+        summary: "Fetches a skill scoped to a graph or raises 404.",
+        tags: [
+          "service",
+          "validation"
+        ],
+        complexity: "simple",
+        lineRange: [
+          22,
+          26
+        ],
+        cluster: null,
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/skills/services.py:list_skills",
+      type: "function",
+      data: {
+        name: "list_skills",
+        filePath: "engine/src/invana/skills/services.py",
+        summary: "Returns all skills for a graph via the store.",
+        tags: [
+          "service",
+          "list"
+        ],
+        complexity: "simple",
+        lineRange: [
+          18,
+          19
+        ],
+        cluster: null,
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/skills/store.py",
+      type: "file",
+      data: {
+        name: "store.py",
+        filePath: "engine/src/invana/skills/store.py",
+        summary: "Data-access store for Skills wrapping SQLAlchemy CRUD queries for a graph scope.",
+        tags: [
+          "service",
+          "data-access",
+          "orm"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-domain",
+        coverage: 89,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/skills/store.py:SkillStore",
+      type: "class",
+      data: {
+        name: "SkillStore",
+        filePath: "engine/src/invana/skills/store.py",
+        summary: "Repository encapsulating SQLAlchemy CRUD queries for Skill records.",
+        tags: [
+          "service",
+          "data-access",
+          "repository"
+        ],
+        complexity: "simple",
+        lineRange: [
+          11,
+          26
+        ],
+        cluster: null,
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/utils.py",
+      type: "file",
+      data: {
+        name: "utils.py",
+        filePath: "engine/src/invana/utils.py",
+        summary: "Shared utility helpers for the engine, including dynamic class import from a dotted path string.",
+        tags: [
+          "utility",
+          "helpers"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-platform",
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/utils.py:import_class_from_dotted_path",
+      type: "function",
+      data: {
+        name: "import_class_from_dotted_path",
+        filePath: "engine/src/invana/utils.py",
+        summary: "Dynamically imports and returns a class from a dotted module path string.",
+        tags: [
+          "utility",
+          "reflection",
+          "factory"
+        ],
+        complexity: "simple",
+        lineRange: [
+          8,
+          37
+        ],
+        cluster: null,
+        coverage: 87,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/llm_providers/store.py",
+      type: "file",
+      data: {
+        name: "store.py",
+        filePath: "engine/src/invana/llm_providers/store.py",
+        summary: "Data-access store for LLM providers wrapping SQLAlchemy queries including clearing the default flag across a graph.",
+        tags: [
+          "service",
+          "data-access",
+          "orm",
+          "llm"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-domain",
+        coverage: 89,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/llm_providers/store.py:LLMProviderStore",
+      type: "class",
+      data: {
+        name: "LLMProviderStore",
+        filePath: "engine/src/invana/llm_providers/store.py",
+        summary: "Repository encapsulating LLM provider CRUD plus a clear_default bulk update.",
+        tags: [
+          "service",
+          "data-access",
+          "repository"
+        ],
+        complexity: "simple",
+        lineRange: [
+          11,
+          35
+        ],
+        cluster: null,
+        coverage: 78,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/modeller/migrations/env.py",
+      type: "file",
+      data: {
+        name: "env.py",
+        filePath: "engine/src/invana/modeller/migrations/env.py",
+        summary: "Alembic migration environment configuring online/offline async migration runs against the app-state database.",
+        tags: [
+          "migration",
+          "config",
+          "database"
+        ],
+        complexity: "moderate",
+        languageNotes: "Uses async_engine_from_config with connection.run_sync to drive Alembic in an async SQLAlchemy context.",
+        cluster: "layer:modeller",
+        coverage: 67,
+        errors: 1
+      }
+    },
+    {
+      id: "function:engine/src/invana/modeller/migrations/env.py:run_async_migrations",
+      type: "function",
+      data: {
+        name: "run_async_migrations",
+        filePath: "engine/src/invana/modeller/migrations/env.py",
+        summary: "Creates an async engine and runs Alembic migrations within a synchronized connection.",
+        tags: [
+          "migration",
+          "database"
+        ],
+        complexity: "simple",
+        lineRange: [
+          54,
+          63
+        ],
+        cluster: null,
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/modeller/migrations/env.py:run_migrations_offline",
+      type: "function",
+      data: {
+        name: "run_migrations_offline",
+        filePath: "engine/src/invana/modeller/migrations/env.py",
+        summary: "Configures Alembic for offline (no-DBAPI) migration generation.",
+        tags: [
+          "migration",
+          "database"
+        ],
+        complexity: "simple",
+        lineRange: [
+          35,
+          45
+        ],
+        cluster: null,
+        coverage: 78,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/modeller/models.py",
+      type: "file",
+      data: {
+        name: "models.py",
+        filePath: "engine/src/invana/modeller/models.py",
+        summary: "Core SQLAlchemy ORM models for the Modeller: graph schemas, versions, property keys, node/edge types, mappings, validation rules, constraints, indexes and projections.",
+        tags: [
+          "data-model",
+          "orm",
+          "schema-definition",
+          "modeller"
+        ],
+        complexity: "complex",
+        languageNotes: "Declares the shared declarative Base reused across engine modules; rich relationship graph models versioned ontology metadata.",
+        cluster: "layer:modeller",
+        coverage: 68,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/modeller/models.py:SchemaVersion",
+      type: "class",
+      data: {
+        name: "SchemaVersion",
+        filePath: "engine/src/invana/modeller/models.py",
+        summary: "ORM entity for a versioned schema snapshot with status, change summary and child definition collections.",
+        tags: [
+          "data-model",
+          "orm",
+          "versioning"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          81,
+          106
+        ],
+        cluster: null,
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/modeller/models.py:GraphSchema",
+      type: "class",
+      data: {
+        name: "GraphSchema",
+        filePath: "engine/src/invana/modeller/models.py",
+        summary: "ORM entity representing a graph's ontology schema with validation mode and version history.",
+        tags: [
+          "data-model",
+          "orm",
+          "modeller"
+        ],
+        complexity: "simple",
+        lineRange: [
+          58,
+          73
+        ],
+        cluster: null,
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/modeller/models.py:NodeTypeDefinition",
+      type: "class",
+      data: {
+        name: "NodeTypeDefinition",
+        filePath: "engine/src/invana/modeller/models.py",
+        summary: "ORM entity defining a node type within a schema version, with inheritance and abstractness.",
+        tags: [
+          "data-model",
+          "orm",
+          "ontology"
+        ],
+        complexity: "simple",
+        lineRange: [
+          146,
+          163
+        ],
+        cluster: null,
+        coverage: 100,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/modeller/models.py:EdgeTypeDefinition",
+      type: "class",
+      data: {
+        name: "EdgeTypeDefinition",
+        filePath: "engine/src/invana/modeller/models.py",
+        summary: "ORM entity defining an edge type with source/target node types and multiplicity.",
+        tags: [
+          "data-model",
+          "orm",
+          "ontology"
+        ],
+        complexity: "simple",
+        lineRange: [
+          171,
+          191
+        ],
+        cluster: null,
+        coverage: 91,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/modeller/models.py:PropertyKeyDefinition",
+      type: "class",
+      data: {
+        name: "PropertyKeyDefinition",
+        filePath: "engine/src/invana/modeller/models.py",
+        summary: "ORM entity defining a reusable property key with type and cardinality.",
+        tags: [
+          "data-model",
+          "orm",
+          "ontology"
+        ],
+        complexity: "simple",
+        lineRange: [
+          114,
+          138
+        ],
+        cluster: null,
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/modeller/models.py:TypePropertyMapping",
+      type: "class",
+      data: {
+        name: "TypePropertyMapping",
+        filePath: "engine/src/invana/modeller/models.py",
+        summary: "ORM entity binding a property key to a node or edge type with defaults and ordering.",
+        tags: [
+          "data-model",
+          "orm",
+          "ontology"
+        ],
+        complexity: "simple",
+        lineRange: [
+          199,
+          228
+        ],
+        cluster: null,
+        coverage: 99,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/modeller/models.py:ConstraintDefinition",
+      type: "class",
+      data: {
+        name: "ConstraintDefinition",
+        filePath: "engine/src/invana/modeller/models.py",
+        summary: "ORM entity describing a schema constraint (e.g. uniqueness) on a target label.",
+        tags: [
+          "data-model",
+          "orm",
+          "constraint"
+        ],
+        complexity: "simple",
+        lineRange: [
+          265,
+          291
+        ],
+        cluster: null,
+        coverage: 92,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/modeller/models.py:IndexDefinition",
+      type: "class",
+      data: {
+        name: "IndexDefinition",
+        filePath: "engine/src/invana/modeller/models.py",
+        summary: "ORM entity describing an index definition for a target label with index type and options.",
+        tags: [
+          "data-model",
+          "orm",
+          "index"
+        ],
+        complexity: "simple",
+        lineRange: [
+          299,
+          317
+        ],
+        cluster: null,
+        coverage: 82,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/modeller/models.py:SchemaProjection",
+      type: "class",
+      data: {
+        name: "SchemaProjection",
+        filePath: "engine/src/invana/modeller/models.py",
+        summary: "ORM entity tracking projection of a schema version onto a connector with status and errors.",
+        tags: [
+          "data-model",
+          "orm",
+          "projection"
+        ],
+        complexity: "simple",
+        lineRange: [
+          325,
+          339
+        ],
+        cluster: null,
+        coverage: 80,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/modeller/store.py",
+      type: "file",
+      data: {
+        name: "store.py",
+        filePath: "engine/src/invana/modeller/store.py",
+        summary: "Large data-access layer for the Modeller, providing CRUD and lookup queries across all schema, version, property-key, node/edge-type, mapping, constraint, index and projection entities.",
+        tags: [
+          "service",
+          "data-access",
+          "orm",
+          "modeller"
+        ],
+        complexity: "complex",
+        languageNotes: "A single SchemaStore class aggregates ~38 async query methods over the modeller ORM models.",
+        cluster: "layer:modeller",
+        coverage: 65,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/modeller/store.py:SchemaStore",
+      type: "class",
+      data: {
+        name: "SchemaStore",
+        filePath: "engine/src/invana/modeller/store.py",
+        summary: "Repository exposing async CRUD/lookup queries for the full modeller schema model graph.",
+        tags: [
+          "service",
+          "data-access",
+          "repository",
+          "modeller"
+        ],
+        complexity: "complex",
+        lineRange: [
+          54,
+          694
+        ],
+        cluster: null,
+        coverage: 44,
+        errors: 3
+      }
+    },
+    {
+      id: "file:engine/src/invana/server/admin/auth.py",
+      type: "file",
+      data: {
+        name: "auth.py",
+        filePath: "engine/src/invana/server/admin/auth.py",
+        summary: "starlette-admin auth provider restricting the admin UI to superusers, validating credentials against the auth User model.",
+        tags: [
+          "security",
+          "auth",
+          "admin",
+          "middleware"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-platform",
+        coverage: 80,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/server/admin/auth.py:SuperuserAuthProvider",
+      type: "class",
+      data: {
+        name: "SuperuserAuthProvider",
+        filePath: "engine/src/invana/server/admin/auth.py",
+        summary: "Auth provider verifying superuser credentials and managing admin login/logout sessions.",
+        tags: [
+          "security",
+          "auth",
+          "admin"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          33,
+          86
+        ],
+        cluster: null,
+        coverage: 84,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/server/admin/views.py",
+      type: "file",
+      data: {
+        name: "views.py",
+        filePath: "engine/src/invana/server/admin/views.py",
+        summary: "starlette-admin model views registering every engine ORM model (schema, users, graphs, LLM providers, skills, instructions, events) into the admin interface.",
+        tags: [
+          "admin",
+          "config",
+          "crud",
+          "data-model"
+        ],
+        complexity: "complex",
+        languageNotes: "Twenty ModelView subclasses plus a mount_admin factory wiring the admin app into FastAPI.",
+        cluster: "layer:engine-platform",
+        coverage: 58,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/server/admin/views.py:mount_admin",
+      type: "function",
+      data: {
+        name: "mount_admin",
+        filePath: "engine/src/invana/server/admin/views.py",
+        summary: "Builds the starlette-admin app, registers all model views, and mounts it onto the FastAPI application.",
+        tags: [
+          "admin",
+          "factory",
+          "config"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          358,
+          441
+        ],
+        cluster: null,
+        coverage: 65,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/server/admin/views.py:EventView",
+      type: "class",
+      data: {
+        name: "EventView",
+        filePath: "engine/src/invana/server/admin/views.py",
+        summary: "Admin model view for Event records with read-oriented formatting.",
+        tags: [
+          "admin",
+          "crud"
+        ],
+        complexity: "simple",
+        lineRange: [
+          330,
+          355
+        ],
+        cluster: null,
+        coverage: 87,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/server/admin/views.py:UserView",
+      type: "class",
+      data: {
+        name: "UserView",
+        filePath: "engine/src/invana/server/admin/views.py",
+        summary: "Admin model view for User records with masked sensitive fields.",
+        tags: [
+          "admin",
+          "crud",
+          "security"
+        ],
+        complexity: "simple",
+        lineRange: [
+          162,
+          182
+        ],
+        cluster: null,
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/server/admin/views.py:InvitationView",
+      type: "class",
+      data: {
+        name: "InvitationView",
+        filePath: "engine/src/invana/server/admin/views.py",
+        summary: "Admin model view for Invitation records.",
+        tags: [
+          "admin",
+          "crud"
+        ],
+        complexity: "simple",
+        lineRange: [
+          216,
+          238
+        ],
+        cluster: null,
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/server/admin/views.py:RefreshTokenView",
+      type: "class",
+      data: {
+        name: "RefreshTokenView",
+        filePath: "engine/src/invana/server/admin/views.py",
+        summary: "Admin model view for RefreshToken records.",
+        tags: [
+          "admin",
+          "crud",
+          "security"
+        ],
+        complexity: "simple",
+        lineRange: [
+          241,
+          258
+        ],
+        cluster: null,
+        coverage: 78,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/server/app.py",
+      type: "file",
+      data: {
+        name: "app.py",
+        filePath: "engine/src/invana/server/app.py",
+        summary: "FastAPI application factory wiring lifespan startup (DB engine, migrations), routers, middleware, and the admin mount for the engine.",
+        tags: [
+          "entry-point",
+          "factory",
+          "api-handler",
+          "config"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-platform",
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/server/app.py:create_app",
+      type: "function",
+      data: {
+        name: "create_app",
+        filePath: "engine/src/invana/server/app.py",
+        summary: "Constructs the FastAPI app, registers routers, middleware, admin and the lifespan handler.",
+        tags: [
+          "entry-point",
+          "factory",
+          "config"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          53,
+          110
+        ],
+        cluster: null,
+        coverage: 64,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/server/app.py:lifespan",
+      type: "function",
+      data: {
+        name: "lifespan",
+        filePath: "engine/src/invana/server/app.py",
+        summary: "Async lifespan context initializing the DB engine and running migrations on startup, disposing on shutdown.",
+        tags: [
+          "entry-point",
+          "lifecycle",
+          "database"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          16,
+          50
+        ],
+        cluster: null,
+        coverage: 70,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/server/health.py",
+      type: "file",
+      data: {
+        name: "health.py",
+        filePath: "engine/src/invana/server/health.py",
+        summary: "FastAPI router providing root and health-check endpoints reporting service status.",
+        tags: [
+          "api-handler",
+          "health-check",
+          "router"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-platform",
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/server/health.py:health",
+      type: "function",
+      data: {
+        name: "health",
+        filePath: "engine/src/invana/server/health.py",
+        summary: "Health endpoint returning service status and basic readiness information.",
+        tags: [
+          "api-handler",
+          "health-check"
+        ],
+        complexity: "simple",
+        lineRange: [
+          28,
+          48
+        ],
+        cluster: null,
+        coverage: 84,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/server/health.py:root",
+      type: "function",
+      data: {
+        name: "root",
+        filePath: "engine/src/invana/server/health.py",
+        summary: "Root endpoint returning a basic service identification payload.",
+        tags: [
+          "api-handler"
+        ],
+        complexity: "simple",
+        lineRange: [
+          14,
+          24
+        ],
+        cluster: null,
+        coverage: 99,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/server/routes/query.py",
+      type: "file",
+      data: {
+        name: "query.py",
+        filePath: "engine/src/invana/server/routes/query.py",
+        summary: "FastAPI router executing user graph queries via the connection manager, enforcing read-only safety and normalizing Cypher/Gremlin responses.",
+        tags: [
+          "api-handler",
+          "router",
+          "query-engine",
+          "validation"
+        ],
+        complexity: "moderate",
+        languageNotes: "Resolves query language from connector capabilities and rejects mutating statements before execution.",
+        cluster: "layer:engine-platform",
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/server/routes/query.py:run_query",
+      type: "function",
+      data: {
+        name: "run_query",
+        filePath: "engine/src/invana/server/routes/query.py",
+        summary: "POST handler executing a graph query through the resolved connector and returning a normalized response, emitting an event.",
+        tags: [
+          "api-handler",
+          "query-engine",
+          "event-handler"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          55,
+          124
+        ],
+        cluster: null,
+        coverage: 73,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/server/routes/query.py:_assert_read_only_query",
+      type: "function",
+      data: {
+        name: "_assert_read_only_query",
+        filePath: "engine/src/invana/server/routes/query.py",
+        summary: "Guards against mutating query statements, raising when a write operation is detected.",
+        tags: [
+          "validation",
+          "security",
+          "query-engine"
+        ],
+        complexity: "simple",
+        lineRange: [
+          135,
+          157
+        ],
+        cluster: null,
+        coverage: 95,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/server/routes/query.py:_build_query_response",
+      type: "function",
+      data: {
+        name: "_build_query_response",
+        filePath: "engine/src/invana/server/routes/query.py",
+        summary: "Normalizes a connector GraphResponse into the API query response shape.",
+        tags: [
+          "serialization",
+          "query-engine"
+        ],
+        complexity: "simple",
+        lineRange: [
+          160,
+          183
+        ],
+        cluster: null,
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/server/routes/query.py:_resolve_query_language",
+      type: "function",
+      data: {
+        name: "_resolve_query_language",
+        filePath: "engine/src/invana/server/routes/query.py",
+        summary: "Determines the query language from connector capabilities.",
+        tags: [
+          "utility",
+          "query-engine"
+        ],
+        complexity: "simple",
+        lineRange: [
+          39,
+          51
+        ],
+        cluster: null,
+        coverage: 86,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/server/routes/schemas.py",
+      type: "file",
+      data: {
+        name: "schemas.py",
+        filePath: "engine/src/invana/server/routes/schemas.py",
+        summary: "FastAPI router exposing the active schema version for a graph, backed by the modeller store.",
+        tags: [
+          "api-handler",
+          "router",
+          "modeller"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-platform",
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/server/routes/schemas.py:get_active_version",
+      type: "function",
+      data: {
+        name: "get_active_version",
+        filePath: "engine/src/invana/server/routes/schemas.py",
+        summary: "GET handler returning the active schema version for a graph or an empty payload.",
+        tags: [
+          "api-handler",
+          "modeller",
+          "read"
+        ],
+        complexity: "simple",
+        lineRange: [
+          30,
+          56
+        ],
+        cluster: null,
+        coverage: 98,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/instructions/models.py",
+      type: "file",
+      data: {
+        name: "models.py",
+        filePath: "engine/src/invana/instructions/models.py",
+        summary: "SQLAlchemy ORM model for graph-scoped agent Instructions, defining the instructions table with priority ordering and audit timestamps.",
+        tags: [
+          "data-model",
+          "orm",
+          "instructions"
+        ],
+        complexity: "simple",
+        languageNotes: "Inherits the shared declarative Base from modeller.models; uses UUID string PKs and priority-ordered records.",
+        cluster: "layer:engine-domain",
+        coverage: 97,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/instructions/models.py:Instruction",
+      type: "class",
+      data: {
+        name: "Instruction",
+        filePath: "engine/src/invana/instructions/models.py",
+        summary: "ORM entity for a graph instruction with name, content, priority and timestamps.",
+        tags: [
+          "data-model",
+          "orm",
+          "entity"
+        ],
+        complexity: "simple",
+        lineRange: [
+          33,
+          53
+        ],
+        cluster: null,
+        coverage: 89,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/instructions/routes.py",
+      type: "file",
+      data: {
+        name: "routes.py",
+        filePath: "engine/src/invana/instructions/routes.py",
+        summary: "FastAPI router exposing graph-scoped CRUD endpoints for Instructions, guarded by graph membership/builder dependencies.",
+        tags: [
+          "api-handler",
+          "router",
+          "instructions",
+          "crud"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-domain",
+        coverage: 63,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/instructions/routes.py:create_instruction",
+      type: "function",
+      data: {
+        name: "create_instruction",
+        filePath: "engine/src/invana/instructions/routes.py",
+        summary: "POST handler creating an instruction within a graph, committing and emitting an event.",
+        tags: [
+          "api-handler",
+          "create"
+        ],
+        complexity: "simple",
+        lineRange: [
+          47,
+          62
+        ],
+        cluster: null,
+        coverage: 84,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/instructions/routes.py:update_instruction",
+      type: "function",
+      data: {
+        name: "update_instruction",
+        filePath: "engine/src/invana/instructions/routes.py",
+        summary: "PATCH handler updating an instruction's fields after a 404 lookup, committing changes.",
+        tags: [
+          "api-handler",
+          "update"
+        ],
+        complexity: "simple",
+        lineRange: [
+          81,
+          102
+        ],
+        cluster: null,
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/instructions/routes.py:delete_instruction",
+      type: "function",
+      data: {
+        name: "delete_instruction",
+        filePath: "engine/src/invana/instructions/routes.py",
+        summary: "DELETE handler removing an instruction and returning 204 after commit.",
+        tags: [
+          "api-handler",
+          "delete"
+        ],
+        complexity: "simple",
+        lineRange: [
+          106,
+          120
+        ],
+        cluster: null,
+        coverage: 94,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/instructions/routes.py:list_instructions",
+      type: "function",
+      data: {
+        name: "list_instructions",
+        filePath: "engine/src/invana/instructions/routes.py",
+        summary: "GET handler listing instructions for a graph as a paginated response.",
+        tags: [
+          "api-handler",
+          "list"
+        ],
+        complexity: "simple",
+        lineRange: [
+          32,
+          39
+        ],
+        cluster: null,
+        coverage: 89,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/instructions/routes.py:get_instruction",
+      type: "function",
+      data: {
+        name: "get_instruction",
+        filePath: "engine/src/invana/instructions/routes.py",
+        summary: "GET handler returning a single instruction by id or 404.",
+        tags: [
+          "api-handler",
+          "read"
+        ],
+        complexity: "simple",
+        lineRange: [
+          66,
+          77
+        ],
+        cluster: null,
+        coverage: 90,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/instructions/schemas.py",
+      type: "file",
+      data: {
+        name: "schemas.py",
+        filePath: "engine/src/invana/instructions/schemas.py",
+        summary: "Pydantic request/response schemas for the Instructions API (create, update, read, list).",
+        tags: [
+          "type-definition",
+          "validation",
+          "schema"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-domain",
+        coverage: 89,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/instructions/schemas.py:InstructionRead",
+      type: "class",
+      data: {
+        name: "InstructionRead",
+        filePath: "engine/src/invana/instructions/schemas.py",
+        summary: "Read schema serializing an instruction record for API responses.",
+        tags: [
+          "type-definition",
+          "serialization"
+        ],
+        complexity: "simple",
+        lineRange: [
+          22,
+          31
+        ],
+        cluster: null,
+        coverage: 93,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/instructions/services.py",
+      type: "file",
+      data: {
+        name: "services.py",
+        filePath: "engine/src/invana/instructions/services.py",
+        summary: "Service layer for Instructions: persistence orchestration, 404 handling, and audit event emission via the events module.",
+        tags: [
+          "service",
+          "instructions",
+          "business-logic"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-domain",
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/instructions/services.py:create_instruction",
+      type: "function",
+      data: {
+        name: "create_instruction",
+        filePath: "engine/src/invana/instructions/services.py",
+        summary: "Creates an Instruction record via the store, handles uniqueness errors, and emits a creation event.",
+        tags: [
+          "service",
+          "create",
+          "event-handler"
+        ],
+        complexity: "simple",
+        lineRange: [
+          29,
+          59
+        ],
+        cluster: null,
+        coverage: 88,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/instructions/services.py:update_instruction",
+      type: "function",
+      data: {
+        name: "update_instruction",
+        filePath: "engine/src/invana/instructions/services.py",
+        summary: "Applies a partial update to an instruction, diffs changed fields, and emits an update event.",
+        tags: [
+          "service",
+          "update",
+          "event-handler"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          62,
+          104
+        ],
+        cluster: null,
+        coverage: 86,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/instructions/services.py:delete_instruction",
+      type: "function",
+      data: {
+        name: "delete_instruction",
+        filePath: "engine/src/invana/instructions/services.py",
+        summary: "Deletes an instruction via the store and emits a deletion event.",
+        tags: [
+          "service",
+          "delete",
+          "event-handler"
+        ],
+        complexity: "simple",
+        lineRange: [
+          107,
+          126
+        ],
+        cluster: null,
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/instructions/services.py:get_or_404",
+      type: "function",
+      data: {
+        name: "get_or_404",
+        filePath: "engine/src/invana/instructions/services.py",
+        summary: "Fetches an instruction scoped to a graph or raises 404.",
+        tags: [
+          "service",
+          "validation"
+        ],
+        complexity: "simple",
+        lineRange: [
+          22,
+          26
+        ],
+        cluster: null,
+        coverage: 96,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/instructions/services.py:list_instructions",
+      type: "function",
+      data: {
+        name: "list_instructions",
+        filePath: "engine/src/invana/instructions/services.py",
+        summary: "Returns all instructions for a graph via the store.",
+        tags: [
+          "service",
+          "list"
+        ],
+        complexity: "simple",
+        lineRange: [
+          18,
+          19
+        ],
+        cluster: null,
+        coverage: 89,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/instructions/store.py",
+      type: "file",
+      data: {
+        name: "store.py",
+        filePath: "engine/src/invana/instructions/store.py",
+        summary: "Data-access store for Instructions wrapping SQLAlchemy queries (list, get, add, delete) for a graph scope.",
+        tags: [
+          "service",
+          "data-access",
+          "orm"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-domain",
+        coverage: 84,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/instructions/store.py:InstructionStore",
+      type: "class",
+      data: {
+        name: "InstructionStore",
+        filePath: "engine/src/invana/instructions/store.py",
+        summary: "Repository encapsulating SQLAlchemy CRUD queries for Instruction records.",
+        tags: [
+          "service",
+          "data-access",
+          "repository"
+        ],
+        complexity: "simple",
+        lineRange: [
+          11,
+          31
+        ],
+        cluster: null,
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/llm_providers/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/llm_providers/__init__.py",
+        summary: "Package marker for the llm_providers module that manages graph-scoped LLM provider configuration.",
+        tags: [
+          "barrel",
+          "entry-point"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-domain",
+        coverage: 88,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/llm_providers/models.py",
+      type: "file",
+      data: {
+        name: "models.py",
+        filePath: "engine/src/invana/llm_providers/models.py",
+        summary: "SQLAlchemy ORM models for LLM providers, including the provider kind enum and encrypted API key storage per graph.",
+        tags: [
+          "data-model",
+          "orm",
+          "llm"
+        ],
+        complexity: "simple",
+        languageNotes: "Stores api_key_encrypted rather than plaintext; LLMProviderKind enumerates supported provider vendors.",
+        cluster: "layer:engine-domain",
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/llm_providers/models.py:LLMProvider",
+      type: "class",
+      data: {
+        name: "LLMProvider",
+        filePath: "engine/src/invana/llm_providers/models.py",
+        summary: "ORM entity for a configured LLM provider with model id, encrypted key, base URL, guardrails and default flag.",
+        tags: [
+          "data-model",
+          "orm",
+          "entity",
+          "llm"
+        ],
+        complexity: "simple",
+        lineRange: [
+          54,
+          78
+        ],
+        cluster: null,
+        coverage: 90,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/llm_providers/models.py:LLMProviderKind",
+      type: "class",
+      data: {
+        name: "LLMProviderKind",
+        filePath: "engine/src/invana/llm_providers/models.py",
+        summary: "Enum of supported LLM provider vendors (e.g. Anthropic, OpenAI, HTTP).",
+        tags: [
+          "type-definition",
+          "enum"
+        ],
+        complexity: "simple",
+        lineRange: [
+          37,
+          43
+        ],
+        cluster: null,
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/llm_providers/routes.py",
+      type: "file",
+      data: {
+        name: "routes.py",
+        filePath: "engine/src/invana/llm_providers/routes.py",
+        summary: "FastAPI router for graph-scoped LLM provider CRUD plus ping and set-default actions, masking API keys in responses.",
+        tags: [
+          "api-handler",
+          "router",
+          "llm",
+          "crud"
+        ],
+        complexity: "moderate",
+        cluster: "layer:engine-domain",
+        coverage: 82,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/llm_providers/routes.py:create_llm_provider",
+      type: "function",
+      data: {
+        name: "create_llm_provider",
+        filePath: "engine/src/invana/llm_providers/routes.py",
+        summary: "POST handler creating an LLM provider, encrypting its key and committing.",
+        tags: [
+          "api-handler",
+          "create",
+          "llm"
+        ],
+        complexity: "simple",
+        lineRange: [
+          71,
+          87
+        ],
+        cluster: null,
+        coverage: 98,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/llm_providers/routes.py:update_llm_provider",
+      type: "function",
+      data: {
+        name: "update_llm_provider",
+        filePath: "engine/src/invana/llm_providers/routes.py",
+        summary: "PATCH handler updating an LLM provider configuration.",
+        tags: [
+          "api-handler",
+          "update",
+          "llm"
+        ],
+        complexity: "simple",
+        lineRange: [
+          102,
+          120
+        ],
+        cluster: null,
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/llm_providers/routes.py:delete_llm_provider",
+      type: "function",
+      data: {
+        name: "delete_llm_provider",
+        filePath: "engine/src/invana/llm_providers/routes.py",
+        summary: "DELETE handler removing an LLM provider, returning 204.",
+        tags: [
+          "api-handler",
+          "delete",
+          "llm"
+        ],
+        complexity: "simple",
+        lineRange: [
+          124,
+          134
+        ],
+        cluster: null,
+        coverage: 78,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/llm_providers/routes.py:ping_llm_provider",
+      type: "function",
+      data: {
+        name: "ping_llm_provider",
+        filePath: "engine/src/invana/llm_providers/routes.py",
+        summary: "POST handler testing live connectivity to an LLM provider and returning latency.",
+        tags: [
+          "api-handler",
+          "health-check",
+          "llm"
+        ],
+        complexity: "simple",
+        lineRange: [
+          138,
+          153
+        ],
+        cluster: null,
+        coverage: 86,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/llm_providers/routes.py:set_default_llm_provider",
+      type: "function",
+      data: {
+        name: "set_default_llm_provider",
+        filePath: "engine/src/invana/llm_providers/routes.py",
+        summary: "POST handler marking a provider as the graph's default LLM.",
+        tags: [
+          "api-handler",
+          "llm"
+        ],
+        complexity: "simple",
+        lineRange: [
+          157,
+          168
+        ],
+        cluster: null,
+        coverage: 88,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/llm_providers/routes.py:list_llm_providers",
+      type: "function",
+      data: {
+        name: "list_llm_providers",
+        filePath: "engine/src/invana/llm_providers/routes.py",
+        summary: "GET handler listing all LLM providers for a graph with keys masked.",
+        tags: [
+          "api-handler",
+          "list",
+          "llm"
+        ],
+        complexity: "simple",
+        lineRange: [
+          60,
+          67
+        ],
+        cluster: null,
+        coverage: 94,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/llm_providers/routes.py:get_llm_provider",
+      type: "function",
+      data: {
+        name: "get_llm_provider",
+        filePath: "engine/src/invana/llm_providers/routes.py",
+        summary: "GET handler returning a single LLM provider with key masked.",
+        tags: [
+          "api-handler",
+          "read",
+          "llm"
+        ],
+        complexity: "simple",
+        lineRange: [
+          91,
+          98
+        ],
+        cluster: null,
+        coverage: 97,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/llm_providers/routes.py:_to_read",
+      type: "function",
+      data: {
+        name: "_to_read",
+        filePath: "engine/src/invana/llm_providers/routes.py",
+        summary: "Maps an LLMProvider ORM row to a read schema, exposing has_api_key instead of the secret.",
+        tags: [
+          "serialization",
+          "utility",
+          "llm"
+        ],
+        complexity: "simple",
+        lineRange: [
+          44,
+          56
+        ],
+        cluster: null,
+        coverage: 98,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/llm_providers/schemas.py",
+      type: "file",
+      data: {
+        name: "schemas.py",
+        filePath: "engine/src/invana/llm_providers/schemas.py",
+        summary: "Pydantic schemas for LLM provider create/update/read plus list and ping responses, hiding raw API keys.",
+        tags: [
+          "type-definition",
+          "validation",
+          "schema",
+          "llm"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-domain",
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/llm_providers/schemas.py:LLMProviderRead",
+      type: "class",
+      data: {
+        name: "LLMProviderRead",
+        filePath: "engine/src/invana/llm_providers/schemas.py",
+        summary: "Read schema exposing provider metadata with has_api_key flag instead of the secret.",
+        tags: [
+          "type-definition",
+          "serialization",
+          "llm"
+        ],
+        complexity: "simple",
+        lineRange: [
+          31,
+          43
+        ],
+        cluster: null,
+        coverage: 92,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/llm_providers/services.py",
+      type: "file",
+      data: {
+        name: "services.py",
+        filePath: "engine/src/invana/llm_providers/services.py",
+        summary: "Service layer for LLM providers: key encryption/decryption, CRUD orchestration, default-flag management, and live ping dispatch to Anthropic/OpenAI/HTTP backends.",
+        tags: [
+          "service",
+          "llm",
+          "business-logic",
+          "security"
+        ],
+        complexity: "complex",
+        languageNotes: "Uses asyncio.to_thread to call blocking provider SDKs and asyncio.wait_for for ping timeouts; encrypts keys via graphs.encryption.",
+        cluster: "layer:engine-domain",
+        coverage: 51,
+        errors: 3
+      }
+    },
+    {
+      id: "function:engine/src/invana/llm_providers/services.py:create_provider",
+      type: "function",
+      data: {
+        name: "create_provider",
+        filePath: "engine/src/invana/llm_providers/services.py",
+        summary: "Creates an LLM provider, encrypts its API key, clears prior default if needed, and emits a creation event.",
+        tags: [
+          "service",
+          "create",
+          "security",
+          "llm"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          60,
+          105
+        ],
+        cluster: null,
+        coverage: 67,
+        errors: 1
+      }
+    },
+    {
+      id: "function:engine/src/invana/llm_providers/services.py:update_provider",
+      type: "function",
+      data: {
+        name: "update_provider",
+        filePath: "engine/src/invana/llm_providers/services.py",
+        summary: "Updates an LLM provider, re-encrypting the key when supplied, diffing changes and emitting an event.",
+        tags: [
+          "service",
+          "update",
+          "security",
+          "llm"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          108,
+          167
+        ],
+        cluster: null,
+        coverage: 62,
+        errors: 1
+      }
+    },
+    {
+      id: "function:engine/src/invana/llm_providers/services.py:delete_provider",
+      type: "function",
+      data: {
+        name: "delete_provider",
+        filePath: "engine/src/invana/llm_providers/services.py",
+        summary: "Deletes an LLM provider via the store and emits a deletion event.",
+        tags: [
+          "service",
+          "delete",
+          "event-handler",
+          "llm"
+        ],
+        complexity: "simple",
+        lineRange: [
+          170,
+          192
+        ],
+        cluster: null,
+        coverage: 96,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/llm_providers/services.py:set_default",
+      type: "function",
+      data: {
+        name: "set_default",
+        filePath: "engine/src/invana/llm_providers/services.py",
+        summary: "Marks a provider as default, clearing any prior default within the graph.",
+        tags: [
+          "service",
+          "llm"
+        ],
+        complexity: "simple",
+        lineRange: [
+          195,
+          215
+        ],
+        cluster: null,
+        coverage: 96,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/llm_providers/services.py:ping_provider",
+      type: "function",
+      data: {
+        name: "ping_provider",
+        filePath: "engine/src/invana/llm_providers/services.py",
+        summary: "Tests provider connectivity with a timeout, records latency, and emits a ping event capturing success/error.",
+        tags: [
+          "service",
+          "health-check",
+          "llm"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          223,
+          273
+        ],
+        cluster: null,
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/llm_providers/services.py:_dispatch_ping",
+      type: "function",
+      data: {
+        name: "_dispatch_ping",
+        filePath: "engine/src/invana/llm_providers/services.py",
+        summary: "Dispatches a provider ping to the correct backend implementation via asyncio.to_thread.",
+        tags: [
+          "service",
+          "llm",
+          "dispatch"
+        ],
+        complexity: "simple",
+        lineRange: [
+          276,
+          298
+        ],
+        cluster: null,
+        coverage: 89,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/llm_providers/services.py:_decrypt_key",
+      type: "function",
+      data: {
+        name: "_decrypt_key",
+        filePath: "engine/src/invana/llm_providers/services.py",
+        summary: "Decrypts a stored encrypted API key payload, raising on malformed data.",
+        tags: [
+          "service",
+          "security",
+          "llm"
+        ],
+        complexity: "simple",
+        lineRange: [
+          33,
+          41
+        ],
+        cluster: null,
+        coverage: 97,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/llm_providers/services.py:_ping_anthropic",
+      type: "function",
+      data: {
+        name: "_ping_anthropic",
+        filePath: "engine/src/invana/llm_providers/services.py",
+        summary: "Performs a minimal Anthropic API call to verify credentials.",
+        tags: [
+          "service",
+          "health-check",
+          "llm"
+        ],
+        complexity: "simple",
+        lineRange: [
+          301,
+          311
+        ],
+        cluster: null,
+        coverage: 95,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/llm_providers/services.py:_ping_openai",
+      type: "function",
+      data: {
+        name: "_ping_openai",
+        filePath: "engine/src/invana/llm_providers/services.py",
+        summary: "Performs a minimal OpenAI-compatible chat completion call to verify credentials.",
+        tags: [
+          "service",
+          "health-check",
+          "llm"
+        ],
+        complexity: "simple",
+        lineRange: [
+          314,
+          323
+        ],
+        cluster: null,
+        coverage: 100,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/graph/connectors/__init__.py",
+        summary: "Public barrel for the graph connectors package, re-exporting the base connector, shared data types, exceptions, and the Cypher and Gremlin connector implementations.",
+        tags: [
+          "entry-point",
+          "barrel",
+          "graph-connectors",
+          "exports"
+        ],
+        complexity: "simple",
+        languageNotes: "Python package barrel; aggregates connector surface under a single import path.",
+        cluster: "layer:graph-connectors",
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/base/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/graph/connectors/base/__init__.py",
+        summary: "Barrel for the base connector subpackage, re-exporting BaseConnector, decorators, exceptions, serializers, and shared query-language constants.",
+        tags: [
+          "entry-point",
+          "barrel",
+          "graph-connectors",
+          "exports"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/base/connector.py",
+      type: "file",
+      data: {
+        name: "connector.py",
+        filePath: "engine/src/invana/graph/connectors/base/connector.py",
+        summary: "Defines BaseConnector, the abstract async connector contract that wires up the seven queryset facades (reader/writer/schema/bulk/algorithms/vector) and the connect/execute/disconnect lifecycle for all graph backends.",
+        tags: [
+          "graph-connectors",
+          "abstract-base",
+          "service",
+          "lifecycle"
+        ],
+        complexity: "moderate",
+        languageNotes: "Async context-manager (__aenter__/__aexit__) and abstract methods structure the vendor-agnostic connector lifecycle.",
+        cluster: "layer:graph-connectors",
+        coverage: 72,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/base/connector.py:BaseConnector",
+      type: "class",
+      data: {
+        name: "BaseConnector",
+        filePath: "engine/src/invana/graph/connectors/base/connector.py",
+        summary: "Vendor-agnostic async connector base exposing query/schema/bulk/algorithm/vector querysets and a connect \u2192 execute \u2192 health-check \u2192 disconnect lifecycle for concrete graph backends to extend.",
+        tags: [
+          "abstract-base",
+          "service",
+          "graph-connectors",
+          "lifecycle"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          20,
+          99
+        ],
+        cluster: null,
+        coverage: 67,
+        errors: 1
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/base/constants.py",
+      type: "file",
+      data: {
+        name: "constants.py",
+        filePath: "engine/src/invana/graph/connectors/base/constants.py",
+        summary: "Re-exports shared graph type constants (QueryLanguage, Capability) for use within the connectors package.",
+        tags: [
+          "constants",
+          "barrel",
+          "graph-connectors",
+          "type-definition"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 91,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/base/data_types/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/graph/connectors/base/data_types/__init__.py",
+        summary: "Barrel re-exporting the canonical graph data and schema types (Vertex, Edge, Path, filters, schema elements) so connectors consume them from one local namespace.",
+        tags: [
+          "barrel",
+          "type-definition",
+          "graph-connectors",
+          "exports"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 78,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/base/data_types/data_elements.py",
+      type: "file",
+      data: {
+        name: "data_elements.py",
+        filePath: "engine/src/invana/graph/connectors/base/data_types/data_elements.py",
+        summary: "Thin re-export of the core graph data elements (Vertex, Edge, Path, GraphResponse, QueryResult) from the shared graph types module.",
+        tags: [
+          "barrel",
+          "type-definition",
+          "data-model",
+          "graph-connectors"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 93,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/base/data_types/filter_types.py",
+      type: "file",
+      data: {
+        name: "filter_types.py",
+        filePath: "engine/src/invana/graph/connectors/base/data_types/filter_types.py",
+        summary: "Re-exports the FilterOp enum defining the comparison operators supported by connector query filters.",
+        tags: [
+          "barrel",
+          "type-definition",
+          "validation",
+          "graph-connectors"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 80,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/base/data_types/filters.py",
+      type: "file",
+      data: {
+        name: "filters.py",
+        filePath: "engine/src/invana/graph/connectors/base/data_types/filters.py",
+        summary: "Re-exports the filter expression model (LogicalOp, FilterExpression, FilterGroup) used to express composable query predicates.",
+        tags: [
+          "barrel",
+          "type-definition",
+          "validation",
+          "graph-connectors"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 93,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/base/data_types/schema_elements.py",
+      type: "file",
+      data: {
+        name: "schema_elements.py",
+        filePath: "engine/src/invana/graph/connectors/base/data_types/schema_elements.py",
+        summary: "Re-exports the graph schema model types (NodeType, EdgeType, PropertyDefinition, IndexInfo, ConstraintInfo, GraphSchemaSnapshot) used by schema-reader querysets and the Modeller.",
+        tags: [
+          "barrel",
+          "type-definition",
+          "schema-definition",
+          "graph-connectors"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 93,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/base/decorators.py",
+      type: "file",
+      data: {
+        name: "decorators.py",
+        filePath: "engine/src/invana/graph/connectors/base/decorators.py",
+        summary: "Provides the not_supported_by_vendor decorator that marks queryset methods unsupported by a given backend, raising NotSupportedError when invoked.",
+        tags: [
+          "utility",
+          "decorator",
+          "graph-connectors",
+          "validation"
+        ],
+        complexity: "simple",
+        languageNotes: "Uses functools.wraps to preserve metadata on the wrapped capability method.",
+        cluster: "layer:graph-connectors",
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graph/connectors/base/decorators.py:not_supported_by_vendor",
+      type: "function",
+      data: {
+        name: "not_supported_by_vendor",
+        filePath: "engine/src/invana/graph/connectors/base/decorators.py",
+        summary: "Decorator factory that wraps a queryset method to raise NotSupportedError with a custom message, declaring a capability unavailable for the current backend.",
+        tags: [
+          "decorator",
+          "factory",
+          "validation",
+          "graph-connectors"
+        ],
+        complexity: "simple",
+        lineRange: [
+          10,
+          21
+        ],
+        cluster: null,
+        coverage: 87,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/base/exceptions.py",
+      type: "file",
+      data: {
+        name: "exceptions.py",
+        filePath: "engine/src/invana/graph/connectors/base/exceptions.py",
+        summary: "Defines the connector exception hierarchy (ConnectorError and its ConnectionError, QueryExecutionError, NotSupportedError, SerializationError subclasses) used across all graph backends.",
+        tags: [
+          "exceptions",
+          "error-handling",
+          "graph-connectors",
+          "type-definition"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/base/exceptions.py:ConnectorError",
+      type: "class",
+      data: {
+        name: "ConnectorError",
+        filePath: "engine/src/invana/graph/connectors/base/exceptions.py",
+        summary: "Root exception type for all connector failures; parent of the connection, query-execution, not-supported, and serialization error classes.",
+        tags: [
+          "exceptions",
+          "error-handling",
+          "graph-connectors"
+        ],
+        complexity: "simple",
+        lineRange: [
+          4,
+          5
+        ],
+        cluster: null,
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/base/querysets/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/graph/connectors/base/querysets/__init__.py",
+        summary: "Barrel re-exporting all base queryset abstractions (base, data reader/writer, schema reader/writer, bulk, algorithms, vector) used to compose a connector's capability surface.",
+        tags: [
+          "barrel",
+          "entry-point",
+          "graph-connectors",
+          "exports"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/base/querysets/algorithms.py",
+      type: "file",
+      data: {
+        name: "algorithms.py",
+        filePath: "engine/src/invana/graph/connectors/base/querysets/algorithms.py",
+        summary: "Defines BaseAlgorithmsQuerySet, the abstract contract for graph analytics (centrality, community detection, pathfinding, similarity) that concrete backends override.",
+        tags: [
+          "graph-algorithms",
+          "abstract-base",
+          "graph-connectors",
+          "analytics"
+        ],
+        complexity: "moderate",
+        cluster: "layer:graph-connectors",
+        coverage: 63,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/base/querysets/algorithms.py:BaseAlgorithmsQuerySet",
+      type: "class",
+      data: {
+        name: "BaseAlgorithmsQuerySet",
+        filePath: "engine/src/invana/graph/connectors/base/querysets/algorithms.py",
+        summary: "Abstract algorithms queryset declaring 15 graph-analytics operations \u2014 PageRank, betweenness/closeness/degree/eigenvector centrality, Louvain, label propagation, connected components, Dijkstra, A*, shortest paths, BFS, and Jaccard/cosine similarity.",
+        tags: [
+          "graph-algorithms",
+          "abstract-base",
+          "analytics",
+          "graph-connectors"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          10,
+          163
+        ],
+        cluster: null,
+        coverage: 73,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/base/querysets/base.py",
+      type: "file",
+      data: {
+        name: "base.py",
+        filePath: "engine/src/invana/graph/connectors/base/querysets/base.py",
+        summary: "Defines BaseQuerySet, the common parent for all queryset facades holding the back-reference to its connector and exposing the connector's serializer.",
+        tags: [
+          "abstract-base",
+          "graph-connectors",
+          "type-definition"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 84,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/base/querysets/base.py:BaseQuerySet",
+      type: "class",
+      data: {
+        name: "BaseQuerySet",
+        filePath: "engine/src/invana/graph/connectors/base/querysets/base.py",
+        summary: "Base class for queryset facades, storing the owning connector and surfacing its serializer via a protected property.",
+        tags: [
+          "abstract-base",
+          "graph-connectors"
+        ],
+        complexity: "simple",
+        lineRange: [
+          12,
+          24
+        ],
+        cluster: null,
+        coverage: 95,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/base/querysets/bulk.py",
+      type: "file",
+      data: {
+        name: "bulk.py",
+        filePath: "engine/src/invana/graph/connectors/base/querysets/bulk.py",
+        summary: "Defines BaseBulkQuerySet, the abstract contract for batched vertex/edge create and delete operations used during high-volume ingestion.",
+        tags: [
+          "abstract-base",
+          "bulk-operations",
+          "graph-connectors",
+          "ingestion"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/base/querysets/bulk.py:BaseBulkQuerySet",
+      type: "class",
+      data: {
+        name: "BaseBulkQuerySet",
+        filePath: "engine/src/invana/graph/connectors/base/querysets/bulk.py",
+        summary: "Abstract queryset declaring bulk_create_vertices, bulk_create_edges, bulk_delete_vertices, and bulk_delete_edges for batch graph mutations.",
+        tags: [
+          "abstract-base",
+          "bulk-operations",
+          "graph-connectors"
+        ],
+        complexity: "simple",
+        lineRange: [
+          9,
+          29
+        ],
+        cluster: null,
+        coverage: 88,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/base/querysets/data_reader.py",
+      type: "file",
+      data: {
+        name: "data_reader.py",
+        filePath: "engine/src/invana/graph/connectors/base/querysets/data_reader.py",
+        summary: "Defines BaseDataReaderQuerySet, the abstract read API for fetching vertices, edges, neighbors, shortest paths, and counts with filter support.",
+        tags: [
+          "abstract-base",
+          "data-access",
+          "graph-connectors",
+          "read"
+        ],
+        complexity: "moderate",
+        cluster: "layer:graph-connectors",
+        coverage: 86,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/base/querysets/data_reader.py:BaseDataReaderQuerySet",
+      type: "class",
+      data: {
+        name: "BaseDataReaderQuerySet",
+        filePath: "engine/src/invana/graph/connectors/base/querysets/data_reader.py",
+        summary: "Abstract read queryset declaring read_vertices/edges/neighbors, read-by-id lookups, shortest_path, and vertex/edge counting with filter expressions.",
+        tags: [
+          "abstract-base",
+          "data-access",
+          "read",
+          "graph-connectors"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          11,
+          72
+        ],
+        cluster: null,
+        coverage: 65,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/base/querysets/data_writer.py",
+      type: "file",
+      data: {
+        name: "data_writer.py",
+        filePath: "engine/src/invana/graph/connectors/base/querysets/data_writer.py",
+        summary: "Defines BaseDataWriterQuerySet, the abstract write API for single vertex/edge create, update, and delete operations.",
+        tags: [
+          "abstract-base",
+          "data-access",
+          "graph-connectors",
+          "write"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/base/querysets/data_writer.py:BaseDataWriterQuerySet",
+      type: "class",
+      data: {
+        name: "BaseDataWriterQuerySet",
+        filePath: "engine/src/invana/graph/connectors/base/querysets/data_writer.py",
+        summary: "Abstract write queryset declaring create/update/delete operations for individual vertices and edges.",
+        tags: [
+          "abstract-base",
+          "data-access",
+          "write",
+          "graph-connectors"
+        ],
+        complexity: "simple",
+        lineRange: [
+          9,
+          40
+        ],
+        cluster: null,
+        coverage: 91,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/base/querysets/schema_reader.py",
+      type: "file",
+      data: {
+        name: "schema_reader.py",
+        filePath: "engine/src/invana/graph/connectors/base/querysets/schema_reader.py",
+        summary: "Defines BaseSchemaReaderQuerySet, the abstract introspection API that gathers labels, property keys, indexes, constraints, and assembles a full GraphSchemaSnapshot for the Modeller.",
+        tags: [
+          "abstract-base",
+          "schema-introspection",
+          "graph-connectors",
+          "modeller"
+        ],
+        complexity: "moderate",
+        cluster: "layer:graph-connectors",
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/base/querysets/schema_reader.py:BaseSchemaReaderQuerySet",
+      type: "class",
+      data: {
+        name: "BaseSchemaReaderQuerySet",
+        filePath: "engine/src/invana/graph/connectors/base/querysets/schema_reader.py",
+        summary: "Abstract schema-introspection queryset; get_full_schema orchestrates node/edge label, property, index, and constraint reads into a single GraphSchemaSnapshot.",
+        tags: [
+          "abstract-base",
+          "schema-introspection",
+          "graph-connectors",
+          "modeller"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          17,
+          103
+        ],
+        cluster: null,
+        coverage: 78,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/base/querysets/schema_writer.py",
+      type: "file",
+      data: {
+        name: "schema_writer.py",
+        filePath: "engine/src/invana/graph/connectors/base/querysets/schema_writer.py",
+        summary: "Defines BaseSchemaWriterQuerySet, the abstract API for creating and dropping indexes and constraints on the graph schema.",
+        tags: [
+          "abstract-base",
+          "schema-definition",
+          "graph-connectors",
+          "write"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/base/querysets/schema_writer.py:BaseSchemaWriterQuerySet",
+      type: "class",
+      data: {
+        name: "BaseSchemaWriterQuerySet",
+        filePath: "engine/src/invana/graph/connectors/base/querysets/schema_writer.py",
+        summary: "Abstract schema-mutation queryset declaring create_index, drop_index, create_constraint, and drop_constraint.",
+        tags: [
+          "abstract-base",
+          "schema-definition",
+          "write",
+          "graph-connectors"
+        ],
+        complexity: "simple",
+        lineRange: [
+          9,
+          41
+        ],
+        cluster: null,
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/base/querysets/vector.py",
+      type: "file",
+      data: {
+        name: "vector.py",
+        filePath: "engine/src/invana/graph/connectors/base/querysets/vector.py",
+        summary: "Defines BaseVectorQuerySet, the abstract API for vector-index lifecycle and similarity search on backends supporting vector capability.",
+        tags: [
+          "abstract-base",
+          "vector-search",
+          "graph-connectors",
+          "similarity"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/base/querysets/vector.py:BaseVectorQuerySet",
+      type: "class",
+      data: {
+        name: "BaseVectorQuerySet",
+        filePath: "engine/src/invana/graph/connectors/base/querysets/vector.py",
+        summary: "Abstract vector queryset declaring create_vector_index, drop_vector_index, and similarity_search for vector-capable graph backends.",
+        tags: [
+          "abstract-base",
+          "vector-search",
+          "similarity",
+          "graph-connectors"
+        ],
+        complexity: "simple",
+        lineRange: [
+          10,
+          38
+        ],
+        cluster: null,
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/base/serializers.py",
+      type: "file",
+      data: {
+        name: "serializers.py",
+        filePath: "engine/src/invana/graph/connectors/base/serializers.py",
+        summary: "Defines BaseSerializer, the abstract contract for converting raw backend driver results into canonical Vertex, Edge, Path, and GraphResponse objects.",
+        tags: [
+          "abstract-base",
+          "serialization",
+          "graph-connectors",
+          "deserialization"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/base/serializers.py:BaseSerializer",
+      type: "class",
+      data: {
+        name: "BaseSerializer",
+        filePath: "engine/src/invana/graph/connectors/base/serializers.py",
+        summary: "Abstract serializer declaring deserialize_vertex/edge/path/graph_response to normalize vendor driver output into shared graph data types.",
+        tags: [
+          "abstract-base",
+          "serialization",
+          "deserialization",
+          "graph-connectors"
+        ],
+        complexity: "simple",
+        lineRange: [
+          9,
+          26
+        ],
+        cluster: null,
+        coverage: 87,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/cypher/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/graph/connectors/cypher/__init__.py",
+        summary: "Barrel for the Cypher connector subpackage, re-exporting OpenCypherConnector.",
+        tags: [
+          "barrel",
+          "entry-point",
+          "cypher",
+          "graph-connectors"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 98,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/cypher/connector.py",
+      type: "file",
+      data: {
+        name: "connector.py",
+        filePath: "engine/src/invana/graph/connectors/cypher/connector.py",
+        summary: "Implements OpenCypherConnector, the Neo4j/Memgraph/ArcadeDB connector that wires the Cypher querysets and serializer and drives queries via the async neo4j driver.",
+        tags: [
+          "cypher",
+          "service",
+          "graph-connectors",
+          "neo4j"
+        ],
+        complexity: "moderate",
+        languageNotes: "Uses neo4j AsyncGraphDatabase driver and sessions; wraps driver errors in ConnectionError / QueryExecutionError.",
+        cluster: "layer:graph-connectors",
+        coverage: 70,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/cypher/connector.py:OpenCypherConnector",
+      type: "class",
+      data: {
+        name: "OpenCypherConnector",
+        filePath: "engine/src/invana/graph/connectors/cypher/connector.py",
+        summary: "Concrete Cypher connector extending BaseConnector; constructs the OpenCypher querysets and serializer, opens the async neo4j driver, and runs raw Cypher with connectivity health checks.",
+        tags: [
+          "cypher",
+          "service",
+          "neo4j",
+          "graph-connectors"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          24,
+          99
+        ],
+        cluster: null,
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/cypher/query_builder.py",
+      type: "file",
+      data: {
+        name: "query_builder.py",
+        filePath: "engine/src/invana/graph/connectors/cypher/query_builder.py",
+        summary: "Implements OpenCypherQueryBuilder, which generates parameterized Cypher statements for node/edge matching, CRUD, counting, paths, and bulk operations, including filter-expression compilation.",
+        tags: [
+          "cypher",
+          "query-builder",
+          "graph-connectors",
+          "serialization"
+        ],
+        complexity: "complex",
+        languageNotes: "Parameterized query generation with a _ParamCounter to avoid name collisions and prevent Cypher injection.",
+        cluster: "layer:graph-connectors",
+        coverage: 67,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/cypher/query_builder.py:OpenCypherQueryBuilder",
+      type: "class",
+      data: {
+        name: "OpenCypherQueryBuilder",
+        filePath: "engine/src/invana/graph/connectors/cypher/query_builder.py",
+        summary: "Builds parameterized Cypher for matching, creating, updating, deleting, counting nodes/edges, shortest paths, bulk mutations, and schema label/property introspection.",
+        tags: [
+          "cypher",
+          "query-builder",
+          "graph-connectors"
+        ],
+        complexity: "complex",
+        lineRange: [
+          105,
+          317
+        ],
+        cluster: null,
+        coverage: 61,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/cypher/query_builder.py:_ParamCounter",
+      type: "class",
+      data: {
+        name: "_ParamCounter",
+        filePath: "engine/src/invana/graph/connectors/cypher/query_builder.py",
+        summary: "Small helper that issues monotonically increasing parameter names for safe parameterized Cypher generation.",
+        tags: [
+          "cypher",
+          "utility",
+          "query-builder"
+        ],
+        complexity: "simple",
+        lineRange: [
+          13,
+          22
+        ],
+        cluster: null,
+        coverage: 98,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graph/connectors/cypher/query_builder.py:_build_filter_clause",
+      type: "function",
+      data: {
+        name: "_build_filter_clause",
+        filePath: "engine/src/invana/graph/connectors/cypher/query_builder.py",
+        summary: "Recursively compiles a FilterGroup (with logical AND/OR joins) into a Cypher WHERE clause fragment and accompanying parameter map.",
+        tags: [
+          "cypher",
+          "query-builder",
+          "validation",
+          "recursion"
+        ],
+        complexity: "simple",
+        lineRange: [
+          25,
+          45
+        ],
+        cluster: null,
+        coverage: 89,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graph/connectors/cypher/query_builder.py:_build_filter_expression",
+      type: "function",
+      data: {
+        name: "_build_filter_expression",
+        filePath: "engine/src/invana/graph/connectors/cypher/query_builder.py",
+        summary: "Compiles a single FilterExpression (field/operator/value) into a parameterized Cypher predicate, mapping each FilterOp to its Cypher comparison syntax.",
+        tags: [
+          "cypher",
+          "query-builder",
+          "validation",
+          "serialization"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          58,
+          102
+        ],
+        cluster: null,
+        coverage: 70,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/cypher/querysets/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/graph/connectors/cypher/querysets/__init__.py",
+        summary: "Barrel re-exporting the concrete OpenCypher querysets (data reader/writer, schema reader/writer, bulk, algorithms, vector) for the Cypher connector.",
+        tags: [
+          "barrel",
+          "entry-point",
+          "cypher",
+          "graph-connectors"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 90,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/cypher/querysets/algorithms.py",
+      type: "file",
+      data: {
+        name: "algorithms.py",
+        filePath: "engine/src/invana/graph/connectors/cypher/querysets/algorithms.py",
+        summary: "Implements OpenCypherAlgorithmsQuerySet, providing Cypher/GDS-backed graph analytics (centrality, community, pathfinding, similarity); unsupported operations are marked via the not_supported_by_vendor decorator.",
+        tags: [
+          "cypher",
+          "graph-algorithms",
+          "analytics",
+          "graph-connectors"
+        ],
+        complexity: "moderate",
+        cluster: "layer:graph-connectors",
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/cypher/querysets/algorithms.py:OpenCypherAlgorithmsQuerySet",
+      type: "class",
+      data: {
+        name: "OpenCypherAlgorithmsQuerySet",
+        filePath: "engine/src/invana/graph/connectors/cypher/querysets/algorithms.py",
+        summary: "Cypher implementation of the algorithms contract, executing analytics via the connector and deserializing path/vertex results; vendor-unsupported algorithms raise NotSupportedError.",
+        tags: [
+          "cypher",
+          "graph-algorithms",
+          "analytics",
+          "graph-connectors"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          10,
+          121
+        ],
+        cluster: null,
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/cypher/querysets/base.py",
+      type: "file",
+      data: {
+        name: "base.py",
+        filePath: "engine/src/invana/graph/connectors/cypher/querysets/base.py",
+        summary: "Defines OpenCypherQuerySet, the shared parent for all Cypher querysets, specializing the base queryset for Cypher backends.",
+        tags: [
+          "cypher",
+          "abstract-base",
+          "graph-connectors"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 82,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/cypher/querysets/base.py:OpenCypherQuerySet",
+      type: "class",
+      data: {
+        name: "OpenCypherQuerySet",
+        filePath: "engine/src/invana/graph/connectors/cypher/querysets/base.py",
+        summary: "Cypher-specific queryset base extending BaseQuerySet, serving as the common parent for concrete Cypher querysets.",
+        tags: [
+          "cypher",
+          "abstract-base",
+          "graph-connectors"
+        ],
+        complexity: "simple",
+        lineRange: [
+          6,
+          7
+        ],
+        cluster: null,
+        coverage: 89,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/cypher/querysets/bulk.py",
+      type: "file",
+      data: {
+        name: "bulk.py",
+        filePath: "engine/src/invana/graph/connectors/cypher/querysets/bulk.py",
+        summary: "Cypher bulk queryset that batch-creates and batch-deletes vertices and edges by delegating to OpenCypherQueryBuilder and the connector executor.",
+        tags: [
+          "service",
+          "data-writer",
+          "cypher",
+          "bulk",
+          "queryset"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/cypher/querysets/bulk.py:OpenCypherBulkQuerySet",
+      type: "class",
+      data: {
+        name: "OpenCypherBulkQuerySet",
+        filePath: "engine/src/invana/graph/connectors/cypher/querysets/bulk.py",
+        summary: "Concrete Cypher bulk queryset implementing batched vertex/edge create and delete via the query builder and serializer.",
+        tags: [
+          "queryset",
+          "bulk",
+          "cypher",
+          "data-writer"
+        ],
+        complexity: "simple",
+        lineRange: [
+          8,
+          29
+        ],
+        cluster: null,
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/cypher/querysets/data_reader.py",
+      type: "file",
+      data: {
+        name: "data_reader.py",
+        filePath: "engine/src/invana/graph/connectors/cypher/querysets/data_reader.py",
+        summary: "Cypher data-reader queryset exposing vertex/edge reads, neighbor traversal, by-id lookups, shortest path, and counts over the OpenCypher backend.",
+        tags: [
+          "service",
+          "data-reader",
+          "cypher",
+          "queryset"
+        ],
+        complexity: "moderate",
+        cluster: "layer:graph-connectors",
+        coverage: 70,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/cypher/querysets/data_reader.py:OpenCypherDataReaderQuerySet",
+      type: "class",
+      data: {
+        name: "OpenCypherDataReaderQuerySet",
+        filePath: "engine/src/invana/graph/connectors/cypher/querysets/data_reader.py",
+        summary: "Read-side Cypher queryset that builds MATCH queries, executes them, and deserializes vertices, edges, neighbors, and paths.",
+        tags: [
+          "queryset",
+          "data-reader",
+          "cypher",
+          "traversal"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          11,
+          82
+        ],
+        cluster: null,
+        coverage: 62,
+        errors: 1
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/cypher/querysets/data_writer.py",
+      type: "file",
+      data: {
+        name: "data_writer.py",
+        filePath: "engine/src/invana/graph/connectors/cypher/querysets/data_writer.py",
+        summary: "Cypher data-writer queryset providing single-element create, update, and delete operations for vertices and edges.",
+        tags: [
+          "service",
+          "data-writer",
+          "cypher",
+          "queryset"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 87,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/cypher/querysets/data_writer.py:OpenCypherDataWriterQuerySet",
+      type: "class",
+      data: {
+        name: "OpenCypherDataWriterQuerySet",
+        filePath: "engine/src/invana/graph/connectors/cypher/querysets/data_writer.py",
+        summary: "Write-side Cypher queryset issuing CREATE/SET/DELETE queries via the query builder and returning deserialized elements.",
+        tags: [
+          "queryset",
+          "data-writer",
+          "cypher",
+          "mutation"
+        ],
+        complexity: "simple",
+        lineRange: [
+          8,
+          44
+        ],
+        cluster: null,
+        coverage: 100,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/cypher/querysets/schema_reader.py",
+      type: "file",
+      data: {
+        name: "schema_reader.py",
+        filePath: "engine/src/invana/graph/connectors/cypher/querysets/schema_reader.py",
+        summary: "Cypher schema-reader queryset that introspects node/edge labels, property keys, indexes, constraints, and infers property types from sampled values.",
+        tags: [
+          "service",
+          "schema-reader",
+          "cypher",
+          "introspection"
+        ],
+        complexity: "moderate",
+        cluster: "layer:graph-connectors",
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graph/connectors/cypher/querysets/schema_reader.py:_infer_type",
+      type: "function",
+      data: {
+        name: "_infer_type",
+        filePath: "engine/src/invana/graph/connectors/cypher/querysets/schema_reader.py",
+        summary: "Infers a property's logical type from a collection of sampled values for schema introspection.",
+        tags: [
+          "utility",
+          "type-inference",
+          "schema",
+          "introspection"
+        ],
+        complexity: "simple",
+        lineRange: [
+          15,
+          31
+        ],
+        cluster: null,
+        coverage: 93,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/cypher/querysets/schema_reader.py:OpenCypherSchemaReaderQuerySet",
+      type: "class",
+      data: {
+        name: "OpenCypherSchemaReaderQuerySet",
+        filePath: "engine/src/invana/graph/connectors/cypher/querysets/schema_reader.py",
+        summary: "Schema introspection queryset reading labels, property keys, indexes, constraints, and property/edge schemas from a Cypher database.",
+        tags: [
+          "queryset",
+          "schema-reader",
+          "cypher",
+          "introspection"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          34,
+          117
+        ],
+        cluster: null,
+        coverage: 74,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/cypher/querysets/schema_writer.py",
+      type: "file",
+      data: {
+        name: "schema_writer.py",
+        filePath: "engine/src/invana/graph/connectors/cypher/querysets/schema_writer.py",
+        summary: "Cypher schema-writer queryset that creates and drops indexes and constraints on the backing database.",
+        tags: [
+          "service",
+          "schema-writer",
+          "cypher",
+          "queryset"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 97,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/cypher/querysets/schema_writer.py:OpenCypherSchemaWriterQuerySet",
+      type: "class",
+      data: {
+        name: "OpenCypherSchemaWriterQuerySet",
+        filePath: "engine/src/invana/graph/connectors/cypher/querysets/schema_writer.py",
+        summary: "Write-side schema queryset applying index and constraint create/drop DDL against a Cypher backend.",
+        tags: [
+          "queryset",
+          "schema-writer",
+          "cypher",
+          "ddl"
+        ],
+        complexity: "simple",
+        lineRange: [
+          8,
+          42
+        ],
+        cluster: null,
+        coverage: 78,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/cypher/querysets/vector.py",
+      type: "file",
+      data: {
+        name: "vector.py",
+        filePath: "engine/src/invana/graph/connectors/cypher/querysets/vector.py",
+        summary: "Cypher vector queryset supporting vector index create/drop and similarity search, gated by vendor capability decorators.",
+        tags: [
+          "service",
+          "vector",
+          "cypher",
+          "queryset",
+          "similarity-search"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 90,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/cypher/querysets/vector.py:OpenCypherVectorQuerySet",
+      type: "class",
+      data: {
+        name: "OpenCypherVectorQuerySet",
+        filePath: "engine/src/invana/graph/connectors/cypher/querysets/vector.py",
+        summary: "Vector-capable Cypher queryset for managing vector indexes and running similarity searches when the vendor supports it.",
+        tags: [
+          "queryset",
+          "vector",
+          "cypher",
+          "similarity-search"
+        ],
+        complexity: "simple",
+        lineRange: [
+          10,
+          39
+        ],
+        cluster: null,
+        coverage: 100,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/cypher/serializers.py",
+      type: "file",
+      data: {
+        name: "serializers.py",
+        filePath: "engine/src/invana/graph/connectors/cypher/serializers.py",
+        summary: "Cypher serializer converting raw neo4j driver records (nodes, relationships, paths) into Invana's normalized Vertex/Edge/Path/GraphResponse types.",
+        tags: [
+          "serialization",
+          "cypher",
+          "deserialization",
+          "adapter"
+        ],
+        complexity: "moderate",
+        cluster: "layer:graph-connectors",
+        coverage: 74,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/cypher/serializers.py:OpenCypherSerializer",
+      type: "class",
+      data: {
+        name: "OpenCypherSerializer",
+        filePath: "engine/src/invana/graph/connectors/cypher/serializers.py",
+        summary: "Deserializes neo4j driver result objects into normalized graph types, handling element IDs, labels, properties, and node/relationship/path detection.",
+        tags: [
+          "serialization",
+          "cypher",
+          "deserialization",
+          "adapter"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          17,
+          178
+        ],
+        cluster: null,
+        coverage: 84,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/gremlin/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/graph/connectors/gremlin/__init__.py",
+        summary: "Gremlin connector package barrel re-exporting the GremlinConnector entry point.",
+        tags: [
+          "barrel",
+          "entry-point",
+          "gremlin",
+          "package"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/gremlin/connector.py",
+      type: "file",
+      data: {
+        name: "connector.py",
+        filePath: "engine/src/invana/graph/connectors/gremlin/connector.py",
+        summary: "Gremlin connector managing the async DriverRemoteConnection lifecycle, traversal source, queryset wiring, capability reporting, and health checks.",
+        tags: [
+          "service",
+          "gremlin",
+          "connector",
+          "async",
+          "factory"
+        ],
+        complexity: "moderate",
+        languageNotes: "Wraps blocking gremlinpython calls in asyncio.to_thread to present an async interface.",
+        cluster: "layer:graph-connectors",
+        coverage: 82,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/gremlin/connector.py:GremlinConnector",
+      type: "class",
+      data: {
+        name: "GremlinConnector",
+        filePath: "engine/src/invana/graph/connectors/gremlin/connector.py",
+        summary: "Concrete Gremlin connector that creates/closes the remote driver, exposes a traversal source, initializes querysets and serializer, and performs health checks.",
+        tags: [
+          "connector",
+          "gremlin",
+          "async",
+          "factory",
+          "lifecycle"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          33,
+          139
+        ],
+        cluster: null,
+        coverage: 72,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/gremlin/query_builder.py",
+      type: "file",
+      data: {
+        name: "query_builder.py",
+        filePath: "engine/src/invana/graph/connectors/gremlin/query_builder.py",
+        summary: "Builds Gremlin traversals for vertex/edge match, create, update, delete, neighbors, shortest path, counts, and schema reads, plus filter-to-predicate translation.",
+        tags: [
+          "query-builder",
+          "gremlin",
+          "traversal",
+          "filter"
+        ],
+        complexity: "complex",
+        languageNotes: "Composes gremlinpython anonymous traversals (__) and TextP/P predicates from Invana filter expressions.",
+        cluster: "layer:graph-connectors",
+        coverage: 60,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graph/connectors/gremlin/query_builder.py:_project_edge",
+      type: "function",
+      data: {
+        name: "_project_edge",
+        filePath: "engine/src/invana/graph/connectors/gremlin/query_builder.py",
+        summary: "Projects a Gremlin edge traversal into a structured map of id, label, properties, and source/target endpoints.",
+        tags: [
+          "utility",
+          "gremlin",
+          "traversal",
+          "projection"
+        ],
+        complexity: "simple",
+        lineRange: [
+          18,
+          30
+        ],
+        cluster: null,
+        coverage: 94,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/graph/connectors/gremlin/query_builder.py:_build_predicate",
+      type: "function",
+      data: {
+        name: "_build_predicate",
+        filePath: "engine/src/invana/graph/connectors/gremlin/query_builder.py",
+        summary: "Recursively converts a filter group of expressions into a combined Gremlin and_/or_ predicate traversal.",
+        tags: [
+          "utility",
+          "gremlin",
+          "filter",
+          "predicate"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          44,
+          71
+        ],
+        cluster: null,
+        coverage: 66,
+        errors: 1
+      }
+    },
+    {
+      id: "function:engine/src/invana/graph/connectors/gremlin/query_builder.py:_build_expression_traversal",
+      type: "function",
+      data: {
+        name: "_build_expression_traversal",
+        filePath: "engine/src/invana/graph/connectors/gremlin/query_builder.py",
+        summary: "Translates a single filter expression and operator into the corresponding Gremlin has/has_not/TextP traversal.",
+        tags: [
+          "utility",
+          "gremlin",
+          "filter",
+          "predicate"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          86,
+          109
+        ],
+        cluster: null,
+        coverage: 67,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/gremlin/query_builder.py:GremlinQueryBuilder",
+      type: "class",
+      data: {
+        name: "GremlinQueryBuilder",
+        filePath: "engine/src/invana/graph/connectors/gremlin/query_builder.py",
+        summary: "Static-method factory of Gremlin traversals covering CRUD, neighbor expansion, shortest path, counts, and schema label/key reads.",
+        tags: [
+          "query-builder",
+          "gremlin",
+          "traversal",
+          "factory"
+        ],
+        complexity: "complex",
+        lineRange: [
+          112,
+          277
+        ],
+        cluster: null,
+        coverage: 51,
+        errors: 1
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/gremlin/querysets/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/graph/connectors/gremlin/querysets/__init__.py",
+        summary: "Barrel module re-exporting all Gremlin queryset classes (algorithms, base, bulk, readers/writers, vector).",
+        tags: [
+          "barrel",
+          "entry-point",
+          "gremlin",
+          "queryset"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 86,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/gremlin/querysets/algorithms.py",
+      type: "file",
+      data: {
+        name: "algorithms.py",
+        filePath: "engine/src/invana/graph/connectors/gremlin/querysets/algorithms.py",
+        summary: "Gremlin algorithms queryset declaring graph-analytics operations (centralities, community detection, pathfinding, similarity) mostly gated as unsupported by vendor.",
+        tags: [
+          "service",
+          "algorithms",
+          "gremlin",
+          "queryset",
+          "analytics"
+        ],
+        complexity: "moderate",
+        cluster: "layer:graph-connectors",
+        coverage: 69,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/gremlin/querysets/algorithms.py:GremlinAlgorithmsQuerySet",
+      type: "class",
+      data: {
+        name: "GremlinAlgorithmsQuerySet",
+        filePath: "engine/src/invana/graph/connectors/gremlin/querysets/algorithms.py",
+        summary: "Gremlin graph-algorithm queryset exposing pagerank, centralities, community detection, shortest-path, and similarity methods.",
+        tags: [
+          "queryset",
+          "algorithms",
+          "gremlin",
+          "analytics"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          10,
+          111
+        ],
+        cluster: null,
+        coverage: 63,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/gremlin/querysets/base.py",
+      type: "file",
+      data: {
+        name: "base.py",
+        filePath: "engine/src/invana/graph/connectors/gremlin/querysets/base.py",
+        summary: "Defines the GremlinQuerySet base marker class that Gremlin querysets extend from the shared base queryset.",
+        tags: [
+          "queryset",
+          "gremlin",
+          "base-class"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 90,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/gremlin/querysets/bulk.py",
+      type: "file",
+      data: {
+        name: "bulk.py",
+        filePath: "engine/src/invana/graph/connectors/gremlin/querysets/bulk.py",
+        summary: "Gremlin bulk queryset performing batched vertex/edge create and delete via traversals and the connector executor.",
+        tags: [
+          "service",
+          "bulk",
+          "gremlin",
+          "queryset",
+          "data-writer"
+        ],
+        complexity: "moderate",
+        cluster: "layer:graph-connectors",
+        coverage: 69,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/gremlin/querysets/bulk.py:GremlinBulkQuerySet",
+      type: "class",
+      data: {
+        name: "GremlinBulkQuerySet",
+        filePath: "engine/src/invana/graph/connectors/gremlin/querysets/bulk.py",
+        summary: "Batched Gremlin queryset that creates and deletes vertices and edges, coercing ids and deserializing results.",
+        tags: [
+          "queryset",
+          "bulk",
+          "gremlin",
+          "data-writer"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          8,
+          57
+        ],
+        cluster: null,
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/gremlin/querysets/data_reader.py",
+      type: "file",
+      data: {
+        name: "data_reader.py",
+        filePath: "engine/src/invana/graph/connectors/gremlin/querysets/data_reader.py",
+        summary: "Gremlin data-reader queryset for vertex/edge reads, neighbor traversal, by-id lookups, shortest path, and counts.",
+        tags: [
+          "service",
+          "data-reader",
+          "gremlin",
+          "queryset",
+          "traversal"
+        ],
+        complexity: "moderate",
+        cluster: "layer:graph-connectors",
+        coverage: 67,
+        errors: 1
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/gremlin/querysets/data_reader.py:GremlinDataReaderQuerySet",
+      type: "class",
+      data: {
+        name: "GremlinDataReaderQuerySet",
+        filePath: "engine/src/invana/graph/connectors/gremlin/querysets/data_reader.py",
+        summary: "Read-side Gremlin queryset building traversals through GremlinQueryBuilder, executing them, and deserializing graph elements.",
+        tags: [
+          "queryset",
+          "data-reader",
+          "gremlin",
+          "traversal"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          11,
+          104
+        ],
+        cluster: null,
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/gremlin/querysets/data_writer.py",
+      type: "file",
+      data: {
+        name: "data_writer.py",
+        filePath: "engine/src/invana/graph/connectors/gremlin/querysets/data_writer.py",
+        summary: "Gremlin data-writer queryset providing single-element create, update, and delete for vertices and edges.",
+        tags: [
+          "service",
+          "data-writer",
+          "gremlin",
+          "queryset",
+          "mutation"
+        ],
+        complexity: "moderate",
+        cluster: "layer:graph-connectors",
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/gremlin/querysets/data_writer.py:GremlinDataWriterQuerySet",
+      type: "class",
+      data: {
+        name: "GremlinDataWriterQuerySet",
+        filePath: "engine/src/invana/graph/connectors/gremlin/querysets/data_writer.py",
+        summary: "Write-side Gremlin queryset issuing CRUD traversals via the query builder and returning deserialized elements.",
+        tags: [
+          "queryset",
+          "data-writer",
+          "gremlin",
+          "mutation"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          8,
+          61
+        ],
+        cluster: null,
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/gremlin/querysets/schema_reader.py",
+      type: "file",
+      data: {
+        name: "schema_reader.py",
+        filePath: "engine/src/invana/graph/connectors/gremlin/querysets/schema_reader.py",
+        summary: "Gremlin schema-reader queryset reading node/edge labels and property keys; index/constraint/schema reads are unsupported by the vendor.",
+        tags: [
+          "service",
+          "schema-reader",
+          "gremlin",
+          "introspection"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/gremlin/querysets/schema_reader.py:GremlinSchemaReaderQuerySet",
+      type: "class",
+      data: {
+        name: "GremlinSchemaReaderQuerySet",
+        filePath: "engine/src/invana/graph/connectors/gremlin/querysets/schema_reader.py",
+        summary: "Schema introspection queryset reading labels and property keys from a Gremlin graph via traversals.",
+        tags: [
+          "queryset",
+          "schema-reader",
+          "gremlin",
+          "introspection"
+        ],
+        complexity: "simple",
+        lineRange: [
+          14,
+          57
+        ],
+        cluster: null,
+        coverage: 91,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/gremlin/querysets/schema_writer.py",
+      type: "file",
+      data: {
+        name: "schema_writer.py",
+        filePath: "engine/src/invana/graph/connectors/gremlin/querysets/schema_writer.py",
+        summary: "Gremlin schema-writer queryset whose index/constraint DDL operations are gated as unsupported by the Gremlin vendor.",
+        tags: [
+          "service",
+          "schema-writer",
+          "gremlin",
+          "queryset"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/gremlin/querysets/schema_writer.py:GremlinSchemaWriterQuerySet",
+      type: "class",
+      data: {
+        name: "GremlinSchemaWriterQuerySet",
+        filePath: "engine/src/invana/graph/connectors/gremlin/querysets/schema_writer.py",
+        summary: "Write-side Gremlin schema queryset declaring index/constraint operations marked not-supported by the vendor.",
+        tags: [
+          "queryset",
+          "schema-writer",
+          "gremlin",
+          "ddl"
+        ],
+        complexity: "simple",
+        lineRange: [
+          9,
+          47
+        ],
+        cluster: null,
+        coverage: 90,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/gremlin/querysets/vector.py",
+      type: "file",
+      data: {
+        name: "vector.py",
+        filePath: "engine/src/invana/graph/connectors/gremlin/querysets/vector.py",
+        summary: "Gremlin vector queryset whose vector-index and similarity-search methods are gated as unsupported by the vendor.",
+        tags: [
+          "service",
+          "vector",
+          "gremlin",
+          "queryset",
+          "similarity-search"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 95,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/gremlin/querysets/vector.py:GremlinVectorQuerySet",
+      type: "class",
+      data: {
+        name: "GremlinVectorQuerySet",
+        filePath: "engine/src/invana/graph/connectors/gremlin/querysets/vector.py",
+        summary: "Gremlin vector queryset declaring vector index management and similarity search as vendor-unsupported.",
+        tags: [
+          "queryset",
+          "vector",
+          "gremlin",
+          "similarity-search"
+        ],
+        complexity: "simple",
+        lineRange: [
+          9,
+          39
+        ],
+        cluster: null,
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/connectors/gremlin/serializers.py",
+      type: "file",
+      data: {
+        name: "serializers.py",
+        filePath: "engine/src/invana/graph/connectors/gremlin/serializers.py",
+        summary: "Gremlin serializer normalizing element maps and traversal results into Invana's Vertex/Edge/Path/GraphResponse types, handling id/label/property extraction.",
+        tags: [
+          "serialization",
+          "gremlin",
+          "deserialization",
+          "adapter"
+        ],
+        complexity: "complex",
+        cluster: "layer:graph-connectors",
+        coverage: 54,
+        errors: 2
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/connectors/gremlin/serializers.py:GremlinSerializer",
+      type: "class",
+      data: {
+        name: "GremlinSerializer",
+        filePath: "engine/src/invana/graph/connectors/gremlin/serializers.py",
+        summary: "Deserializes Gremlin element maps and projected edge records into normalized graph types, extracting ids, labels, properties, and endpoints.",
+        tags: [
+          "serialization",
+          "gremlin",
+          "deserialization",
+          "adapter"
+        ],
+        complexity: "complex",
+        lineRange: [
+          19,
+          239
+        ],
+        cluster: null,
+        coverage: 44,
+        errors: 3
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/types/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/graph/types/__init__.py",
+        summary: "Barrel module re-exporting the graph type system: constants, data elements, filters, and schema elements.",
+        tags: [
+          "barrel",
+          "entry-point",
+          "type-definition",
+          "graph-types"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/types/constants.py",
+      type: "file",
+      data: {
+        name: "constants.py",
+        filePath: "engine/src/invana/graph/types/constants.py",
+        summary: "Defines the QueryLanguage and Capability enums used to describe a connector's supported query dialects and feature set.",
+        tags: [
+          "type-definition",
+          "constants",
+          "enum",
+          "graph-types"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 93,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/types/constants.py:Capability",
+      type: "class",
+      data: {
+        name: "Capability",
+        filePath: "engine/src/invana/graph/types/constants.py",
+        summary: "Enum enumerating optional connector capabilities (e.g. vector search, algorithms) used for capability negotiation.",
+        tags: [
+          "enum",
+          "constants",
+          "capability",
+          "graph-types"
+        ],
+        complexity: "simple",
+        lineRange: [
+          13,
+          28
+        ],
+        cluster: null,
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/types/data_elements.py",
+      type: "file",
+      data: {
+        name: "data_elements.py",
+        filePath: "engine/src/invana/graph/types/data_elements.py",
+        summary: "Pydantic models for normalized graph data: Vertex, Edge, Path, ResultMetadata, GraphResponse, and QueryResult.",
+        tags: [
+          "data-model",
+          "type-definition",
+          "pydantic",
+          "graph-types"
+        ],
+        complexity: "moderate",
+        languageNotes: "Pydantic models serve as the connector-agnostic wire/result contract shared by all serializers.",
+        cluster: "layer:graph-connectors",
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/types/data_elements.py:GraphResponse",
+      type: "class",
+      data: {
+        name: "GraphResponse",
+        filePath: "engine/src/invana/graph/types/data_elements.py",
+        summary: "Aggregate response model bundling nodes, edges, raw records, and result metadata returned from a query.",
+        tags: [
+          "data-model",
+          "pydantic",
+          "response",
+          "graph-types"
+        ],
+        complexity: "simple",
+        lineRange: [
+          72,
+          85
+        ],
+        cluster: null,
+        coverage: 82,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/types/data_elements.py:QueryResult",
+      type: "class",
+      data: {
+        name: "QueryResult",
+        filePath: "engine/src/invana/graph/types/data_elements.py",
+        summary: "Top-level query result model carrying id, status, duration, language, payload, and error fields.",
+        tags: [
+          "data-model",
+          "pydantic",
+          "response",
+          "graph-types"
+        ],
+        complexity: "simple",
+        lineRange: [
+          88,
+          105
+        ],
+        cluster: null,
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/types/filter_types.py",
+      type: "file",
+      data: {
+        name: "filter_types.py",
+        filePath: "engine/src/invana/graph/types/filter_types.py",
+        summary: "Defines the FilterOp enum of comparison/text operators used to build property filters.",
+        tags: [
+          "type-definition",
+          "filter",
+          "enum",
+          "graph-types"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 94,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/types/filters.py",
+      type: "file",
+      data: {
+        name: "filters.py",
+        filePath: "engine/src/invana/graph/types/filters.py",
+        summary: "Filter model layer with LogicalOp enum plus FilterExpression and FilterGroup Pydantic models for composing query predicates.",
+        tags: [
+          "data-model",
+          "filter",
+          "type-definition",
+          "graph-types"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 98,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/types/filters.py:FilterGroup",
+      type: "class",
+      data: {
+        name: "FilterGroup",
+        filePath: "engine/src/invana/graph/types/filters.py",
+        summary: "Composable filter model grouping nested conditions under a logical AND/OR operator.",
+        tags: [
+          "data-model",
+          "filter",
+          "pydantic",
+          "graph-types"
+        ],
+        complexity: "simple",
+        lineRange: [
+          34,
+          38
+        ],
+        cluster: null,
+        coverage: 89,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/types/schema_elements.py",
+      type: "file",
+      data: {
+        name: "schema_elements.py",
+        filePath: "engine/src/invana/graph/types/schema_elements.py",
+        summary: "Pydantic schema models describing graph structure: property/edge info, node/edge type definitions, indexes, constraints, and a full schema snapshot.",
+        tags: [
+          "data-model",
+          "type-definition",
+          "schema",
+          "pydantic",
+          "graph-types"
+        ],
+        complexity: "moderate",
+        cluster: "layer:graph-connectors",
+        coverage: 68,
+        errors: 0
+      }
+    },
+    {
+      id: "class:engine/src/invana/graph/types/schema_elements.py:GraphSchemaSnapshot",
+      type: "class",
+      data: {
+        name: "GraphSchemaSnapshot",
+        filePath: "engine/src/invana/graph/types/schema_elements.py",
+        summary: "Composite snapshot model aggregating node/edge labels, schemas, indexes, and constraints from introspection.",
+        tags: [
+          "data-model",
+          "schema",
+          "pydantic",
+          "introspection"
+        ],
+        complexity: "simple",
+        lineRange: [
+          125,
+          142
+        ],
+        cluster: null,
+        coverage: 91,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/components/settings/sections/SkillsSection.tsx",
+      type: "file",
+      data: {
+        name: "SkillsSection.tsx",
+        filePath: "studio/src/components/settings/sections/SkillsSection.tsx",
+        summary: "CRUD settings section managing a graph's skills, listing rows with edit/delete and an inline create/edit form backed by the skills query hooks.",
+        tags: [
+          "component",
+          "settings",
+          "crud",
+          "form"
+        ],
+        complexity: "complex",
+        cluster: "layer:studio-ui",
+        coverage: 49,
+        errors: 1
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/SkillsSection.tsx:SkillsSection",
+      type: "function",
+      data: {
+        name: "SkillsSection",
+        filePath: "studio/src/components/settings/sections/SkillsSection.tsx",
+        summary: "Lists configured skills and toggles the inline editor for creating or updating a skill.",
+        tags: [
+          "component",
+          "settings",
+          "crud"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          19,
+          79
+        ],
+        cluster: null,
+        coverage: 70,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/SkillsSection.tsx:SkillRow",
+      type: "function",
+      data: {
+        name: "SkillRow",
+        filePath: "studio/src/components/settings/sections/SkillsSection.tsx",
+        summary: "Renders a single skill row with edit and confirm-delete actions wired to the delete mutation.",
+        tags: [
+          "component",
+          "settings",
+          "crud"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          81,
+          125
+        ],
+        cluster: null,
+        coverage: 73,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/SkillsSection.tsx:SkillForm",
+      type: "function",
+      data: {
+        name: "SkillForm",
+        filePath: "studio/src/components/settings/sections/SkillsSection.tsx",
+        summary: "Controlled form for creating or updating a skill (name, description, content, when-to-use) with validation and create/update mutations.",
+        tags: [
+          "component",
+          "settings",
+          "form",
+          "validation"
+        ],
+        complexity: "complex",
+        lineRange: [
+          127,
+          243
+        ],
+        cluster: null,
+        coverage: 67,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/components/settings/useGraphLeftNav.tsx",
+      type: "file",
+      data: {
+        name: "useGraphLeftNav.tsx",
+        filePath: "studio/src/components/settings/useGraphLeftNav.tsx",
+        summary: "Hook that builds the graph-scoped left navigation items (overview, explorer, modeller, settings sections), filtering by the user's roles for the graph.",
+        tags: [
+          "hook",
+          "navigation",
+          "settings",
+          "authorization"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-ui",
+        coverage: 72,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/useGraphLeftNav.tsx:useGraphLeftNav",
+      type: "function",
+      data: {
+        name: "useGraphLeftNav",
+        filePath: "studio/src/components/settings/useGraphLeftNav.tsx",
+        summary: "Computes role-filtered left-nav entries and navigation handlers for a graph's overview, views, and settings sections.",
+        tags: [
+          "hook",
+          "navigation",
+          "authorization"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          65,
+          124
+        ],
+        cluster: null,
+        coverage: 66,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/components/settings/useSettingsPanel.ts",
+      type: "file",
+      data: {
+        name: "useSettingsPanel.ts",
+        filePath: "studio/src/components/settings/useSettingsPanel.ts",
+        summary: "Hook managing the settings panel state (active section and expanded flag) via URL search params and an external store subscription.",
+        tags: [
+          "hook",
+          "settings",
+          "state",
+          "url-sync"
+        ],
+        complexity: "moderate",
+        languageNotes: "Uses useSyncExternalStore with a module-level listener set to share expanded state across components without a context.",
+        cluster: "layer:studio-ui",
+        coverage: 69,
+        errors: 1
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/useSettingsPanel.ts:useSettingsPanel",
+      type: "function",
+      data: {
+        name: "useSettingsPanel",
+        filePath: "studio/src/components/settings/useSettingsPanel.ts",
+        summary: "Reads/writes the active settings section to URL params and exposes expand/collapse controls backed by an external store.",
+        tags: [
+          "hook",
+          "settings",
+          "state",
+          "url-sync"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          41,
+          86
+        ],
+        cluster: null,
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/hooks/queries/useAppVersion.ts",
+      type: "file",
+      data: {
+        name: "useAppVersion.ts",
+        filePath: "studio/src/hooks/queries/useAppVersion.ts",
+        summary: "TanStack Query hook fetching the engine application version from the health API for display in the Studio footer.",
+        tags: [
+          "hook",
+          "data-fetching",
+          "version"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-data",
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/hooks/queries/useGraphs.ts",
+      type: "file",
+      data: {
+        name: "useGraphs.ts",
+        filePath: "studio/src/hooks/queries/useGraphs.ts",
+        summary: "Central TanStack Query hook module for graph CRUD, setup-section progress, and graph database connection lifecycle (get/put/delete/ping), with auth-me refresh on graph mutations.",
+        tags: [
+          "hook",
+          "data-fetching",
+          "api-handler",
+          "crud"
+        ],
+        complexity: "complex",
+        languageNotes: "Combines useQuery/useMutation with manual query-key helpers and auth store refresh to keep graph membership in sync.",
+        cluster: "layer:studio-data",
+        coverage: 45,
+        errors: 2
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useGraphs.ts:useGraphsQuery",
+      type: "function",
+      data: {
+        name: "useGraphsQuery",
+        filePath: "studio/src/hooks/queries/useGraphs.ts",
+        summary: "Query hook listing all graphs accessible to the current user.",
+        tags: [
+          "hook",
+          "data-fetching",
+          "query"
+        ],
+        complexity: "simple",
+        lineRange: [
+          36,
+          42
+        ],
+        cluster: null,
+        coverage: 89,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useGraphs.ts:useGraphQuery",
+      type: "function",
+      data: {
+        name: "useGraphQuery",
+        filePath: "studio/src/hooks/queries/useGraphs.ts",
+        summary: "Query hook fetching a single graph by username and slug.",
+        tags: [
+          "hook",
+          "data-fetching",
+          "query"
+        ],
+        complexity: "simple",
+        lineRange: [
+          44,
+          53
+        ],
+        cluster: null,
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useGraphs.ts:useCreateGraphMutation",
+      type: "function",
+      data: {
+        name: "useCreateGraphMutation",
+        filePath: "studio/src/hooks/queries/useGraphs.ts",
+        summary: "Mutation hook creating a graph, invalidating the graphs list and refreshing auth-me membership.",
+        tags: [
+          "hook",
+          "mutation",
+          "crud"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          55,
+          67
+        ],
+        cluster: null,
+        coverage: 80,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useGraphs.ts:useUpdateGraphMutation",
+      type: "function",
+      data: {
+        name: "useUpdateGraphMutation",
+        filePath: "studio/src/hooks/queries/useGraphs.ts",
+        summary: "Mutation hook updating a graph and invalidating both the graph list and the specific graph query.",
+        tags: [
+          "hook",
+          "mutation",
+          "crud"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          69,
+          86
+        ],
+        cluster: null,
+        coverage: 68,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useGraphs.ts:useDeleteGraphMutation",
+      type: "function",
+      data: {
+        name: "useDeleteGraphMutation",
+        filePath: "studio/src/hooks/queries/useGraphs.ts",
+        summary: "Mutation hook deleting a graph, invalidating the list and refreshing auth-me membership.",
+        tags: [
+          "hook",
+          "mutation",
+          "crud"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          88,
+          102
+        ],
+        cluster: null,
+        coverage: 84,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useGraphs.ts:useSetupSectionMutation",
+      type: "function",
+      data: {
+        name: "useSetupSectionMutation",
+        filePath: "studio/src/hooks/queries/useGraphs.ts",
+        summary: "Mutation hook marking a setup section complete/skipped/reset and invalidating the affected graph query.",
+        tags: [
+          "hook",
+          "mutation",
+          "onboarding"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          104,
+          123
+        ],
+        cluster: null,
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useGraphs.ts:useGraphConnectionQuery",
+      type: "function",
+      data: {
+        name: "useGraphConnectionQuery",
+        filePath: "studio/src/hooks/queries/useGraphs.ts",
+        summary: "Query hook fetching a graph's database connection configuration and status.",
+        tags: [
+          "hook",
+          "data-fetching",
+          "query"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          132,
+          146
+        ],
+        cluster: null,
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useGraphs.ts:usePutGraphConnectionMutation",
+      type: "function",
+      data: {
+        name: "usePutGraphConnectionMutation",
+        filePath: "studio/src/hooks/queries/useGraphs.ts",
+        summary: "Mutation hook saving a graph's connection config and invalidating the connection and graph queries.",
+        tags: [
+          "hook",
+          "mutation",
+          "crud"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          148,
+          165
+        ],
+        cluster: null,
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useGraphs.ts:useDeleteGraphConnectionMutation",
+      type: "function",
+      data: {
+        name: "useDeleteGraphConnectionMutation",
+        filePath: "studio/src/hooks/queries/useGraphs.ts",
+        summary: "Mutation hook removing a graph's connection config and invalidating related queries.",
+        tags: [
+          "hook",
+          "mutation",
+          "crud"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          167,
+          180
+        ],
+        cluster: null,
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useGraphs.ts:usePingGraphConnectionMutation",
+      type: "function",
+      data: {
+        name: "usePingGraphConnectionMutation",
+        filePath: "studio/src/hooks/queries/useGraphs.ts",
+        summary: "Mutation hook pinging a graph's database connection to verify connectivity and refresh its status.",
+        tags: [
+          "hook",
+          "mutation",
+          "validation"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          182,
+          194
+        ],
+        cluster: null,
+        coverage: 66,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/hooks/queries/useInstructions.ts",
+      type: "file",
+      data: {
+        name: "useInstructions.ts",
+        filePath: "studio/src/hooks/queries/useInstructions.ts",
+        summary: "TanStack Query hooks for listing and mutating a graph's instructions (create/update/delete), keyed per username and graph slug.",
+        tags: [
+          "hook",
+          "data-fetching",
+          "crud"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-data",
+        coverage: 78,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useInstructions.ts:useInstructionsQuery",
+      type: "function",
+      data: {
+        name: "useInstructionsQuery",
+        filePath: "studio/src/hooks/queries/useInstructions.ts",
+        summary: "Query hook listing a graph's instructions.",
+        tags: [
+          "hook",
+          "data-fetching",
+          "query"
+        ],
+        complexity: "simple",
+        lineRange: [
+          11,
+          21
+        ],
+        cluster: null,
+        coverage: 93,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useInstructions.ts:useCreateInstructionMutation",
+      type: "function",
+      data: {
+        name: "useCreateInstructionMutation",
+        filePath: "studio/src/hooks/queries/useInstructions.ts",
+        summary: "Mutation hook creating an instruction and invalidating the instructions list.",
+        tags: [
+          "hook",
+          "mutation",
+          "crud"
+        ],
+        complexity: "simple",
+        lineRange: [
+          23,
+          35
+        ],
+        cluster: null,
+        coverage: 92,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useInstructions.ts:useUpdateInstructionMutation",
+      type: "function",
+      data: {
+        name: "useUpdateInstructionMutation",
+        filePath: "studio/src/hooks/queries/useInstructions.ts",
+        summary: "Mutation hook updating an instruction and invalidating the instructions list.",
+        tags: [
+          "hook",
+          "mutation",
+          "crud"
+        ],
+        complexity: "simple",
+        lineRange: [
+          37,
+          49
+        ],
+        cluster: null,
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useInstructions.ts:useDeleteInstructionMutation",
+      type: "function",
+      data: {
+        name: "useDeleteInstructionMutation",
+        filePath: "studio/src/hooks/queries/useInstructions.ts",
+        summary: "Mutation hook deleting an instruction and invalidating the instructions list.",
+        tags: [
+          "hook",
+          "mutation",
+          "crud"
+        ],
+        complexity: "simple",
+        lineRange: [
+          51,
+          62
+        ],
+        cluster: null,
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/hooks/queries/useLLMProviders.ts",
+      type: "file",
+      data: {
+        name: "useLLMProviders.ts",
+        filePath: "studio/src/hooks/queries/useLLMProviders.ts",
+        summary: "TanStack Query hooks for managing a graph's LLM providers (list/create/update/delete/set-default), keyed per username and graph slug.",
+        tags: [
+          "hook",
+          "data-fetching",
+          "crud",
+          "llm"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-data",
+        coverage: 74,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useLLMProviders.ts:useLLMProvidersQuery",
+      type: "function",
+      data: {
+        name: "useLLMProvidersQuery",
+        filePath: "studio/src/hooks/queries/useLLMProviders.ts",
+        summary: "Query hook listing a graph's configured LLM providers.",
+        tags: [
+          "hook",
+          "data-fetching",
+          "query",
+          "llm"
+        ],
+        complexity: "simple",
+        lineRange: [
+          8,
+          18
+        ],
+        cluster: null,
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useLLMProviders.ts:useCreateLLMProviderMutation",
+      type: "function",
+      data: {
+        name: "useCreateLLMProviderMutation",
+        filePath: "studio/src/hooks/queries/useLLMProviders.ts",
+        summary: "Mutation hook creating an LLM provider and invalidating the providers list.",
+        tags: [
+          "hook",
+          "mutation",
+          "crud",
+          "llm"
+        ],
+        complexity: "simple",
+        lineRange: [
+          20,
+          32
+        ],
+        cluster: null,
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useLLMProviders.ts:useUpdateLLMProviderMutation",
+      type: "function",
+      data: {
+        name: "useUpdateLLMProviderMutation",
+        filePath: "studio/src/hooks/queries/useLLMProviders.ts",
+        summary: "Mutation hook updating an LLM provider and invalidating the providers list.",
+        tags: [
+          "hook",
+          "mutation",
+          "crud",
+          "llm"
+        ],
+        complexity: "simple",
+        lineRange: [
+          34,
+          46
+        ],
+        cluster: null,
+        coverage: 80,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useLLMProviders.ts:useDeleteLLMProviderMutation",
+      type: "function",
+      data: {
+        name: "useDeleteLLMProviderMutation",
+        filePath: "studio/src/hooks/queries/useLLMProviders.ts",
+        summary: "Mutation hook deleting an LLM provider and invalidating the providers list.",
+        tags: [
+          "hook",
+          "mutation",
+          "crud",
+          "llm"
+        ],
+        complexity: "simple",
+        lineRange: [
+          48,
+          59
+        ],
+        cluster: null,
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useLLMProviders.ts:useSetDefaultLLMProviderMutation",
+      type: "function",
+      data: {
+        name: "useSetDefaultLLMProviderMutation",
+        filePath: "studio/src/hooks/queries/useLLMProviders.ts",
+        summary: "Mutation hook marking an LLM provider as the graph default and invalidating the providers list.",
+        tags: [
+          "hook",
+          "mutation",
+          "llm"
+        ],
+        complexity: "simple",
+        lineRange: [
+          61,
+          73
+        ],
+        cluster: null,
+        coverage: 98,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/hooks/queries/useSkills.ts",
+      type: "file",
+      data: {
+        name: "useSkills.ts",
+        filePath: "studio/src/hooks/queries/useSkills.ts",
+        summary: "TanStack Query hooks for managing a graph's skills (list/create/update/delete), keyed per username and graph slug.",
+        tags: [
+          "hook",
+          "data-fetching",
+          "crud"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-data",
+        coverage: 82,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useSkills.ts:useSkillsQuery",
+      type: "function",
+      data: {
+        name: "useSkillsQuery",
+        filePath: "studio/src/hooks/queries/useSkills.ts",
+        summary: "Query hook listing a graph's configured skills.",
+        tags: [
+          "hook",
+          "data-fetching",
+          "query"
+        ],
+        complexity: "simple",
+        lineRange: [
+          8,
+          17
+        ],
+        cluster: null,
+        coverage: 87,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useSkills.ts:useCreateSkillMutation",
+      type: "function",
+      data: {
+        name: "useCreateSkillMutation",
+        filePath: "studio/src/hooks/queries/useSkills.ts",
+        summary: "Mutation hook creating a skill and invalidating the skills list.",
+        tags: [
+          "hook",
+          "mutation",
+          "crud"
+        ],
+        complexity: "simple",
+        lineRange: [
+          19,
+          28
+        ],
+        cluster: null,
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useSkills.ts:useUpdateSkillMutation",
+      type: "function",
+      data: {
+        name: "useUpdateSkillMutation",
+        filePath: "studio/src/hooks/queries/useSkills.ts",
+        summary: "Mutation hook updating a skill and invalidating the skills list.",
+        tags: [
+          "hook",
+          "mutation",
+          "crud"
+        ],
+        complexity: "simple",
+        lineRange: [
+          30,
+          39
+        ],
+        cluster: null,
+        coverage: 84,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useSkills.ts:useDeleteSkillMutation",
+      type: "function",
+      data: {
+        name: "useDeleteSkillMutation",
+        filePath: "studio/src/hooks/queries/useSkills.ts",
+        summary: "Mutation hook deleting a skill and invalidating the skills list.",
+        tags: [
+          "hook",
+          "mutation",
+          "crud"
+        ],
+        complexity: "simple",
+        lineRange: [
+          41,
+          49
+        ],
+        cluster: null,
+        coverage: 87,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/GraphOverviewPage.tsx",
+      type: "file",
+      data: {
+        name: "GraphOverviewPage.tsx",
+        filePath: "studio/src/pages/graphs/GraphOverviewPage.tsx",
+        summary: "Graph overview page rendering a single graph's summary and entry points into explorer, modeller, and settings, wrapped in the shared GraphDetail shell.",
+        tags: [
+          "page",
+          "graph",
+          "overview",
+          "entry-point"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-ui",
+        coverage: 70,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/GraphOverviewPage.tsx:GraphOverviewPage",
+      type: "function",
+      data: {
+        name: "GraphOverviewPage",
+        filePath: "studio/src/pages/graphs/GraphOverviewPage.tsx",
+        summary: "Reads route params, loads the graph, and renders overview content with navigation into the graph's views and settings sections.",
+        tags: [
+          "page",
+          "graph",
+          "overview"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          8,
+          166
+        ],
+        cluster: null,
+        coverage: 70,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/GraphsListPage.tsx",
+      type: "file",
+      data: {
+        name: "GraphsListPage.tsx",
+        filePath: "studio/src/pages/graphs/GraphsListPage.tsx",
+        summary: "Landing page listing all accessible graphs with search, pagination, setup-progress indicators, row open/delete actions, and a featured-graphs preview.",
+        tags: [
+          "page",
+          "graph",
+          "list",
+          "entry-point"
+        ],
+        complexity: "complex",
+        cluster: "layer:studio-ui",
+        coverage: 57,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/GraphsListPage.tsx:formatRelative",
+      type: "function",
+      data: {
+        name: "formatRelative",
+        filePath: "studio/src/pages/graphs/GraphsListPage.tsx",
+        summary: "Formats an ISO timestamp as a human-friendly relative time string (e.g. minutes/hours/days ago).",
+        tags: [
+          "utility",
+          "date",
+          "formatting"
+        ],
+        complexity: "simple",
+        lineRange: [
+          34,
+          46
+        ],
+        cluster: null,
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/GraphsListPage.tsx:GraphRow",
+      type: "function",
+      data: {
+        name: "GraphRow",
+        filePath: "studio/src/pages/graphs/GraphsListPage.tsx",
+        summary: "Renders a single graph row with setup progress, metadata, and open/delete controls.",
+        tags: [
+          "component",
+          "graph",
+          "list"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          57,
+          116
+        ],
+        cluster: null,
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/GraphsListPage.tsx:GraphsListPage",
+      type: "function",
+      data: {
+        name: "GraphsListPage",
+        filePath: "studio/src/pages/graphs/GraphsListPage.tsx",
+        summary: "Top-level graphs list view handling search filtering, client-side pagination, deletion with confirmation, and navigation into individual graphs.",
+        tags: [
+          "page",
+          "graph",
+          "list",
+          "pagination"
+        ],
+        complexity: "complex",
+        lineRange: [
+          118,
+          402
+        ],
+        cluster: null,
+        coverage: 58,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/components/canvas/GraphCanvas.tsx",
+      type: "file",
+      data: {
+        name: "GraphCanvas.tsx",
+        filePath: "studio/src/components/canvas/GraphCanvas.tsx",
+        summary: "Thin React wrapper that adapts node/edge data into the @invana/canvas PixiJS renderer for graph visualization in Studio.",
+        tags: [
+          "component",
+          "visualization",
+          "canvas",
+          "graph-rendering"
+        ],
+        complexity: "moderate",
+        languageNotes: "Delegates all PixiJS rendering to @invana/canvas per project rule; only memoizes data shaping with useMemo.",
+        cluster: "layer:studio-ui",
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/canvas/GraphCanvas.tsx:GraphCanvas",
+      type: "function",
+      data: {
+        name: "GraphCanvas",
+        filePath: "studio/src/components/canvas/GraphCanvas.tsx",
+        summary: "Maps incoming nodes and edges into canvas-renderable shapes and mounts the PixiJS-backed graph surface.",
+        tags: [
+          "component",
+          "visualization",
+          "graph-rendering"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          38,
+          100
+        ],
+        cluster: null,
+        coverage: 68,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/components/settings/SettingsPanel.tsx",
+      type: "file",
+      data: {
+        name: "SettingsPanel.tsx",
+        filePath: "studio/src/components/settings/SettingsPanel.tsx",
+        summary: "Top-level settings panel that switches between graph configuration sections (connection, datasets, info, instructions, intent, LLMs, members, skills) based on the active section state.",
+        tags: [
+          "component",
+          "settings",
+          "panel",
+          "router"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-ui",
+        coverage: 63,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/SettingsPanel.tsx:SettingsPanel",
+      type: "function",
+      data: {
+        name: "SettingsPanel",
+        filePath: "studio/src/components/settings/SettingsPanel.tsx",
+        summary: "Renders the settings panel chrome and selects which section component to display via the useSettingsPanel hook.",
+        tags: [
+          "component",
+          "settings",
+          "panel"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          42,
+          117
+        ],
+        cluster: null,
+        coverage: 70,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/SettingsPanel.tsx:SectionContent",
+      type: "function",
+      data: {
+        name: "SectionContent",
+        filePath: "studio/src/components/settings/SettingsPanel.tsx",
+        summary: "Dispatches the active section key to the corresponding settings section component.",
+        tags: [
+          "component",
+          "settings",
+          "dispatcher"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          138,
+          165
+        ],
+        cluster: null,
+        coverage: 70,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/components/settings/SetupRequiredBanner.tsx",
+      type: "file",
+      data: {
+        name: "SetupRequiredBanner.tsx",
+        filePath: "studio/src/components/settings/SetupRequiredBanner.tsx",
+        summary: "Inline banner shown on graph pages when required setup is incomplete, prompting the user to open the relevant settings section.",
+        tags: [
+          "component",
+          "settings",
+          "banner",
+          "onboarding"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-ui",
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/SetupRequiredBanner.tsx:SetupRequiredBanner",
+      type: "function",
+      data: {
+        name: "SetupRequiredBanner",
+        filePath: "studio/src/components/settings/SetupRequiredBanner.tsx",
+        summary: "Renders a setup-required notice for a page and links into the settings panel section that resolves it.",
+        tags: [
+          "component",
+          "banner",
+          "onboarding"
+        ],
+        complexity: "simple",
+        lineRange: [
+          23,
+          51
+        ],
+        cluster: null,
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/components/settings/sections/ConnectionSection.tsx",
+      type: "file",
+      data: {
+        name: "ConnectionSection.tsx",
+        filePath: "studio/src/components/settings/sections/ConnectionSection.tsx",
+        summary: "Settings section for editing and testing a graph's database connection, backed by the graph connection query/mutation hooks and the test-connection API.",
+        tags: [
+          "component",
+          "settings",
+          "api-handler",
+          "validation"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-ui",
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/ConnectionSection.tsx:ConnectionSection",
+      type: "function",
+      data: {
+        name: "ConnectionSection",
+        filePath: "studio/src/components/settings/sections/ConnectionSection.tsx",
+        summary: "Loads existing connection config, submits PUT mutations, and runs a live test-connection check with toast feedback.",
+        tags: [
+          "component",
+          "settings",
+          "form",
+          "validation"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          20,
+          102
+        ],
+        cluster: null,
+        coverage: 84,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/components/settings/sections/DatasetsSection.tsx",
+      type: "file",
+      data: {
+        name: "DatasetsSection.tsx",
+        filePath: "studio/src/components/settings/sections/DatasetsSection.tsx",
+        summary: "Placeholder settings section for datasets, currently rendering a stub awaiting future dataset management features.",
+        tags: [
+          "component",
+          "settings",
+          "placeholder"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-ui",
+        coverage: 92,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/components/settings/sections/InfoSection.tsx",
+      type: "file",
+      data: {
+        name: "InfoSection.tsx",
+        filePath: "studio/src/components/settings/sections/InfoSection.tsx",
+        summary: "Overview settings section aggregating graph stats (connection status, LLM providers, skills, instructions) into stat cards and a setup wizard.",
+        tags: [
+          "component",
+          "settings",
+          "dashboard",
+          "overview"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-ui",
+        coverage: 86,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/InfoSection.tsx:InfoSection",
+      type: "function",
+      data: {
+        name: "InfoSection",
+        filePath: "studio/src/components/settings/sections/InfoSection.tsx",
+        summary: "Fetches graph, connection, LLM, skill, and instruction data to render an at-a-glance configuration summary with the setup wizard.",
+        tags: [
+          "component",
+          "settings",
+          "dashboard"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          25,
+          122
+        ],
+        cluster: null,
+        coverage: 62,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/InfoSection.tsx:StatCard",
+      type: "function",
+      data: {
+        name: "StatCard",
+        filePath: "studio/src/components/settings/sections/InfoSection.tsx",
+        summary: "Presentational card displaying a labeled count with an icon and optional footer.",
+        tags: [
+          "component",
+          "presentational",
+          "stat"
+        ],
+        complexity: "simple",
+        lineRange: [
+          124,
+          149
+        ],
+        cluster: null,
+        coverage: 87,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/InfoSection.tsx:ConnectionStatusBadge",
+      type: "function",
+      data: {
+        name: "ConnectionStatusBadge",
+        filePath: "studio/src/components/settings/sections/InfoSection.tsx",
+        summary: "Renders a colored badge reflecting the graph database connection status.",
+        tags: [
+          "component",
+          "presentational",
+          "status"
+        ],
+        complexity: "simple",
+        lineRange: [
+          151,
+          166
+        ],
+        cluster: null,
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/components/settings/sections/InstructionsSection.tsx",
+      type: "file",
+      data: {
+        name: "InstructionsSection.tsx",
+        filePath: "studio/src/components/settings/sections/InstructionsSection.tsx",
+        summary: "CRUD settings section for graph instructions, listing rows with edit/delete and an inline create/edit form backed by the instructions query hooks.",
+        tags: [
+          "component",
+          "settings",
+          "crud",
+          "form"
+        ],
+        complexity: "complex",
+        cluster: "layer:studio-ui",
+        coverage: 66,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/InstructionsSection.tsx:InstructionsSection",
+      type: "function",
+      data: {
+        name: "InstructionsSection",
+        filePath: "studio/src/components/settings/sections/InstructionsSection.tsx",
+        summary: "Lists instructions and toggles the inline editor for creating or updating an instruction.",
+        tags: [
+          "component",
+          "settings",
+          "crud"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          22,
+          83
+        ],
+        cluster: null,
+        coverage: 74,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/InstructionsSection.tsx:InstructionRow",
+      type: "function",
+      data: {
+        name: "InstructionRow",
+        filePath: "studio/src/components/settings/sections/InstructionsSection.tsx",
+        summary: "Renders a single instruction row with edit and confirm-delete actions wired to the delete mutation.",
+        tags: [
+          "component",
+          "settings",
+          "crud"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          85,
+          134
+        ],
+        cluster: null,
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/InstructionsSection.tsx:InstructionForm",
+      type: "function",
+      data: {
+        name: "InstructionForm",
+        filePath: "studio/src/components/settings/sections/InstructionsSection.tsx",
+        summary: "Controlled form for creating or updating an instruction (name, priority, content) with validation and create/update mutations.",
+        tags: [
+          "component",
+          "settings",
+          "form",
+          "validation"
+        ],
+        complexity: "complex",
+        lineRange: [
+          136,
+          248
+        ],
+        cluster: null,
+        coverage: 68,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/components/settings/sections/IntentSection.tsx",
+      type: "file",
+      data: {
+        name: "IntentSection.tsx",
+        filePath: "studio/src/components/settings/sections/IntentSection.tsx",
+        summary: "Settings section for editing a graph's intent text, syncing local state with the graph query and persisting via the update-graph mutation.",
+        tags: [
+          "component",
+          "settings",
+          "form"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-ui",
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/IntentSection.tsx:IntentSection",
+      type: "function",
+      data: {
+        name: "IntentSection",
+        filePath: "studio/src/components/settings/sections/IntentSection.tsx",
+        summary: "Manages the graph intent textarea, syncing from the graph query and saving through the update-graph mutation with toast feedback.",
+        tags: [
+          "component",
+          "settings",
+          "form"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          16,
+          67
+        ],
+        cluster: null,
+        coverage: 68,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/components/settings/sections/LLMsSection.tsx",
+      type: "file",
+      data: {
+        name: "LLMsSection.tsx",
+        filePath: "studio/src/components/settings/sections/LLMsSection.tsx",
+        summary: "CRUD settings section managing a graph's LLM providers, including provider rows, set-default and delete actions, and a form with live ping/test connectivity.",
+        tags: [
+          "component",
+          "settings",
+          "crud",
+          "form",
+          "llm"
+        ],
+        complexity: "complex",
+        cluster: "layer:studio-ui",
+        coverage: 55,
+        errors: 1
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/LLMsSection.tsx:LLMsSection",
+      type: "function",
+      data: {
+        name: "LLMsSection",
+        filePath: "studio/src/components/settings/sections/LLMsSection.tsx",
+        summary: "Lists configured LLM providers and toggles the inline provider editor for create/edit.",
+        tags: [
+          "component",
+          "settings",
+          "crud",
+          "llm"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          46,
+          106
+        ],
+        cluster: null,
+        coverage: 84,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/LLMsSection.tsx:ProviderRow",
+      type: "function",
+      data: {
+        name: "ProviderRow",
+        filePath: "studio/src/components/settings/sections/LLMsSection.tsx",
+        summary: "Renders an LLM provider row with set-default and confirm-delete actions wired to their mutations.",
+        tags: [
+          "component",
+          "settings",
+          "crud",
+          "llm"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          108,
+          183
+        ],
+        cluster: null,
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/LLMsSection.tsx:LLMProviderForm",
+      type: "function",
+      data: {
+        name: "LLMProviderForm",
+        filePath: "studio/src/components/settings/sections/LLMsSection.tsx",
+        summary: "Controlled form for creating or editing an LLM provider (kind, model, API key, base URL) with payload building, live ping testing, and create/update mutations.",
+        tags: [
+          "component",
+          "settings",
+          "form",
+          "validation",
+          "llm"
+        ],
+        complexity: "complex",
+        lineRange: [
+          191,
+          486
+        ],
+        cluster: null,
+        coverage: 44,
+        errors: 1
+      }
+    },
+    {
+      id: "file:studio/src/components/settings/sections/SetupWizard.tsx",
+      type: "file",
+      data: {
+        name: "SetupWizard.tsx",
+        filePath: "studio/src/components/settings/sections/SetupWizard.tsx",
+        summary: "Step-by-step graph setup wizard that tracks per-section completion status, allows skipping skippable sections, and routes the user to each settings section.",
+        tags: [
+          "component",
+          "settings",
+          "onboarding",
+          "wizard"
+        ],
+        complexity: "complex",
+        cluster: "layer:studio-ui",
+        coverage: 55,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/SetupWizard.tsx:sectionStatus",
+      type: "function",
+      data: {
+        name: "sectionStatus",
+        filePath: "studio/src/components/settings/sections/SetupWizard.tsx",
+        summary: "Derives a section's completion status label from its setup state.",
+        tags: [
+          "utility",
+          "settings",
+          "wizard"
+        ],
+        complexity: "simple",
+        lineRange: [
+          62,
+          68
+        ],
+        cluster: null,
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/SetupWizard.tsx:SetupWizard",
+      type: "function",
+      data: {
+        name: "SetupWizard",
+        filePath: "studio/src/components/settings/sections/SetupWizard.tsx",
+        summary: "Renders the ordered setup checklist, computes overall readiness from required sections, and dispatches skip/reset actions via the setup-section mutation.",
+        tags: [
+          "component",
+          "settings",
+          "wizard",
+          "onboarding"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          84,
+          150
+        ],
+        cluster: null,
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/components/settings/sections/SetupWizard.tsx:WizardRow",
+      type: "function",
+      data: {
+        name: "WizardRow",
+        filePath: "studio/src/components/settings/sections/SetupWizard.tsx",
+        summary: "Renders a single wizard step row with its status, navigation link, and skip/reset controls.",
+        tags: [
+          "component",
+          "settings",
+          "wizard"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          152,
+          224
+        ],
+        cluster: null,
+        coverage: 86,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/components/AppVersion.tsx",
+      type: "file",
+      data: {
+        name: "AppVersion.tsx",
+        filePath: "studio/src/pages/graphs/components/AppVersion.tsx",
+        summary: "Tiny presentational component that renders the engine/app version chip, sourcing the value from the useAppVersionQuery hook.",
+        tags: [
+          "component",
+          "react",
+          "version",
+          "presentational"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-ui",
+        coverage: 84,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/components/GraphDetail.tsx",
+      type: "file",
+      data: {
+        name: "GraphDetail.tsx",
+        filePath: "studio/src/pages/graphs/components/GraphDetail.tsx",
+        summary: "Shared shell layout for all graph-scoped pages (Overview, Explorer, Modeller), wiring the app header, left nav, settings panel, and status bar around routed child content.",
+        tags: [
+          "component",
+          "layout",
+          "graph-scoped",
+          "shell"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-ui",
+        coverage: 74,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/components/GraphForm.tsx",
+      type: "file",
+      data: {
+        name: "GraphForm.tsx",
+        filePath: "studio/src/pages/graphs/components/GraphForm.tsx",
+        summary: "Create/edit form for a graph container, collecting name, slug, description, and connector fields with inline validation via FormError.",
+        tags: [
+          "component",
+          "form",
+          "validation",
+          "graph-model"
+        ],
+        complexity: "complex",
+        cluster: "layer:studio-ui",
+        coverage: 67,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/components/GraphStatusBadge.tsx",
+      type: "file",
+      data: {
+        name: "GraphStatusBadge.tsx",
+        filePath: "studio/src/pages/graphs/components/GraphStatusBadge.tsx",
+        summary: "Renders a colored badge reflecting a graph connection's status, mapping each GraphConnectionStatus value to a label and style.",
+        tags: [
+          "component",
+          "badge",
+          "status",
+          "presentational"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-ui",
+        coverage: 98,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/components/GraphStatusBar.tsx",
+      type: "file",
+      data: {
+        name: "GraphStatusBar.tsx",
+        filePath: "studio/src/pages/graphs/components/GraphStatusBar.tsx",
+        summary: "Shared footer status bar surfaced across Overview/Explorer/Modeller, showing the graph's connection state and metadata.",
+        tags: [
+          "component",
+          "status-bar",
+          "footer",
+          "graph-scoped"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-ui",
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/explorer/ExplorerPage.tsx",
+      type: "file",
+      data: {
+        name: "ExplorerPage.tsx",
+        filePath: "studio/src/pages/graphs/explorer/ExplorerPage.tsx",
+        summary: "Top-level Explorer page composing the query panel, graph canvas, canvas toolbar, and inspector panel for interactive graph querying and visualization.",
+        tags: [
+          "component",
+          "page",
+          "explorer",
+          "visualization"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-ui",
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/explorer/components/CanvasToolbar.tsx",
+      type: "file",
+      data: {
+        name: "CanvasToolbar.tsx",
+        filePath: "studio/src/pages/graphs/explorer/components/CanvasToolbar.tsx",
+        summary: "Compact toolbar overlaying the graph canvas with zoom/fit/layout controls for the Explorer view.",
+        tags: [
+          "component",
+          "toolbar",
+          "canvas",
+          "explorer"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-ui",
+        coverage: 93,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/explorer/components/InspectorPanel.tsx",
+      type: "file",
+      data: {
+        name: "InspectorPanel.tsx",
+        filePath: "studio/src/pages/graphs/explorer/components/InspectorPanel.tsx",
+        summary: "Side panel that displays the properties and metadata of the node or edge currently selected on the Explorer canvas.",
+        tags: [
+          "component",
+          "inspector",
+          "panel",
+          "explorer"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-ui",
+        coverage: 86,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/explorer/components/QueryPanel.tsx",
+      type: "file",
+      data: {
+        name: "QueryPanel.tsx",
+        filePath: "studio/src/pages/graphs/explorer/components/QueryPanel.tsx",
+        summary: "Rich query authoring panel combining a CodeMirror editor, natural-language-to-query LLM assist, and result handling for the Explorer experience.",
+        tags: [
+          "component",
+          "query-editor",
+          "explorer",
+          "llm"
+        ],
+        complexity: "complex",
+        cluster: "layer:studio-ui",
+        coverage: 63,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/explorer/hooks/useQueryExecution.ts",
+      type: "file",
+      data: {
+        name: "useQueryExecution.ts",
+        filePath: "studio/src/pages/graphs/explorer/hooks/useQueryExecution.ts",
+        summary: "Custom hook wrapping graphsApi.query in a TanStack mutation, exposing query execution state and results to the Explorer.",
+        tags: [
+          "hook",
+          "query",
+          "explorer",
+          "data-fetching"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-ui",
+        coverage: 91,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/services/api/graphs.ts",
+      type: "file",
+      data: {
+        name: "graphs.ts",
+        filePath: "studio/src/services/api/graphs.ts",
+        summary: "API client object for the graph container resource (RFC-017): CRUD, setup sections, the 1:1 connection sub-resource, ping/introspect/test, and query execution.",
+        tags: [
+          "service",
+          "api-handler",
+          "data-fetching",
+          "graph-model"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-data",
+        coverage: 82,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/services/api/health.ts",
+      type: "file",
+      data: {
+        name: "health.ts",
+        filePath: "studio/src/services/api/health.ts",
+        summary: "Minimal API client exposing the engine health/version endpoint used by the app version display.",
+        tags: [
+          "service",
+          "api-handler",
+          "health",
+          "version"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-data",
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/services/api/instructions.ts",
+      type: "file",
+      data: {
+        name: "instructions.ts",
+        filePath: "studio/src/services/api/instructions.ts",
+        summary: "API client object for graph-scoped instructions, providing list and CRUD requests against the instructions endpoints.",
+        tags: [
+          "service",
+          "api-handler",
+          "data-fetching",
+          "instructions"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-data",
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/services/api/llm.ts",
+      type: "file",
+      data: {
+        name: "llm.ts",
+        filePath: "studio/src/services/api/llm.ts",
+        summary: "API client object for LLM provider configuration, covering list, CRUD, and set-default requests for the graph's LLM settings.",
+        tags: [
+          "service",
+          "api-handler",
+          "data-fetching",
+          "llm"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-data",
+        coverage: 87,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/services/api/skills.ts",
+      type: "file",
+      data: {
+        name: "skills.ts",
+        filePath: "studio/src/services/api/skills.ts",
+        summary: "API client object for graph-scoped skills, providing list and CRUD requests against the skills endpoints.",
+        tags: [
+          "service",
+          "api-handler",
+          "data-fetching",
+          "skills"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-data",
+        coverage: 80,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/types/graphs.ts",
+      type: "file",
+      data: {
+        name: "graphs.ts",
+        filePath: "studio/src/types/graphs.ts",
+        summary: "TypeScript types and constants for the graph container domain \u2014 Graph, connection, setup sections, and connector option metadata shared across pages and the API layer.",
+        tags: [
+          "type-definition",
+          "graph-model",
+          "constants",
+          "domain"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-types",
+        coverage: 66,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/types/instructions.ts",
+      type: "file",
+      data: {
+        name: "instructions.ts",
+        filePath: "studio/src/types/instructions.ts",
+        summary: "TypeScript type definitions for graph instructions, including read/create/update payload shapes used by the instructions API and section UI.",
+        tags: [
+          "type-definition",
+          "instructions",
+          "domain"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-types",
+        coverage: 88,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/types/llm.ts",
+      type: "file",
+      data: {
+        name: "llm.ts",
+        filePath: "studio/src/types/llm.ts",
+        summary: "TypeScript types and provider option metadata for LLM provider configuration, defining provider shapes and the selectable LLM_PROVIDER_OPTIONS catalog.",
+        tags: [
+          "type-definition",
+          "llm",
+          "constants",
+          "domain"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-types",
+        coverage: 72,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/types/query.ts",
+      type: "file",
+      data: {
+        name: "query.ts",
+        filePath: "studio/src/types/query.ts",
+        summary: "TypeScript types for graph query execution, defining the QueryRequest/QueryResponse contract and the node/edge result shapes consumed by the Explorer.",
+        tags: [
+          "type-definition",
+          "query",
+          "domain"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-types",
+        coverage: 85,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/types/skills.ts",
+      type: "file",
+      data: {
+        name: "skills.ts",
+        filePath: "studio/src/types/skills.ts",
+        summary: "TypeScript type definitions for graph skills, including read/create/update payload shapes used by the skills API and section UI.",
+        tags: [
+          "type-definition",
+          "skills",
+          "domain"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-types",
+        coverage: 98,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/components/GraphDetail.tsx:GraphDetail",
+      type: "function",
+      data: {
+        name: "GraphDetail",
+        filePath: "studio/src/pages/graphs/components/GraphDetail.tsx",
+        summary: "Renders the shared graph-scoped shell: header, left nav, settings panel, and status bar wrapping routed child page content.",
+        tags: [
+          "component",
+          "layout",
+          "shell",
+          "react"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          67,
+          149
+        ],
+        cluster: null,
+        coverage: 86,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/components/GraphForm.tsx:GraphForm",
+      type: "function",
+      data: {
+        name: "GraphForm",
+        filePath: "studio/src/pages/graphs/components/GraphForm.tsx",
+        summary: "Controlled create/edit form for a graph container with field state, validation, and submission handling.",
+        tags: [
+          "component",
+          "form",
+          "validation",
+          "react"
+        ],
+        complexity: "complex",
+        lineRange: [
+          55,
+          314
+        ],
+        cluster: null,
+        coverage: 49,
+        errors: 1
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/components/GraphStatusBadge.tsx:GraphConnectionStatusBadge",
+      type: "function",
+      data: {
+        name: "GraphConnectionStatusBadge",
+        filePath: "studio/src/pages/graphs/components/GraphStatusBadge.tsx",
+        summary: "Maps a graph connection status to a styled badge label for display.",
+        tags: [
+          "component",
+          "badge",
+          "status",
+          "react"
+        ],
+        complexity: "simple",
+        lineRange: [
+          32,
+          41
+        ],
+        cluster: null,
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/components/GraphStatusBar.tsx:GraphStatusBar",
+      type: "function",
+      data: {
+        name: "GraphStatusBar",
+        filePath: "studio/src/pages/graphs/components/GraphStatusBar.tsx",
+        summary: "Renders the shared footer status bar showing graph connection state and metadata.",
+        tags: [
+          "component",
+          "status-bar",
+          "footer",
+          "react"
+        ],
+        complexity: "simple",
+        lineRange: [
+          21,
+          52
+        ],
+        cluster: null,
+        coverage: 90,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/explorer/ExplorerPage.tsx:ExplorerPage",
+      type: "function",
+      data: {
+        name: "ExplorerPage",
+        filePath: "studio/src/pages/graphs/explorer/ExplorerPage.tsx",
+        summary: "Composes the Explorer layout \u2014 query panel, canvas, toolbar, and inspector \u2014 and orchestrates query/visualization state.",
+        tags: [
+          "component",
+          "page",
+          "explorer",
+          "react"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          28,
+          170
+        ],
+        cluster: null,
+        coverage: 78,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/explorer/components/CanvasToolbar.tsx:CanvasToolbar",
+      type: "function",
+      data: {
+        name: "CanvasToolbar",
+        filePath: "studio/src/pages/graphs/explorer/components/CanvasToolbar.tsx",
+        summary: "Renders the floating canvas toolbar with zoom and layout controls for the Explorer.",
+        tags: [
+          "component",
+          "toolbar",
+          "canvas",
+          "react"
+        ],
+        complexity: "simple",
+        lineRange: [
+          13,
+          27
+        ],
+        cluster: null,
+        coverage: 88,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/explorer/components/InspectorPanel.tsx:InspectorPanel",
+      type: "function",
+      data: {
+        name: "InspectorPanel",
+        filePath: "studio/src/pages/graphs/explorer/components/InspectorPanel.tsx",
+        summary: "Displays properties and metadata for the currently selected node or edge on the Explorer canvas.",
+        tags: [
+          "component",
+          "inspector",
+          "panel",
+          "react"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          10,
+          117
+        ],
+        cluster: null,
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/explorer/components/QueryPanel.tsx:QueryPanel",
+      type: "function",
+      data: {
+        name: "QueryPanel",
+        filePath: "studio/src/pages/graphs/explorer/components/QueryPanel.tsx",
+        summary: "Query authoring panel with CodeMirror editor, LLM-assisted query generation, and result dispatch for the Explorer.",
+        tags: [
+          "component",
+          "query-editor",
+          "llm",
+          "react"
+        ],
+        complexity: "complex",
+        lineRange: [
+          94,
+          448
+        ],
+        cluster: null,
+        coverage: 65,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/explorer/hooks/useQueryExecution.ts:useQueryExecution",
+      type: "function",
+      data: {
+        name: "useQueryExecution",
+        filePath: "studio/src/pages/graphs/explorer/hooks/useQueryExecution.ts",
+        summary: "Hook wrapping graphsApi.query as a mutation, exposing execution state and parsed query results.",
+        tags: [
+          "hook",
+          "query",
+          "data-fetching",
+          "react"
+        ],
+        complexity: "simple",
+        lineRange: [
+          6,
+          33
+        ],
+        cluster: null,
+        coverage: 98,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/components/AppVersion.tsx:AppVersion",
+      type: "function",
+      data: {
+        name: "AppVersion",
+        filePath: "studio/src/pages/graphs/components/AppVersion.tsx",
+        summary: "Renders the app version chip from the useAppVersionQuery hook value.",
+        tags: [
+          "component",
+          "version",
+          "presentational",
+          "react"
+        ],
+        complexity: "simple",
+        lineRange: [
+          8,
+          12
+        ],
+        cluster: null,
+        coverage: 96,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/hooks/queries/useSchema.ts",
+      type: "file",
+      data: {
+        name: "useSchema.ts",
+        filePath: "studio/src/hooks/queries/useSchema.ts",
+        summary: "TanStack Query hook that fetches the active schema version for a graph from the schemas API, keyed by username and graph slug.",
+        tags: [
+          "hook",
+          "data-fetching",
+          "tanstack-query",
+          "schema"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-data",
+        coverage: 90,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/hooks/queries/useSchema.ts:useActiveVersionQuery",
+      type: "function",
+      data: {
+        name: "useActiveVersionQuery",
+        filePath: "studio/src/hooks/queries/useSchema.ts",
+        summary: "React Query hook wrapping schemasApi.getActiveVersion to load the currently active schema version for a graph.",
+        tags: [
+          "hook",
+          "tanstack-query",
+          "schema"
+        ],
+        complexity: "simple",
+        lineRange: [
+          4,
+          15
+        ],
+        cluster: null,
+        coverage: 80,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/modeller/ModellerPage.tsx",
+      type: "file",
+      data: {
+        name: "ModellerPage.tsx",
+        filePath: "studio/src/pages/graphs/modeller/ModellerPage.tsx",
+        summary: "Modeller page that renders the graph ontology/schema for a graph, gating on setup completion and offering a connection introspection action to populate the schema.",
+        tags: [
+          "page",
+          "component",
+          "modeller",
+          "schema",
+          "ontology"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-ui",
+        coverage: 75,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/modeller/ModellerPage.tsx:ModellerPage",
+      type: "function",
+      data: {
+        name: "ModellerPage",
+        filePath: "studio/src/pages/graphs/modeller/ModellerPage.tsx",
+        summary: "Top-level Modeller page component: loads the active schema version, manages introspection state, and lays out the schema navigation, canvas, and detail panels.",
+        tags: [
+          "component",
+          "page",
+          "modeller",
+          "introspection"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          16,
+          179
+        ],
+        cluster: null,
+        coverage: 65,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/modeller/components/ConstraintTable.tsx",
+      type: "file",
+      data: {
+        name: "ConstraintTable.tsx",
+        filePath: "studio/src/pages/graphs/modeller/components/ConstraintTable.tsx",
+        summary: "Presentational table rendering schema constraint definitions with their type and bound properties.",
+        tags: [
+          "component",
+          "modeller",
+          "table",
+          "schema"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-ui",
+        coverage: 90,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/modeller/components/ConstraintTable.tsx:ConstraintTable",
+      type: "function",
+      data: {
+        name: "ConstraintTable",
+        filePath: "studio/src/pages/graphs/modeller/components/ConstraintTable.tsx",
+        summary: "Renders a table of schema constraints, joining each constraint's property list for display.",
+        tags: [
+          "component",
+          "table",
+          "schema"
+        ],
+        complexity: "simple",
+        lineRange: [
+          15,
+          46
+        ],
+        cluster: null,
+        coverage: 82,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/modeller/components/DetailPanel.tsx",
+      type: "file",
+      data: {
+        name: "DetailPanel.tsx",
+        filePath: "studio/src/pages/graphs/modeller/components/DetailPanel.tsx",
+        summary: "Detail panel for the Modeller that dispatches to node-type, edge-type, or placeholder views based on the currently selected schema element.",
+        tags: [
+          "component",
+          "modeller",
+          "detail-panel",
+          "schema"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-ui",
+        coverage: 70,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/modeller/components/DetailPanel.tsx:DetailPanel",
+      type: "function",
+      data: {
+        name: "DetailPanel",
+        filePath: "studio/src/pages/graphs/modeller/components/DetailPanel.tsx",
+        summary: "Resolves the selected schema element and renders the appropriate detail view (node type, edge type, or no-selection placeholder).",
+        tags: [
+          "component",
+          "detail-panel",
+          "schema",
+          "router"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          32,
+          100
+        ],
+        cluster: null,
+        coverage: 78,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/modeller/components/EdgeTypeDetail.tsx",
+      type: "file",
+      data: {
+        name: "EdgeTypeDetail.tsx",
+        filePath: "studio/src/pages/graphs/modeller/components/EdgeTypeDetail.tsx",
+        summary: "Detail view for an edge type, showing source/target node types, property mappings, and the constraints and indexes scoped to that edge type.",
+        tags: [
+          "component",
+          "modeller",
+          "detail-panel",
+          "edge-type"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-ui",
+        coverage: 70,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/modeller/components/EdgeTypeDetail.tsx:EdgeTypeDetail",
+      type: "function",
+      data: {
+        name: "EdgeTypeDetail",
+        filePath: "studio/src/pages/graphs/modeller/components/EdgeTypeDetail.tsx",
+        summary: "Renders edge-type metadata including source/target node types and filtered constraints, indexes, and property mappings.",
+        tags: [
+          "component",
+          "edge-type",
+          "schema"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          17,
+          97
+        ],
+        cluster: null,
+        coverage: 65,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/modeller/components/IndexTable.tsx",
+      type: "file",
+      data: {
+        name: "IndexTable.tsx",
+        filePath: "studio/src/pages/graphs/modeller/components/IndexTable.tsx",
+        summary: "Presentational table rendering schema index definitions with their type and indexed properties.",
+        tags: [
+          "component",
+          "modeller",
+          "table",
+          "schema"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-ui",
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/modeller/components/IndexTable.tsx:IndexTable",
+      type: "function",
+      data: {
+        name: "IndexTable",
+        filePath: "studio/src/pages/graphs/modeller/components/IndexTable.tsx",
+        summary: "Renders a table of schema indexes, joining each index's property list for display.",
+        tags: [
+          "component",
+          "table",
+          "schema"
+        ],
+        complexity: "simple",
+        lineRange: [
+          15,
+          44
+        ],
+        cluster: null,
+        coverage: 97,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/modeller/components/NoSelectionPlaceholder.tsx",
+      type: "file",
+      data: {
+        name: "NoSelectionPlaceholder.tsx",
+        filePath: "studio/src/pages/graphs/modeller/components/NoSelectionPlaceholder.tsx",
+        summary: "Placeholder shown in the detail panel when no schema element is selected; also re-exports shared Table primitives used across Modeller tables.",
+        tags: [
+          "component",
+          "modeller",
+          "placeholder",
+          "barrel"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-ui",
+        coverage: 86,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/modeller/components/NodeTypeDetail.tsx",
+      type: "file",
+      data: {
+        name: "NodeTypeDetail.tsx",
+        filePath: "studio/src/pages/graphs/modeller/components/NodeTypeDetail.tsx",
+        summary: "Detail view for a node type, showing its inheritance hierarchy, property mappings, and the constraints and indexes scoped to that node type.",
+        tags: [
+          "component",
+          "modeller",
+          "detail-panel",
+          "node-type"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-ui",
+        coverage: 67,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/modeller/components/NodeTypeDetail.tsx:NodeTypeDetail",
+      type: "function",
+      data: {
+        name: "NodeTypeDetail",
+        filePath: "studio/src/pages/graphs/modeller/components/NodeTypeDetail.tsx",
+        summary: "Renders node-type metadata including inheritance hierarchy and filtered constraints, indexes, and property mappings.",
+        tags: [
+          "component",
+          "node-type",
+          "schema"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          17,
+          81
+        ],
+        cluster: null,
+        coverage: 68,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/modeller/components/PropertyKeyTable.tsx",
+      type: "file",
+      data: {
+        name: "PropertyKeyTable.tsx",
+        filePath: "studio/src/pages/graphs/modeller/components/PropertyKeyTable.tsx",
+        summary: "Table of property keys for a schema, computing for each key which node and edge types reference it via their property mappings.",
+        tags: [
+          "component",
+          "modeller",
+          "table",
+          "property-key"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-ui",
+        coverage: 84,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/modeller/components/PropertyKeyTable.tsx:PropertyKeyTable",
+      type: "function",
+      data: {
+        name: "PropertyKeyTable",
+        filePath: "studio/src/pages/graphs/modeller/components/PropertyKeyTable.tsx",
+        summary: "Renders property keys and derives the set of node/edge types using each key by scanning their property mappings.",
+        tags: [
+          "component",
+          "table",
+          "property-key",
+          "schema"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          21,
+          72
+        ],
+        cluster: null,
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/modeller/components/PropertyMappingTable.tsx",
+      type: "file",
+      data: {
+        name: "PropertyMappingTable.tsx",
+        filePath: "studio/src/pages/graphs/modeller/components/PropertyMappingTable.tsx",
+        summary: "Presentational table rendering a type's property mappings along with each property key's validation rules.",
+        tags: [
+          "component",
+          "modeller",
+          "table",
+          "property-mapping"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-ui",
+        coverage: 98,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/modeller/components/PropertyMappingTable.tsx:PropertyMappingTable",
+      type: "function",
+      data: {
+        name: "PropertyMappingTable",
+        filePath: "studio/src/pages/graphs/modeller/components/PropertyMappingTable.tsx",
+        summary: "Renders property mappings for a type, surfacing each mapped property key's validation rule types.",
+        tags: [
+          "component",
+          "table",
+          "property-mapping"
+        ],
+        complexity: "simple",
+        lineRange: [
+          15,
+          48
+        ],
+        cluster: null,
+        coverage: 91,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/modeller/components/SchemaCanvas.tsx",
+      type: "file",
+      data: {
+        name: "SchemaCanvas.tsx",
+        filePath: "studio/src/pages/graphs/modeller/components/SchemaCanvas.tsx",
+        summary: "Renders the schema as a graph diagram by mapping node types to canvas nodes and edge types to canvas edges, delegating rendering to the shared GraphCanvas.",
+        tags: [
+          "component",
+          "modeller",
+          "canvas",
+          "visualization",
+          "schema"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-ui",
+        coverage: 64,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/modeller/components/SchemaCanvas.tsx:SchemaCanvas",
+      type: "function",
+      data: {
+        name: "SchemaCanvas",
+        filePath: "studio/src/pages/graphs/modeller/components/SchemaCanvas.tsx",
+        summary: "Memoizes node types and edge types into canvas node/edge structures and renders them through GraphCanvas.",
+        tags: [
+          "component",
+          "canvas",
+          "visualization",
+          "schema"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          20,
+          67
+        ],
+        cluster: null,
+        coverage: 76,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/modeller/components/SchemaNav.tsx",
+      type: "file",
+      data: {
+        name: "SchemaNav.tsx",
+        filePath: "studio/src/pages/graphs/modeller/components/SchemaNav.tsx",
+        summary: "Left-side navigation tree for the Modeller listing node types, edge types, and global sections (property keys, constraints, indexes) with collapsible groups and selection.",
+        tags: [
+          "component",
+          "modeller",
+          "navigation",
+          "schema"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-ui",
+        coverage: 82,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/modeller/components/SchemaNav.tsx:SchemaNav",
+      type: "function",
+      data: {
+        name: "SchemaNav",
+        filePath: "studio/src/pages/graphs/modeller/components/SchemaNav.tsx",
+        summary: "Renders the collapsible schema navigation tree and emits selection changes for node types, edge types, and global sections.",
+        tags: [
+          "component",
+          "navigation",
+          "schema",
+          "tree"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          101,
+          193
+        ],
+        cluster: null,
+        coverage: 82,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/modeller/components/SchemaNav.tsx:GlobalItem",
+      type: "function",
+      data: {
+        name: "GlobalItem",
+        filePath: "studio/src/pages/graphs/modeller/components/SchemaNav.tsx",
+        summary: "Navigation item for a global schema section (property keys, constraints, indexes) showing a count and active state.",
+        tags: [
+          "component",
+          "navigation",
+          "schema"
+        ],
+        complexity: "simple",
+        lineRange: [
+          74,
+          99
+        ],
+        cluster: null,
+        coverage: 94,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/modeller/components/SchemaNav.tsx:SectionHeader",
+      type: "function",
+      data: {
+        name: "SectionHeader",
+        filePath: "studio/src/pages/graphs/modeller/components/SchemaNav.tsx",
+        summary: "Collapsible section header with a label, count badge, and open/close toggle for the schema navigation tree.",
+        tags: [
+          "component",
+          "navigation",
+          "collapsible"
+        ],
+        complexity: "simple",
+        lineRange: [
+          20,
+          48
+        ],
+        cluster: null,
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/modeller/components/SchemaNav.tsx:NavItem",
+      type: "function",
+      data: {
+        name: "NavItem",
+        filePath: "studio/src/pages/graphs/modeller/components/SchemaNav.tsx",
+        summary: "Selectable navigation item for a single node or edge type with an active highlight state.",
+        tags: [
+          "component",
+          "navigation"
+        ],
+        complexity: "simple",
+        lineRange: [
+          50,
+          72
+        ],
+        cluster: null,
+        coverage: 84,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/services/api/schemas.ts",
+      type: "file",
+      data: {
+        name: "schemas.ts",
+        filePath: "studio/src/services/api/schemas.ts",
+        summary: "API client module exposing schemasApi.getActiveVersion to fetch a graph's active schema version from the engine.",
+        tags: [
+          "api-client",
+          "service",
+          "schema"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-data",
+        coverage: 95,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/types/schemas.ts",
+      type: "file",
+      data: {
+        name: "schemas.ts",
+        filePath: "studio/src/types/schemas.ts",
+        summary: "TypeScript type definitions for the schema/ontology domain: node types, edge types, property keys, mappings, constraints, indexes, and validation rules.",
+        tags: [
+          "type-definition",
+          "schema",
+          "ontology",
+          "modeller"
+        ],
+        complexity: "moderate",
+        cluster: "layer:studio-types",
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "config:engine/.env.example",
+      type: "config",
+      data: {
+        name: ".env.example",
+        filePath: "engine/.env.example",
+        summary: "Template of INVANA_-prefixed environment variables for the engine, covering app metadata, server host/port, the app-state database URL and pool settings, JWT auth secret/expiry, and OpenTelemetry configuration. Copied to .env and loaded by pydantic-settings.",
+        tags: [
+          "configuration",
+          "environment",
+          "security",
+          "database",
+          "telemetry"
+        ],
+        complexity: "simple",
+        languageNotes: "All keys share the INVANA_ prefix consumed by pydantic-settings; defaults point at a local Postgres (asyncpg) and an OTLP collector on :4317.",
+        cluster: "layer:config"
+      }
+    },
+    {
+      id: "document:engine/CLAUDE.md",
+      type: "document",
+      data: {
+        name: "CLAUDE.md",
+        filePath: "engine/CLAUDE.md",
+        summary: "Engine-specific Claude context guide describing the FastAPI + SQLAlchemy async stack, the src/invana module layout (auth, graphs, modeller, graph connectors, server, cli, telemetry), RFC-017 container model, hard-delete cascade semantics, and common uv/Alembic/pytest commands.",
+        tags: [
+          "documentation",
+          "entry-point",
+          "overview",
+          "architecture",
+          "development"
+        ],
+        complexity: "moderate",
+        cluster: "layer:config"
+      }
+    },
+    {
+      id: "config:engine/alembic.ini",
+      type: "config",
+      data: {
+        name: "alembic.ini",
+        filePath: "engine/alembic.ini",
+        summary: "Alembic configuration for the engine's app-state database migrations, defining the migrations script location, version path, and logging setup used when running migrations against SQLite/PostgreSQL.",
+        tags: [
+          "configuration",
+          "database",
+          "migration",
+          "alembic"
+        ],
+        complexity: "moderate",
+        cluster: "layer:config"
+      }
+    },
+    {
+      id: "config:engine/pyproject.toml",
+      type: "config",
+      data: {
+        name: "pyproject.toml",
+        filePath: "engine/pyproject.toml",
+        summary: "Python project manifest for invana-engine: core dependencies (FastAPI stack, SQLAlchemy async, neo4j/gremlinpython connectors, JWT/passlib auth), optional server/telemetry extras, editable local connector sources, the `invana` CLI entry point, and pytest/Ruff tooling configuration.",
+        tags: [
+          "configuration",
+          "build-system",
+          "dependencies",
+          "tooling",
+          "entry-point"
+        ],
+        complexity: "moderate",
+        languageNotes: "Uses uv with editable path sources for local connector integrations; hatchling build backend packages src/invana; extensive Ruff lint selection with per-file-ignores for lazy imports in telemetry/cli.",
+        cluster: "layer:config"
+      }
+    },
+    {
+      id: "config:studio/.env.example",
+      type: "config",
+      data: {
+        name: ".env.example",
+        filePath: "studio/.env.example",
+        summary: "Environment variable template for Studio, declaring VITE_API_BASE_URL pointing at the Invana engine API (default http://localhost:8200).",
+        tags: [
+          "configuration",
+          "environment",
+          "vite",
+          "api-base-url"
+        ],
+        complexity: "simple",
+        cluster: "layer:config"
+      }
+    },
+    {
+      id: "config:studio/biome.json",
+      type: "config",
+      data: {
+        name: "biome.json",
+        filePath: "studio/biome.json",
+        summary: "Biome linter and formatter configuration for the Studio frontend, defining VCS integration, file globs, formatting style, lint rules, and import organization.",
+        tags: [
+          "configuration",
+          "biome",
+          "linting",
+          "formatting",
+          "build-system"
+        ],
+        complexity: "simple",
+        cluster: "layer:config"
+      }
+    },
+    {
+      id: "file:studio/index.html",
+      type: "file",
+      data: {
+        name: "index.html",
+        filePath: "studio/index.html",
+        summary: "Vite HTML entry document for Studio that mounts the React 19 app into #root and loads the /src/main.tsx module bundle.",
+        tags: [
+          "markup",
+          "entry-point",
+          "vite",
+          "html",
+          "spa"
+        ],
+        complexity: "simple",
+        cluster: "layer:config",
+        coverage: 96,
+        errors: 0
+      }
+    },
+    {
+      id: "config:studio/package.json",
+      type: "config",
+      data: {
+        name: "package.json",
+        filePath: "studio/package.json",
+        summary: "npm/pnpm manifest for the Studio frontend, declaring dev/build/lint scripts and pinning React 19, Vite 7, TanStack Query, Zustand, PixiJS 8, CodeMirror, axios, and the @invana/design-kit packages.",
+        tags: [
+          "configuration",
+          "package-manifest",
+          "build-system",
+          "dependencies"
+        ],
+        complexity: "moderate",
+        languageNotes: "ESM module project; @invana/styling, @invana/themes, and @invana/ui are sourced directly from GitHub release branches of the design-kit.",
+        cluster: "layer:config"
+      }
+    },
+    {
+      id: "config:studio/tsconfig.app.json",
+      type: "config",
+      data: {
+        name: "tsconfig.app.json",
+        filePath: "studio/tsconfig.app.json",
+        summary: "TypeScript compiler configuration for the Studio application source (src/), setting strict type-checking and bundler module resolution for the React app build.",
+        tags: [
+          "configuration",
+          "typescript",
+          "build-system",
+          "compiler-options"
+        ],
+        complexity: "simple",
+        cluster: "layer:config"
+      }
+    },
+    {
+      id: "config:studio/tsconfig.json",
+      type: "config",
+      data: {
+        name: "tsconfig.json",
+        filePath: "studio/tsconfig.json",
+        summary: "Root TypeScript solution-style config for Studio using project references to delegate to tsconfig.app.json (application) and tsconfig.node.json (build tooling).",
+        tags: [
+          "configuration",
+          "typescript",
+          "build-system",
+          "project-references"
+        ],
+        complexity: "simple",
+        cluster: "layer:config"
+      }
+    },
+    {
+      id: "config:studio/tsconfig.node.json",
+      type: "config",
+      data: {
+        name: "tsconfig.node.json",
+        filePath: "studio/tsconfig.node.json",
+        summary: "TypeScript compiler configuration for Studio's Node-side build tooling (e.g. vite.config), separated from the application source via project references.",
+        tags: [
+          "configuration",
+          "typescript",
+          "build-system",
+          "tooling"
+        ],
+        complexity: "simple",
+        cluster: "layer:config"
+      }
+    },
+    {
+      id: "file:engine/src/invana/cli/commands/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/cli/commands/__init__.py",
+        summary: "Package initializer marking the CLI commands directory as an importable Python package for the invana command suite.",
+        tags: [
+          "entry-point",
+          "package-init",
+          "cli"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-platform",
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/graph/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/graph/__init__.py",
+        summary: "Empty package initializer marking the graph subpackage of the engine as an importable Python module.",
+        tags: [
+          "entry-point",
+          "package-init",
+          "graph"
+        ],
+        complexity: "simple",
+        cluster: "layer:graph-connectors",
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/modeller/migrations/README",
+      type: "file",
+      data: {
+        name: "README",
+        filePath: "engine/src/invana/modeller/migrations/README",
+        summary: "Marker README placed by Alembic in the migrations environment directory for the modeller's schema versioning.",
+        tags: [
+          "documentation",
+          "migration",
+          "alembic"
+        ],
+        complexity: "simple",
+        cluster: "layer:modeller",
+        coverage: 78,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/modeller/migrations/script.py.mako",
+      type: "file",
+      data: {
+        name: "script.py.mako",
+        filePath: "engine/src/invana/modeller/migrations/script.py.mako",
+        summary: "Mako template Alembic uses to scaffold new migration scripts with upgrade/downgrade stubs and revision metadata.",
+        tags: [
+          "migration",
+          "alembic",
+          "template",
+          "code-generation"
+        ],
+        complexity: "simple",
+        languageNotes: "Mako template with Alembic placeholders (${up_revision}, ${upgrades}) rendered when generating revisions.",
+        cluster: "layer:modeller",
+        coverage: 91,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/modeller/migrations/versions/00000000000a_initial_arch_redesign.py",
+      type: "file",
+      data: {
+        name: "00000000000a_initial_arch_redesign.py",
+        filePath: "engine/src/invana/modeller/migrations/versions/00000000000a_initial_arch_redesign.py",
+        summary: "Initial Alembic migration for the mission-centric architecture redesign, creating the full app-state schema (graphs, connections, members, and related tables) with Postgres enum bootstrapping.",
+        tags: [
+          "migration",
+          "database",
+          "alembic",
+          "schema-definition"
+        ],
+        complexity: "complex",
+        languageNotes: "Creates Postgres ENUMs idempotently via _create_pg_enum_if_absent so the migration is portable across SQLite (dev) and PostgreSQL (prod).",
+        cluster: "layer:modeller",
+        coverage: 54,
+        errors: 3
+      }
+    },
+    {
+      id: "function:engine/src/invana/modeller/migrations/versions/00000000000a_initial_arch_redesign.py:_create_pg_enum_if_absent",
+      type: "function",
+      data: {
+        name: "_create_pg_enum_if_absent",
+        filePath: "engine/src/invana/modeller/migrations/versions/00000000000a_initial_arch_redesign.py",
+        summary: "Creates a PostgreSQL enum type only when it does not already exist, keeping the migration idempotent and SQLite-safe.",
+        tags: [
+          "migration",
+          "database",
+          "validation",
+          "idempotent"
+        ],
+        complexity: "simple",
+        lineRange: [
+          46,
+          52
+        ],
+        cluster: null,
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/modeller/migrations/versions/00000000000a_initial_arch_redesign.py:upgrade",
+      type: "function",
+      data: {
+        name: "upgrade",
+        filePath: "engine/src/invana/modeller/migrations/versions/00000000000a_initial_arch_redesign.py",
+        summary: "Builds the entire initial app-state schema, creating tables, foreign keys, unique constraints, and indexes for the redesigned mission-centric data model.",
+        tags: [
+          "migration",
+          "database",
+          "schema-definition",
+          "alembic"
+        ],
+        complexity: "complex",
+        lineRange: [
+          55,
+          327
+        ],
+        cluster: null,
+        coverage: 55,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/modeller/migrations/versions/00000000000a_initial_arch_redesign.py:downgrade",
+      type: "function",
+      data: {
+        name: "downgrade",
+        filePath: "engine/src/invana/modeller/migrations/versions/00000000000a_initial_arch_redesign.py",
+        summary: "Reverts the initial schema by dropping all created indexes, tables, and Postgres enum types in dependency-safe order.",
+        tags: [
+          "migration",
+          "database",
+          "rollback",
+          "alembic"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          330,
+          365
+        ],
+        cluster: null,
+        coverage: 77,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/modeller/migrations/versions/00000000000b_llm_providers.py",
+      type: "file",
+      data: {
+        name: "00000000000b_llm_providers.py",
+        filePath: "engine/src/invana/modeller/migrations/versions/00000000000b_llm_providers.py",
+        summary: "Alembic migration adding the LLM providers table with a provider-kind enum and encrypted credential storage for the modeller's AI integrations.",
+        tags: [
+          "migration",
+          "database",
+          "alembic",
+          "llm"
+        ],
+        complexity: "moderate",
+        cluster: "layer:modeller",
+        coverage: 62,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/modeller/migrations/versions/00000000000b_llm_providers.py:upgrade",
+      type: "function",
+      data: {
+        name: "upgrade",
+        filePath: "engine/src/invana/modeller/migrations/versions/00000000000b_llm_providers.py",
+        summary: "Creates the llm_providers table with its kind enum, encrypted secret column, indexes, and foreign keys.",
+        tags: [
+          "migration",
+          "database",
+          "schema-definition",
+          "llm"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          45,
+          71
+        ],
+        cluster: null,
+        coverage: 68,
+        errors: 1
+      }
+    },
+    {
+      id: "file:engine/src/invana/modeller/migrations/versions/00000000000c_skills_and_instructions.py",
+      type: "file",
+      data: {
+        name: "00000000000c_skills_and_instructions.py",
+        filePath: "engine/src/invana/modeller/migrations/versions/00000000000c_skills_and_instructions.py",
+        summary: "Alembic migration introducing skills and instructions tables that store reusable agent skill definitions and ordered instruction sets.",
+        tags: [
+          "migration",
+          "database",
+          "alembic",
+          "skills"
+        ],
+        complexity: "moderate",
+        cluster: "layer:modeller",
+        coverage: 70,
+        errors: 0
+      }
+    },
+    {
+      id: "function:engine/src/invana/modeller/migrations/versions/00000000000c_skills_and_instructions.py:upgrade",
+      type: "function",
+      data: {
+        name: "upgrade",
+        filePath: "engine/src/invana/modeller/migrations/versions/00000000000c_skills_and_instructions.py",
+        summary: "Creates the skills and instructions tables with their columns, foreign keys, unique constraints, and indexes.",
+        tags: [
+          "migration",
+          "database",
+          "schema-definition",
+          "skills"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          25,
+          53
+        ],
+        cluster: null,
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/modeller/migrations/versions/00000000000d_events.py",
+      type: "file",
+      data: {
+        name: "00000000000d_events.py",
+        filePath: "engine/src/invana/modeller/migrations/versions/00000000000d_events.py",
+        summary: "Alembic migration adding the events audit table with an actor-type enum and indexes for tracking actions across the platform.",
+        tags: [
+          "migration",
+          "database",
+          "alembic",
+          "audit"
+        ],
+        complexity: "moderate",
+        cluster: "layer:modeller",
+        coverage: 65,
+        errors: 1
+      }
+    },
+    {
+      id: "function:engine/src/invana/modeller/migrations/versions/00000000000d_events.py:upgrade",
+      type: "function",
+      data: {
+        name: "upgrade",
+        filePath: "engine/src/invana/modeller/migrations/versions/00000000000d_events.py",
+        summary: "Creates the events table with the actor-type enum, JSON payload column, foreign keys, and lookup indexes.",
+        tags: [
+          "migration",
+          "database",
+          "schema-definition",
+          "audit"
+        ],
+        complexity: "moderate",
+        lineRange: [
+          75,
+          101
+        ],
+        cluster: null,
+        coverage: 83,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/modeller/migrations/versions/00000000000e_drop_connection_name_desc.py",
+      type: "file",
+      data: {
+        name: "00000000000e_drop_connection_name_desc.py",
+        filePath: "engine/src/invana/modeller/migrations/versions/00000000000e_drop_connection_name_desc.py",
+        summary: "Small Alembic migration dropping the redundant name and description columns from the connection table, with a downgrade that re-adds them.",
+        tags: [
+          "migration",
+          "database",
+          "alembic",
+          "schema-change"
+        ],
+        complexity: "simple",
+        cluster: "layer:modeller",
+        coverage: 87,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/server/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/server/__init__.py",
+        summary: "Empty package initializer marking the FastAPI server subpackage as an importable Python module.",
+        tags: [
+          "entry-point",
+          "package-init",
+          "server"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-platform",
+        coverage: 88,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/server/admin/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/server/admin/__init__.py",
+        summary: "Empty package initializer marking the starlette-admin integration subpackage as an importable Python module.",
+        tags: [
+          "entry-point",
+          "package-init",
+          "admin"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-platform",
+        coverage: 94,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/server/admin/templates/base.html",
+      type: "file",
+      data: {
+        name: "base.html",
+        filePath: "engine/src/invana/server/admin/templates/base.html",
+        summary: "Base Jinja/HTML template for the starlette-admin interface, defining the overall page layout, navigation, and block structure that admin views extend.",
+        tags: [
+          "markup",
+          "admin",
+          "template",
+          "ui"
+        ],
+        complexity: "moderate",
+        languageNotes: "Template-engine HTML with extendable blocks consumed by starlette-admin's server-rendered admin pages.",
+        cluster: "layer:engine-platform",
+        coverage: 74,
+        errors: 0
+      }
+    },
+    {
+      id: "file:engine/src/invana/server/routes/__init__.py",
+      type: "file",
+      data: {
+        name: "__init__.py",
+        filePath: "engine/src/invana/server/routes/__init__.py",
+        summary: "Package initializer marking the server routes directory as an importable Python package aggregating API route modules.",
+        tags: [
+          "entry-point",
+          "package-init",
+          "api-handler"
+        ],
+        complexity: "simple",
+        cluster: "layer:engine-platform",
+        coverage: 93,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/.gitkeep",
+      type: "file",
+      data: {
+        name: ".gitkeep",
+        filePath: "studio/.gitkeep",
+        summary: "Placeholder file that keeps the otherwise-empty studio directory tracked in Git.",
+        tags: [
+          "placeholder",
+          "git",
+          "scaffolding"
+        ],
+        complexity: "simple",
+        cluster: "layer:config",
+        coverage: 87,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/index.css",
+      type: "file",
+      data: {
+        name: "index.css",
+        filePath: "studio/src/index.css",
+        summary: "Global stylesheet for the Studio app, importing TailwindCSS layers and defining base theme tokens applied across the React UI.",
+        tags: [
+          "markup",
+          "styling",
+          "tailwindcss",
+          "theme"
+        ],
+        complexity: "simple",
+        languageNotes: "TailwindCSS 4 entry stylesheet pulled in by main.tsx to provide app-wide utility classes and design tokens.",
+        cluster: "layer:studio-ui",
+        coverage: 90,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/pages/graphs/modeller/components/SchemaCanvasPlaceholder.tsx",
+      type: "file",
+      data: {
+        name: "SchemaCanvasPlaceholder.tsx",
+        filePath: "studio/src/pages/graphs/modeller/components/SchemaCanvasPlaceholder.tsx",
+        summary: "React placeholder component shown in the Modeller's schema canvas area before the real graph schema renderer is mounted.",
+        tags: [
+          "component",
+          "modeller",
+          "ui",
+          "placeholder"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-ui",
+        coverage: 81,
+        errors: 0
+      }
+    },
+    {
+      id: "function:studio/src/pages/graphs/modeller/components/SchemaCanvasPlaceholder.tsx:SchemaCanvasPlaceholder",
+      type: "function",
+      data: {
+        name: "SchemaCanvasPlaceholder",
+        filePath: "studio/src/pages/graphs/modeller/components/SchemaCanvasPlaceholder.tsx",
+        summary: "Functional React component rendering a static placeholder for the Modeller schema canvas.",
+        tags: [
+          "component",
+          "modeller",
+          "ui",
+          "placeholder"
+        ],
+        complexity: "simple",
+        lineRange: [
+          3,
+          13
+        ],
+        cluster: null,
+        coverage: 79,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/stores/ui.store.ts",
+      type: "file",
+      data: {
+        name: "ui.store.ts",
+        filePath: "studio/src/stores/ui.store.ts",
+        summary: "Zustand store holding global UI state for Studio, tracking the active nav item and sidebar collapse with setter actions.",
+        tags: [
+          "state-management",
+          "zustand",
+          "ui",
+          "store"
+        ],
+        complexity: "simple",
+        languageNotes: "Zustand create() store typed with a UIState interface exposing state plus setters.",
+        cluster: "layer:studio-data",
+        coverage: 99,
+        errors: 0
+      }
+    },
+    {
+      id: "file:studio/src/vite-env.d.ts",
+      type: "file",
+      data: {
+        name: "vite-env.d.ts",
+        filePath: "studio/src/vite-env.d.ts",
+        summary: "TypeScript ambient declaration referencing Vite client types so import.meta.env and asset imports are typed in the Studio app.",
+        tags: [
+          "type-definition",
+          "vite",
+          "typescript",
+          "build-system"
+        ],
+        complexity: "simple",
+        cluster: "layer:studio-ui",
+        coverage: 99,
+        errors: 0
+      }
+    },
+    {
+      id: "config:studio/vite.config.ts",
+      type: "config",
+      data: {
+        name: "vite.config.ts",
+        filePath: "studio/vite.config.ts",
+        summary: "Vite build configuration for the Studio app, wiring React and TailwindCSS plugins, path aliases, and the dev server proxy to the engine API.",
+        tags: [
+          "configuration",
+          "vite",
+          "build-system",
+          "studio"
+        ],
+        complexity: "moderate",
+        languageNotes: "Vite config defining plugins and dev-server settings; the API proxy targets the engine on localhost:8200.",
+        cluster: "layer:config"
+      }
+    }
+  ],
+  edges: [
+    {
+      id: "e0",
+      type: "imports",
+      source: "file:studio/src/main.tsx",
+      target: "file:studio/src/index.css",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1",
+      type: "imports",
+      source: "file:studio/src/main.tsx",
+      target: "file:studio/src/router.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e2",
+      type: "imports",
+      source: "file:studio/src/main.tsx",
+      target: "file:studio/src/stores/auth.store.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e3",
+      type: "contains",
+      source: "file:studio/src/pages/ErrorPage.tsx",
+      target: "function:studio/src/pages/ErrorPage.tsx:ErrorPage",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e4",
+      type: "exports",
+      source: "file:studio/src/pages/ErrorPage.tsx",
+      target: "function:studio/src/pages/ErrorPage.tsx:ErrorPage",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e5",
+      type: "contains",
+      source: "file:studio/src/pages/auth/LoginPage.tsx",
+      target: "function:studio/src/pages/auth/LoginPage.tsx:LoginPage",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e6",
+      type: "exports",
+      source: "file:studio/src/pages/auth/LoginPage.tsx",
+      target: "function:studio/src/pages/auth/LoginPage.tsx:LoginPage",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e7",
+      type: "imports",
+      source: "file:studio/src/pages/auth/LoginPage.tsx",
+      target: "file:studio/src/components/forms/FormError.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e8",
+      type: "imports",
+      source: "file:studio/src/pages/auth/LoginPage.tsx",
+      target: "file:studio/src/hooks/useAuth.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e9",
+      type: "imports",
+      source: "file:studio/src/pages/auth/LoginPage.tsx",
+      target: "file:studio/src/services/api/auth.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e10",
+      type: "imports",
+      source: "file:studio/src/pages/auth/LoginPage.tsx",
+      target: "file:studio/src/services/api/client.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e11",
+      type: "contains",
+      source: "file:studio/src/pages/auth/RegisterPage.tsx",
+      target: "function:studio/src/pages/auth/RegisterPage.tsx:RegisterPage",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e12",
+      type: "exports",
+      source: "file:studio/src/pages/auth/RegisterPage.tsx",
+      target: "function:studio/src/pages/auth/RegisterPage.tsx:RegisterPage",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e13",
+      type: "contains",
+      source: "file:studio/src/pages/auth/RegisterPage.tsx",
+      target: "function:studio/src/pages/auth/RegisterPage.tsx:UsernameHint",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e14",
+      type: "imports",
+      source: "file:studio/src/pages/auth/RegisterPage.tsx",
+      target: "file:studio/src/components/forms/FormError.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e15",
+      type: "imports",
+      source: "file:studio/src/pages/auth/RegisterPage.tsx",
+      target: "file:studio/src/hooks/useAuth.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e16",
+      type: "imports",
+      source: "file:studio/src/pages/auth/RegisterPage.tsx",
+      target: "file:studio/src/services/api/auth.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e17",
+      type: "imports",
+      source: "file:studio/src/pages/auth/RegisterPage.tsx",
+      target: "file:studio/src/services/api/client.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e18",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/GraphCreatePage.tsx",
+      target: "function:studio/src/pages/graphs/GraphCreatePage.tsx:GraphCreatePage",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e19",
+      type: "exports",
+      source: "file:studio/src/pages/graphs/GraphCreatePage.tsx",
+      target: "function:studio/src/pages/graphs/GraphCreatePage.tsx:GraphCreatePage",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e20",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/GraphCreatePage.tsx",
+      target: "function:studio/src/pages/graphs/GraphCreatePage.tsx:slugify",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e21",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/GraphCreatePage.tsx",
+      target: "file:studio/src/components/forms/FormError.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e22",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/GraphCreatePage.tsx",
+      target: "file:studio/src/hooks/queries/useGraphs.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e23",
+      type: "contains",
+      source: "file:studio/src/pages/platform/PlatformEventsPage.tsx",
+      target: "function:studio/src/pages/platform/PlatformEventsPage.tsx:PlatformEventsPage",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e24",
+      type: "exports",
+      source: "file:studio/src/pages/platform/PlatformEventsPage.tsx",
+      target: "function:studio/src/pages/platform/PlatformEventsPage.tsx:PlatformEventsPage",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e25",
+      type: "contains",
+      source: "file:studio/src/pages/platform/PlatformEventsPage.tsx",
+      target: "function:studio/src/pages/platform/PlatformEventsPage.tsx:EventRow",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e26",
+      type: "imports",
+      source: "file:studio/src/pages/platform/PlatformEventsPage.tsx",
+      target: "file:studio/src/hooks/queries/useEvents.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e27",
+      type: "imports",
+      source: "file:studio/src/pages/platform/PlatformEventsPage.tsx",
+      target: "file:studio/src/hooks/useAuth.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e28",
+      type: "imports",
+      source: "file:studio/src/pages/platform/PlatformEventsPage.tsx",
+      target: "file:studio/src/hooks/useEventStream.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e29",
+      type: "imports",
+      source: "file:studio/src/pages/platform/PlatformEventsPage.tsx",
+      target: "file:studio/src/types/events.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e30",
+      type: "contains",
+      source: "file:studio/src/pages/settings/ProfileSettingsPage.tsx",
+      target: "function:studio/src/pages/settings/ProfileSettingsPage.tsx:ProfileSettingsPage",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e31",
+      type: "exports",
+      source: "file:studio/src/pages/settings/ProfileSettingsPage.tsx",
+      target: "function:studio/src/pages/settings/ProfileSettingsPage.tsx:ProfileSettingsPage",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e32",
+      type: "contains",
+      source: "file:studio/src/pages/settings/ProfileSettingsPage.tsx",
+      target: "function:studio/src/pages/settings/ProfileSettingsPage.tsx:BasicInfoTab",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e33",
+      type: "contains",
+      source: "file:studio/src/pages/settings/ProfileSettingsPage.tsx",
+      target: "function:studio/src/pages/settings/ProfileSettingsPage.tsx:PasswordTab",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e34",
+      type: "contains",
+      source: "file:studio/src/pages/settings/ProfileSettingsPage.tsx",
+      target: "function:studio/src/pages/settings/ProfileSettingsPage.tsx:DangerZoneTab",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e35",
+      type: "imports",
+      source: "file:studio/src/pages/settings/ProfileSettingsPage.tsx",
+      target: "file:studio/src/hooks/useAuth.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e36",
+      type: "imports",
+      source: "file:studio/src/pages/settings/ProfileSettingsPage.tsx",
+      target: "file:studio/src/services/api/auth.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e37",
+      type: "imports",
+      source: "file:studio/src/pages/settings/ProfileSettingsPage.tsx",
+      target: "file:studio/src/services/api/client.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e38",
+      type: "imports",
+      source: "file:studio/src/router.tsx",
+      target: "file:studio/src/App.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e39",
+      type: "imports",
+      source: "file:studio/src/router.tsx",
+      target: "file:studio/src/components/ProtectedRoute.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e40",
+      type: "imports",
+      source: "file:studio/src/router.tsx",
+      target: "file:studio/src/pages/auth/LoginPage.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e41",
+      type: "imports",
+      source: "file:studio/src/router.tsx",
+      target: "file:studio/src/pages/auth/RegisterPage.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e42",
+      type: "imports",
+      source: "file:studio/src/router.tsx",
+      target: "file:studio/src/pages/ErrorPage.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e43",
+      type: "imports",
+      source: "file:studio/src/router.tsx",
+      target: "file:studio/src/pages/graphs/GraphCreatePage.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e44",
+      type: "imports",
+      source: "file:studio/src/router.tsx",
+      target: "file:studio/src/pages/graphs/GraphOverviewPage.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e45",
+      type: "imports",
+      source: "file:studio/src/router.tsx",
+      target: "file:studio/src/pages/graphs/GraphsListPage.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e46",
+      type: "imports",
+      source: "file:studio/src/router.tsx",
+      target: "file:studio/src/pages/platform/PlatformEventsPage.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e47",
+      type: "imports",
+      source: "file:studio/src/router.tsx",
+      target: "file:studio/src/pages/settings/ProfileSettingsPage.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e48",
+      type: "imports",
+      source: "file:studio/src/services/api/auth.ts",
+      target: "file:studio/src/services/api/client.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e49",
+      type: "imports",
+      source: "file:studio/src/services/api/auth.ts",
+      target: "file:studio/src/types/auth.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e50",
+      type: "contains",
+      source: "file:studio/src/services/api/client.ts",
+      target: "class:studio/src/services/api/client.ts:ApiError",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e51",
+      type: "exports",
+      source: "file:studio/src/services/api/client.ts",
+      target: "class:studio/src/services/api/client.ts:ApiError",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e52",
+      type: "contains",
+      source: "file:studio/src/services/api/client.ts",
+      target: "function:studio/src/services/api/client.ts:request",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e53",
+      type: "exports",
+      source: "file:studio/src/services/api/client.ts",
+      target: "function:studio/src/services/api/client.ts:request",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e54",
+      type: "contains",
+      source: "file:studio/src/services/api/client.ts",
+      target: "function:studio/src/services/api/client.ts:attemptRefresh",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e55",
+      type: "contains",
+      source: "file:studio/src/services/api/client.ts",
+      target: "function:studio/src/services/api/client.ts:formatErrorDetail",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e56",
+      type: "imports",
+      source: "file:studio/src/services/api/events.ts",
+      target: "file:studio/src/services/api/client.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e57",
+      type: "imports",
+      source: "file:studio/src/services/api/events.ts",
+      target: "file:studio/src/types/events.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e58",
+      type: "imports",
+      source: "file:studio/src/services/api/graph-membership.ts",
+      target: "file:studio/src/services/api/client.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e59",
+      type: "imports",
+      source: "file:studio/src/services/api/graph-membership.ts",
+      target: "file:studio/src/types/auth.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e60",
+      type: "imports",
+      source: "file:studio/src/stores/auth.store.ts",
+      target: "file:studio/src/services/api/client.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e61",
+      type: "imports",
+      source: "file:studio/src/stores/auth.store.ts",
+      target: "file:studio/src/types/auth.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e62",
+      type: "contains",
+      source: "file:studio/src/App.tsx",
+      target: "function:studio/src/App.tsx:App",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e63",
+      type: "exports",
+      source: "file:studio/src/App.tsx",
+      target: "function:studio/src/App.tsx:App",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e64",
+      type: "imports",
+      source: "file:studio/src/App.tsx",
+      target: "file:studio/src/components/header/useAppHeader.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e65",
+      type: "contains",
+      source: "file:studio/src/components/FullscreenToggle.tsx",
+      target: "function:studio/src/components/FullscreenToggle.tsx:FullscreenToggle",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e66",
+      type: "exports",
+      source: "file:studio/src/components/FullscreenToggle.tsx",
+      target: "function:studio/src/components/FullscreenToggle.tsx:FullscreenToggle",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e67",
+      type: "imports",
+      source: "file:studio/src/components/ProtectedRoute.tsx",
+      target: "file:studio/src/hooks/useAuth.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e68",
+      type: "contains",
+      source: "file:studio/src/components/RoleGate.tsx",
+      target: "function:studio/src/components/RoleGate.tsx:RoleGate",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e69",
+      type: "exports",
+      source: "file:studio/src/components/RoleGate.tsx",
+      target: "function:studio/src/components/RoleGate.tsx:RoleGate",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e70",
+      type: "imports",
+      source: "file:studio/src/components/RoleGate.tsx",
+      target: "file:studio/src/hooks/useAuth.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e71",
+      type: "contains",
+      source: "file:studio/src/components/forms/FormError.tsx",
+      target: "function:studio/src/components/forms/FormError.tsx:FormError",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e72",
+      type: "exports",
+      source: "file:studio/src/components/forms/FormError.tsx",
+      target: "function:studio/src/components/forms/FormError.tsx:FormError",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e73",
+      type: "contains",
+      source: "file:studio/src/components/header/UserMenu.tsx",
+      target: "function:studio/src/components/header/UserMenu.tsx:UserMenu",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e74",
+      type: "exports",
+      source: "file:studio/src/components/header/UserMenu.tsx",
+      target: "function:studio/src/components/header/UserMenu.tsx:UserMenu",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e75",
+      type: "imports",
+      source: "file:studio/src/components/header/UserMenu.tsx",
+      target: "file:studio/src/components/RoleGate.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e76",
+      type: "imports",
+      source: "file:studio/src/components/header/UserMenu.tsx",
+      target: "file:studio/src/hooks/useAuth.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e77",
+      type: "contains",
+      source: "file:studio/src/components/header/useAppHeader.tsx",
+      target: "function:studio/src/components/header/useAppHeader.tsx:useAppHeader",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e78",
+      type: "exports",
+      source: "file:studio/src/components/header/useAppHeader.tsx",
+      target: "function:studio/src/components/header/useAppHeader.tsx:useAppHeader",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e79",
+      type: "contains",
+      source: "file:studio/src/components/header/useAppHeader.tsx",
+      target: "function:studio/src/components/header/useAppHeader.tsx:Breadcrumb",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e80",
+      type: "contains",
+      source: "file:studio/src/components/header/useAppHeader.tsx",
+      target: "function:studio/src/components/header/useAppHeader.tsx:computeSegments",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e81",
+      type: "contains",
+      source: "file:studio/src/components/header/useAppHeader.tsx",
+      target: "function:studio/src/components/header/useAppHeader.tsx:graphRestSegments",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e82",
+      type: "imports",
+      source: "file:studio/src/components/header/useAppHeader.tsx",
+      target: "file:studio/src/components/FullscreenToggle.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e83",
+      type: "imports",
+      source: "file:studio/src/components/header/useAppHeader.tsx",
+      target: "file:studio/src/components/header/UserMenu.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e84",
+      type: "imports",
+      source: "file:studio/src/components/header/useAppHeader.tsx",
+      target: "file:studio/src/components/ThemeToggle.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e85",
+      type: "imports",
+      source: "file:studio/src/components/header/useAppHeader.tsx",
+      target: "file:studio/src/hooks/useAuth.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e86",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/EventsSection.tsx",
+      target: "function:studio/src/components/settings/sections/EventsSection.tsx:EventsSection",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e87",
+      type: "exports",
+      source: "file:studio/src/components/settings/sections/EventsSection.tsx",
+      target: "function:studio/src/components/settings/sections/EventsSection.tsx:EventsSection",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e88",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/EventsSection.tsx",
+      target: "function:studio/src/components/settings/sections/EventsSection.tsx:EventRow",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e89",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/EventsSection.tsx",
+      target: "function:studio/src/components/settings/sections/EventsSection.tsx:DetailsView",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e90",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/EventsSection.tsx",
+      target: "function:studio/src/components/settings/sections/EventsSection.tsx:iconForAction",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e91",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/EventsSection.tsx",
+      target: "file:studio/src/hooks/queries/useEvents.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e92",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/EventsSection.tsx",
+      target: "file:studio/src/hooks/useEventStream.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e93",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/EventsSection.tsx",
+      target: "file:studio/src/types/events.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e94",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/InvitationsSection.tsx",
+      target: "function:studio/src/components/settings/sections/InvitationsSection.tsx:InvitationsSection",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e95",
+      type: "exports",
+      source: "file:studio/src/components/settings/sections/InvitationsSection.tsx",
+      target: "function:studio/src/components/settings/sections/InvitationsSection.tsx:InvitationsSection",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e96",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/InvitationsSection.tsx",
+      target: "function:studio/src/components/settings/sections/InvitationsSection.tsx:NewInvitationDialog",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e97",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/InvitationsSection.tsx",
+      target: "file:studio/src/components/forms/FormError.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e98",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/InvitationsSection.tsx",
+      target: "file:studio/src/hooks/useAuth.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e99",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/InvitationsSection.tsx",
+      target: "file:studio/src/services/api/client.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e100",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/InvitationsSection.tsx",
+      target: "file:studio/src/services/api/graph-membership.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e101",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/InvitationsSection.tsx",
+      target: "file:studio/src/types/auth.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e102",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/MembersInvitationsSection.tsx",
+      target: "function:studio/src/components/settings/sections/MembersInvitationsSection.tsx:MembersInvitationsSection",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e103",
+      type: "exports",
+      source: "file:studio/src/components/settings/sections/MembersInvitationsSection.tsx",
+      target: "function:studio/src/components/settings/sections/MembersInvitationsSection.tsx:MembersInvitationsSection",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e104",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/MembersInvitationsSection.tsx",
+      target: "file:studio/src/components/settings/sections/InvitationsSection.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e105",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/MembersInvitationsSection.tsx",
+      target: "file:studio/src/components/settings/sections/MembersSection.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e106",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/MembersInvitationsSection.tsx",
+      target: "file:studio/src/hooks/useAuth.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e107",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/MembersSection.tsx",
+      target: "function:studio/src/components/settings/sections/MembersSection.tsx:MembersSection",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e108",
+      type: "exports",
+      source: "file:studio/src/components/settings/sections/MembersSection.tsx",
+      target: "function:studio/src/components/settings/sections/MembersSection.tsx:MembersSection",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e109",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/MembersSection.tsx",
+      target: "file:studio/src/hooks/useAuth.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e110",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/MembersSection.tsx",
+      target: "file:studio/src/services/api/client.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e111",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/MembersSection.tsx",
+      target: "file:studio/src/services/api/graph-membership.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e112",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/MembersSection.tsx",
+      target: "file:studio/src/types/auth.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e113",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useEvents.ts",
+      target: "function:studio/src/hooks/queries/useEvents.ts:useGraphEventsQuery",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e114",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useEvents.ts",
+      target: "function:studio/src/hooks/queries/useEvents.ts:useGraphEventsQuery",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e115",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useEvents.ts",
+      target: "function:studio/src/hooks/queries/useEvents.ts:useGlobalEventsQuery",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e116",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useEvents.ts",
+      target: "function:studio/src/hooks/queries/useEvents.ts:useGlobalEventsQuery",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e117",
+      type: "imports",
+      source: "file:studio/src/hooks/queries/useEvents.ts",
+      target: "file:studio/src/services/api/events.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e118",
+      type: "imports",
+      source: "file:studio/src/hooks/queries/useEvents.ts",
+      target: "file:studio/src/types/events.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e119",
+      type: "contains",
+      source: "file:studio/src/hooks/useAuth.ts",
+      target: "function:studio/src/hooks/useAuth.ts:useAuth",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e120",
+      type: "exports",
+      source: "file:studio/src/hooks/useAuth.ts",
+      target: "function:studio/src/hooks/useAuth.ts:useAuth",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e121",
+      type: "imports",
+      source: "file:studio/src/hooks/useAuth.ts",
+      target: "file:studio/src/services/api/auth.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e122",
+      type: "imports",
+      source: "file:studio/src/hooks/useAuth.ts",
+      target: "file:studio/src/stores/auth.store.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e123",
+      type: "imports",
+      source: "file:studio/src/hooks/useAuth.ts",
+      target: "file:studio/src/types/auth.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e124",
+      type: "contains",
+      source: "file:studio/src/hooks/useEventStream.ts",
+      target: "function:studio/src/hooks/useEventStream.ts:useEventStream",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e125",
+      type: "exports",
+      source: "file:studio/src/hooks/useEventStream.ts",
+      target: "function:studio/src/hooks/useEventStream.ts:useEventStream",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e126",
+      type: "imports",
+      source: "file:studio/src/hooks/useEventStream.ts",
+      target: "file:studio/src/hooks/useAuth.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e127",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/introspector.py",
+      target: "file:engine/src/invana/graph/types/constants.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e128",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/introspector.py",
+      target: "file:engine/src/invana/logging/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e129",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/json_io.py",
+      target: "file:engine/src/invana/modeller/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e130",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/json_io.py",
+      target: "file:engine/src/invana/modeller/schemas.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e131",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/projector.py",
+      target: "file:engine/src/invana/graph/types/constants.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e132",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/projector.py",
+      target: "file:engine/src/invana/logging/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e133",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/projector.py",
+      target: "file:engine/src/invana/modeller/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e134",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/reconciler.py",
+      target: "file:engine/src/invana/logging/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e135",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/reconciler.py",
+      target: "file:engine/src/invana/modeller/schemas.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e136",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/validator.py",
+      target: "file:engine/src/invana/modeller/inheritance.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e137",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/validator.py",
+      target: "file:engine/src/invana/modeller/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e138",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/versioner.py",
+      target: "file:engine/src/invana/modeller/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e139",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/versioner.py",
+      target: "file:engine/src/invana/modeller/schemas.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e140",
+      type: "imports",
+      source: "file:engine/src/invana/telemetry/__init__.py",
+      target: "file:engine/src/invana/telemetry/setup.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e141",
+      type: "imports",
+      source: "file:engine/src/invana/telemetry/decorators/__init__.py",
+      target: "file:engine/src/invana/telemetry/decorators/capture_metrics.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e142",
+      type: "imports",
+      source: "file:engine/src/invana/telemetry/decorators/__init__.py",
+      target: "file:engine/src/invana/telemetry/decorators/track.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e143",
+      type: "imports",
+      source: "file:engine/src/invana/telemetry/decorators/track.py",
+      target: "file:engine/src/invana/telemetry/metrics.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e144",
+      type: "imports",
+      source: "file:engine/src/invana/telemetry/middleware.py",
+      target: "file:engine/src/invana/logging/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e145",
+      type: "imports",
+      source: "file:engine/src/invana/telemetry/middleware.py",
+      target: "file:engine/src/invana/telemetry/metrics.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e146",
+      type: "imports",
+      source: "file:engine/src/invana/telemetry/setup.py",
+      target: "file:engine/src/invana/logging/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e147",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/introspector.py",
+      target: "class:engine/src/invana/modeller/introspector.py:Introspector",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e148",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/introspector.py",
+      target: "class:engine/src/invana/modeller/introspector.py:Introspector",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e149",
+      type: "calls",
+      source: "class:engine/src/invana/modeller/introspector.py:Introspector",
+      target: "class:engine/src/invana/modeller/versioner.py:Versioner",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e150",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/json_io.py",
+      target: "class:engine/src/invana/modeller/json_io.py:SchemaExporter",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e151",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/json_io.py",
+      target: "class:engine/src/invana/modeller/json_io.py:SchemaImporter",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e152",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/json_io.py",
+      target: "class:engine/src/invana/modeller/json_io.py:SchemaExporter",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e153",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/json_io.py",
+      target: "class:engine/src/invana/modeller/json_io.py:SchemaImporter",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e154",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/projector.py",
+      target: "class:engine/src/invana/modeller/projector.py:Projector",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e155",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/projector.py",
+      target: "class:engine/src/invana/modeller/projector.py:Projector",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e156",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/reconciler.py",
+      target: "class:engine/src/invana/modeller/reconciler.py:Reconciler",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e157",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/reconciler.py",
+      target: "class:engine/src/invana/modeller/reconciler.py:Reconciler",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e158",
+      type: "calls",
+      source: "class:engine/src/invana/modeller/reconciler.py:Reconciler",
+      target: "class:engine/src/invana/modeller/introspector.py:Introspector",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e159",
+      type: "calls",
+      source: "class:engine/src/invana/modeller/reconciler.py:Reconciler",
+      target: "class:engine/src/invana/modeller/projector.py:Projector",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e160",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/validator.py",
+      target: "class:engine/src/invana/modeller/validator.py:SchemaValidator",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e161",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/validator.py",
+      target: "function:engine/src/invana/modeller/validator.py:_validate_rules",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e162",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/validator.py",
+      target: "function:engine/src/invana/modeller/validator.py:_build_cache",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e163",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/validator.py",
+      target: "class:engine/src/invana/modeller/validator.py:SchemaValidator",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e164",
+      type: "calls",
+      source: "class:engine/src/invana/modeller/validator.py:SchemaValidator",
+      target: "function:engine/src/invana/modeller/validator.py:_build_cache",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e165",
+      type: "calls",
+      source: "class:engine/src/invana/modeller/validator.py:SchemaValidator",
+      target: "function:engine/src/invana/modeller/validator.py:_validate_rules",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e166",
+      type: "calls",
+      source: "function:engine/src/invana/modeller/validator.py:_build_cache",
+      target: "function:engine/src/invana/modeller/inheritance.py:resolve_effective_mappings",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e167",
+      type: "calls",
+      source: "function:engine/src/invana/modeller/validator.py:_build_cache",
+      target: "function:engine/src/invana/modeller/inheritance.py:get_subtypes",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e168",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/versioner.py",
+      target: "class:engine/src/invana/modeller/versioner.py:Versioner",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e169",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/versioner.py",
+      target: "function:engine/src/invana/modeller/versioner.py:compute_diff",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e170",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/versioner.py",
+      target: "function:engine/src/invana/modeller/versioner.py:_classify",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e171",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/versioner.py",
+      target: "function:engine/src/invana/modeller/versioner.py:_diff_node_types",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e172",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/versioner.py",
+      target: "function:engine/src/invana/modeller/versioner.py:_diff_edge_types",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e173",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/versioner.py",
+      target: "class:engine/src/invana/modeller/versioner.py:Versioner",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e174",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/versioner.py",
+      target: "function:engine/src/invana/modeller/versioner.py:compute_diff",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e175",
+      type: "calls",
+      source: "function:engine/src/invana/modeller/versioner.py:compute_diff",
+      target: "function:engine/src/invana/modeller/versioner.py:_diff_node_types",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e176",
+      type: "calls",
+      source: "function:engine/src/invana/modeller/versioner.py:compute_diff",
+      target: "function:engine/src/invana/modeller/versioner.py:_diff_edge_types",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e177",
+      type: "calls",
+      source: "function:engine/src/invana/modeller/versioner.py:compute_diff",
+      target: "function:engine/src/invana/modeller/versioner.py:_classify",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e178",
+      type: "calls",
+      source: "class:engine/src/invana/modeller/versioner.py:Versioner",
+      target: "function:engine/src/invana/modeller/versioner.py:compute_diff",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e179",
+      type: "contains",
+      source: "file:engine/src/invana/telemetry/decorators/capture_metrics.py",
+      target: "function:engine/src/invana/telemetry/decorators/capture_metrics.py:capture_metrics",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e180",
+      type: "contains",
+      source: "file:engine/src/invana/telemetry/decorators/capture_metrics.py",
+      target: "function:engine/src/invana/telemetry/decorators/capture_metrics.py:_get_domain_instruments",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e181",
+      type: "contains",
+      source: "file:engine/src/invana/telemetry/decorators/capture_metrics.py",
+      target: "class:engine/src/invana/telemetry/decorators/capture_metrics.py:_MetricRecorder",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e182",
+      type: "exports",
+      source: "file:engine/src/invana/telemetry/decorators/capture_metrics.py",
+      target: "function:engine/src/invana/telemetry/decorators/capture_metrics.py:capture_metrics",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e183",
+      type: "calls",
+      source: "class:engine/src/invana/telemetry/decorators/capture_metrics.py:_MetricRecorder",
+      target: "function:engine/src/invana/telemetry/decorators/capture_metrics.py:_get_domain_instruments",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e184",
+      type: "calls",
+      source: "function:engine/src/invana/telemetry/decorators/capture_metrics.py:capture_metrics",
+      target: "class:engine/src/invana/telemetry/decorators/capture_metrics.py:_MetricRecorder",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e185",
+      type: "contains",
+      source: "file:engine/src/invana/telemetry/decorators/track.py",
+      target: "function:engine/src/invana/telemetry/decorators/track.py:track",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e186",
+      type: "contains",
+      source: "file:engine/src/invana/telemetry/decorators/track.py",
+      target: "function:engine/src/invana/telemetry/decorators/track.py:_on_failure",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e187",
+      type: "contains",
+      source: "file:engine/src/invana/telemetry/decorators/track.py",
+      target: "function:engine/src/invana/telemetry/decorators/track.py:_capture_locals",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e188",
+      type: "exports",
+      source: "file:engine/src/invana/telemetry/decorators/track.py",
+      target: "function:engine/src/invana/telemetry/decorators/track.py:track",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e189",
+      type: "calls",
+      source: "function:engine/src/invana/telemetry/decorators/track.py:_on_failure",
+      target: "function:engine/src/invana/telemetry/decorators/track.py:_capture_locals",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e190",
+      type: "contains",
+      source: "file:engine/src/invana/telemetry/middleware.py",
+      target: "class:engine/src/invana/telemetry/middleware.py:TelemetryMiddleware",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e191",
+      type: "exports",
+      source: "file:engine/src/invana/telemetry/middleware.py",
+      target: "class:engine/src/invana/telemetry/middleware.py:TelemetryMiddleware",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e192",
+      type: "contains",
+      source: "file:engine/src/invana/telemetry/setup.py",
+      target: "function:engine/src/invana/telemetry/setup.py:setup_telemetry",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e193",
+      type: "contains",
+      source: "file:engine/src/invana/telemetry/setup.py",
+      target: "function:engine/src/invana/telemetry/setup.py:instrument_app",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e194",
+      type: "exports",
+      source: "file:engine/src/invana/telemetry/setup.py",
+      target: "function:engine/src/invana/telemetry/setup.py:setup_telemetry",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e195",
+      type: "exports",
+      source: "file:engine/src/invana/telemetry/setup.py",
+      target: "function:engine/src/invana/telemetry/setup.py:instrument_app",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e196",
+      type: "calls",
+      source: "function:engine/src/invana/telemetry/setup.py:instrument_app",
+      target: "class:engine/src/invana/telemetry/middleware.py:TelemetryMiddleware",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e197",
+      type: "imports",
+      source: "file:engine/src/invana/__init__.py",
+      target: "file:engine/src/invana/logging/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e198",
+      type: "imports",
+      source: "file:engine/src/invana/__init__.py",
+      target: "file:engine/src/invana/settings.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e199",
+      type: "imports",
+      source: "file:engine/src/invana/cli/__init__.py",
+      target: "file:engine/src/invana/cli/main.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e200",
+      type: "imports",
+      source: "file:engine/src/invana/cli/main.py",
+      target: "file:engine/src/invana/cli/commands/init.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e201",
+      type: "imports",
+      source: "file:engine/src/invana/cli/main.py",
+      target: "file:engine/src/invana/cli/commands/loader.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e202",
+      type: "imports",
+      source: "file:engine/src/invana/cli/main.py",
+      target: "file:engine/src/invana/cli/commands/migrate.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e203",
+      type: "imports",
+      source: "file:engine/src/invana/cli/main.py",
+      target: "file:engine/src/invana/cli/commands/start.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e204",
+      type: "imports",
+      source: "file:engine/src/invana/cli/main.py",
+      target: "file:engine/src/invana/logging/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e205",
+      type: "imports",
+      source: "file:engine/src/invana/graph/loaders/__init__.py",
+      target: "file:engine/src/invana/graph/loaders/csv.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e206",
+      type: "imports",
+      source: "file:engine/src/invana/graph/loaders/csv.py",
+      target: "file:engine/src/invana/graph/loaders/csv.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e207",
+      type: "imports",
+      source: "file:engine/src/invana/graph/loaders/csv.py",
+      target: "file:engine/src/invana/logging/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e208",
+      type: "imports",
+      source: "file:engine/src/invana/logging/__init__.py",
+      target: "file:engine/src/invana/logging/config.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e209",
+      type: "imports",
+      source: "file:engine/src/invana/logging/__init__.py",
+      target: "file:engine/src/invana/logging/filters.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e210",
+      type: "imports",
+      source: "file:engine/src/invana/logging/config.py",
+      target: "file:engine/src/invana/logging/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e211",
+      type: "imports",
+      source: "file:engine/src/invana/logging/config.py",
+      target: "file:engine/src/invana/logging/config.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e212",
+      type: "imports",
+      source: "file:engine/src/invana/logging/filters.py",
+      target: "file:engine/src/invana/logging/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e213",
+      type: "imports",
+      source: "file:engine/src/invana/logging/formatters.py",
+      target: "file:engine/src/invana/logging/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e214",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/__init__.py",
+      target: "file:engine/src/invana/modeller/database.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e215",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/__init__.py",
+      target: "file:engine/src/invana/modeller/inheritance.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e216",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/__init__.py",
+      target: "file:engine/src/invana/modeller/introspector.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e217",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/__init__.py",
+      target: "file:engine/src/invana/modeller/json_io.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e218",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/__init__.py",
+      target: "file:engine/src/invana/modeller/projector.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e219",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/__init__.py",
+      target: "file:engine/src/invana/modeller/reconciler.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e220",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/__init__.py",
+      target: "file:engine/src/invana/modeller/store.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e221",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/__init__.py",
+      target: "file:engine/src/invana/modeller/validator.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e222",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/__init__.py",
+      target: "file:engine/src/invana/modeller/versioner.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e223",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/database.py",
+      target: "file:engine/src/invana/db.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e224",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/inheritance.py",
+      target: "file:engine/src/invana/modeller/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e225",
+      type: "contains",
+      source: "file:engine/src/invana/cli/commands/loader.py",
+      target: "function:engine/src/invana/cli/commands/loader.py:_print_summary",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e226",
+      type: "contains",
+      source: "file:engine/src/invana/cli/commands/loader.py",
+      target: "function:engine/src/invana/cli/commands/loader.py:loader_cmd",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e227",
+      type: "exports",
+      source: "file:engine/src/invana/cli/commands/loader.py",
+      target: "function:engine/src/invana/cli/commands/loader.py:loader_cmd",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e228",
+      type: "calls",
+      source: "function:engine/src/invana/cli/commands/loader.py:loader_cmd",
+      target: "function:engine/src/invana/cli/commands/loader.py:_print_summary",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e229",
+      type: "calls",
+      source: "function:engine/src/invana/cli/commands/loader.py:loader_cmd",
+      target: "class:engine/src/invana/graph/loaders/csv.py:LoaderConfig",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e230",
+      type: "contains",
+      source: "file:engine/src/invana/cli/commands/migrate.py",
+      target: "function:engine/src/invana/cli/commands/migrate.py:migrate_cmd",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e231",
+      type: "exports",
+      source: "file:engine/src/invana/cli/commands/migrate.py",
+      target: "function:engine/src/invana/cli/commands/migrate.py:migrate_cmd",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e232",
+      type: "contains",
+      source: "file:engine/src/invana/cli/commands/start.py",
+      target: "function:engine/src/invana/cli/commands/start.py:start_cmd",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e233",
+      type: "exports",
+      source: "file:engine/src/invana/cli/commands/start.py",
+      target: "function:engine/src/invana/cli/commands/start.py:start_cmd",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e234",
+      type: "contains",
+      source: "file:engine/src/invana/graph/loaders/csv.py",
+      target: "class:engine/src/invana/graph/loaders/csv.py:LoaderConfig",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e235",
+      type: "contains",
+      source: "file:engine/src/invana/graph/loaders/csv.py",
+      target: "class:engine/src/invana/graph/loaders/csv.py:LoaderStats",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e236",
+      type: "contains",
+      source: "file:engine/src/invana/graph/loaders/csv.py",
+      target: "class:engine/src/invana/graph/loaders/csv.py:CSVLoader",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e237",
+      type: "contains",
+      source: "file:engine/src/invana/graph/loaders/csv.py",
+      target: "function:engine/src/invana/graph/loaders/csv.py:_coerce_value",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e238",
+      type: "contains",
+      source: "file:engine/src/invana/graph/loaders/csv.py",
+      target: "function:engine/src/invana/graph/loaders/csv.py:_parse_node_row",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e239",
+      type: "contains",
+      source: "file:engine/src/invana/graph/loaders/csv.py",
+      target: "function:engine/src/invana/graph/loaders/csv.py:_parse_edge_row",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e240",
+      type: "exports",
+      source: "file:engine/src/invana/graph/loaders/csv.py",
+      target: "class:engine/src/invana/graph/loaders/csv.py:LoaderConfig",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e241",
+      type: "exports",
+      source: "file:engine/src/invana/graph/loaders/csv.py",
+      target: "class:engine/src/invana/graph/loaders/csv.py:LoaderStats",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e242",
+      type: "exports",
+      source: "file:engine/src/invana/graph/loaders/csv.py",
+      target: "class:engine/src/invana/graph/loaders/csv.py:CSVLoader",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e243",
+      type: "calls",
+      source: "class:engine/src/invana/graph/loaders/csv.py:CSVLoader",
+      target: "function:engine/src/invana/graph/loaders/csv.py:_parse_node_row",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e244",
+      type: "calls",
+      source: "class:engine/src/invana/graph/loaders/csv.py:CSVLoader",
+      target: "function:engine/src/invana/graph/loaders/csv.py:_parse_edge_row",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e245",
+      type: "calls",
+      source: "function:engine/src/invana/graph/loaders/csv.py:_parse_node_row",
+      target: "function:engine/src/invana/graph/loaders/csv.py:_coerce_value",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e246",
+      type: "calls",
+      source: "function:engine/src/invana/graph/loaders/csv.py:_parse_edge_row",
+      target: "function:engine/src/invana/graph/loaders/csv.py:_coerce_value",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e247",
+      type: "contains",
+      source: "file:engine/src/invana/logging/config.py",
+      target: "function:engine/src/invana/logging/config.py:configure_logging",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e248",
+      type: "exports",
+      source: "file:engine/src/invana/logging/config.py",
+      target: "function:engine/src/invana/logging/config.py:configure_logging",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e249",
+      type: "contains",
+      source: "file:engine/src/invana/logging/filters.py",
+      target: "class:engine/src/invana/logging/filters.py:SuppressNoisyFilter",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e250",
+      type: "contains",
+      source: "file:engine/src/invana/logging/filters.py",
+      target: "class:engine/src/invana/logging/filters.py:OtlpThirdPartyFilter",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e251",
+      type: "exports",
+      source: "file:engine/src/invana/logging/filters.py",
+      target: "class:engine/src/invana/logging/filters.py:SuppressNoisyFilter",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e252",
+      type: "exports",
+      source: "file:engine/src/invana/logging/filters.py",
+      target: "class:engine/src/invana/logging/filters.py:OtlpThirdPartyFilter",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e253",
+      type: "contains",
+      source: "file:engine/src/invana/logging/formatters.py",
+      target: "class:engine/src/invana/logging/formatters.py:JSONFormatter",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e254",
+      type: "exports",
+      source: "file:engine/src/invana/logging/formatters.py",
+      target: "class:engine/src/invana/logging/formatters.py:JSONFormatter",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e255",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/inheritance.py",
+      target: "function:engine/src/invana/modeller/inheritance.py:build_hierarchy",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e256",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/inheritance.py",
+      target: "function:engine/src/invana/modeller/inheritance.py:resolve_effective_mappings",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e257",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/inheritance.py",
+      target: "function:engine/src/invana/modeller/inheritance.py:get_subtypes",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e258",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/inheritance.py",
+      target: "function:engine/src/invana/modeller/inheritance.py:build_hierarchy",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e259",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/inheritance.py",
+      target: "function:engine/src/invana/modeller/inheritance.py:resolve_effective_mappings",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e260",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/inheritance.py",
+      target: "function:engine/src/invana/modeller/inheritance.py:get_subtypes",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e261",
+      type: "calls",
+      source: "function:engine/src/invana/modeller/inheritance.py:resolve_effective_mappings",
+      target: "function:engine/src/invana/modeller/inheritance.py:build_hierarchy",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e262",
+      type: "calls",
+      source: "function:engine/src/invana/modeller/inheritance.py:get_subtypes",
+      target: "function:engine/src/invana/modeller/inheritance.py:build_hierarchy",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e263",
+      type: "contains",
+      source: "file:engine/src/invana/auth/deps.py",
+      target: "function:engine/src/invana/auth/deps.py:get_current_user",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e264",
+      type: "exports",
+      source: "file:engine/src/invana/auth/deps.py",
+      target: "function:engine/src/invana/auth/deps.py:get_current_user",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e265",
+      type: "contains",
+      source: "file:engine/src/invana/auth/jwt.py",
+      target: "function:engine/src/invana/auth/jwt.py:encode_access_token",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e266",
+      type: "exports",
+      source: "file:engine/src/invana/auth/jwt.py",
+      target: "function:engine/src/invana/auth/jwt.py:encode_access_token",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e267",
+      type: "contains",
+      source: "file:engine/src/invana/auth/models.py",
+      target: "class:engine/src/invana/auth/models.py:User",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e268",
+      type: "exports",
+      source: "file:engine/src/invana/auth/models.py",
+      target: "class:engine/src/invana/auth/models.py:User",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e269",
+      type: "contains",
+      source: "file:engine/src/invana/auth/routes.py",
+      target: "function:engine/src/invana/auth/routes.py:username_available",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e270",
+      type: "exports",
+      source: "file:engine/src/invana/auth/routes.py",
+      target: "function:engine/src/invana/auth/routes.py:username_available",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e271",
+      type: "contains",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "function:engine/src/invana/auth/services.py:_validate_username_format",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e272",
+      type: "contains",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "function:engine/src/invana/auth/services.py:check_username_availability",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e273",
+      type: "exports",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "function:engine/src/invana/auth/services.py:check_username_availability",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e274",
+      type: "contains",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "function:engine/src/invana/auth/services.py:_list_memberships",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e275",
+      type: "contains",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "function:engine/src/invana/auth/services.py:_user_out",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e276",
+      type: "contains",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "function:engine/src/invana/auth/services.py:register_with_invite",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e277",
+      type: "exports",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "function:engine/src/invana/auth/services.py:register_with_invite",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e278",
+      type: "contains",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "function:engine/src/invana/auth/services.py:login",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e279",
+      type: "exports",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "function:engine/src/invana/auth/services.py:login",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e280",
+      type: "contains",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "function:engine/src/invana/auth/services.py:refresh",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e281",
+      type: "exports",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "function:engine/src/invana/auth/services.py:refresh",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e282",
+      type: "contains",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "function:engine/src/invana/auth/services.py:logout",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e283",
+      type: "exports",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "function:engine/src/invana/auth/services.py:logout",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e284",
+      type: "contains",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "function:engine/src/invana/auth/services.py:patch_me",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e285",
+      type: "exports",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "function:engine/src/invana/auth/services.py:patch_me",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e286",
+      type: "contains",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "function:engine/src/invana/auth/services.py:change_password",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e287",
+      type: "exports",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "function:engine/src/invana/auth/services.py:change_password",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e288",
+      type: "contains",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "function:engine/src/invana/auth/services.py:delete_me",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e289",
+      type: "exports",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "function:engine/src/invana/auth/services.py:delete_me",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e290",
+      type: "contains",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "function:engine/src/invana/auth/services.py:bootstrap_root",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e291",
+      type: "exports",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "function:engine/src/invana/auth/services.py:bootstrap_root",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e292",
+      type: "contains",
+      source: "file:engine/src/invana/auth/tokens.py",
+      target: "function:engine/src/invana/auth/tokens.py:issue_refresh_token",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e293",
+      type: "exports",
+      source: "file:engine/src/invana/auth/tokens.py",
+      target: "function:engine/src/invana/auth/tokens.py:issue_refresh_token",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e294",
+      type: "contains",
+      source: "file:engine/src/invana/auth/tokens.py",
+      target: "function:engine/src/invana/auth/tokens.py:find_active_refresh_token",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e295",
+      type: "exports",
+      source: "file:engine/src/invana/auth/tokens.py",
+      target: "function:engine/src/invana/auth/tokens.py:find_active_refresh_token",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e296",
+      type: "contains",
+      source: "file:engine/src/invana/cli/commands/init.py",
+      target: "function:engine/src/invana/cli/commands/init.py:_validate_username_cli",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e297",
+      type: "contains",
+      source: "file:engine/src/invana/cli/commands/init.py",
+      target: "function:engine/src/invana/cli/commands/init.py:init_cmd",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e298",
+      type: "exports",
+      source: "file:engine/src/invana/cli/commands/init.py",
+      target: "function:engine/src/invana/cli/commands/init.py:init_cmd",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e299",
+      type: "contains",
+      source: "file:engine/src/invana/cli/commands/init.py",
+      target: "function:engine/src/invana/cli/commands/init.py:_run_init",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e300",
+      type: "imports",
+      source: "file:engine/src/invana/auth/__init__.py",
+      target: "file:engine/src/invana/auth/deps.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e301",
+      type: "imports",
+      source: "file:engine/src/invana/auth/deps.py",
+      target: "file:engine/src/invana/auth/jwt.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e302",
+      type: "imports",
+      source: "file:engine/src/invana/auth/deps.py",
+      target: "file:engine/src/invana/auth/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e303",
+      type: "imports",
+      source: "file:engine/src/invana/auth/deps.py",
+      target: "file:engine/src/invana/db.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e304",
+      type: "imports",
+      source: "file:engine/src/invana/auth/jwt.py",
+      target: "file:engine/src/invana/settings.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e305",
+      type: "imports",
+      source: "file:engine/src/invana/auth/models.py",
+      target: "file:engine/src/invana/modeller/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e306",
+      type: "imports",
+      source: "file:engine/src/invana/auth/passwords.py",
+      target: "file:engine/src/invana/settings.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e307",
+      type: "imports",
+      source: "file:engine/src/invana/auth/routes.py",
+      target: "file:engine/src/invana/auth/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e308",
+      type: "imports",
+      source: "file:engine/src/invana/auth/routes.py",
+      target: "file:engine/src/invana/auth/deps.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e309",
+      type: "imports",
+      source: "file:engine/src/invana/auth/routes.py",
+      target: "file:engine/src/invana/auth/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e310",
+      type: "imports",
+      source: "file:engine/src/invana/auth/routes.py",
+      target: "file:engine/src/invana/auth/schemas.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e311",
+      type: "imports",
+      source: "file:engine/src/invana/auth/routes.py",
+      target: "file:engine/src/invana/auth/services.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e312",
+      type: "imports",
+      source: "file:engine/src/invana/auth/routes.py",
+      target: "file:engine/src/invana/db.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e313",
+      type: "imports",
+      source: "file:engine/src/invana/auth/schemas.py",
+      target: "file:engine/src/invana/graphs/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e314",
+      type: "imports",
+      source: "file:engine/src/invana/auth/schemas.py",
+      target: "file:engine/src/invana/settings.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e315",
+      type: "imports",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "file:engine/src/invana/auth/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e316",
+      type: "imports",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "file:engine/src/invana/auth/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e317",
+      type: "imports",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "file:engine/src/invana/auth/passwords.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e318",
+      type: "imports",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "file:engine/src/invana/auth/schemas.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e319",
+      type: "imports",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "file:engine/src/invana/auth/tokens.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e320",
+      type: "imports",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "file:engine/src/invana/events/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e321",
+      type: "imports",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "file:engine/src/invana/events/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e322",
+      type: "imports",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "file:engine/src/invana/events/services.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e323",
+      type: "imports",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "file:engine/src/invana/graphs/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e324",
+      type: "imports",
+      source: "file:engine/src/invana/auth/services.py",
+      target: "file:engine/src/invana/settings.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e325",
+      type: "imports",
+      source: "file:engine/src/invana/auth/tokens.py",
+      target: "file:engine/src/invana/auth/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e326",
+      type: "imports",
+      source: "file:engine/src/invana/auth/tokens.py",
+      target: "file:engine/src/invana/settings.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e327",
+      type: "imports",
+      source: "file:engine/src/invana/cli/commands/init.py",
+      target: "file:engine/src/invana/auth/passwords.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e328",
+      type: "imports",
+      source: "file:engine/src/invana/cli/commands/init.py",
+      target: "file:engine/src/invana/auth/services.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e329",
+      type: "imports",
+      source: "file:engine/src/invana/cli/commands/init.py",
+      target: "file:engine/src/invana/db.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e330",
+      type: "imports",
+      source: "file:engine/src/invana/cli/commands/init.py",
+      target: "file:engine/src/invana/settings.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e331",
+      type: "contains",
+      source: "file:engine/src/invana/db.py",
+      target: "function:engine/src/invana/db.py:create_sync_engine",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e332",
+      type: "exports",
+      source: "file:engine/src/invana/db.py",
+      target: "function:engine/src/invana/db.py:create_sync_engine",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e333",
+      type: "contains",
+      source: "file:engine/src/invana/events/models.py",
+      target: "class:engine/src/invana/events/models.py:Event",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e334",
+      type: "exports",
+      source: "file:engine/src/invana/events/models.py",
+      target: "class:engine/src/invana/events/models.py:Event",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e335",
+      type: "contains",
+      source: "file:engine/src/invana/events/notify.py",
+      target: "function:engine/src/invana/events/notify.py:iter_frames",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e336",
+      type: "exports",
+      source: "file:engine/src/invana/events/notify.py",
+      target: "function:engine/src/invana/events/notify.py:iter_frames",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e337",
+      type: "contains",
+      source: "file:engine/src/invana/events/notify.py",
+      target: "class:engine/src/invana/events/notify.py:EventBroadcaster",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e338",
+      type: "exports",
+      source: "file:engine/src/invana/events/notify.py",
+      target: "class:engine/src/invana/events/notify.py:EventBroadcaster",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e339",
+      type: "contains",
+      source: "file:engine/src/invana/events/routes.py",
+      target: "function:engine/src/invana/events/routes.py:_sse_response",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e340",
+      type: "contains",
+      source: "file:engine/src/invana/events/routes.py",
+      target: "function:engine/src/invana/events/routes.py:list_events",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e341",
+      type: "exports",
+      source: "file:engine/src/invana/events/routes.py",
+      target: "function:engine/src/invana/events/routes.py:list_events",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e342",
+      type: "contains",
+      source: "file:engine/src/invana/events/routes.py",
+      target: "function:engine/src/invana/events/routes.py:list_graph_events",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e343",
+      type: "exports",
+      source: "file:engine/src/invana/events/routes.py",
+      target: "function:engine/src/invana/events/routes.py:list_graph_events",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e344",
+      type: "contains",
+      source: "file:engine/src/invana/events/services.py",
+      target: "function:engine/src/invana/events/services.py:emit_event",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e345",
+      type: "exports",
+      source: "file:engine/src/invana/events/services.py",
+      target: "function:engine/src/invana/events/services.py:emit_event",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e346",
+      type: "contains",
+      source: "file:engine/src/invana/events/services.py",
+      target: "function:engine/src/invana/events/services.py:diff_changed_fields",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e347",
+      type: "exports",
+      source: "file:engine/src/invana/events/services.py",
+      target: "function:engine/src/invana/events/services.py:diff_changed_fields",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e348",
+      type: "contains",
+      source: "file:engine/src/invana/events/services.py",
+      target: "function:engine/src/invana/events/services.py:current_trace_id",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e349",
+      type: "exports",
+      source: "file:engine/src/invana/events/services.py",
+      target: "function:engine/src/invana/events/services.py:current_trace_id",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e350",
+      type: "contains",
+      source: "file:engine/src/invana/events/store.py",
+      target: "function:engine/src/invana/events/store.py:_decode_cursor",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e351",
+      type: "contains",
+      source: "file:engine/src/invana/events/store.py",
+      target: "class:engine/src/invana/events/store.py:EventStore",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e352",
+      type: "exports",
+      source: "file:engine/src/invana/events/store.py",
+      target: "class:engine/src/invana/events/store.py:EventStore",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e353",
+      type: "imports",
+      source: "file:engine/src/invana/db.py",
+      target: "file:engine/src/invana/settings.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e354",
+      type: "imports",
+      source: "file:engine/src/invana/events/models.py",
+      target: "file:engine/src/invana/modeller/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e355",
+      type: "imports",
+      source: "file:engine/src/invana/events/notify.py",
+      target: "file:engine/src/invana/logging/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e356",
+      type: "imports",
+      source: "file:engine/src/invana/events/notify.py",
+      target: "file:engine/src/invana/settings.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e357",
+      type: "imports",
+      source: "file:engine/src/invana/events/routes.py",
+      target: "file:engine/src/invana/auth/deps.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e358",
+      type: "imports",
+      source: "file:engine/src/invana/events/routes.py",
+      target: "file:engine/src/invana/auth/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e359",
+      type: "imports",
+      source: "file:engine/src/invana/events/routes.py",
+      target: "file:engine/src/invana/db.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e360",
+      type: "imports",
+      source: "file:engine/src/invana/events/routes.py",
+      target: "file:engine/src/invana/events/notify.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e361",
+      type: "imports",
+      source: "file:engine/src/invana/events/routes.py",
+      target: "file:engine/src/invana/events/schemas.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e362",
+      type: "imports",
+      source: "file:engine/src/invana/events/routes.py",
+      target: "file:engine/src/invana/events/store.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e363",
+      type: "imports",
+      source: "file:engine/src/invana/events/routes.py",
+      target: "file:engine/src/invana/graphs/deps.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e364",
+      type: "imports",
+      source: "file:engine/src/invana/events/routes.py",
+      target: "file:engine/src/invana/graphs/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e365",
+      type: "imports",
+      source: "file:engine/src/invana/events/schemas.py",
+      target: "file:engine/src/invana/events/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e366",
+      type: "imports",
+      source: "file:engine/src/invana/events/services.py",
+      target: "file:engine/src/invana/events/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e367",
+      type: "imports",
+      source: "file:engine/src/invana/events/services.py",
+      target: "file:engine/src/invana/events/store.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e368",
+      type: "imports",
+      source: "file:engine/src/invana/events/store.py",
+      target: "file:engine/src/invana/auth/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e369",
+      type: "imports",
+      source: "file:engine/src/invana/events/store.py",
+      target: "file:engine/src/invana/events/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e370",
+      type: "imports",
+      source: "file:engine/src/invana/events/store.py",
+      target: "file:engine/src/invana/events/schemas.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e371",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/__init__.py",
+      target: "file:engine/src/invana/graphs/manager.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e372",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/__init__.py",
+      target: "file:engine/src/invana/graphs/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e373",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/__init__.py",
+      target: "file:engine/src/invana/graphs/store.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e374",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/deps.py",
+      target: "function:engine/src/invana/graphs/deps.py:resolve_graph_by_username_slug",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e375",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/deps.py",
+      target: "function:engine/src/invana/graphs/deps.py:resolve_graph_by_username_slug",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e376",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/deps.py",
+      target: "function:engine/src/invana/graphs/deps.py:get_graph_membership",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e377",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/deps.py",
+      target: "function:engine/src/invana/graphs/deps.py:get_graph_membership",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e378",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/deps.py",
+      target: "function:engine/src/invana/graphs/deps.py:require_graph_setup_complete",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e379",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/deps.py",
+      target: "function:engine/src/invana/graphs/deps.py:require_graph_setup_complete",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e380",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/encryption.py",
+      target: "function:engine/src/invana/graphs/encryption.py:encrypt_credentials",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e381",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/encryption.py",
+      target: "function:engine/src/invana/graphs/encryption.py:encrypt_credentials",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e382",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/encryption.py",
+      target: "function:engine/src/invana/graphs/encryption.py:decrypt_credentials",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e383",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/encryption.py",
+      target: "function:engine/src/invana/graphs/encryption.py:decrypt_credentials",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e384",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/manager.py",
+      target: "class:engine/src/invana/graphs/manager.py:GraphConnectionManager",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e385",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/manager.py",
+      target: "class:engine/src/invana/graphs/manager.py:GraphConnectionManager",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e386",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/models.py",
+      target: "class:engine/src/invana/graphs/models.py:Graph",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e387",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/models.py",
+      target: "class:engine/src/invana/graphs/models.py:Graph",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e388",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/models.py",
+      target: "class:engine/src/invana/graphs/models.py:GraphConnection",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e389",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/models.py",
+      target: "class:engine/src/invana/graphs/models.py:GraphConnection",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e390",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "function:engine/src/invana/graphs/routes.py:_build_connection_read",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e391",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "function:engine/src/invana/graphs/routes.py:_resolve_capabilities",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e392",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "function:engine/src/invana/graphs/routes.py:patch_graph",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e393",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "function:engine/src/invana/graphs/routes.py:patch_graph",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e394",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "function:engine/src/invana/graphs/routes.py:update_member_role",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e395",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "function:engine/src/invana/graphs/routes.py:update_member_role",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e396",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "function:engine/src/invana/graphs/routes.py:remove_member",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e397",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "function:engine/src/invana/graphs/routes.py:remove_member",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e398",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "function:engine/src/invana/graphs/routes.py:create_invitation",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e399",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "function:engine/src/invana/graphs/routes.py:create_invitation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e400",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "function:engine/src/invana/graphs/routes.py:delete_invitation",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e401",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "function:engine/src/invana/graphs/routes.py:delete_invitation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e402",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "function:engine/src/invana/graphs/routes.py:put_connection",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e403",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "function:engine/src/invana/graphs/routes.py:put_connection",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e404",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "function:engine/src/invana/graphs/routes.py:delete_connection",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e405",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "function:engine/src/invana/graphs/routes.py:delete_connection",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e406",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "function:engine/src/invana/graphs/routes.py:update_setup_section",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e407",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "function:engine/src/invana/graphs/routes.py:update_setup_section",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e408",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "function:engine/src/invana/graphs/routes.py:test_connection",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e409",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "function:engine/src/invana/graphs/routes.py:test_connection",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e410",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "function:engine/src/invana/graphs/routes.py:ping_connection",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e411",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "function:engine/src/invana/graphs/routes.py:ping_connection",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e412",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "function:engine/src/invana/graphs/routes.py:introspect_connection",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e413",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "function:engine/src/invana/graphs/routes.py:introspect_connection",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e414",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/schemas.py",
+      target: "class:engine/src/invana/graphs/schemas.py:GraphConnectionRead",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e415",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/schemas.py",
+      target: "class:engine/src/invana/graphs/schemas.py:GraphConnectionRead",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e416",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:create_graph",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e417",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:create_graph",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e418",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:list_graphs_for_user",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e419",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:list_graphs_for_user",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e420",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:update_graph",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e421",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:update_graph",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e422",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:delete_graph",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e423",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:delete_graph",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e424",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:put_graph_connection",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e425",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:put_graph_connection",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e426",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:test_connection_credentials",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e427",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:test_connection_credentials",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e428",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:delete_graph_connection",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e429",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:delete_graph_connection",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e430",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:_mark_section",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e431",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:update_setup_section",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e432",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:update_setup_section",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e433",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:_serialize_graph",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e434",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:list_graph_members",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e435",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:list_graph_members",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e436",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:update_graph_member_role",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e437",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:update_graph_member_role",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e438",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:remove_graph_member",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e439",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:remove_graph_member",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e440",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:create_invitation",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e441",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:create_invitation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e442",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:delete_invitation",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e443",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "function:engine/src/invana/graphs/services.py:delete_invitation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e444",
+      type: "contains",
+      source: "file:engine/src/invana/graphs/store.py",
+      target: "class:engine/src/invana/graphs/store.py:GraphConnectionStore",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e445",
+      type: "exports",
+      source: "file:engine/src/invana/graphs/store.py",
+      target: "class:engine/src/invana/graphs/store.py:GraphConnectionStore",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e446",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/deps.py",
+      target: "file:engine/src/invana/auth/deps.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e447",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/deps.py",
+      target: "file:engine/src/invana/auth/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e448",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/deps.py",
+      target: "file:engine/src/invana/db.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e449",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/deps.py",
+      target: "file:engine/src/invana/graphs/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e450",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/manager.py",
+      target: "file:engine/src/invana/events/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e451",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/manager.py",
+      target: "file:engine/src/invana/events/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e452",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/manager.py",
+      target: "file:engine/src/invana/events/services.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e453",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/manager.py",
+      target: "file:engine/src/invana/graphs/encryption.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e454",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/manager.py",
+      target: "file:engine/src/invana/graphs/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e455",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/manager.py",
+      target: "file:engine/src/invana/graphs/store.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e456",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/manager.py",
+      target: "file:engine/src/invana/logging/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e457",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/manager.py",
+      target: "file:engine/src/invana/modeller/introspector.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e458",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/manager.py",
+      target: "file:engine/src/invana/modeller/store.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e459",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/manager.py",
+      target: "file:engine/src/invana/settings.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e460",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/manager.py",
+      target: "file:engine/src/invana/utils.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e461",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/models.py",
+      target: "file:engine/src/invana/auth/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e462",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/models.py",
+      target: "file:engine/src/invana/modeller/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e463",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "file:engine/src/invana/auth/deps.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e464",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "file:engine/src/invana/auth/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e465",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "file:engine/src/invana/auth/schemas.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e466",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "file:engine/src/invana/db.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e467",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "file:engine/src/invana/events/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e468",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "file:engine/src/invana/events/services.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e469",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "file:engine/src/invana/graph/connectors/base/connector.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e470",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "file:engine/src/invana/graph/types/constants.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e471",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "file:engine/src/invana/graphs/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e472",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "file:engine/src/invana/graphs/deps.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e473",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "file:engine/src/invana/graphs/manager.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e474",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "file:engine/src/invana/graphs/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e475",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "file:engine/src/invana/graphs/schemas.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e476",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "file:engine/src/invana/graphs/services.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e477",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "file:engine/src/invana/settings.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e478",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/routes.py",
+      target: "file:engine/src/invana/utils.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e479",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/schemas.py",
+      target: "file:engine/src/invana/graph/types/data_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e480",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/schemas.py",
+      target: "file:engine/src/invana/graphs/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e481",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "file:engine/src/invana/auth/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e482",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "file:engine/src/invana/auth/schemas.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e483",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "file:engine/src/invana/auth/services.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e484",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "file:engine/src/invana/events/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e485",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "file:engine/src/invana/events/actions.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e486",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "file:engine/src/invana/events/services.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e487",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "file:engine/src/invana/graphs/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e488",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/services.py",
+      target: "file:engine/src/invana/graphs/schemas.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e489",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/store.py",
+      target: "file:engine/src/invana/graphs/encryption.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e490",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/store.py",
+      target: "file:engine/src/invana/graphs/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e491",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/store.py",
+      target: "file:engine/src/invana/graphs/schemas.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e492",
+      type: "imports",
+      source: "file:engine/src/invana/graphs/store.py",
+      target: "file:engine/src/invana/modeller/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e493",
+      type: "contains",
+      source: "file:engine/src/invana/settings.py",
+      target: "class:engine/src/invana/settings.py:Settings",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e494",
+      type: "exports",
+      source: "file:engine/src/invana/settings.py",
+      target: "class:engine/src/invana/settings.py:Settings",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e495",
+      type: "contains",
+      source: "file:engine/src/invana/skills/models.py",
+      target: "class:engine/src/invana/skills/models.py:Skill",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e496",
+      type: "exports",
+      source: "file:engine/src/invana/skills/models.py",
+      target: "class:engine/src/invana/skills/models.py:Skill",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e497",
+      type: "contains",
+      source: "file:engine/src/invana/skills/routes.py",
+      target: "function:engine/src/invana/skills/routes.py:create_skill",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e498",
+      type: "exports",
+      source: "file:engine/src/invana/skills/routes.py",
+      target: "function:engine/src/invana/skills/routes.py:create_skill",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e499",
+      type: "contains",
+      source: "file:engine/src/invana/skills/routes.py",
+      target: "function:engine/src/invana/skills/routes.py:update_skill",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e500",
+      type: "exports",
+      source: "file:engine/src/invana/skills/routes.py",
+      target: "function:engine/src/invana/skills/routes.py:update_skill",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e501",
+      type: "contains",
+      source: "file:engine/src/invana/skills/routes.py",
+      target: "function:engine/src/invana/skills/routes.py:delete_skill",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e502",
+      type: "exports",
+      source: "file:engine/src/invana/skills/routes.py",
+      target: "function:engine/src/invana/skills/routes.py:delete_skill",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e503",
+      type: "contains",
+      source: "file:engine/src/invana/skills/routes.py",
+      target: "function:engine/src/invana/skills/routes.py:list_skills",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e504",
+      type: "exports",
+      source: "file:engine/src/invana/skills/routes.py",
+      target: "function:engine/src/invana/skills/routes.py:list_skills",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e505",
+      type: "contains",
+      source: "file:engine/src/invana/skills/routes.py",
+      target: "function:engine/src/invana/skills/routes.py:get_skill",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e506",
+      type: "exports",
+      source: "file:engine/src/invana/skills/routes.py",
+      target: "function:engine/src/invana/skills/routes.py:get_skill",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e507",
+      type: "contains",
+      source: "file:engine/src/invana/skills/schemas.py",
+      target: "class:engine/src/invana/skills/schemas.py:SkillRead",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e508",
+      type: "exports",
+      source: "file:engine/src/invana/skills/schemas.py",
+      target: "class:engine/src/invana/skills/schemas.py:SkillRead",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e509",
+      type: "contains",
+      source: "file:engine/src/invana/skills/services.py",
+      target: "function:engine/src/invana/skills/services.py:create_skill",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e510",
+      type: "exports",
+      source: "file:engine/src/invana/skills/services.py",
+      target: "function:engine/src/invana/skills/services.py:create_skill",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e511",
+      type: "contains",
+      source: "file:engine/src/invana/skills/services.py",
+      target: "function:engine/src/invana/skills/services.py:update_skill",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e512",
+      type: "exports",
+      source: "file:engine/src/invana/skills/services.py",
+      target: "function:engine/src/invana/skills/services.py:update_skill",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e513",
+      type: "contains",
+      source: "file:engine/src/invana/skills/services.py",
+      target: "function:engine/src/invana/skills/services.py:delete_skill",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e514",
+      type: "exports",
+      source: "file:engine/src/invana/skills/services.py",
+      target: "function:engine/src/invana/skills/services.py:delete_skill",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e515",
+      type: "contains",
+      source: "file:engine/src/invana/skills/services.py",
+      target: "function:engine/src/invana/skills/services.py:get_or_404",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e516",
+      type: "exports",
+      source: "file:engine/src/invana/skills/services.py",
+      target: "function:engine/src/invana/skills/services.py:get_or_404",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e517",
+      type: "contains",
+      source: "file:engine/src/invana/skills/services.py",
+      target: "function:engine/src/invana/skills/services.py:list_skills",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e518",
+      type: "exports",
+      source: "file:engine/src/invana/skills/services.py",
+      target: "function:engine/src/invana/skills/services.py:list_skills",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e519",
+      type: "contains",
+      source: "file:engine/src/invana/skills/store.py",
+      target: "class:engine/src/invana/skills/store.py:SkillStore",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e520",
+      type: "exports",
+      source: "file:engine/src/invana/skills/store.py",
+      target: "class:engine/src/invana/skills/store.py:SkillStore",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e521",
+      type: "contains",
+      source: "file:engine/src/invana/utils.py",
+      target: "function:engine/src/invana/utils.py:import_class_from_dotted_path",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e522",
+      type: "exports",
+      source: "file:engine/src/invana/utils.py",
+      target: "function:engine/src/invana/utils.py:import_class_from_dotted_path",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e523",
+      type: "imports",
+      source: "file:engine/src/invana/settings.py",
+      target: "file:engine/src/invana/logging/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e524",
+      type: "imports",
+      source: "file:engine/src/invana/skills/models.py",
+      target: "file:engine/src/invana/modeller/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e525",
+      type: "imports",
+      source: "file:engine/src/invana/skills/routes.py",
+      target: "file:engine/src/invana/auth/deps.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e526",
+      type: "imports",
+      source: "file:engine/src/invana/skills/routes.py",
+      target: "file:engine/src/invana/auth/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e527",
+      type: "imports",
+      source: "file:engine/src/invana/skills/routes.py",
+      target: "file:engine/src/invana/db.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e528",
+      type: "imports",
+      source: "file:engine/src/invana/skills/routes.py",
+      target: "file:engine/src/invana/graphs/deps.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e529",
+      type: "imports",
+      source: "file:engine/src/invana/skills/routes.py",
+      target: "file:engine/src/invana/graphs/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e530",
+      type: "imports",
+      source: "file:engine/src/invana/skills/routes.py",
+      target: "file:engine/src/invana/skills/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e531",
+      type: "imports",
+      source: "file:engine/src/invana/skills/routes.py",
+      target: "file:engine/src/invana/skills/schemas.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e532",
+      type: "imports",
+      source: "file:engine/src/invana/skills/routes.py",
+      target: "file:engine/src/invana/skills/services.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e533",
+      type: "imports",
+      source: "file:engine/src/invana/skills/services.py",
+      target: "file:engine/src/invana/events/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e534",
+      type: "imports",
+      source: "file:engine/src/invana/skills/services.py",
+      target: "file:engine/src/invana/events/actions.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e535",
+      type: "imports",
+      source: "file:engine/src/invana/skills/services.py",
+      target: "file:engine/src/invana/events/services.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e536",
+      type: "imports",
+      source: "file:engine/src/invana/skills/services.py",
+      target: "file:engine/src/invana/skills/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e537",
+      type: "imports",
+      source: "file:engine/src/invana/skills/services.py",
+      target: "file:engine/src/invana/skills/schemas.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e538",
+      type: "imports",
+      source: "file:engine/src/invana/skills/services.py",
+      target: "file:engine/src/invana/skills/store.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e539",
+      type: "imports",
+      source: "file:engine/src/invana/skills/store.py",
+      target: "file:engine/src/invana/skills/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e540",
+      type: "calls",
+      source: "function:engine/src/invana/skills/routes.py:create_skill",
+      target: "function:engine/src/invana/skills/services.py:create_skill",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e541",
+      type: "calls",
+      source: "function:engine/src/invana/skills/routes.py:update_skill",
+      target: "function:engine/src/invana/skills/services.py:update_skill",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e542",
+      type: "calls",
+      source: "function:engine/src/invana/skills/routes.py:delete_skill",
+      target: "function:engine/src/invana/skills/services.py:delete_skill",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e543",
+      type: "calls",
+      source: "function:engine/src/invana/skills/routes.py:list_skills",
+      target: "function:engine/src/invana/skills/services.py:list_skills",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e544",
+      type: "calls",
+      source: "function:engine/src/invana/skills/routes.py:get_skill",
+      target: "function:engine/src/invana/skills/services.py:get_or_404",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e545",
+      type: "contains",
+      source: "file:engine/src/invana/llm_providers/store.py",
+      target: "class:engine/src/invana/llm_providers/store.py:LLMProviderStore",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e546",
+      type: "exports",
+      source: "file:engine/src/invana/llm_providers/store.py",
+      target: "class:engine/src/invana/llm_providers/store.py:LLMProviderStore",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e547",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/migrations/env.py",
+      target: "function:engine/src/invana/modeller/migrations/env.py:run_async_migrations",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e548",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/migrations/env.py",
+      target: "function:engine/src/invana/modeller/migrations/env.py:run_migrations_offline",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e549",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/models.py",
+      target: "class:engine/src/invana/modeller/models.py:SchemaVersion",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e550",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/models.py",
+      target: "class:engine/src/invana/modeller/models.py:SchemaVersion",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e551",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/models.py",
+      target: "class:engine/src/invana/modeller/models.py:GraphSchema",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e552",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/models.py",
+      target: "class:engine/src/invana/modeller/models.py:GraphSchema",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e553",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/models.py",
+      target: "class:engine/src/invana/modeller/models.py:NodeTypeDefinition",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e554",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/models.py",
+      target: "class:engine/src/invana/modeller/models.py:NodeTypeDefinition",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e555",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/models.py",
+      target: "class:engine/src/invana/modeller/models.py:EdgeTypeDefinition",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e556",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/models.py",
+      target: "class:engine/src/invana/modeller/models.py:EdgeTypeDefinition",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e557",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/models.py",
+      target: "class:engine/src/invana/modeller/models.py:PropertyKeyDefinition",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e558",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/models.py",
+      target: "class:engine/src/invana/modeller/models.py:PropertyKeyDefinition",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e559",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/models.py",
+      target: "class:engine/src/invana/modeller/models.py:TypePropertyMapping",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e560",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/models.py",
+      target: "class:engine/src/invana/modeller/models.py:TypePropertyMapping",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e561",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/models.py",
+      target: "class:engine/src/invana/modeller/models.py:ConstraintDefinition",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e562",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/models.py",
+      target: "class:engine/src/invana/modeller/models.py:ConstraintDefinition",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e563",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/models.py",
+      target: "class:engine/src/invana/modeller/models.py:IndexDefinition",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e564",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/models.py",
+      target: "class:engine/src/invana/modeller/models.py:IndexDefinition",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e565",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/models.py",
+      target: "class:engine/src/invana/modeller/models.py:SchemaProjection",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e566",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/models.py",
+      target: "class:engine/src/invana/modeller/models.py:SchemaProjection",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e567",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/store.py",
+      target: "class:engine/src/invana/modeller/store.py:SchemaStore",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e568",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/store.py",
+      target: "class:engine/src/invana/modeller/store.py:SchemaStore",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e569",
+      type: "contains",
+      source: "file:engine/src/invana/server/admin/auth.py",
+      target: "class:engine/src/invana/server/admin/auth.py:SuperuserAuthProvider",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e570",
+      type: "exports",
+      source: "file:engine/src/invana/server/admin/auth.py",
+      target: "class:engine/src/invana/server/admin/auth.py:SuperuserAuthProvider",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e571",
+      type: "contains",
+      source: "file:engine/src/invana/server/admin/views.py",
+      target: "function:engine/src/invana/server/admin/views.py:mount_admin",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e572",
+      type: "exports",
+      source: "file:engine/src/invana/server/admin/views.py",
+      target: "function:engine/src/invana/server/admin/views.py:mount_admin",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e573",
+      type: "contains",
+      source: "file:engine/src/invana/server/admin/views.py",
+      target: "class:engine/src/invana/server/admin/views.py:EventView",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e574",
+      type: "exports",
+      source: "file:engine/src/invana/server/admin/views.py",
+      target: "class:engine/src/invana/server/admin/views.py:EventView",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e575",
+      type: "contains",
+      source: "file:engine/src/invana/server/admin/views.py",
+      target: "class:engine/src/invana/server/admin/views.py:UserView",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e576",
+      type: "exports",
+      source: "file:engine/src/invana/server/admin/views.py",
+      target: "class:engine/src/invana/server/admin/views.py:UserView",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e577",
+      type: "contains",
+      source: "file:engine/src/invana/server/admin/views.py",
+      target: "class:engine/src/invana/server/admin/views.py:InvitationView",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e578",
+      type: "exports",
+      source: "file:engine/src/invana/server/admin/views.py",
+      target: "class:engine/src/invana/server/admin/views.py:InvitationView",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e579",
+      type: "contains",
+      source: "file:engine/src/invana/server/admin/views.py",
+      target: "class:engine/src/invana/server/admin/views.py:RefreshTokenView",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e580",
+      type: "exports",
+      source: "file:engine/src/invana/server/admin/views.py",
+      target: "class:engine/src/invana/server/admin/views.py:RefreshTokenView",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e581",
+      type: "contains",
+      source: "file:engine/src/invana/server/app.py",
+      target: "function:engine/src/invana/server/app.py:create_app",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e582",
+      type: "exports",
+      source: "file:engine/src/invana/server/app.py",
+      target: "function:engine/src/invana/server/app.py:create_app",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e583",
+      type: "contains",
+      source: "file:engine/src/invana/server/app.py",
+      target: "function:engine/src/invana/server/app.py:lifespan",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e584",
+      type: "exports",
+      source: "file:engine/src/invana/server/app.py",
+      target: "function:engine/src/invana/server/app.py:lifespan",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e585",
+      type: "contains",
+      source: "file:engine/src/invana/server/health.py",
+      target: "function:engine/src/invana/server/health.py:health",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e586",
+      type: "exports",
+      source: "file:engine/src/invana/server/health.py",
+      target: "function:engine/src/invana/server/health.py:health",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e587",
+      type: "contains",
+      source: "file:engine/src/invana/server/health.py",
+      target: "function:engine/src/invana/server/health.py:root",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e588",
+      type: "exports",
+      source: "file:engine/src/invana/server/health.py",
+      target: "function:engine/src/invana/server/health.py:root",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e589",
+      type: "contains",
+      source: "file:engine/src/invana/server/routes/query.py",
+      target: "function:engine/src/invana/server/routes/query.py:run_query",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e590",
+      type: "exports",
+      source: "file:engine/src/invana/server/routes/query.py",
+      target: "function:engine/src/invana/server/routes/query.py:run_query",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e591",
+      type: "contains",
+      source: "file:engine/src/invana/server/routes/query.py",
+      target: "function:engine/src/invana/server/routes/query.py:_assert_read_only_query",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e592",
+      type: "contains",
+      source: "file:engine/src/invana/server/routes/query.py",
+      target: "function:engine/src/invana/server/routes/query.py:_build_query_response",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e593",
+      type: "contains",
+      source: "file:engine/src/invana/server/routes/query.py",
+      target: "function:engine/src/invana/server/routes/query.py:_resolve_query_language",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e594",
+      type: "contains",
+      source: "file:engine/src/invana/server/routes/schemas.py",
+      target: "function:engine/src/invana/server/routes/schemas.py:get_active_version",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e595",
+      type: "exports",
+      source: "file:engine/src/invana/server/routes/schemas.py",
+      target: "function:engine/src/invana/server/routes/schemas.py:get_active_version",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e596",
+      type: "imports",
+      source: "file:engine/src/invana/llm_providers/store.py",
+      target: "file:engine/src/invana/llm_providers/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e597",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/migrations/env.py",
+      target: "file:engine/src/invana/auth/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e598",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/migrations/env.py",
+      target: "file:engine/src/invana/graphs/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e599",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/migrations/env.py",
+      target: "file:engine/src/invana/logging/config.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e600",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/migrations/env.py",
+      target: "file:engine/src/invana/modeller/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e601",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/migrations/env.py",
+      target: "file:engine/src/invana/settings.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e602",
+      type: "imports",
+      source: "file:engine/src/invana/modeller/store.py",
+      target: "file:engine/src/invana/modeller/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e603",
+      type: "imports",
+      source: "file:engine/src/invana/server/admin/auth.py",
+      target: "file:engine/src/invana/auth/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e604",
+      type: "imports",
+      source: "file:engine/src/invana/server/admin/auth.py",
+      target: "file:engine/src/invana/auth/passwords.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e605",
+      type: "imports",
+      source: "file:engine/src/invana/server/admin/views.py",
+      target: "file:engine/src/invana/auth/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e606",
+      type: "imports",
+      source: "file:engine/src/invana/server/admin/views.py",
+      target: "file:engine/src/invana/events/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e607",
+      type: "imports",
+      source: "file:engine/src/invana/server/admin/views.py",
+      target: "file:engine/src/invana/graphs/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e608",
+      type: "imports",
+      source: "file:engine/src/invana/server/admin/views.py",
+      target: "file:engine/src/invana/instructions/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e609",
+      type: "imports",
+      source: "file:engine/src/invana/server/admin/views.py",
+      target: "file:engine/src/invana/llm_providers/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e610",
+      type: "imports",
+      source: "file:engine/src/invana/server/admin/views.py",
+      target: "file:engine/src/invana/modeller/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e611",
+      type: "imports",
+      source: "file:engine/src/invana/server/admin/views.py",
+      target: "file:engine/src/invana/server/admin/auth.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e612",
+      type: "imports",
+      source: "file:engine/src/invana/server/admin/views.py",
+      target: "file:engine/src/invana/skills/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e613",
+      type: "imports",
+      source: "file:engine/src/invana/server/app.py",
+      target: "file:engine/src/invana/db.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e614",
+      type: "imports",
+      source: "file:engine/src/invana/server/app.py",
+      target: "file:engine/src/invana/settings.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e615",
+      type: "imports",
+      source: "file:engine/src/invana/server/health.py",
+      target: "file:engine/src/invana/settings.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e616",
+      type: "imports",
+      source: "file:engine/src/invana/server/routes/query.py",
+      target: "file:engine/src/invana/auth/deps.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e617",
+      type: "imports",
+      source: "file:engine/src/invana/server/routes/query.py",
+      target: "file:engine/src/invana/auth/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e618",
+      type: "imports",
+      source: "file:engine/src/invana/server/routes/query.py",
+      target: "file:engine/src/invana/db.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e619",
+      type: "imports",
+      source: "file:engine/src/invana/server/routes/query.py",
+      target: "file:engine/src/invana/events/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e620",
+      type: "imports",
+      source: "file:engine/src/invana/server/routes/query.py",
+      target: "file:engine/src/invana/events/services.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e621",
+      type: "imports",
+      source: "file:engine/src/invana/server/routes/query.py",
+      target: "file:engine/src/invana/graph/types/constants.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e622",
+      type: "imports",
+      source: "file:engine/src/invana/server/routes/query.py",
+      target: "file:engine/src/invana/graph/types/data_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e623",
+      type: "imports",
+      source: "file:engine/src/invana/server/routes/query.py",
+      target: "file:engine/src/invana/graphs/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e624",
+      type: "imports",
+      source: "file:engine/src/invana/server/routes/query.py",
+      target: "file:engine/src/invana/graphs/deps.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e625",
+      type: "imports",
+      source: "file:engine/src/invana/server/routes/query.py",
+      target: "file:engine/src/invana/graphs/manager.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e626",
+      type: "imports",
+      source: "file:engine/src/invana/server/routes/query.py",
+      target: "file:engine/src/invana/graphs/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e627",
+      type: "imports",
+      source: "file:engine/src/invana/server/routes/query.py",
+      target: "file:engine/src/invana/graphs/schemas.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e628",
+      type: "imports",
+      source: "file:engine/src/invana/server/routes/query.py",
+      target: "file:engine/src/invana/graphs/services.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e629",
+      type: "imports",
+      source: "file:engine/src/invana/server/routes/schemas.py",
+      target: "file:engine/src/invana/db.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e630",
+      type: "imports",
+      source: "file:engine/src/invana/server/routes/schemas.py",
+      target: "file:engine/src/invana/graphs/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e631",
+      type: "imports",
+      source: "file:engine/src/invana/server/routes/schemas.py",
+      target: "file:engine/src/invana/graphs/deps.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e632",
+      type: "imports",
+      source: "file:engine/src/invana/server/routes/schemas.py",
+      target: "file:engine/src/invana/graphs/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e633",
+      type: "imports",
+      source: "file:engine/src/invana/server/routes/schemas.py",
+      target: "file:engine/src/invana/graphs/services.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e634",
+      type: "imports",
+      source: "file:engine/src/invana/server/routes/schemas.py",
+      target: "file:engine/src/invana/modeller/schemas.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e635",
+      type: "imports",
+      source: "file:engine/src/invana/server/routes/schemas.py",
+      target: "file:engine/src/invana/modeller/store.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e636",
+      type: "calls",
+      source: "function:engine/src/invana/server/app.py:create_app",
+      target: "function:engine/src/invana/server/admin/views.py:mount_admin",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e637",
+      type: "contains",
+      source: "file:engine/src/invana/instructions/models.py",
+      target: "class:engine/src/invana/instructions/models.py:Instruction",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e638",
+      type: "exports",
+      source: "file:engine/src/invana/instructions/models.py",
+      target: "class:engine/src/invana/instructions/models.py:Instruction",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e639",
+      type: "contains",
+      source: "file:engine/src/invana/instructions/routes.py",
+      target: "function:engine/src/invana/instructions/routes.py:create_instruction",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e640",
+      type: "exports",
+      source: "file:engine/src/invana/instructions/routes.py",
+      target: "function:engine/src/invana/instructions/routes.py:create_instruction",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e641",
+      type: "contains",
+      source: "file:engine/src/invana/instructions/routes.py",
+      target: "function:engine/src/invana/instructions/routes.py:update_instruction",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e642",
+      type: "exports",
+      source: "file:engine/src/invana/instructions/routes.py",
+      target: "function:engine/src/invana/instructions/routes.py:update_instruction",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e643",
+      type: "contains",
+      source: "file:engine/src/invana/instructions/routes.py",
+      target: "function:engine/src/invana/instructions/routes.py:delete_instruction",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e644",
+      type: "exports",
+      source: "file:engine/src/invana/instructions/routes.py",
+      target: "function:engine/src/invana/instructions/routes.py:delete_instruction",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e645",
+      type: "contains",
+      source: "file:engine/src/invana/instructions/routes.py",
+      target: "function:engine/src/invana/instructions/routes.py:list_instructions",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e646",
+      type: "exports",
+      source: "file:engine/src/invana/instructions/routes.py",
+      target: "function:engine/src/invana/instructions/routes.py:list_instructions",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e647",
+      type: "contains",
+      source: "file:engine/src/invana/instructions/routes.py",
+      target: "function:engine/src/invana/instructions/routes.py:get_instruction",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e648",
+      type: "exports",
+      source: "file:engine/src/invana/instructions/routes.py",
+      target: "function:engine/src/invana/instructions/routes.py:get_instruction",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e649",
+      type: "contains",
+      source: "file:engine/src/invana/instructions/schemas.py",
+      target: "class:engine/src/invana/instructions/schemas.py:InstructionRead",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e650",
+      type: "exports",
+      source: "file:engine/src/invana/instructions/schemas.py",
+      target: "class:engine/src/invana/instructions/schemas.py:InstructionRead",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e651",
+      type: "contains",
+      source: "file:engine/src/invana/instructions/services.py",
+      target: "function:engine/src/invana/instructions/services.py:create_instruction",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e652",
+      type: "exports",
+      source: "file:engine/src/invana/instructions/services.py",
+      target: "function:engine/src/invana/instructions/services.py:create_instruction",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e653",
+      type: "contains",
+      source: "file:engine/src/invana/instructions/services.py",
+      target: "function:engine/src/invana/instructions/services.py:update_instruction",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e654",
+      type: "exports",
+      source: "file:engine/src/invana/instructions/services.py",
+      target: "function:engine/src/invana/instructions/services.py:update_instruction",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e655",
+      type: "contains",
+      source: "file:engine/src/invana/instructions/services.py",
+      target: "function:engine/src/invana/instructions/services.py:delete_instruction",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e656",
+      type: "exports",
+      source: "file:engine/src/invana/instructions/services.py",
+      target: "function:engine/src/invana/instructions/services.py:delete_instruction",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e657",
+      type: "contains",
+      source: "file:engine/src/invana/instructions/services.py",
+      target: "function:engine/src/invana/instructions/services.py:get_or_404",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e658",
+      type: "exports",
+      source: "file:engine/src/invana/instructions/services.py",
+      target: "function:engine/src/invana/instructions/services.py:get_or_404",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e659",
+      type: "contains",
+      source: "file:engine/src/invana/instructions/services.py",
+      target: "function:engine/src/invana/instructions/services.py:list_instructions",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e660",
+      type: "exports",
+      source: "file:engine/src/invana/instructions/services.py",
+      target: "function:engine/src/invana/instructions/services.py:list_instructions",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e661",
+      type: "contains",
+      source: "file:engine/src/invana/instructions/store.py",
+      target: "class:engine/src/invana/instructions/store.py:InstructionStore",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e662",
+      type: "exports",
+      source: "file:engine/src/invana/instructions/store.py",
+      target: "class:engine/src/invana/instructions/store.py:InstructionStore",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e663",
+      type: "contains",
+      source: "file:engine/src/invana/llm_providers/models.py",
+      target: "class:engine/src/invana/llm_providers/models.py:LLMProvider",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e664",
+      type: "exports",
+      source: "file:engine/src/invana/llm_providers/models.py",
+      target: "class:engine/src/invana/llm_providers/models.py:LLMProvider",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e665",
+      type: "contains",
+      source: "file:engine/src/invana/llm_providers/models.py",
+      target: "class:engine/src/invana/llm_providers/models.py:LLMProviderKind",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e666",
+      type: "exports",
+      source: "file:engine/src/invana/llm_providers/models.py",
+      target: "class:engine/src/invana/llm_providers/models.py:LLMProviderKind",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e667",
+      type: "contains",
+      source: "file:engine/src/invana/llm_providers/routes.py",
+      target: "function:engine/src/invana/llm_providers/routes.py:create_llm_provider",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e668",
+      type: "exports",
+      source: "file:engine/src/invana/llm_providers/routes.py",
+      target: "function:engine/src/invana/llm_providers/routes.py:create_llm_provider",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e669",
+      type: "contains",
+      source: "file:engine/src/invana/llm_providers/routes.py",
+      target: "function:engine/src/invana/llm_providers/routes.py:update_llm_provider",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e670",
+      type: "exports",
+      source: "file:engine/src/invana/llm_providers/routes.py",
+      target: "function:engine/src/invana/llm_providers/routes.py:update_llm_provider",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e671",
+      type: "contains",
+      source: "file:engine/src/invana/llm_providers/routes.py",
+      target: "function:engine/src/invana/llm_providers/routes.py:delete_llm_provider",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e672",
+      type: "exports",
+      source: "file:engine/src/invana/llm_providers/routes.py",
+      target: "function:engine/src/invana/llm_providers/routes.py:delete_llm_provider",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e673",
+      type: "contains",
+      source: "file:engine/src/invana/llm_providers/routes.py",
+      target: "function:engine/src/invana/llm_providers/routes.py:ping_llm_provider",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e674",
+      type: "exports",
+      source: "file:engine/src/invana/llm_providers/routes.py",
+      target: "function:engine/src/invana/llm_providers/routes.py:ping_llm_provider",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e675",
+      type: "contains",
+      source: "file:engine/src/invana/llm_providers/routes.py",
+      target: "function:engine/src/invana/llm_providers/routes.py:set_default_llm_provider",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e676",
+      type: "exports",
+      source: "file:engine/src/invana/llm_providers/routes.py",
+      target: "function:engine/src/invana/llm_providers/routes.py:set_default_llm_provider",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e677",
+      type: "contains",
+      source: "file:engine/src/invana/llm_providers/routes.py",
+      target: "function:engine/src/invana/llm_providers/routes.py:list_llm_providers",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e678",
+      type: "exports",
+      source: "file:engine/src/invana/llm_providers/routes.py",
+      target: "function:engine/src/invana/llm_providers/routes.py:list_llm_providers",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e679",
+      type: "contains",
+      source: "file:engine/src/invana/llm_providers/routes.py",
+      target: "function:engine/src/invana/llm_providers/routes.py:get_llm_provider",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e680",
+      type: "exports",
+      source: "file:engine/src/invana/llm_providers/routes.py",
+      target: "function:engine/src/invana/llm_providers/routes.py:get_llm_provider",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e681",
+      type: "contains",
+      source: "file:engine/src/invana/llm_providers/routes.py",
+      target: "function:engine/src/invana/llm_providers/routes.py:_to_read",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e682",
+      type: "contains",
+      source: "file:engine/src/invana/llm_providers/schemas.py",
+      target: "class:engine/src/invana/llm_providers/schemas.py:LLMProviderRead",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e683",
+      type: "exports",
+      source: "file:engine/src/invana/llm_providers/schemas.py",
+      target: "class:engine/src/invana/llm_providers/schemas.py:LLMProviderRead",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e684",
+      type: "contains",
+      source: "file:engine/src/invana/llm_providers/services.py",
+      target: "function:engine/src/invana/llm_providers/services.py:create_provider",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e685",
+      type: "exports",
+      source: "file:engine/src/invana/llm_providers/services.py",
+      target: "function:engine/src/invana/llm_providers/services.py:create_provider",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e686",
+      type: "contains",
+      source: "file:engine/src/invana/llm_providers/services.py",
+      target: "function:engine/src/invana/llm_providers/services.py:update_provider",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e687",
+      type: "exports",
+      source: "file:engine/src/invana/llm_providers/services.py",
+      target: "function:engine/src/invana/llm_providers/services.py:update_provider",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e688",
+      type: "contains",
+      source: "file:engine/src/invana/llm_providers/services.py",
+      target: "function:engine/src/invana/llm_providers/services.py:delete_provider",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e689",
+      type: "exports",
+      source: "file:engine/src/invana/llm_providers/services.py",
+      target: "function:engine/src/invana/llm_providers/services.py:delete_provider",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e690",
+      type: "contains",
+      source: "file:engine/src/invana/llm_providers/services.py",
+      target: "function:engine/src/invana/llm_providers/services.py:set_default",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e691",
+      type: "exports",
+      source: "file:engine/src/invana/llm_providers/services.py",
+      target: "function:engine/src/invana/llm_providers/services.py:set_default",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e692",
+      type: "contains",
+      source: "file:engine/src/invana/llm_providers/services.py",
+      target: "function:engine/src/invana/llm_providers/services.py:ping_provider",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e693",
+      type: "exports",
+      source: "file:engine/src/invana/llm_providers/services.py",
+      target: "function:engine/src/invana/llm_providers/services.py:ping_provider",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e694",
+      type: "contains",
+      source: "file:engine/src/invana/llm_providers/services.py",
+      target: "function:engine/src/invana/llm_providers/services.py:_dispatch_ping",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e695",
+      type: "contains",
+      source: "file:engine/src/invana/llm_providers/services.py",
+      target: "function:engine/src/invana/llm_providers/services.py:_decrypt_key",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e696",
+      type: "contains",
+      source: "file:engine/src/invana/llm_providers/services.py",
+      target: "function:engine/src/invana/llm_providers/services.py:_ping_anthropic",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e697",
+      type: "contains",
+      source: "file:engine/src/invana/llm_providers/services.py",
+      target: "function:engine/src/invana/llm_providers/services.py:_ping_openai",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e698",
+      type: "imports",
+      source: "file:engine/src/invana/instructions/models.py",
+      target: "file:engine/src/invana/modeller/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e699",
+      type: "imports",
+      source: "file:engine/src/invana/instructions/routes.py",
+      target: "file:engine/src/invana/auth/deps.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e700",
+      type: "imports",
+      source: "file:engine/src/invana/instructions/routes.py",
+      target: "file:engine/src/invana/auth/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e701",
+      type: "imports",
+      source: "file:engine/src/invana/instructions/routes.py",
+      target: "file:engine/src/invana/db.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e702",
+      type: "imports",
+      source: "file:engine/src/invana/instructions/routes.py",
+      target: "file:engine/src/invana/graphs/deps.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e703",
+      type: "imports",
+      source: "file:engine/src/invana/instructions/routes.py",
+      target: "file:engine/src/invana/graphs/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e704",
+      type: "imports",
+      source: "file:engine/src/invana/instructions/routes.py",
+      target: "file:engine/src/invana/instructions/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e705",
+      type: "imports",
+      source: "file:engine/src/invana/instructions/routes.py",
+      target: "file:engine/src/invana/instructions/schemas.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e706",
+      type: "imports",
+      source: "file:engine/src/invana/instructions/routes.py",
+      target: "file:engine/src/invana/instructions/services.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e707",
+      type: "imports",
+      source: "file:engine/src/invana/instructions/services.py",
+      target: "file:engine/src/invana/events/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e708",
+      type: "imports",
+      source: "file:engine/src/invana/instructions/services.py",
+      target: "file:engine/src/invana/events/actions.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e709",
+      type: "imports",
+      source: "file:engine/src/invana/instructions/services.py",
+      target: "file:engine/src/invana/events/services.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e710",
+      type: "imports",
+      source: "file:engine/src/invana/instructions/services.py",
+      target: "file:engine/src/invana/instructions/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e711",
+      type: "imports",
+      source: "file:engine/src/invana/instructions/services.py",
+      target: "file:engine/src/invana/instructions/schemas.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e712",
+      type: "imports",
+      source: "file:engine/src/invana/instructions/services.py",
+      target: "file:engine/src/invana/instructions/store.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e713",
+      type: "imports",
+      source: "file:engine/src/invana/instructions/store.py",
+      target: "file:engine/src/invana/instructions/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e714",
+      type: "imports",
+      source: "file:engine/src/invana/llm_providers/models.py",
+      target: "file:engine/src/invana/modeller/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e715",
+      type: "imports",
+      source: "file:engine/src/invana/llm_providers/routes.py",
+      target: "file:engine/src/invana/auth/deps.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e716",
+      type: "imports",
+      source: "file:engine/src/invana/llm_providers/routes.py",
+      target: "file:engine/src/invana/auth/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e717",
+      type: "imports",
+      source: "file:engine/src/invana/llm_providers/routes.py",
+      target: "file:engine/src/invana/db.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e718",
+      type: "imports",
+      source: "file:engine/src/invana/llm_providers/routes.py",
+      target: "file:engine/src/invana/graphs/deps.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e719",
+      type: "imports",
+      source: "file:engine/src/invana/llm_providers/routes.py",
+      target: "file:engine/src/invana/graphs/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e720",
+      type: "imports",
+      source: "file:engine/src/invana/llm_providers/routes.py",
+      target: "file:engine/src/invana/llm_providers/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e721",
+      type: "imports",
+      source: "file:engine/src/invana/llm_providers/routes.py",
+      target: "file:engine/src/invana/llm_providers/schemas.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e722",
+      type: "imports",
+      source: "file:engine/src/invana/llm_providers/routes.py",
+      target: "file:engine/src/invana/llm_providers/services.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e723",
+      type: "imports",
+      source: "file:engine/src/invana/llm_providers/routes.py",
+      target: "file:engine/src/invana/settings.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e724",
+      type: "imports",
+      source: "file:engine/src/invana/llm_providers/schemas.py",
+      target: "file:engine/src/invana/llm_providers/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e725",
+      type: "imports",
+      source: "file:engine/src/invana/llm_providers/services.py",
+      target: "file:engine/src/invana/events/__init__.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e726",
+      type: "imports",
+      source: "file:engine/src/invana/llm_providers/services.py",
+      target: "file:engine/src/invana/events/actions.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e727",
+      type: "imports",
+      source: "file:engine/src/invana/llm_providers/services.py",
+      target: "file:engine/src/invana/events/services.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e728",
+      type: "imports",
+      source: "file:engine/src/invana/llm_providers/services.py",
+      target: "file:engine/src/invana/graphs/encryption.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e729",
+      type: "imports",
+      source: "file:engine/src/invana/llm_providers/services.py",
+      target: "file:engine/src/invana/llm_providers/models.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e730",
+      type: "imports",
+      source: "file:engine/src/invana/llm_providers/services.py",
+      target: "file:engine/src/invana/llm_providers/schemas.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e731",
+      type: "imports",
+      source: "file:engine/src/invana/llm_providers/services.py",
+      target: "file:engine/src/invana/llm_providers/store.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e732",
+      type: "calls",
+      source: "function:engine/src/invana/instructions/routes.py:create_instruction",
+      target: "function:engine/src/invana/instructions/services.py:create_instruction",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e733",
+      type: "calls",
+      source: "function:engine/src/invana/instructions/routes.py:update_instruction",
+      target: "function:engine/src/invana/instructions/services.py:update_instruction",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e734",
+      type: "calls",
+      source: "function:engine/src/invana/instructions/routes.py:delete_instruction",
+      target: "function:engine/src/invana/instructions/services.py:delete_instruction",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e735",
+      type: "calls",
+      source: "function:engine/src/invana/instructions/routes.py:list_instructions",
+      target: "function:engine/src/invana/instructions/services.py:list_instructions",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e736",
+      type: "calls",
+      source: "function:engine/src/invana/instructions/routes.py:get_instruction",
+      target: "function:engine/src/invana/instructions/services.py:get_or_404",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e737",
+      type: "calls",
+      source: "function:engine/src/invana/llm_providers/routes.py:create_llm_provider",
+      target: "function:engine/src/invana/llm_providers/services.py:create_provider",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e738",
+      type: "calls",
+      source: "function:engine/src/invana/llm_providers/routes.py:update_llm_provider",
+      target: "function:engine/src/invana/llm_providers/services.py:update_provider",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e739",
+      type: "calls",
+      source: "function:engine/src/invana/llm_providers/routes.py:delete_llm_provider",
+      target: "function:engine/src/invana/llm_providers/services.py:delete_provider",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e740",
+      type: "calls",
+      source: "function:engine/src/invana/llm_providers/routes.py:ping_llm_provider",
+      target: "function:engine/src/invana/llm_providers/services.py:ping_provider",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e741",
+      type: "calls",
+      source: "function:engine/src/invana/llm_providers/routes.py:set_default_llm_provider",
+      target: "function:engine/src/invana/llm_providers/services.py:set_default",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e742",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/base/connector.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e743",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/base/constants.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e744",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/base/data_types/data_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e745",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/base/data_types/filter_types.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e746",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/base/data_types/filters.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e747",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/base/data_types/schema_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e748",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/base/exceptions.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e749",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/cypher/connector.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e750",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/gremlin/connector.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e751",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/base/connector.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e752",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/base/decorators.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e753",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/base/exceptions.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e754",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/base/serializers.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e755",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/__init__.py",
+      target: "file:engine/src/invana/graph/types/constants.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e756",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/connector.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/algorithms.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e757",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/connector.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/bulk.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e758",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/connector.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/data_reader.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e759",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/connector.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/data_writer.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e760",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/connector.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/schema_reader.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e761",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/connector.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/schema_writer.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e762",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/connector.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/vector.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e763",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/connector.py",
+      target: "file:engine/src/invana/graph/connectors/base/serializers.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e764",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/connector.py",
+      target: "file:engine/src/invana/graph/types/constants.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e765",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/connector.py",
+      target: "file:engine/src/invana/graph/types/data_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e766",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/base/connector.py",
+      target: "class:engine/src/invana/graph/connectors/base/connector.py:BaseConnector",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e767",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/base/connector.py",
+      target: "class:engine/src/invana/graph/connectors/base/connector.py:BaseConnector",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e768",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/constants.py",
+      target: "file:engine/src/invana/graph/types/constants.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e769",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/data_types/__init__.py",
+      target: "file:engine/src/invana/graph/types/data_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e770",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/data_types/__init__.py",
+      target: "file:engine/src/invana/graph/types/filter_types.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e771",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/data_types/__init__.py",
+      target: "file:engine/src/invana/graph/types/filters.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e772",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/data_types/__init__.py",
+      target: "file:engine/src/invana/graph/types/schema_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e773",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/data_types/data_elements.py",
+      target: "file:engine/src/invana/graph/types/data_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e774",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/data_types/filter_types.py",
+      target: "file:engine/src/invana/graph/types/filter_types.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e775",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/data_types/filters.py",
+      target: "file:engine/src/invana/graph/types/filters.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e776",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/data_types/schema_elements.py",
+      target: "file:engine/src/invana/graph/types/schema_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e777",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/decorators.py",
+      target: "file:engine/src/invana/graph/connectors/base/exceptions.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e778",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/base/decorators.py",
+      target: "function:engine/src/invana/graph/connectors/base/decorators.py:not_supported_by_vendor",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e779",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/base/decorators.py",
+      target: "function:engine/src/invana/graph/connectors/base/decorators.py:not_supported_by_vendor",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e780",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/base/exceptions.py",
+      target: "class:engine/src/invana/graph/connectors/base/exceptions.py:ConnectorError",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e781",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/base/exceptions.py",
+      target: "class:engine/src/invana/graph/connectors/base/exceptions.py:ConnectorError",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e782",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/algorithms.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e783",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/base.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e784",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/bulk.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e785",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/data_reader.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e786",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/data_writer.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e787",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/schema_reader.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e788",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/schema_writer.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e789",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/vector.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e790",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/algorithms.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/base.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e791",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/algorithms.py",
+      target: "file:engine/src/invana/graph/types/data_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e792",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/algorithms.py",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/algorithms.py:BaseAlgorithmsQuerySet",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e793",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/algorithms.py",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/algorithms.py:BaseAlgorithmsQuerySet",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e794",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/base/querysets/algorithms.py:BaseAlgorithmsQuerySet",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/base.py:BaseQuerySet",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e795",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/base.py",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/base.py:BaseQuerySet",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e796",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/base.py",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/base.py:BaseQuerySet",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e797",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/bulk.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/base.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e798",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/bulk.py",
+      target: "file:engine/src/invana/graph/types/data_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e799",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/bulk.py",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/bulk.py:BaseBulkQuerySet",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e800",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/bulk.py",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/bulk.py:BaseBulkQuerySet",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e801",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/base/querysets/bulk.py:BaseBulkQuerySet",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/base.py:BaseQuerySet",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e802",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/data_reader.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/base.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e803",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/data_reader.py",
+      target: "file:engine/src/invana/graph/types/data_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e804",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/data_reader.py",
+      target: "file:engine/src/invana/graph/types/filters.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e805",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/data_reader.py",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/data_reader.py:BaseDataReaderQuerySet",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e806",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/data_reader.py",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/data_reader.py:BaseDataReaderQuerySet",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e807",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/base/querysets/data_reader.py:BaseDataReaderQuerySet",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/base.py:BaseQuerySet",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e808",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/data_writer.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/base.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e809",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/data_writer.py",
+      target: "file:engine/src/invana/graph/types/data_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e810",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/data_writer.py",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/data_writer.py:BaseDataWriterQuerySet",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e811",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/data_writer.py",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/data_writer.py:BaseDataWriterQuerySet",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e812",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/base/querysets/data_writer.py:BaseDataWriterQuerySet",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/base.py:BaseQuerySet",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e813",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/schema_reader.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/base.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e814",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/schema_reader.py",
+      target: "file:engine/src/invana/graph/types/schema_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e815",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/schema_reader.py",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/schema_reader.py:BaseSchemaReaderQuerySet",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e816",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/schema_reader.py",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/schema_reader.py:BaseSchemaReaderQuerySet",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e817",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/base/querysets/schema_reader.py:BaseSchemaReaderQuerySet",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/base.py:BaseQuerySet",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e818",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/schema_writer.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/base.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e819",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/schema_writer.py",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/schema_writer.py:BaseSchemaWriterQuerySet",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e820",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/schema_writer.py",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/schema_writer.py:BaseSchemaWriterQuerySet",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e821",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/base/querysets/schema_writer.py:BaseSchemaWriterQuerySet",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/base.py:BaseQuerySet",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e822",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/vector.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/base.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e823",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/vector.py",
+      target: "file:engine/src/invana/graph/types/data_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e824",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/vector.py",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/vector.py:BaseVectorQuerySet",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e825",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/base/querysets/vector.py",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/vector.py:BaseVectorQuerySet",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e826",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/base/querysets/vector.py:BaseVectorQuerySet",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/base.py:BaseQuerySet",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e827",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/base/serializers.py",
+      target: "file:engine/src/invana/graph/types/data_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e828",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/base/serializers.py",
+      target: "class:engine/src/invana/graph/connectors/base/serializers.py:BaseSerializer",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e829",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/base/serializers.py",
+      target: "class:engine/src/invana/graph/connectors/base/serializers.py:BaseSerializer",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e830",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/cypher/connector.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e831",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/connector.py",
+      target: "file:engine/src/invana/graph/connectors/base/connector.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e832",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/connector.py",
+      target: "file:engine/src/invana/graph/connectors/base/exceptions.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e833",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/connector.py",
+      target: "file:engine/src/invana/graph/connectors/base/serializers.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e834",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/connector.py",
+      target: "file:engine/src/invana/graph/connectors/cypher/querysets/algorithms.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e835",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/connector.py",
+      target: "file:engine/src/invana/graph/connectors/cypher/querysets/bulk.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e836",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/connector.py",
+      target: "file:engine/src/invana/graph/connectors/cypher/querysets/data_reader.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e837",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/connector.py",
+      target: "file:engine/src/invana/graph/connectors/cypher/querysets/data_writer.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e838",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/connector.py",
+      target: "file:engine/src/invana/graph/connectors/cypher/querysets/schema_reader.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e839",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/connector.py",
+      target: "file:engine/src/invana/graph/connectors/cypher/querysets/schema_writer.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e840",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/connector.py",
+      target: "file:engine/src/invana/graph/connectors/cypher/querysets/vector.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e841",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/connector.py",
+      target: "file:engine/src/invana/graph/connectors/cypher/serializers.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e842",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/connector.py",
+      target: "file:engine/src/invana/graph/types/constants.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e843",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/cypher/connector.py",
+      target: "class:engine/src/invana/graph/connectors/cypher/connector.py:OpenCypherConnector",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e844",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/cypher/connector.py",
+      target: "class:engine/src/invana/graph/connectors/cypher/connector.py:OpenCypherConnector",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e845",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/cypher/connector.py:OpenCypherConnector",
+      target: "class:engine/src/invana/graph/connectors/base/connector.py:BaseConnector",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e846",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/query_builder.py",
+      target: "file:engine/src/invana/graph/types/filter_types.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e847",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/query_builder.py",
+      target: "file:engine/src/invana/graph/types/filters.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e848",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/cypher/query_builder.py",
+      target: "class:engine/src/invana/graph/connectors/cypher/query_builder.py:OpenCypherQueryBuilder",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e849",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/cypher/query_builder.py",
+      target: "class:engine/src/invana/graph/connectors/cypher/query_builder.py:_ParamCounter",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e850",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/cypher/query_builder.py",
+      target: "function:engine/src/invana/graph/connectors/cypher/query_builder.py:_build_filter_clause",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e851",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/cypher/query_builder.py",
+      target: "function:engine/src/invana/graph/connectors/cypher/query_builder.py:_build_filter_expression",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e852",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/cypher/query_builder.py",
+      target: "class:engine/src/invana/graph/connectors/cypher/query_builder.py:OpenCypherQueryBuilder",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e853",
+      type: "calls",
+      source: "function:engine/src/invana/graph/connectors/cypher/query_builder.py:_build_filter_clause",
+      target: "function:engine/src/invana/graph/connectors/cypher/query_builder.py:_build_filter_expression",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e854",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/cypher/querysets/algorithms.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e855",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/cypher/querysets/base.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e856",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/cypher/querysets/bulk.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e857",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/cypher/querysets/data_reader.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e858",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/cypher/querysets/data_writer.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e859",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/cypher/querysets/schema_reader.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e860",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/cypher/querysets/schema_writer.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e861",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/cypher/querysets/vector.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e862",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/algorithms.py",
+      target: "file:engine/src/invana/graph/connectors/base/decorators.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e863",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/algorithms.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/algorithms.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e864",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/algorithms.py",
+      target: "file:engine/src/invana/graph/types/data_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e865",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/algorithms.py",
+      target: "class:engine/src/invana/graph/connectors/cypher/querysets/algorithms.py:OpenCypherAlgorithmsQuerySet",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e866",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/algorithms.py",
+      target: "class:engine/src/invana/graph/connectors/cypher/querysets/algorithms.py:OpenCypherAlgorithmsQuerySet",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e867",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/cypher/querysets/algorithms.py:OpenCypherAlgorithmsQuerySet",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/algorithms.py:BaseAlgorithmsQuerySet",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e868",
+      type: "depends_on",
+      source: "class:engine/src/invana/graph/connectors/cypher/querysets/algorithms.py:OpenCypherAlgorithmsQuerySet",
+      target: "function:engine/src/invana/graph/connectors/base/decorators.py:not_supported_by_vendor",
+      data: {
+        weight: 0.6,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e869",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/base.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/base.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e870",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/base.py",
+      target: "class:engine/src/invana/graph/connectors/cypher/querysets/base.py:OpenCypherQuerySet",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e871",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/base.py",
+      target: "class:engine/src/invana/graph/connectors/cypher/querysets/base.py:OpenCypherQuerySet",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e872",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/cypher/querysets/base.py:OpenCypherQuerySet",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/base.py:BaseQuerySet",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e873",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/bulk.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/bulk.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e874",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/bulk.py",
+      target: "file:engine/src/invana/graph/connectors/cypher/query_builder.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e875",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/bulk.py",
+      target: "file:engine/src/invana/graph/types/data_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e876",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/bulk.py",
+      target: "class:engine/src/invana/graph/connectors/cypher/querysets/bulk.py:OpenCypherBulkQuerySet",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e877",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/bulk.py",
+      target: "class:engine/src/invana/graph/connectors/cypher/querysets/bulk.py:OpenCypherBulkQuerySet",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e878",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/cypher/querysets/bulk.py:OpenCypherBulkQuerySet",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/bulk.py:BaseBulkQuerySet",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e879",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/data_reader.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/data_reader.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e880",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/data_reader.py",
+      target: "file:engine/src/invana/graph/connectors/cypher/query_builder.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e881",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/data_reader.py",
+      target: "file:engine/src/invana/graph/types/data_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e882",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/data_reader.py",
+      target: "file:engine/src/invana/graph/types/filters.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e883",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/data_reader.py",
+      target: "class:engine/src/invana/graph/connectors/cypher/querysets/data_reader.py:OpenCypherDataReaderQuerySet",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e884",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/data_reader.py",
+      target: "class:engine/src/invana/graph/connectors/cypher/querysets/data_reader.py:OpenCypherDataReaderQuerySet",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e885",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/cypher/querysets/data_reader.py:OpenCypherDataReaderQuerySet",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/data_reader.py:BaseDataReaderQuerySet",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e886",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/data_writer.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/data_writer.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e887",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/data_writer.py",
+      target: "file:engine/src/invana/graph/connectors/cypher/query_builder.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e888",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/data_writer.py",
+      target: "file:engine/src/invana/graph/types/data_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e889",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/data_writer.py",
+      target: "class:engine/src/invana/graph/connectors/cypher/querysets/data_writer.py:OpenCypherDataWriterQuerySet",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e890",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/data_writer.py",
+      target: "class:engine/src/invana/graph/connectors/cypher/querysets/data_writer.py:OpenCypherDataWriterQuerySet",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e891",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/cypher/querysets/data_writer.py:OpenCypherDataWriterQuerySet",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/data_writer.py:BaseDataWriterQuerySet",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e892",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/schema_reader.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/schema_reader.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e893",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/schema_reader.py",
+      target: "file:engine/src/invana/graph/connectors/cypher/query_builder.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e894",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/schema_reader.py",
+      target: "file:engine/src/invana/graph/types/schema_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e895",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/schema_reader.py",
+      target: "function:engine/src/invana/graph/connectors/cypher/querysets/schema_reader.py:_infer_type",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e896",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/schema_reader.py",
+      target: "class:engine/src/invana/graph/connectors/cypher/querysets/schema_reader.py:OpenCypherSchemaReaderQuerySet",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e897",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/schema_reader.py",
+      target: "class:engine/src/invana/graph/connectors/cypher/querysets/schema_reader.py:OpenCypherSchemaReaderQuerySet",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e898",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/cypher/querysets/schema_reader.py:OpenCypherSchemaReaderQuerySet",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/schema_reader.py:BaseSchemaReaderQuerySet",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e899",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/schema_writer.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/schema_writer.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e900",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/schema_writer.py",
+      target: "class:engine/src/invana/graph/connectors/cypher/querysets/schema_writer.py:OpenCypherSchemaWriterQuerySet",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e901",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/schema_writer.py",
+      target: "class:engine/src/invana/graph/connectors/cypher/querysets/schema_writer.py:OpenCypherSchemaWriterQuerySet",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e902",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/cypher/querysets/schema_writer.py:OpenCypherSchemaWriterQuerySet",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/schema_writer.py:BaseSchemaWriterQuerySet",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e903",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/vector.py",
+      target: "file:engine/src/invana/graph/connectors/base/decorators.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e904",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/vector.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/vector.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e905",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/vector.py",
+      target: "file:engine/src/invana/graph/types/data_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e906",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/vector.py",
+      target: "class:engine/src/invana/graph/connectors/cypher/querysets/vector.py:OpenCypherVectorQuerySet",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e907",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/cypher/querysets/vector.py",
+      target: "class:engine/src/invana/graph/connectors/cypher/querysets/vector.py:OpenCypherVectorQuerySet",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e908",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/cypher/querysets/vector.py:OpenCypherVectorQuerySet",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/vector.py:BaseVectorQuerySet",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e909",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/serializers.py",
+      target: "file:engine/src/invana/graph/connectors/base/exceptions.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e910",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/serializers.py",
+      target: "file:engine/src/invana/graph/connectors/base/serializers.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e911",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/cypher/serializers.py",
+      target: "file:engine/src/invana/graph/types/data_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e912",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/cypher/serializers.py",
+      target: "class:engine/src/invana/graph/connectors/cypher/serializers.py:OpenCypherSerializer",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e913",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/cypher/serializers.py",
+      target: "class:engine/src/invana/graph/connectors/cypher/serializers.py:OpenCypherSerializer",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e914",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/cypher/serializers.py:OpenCypherSerializer",
+      target: "class:engine/src/invana/graph/connectors/base/serializers.py:BaseSerializer",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e915",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/gremlin/connector.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e916",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/connector.py",
+      target: "file:engine/src/invana/graph/connectors/base/connector.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e917",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/connector.py",
+      target: "file:engine/src/invana/graph/connectors/base/exceptions.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e918",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/connector.py",
+      target: "file:engine/src/invana/graph/connectors/base/serializers.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e919",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/connector.py",
+      target: "file:engine/src/invana/graph/connectors/gremlin/querysets/algorithms.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e920",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/connector.py",
+      target: "file:engine/src/invana/graph/connectors/gremlin/querysets/bulk.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e921",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/connector.py",
+      target: "file:engine/src/invana/graph/connectors/gremlin/querysets/data_reader.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e922",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/connector.py",
+      target: "file:engine/src/invana/graph/connectors/gremlin/querysets/data_writer.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e923",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/connector.py",
+      target: "file:engine/src/invana/graph/connectors/gremlin/querysets/schema_reader.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e924",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/connector.py",
+      target: "file:engine/src/invana/graph/connectors/gremlin/querysets/schema_writer.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e925",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/connector.py",
+      target: "file:engine/src/invana/graph/connectors/gremlin/querysets/vector.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e926",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/connector.py",
+      target: "file:engine/src/invana/graph/connectors/gremlin/serializers.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e927",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/connector.py",
+      target: "file:engine/src/invana/graph/types/constants.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e928",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/gremlin/connector.py",
+      target: "class:engine/src/invana/graph/connectors/gremlin/connector.py:GremlinConnector",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e929",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/connector.py",
+      target: "class:engine/src/invana/graph/connectors/gremlin/connector.py:GremlinConnector",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e930",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/gremlin/connector.py:GremlinConnector",
+      target: "class:engine/src/invana/graph/connectors/base/connector.py:BaseConnector",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e931",
+      type: "depends_on",
+      source: "class:engine/src/invana/graph/connectors/gremlin/connector.py:GremlinConnector",
+      target: "class:engine/src/invana/graph/connectors/gremlin/serializers.py:GremlinSerializer",
+      data: {
+        weight: 0.6,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e932",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/query_builder.py",
+      target: "file:engine/src/invana/graph/types/filter_types.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e933",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/query_builder.py",
+      target: "file:engine/src/invana/graph/types/filters.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e934",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/gremlin/query_builder.py",
+      target: "function:engine/src/invana/graph/connectors/gremlin/query_builder.py:_project_edge",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e935",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/gremlin/query_builder.py",
+      target: "function:engine/src/invana/graph/connectors/gremlin/query_builder.py:_build_predicate",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e936",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/gremlin/query_builder.py",
+      target: "function:engine/src/invana/graph/connectors/gremlin/query_builder.py:_build_expression_traversal",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e937",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/gremlin/query_builder.py",
+      target: "class:engine/src/invana/graph/connectors/gremlin/query_builder.py:GremlinQueryBuilder",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e938",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/query_builder.py",
+      target: "class:engine/src/invana/graph/connectors/gremlin/query_builder.py:GremlinQueryBuilder",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e939",
+      type: "calls",
+      source: "function:engine/src/invana/graph/connectors/gremlin/query_builder.py:_build_predicate",
+      target: "function:engine/src/invana/graph/connectors/gremlin/query_builder.py:_build_expression_traversal",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e940",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/gremlin/querysets/algorithms.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e941",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/gremlin/querysets/base.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e942",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/gremlin/querysets/bulk.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e943",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/gremlin/querysets/data_reader.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e944",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/gremlin/querysets/data_writer.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e945",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/gremlin/querysets/schema_reader.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e946",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/gremlin/querysets/schema_writer.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e947",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/__init__.py",
+      target: "file:engine/src/invana/graph/connectors/gremlin/querysets/vector.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e948",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/algorithms.py",
+      target: "file:engine/src/invana/graph/connectors/base/decorators.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e949",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/algorithms.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/algorithms.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e950",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/algorithms.py",
+      target: "file:engine/src/invana/graph/types/data_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e951",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/algorithms.py",
+      target: "class:engine/src/invana/graph/connectors/gremlin/querysets/algorithms.py:GremlinAlgorithmsQuerySet",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e952",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/algorithms.py",
+      target: "class:engine/src/invana/graph/connectors/gremlin/querysets/algorithms.py:GremlinAlgorithmsQuerySet",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e953",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/gremlin/querysets/algorithms.py:GremlinAlgorithmsQuerySet",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/algorithms.py:BaseAlgorithmsQuerySet",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e954",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/base.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/base.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e955",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/bulk.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/bulk.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e956",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/bulk.py",
+      target: "file:engine/src/invana/graph/connectors/gremlin/query_builder.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e957",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/bulk.py",
+      target: "file:engine/src/invana/graph/types/data_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e958",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/bulk.py",
+      target: "class:engine/src/invana/graph/connectors/gremlin/querysets/bulk.py:GremlinBulkQuerySet",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e959",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/bulk.py",
+      target: "class:engine/src/invana/graph/connectors/gremlin/querysets/bulk.py:GremlinBulkQuerySet",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e960",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/gremlin/querysets/bulk.py:GremlinBulkQuerySet",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/bulk.py:BaseBulkQuerySet",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e961",
+      type: "calls",
+      source: "class:engine/src/invana/graph/connectors/gremlin/querysets/bulk.py:GremlinBulkQuerySet",
+      target: "class:engine/src/invana/graph/connectors/gremlin/query_builder.py:GremlinQueryBuilder",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e962",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/data_reader.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/data_reader.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e963",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/data_reader.py",
+      target: "file:engine/src/invana/graph/connectors/gremlin/query_builder.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e964",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/data_reader.py",
+      target: "file:engine/src/invana/graph/types/data_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e965",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/data_reader.py",
+      target: "file:engine/src/invana/graph/types/filters.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e966",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/data_reader.py",
+      target: "class:engine/src/invana/graph/connectors/gremlin/querysets/data_reader.py:GremlinDataReaderQuerySet",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e967",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/data_reader.py",
+      target: "class:engine/src/invana/graph/connectors/gremlin/querysets/data_reader.py:GremlinDataReaderQuerySet",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e968",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/gremlin/querysets/data_reader.py:GremlinDataReaderQuerySet",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/data_reader.py:BaseDataReaderQuerySet",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e969",
+      type: "calls",
+      source: "class:engine/src/invana/graph/connectors/gremlin/querysets/data_reader.py:GremlinDataReaderQuerySet",
+      target: "class:engine/src/invana/graph/connectors/gremlin/query_builder.py:GremlinQueryBuilder",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e970",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/data_writer.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/data_writer.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e971",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/data_writer.py",
+      target: "file:engine/src/invana/graph/connectors/gremlin/query_builder.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e972",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/data_writer.py",
+      target: "file:engine/src/invana/graph/types/data_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e973",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/data_writer.py",
+      target: "class:engine/src/invana/graph/connectors/gremlin/querysets/data_writer.py:GremlinDataWriterQuerySet",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e974",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/data_writer.py",
+      target: "class:engine/src/invana/graph/connectors/gremlin/querysets/data_writer.py:GremlinDataWriterQuerySet",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e975",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/gremlin/querysets/data_writer.py:GremlinDataWriterQuerySet",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/data_writer.py:BaseDataWriterQuerySet",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e976",
+      type: "calls",
+      source: "class:engine/src/invana/graph/connectors/gremlin/querysets/data_writer.py:GremlinDataWriterQuerySet",
+      target: "class:engine/src/invana/graph/connectors/gremlin/query_builder.py:GremlinQueryBuilder",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e977",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/schema_reader.py",
+      target: "file:engine/src/invana/graph/connectors/base/decorators.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e978",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/schema_reader.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/schema_reader.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e979",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/schema_reader.py",
+      target: "file:engine/src/invana/graph/connectors/gremlin/query_builder.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e980",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/schema_reader.py",
+      target: "file:engine/src/invana/graph/types/schema_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e981",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/schema_reader.py",
+      target: "class:engine/src/invana/graph/connectors/gremlin/querysets/schema_reader.py:GremlinSchemaReaderQuerySet",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e982",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/schema_reader.py",
+      target: "class:engine/src/invana/graph/connectors/gremlin/querysets/schema_reader.py:GremlinSchemaReaderQuerySet",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e983",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/gremlin/querysets/schema_reader.py:GremlinSchemaReaderQuerySet",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/schema_reader.py:BaseSchemaReaderQuerySet",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e984",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/schema_writer.py",
+      target: "file:engine/src/invana/graph/connectors/base/decorators.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e985",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/schema_writer.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/schema_writer.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e986",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/schema_writer.py",
+      target: "class:engine/src/invana/graph/connectors/gremlin/querysets/schema_writer.py:GremlinSchemaWriterQuerySet",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e987",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/schema_writer.py",
+      target: "class:engine/src/invana/graph/connectors/gremlin/querysets/schema_writer.py:GremlinSchemaWriterQuerySet",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e988",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/gremlin/querysets/schema_writer.py:GremlinSchemaWriterQuerySet",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/schema_writer.py:BaseSchemaWriterQuerySet",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e989",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/vector.py",
+      target: "file:engine/src/invana/graph/connectors/base/decorators.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e990",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/vector.py",
+      target: "file:engine/src/invana/graph/connectors/base/querysets/vector.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e991",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/vector.py",
+      target: "class:engine/src/invana/graph/connectors/gremlin/querysets/vector.py:GremlinVectorQuerySet",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e992",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/querysets/vector.py",
+      target: "class:engine/src/invana/graph/connectors/gremlin/querysets/vector.py:GremlinVectorQuerySet",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e993",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/gremlin/querysets/vector.py:GremlinVectorQuerySet",
+      target: "class:engine/src/invana/graph/connectors/base/querysets/vector.py:BaseVectorQuerySet",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e994",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/serializers.py",
+      target: "file:engine/src/invana/graph/connectors/base/exceptions.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e995",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/serializers.py",
+      target: "file:engine/src/invana/graph/connectors/base/serializers.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e996",
+      type: "imports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/serializers.py",
+      target: "file:engine/src/invana/graph/types/data_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e997",
+      type: "contains",
+      source: "file:engine/src/invana/graph/connectors/gremlin/serializers.py",
+      target: "class:engine/src/invana/graph/connectors/gremlin/serializers.py:GremlinSerializer",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e998",
+      type: "exports",
+      source: "file:engine/src/invana/graph/connectors/gremlin/serializers.py",
+      target: "class:engine/src/invana/graph/connectors/gremlin/serializers.py:GremlinSerializer",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e999",
+      type: "inherits",
+      source: "class:engine/src/invana/graph/connectors/gremlin/serializers.py:GremlinSerializer",
+      target: "class:engine/src/invana/graph/connectors/base/serializers.py:BaseSerializer",
+      data: {
+        weight: 0.9,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1000",
+      type: "imports",
+      source: "file:engine/src/invana/graph/types/__init__.py",
+      target: "file:engine/src/invana/graph/types/constants.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1001",
+      type: "imports",
+      source: "file:engine/src/invana/graph/types/__init__.py",
+      target: "file:engine/src/invana/graph/types/data_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1002",
+      type: "imports",
+      source: "file:engine/src/invana/graph/types/__init__.py",
+      target: "file:engine/src/invana/graph/types/filter_types.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1003",
+      type: "imports",
+      source: "file:engine/src/invana/graph/types/__init__.py",
+      target: "file:engine/src/invana/graph/types/filters.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1004",
+      type: "imports",
+      source: "file:engine/src/invana/graph/types/__init__.py",
+      target: "file:engine/src/invana/graph/types/schema_elements.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1005",
+      type: "contains",
+      source: "file:engine/src/invana/graph/types/constants.py",
+      target: "class:engine/src/invana/graph/types/constants.py:Capability",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1006",
+      type: "exports",
+      source: "file:engine/src/invana/graph/types/constants.py",
+      target: "class:engine/src/invana/graph/types/constants.py:Capability",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1007",
+      type: "contains",
+      source: "file:engine/src/invana/graph/types/data_elements.py",
+      target: "class:engine/src/invana/graph/types/data_elements.py:GraphResponse",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1008",
+      type: "exports",
+      source: "file:engine/src/invana/graph/types/data_elements.py",
+      target: "class:engine/src/invana/graph/types/data_elements.py:GraphResponse",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1009",
+      type: "contains",
+      source: "file:engine/src/invana/graph/types/data_elements.py",
+      target: "class:engine/src/invana/graph/types/data_elements.py:QueryResult",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1010",
+      type: "exports",
+      source: "file:engine/src/invana/graph/types/data_elements.py",
+      target: "class:engine/src/invana/graph/types/data_elements.py:QueryResult",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1011",
+      type: "imports",
+      source: "file:engine/src/invana/graph/types/filters.py",
+      target: "file:engine/src/invana/graph/types/filter_types.py",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1012",
+      type: "contains",
+      source: "file:engine/src/invana/graph/types/filters.py",
+      target: "class:engine/src/invana/graph/types/filters.py:FilterGroup",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1013",
+      type: "exports",
+      source: "file:engine/src/invana/graph/types/filters.py",
+      target: "class:engine/src/invana/graph/types/filters.py:FilterGroup",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1014",
+      type: "contains",
+      source: "file:engine/src/invana/graph/types/schema_elements.py",
+      target: "class:engine/src/invana/graph/types/schema_elements.py:GraphSchemaSnapshot",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1015",
+      type: "exports",
+      source: "file:engine/src/invana/graph/types/schema_elements.py",
+      target: "class:engine/src/invana/graph/types/schema_elements.py:GraphSchemaSnapshot",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1016",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/SkillsSection.tsx",
+      target: "function:studio/src/components/settings/sections/SkillsSection.tsx:SkillsSection",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1017",
+      type: "exports",
+      source: "file:studio/src/components/settings/sections/SkillsSection.tsx",
+      target: "function:studio/src/components/settings/sections/SkillsSection.tsx:SkillsSection",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1018",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/SkillsSection.tsx",
+      target: "function:studio/src/components/settings/sections/SkillsSection.tsx:SkillRow",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1019",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/SkillsSection.tsx",
+      target: "function:studio/src/components/settings/sections/SkillsSection.tsx:SkillForm",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1020",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/SkillsSection.tsx",
+      target: "file:studio/src/components/forms/FormError.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1021",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/SkillsSection.tsx",
+      target: "file:studio/src/hooks/queries/useSkills.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1022",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/SkillsSection.tsx",
+      target: "file:studio/src/types/skills.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1023",
+      type: "calls",
+      source: "function:studio/src/components/settings/sections/SkillsSection.tsx:SkillsSection",
+      target: "function:studio/src/hooks/queries/useSkills.ts:useSkillsQuery",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1024",
+      type: "calls",
+      source: "function:studio/src/components/settings/sections/SkillsSection.tsx:SkillRow",
+      target: "function:studio/src/hooks/queries/useSkills.ts:useDeleteSkillMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1025",
+      type: "calls",
+      source: "function:studio/src/components/settings/sections/SkillsSection.tsx:SkillForm",
+      target: "function:studio/src/hooks/queries/useSkills.ts:useCreateSkillMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1026",
+      type: "calls",
+      source: "function:studio/src/components/settings/sections/SkillsSection.tsx:SkillForm",
+      target: "function:studio/src/hooks/queries/useSkills.ts:useUpdateSkillMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1027",
+      type: "contains",
+      source: "file:studio/src/components/settings/useGraphLeftNav.tsx",
+      target: "function:studio/src/components/settings/useGraphLeftNav.tsx:useGraphLeftNav",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1028",
+      type: "exports",
+      source: "file:studio/src/components/settings/useGraphLeftNav.tsx",
+      target: "function:studio/src/components/settings/useGraphLeftNav.tsx:useGraphLeftNav",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1029",
+      type: "imports",
+      source: "file:studio/src/components/settings/useGraphLeftNav.tsx",
+      target: "file:studio/src/components/settings/useSettingsPanel.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1030",
+      type: "imports",
+      source: "file:studio/src/components/settings/useGraphLeftNav.tsx",
+      target: "file:studio/src/hooks/useAuth.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1031",
+      type: "calls",
+      source: "function:studio/src/components/settings/useGraphLeftNav.tsx:useGraphLeftNav",
+      target: "function:studio/src/components/settings/useSettingsPanel.ts:useSettingsPanel",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1032",
+      type: "calls",
+      source: "function:studio/src/components/settings/useGraphLeftNav.tsx:useGraphLeftNav",
+      target: "function:studio/src/hooks/useAuth.ts:useAuth",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1033",
+      type: "contains",
+      source: "file:studio/src/components/settings/useSettingsPanel.ts",
+      target: "function:studio/src/components/settings/useSettingsPanel.ts:useSettingsPanel",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1034",
+      type: "exports",
+      source: "file:studio/src/components/settings/useSettingsPanel.ts",
+      target: "function:studio/src/components/settings/useSettingsPanel.ts:useSettingsPanel",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1035",
+      type: "imports",
+      source: "file:studio/src/hooks/queries/useAppVersion.ts",
+      target: "file:studio/src/services/api/health.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1036",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useGraphs.ts",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:useGraphsQuery",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1037",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useGraphs.ts",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:useGraphsQuery",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1038",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useGraphs.ts",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:useGraphQuery",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1039",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useGraphs.ts",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:useGraphQuery",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1040",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useGraphs.ts",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:useCreateGraphMutation",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1041",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useGraphs.ts",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:useCreateGraphMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1042",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useGraphs.ts",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:useUpdateGraphMutation",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1043",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useGraphs.ts",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:useUpdateGraphMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1044",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useGraphs.ts",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:useDeleteGraphMutation",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1045",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useGraphs.ts",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:useDeleteGraphMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1046",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useGraphs.ts",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:useSetupSectionMutation",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1047",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useGraphs.ts",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:useSetupSectionMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1048",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useGraphs.ts",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:useGraphConnectionQuery",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1049",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useGraphs.ts",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:useGraphConnectionQuery",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1050",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useGraphs.ts",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:usePutGraphConnectionMutation",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1051",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useGraphs.ts",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:usePutGraphConnectionMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1052",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useGraphs.ts",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:useDeleteGraphConnectionMutation",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1053",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useGraphs.ts",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:useDeleteGraphConnectionMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1054",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useGraphs.ts",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:usePingGraphConnectionMutation",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1055",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useGraphs.ts",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:usePingGraphConnectionMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1056",
+      type: "imports",
+      source: "file:studio/src/hooks/queries/useGraphs.ts",
+      target: "file:studio/src/services/api/auth.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1057",
+      type: "imports",
+      source: "file:studio/src/hooks/queries/useGraphs.ts",
+      target: "file:studio/src/services/api/graphs.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1058",
+      type: "imports",
+      source: "file:studio/src/hooks/queries/useGraphs.ts",
+      target: "file:studio/src/stores/auth.store.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1059",
+      type: "imports",
+      source: "file:studio/src/hooks/queries/useGraphs.ts",
+      target: "file:studio/src/types/graphs.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1060",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useInstructions.ts",
+      target: "function:studio/src/hooks/queries/useInstructions.ts:useInstructionsQuery",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1061",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useInstructions.ts",
+      target: "function:studio/src/hooks/queries/useInstructions.ts:useInstructionsQuery",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1062",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useInstructions.ts",
+      target: "function:studio/src/hooks/queries/useInstructions.ts:useCreateInstructionMutation",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1063",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useInstructions.ts",
+      target: "function:studio/src/hooks/queries/useInstructions.ts:useCreateInstructionMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1064",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useInstructions.ts",
+      target: "function:studio/src/hooks/queries/useInstructions.ts:useUpdateInstructionMutation",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1065",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useInstructions.ts",
+      target: "function:studio/src/hooks/queries/useInstructions.ts:useUpdateInstructionMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1066",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useInstructions.ts",
+      target: "function:studio/src/hooks/queries/useInstructions.ts:useDeleteInstructionMutation",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1067",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useInstructions.ts",
+      target: "function:studio/src/hooks/queries/useInstructions.ts:useDeleteInstructionMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1068",
+      type: "imports",
+      source: "file:studio/src/hooks/queries/useInstructions.ts",
+      target: "file:studio/src/services/api/instructions.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1069",
+      type: "imports",
+      source: "file:studio/src/hooks/queries/useInstructions.ts",
+      target: "file:studio/src/types/instructions.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1070",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useLLMProviders.ts",
+      target: "function:studio/src/hooks/queries/useLLMProviders.ts:useLLMProvidersQuery",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1071",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useLLMProviders.ts",
+      target: "function:studio/src/hooks/queries/useLLMProviders.ts:useLLMProvidersQuery",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1072",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useLLMProviders.ts",
+      target: "function:studio/src/hooks/queries/useLLMProviders.ts:useCreateLLMProviderMutation",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1073",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useLLMProviders.ts",
+      target: "function:studio/src/hooks/queries/useLLMProviders.ts:useCreateLLMProviderMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1074",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useLLMProviders.ts",
+      target: "function:studio/src/hooks/queries/useLLMProviders.ts:useUpdateLLMProviderMutation",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1075",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useLLMProviders.ts",
+      target: "function:studio/src/hooks/queries/useLLMProviders.ts:useUpdateLLMProviderMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1076",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useLLMProviders.ts",
+      target: "function:studio/src/hooks/queries/useLLMProviders.ts:useDeleteLLMProviderMutation",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1077",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useLLMProviders.ts",
+      target: "function:studio/src/hooks/queries/useLLMProviders.ts:useDeleteLLMProviderMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1078",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useLLMProviders.ts",
+      target: "function:studio/src/hooks/queries/useLLMProviders.ts:useSetDefaultLLMProviderMutation",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1079",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useLLMProviders.ts",
+      target: "function:studio/src/hooks/queries/useLLMProviders.ts:useSetDefaultLLMProviderMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1080",
+      type: "imports",
+      source: "file:studio/src/hooks/queries/useLLMProviders.ts",
+      target: "file:studio/src/services/api/llm.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1081",
+      type: "imports",
+      source: "file:studio/src/hooks/queries/useLLMProviders.ts",
+      target: "file:studio/src/types/llm.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1082",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useSkills.ts",
+      target: "function:studio/src/hooks/queries/useSkills.ts:useSkillsQuery",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1083",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useSkills.ts",
+      target: "function:studio/src/hooks/queries/useSkills.ts:useSkillsQuery",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1084",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useSkills.ts",
+      target: "function:studio/src/hooks/queries/useSkills.ts:useCreateSkillMutation",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1085",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useSkills.ts",
+      target: "function:studio/src/hooks/queries/useSkills.ts:useCreateSkillMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1086",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useSkills.ts",
+      target: "function:studio/src/hooks/queries/useSkills.ts:useUpdateSkillMutation",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1087",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useSkills.ts",
+      target: "function:studio/src/hooks/queries/useSkills.ts:useUpdateSkillMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1088",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useSkills.ts",
+      target: "function:studio/src/hooks/queries/useSkills.ts:useDeleteSkillMutation",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1089",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useSkills.ts",
+      target: "function:studio/src/hooks/queries/useSkills.ts:useDeleteSkillMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1090",
+      type: "imports",
+      source: "file:studio/src/hooks/queries/useSkills.ts",
+      target: "file:studio/src/services/api/skills.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1091",
+      type: "imports",
+      source: "file:studio/src/hooks/queries/useSkills.ts",
+      target: "file:studio/src/types/skills.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1092",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/GraphOverviewPage.tsx",
+      target: "function:studio/src/pages/graphs/GraphOverviewPage.tsx:GraphOverviewPage",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1093",
+      type: "exports",
+      source: "file:studio/src/pages/graphs/GraphOverviewPage.tsx",
+      target: "function:studio/src/pages/graphs/GraphOverviewPage.tsx:GraphOverviewPage",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1094",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/GraphOverviewPage.tsx",
+      target: "file:studio/src/components/settings/useSettingsPanel.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1095",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/GraphOverviewPage.tsx",
+      target: "file:studio/src/hooks/queries/useGraphs.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1096",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/GraphOverviewPage.tsx",
+      target: "file:studio/src/pages/graphs/components/GraphDetail.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1097",
+      type: "calls",
+      source: "function:studio/src/pages/graphs/GraphOverviewPage.tsx:GraphOverviewPage",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:useGraphQuery",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1098",
+      type: "calls",
+      source: "function:studio/src/pages/graphs/GraphOverviewPage.tsx:GraphOverviewPage",
+      target: "function:studio/src/components/settings/useSettingsPanel.ts:useSettingsPanel",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1099",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/GraphsListPage.tsx",
+      target: "function:studio/src/pages/graphs/GraphsListPage.tsx:GraphsListPage",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1100",
+      type: "exports",
+      source: "file:studio/src/pages/graphs/GraphsListPage.tsx",
+      target: "function:studio/src/pages/graphs/GraphsListPage.tsx:GraphsListPage",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1101",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/GraphsListPage.tsx",
+      target: "function:studio/src/pages/graphs/GraphsListPage.tsx:GraphRow",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1102",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/GraphsListPage.tsx",
+      target: "function:studio/src/pages/graphs/GraphsListPage.tsx:formatRelative",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1103",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/GraphsListPage.tsx",
+      target: "file:studio/src/hooks/queries/useGraphs.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1104",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/GraphsListPage.tsx",
+      target: "file:studio/src/types/graphs.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1105",
+      type: "calls",
+      source: "function:studio/src/pages/graphs/GraphsListPage.tsx:GraphsListPage",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:useGraphsQuery",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1106",
+      type: "calls",
+      source: "function:studio/src/pages/graphs/GraphsListPage.tsx:GraphsListPage",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:useDeleteGraphMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1107",
+      type: "contains",
+      source: "file:studio/src/components/canvas/GraphCanvas.tsx",
+      target: "function:studio/src/components/canvas/GraphCanvas.tsx:GraphCanvas",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1108",
+      type: "exports",
+      source: "file:studio/src/components/canvas/GraphCanvas.tsx",
+      target: "function:studio/src/components/canvas/GraphCanvas.tsx:GraphCanvas",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1109",
+      type: "contains",
+      source: "file:studio/src/components/settings/SettingsPanel.tsx",
+      target: "function:studio/src/components/settings/SettingsPanel.tsx:SettingsPanel",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1110",
+      type: "exports",
+      source: "file:studio/src/components/settings/SettingsPanel.tsx",
+      target: "function:studio/src/components/settings/SettingsPanel.tsx:SettingsPanel",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1111",
+      type: "contains",
+      source: "file:studio/src/components/settings/SettingsPanel.tsx",
+      target: "function:studio/src/components/settings/SettingsPanel.tsx:SectionContent",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1112",
+      type: "imports",
+      source: "file:studio/src/components/settings/SettingsPanel.tsx",
+      target: "file:studio/src/components/settings/sections/ConnectionSection.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1113",
+      type: "imports",
+      source: "file:studio/src/components/settings/SettingsPanel.tsx",
+      target: "file:studio/src/components/settings/sections/DatasetsSection.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1114",
+      type: "imports",
+      source: "file:studio/src/components/settings/SettingsPanel.tsx",
+      target: "file:studio/src/components/settings/sections/EventsSection.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1115",
+      type: "imports",
+      source: "file:studio/src/components/settings/SettingsPanel.tsx",
+      target: "file:studio/src/components/settings/sections/InfoSection.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1116",
+      type: "imports",
+      source: "file:studio/src/components/settings/SettingsPanel.tsx",
+      target: "file:studio/src/components/settings/sections/InstructionsSection.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1117",
+      type: "imports",
+      source: "file:studio/src/components/settings/SettingsPanel.tsx",
+      target: "file:studio/src/components/settings/sections/IntentSection.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1118",
+      type: "imports",
+      source: "file:studio/src/components/settings/SettingsPanel.tsx",
+      target: "file:studio/src/components/settings/sections/LLMsSection.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1119",
+      type: "imports",
+      source: "file:studio/src/components/settings/SettingsPanel.tsx",
+      target: "file:studio/src/components/settings/sections/MembersInvitationsSection.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1120",
+      type: "imports",
+      source: "file:studio/src/components/settings/SettingsPanel.tsx",
+      target: "file:studio/src/components/settings/sections/SkillsSection.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1121",
+      type: "imports",
+      source: "file:studio/src/components/settings/SettingsPanel.tsx",
+      target: "file:studio/src/components/settings/useSettingsPanel.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1122",
+      type: "contains",
+      source: "file:studio/src/components/settings/SetupRequiredBanner.tsx",
+      target: "function:studio/src/components/settings/SetupRequiredBanner.tsx:SetupRequiredBanner",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1123",
+      type: "exports",
+      source: "file:studio/src/components/settings/SetupRequiredBanner.tsx",
+      target: "function:studio/src/components/settings/SetupRequiredBanner.tsx:SetupRequiredBanner",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1124",
+      type: "imports",
+      source: "file:studio/src/components/settings/SetupRequiredBanner.tsx",
+      target: "file:studio/src/components/settings/useSettingsPanel.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1125",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/ConnectionSection.tsx",
+      target: "function:studio/src/components/settings/sections/ConnectionSection.tsx:ConnectionSection",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1126",
+      type: "exports",
+      source: "file:studio/src/components/settings/sections/ConnectionSection.tsx",
+      target: "function:studio/src/components/settings/sections/ConnectionSection.tsx:ConnectionSection",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1127",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/ConnectionSection.tsx",
+      target: "file:studio/src/hooks/queries/useGraphs.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1128",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/ConnectionSection.tsx",
+      target: "file:studio/src/pages/graphs/components/GraphForm.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1129",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/ConnectionSection.tsx",
+      target: "file:studio/src/services/api/graphs.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1130",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/ConnectionSection.tsx",
+      target: "file:studio/src/types/graphs.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1131",
+      type: "calls",
+      source: "function:studio/src/components/settings/sections/ConnectionSection.tsx:ConnectionSection",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:useGraphConnectionQuery",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1132",
+      type: "calls",
+      source: "function:studio/src/components/settings/sections/ConnectionSection.tsx:ConnectionSection",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:usePutGraphConnectionMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1133",
+      type: "related",
+      source: "file:studio/src/components/settings/sections/DatasetsSection.tsx",
+      target: "function:studio/src/components/settings/sections/InfoSection.tsx:InfoSection",
+      data: {
+        weight: 0.5,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1134",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/InfoSection.tsx",
+      target: "function:studio/src/components/settings/sections/InfoSection.tsx:InfoSection",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1135",
+      type: "exports",
+      source: "file:studio/src/components/settings/sections/InfoSection.tsx",
+      target: "function:studio/src/components/settings/sections/InfoSection.tsx:InfoSection",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1136",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/InfoSection.tsx",
+      target: "function:studio/src/components/settings/sections/InfoSection.tsx:StatCard",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1137",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/InfoSection.tsx",
+      target: "function:studio/src/components/settings/sections/InfoSection.tsx:ConnectionStatusBadge",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1138",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/InfoSection.tsx",
+      target: "file:studio/src/components/settings/sections/SetupWizard.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1139",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/InfoSection.tsx",
+      target: "file:studio/src/hooks/queries/useGraphs.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1140",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/InfoSection.tsx",
+      target: "file:studio/src/hooks/queries/useInstructions.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1141",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/InfoSection.tsx",
+      target: "file:studio/src/hooks/queries/useLLMProviders.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1142",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/InfoSection.tsx",
+      target: "file:studio/src/hooks/queries/useSkills.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1143",
+      type: "calls",
+      source: "function:studio/src/components/settings/sections/InfoSection.tsx:InfoSection",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:useGraphQuery",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1144",
+      type: "calls",
+      source: "function:studio/src/components/settings/sections/InfoSection.tsx:InfoSection",
+      target: "function:studio/src/hooks/queries/useLLMProviders.ts:useLLMProvidersQuery",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1145",
+      type: "calls",
+      source: "function:studio/src/components/settings/sections/InfoSection.tsx:InfoSection",
+      target: "function:studio/src/hooks/queries/useSkills.ts:useSkillsQuery",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1146",
+      type: "calls",
+      source: "function:studio/src/components/settings/sections/InfoSection.tsx:InfoSection",
+      target: "function:studio/src/hooks/queries/useInstructions.ts:useInstructionsQuery",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1147",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/InstructionsSection.tsx",
+      target: "function:studio/src/components/settings/sections/InstructionsSection.tsx:InstructionsSection",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1148",
+      type: "exports",
+      source: "file:studio/src/components/settings/sections/InstructionsSection.tsx",
+      target: "function:studio/src/components/settings/sections/InstructionsSection.tsx:InstructionsSection",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1149",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/InstructionsSection.tsx",
+      target: "function:studio/src/components/settings/sections/InstructionsSection.tsx:InstructionRow",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1150",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/InstructionsSection.tsx",
+      target: "function:studio/src/components/settings/sections/InstructionsSection.tsx:InstructionForm",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1151",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/InstructionsSection.tsx",
+      target: "file:studio/src/components/forms/FormError.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1152",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/InstructionsSection.tsx",
+      target: "file:studio/src/hooks/queries/useInstructions.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1153",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/InstructionsSection.tsx",
+      target: "file:studio/src/types/instructions.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1154",
+      type: "calls",
+      source: "function:studio/src/components/settings/sections/InstructionsSection.tsx:InstructionsSection",
+      target: "function:studio/src/hooks/queries/useInstructions.ts:useInstructionsQuery",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1155",
+      type: "calls",
+      source: "function:studio/src/components/settings/sections/InstructionsSection.tsx:InstructionRow",
+      target: "function:studio/src/hooks/queries/useInstructions.ts:useDeleteInstructionMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1156",
+      type: "calls",
+      source: "function:studio/src/components/settings/sections/InstructionsSection.tsx:InstructionForm",
+      target: "function:studio/src/hooks/queries/useInstructions.ts:useCreateInstructionMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1157",
+      type: "calls",
+      source: "function:studio/src/components/settings/sections/InstructionsSection.tsx:InstructionForm",
+      target: "function:studio/src/hooks/queries/useInstructions.ts:useUpdateInstructionMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1158",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/IntentSection.tsx",
+      target: "function:studio/src/components/settings/sections/IntentSection.tsx:IntentSection",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1159",
+      type: "exports",
+      source: "file:studio/src/components/settings/sections/IntentSection.tsx",
+      target: "function:studio/src/components/settings/sections/IntentSection.tsx:IntentSection",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1160",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/IntentSection.tsx",
+      target: "file:studio/src/components/forms/FormError.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1161",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/IntentSection.tsx",
+      target: "file:studio/src/hooks/queries/useGraphs.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1162",
+      type: "calls",
+      source: "function:studio/src/components/settings/sections/IntentSection.tsx:IntentSection",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:useGraphQuery",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1163",
+      type: "calls",
+      source: "function:studio/src/components/settings/sections/IntentSection.tsx:IntentSection",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:useUpdateGraphMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1164",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/LLMsSection.tsx",
+      target: "function:studio/src/components/settings/sections/LLMsSection.tsx:LLMsSection",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1165",
+      type: "exports",
+      source: "file:studio/src/components/settings/sections/LLMsSection.tsx",
+      target: "function:studio/src/components/settings/sections/LLMsSection.tsx:LLMsSection",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1166",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/LLMsSection.tsx",
+      target: "function:studio/src/components/settings/sections/LLMsSection.tsx:ProviderRow",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1167",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/LLMsSection.tsx",
+      target: "function:studio/src/components/settings/sections/LLMsSection.tsx:LLMProviderForm",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1168",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/LLMsSection.tsx",
+      target: "file:studio/src/components/forms/FormError.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1169",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/LLMsSection.tsx",
+      target: "file:studio/src/hooks/queries/useLLMProviders.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1170",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/LLMsSection.tsx",
+      target: "file:studio/src/services/api/llm.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1171",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/LLMsSection.tsx",
+      target: "file:studio/src/types/llm.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1172",
+      type: "calls",
+      source: "function:studio/src/components/settings/sections/LLMsSection.tsx:LLMsSection",
+      target: "function:studio/src/hooks/queries/useLLMProviders.ts:useLLMProvidersQuery",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1173",
+      type: "calls",
+      source: "function:studio/src/components/settings/sections/LLMsSection.tsx:ProviderRow",
+      target: "function:studio/src/hooks/queries/useLLMProviders.ts:useSetDefaultLLMProviderMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1174",
+      type: "calls",
+      source: "function:studio/src/components/settings/sections/LLMsSection.tsx:ProviderRow",
+      target: "function:studio/src/hooks/queries/useLLMProviders.ts:useDeleteLLMProviderMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1175",
+      type: "calls",
+      source: "function:studio/src/components/settings/sections/LLMsSection.tsx:LLMProviderForm",
+      target: "function:studio/src/hooks/queries/useLLMProviders.ts:useCreateLLMProviderMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1176",
+      type: "calls",
+      source: "function:studio/src/components/settings/sections/LLMsSection.tsx:LLMProviderForm",
+      target: "function:studio/src/hooks/queries/useLLMProviders.ts:useUpdateLLMProviderMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1177",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/SetupWizard.tsx",
+      target: "function:studio/src/components/settings/sections/SetupWizard.tsx:SetupWizard",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1178",
+      type: "exports",
+      source: "file:studio/src/components/settings/sections/SetupWizard.tsx",
+      target: "function:studio/src/components/settings/sections/SetupWizard.tsx:SetupWizard",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1179",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/SetupWizard.tsx",
+      target: "function:studio/src/components/settings/sections/SetupWizard.tsx:sectionStatus",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1180",
+      type: "contains",
+      source: "file:studio/src/components/settings/sections/SetupWizard.tsx",
+      target: "function:studio/src/components/settings/sections/SetupWizard.tsx:WizardRow",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1181",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/SetupWizard.tsx",
+      target: "file:studio/src/hooks/queries/useGraphs.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1182",
+      type: "imports",
+      source: "file:studio/src/components/settings/sections/SetupWizard.tsx",
+      target: "file:studio/src/types/graphs.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1183",
+      type: "calls",
+      source: "function:studio/src/components/settings/sections/SetupWizard.tsx:SetupWizard",
+      target: "function:studio/src/hooks/queries/useGraphs.ts:useSetupSectionMutation",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1184",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/components/AppVersion.tsx",
+      target: "function:studio/src/pages/graphs/components/AppVersion.tsx:AppVersion",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1185",
+      type: "exports",
+      source: "file:studio/src/pages/graphs/components/AppVersion.tsx",
+      target: "function:studio/src/pages/graphs/components/AppVersion.tsx:AppVersion",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1186",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/components/AppVersion.tsx",
+      target: "file:studio/src/hooks/queries/useAppVersion.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1187",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/components/GraphDetail.tsx",
+      target: "function:studio/src/pages/graphs/components/GraphDetail.tsx:GraphDetail",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1188",
+      type: "exports",
+      source: "file:studio/src/pages/graphs/components/GraphDetail.tsx",
+      target: "function:studio/src/pages/graphs/components/GraphDetail.tsx:GraphDetail",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1189",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/components/GraphDetail.tsx",
+      target: "file:studio/src/components/header/useAppHeader.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1190",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/components/GraphDetail.tsx",
+      target: "file:studio/src/components/settings/SettingsPanel.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1191",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/components/GraphDetail.tsx",
+      target: "file:studio/src/components/settings/useGraphLeftNav.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1192",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/components/GraphDetail.tsx",
+      target: "file:studio/src/components/settings/useSettingsPanel.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1193",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/components/GraphDetail.tsx",
+      target: "file:studio/src/hooks/queries/useGraphs.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1194",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/components/GraphDetail.tsx",
+      target: "file:studio/src/pages/graphs/components/AppVersion.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1195",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/components/GraphDetail.tsx",
+      target: "file:studio/src/pages/graphs/components/GraphStatusBar.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1196",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/components/GraphForm.tsx",
+      target: "function:studio/src/pages/graphs/components/GraphForm.tsx:GraphForm",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1197",
+      type: "exports",
+      source: "file:studio/src/pages/graphs/components/GraphForm.tsx",
+      target: "function:studio/src/pages/graphs/components/GraphForm.tsx:GraphForm",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1198",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/components/GraphForm.tsx",
+      target: "file:studio/src/components/forms/FormError.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1199",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/components/GraphForm.tsx",
+      target: "file:studio/src/types/graphs.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1200",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/components/GraphStatusBadge.tsx",
+      target: "function:studio/src/pages/graphs/components/GraphStatusBadge.tsx:GraphConnectionStatusBadge",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1201",
+      type: "exports",
+      source: "file:studio/src/pages/graphs/components/GraphStatusBadge.tsx",
+      target: "function:studio/src/pages/graphs/components/GraphStatusBadge.tsx:GraphConnectionStatusBadge",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1202",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/components/GraphStatusBadge.tsx",
+      target: "file:studio/src/types/graphs.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1203",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/components/GraphStatusBar.tsx",
+      target: "function:studio/src/pages/graphs/components/GraphStatusBar.tsx:GraphStatusBar",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1204",
+      type: "exports",
+      source: "file:studio/src/pages/graphs/components/GraphStatusBar.tsx",
+      target: "function:studio/src/pages/graphs/components/GraphStatusBar.tsx:GraphStatusBar",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1205",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/components/GraphStatusBar.tsx",
+      target: "file:studio/src/types/graphs.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1206",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/explorer/ExplorerPage.tsx",
+      target: "function:studio/src/pages/graphs/explorer/ExplorerPage.tsx:ExplorerPage",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1207",
+      type: "exports",
+      source: "file:studio/src/pages/graphs/explorer/ExplorerPage.tsx",
+      target: "function:studio/src/pages/graphs/explorer/ExplorerPage.tsx:ExplorerPage",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1208",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/explorer/ExplorerPage.tsx",
+      target: "file:studio/src/components/canvas/GraphCanvas.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1209",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/explorer/ExplorerPage.tsx",
+      target: "file:studio/src/components/settings/SetupRequiredBanner.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1210",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/explorer/ExplorerPage.tsx",
+      target: "file:studio/src/hooks/queries/useGraphs.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1211",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/explorer/ExplorerPage.tsx",
+      target: "file:studio/src/hooks/queries/useLLMProviders.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1212",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/explorer/ExplorerPage.tsx",
+      target: "file:studio/src/pages/graphs/components/GraphDetail.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1213",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/explorer/ExplorerPage.tsx",
+      target: "file:studio/src/pages/graphs/explorer/components/CanvasToolbar.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1214",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/explorer/ExplorerPage.tsx",
+      target: "file:studio/src/pages/graphs/explorer/components/InspectorPanel.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1215",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/explorer/ExplorerPage.tsx",
+      target: "file:studio/src/pages/graphs/explorer/components/QueryPanel.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1216",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/explorer/ExplorerPage.tsx",
+      target: "file:studio/src/pages/graphs/explorer/hooks/useQueryExecution.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1217",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/explorer/ExplorerPage.tsx",
+      target: "file:studio/src/types/graphs.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1218",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/explorer/ExplorerPage.tsx",
+      target: "file:studio/src/types/query.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1219",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/explorer/components/CanvasToolbar.tsx",
+      target: "function:studio/src/pages/graphs/explorer/components/CanvasToolbar.tsx:CanvasToolbar",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1220",
+      type: "exports",
+      source: "file:studio/src/pages/graphs/explorer/components/CanvasToolbar.tsx",
+      target: "function:studio/src/pages/graphs/explorer/components/CanvasToolbar.tsx:CanvasToolbar",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1221",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/explorer/components/InspectorPanel.tsx",
+      target: "function:studio/src/pages/graphs/explorer/components/InspectorPanel.tsx:InspectorPanel",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1222",
+      type: "exports",
+      source: "file:studio/src/pages/graphs/explorer/components/InspectorPanel.tsx",
+      target: "function:studio/src/pages/graphs/explorer/components/InspectorPanel.tsx:InspectorPanel",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1223",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/explorer/components/InspectorPanel.tsx",
+      target: "file:studio/src/types/query.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1224",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/explorer/components/QueryPanel.tsx",
+      target: "function:studio/src/pages/graphs/explorer/components/QueryPanel.tsx:QueryPanel",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1225",
+      type: "exports",
+      source: "file:studio/src/pages/graphs/explorer/components/QueryPanel.tsx",
+      target: "function:studio/src/pages/graphs/explorer/components/QueryPanel.tsx:QueryPanel",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1226",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/explorer/components/QueryPanel.tsx",
+      target: "file:studio/src/types/graphs.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1227",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/explorer/components/QueryPanel.tsx",
+      target: "file:studio/src/types/llm.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1228",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/explorer/components/QueryPanel.tsx",
+      target: "file:studio/src/types/query.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1229",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/explorer/hooks/useQueryExecution.ts",
+      target: "function:studio/src/pages/graphs/explorer/hooks/useQueryExecution.ts:useQueryExecution",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1230",
+      type: "exports",
+      source: "file:studio/src/pages/graphs/explorer/hooks/useQueryExecution.ts",
+      target: "function:studio/src/pages/graphs/explorer/hooks/useQueryExecution.ts:useQueryExecution",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1231",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/explorer/hooks/useQueryExecution.ts",
+      target: "file:studio/src/services/api/graphs.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1232",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/explorer/hooks/useQueryExecution.ts",
+      target: "file:studio/src/types/query.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1233",
+      type: "imports",
+      source: "file:studio/src/services/api/graphs.ts",
+      target: "file:studio/src/services/api/client.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1234",
+      type: "imports",
+      source: "file:studio/src/services/api/graphs.ts",
+      target: "file:studio/src/types/graphs.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1235",
+      type: "imports",
+      source: "file:studio/src/services/api/graphs.ts",
+      target: "file:studio/src/types/query.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1236",
+      type: "imports",
+      source: "file:studio/src/services/api/health.ts",
+      target: "file:studio/src/services/api/client.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1237",
+      type: "imports",
+      source: "file:studio/src/services/api/instructions.ts",
+      target: "file:studio/src/services/api/client.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1238",
+      type: "imports",
+      source: "file:studio/src/services/api/instructions.ts",
+      target: "file:studio/src/types/instructions.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1239",
+      type: "imports",
+      source: "file:studio/src/services/api/llm.ts",
+      target: "file:studio/src/services/api/client.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1240",
+      type: "imports",
+      source: "file:studio/src/services/api/llm.ts",
+      target: "file:studio/src/types/llm.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1241",
+      type: "imports",
+      source: "file:studio/src/services/api/skills.ts",
+      target: "file:studio/src/services/api/client.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1242",
+      type: "imports",
+      source: "file:studio/src/services/api/skills.ts",
+      target: "file:studio/src/types/skills.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1243",
+      type: "contains",
+      source: "file:studio/src/hooks/queries/useSchema.ts",
+      target: "function:studio/src/hooks/queries/useSchema.ts:useActiveVersionQuery",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1244",
+      type: "exports",
+      source: "file:studio/src/hooks/queries/useSchema.ts",
+      target: "function:studio/src/hooks/queries/useSchema.ts:useActiveVersionQuery",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1245",
+      type: "imports",
+      source: "file:studio/src/hooks/queries/useSchema.ts",
+      target: "file:studio/src/services/api/schemas.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1246",
+      type: "calls",
+      source: "function:studio/src/hooks/queries/useSchema.ts:useActiveVersionQuery",
+      target: "file:studio/src/services/api/schemas.ts",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1247",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/modeller/ModellerPage.tsx",
+      target: "function:studio/src/pages/graphs/modeller/ModellerPage.tsx:ModellerPage",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1248",
+      type: "exports",
+      source: "file:studio/src/pages/graphs/modeller/ModellerPage.tsx",
+      target: "function:studio/src/pages/graphs/modeller/ModellerPage.tsx:ModellerPage",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1249",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/ModellerPage.tsx",
+      target: "file:studio/src/components/settings/SetupRequiredBanner.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1250",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/ModellerPage.tsx",
+      target: "file:studio/src/hooks/queries/useGraphs.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1251",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/ModellerPage.tsx",
+      target: "file:studio/src/hooks/queries/useSchema.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1252",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/ModellerPage.tsx",
+      target: "file:studio/src/pages/graphs/components/GraphDetail.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1253",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/ModellerPage.tsx",
+      target: "file:studio/src/pages/graphs/modeller/components/DetailPanel.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1254",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/ModellerPage.tsx",
+      target: "file:studio/src/pages/graphs/modeller/components/SchemaCanvas.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1255",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/ModellerPage.tsx",
+      target: "file:studio/src/pages/graphs/modeller/components/SchemaNav.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1256",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/ModellerPage.tsx",
+      target: "file:studio/src/services/api/graphs.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1257",
+      type: "calls",
+      source: "function:studio/src/pages/graphs/modeller/ModellerPage.tsx:ModellerPage",
+      target: "function:studio/src/hooks/queries/useSchema.ts:useActiveVersionQuery",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1258",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/modeller/components/ConstraintTable.tsx",
+      target: "function:studio/src/pages/graphs/modeller/components/ConstraintTable.tsx:ConstraintTable",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1259",
+      type: "exports",
+      source: "file:studio/src/pages/graphs/modeller/components/ConstraintTable.tsx",
+      target: "function:studio/src/pages/graphs/modeller/components/ConstraintTable.tsx:ConstraintTable",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1260",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/components/ConstraintTable.tsx",
+      target: "file:studio/src/types/schemas.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1261",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/modeller/components/DetailPanel.tsx",
+      target: "function:studio/src/pages/graphs/modeller/components/DetailPanel.tsx:DetailPanel",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1262",
+      type: "exports",
+      source: "file:studio/src/pages/graphs/modeller/components/DetailPanel.tsx",
+      target: "function:studio/src/pages/graphs/modeller/components/DetailPanel.tsx:DetailPanel",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1263",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/components/DetailPanel.tsx",
+      target: "file:studio/src/pages/graphs/modeller/components/ConstraintTable.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1264",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/components/DetailPanel.tsx",
+      target: "file:studio/src/pages/graphs/modeller/components/EdgeTypeDetail.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1265",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/components/DetailPanel.tsx",
+      target: "file:studio/src/pages/graphs/modeller/components/IndexTable.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1266",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/components/DetailPanel.tsx",
+      target: "file:studio/src/pages/graphs/modeller/components/NodeTypeDetail.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1267",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/components/DetailPanel.tsx",
+      target: "file:studio/src/pages/graphs/modeller/components/NoSelectionPlaceholder.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1268",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/components/DetailPanel.tsx",
+      target: "file:studio/src/pages/graphs/modeller/components/PropertyKeyTable.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1269",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/components/DetailPanel.tsx",
+      target: "file:studio/src/types/schemas.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1270",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/modeller/components/EdgeTypeDetail.tsx",
+      target: "function:studio/src/pages/graphs/modeller/components/EdgeTypeDetail.tsx:EdgeTypeDetail",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1271",
+      type: "exports",
+      source: "file:studio/src/pages/graphs/modeller/components/EdgeTypeDetail.tsx",
+      target: "function:studio/src/pages/graphs/modeller/components/EdgeTypeDetail.tsx:EdgeTypeDetail",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1272",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/components/EdgeTypeDetail.tsx",
+      target: "file:studio/src/pages/graphs/modeller/components/ConstraintTable.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1273",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/components/EdgeTypeDetail.tsx",
+      target: "file:studio/src/pages/graphs/modeller/components/IndexTable.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1274",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/components/EdgeTypeDetail.tsx",
+      target: "file:studio/src/pages/graphs/modeller/components/PropertyMappingTable.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1275",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/components/EdgeTypeDetail.tsx",
+      target: "file:studio/src/types/schemas.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1276",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/modeller/components/IndexTable.tsx",
+      target: "function:studio/src/pages/graphs/modeller/components/IndexTable.tsx:IndexTable",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1277",
+      type: "exports",
+      source: "file:studio/src/pages/graphs/modeller/components/IndexTable.tsx",
+      target: "function:studio/src/pages/graphs/modeller/components/IndexTable.tsx:IndexTable",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1278",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/components/IndexTable.tsx",
+      target: "file:studio/src/types/schemas.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1279",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/modeller/components/NodeTypeDetail.tsx",
+      target: "function:studio/src/pages/graphs/modeller/components/NodeTypeDetail.tsx:NodeTypeDetail",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1280",
+      type: "exports",
+      source: "file:studio/src/pages/graphs/modeller/components/NodeTypeDetail.tsx",
+      target: "function:studio/src/pages/graphs/modeller/components/NodeTypeDetail.tsx:NodeTypeDetail",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1281",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/components/NodeTypeDetail.tsx",
+      target: "file:studio/src/pages/graphs/modeller/components/ConstraintTable.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1282",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/components/NodeTypeDetail.tsx",
+      target: "file:studio/src/pages/graphs/modeller/components/IndexTable.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1283",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/components/NodeTypeDetail.tsx",
+      target: "file:studio/src/pages/graphs/modeller/components/PropertyMappingTable.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1284",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/components/NodeTypeDetail.tsx",
+      target: "file:studio/src/types/schemas.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1285",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/modeller/components/PropertyKeyTable.tsx",
+      target: "function:studio/src/pages/graphs/modeller/components/PropertyKeyTable.tsx:PropertyKeyTable",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1286",
+      type: "exports",
+      source: "file:studio/src/pages/graphs/modeller/components/PropertyKeyTable.tsx",
+      target: "function:studio/src/pages/graphs/modeller/components/PropertyKeyTable.tsx:PropertyKeyTable",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1287",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/components/PropertyKeyTable.tsx",
+      target: "file:studio/src/types/schemas.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1288",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/modeller/components/PropertyMappingTable.tsx",
+      target: "function:studio/src/pages/graphs/modeller/components/PropertyMappingTable.tsx:PropertyMappingTable",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1289",
+      type: "exports",
+      source: "file:studio/src/pages/graphs/modeller/components/PropertyMappingTable.tsx",
+      target: "function:studio/src/pages/graphs/modeller/components/PropertyMappingTable.tsx:PropertyMappingTable",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1290",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/components/PropertyMappingTable.tsx",
+      target: "file:studio/src/types/schemas.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1291",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/modeller/components/SchemaCanvas.tsx",
+      target: "function:studio/src/pages/graphs/modeller/components/SchemaCanvas.tsx:SchemaCanvas",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1292",
+      type: "exports",
+      source: "file:studio/src/pages/graphs/modeller/components/SchemaCanvas.tsx",
+      target: "function:studio/src/pages/graphs/modeller/components/SchemaCanvas.tsx:SchemaCanvas",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1293",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/components/SchemaCanvas.tsx",
+      target: "file:studio/src/components/canvas/GraphCanvas.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1294",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/components/SchemaCanvas.tsx",
+      target: "file:studio/src/pages/graphs/modeller/components/DetailPanel.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1295",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/components/SchemaCanvas.tsx",
+      target: "file:studio/src/types/schemas.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1296",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/modeller/components/SchemaNav.tsx",
+      target: "function:studio/src/pages/graphs/modeller/components/SchemaNav.tsx:SchemaNav",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1297",
+      type: "exports",
+      source: "file:studio/src/pages/graphs/modeller/components/SchemaNav.tsx",
+      target: "function:studio/src/pages/graphs/modeller/components/SchemaNav.tsx:SchemaNav",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1298",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/modeller/components/SchemaNav.tsx",
+      target: "function:studio/src/pages/graphs/modeller/components/SchemaNav.tsx:GlobalItem",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1299",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/modeller/components/SchemaNav.tsx",
+      target: "function:studio/src/pages/graphs/modeller/components/SchemaNav.tsx:SectionHeader",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1300",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/modeller/components/SchemaNav.tsx",
+      target: "function:studio/src/pages/graphs/modeller/components/SchemaNav.tsx:NavItem",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1301",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/components/SchemaNav.tsx",
+      target: "file:studio/src/pages/graphs/modeller/components/DetailPanel.tsx",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1302",
+      type: "imports",
+      source: "file:studio/src/pages/graphs/modeller/components/SchemaNav.tsx",
+      target: "file:studio/src/types/schemas.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1303",
+      type: "imports",
+      source: "file:studio/src/services/api/schemas.ts",
+      target: "file:studio/src/services/api/client.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1304",
+      type: "imports",
+      source: "file:studio/src/services/api/schemas.ts",
+      target: "file:studio/src/types/schemas.ts",
+      data: {
+        weight: 0.7,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1305",
+      type: "configures",
+      source: "config:engine/pyproject.toml",
+      target: "file:engine/src/invana/cli/main.py",
+      data: {
+        weight: 0.6,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1306",
+      type: "configures",
+      source: "config:engine/pyproject.toml",
+      target: "file:engine/src/invana/__init__.py",
+      data: {
+        weight: 0.6,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1307",
+      type: "configures",
+      source: "config:engine/.env.example",
+      target: "file:engine/src/invana/settings.py",
+      data: {
+        weight: 0.6,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1308",
+      type: "configures",
+      source: "config:engine/alembic.ini",
+      target: "file:engine/src/invana/modeller/migrations/env.py",
+      data: {
+        weight: 0.6,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1309",
+      type: "documents",
+      source: "document:engine/CLAUDE.md",
+      target: "file:engine/src/invana/server/app.py",
+      data: {
+        weight: 0.5,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1310",
+      type: "documents",
+      source: "document:engine/CLAUDE.md",
+      target: "file:engine/src/invana/db.py",
+      data: {
+        weight: 0.5,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1311",
+      type: "documents",
+      source: "document:engine/CLAUDE.md",
+      target: "file:engine/src/invana/settings.py",
+      data: {
+        weight: 0.5,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1312",
+      type: "documents",
+      source: "document:engine/CLAUDE.md",
+      target: "file:engine/src/invana/server/admin/views.py",
+      data: {
+        weight: 0.5,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1313",
+      type: "depends_on",
+      source: "config:studio/tsconfig.json",
+      target: "config:studio/tsconfig.app.json",
+      data: {
+        weight: 0.6,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1314",
+      type: "depends_on",
+      source: "config:studio/tsconfig.json",
+      target: "config:studio/tsconfig.node.json",
+      data: {
+        weight: 0.6,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1315",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/migrations/versions/00000000000a_initial_arch_redesign.py",
+      target: "function:engine/src/invana/modeller/migrations/versions/00000000000a_initial_arch_redesign.py:_create_pg_enum_if_absent",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1316",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/migrations/versions/00000000000a_initial_arch_redesign.py",
+      target: "function:engine/src/invana/modeller/migrations/versions/00000000000a_initial_arch_redesign.py:upgrade",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1317",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/migrations/versions/00000000000a_initial_arch_redesign.py",
+      target: "function:engine/src/invana/modeller/migrations/versions/00000000000a_initial_arch_redesign.py:downgrade",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1318",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/migrations/versions/00000000000a_initial_arch_redesign.py",
+      target: "function:engine/src/invana/modeller/migrations/versions/00000000000a_initial_arch_redesign.py:upgrade",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1319",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/migrations/versions/00000000000a_initial_arch_redesign.py",
+      target: "function:engine/src/invana/modeller/migrations/versions/00000000000a_initial_arch_redesign.py:downgrade",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1320",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/migrations/versions/00000000000b_llm_providers.py",
+      target: "function:engine/src/invana/modeller/migrations/versions/00000000000b_llm_providers.py:upgrade",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1321",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/migrations/versions/00000000000b_llm_providers.py",
+      target: "function:engine/src/invana/modeller/migrations/versions/00000000000b_llm_providers.py:upgrade",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1322",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/migrations/versions/00000000000c_skills_and_instructions.py",
+      target: "function:engine/src/invana/modeller/migrations/versions/00000000000c_skills_and_instructions.py:upgrade",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1323",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/migrations/versions/00000000000c_skills_and_instructions.py",
+      target: "function:engine/src/invana/modeller/migrations/versions/00000000000c_skills_and_instructions.py:upgrade",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1324",
+      type: "contains",
+      source: "file:engine/src/invana/modeller/migrations/versions/00000000000d_events.py",
+      target: "function:engine/src/invana/modeller/migrations/versions/00000000000d_events.py:upgrade",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1325",
+      type: "exports",
+      source: "file:engine/src/invana/modeller/migrations/versions/00000000000d_events.py",
+      target: "function:engine/src/invana/modeller/migrations/versions/00000000000d_events.py:upgrade",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1326",
+      type: "contains",
+      source: "file:studio/src/pages/graphs/modeller/components/SchemaCanvasPlaceholder.tsx",
+      target: "function:studio/src/pages/graphs/modeller/components/SchemaCanvasPlaceholder.tsx:SchemaCanvasPlaceholder",
+      data: {
+        weight: 1,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1327",
+      type: "exports",
+      source: "file:studio/src/pages/graphs/modeller/components/SchemaCanvasPlaceholder.tsx",
+      target: "function:studio/src/pages/graphs/modeller/components/SchemaCanvasPlaceholder.tsx:SchemaCanvasPlaceholder",
+      data: {
+        weight: 0.8,
+        direction: "forward"
+      }
+    },
+    {
+      id: "e1328",
+      type: "configures",
+      source: "config:studio/vite.config.ts",
+      target: "file:studio/src/index.css",
+      data: {
+        weight: 0.6,
+        direction: "forward"
+      }
+    }
+  ],
+  clusters: [
+    {
+      id: "layer:graph-connectors",
+      name: "Graph Connector Layer",
+      description: "Pluggable database connectors (OpenCypher, Gremlin) with base abstractions, querysets, serializers, loaders, and shared graph value types that execute and shape queries against backing graph databases.",
+      nodeIds: [
+        "file:engine/src/invana/graph/connectors/__init__.py",
+        "file:engine/src/invana/graph/connectors/base/__init__.py",
+        "file:engine/src/invana/graph/connectors/base/connector.py",
+        "file:engine/src/invana/graph/connectors/base/constants.py",
+        "file:engine/src/invana/graph/connectors/base/data_types/__init__.py",
+        "file:engine/src/invana/graph/connectors/base/data_types/data_elements.py",
+        "file:engine/src/invana/graph/connectors/base/data_types/filter_types.py",
+        "file:engine/src/invana/graph/connectors/base/data_types/filters.py",
+        "file:engine/src/invana/graph/connectors/base/data_types/schema_elements.py",
+        "file:engine/src/invana/graph/connectors/base/decorators.py",
+        "file:engine/src/invana/graph/connectors/base/exceptions.py",
+        "file:engine/src/invana/graph/connectors/base/querysets/__init__.py",
+        "file:engine/src/invana/graph/connectors/base/querysets/algorithms.py",
+        "file:engine/src/invana/graph/connectors/base/querysets/base.py",
+        "file:engine/src/invana/graph/connectors/base/querysets/bulk.py",
+        "file:engine/src/invana/graph/connectors/base/querysets/data_reader.py",
+        "file:engine/src/invana/graph/connectors/base/querysets/data_writer.py",
+        "file:engine/src/invana/graph/connectors/base/querysets/schema_reader.py",
+        "file:engine/src/invana/graph/connectors/base/querysets/schema_writer.py",
+        "file:engine/src/invana/graph/connectors/base/querysets/vector.py",
+        "file:engine/src/invana/graph/connectors/base/serializers.py",
+        "file:engine/src/invana/graph/connectors/cypher/__init__.py",
+        "file:engine/src/invana/graph/connectors/cypher/connector.py",
+        "file:engine/src/invana/graph/connectors/cypher/query_builder.py",
+        "file:engine/src/invana/graph/connectors/cypher/querysets/__init__.py",
+        "file:engine/src/invana/graph/connectors/cypher/querysets/algorithms.py",
+        "file:engine/src/invana/graph/connectors/cypher/querysets/base.py",
+        "file:engine/src/invana/graph/connectors/cypher/querysets/bulk.py",
+        "file:engine/src/invana/graph/connectors/cypher/querysets/data_reader.py",
+        "file:engine/src/invana/graph/connectors/cypher/querysets/data_writer.py",
+        "file:engine/src/invana/graph/connectors/cypher/querysets/schema_reader.py",
+        "file:engine/src/invana/graph/connectors/cypher/querysets/schema_writer.py",
+        "file:engine/src/invana/graph/connectors/cypher/querysets/vector.py",
+        "file:engine/src/invana/graph/connectors/cypher/serializers.py",
+        "file:engine/src/invana/graph/connectors/gremlin/__init__.py",
+        "file:engine/src/invana/graph/connectors/gremlin/connector.py",
+        "file:engine/src/invana/graph/connectors/gremlin/query_builder.py",
+        "file:engine/src/invana/graph/connectors/gremlin/querysets/__init__.py",
+        "file:engine/src/invana/graph/connectors/gremlin/querysets/algorithms.py",
+        "file:engine/src/invana/graph/connectors/gremlin/querysets/base.py",
+        "file:engine/src/invana/graph/connectors/gremlin/querysets/bulk.py",
+        "file:engine/src/invana/graph/connectors/gremlin/querysets/data_reader.py",
+        "file:engine/src/invana/graph/connectors/gremlin/querysets/data_writer.py",
+        "file:engine/src/invana/graph/connectors/gremlin/querysets/schema_reader.py",
+        "file:engine/src/invana/graph/connectors/gremlin/querysets/schema_writer.py",
+        "file:engine/src/invana/graph/connectors/gremlin/querysets/vector.py",
+        "file:engine/src/invana/graph/connectors/gremlin/serializers.py",
+        "file:engine/src/invana/graph/loaders/__init__.py",
+        "file:engine/src/invana/graph/loaders/csv.py",
+        "file:engine/src/invana/graph/types/__init__.py",
+        "file:engine/src/invana/graph/types/constants.py",
+        "file:engine/src/invana/graph/types/data_elements.py",
+        "file:engine/src/invana/graph/types/filter_types.py",
+        "file:engine/src/invana/graph/types/filters.py",
+        "file:engine/src/invana/graph/types/schema_elements.py",
+        "file:engine/src/invana/graph/__init__.py"
+      ]
+    },
+    {
+      id: "layer:modeller",
+      name: "Modeller & Schema",
+      description: "Graph ontology and schema modelling: GraphSchema models, schema/version/projection tables, validator, versioner, projector services, and Alembic migrations for the engine app-state database.",
+      nodeIds: [
+        "file:engine/src/invana/modeller/introspector.py",
+        "file:engine/src/invana/modeller/json_io.py",
+        "file:engine/src/invana/modeller/projector.py",
+        "file:engine/src/invana/modeller/reconciler.py",
+        "file:engine/src/invana/modeller/schemas.py",
+        "file:engine/src/invana/modeller/validator.py",
+        "file:engine/src/invana/modeller/versioner.py",
+        "file:engine/src/invana/modeller/__init__.py",
+        "file:engine/src/invana/modeller/database.py",
+        "file:engine/src/invana/modeller/inheritance.py",
+        "file:engine/src/invana/modeller/migrations/env.py",
+        "file:engine/src/invana/modeller/models.py",
+        "file:engine/src/invana/modeller/store.py",
+        "file:engine/src/invana/modeller/migrations/README",
+        "file:engine/src/invana/modeller/migrations/script.py.mako",
+        "file:engine/src/invana/modeller/migrations/versions/00000000000a_initial_arch_redesign.py",
+        "file:engine/src/invana/modeller/migrations/versions/00000000000b_llm_providers.py",
+        "file:engine/src/invana/modeller/migrations/versions/00000000000c_skills_and_instructions.py",
+        "file:engine/src/invana/modeller/migrations/versions/00000000000d_events.py",
+        "file:engine/src/invana/modeller/migrations/versions/00000000000e_drop_connection_name_desc.py"
+      ]
+    },
+    {
+      id: "layer:engine-domain",
+      name: "Engine Domain Services",
+      description: "Graph-scoped feature slices (graphs, auth/identity, events, skills, instructions, LLM providers) each bundling models, routes, schemas, services, and stores into the engine business-logic layer.",
+      nodeIds: [
+        "file:engine/src/invana/graphs/__init__.py",
+        "file:engine/src/invana/graphs/deps.py",
+        "file:engine/src/invana/graphs/encryption.py",
+        "file:engine/src/invana/graphs/manager.py",
+        "file:engine/src/invana/graphs/models.py",
+        "file:engine/src/invana/graphs/routes.py",
+        "file:engine/src/invana/graphs/schemas.py",
+        "file:engine/src/invana/graphs/services.py",
+        "file:engine/src/invana/graphs/store.py",
+        "file:engine/src/invana/auth/__init__.py",
+        "file:engine/src/invana/auth/deps.py",
+        "file:engine/src/invana/auth/jwt.py",
+        "file:engine/src/invana/auth/models.py",
+        "file:engine/src/invana/auth/passwords.py",
+        "file:engine/src/invana/auth/routes.py",
+        "file:engine/src/invana/auth/schemas.py",
+        "file:engine/src/invana/auth/services.py",
+        "file:engine/src/invana/auth/tokens.py",
+        "file:engine/src/invana/events/__init__.py",
+        "file:engine/src/invana/events/actions.py",
+        "file:engine/src/invana/events/models.py",
+        "file:engine/src/invana/events/notify.py",
+        "file:engine/src/invana/events/routes.py",
+        "file:engine/src/invana/events/schemas.py",
+        "file:engine/src/invana/events/services.py",
+        "file:engine/src/invana/events/store.py",
+        "file:engine/src/invana/skills/__init__.py",
+        "file:engine/src/invana/skills/models.py",
+        "file:engine/src/invana/skills/routes.py",
+        "file:engine/src/invana/skills/schemas.py",
+        "file:engine/src/invana/skills/services.py",
+        "file:engine/src/invana/skills/store.py",
+        "file:engine/src/invana/instructions/__init__.py",
+        "file:engine/src/invana/instructions/models.py",
+        "file:engine/src/invana/instructions/routes.py",
+        "file:engine/src/invana/instructions/schemas.py",
+        "file:engine/src/invana/instructions/services.py",
+        "file:engine/src/invana/instructions/store.py",
+        "file:engine/src/invana/llm_providers/store.py",
+        "file:engine/src/invana/llm_providers/__init__.py",
+        "file:engine/src/invana/llm_providers/models.py",
+        "file:engine/src/invana/llm_providers/routes.py",
+        "file:engine/src/invana/llm_providers/schemas.py",
+        "file:engine/src/invana/llm_providers/services.py"
+      ]
+    },
+    {
+      id: "layer:engine-platform",
+      name: "Engine Platform & Server",
+      description: "FastAPI app factory, routers, starlette-admin, health checks, the invana CLI, telemetry/logging, and core engine plumbing (db session, settings, utils) that host and bootstrap the backend.",
+      nodeIds: [
+        "file:engine/src/invana/server/admin/auth.py",
+        "file:engine/src/invana/server/admin/views.py",
+        "file:engine/src/invana/server/app.py",
+        "file:engine/src/invana/server/health.py",
+        "file:engine/src/invana/server/routes/query.py",
+        "file:engine/src/invana/server/routes/schemas.py",
+        "file:engine/src/invana/server/__init__.py",
+        "file:engine/src/invana/server/admin/__init__.py",
+        "file:engine/src/invana/server/admin/templates/base.html",
+        "file:engine/src/invana/server/routes/__init__.py",
+        "file:engine/src/invana/cli/__init__.py",
+        "file:engine/src/invana/cli/commands/loader.py",
+        "file:engine/src/invana/cli/commands/migrate.py",
+        "file:engine/src/invana/cli/commands/start.py",
+        "file:engine/src/invana/cli/main.py",
+        "file:engine/src/invana/cli/commands/init.py",
+        "file:engine/src/invana/cli/commands/__init__.py",
+        "file:engine/src/invana/telemetry/__init__.py",
+        "file:engine/src/invana/telemetry/decorators/__init__.py",
+        "file:engine/src/invana/telemetry/decorators/capture_metrics.py",
+        "file:engine/src/invana/telemetry/decorators/track.py",
+        "file:engine/src/invana/telemetry/metrics.py",
+        "file:engine/src/invana/telemetry/middleware.py",
+        "file:engine/src/invana/telemetry/setup.py",
+        "file:engine/src/invana/logging/__init__.py",
+        "file:engine/src/invana/logging/config.py",
+        "file:engine/src/invana/logging/filters.py",
+        "file:engine/src/invana/logging/formatters.py",
+        "file:engine/src/invana/__init__.py",
+        "file:engine/src/invana/db.py",
+        "file:engine/src/invana/settings.py",
+        "file:engine/src/invana/utils.py"
+      ]
+    },
+    {
+      id: "layer:studio-ui",
+      name: "Studio UI & Pages",
+      description: "React 19 route pages (graph overview/explorer/modeller, auth, settings, platform) plus shared components, route guards, and the App/router/main bootstrap that compose the Studio frontend.",
+      nodeIds: [
+        "file:studio/src/pages/ErrorPage.tsx",
+        "file:studio/src/pages/auth/LoginPage.tsx",
+        "file:studio/src/pages/auth/RegisterPage.tsx",
+        "file:studio/src/pages/graphs/GraphCreatePage.tsx",
+        "file:studio/src/pages/graphs/GraphOverviewPage.tsx",
+        "file:studio/src/pages/graphs/GraphsListPage.tsx",
+        "file:studio/src/pages/graphs/components/AppVersion.tsx",
+        "file:studio/src/pages/graphs/components/GraphDetail.tsx",
+        "file:studio/src/pages/graphs/components/GraphForm.tsx",
+        "file:studio/src/pages/graphs/components/GraphStatusBadge.tsx",
+        "file:studio/src/pages/graphs/components/GraphStatusBar.tsx",
+        "file:studio/src/pages/graphs/explorer/ExplorerPage.tsx",
+        "file:studio/src/pages/graphs/explorer/components/CanvasToolbar.tsx",
+        "file:studio/src/pages/graphs/explorer/components/InspectorPanel.tsx",
+        "file:studio/src/pages/graphs/explorer/components/QueryPanel.tsx",
+        "file:studio/src/pages/graphs/explorer/hooks/useQueryExecution.ts",
+        "file:studio/src/pages/graphs/modeller/ModellerPage.tsx",
+        "file:studio/src/pages/graphs/modeller/components/ConstraintTable.tsx",
+        "file:studio/src/pages/graphs/modeller/components/DetailPanel.tsx",
+        "file:studio/src/pages/graphs/modeller/components/EdgeTypeDetail.tsx",
+        "file:studio/src/pages/graphs/modeller/components/IndexTable.tsx",
+        "file:studio/src/pages/graphs/modeller/components/NoSelectionPlaceholder.tsx",
+        "file:studio/src/pages/graphs/modeller/components/NodeTypeDetail.tsx",
+        "file:studio/src/pages/graphs/modeller/components/PropertyKeyTable.tsx",
+        "file:studio/src/pages/graphs/modeller/components/PropertyMappingTable.tsx",
+        "file:studio/src/pages/graphs/modeller/components/SchemaCanvas.tsx",
+        "file:studio/src/pages/graphs/modeller/components/SchemaNav.tsx",
+        "file:studio/src/pages/graphs/modeller/components/SchemaCanvasPlaceholder.tsx",
+        "file:studio/src/pages/platform/PlatformEventsPage.tsx",
+        "file:studio/src/pages/settings/ProfileSettingsPage.tsx",
+        "file:studio/src/components/FullscreenToggle.tsx",
+        "file:studio/src/components/ProtectedRoute.tsx",
+        "file:studio/src/components/RoleGate.tsx",
+        "file:studio/src/components/ThemeToggle.tsx",
+        "file:studio/src/components/canvas/GraphCanvas.tsx",
+        "file:studio/src/components/forms/FormError.tsx",
+        "file:studio/src/components/header/UserMenu.tsx",
+        "file:studio/src/components/header/useAppHeader.tsx",
+        "file:studio/src/components/settings/sections/EventsSection.tsx",
+        "file:studio/src/components/settings/sections/InvitationsSection.tsx",
+        "file:studio/src/components/settings/sections/MembersInvitationsSection.tsx",
+        "file:studio/src/components/settings/sections/MembersSection.tsx",
+        "file:studio/src/components/settings/sections/SkillsSection.tsx",
+        "file:studio/src/components/settings/useGraphLeftNav.tsx",
+        "file:studio/src/components/settings/useSettingsPanel.ts",
+        "file:studio/src/components/settings/SettingsPanel.tsx",
+        "file:studio/src/components/settings/SetupRequiredBanner.tsx",
+        "file:studio/src/components/settings/sections/ConnectionSection.tsx",
+        "file:studio/src/components/settings/sections/DatasetsSection.tsx",
+        "file:studio/src/components/settings/sections/InfoSection.tsx",
+        "file:studio/src/components/settings/sections/InstructionsSection.tsx",
+        "file:studio/src/components/settings/sections/IntentSection.tsx",
+        "file:studio/src/components/settings/sections/LLMsSection.tsx",
+        "file:studio/src/components/settings/sections/SetupWizard.tsx",
+        "file:studio/src/main.tsx",
+        "file:studio/src/router.tsx",
+        "file:studio/src/App.tsx",
+        "file:studio/src/index.css",
+        "file:studio/src/vite-env.d.ts"
+      ]
+    },
+    {
+      id: "layer:studio-data",
+      name: "Studio Data Access & State",
+      description: "Frontend data layer: axios API client and per-domain API modules, TanStack Query hooks, and Zustand auth/ui stores that mediate between Studio UI and the engine API.",
+      nodeIds: [
+        "file:studio/src/services/api/auth.ts",
+        "file:studio/src/services/api/client.ts",
+        "file:studio/src/services/api/events.ts",
+        "file:studio/src/services/api/graph-membership.ts",
+        "file:studio/src/services/api/graphs.ts",
+        "file:studio/src/services/api/health.ts",
+        "file:studio/src/services/api/instructions.ts",
+        "file:studio/src/services/api/llm.ts",
+        "file:studio/src/services/api/skills.ts",
+        "file:studio/src/services/api/schemas.ts",
+        "file:studio/src/hooks/queries/useEvents.ts",
+        "file:studio/src/hooks/useAuth.ts",
+        "file:studio/src/hooks/useEventStream.ts",
+        "file:studio/src/hooks/queries/useAppVersion.ts",
+        "file:studio/src/hooks/queries/useGraphs.ts",
+        "file:studio/src/hooks/queries/useInstructions.ts",
+        "file:studio/src/hooks/queries/useLLMProviders.ts",
+        "file:studio/src/hooks/queries/useSkills.ts",
+        "file:studio/src/hooks/queries/useSchema.ts",
+        "file:studio/src/stores/auth.store.ts",
+        "file:studio/src/stores/ui.store.ts"
+      ]
+    },
+    {
+      id: "layer:studio-types",
+      name: "Studio Shared Types",
+      description: "TypeScript interfaces and type definitions shared across Studio pages, hooks, and API modules describing graphs, schema, events, and platform contracts.",
+      nodeIds: [
+        "file:studio/src/types/auth.ts",
+        "file:studio/src/types/events.ts",
+        "file:studio/src/types/graphs.ts",
+        "file:studio/src/types/instructions.ts",
+        "file:studio/src/types/llm.ts",
+        "file:studio/src/types/query.ts",
+        "file:studio/src/types/skills.ts",
+        "file:studio/src/types/schemas.ts"
+      ]
+    },
+    {
+      id: "layer:config",
+      name: "Configuration & Project Files",
+      description: "Build, lint, and environment configuration for both apps (pyproject.toml, alembic.ini, tsconfig, vite, biome, package.json, .env examples) plus engine project documentation.",
+      nodeIds: [
+        "config:engine/.env.example",
+        "document:engine/CLAUDE.md",
+        "config:engine/alembic.ini",
+        "config:engine/pyproject.toml",
+        "config:studio/.env.example",
+        "config:studio/biome.json",
+        "file:studio/index.html",
+        "config:studio/package.json",
+        "config:studio/tsconfig.app.json",
+        "config:studio/tsconfig.json",
+        "config:studio/tsconfig.node.json",
+        "file:studio/.gitkeep",
+        "config:studio/vite.config.ts"
+      ]
+    }
+  ],
+  tour: [
+    {
+      order: 1,
+      title: "Project Overview & Monorepo",
+      description: "Invana is an open-source graph intelligence platform that turns structured knowledge graphs into interactive decision-simulation environments. Start with engine/CLAUDE.md, which is the authoritative map of the codebase: it describes the monorepo split into engine/ (Python 3.14 + FastAPI) and studio/ (React 19 + TypeScript), the supported Cypher/Gremlin graph databases, and the core feature areas. Read alongside the two project manifests to see the concrete stacks: pyproject.toml pins the FastAPI/SQLAlchemy/neo4j/gremlin backend, while package.json pins React 19, Vite, TanStack Query, Zustand, and PixiJS for the frontend.",
+      nodeIds: [
+        "document:engine/CLAUDE.md",
+        "config:engine/pyproject.toml",
+        "config:studio/package.json"
+      ]
+    },
+    {
+      order: 2,
+      title: "The Backend Entry Points",
+      description: "Building on the architecture from Step 1, this is where the engine boots. app.py is the FastAPI application factory: its create_app wires the lifespan startup (database engine + migrations), mounts routers and middleware, and exposes the admin UI. main.py is the Click CLI that ships as the `invana` command, grouping the start, migrate, init, and version subcommands so operators bootstrap and run the server from one tool. Together they answer 'how does the backend start?'",
+      nodeIds: [
+        "file:engine/src/invana/server/app.py",
+        "file:engine/src/invana/cli/main.py"
+      ]
+    },
+    {
+      order: 3,
+      title: "Configuration, Database & Migrations",
+      description: "Before any feature logic, the engine needs configuration and persistence. settings.py is a Pydantic Settings model that loads the database URL, ports, secrets, and telemetry flags from the environment \u2014 it has one of the highest fan-in scores in the codebase because nearly everything depends on it. db.py sets up the async SQLAlchemy engine, the get_session dependency injected into every route, and the Alembic migration runner, while alembic.ini configures where those app-state migrations live. This trio is the foundation the domain slices in later steps build on.",
+      nodeIds: [
+        "file:engine/src/invana/settings.py",
+        "file:engine/src/invana/db.py",
+        "config:engine/alembic.ini"
+      ],
+      languageLesson: "Pydantic BaseSettings reads typed fields from environment variables and .env files, giving validated, IDE-autocompleted config instead of scattered os.getenv calls. SQLAlchemy's async engine pairs with FastAPI dependency injection so each request gets a scoped AsyncSession."
+    },
+    {
+      order: 4,
+      title: "The Auth & Identity Seam",
+      description: "Every graph in Invana is owned and access-controlled, so identity comes early. models.py defines the User (with a globally unique username) and RefreshToken tables \u2014 the core identity records. services.py holds the auth business logic: invite-based registration, login/refresh/logout, self-service account changes, and root bootstrap. deps.py provides the FastAPI dependencies that decode the JWT, load the current User, and enforce authentication and superuser access on protected routes \u2014 the gate that the graph-scoped features in later steps sit behind.",
+      nodeIds: [
+        "file:engine/src/invana/auth/models.py",
+        "file:engine/src/invana/auth/services.py",
+        "file:engine/src/invana/auth/deps.py"
+      ]
+    },
+    {
+      order: 5,
+      title: "The Graph Container Model",
+      description: "A 'Graph' is the central organizing unit of the platform \u2014 a workspace that binds a backing database connection, members, and all the feature slices together. models.py defines the Graph container alongside its 1:1 GraphConnection, GraphMember, and Invitation tables plus role/status enums (RFC-017). services.py implements graph CRUD, encrypted connection setup, setup-section progress tracking, membership, and invitations. This builds directly on the auth User from Step 4, since graphs are owned by and shared between users.",
+      nodeIds: [
+        "file:engine/src/invana/graphs/models.py",
+        "file:engine/src/invana/graphs/services.py"
+      ]
+    },
+    {
+      order: 6,
+      title: "The Graph Connector Layer",
+      description: "This is Invana's core value: a pluggable layer that executes queries against heterogeneous graph databases behind one async contract. data_elements.py defines the normalized Vertex / Edge / Path / QueryResult Pydantic models that every backend's results are shaped into \u2014 the most depended-upon module in the engine. base/connector.py is the abstract BaseConnector that wires seven queryset facades (reader, writer, schema, bulk, algorithms, vector) and the connect/execute/disconnect lifecycle. cypher/connector.py implements it over the neo4j async driver (Neo4j/Memgraph/ArcadeDB) and gremlin/connector.py over a Gremlin DriverRemoteConnection (JanusGraph/Neptune/TinkerGraph).",
+      nodeIds: [
+        "file:engine/src/invana/graph/types/data_elements.py",
+        "file:engine/src/invana/graph/connectors/base/connector.py",
+        "file:engine/src/invana/graph/connectors/cypher/connector.py",
+        "file:engine/src/invana/graph/connectors/gremlin/connector.py"
+      ],
+      languageLesson: "Python's abc.ABC defines an abstract async contract that concrete connectors must satisfy, so Cypher and Gremlin backends are interchangeable. async/await lets a single connector pool stream results from a graph database without blocking the FastAPI event loop."
+    },
+    {
+      order: 7,
+      title: "Connection Pooling & Query Execution",
+      description: "The connectors from Step 6 don't run in isolation \u2014 they are managed and exposed over HTTP here. manager.py is the GraphConnectionManager: it builds, pools, and reuses one live connector per graph, surfacing each backend's capabilities and introspection. query.py is the FastAPI router that takes a user's Cypher or Gremlin query, runs it through the connection manager, enforces read-only safety, and normalizes the response into the data_elements shapes from Step 6. This is the runtime path that powers the Studio Explorer later in the tour.",
+      nodeIds: [
+        "file:engine/src/invana/graphs/manager.py",
+        "file:engine/src/invana/server/routes/query.py"
+      ]
+    },
+    {
+      order: 8,
+      title: "The Modeller \u2014 Ontology & Schema Versioning",
+      description: "On top of raw connectors sits the Modeller, which gives a graph a typed ontology and a versioned schema. models.py defines the ORM models for graph schemas, versions, property keys, node/edge types, mappings, validation rules, constraints, indexes, and projections \u2014 the semantic layer that turns an arbitrary graph database into a governed knowledge model. The package barrel (__init__.py) re-exports the schema store, validator, versioner, projector, reconciler, introspector, and JSON import/export services that operate on those models, enabling schema evolution alongside the application.",
+      nodeIds: [
+        "file:engine/src/invana/modeller/models.py",
+        "file:engine/src/invana/modeller/__init__.py"
+      ]
+    },
+    {
+      order: 9,
+      title: "Graph-Scoped Feature Slices",
+      description: "With graphs, connectors, and a schema in place, Invana layers on the features that make a graph an intelligence workspace. Each slice follows the same pattern (models / routes / schemas / services) and is scoped to a graph behind the membership guards from Step 4. llm_providers/routes.py manages per-graph LLM provider credentials (with key masking, ping, and set-default); skills/routes.py and instructions/routes.py expose builder-guarded CRUD for the reusable Skills and Instructions that steer the agents; and events/services.py emits redacted, diffed, trace-correlated audit events for explainability across every action.",
+      nodeIds: [
+        "file:engine/src/invana/llm_providers/routes.py",
+        "file:engine/src/invana/skills/routes.py",
+        "file:engine/src/invana/instructions/routes.py",
+        "file:engine/src/invana/events/services.py"
+      ]
+    },
+    {
+      order: 10,
+      title: "Studio Bootstrap & Routing",
+      description: "Now we cross from the engine to the Studio frontend. main.tsx is the React entry point: it bootstraps React, the router, the TanStack Query client, and hydrates the persisted auth store into the DOM. router.tsx is the central React Router config that maps the auth, graph, platform, and settings routes with lazy loading and route protection \u2014 the frontend mirror of the engine's route surface. This is the studio counterpart to the backend entry points from Step 2.",
+      nodeIds: [
+        "file:studio/src/main.tsx",
+        "file:studio/src/router.tsx"
+      ],
+      languageLesson: "React 19 mounts the app via createRoot in main.tsx. React Router's data router defines routes as a tree of objects, and lazy() defers loading a route's component bundle until the user navigates there, shrinking the initial download."
+    },
+    {
+      order: 11,
+      title: "Studio Data Access & State",
+      description: "The Studio talks to the engine through a thin, typed data layer. client.ts is the core HTTP client with a typed request helper, automatic token-refresh handling, and a normalized ApiError type. auth.store.ts is a Zustand store that holds the authenticated user and tokens and rehydrates the session across reloads \u2014 the frontend twin of Step 4's identity model. useGraphs.ts is a TanStack Query hook module for graph CRUD, setup progress, and connection lifecycle, while types/graphs.ts mirrors the engine's Graph container types so the two apps stay in contract.",
+      nodeIds: [
+        "file:studio/src/services/api/client.ts",
+        "file:studio/src/stores/auth.store.ts",
+        "file:studio/src/hooks/queries/useGraphs.ts",
+        "file:studio/src/types/graphs.ts"
+      ],
+      languageLesson: "Zustand holds client/session state in a tiny hook-based store, while TanStack Query owns server state \u2014 caching, refetching, and mutation invalidation \u2014 so components stay declarative. The two are kept separate: stores for session, query hooks for data fetched from the engine."
+    },
+    {
+      order: 12,
+      title: "The Explorer \u2014 Querying & Visualization",
+      description: "The Explorer is where users interactively query a graph and see results. ExplorerPage.tsx composes the query panel, the graph canvas, a canvas toolbar, and an inspector panel. QueryPanel.tsx combines a CodeMirror editor with natural-language-to-query LLM assist (using the providers from Step 9) and posts to the engine's query route from Step 7. GraphCanvas.tsx is the thin React wrapper that adapts the normalized node/edge results into the @invana/canvas PixiJS renderer, which draws large graphs on the GPU.",
+      nodeIds: [
+        "file:studio/src/pages/graphs/explorer/ExplorerPage.tsx",
+        "file:studio/src/pages/graphs/explorer/components/QueryPanel.tsx",
+        "file:studio/src/components/canvas/GraphCanvas.tsx"
+      ],
+      languageLesson: "Graph rendering is isolated behind @invana/canvas (PixiJS 8, WebGPU/WebGL) so Studio never touches PixiJS directly \u2014 GraphCanvas.tsx just maps data to the renderer's API, keeping the heavy GPU code out of the page components."
+    },
+    {
+      order: 13,
+      title: "The Modeller \u2014 Schema Diagram",
+      description: "The tour closes by connecting the engine's Modeller (Step 8) to its frontend. ModellerPage.tsx renders a graph's ontology, gating on setup completion and offering a connection-introspection action that populates the schema from a live database. SchemaCanvas.tsx maps node types to canvas nodes and edge types to canvas edges, reusing the same GraphCanvas renderer from Step 12 to draw the schema as a diagram. types/schemas.ts is the TypeScript contract \u2014 node types, edge types, property keys, mappings, constraints, indexes, validation rules \u2014 mirroring the engine's modeller models so the ontology stays consistent end to end.",
+      nodeIds: [
+        "file:studio/src/pages/graphs/modeller/ModellerPage.tsx",
+        "file:studio/src/pages/graphs/modeller/components/SchemaCanvas.tsx",
+        "file:studio/src/types/schemas.ts"
+      ]
+    }
+  ]
+};
+
+// src/usecase-demos/invana-code-kg/data.ts
+var invanaCodeKg = knowledge_graph_default;
+var settings11 = {
+  activeLayout: "graph-force",
+  fitOnLoad: true,
+  layers: {
+    graph: {
+      node: {
+        style: {
+          shape: { kind: "circle", radius: 4 },
+          bgStrokeWidth: 0,
+          showLabel: false
+        }
+      },
+      edge: {
+        style: {
+          strokeColor: 9741240,
+          strokeWidth: 0.5,
+          strokeAlpha: 0.22,
+          arrowTargetShape: "none"
+        }
+      }
+    }
+  },
+  layouts: {
+    "graph-force": {
+      charge: { strength: -140 },
+      link: { distance: 44 },
+      collide: {},
+      animate: false
+    }
+  },
+  behaviours: {
+    color: { enabled: true, colorEdges: false },
+    hover: {
+      enabled: true,
+      state: "highlighted",
+      inactiveState: "dimmed",
+      degree: 1,
+      direction: "both"
+    },
+    "click-select": { enabled: true, multiple: true, trigger: ["shift"] }
+  }
+};
+
+// src/usecase-demos/airways-global-model/global-model.json
+var global_model_default = {
+  nodes: [
+    {
+      id: "AirRoutes",
+      type: "model",
+      data: {
+        name: "AirRoutes",
+        packageId: "invana.dataset.air-routes",
+        version: "1.0.0",
+        description: "Airports, the countries and continents that contain them, and the flights between them."
+      }
+    },
+    {
+      id: "AirRoutes.airport",
+      type: "AirRoutes.airport",
+      parentId: "AirRoutes",
+      data: {
+        label: "airport",
+        model: "AirRoutes",
+        description: "An airport, with its codes and where it is.",
+        icon: "lucide/plane-takeoff",
+        identity: "code",
+        propertyCount: 12,
+        stitchCount: 5,
+        properties: [
+          {
+            name: "type",
+            type: "string",
+            description: "The kind of thing, as the source file spells it."
+          },
+          {
+            name: "code",
+            type: "string",
+            description: "IATA code on an airport, two-letter code on a country or continent.",
+            identity: true,
+            stitches: [
+              "R1",
+              "R2",
+              "R3",
+              "R4",
+              "R7"
+            ]
+          },
+          {
+            name: "icao",
+            type: "string",
+            description: "Four-letter ICAO airport code."
+          },
+          {
+            name: "desc",
+            type: "string",
+            description: "The long name."
+          },
+          {
+            name: "region",
+            type: "string",
+            description: "ISO 3166-2 region."
+          },
+          {
+            name: "runways",
+            type: "integer",
+            description: "Number of runways."
+          },
+          {
+            name: "longest",
+            type: "integer",
+            description: "Longest runway, in feet."
+          },
+          {
+            name: "elev",
+            type: "integer",
+            description: "Elevation, in feet."
+          },
+          {
+            name: "country",
+            type: "string",
+            description: "Two-letter country code the airport sits in."
+          },
+          {
+            name: "city",
+            type: "string",
+            description: "The city served."
+          },
+          {
+            name: "lat",
+            type: "float",
+            description: "Latitude."
+          },
+          {
+            name: "lon",
+            type: "float",
+            description: "Longitude."
+          }
+        ]
+      }
+    },
+    {
+      id: "AirRoutes.country",
+      type: "AirRoutes.country",
+      parentId: "AirRoutes",
+      data: {
+        label: "country",
+        model: "AirRoutes",
+        description: "A country, by two-letter code.",
+        icon: "lucide/flag",
+        identity: "code",
+        propertyCount: 3,
+        stitchCount: 1,
+        properties: [
+          {
+            name: "type",
+            type: "string",
+            description: "The kind of thing, as the source file spells it."
+          },
+          {
+            name: "code",
+            type: "string",
+            description: "IATA code on an airport, two-letter code on a country or continent.",
+            identity: true,
+            stitches: [
+              "A1"
+            ]
+          },
+          {
+            name: "desc",
+            type: "string",
+            description: "The long name."
+          }
+        ],
+        anchored: true
+      }
+    },
+    {
+      id: "AirRoutes.continent",
+      type: "AirRoutes.continent",
+      parentId: "AirRoutes",
+      data: {
+        label: "continent",
+        model: "AirRoutes",
+        description: "A continent, by two-letter code.",
+        icon: "lucide/globe",
+        identity: "code",
+        propertyCount: 3,
+        stitchCount: 0,
+        properties: [
+          {
+            name: "type",
+            type: "string",
+            description: "The kind of thing, as the source file spells it."
+          },
+          {
+            name: "code",
+            type: "string",
+            description: "IATA code on an airport, two-letter code on a country or continent.",
+            identity: true
+          },
+          {
+            name: "desc",
+            type: "string",
+            description: "The long name."
+          }
+        ]
+      }
+    },
+    {
+      id: "AirRoutes.version",
+      type: "AirRoutes.version",
+      parentId: "AirRoutes",
+      data: {
+        label: "version",
+        model: "AirRoutes",
+        description: "The edition of the source data this graph was built from.",
+        icon: "lucide/history",
+        propertyCount: 5,
+        stitchCount: 0,
+        properties: [
+          {
+            name: "type",
+            type: "string",
+            description: "The kind of thing, as the source file spells it."
+          },
+          {
+            name: "code",
+            type: "string",
+            description: "IATA code on an airport, two-letter code on a country or continent."
+          },
+          {
+            name: "desc",
+            type: "string",
+            description: "The long name."
+          },
+          {
+            name: "author",
+            type: "string",
+            description: "Who compiled this edition of the data."
+          },
+          {
+            name: "date",
+            type: "string",
+            description: "When the edition was generated."
+          }
+        ]
+      }
+    },
+    {
+      id: "NewsArticles",
+      type: "model",
+      data: {
+        name: "NewsArticles",
+        packageId: "invana.dataset.news-articles",
+        version: "1.0.0",
+        description: "Aviation coverage \u2014 articles, the outlets that ran them, and the carriers, routes, cities and countries they name."
+      }
+    },
+    {
+      id: "NewsArticles.Article",
+      type: "NewsArticles.Article",
+      parentId: "NewsArticles",
+      data: {
+        label: "Article",
+        model: "NewsArticles",
+        description: "One published piece of aviation coverage.",
+        icon: "lucide/newspaper",
+        identity: "article_id",
+        propertyCount: 8,
+        stitchCount: 2,
+        properties: [
+          {
+            name: "article_id",
+            type: "string",
+            description: "Stable id of the article at its publisher.",
+            identity: true,
+            stitches: [
+              "R9"
+            ]
+          },
+          {
+            name: "headline",
+            type: "string",
+            description: "What the article is called."
+          },
+          {
+            name: "url",
+            type: "string",
+            description: "Where the article lives.",
+            stitches: [
+              "R8"
+            ]
+          },
+          {
+            name: "summary",
+            type: "string",
+            description: "One line of what it says."
+          },
+          {
+            name: "published_at",
+            type: "datetime",
+            description: "When it went out."
+          },
+          {
+            name: "sentiment",
+            type: "enum",
+            description: "How the piece reads about its subject."
+          },
+          {
+            name: "word_count",
+            type: "integer",
+            description: "Length of the body."
+          },
+          {
+            name: "language",
+            type: "string",
+            description: "BCP-47 language tag."
+          }
+        ]
+      }
+    },
+    {
+      id: "NewsArticles.Publisher",
+      type: "NewsArticles.Publisher",
+      parentId: "NewsArticles",
+      data: {
+        label: "Publisher",
+        model: "NewsArticles",
+        description: "The outlet that ran it.",
+        icon: "lucide/building-2",
+        identity: "domain",
+        propertyCount: 4,
+        stitchCount: 2,
+        properties: [
+          {
+            name: "name",
+            type: "string",
+            description: "What to call it."
+          },
+          {
+            name: "domain",
+            type: "string",
+            description: "The publisher's own domain \u2014 the key a social account shares.",
+            identity: true,
+            stitches: [
+              "R5",
+              "A3"
+            ]
+          },
+          {
+            name: "country_code",
+            type: "string",
+            description: "Two-letter country code, as air-routes spells it."
+          },
+          {
+            name: "kind",
+            type: "enum",
+            description: "What sort of outlet this is."
+          }
+        ],
+        anchored: true
+      }
+    },
+    {
+      id: "NewsArticles.Airline",
+      type: "NewsArticles.Airline",
+      parentId: "NewsArticles",
+      data: {
+        label: "Airline",
+        model: "NewsArticles",
+        description: "A carrier the coverage is about.",
+        icon: "lucide/plane",
+        identity: "iata",
+        propertyCount: 8,
+        stitchCount: 3,
+        properties: [
+          {
+            name: "name",
+            type: "string",
+            description: "What to call it."
+          },
+          {
+            name: "iata",
+            type: "string",
+            description: "Two-letter IATA airline designator.",
+            identity: true,
+            stitches: [
+              "R6",
+              "R10"
+            ]
+          },
+          {
+            name: "icao",
+            type: "string",
+            description: "Three-letter ICAO airline designator."
+          },
+          {
+            name: "callsign",
+            type: "string",
+            description: "Radio callsign."
+          },
+          {
+            name: "country_code",
+            type: "string",
+            description: "Two-letter country code, as air-routes spells it."
+          },
+          {
+            name: "hub_code",
+            type: "string",
+            description: "IATA code of the airline's main hub \u2014 an air-routes airport code.",
+            stitches: [
+              "R2"
+            ]
+          },
+          {
+            name: "alliance",
+            type: "enum",
+            description: "Global alliance membership."
+          },
+          {
+            name: "fleet_size",
+            type: "integer",
+            description: "Aircraft in service."
+          }
+        ]
+      }
+    },
+    {
+      id: "NewsArticles.City",
+      type: "NewsArticles.City",
+      parentId: "NewsArticles",
+      data: {
+        label: "City",
+        model: "NewsArticles",
+        description: "A city the coverage names.",
+        icon: "lucide/landmark",
+        identity: "code",
+        propertyCount: 5,
+        stitchCount: 1,
+        properties: [
+          {
+            name: "name",
+            type: "string",
+            description: "What to call it."
+          },
+          {
+            name: "code",
+            type: "string",
+            description: "IATA code of the city's main airport.",
+            identity: true,
+            stitches: [
+              "R1"
+            ]
+          },
+          {
+            name: "country_code",
+            type: "string",
+            description: "Two-letter country code, as air-routes spells it."
+          },
+          {
+            name: "lat",
+            type: "float",
+            description: "Latitude."
+          },
+          {
+            name: "lon",
+            type: "float",
+            description: "Longitude."
+          }
+        ]
+      }
+    },
+    {
+      id: "NewsArticles.Country",
+      type: "NewsArticles.Country",
+      parentId: "NewsArticles",
+      data: {
+        label: "Country",
+        model: "NewsArticles",
+        description: "A country the coverage names.",
+        icon: "lucide/flag",
+        identity: "iso_code",
+        propertyCount: 2,
+        stitchCount: 1,
+        properties: [
+          {
+            name: "name",
+            type: "string",
+            description: "What to call it."
+          },
+          {
+            name: "iso_code",
+            type: "string",
+            description: "Two-letter country code. air-routes calls the same fact `code` \u2014 the W1 case.",
+            identity: true,
+            stitches: [
+              "A1"
+            ]
+          }
+        ],
+        anchored: true
+      }
+    },
+    {
+      id: "NewsArticles.Route",
+      type: "NewsArticles.Route",
+      parentId: "NewsArticles",
+      data: {
+        label: "Route",
+        model: "NewsArticles",
+        description: "A city pair a carrier flies, or says it will.",
+        icon: "lucide/route",
+        identity: "route_id",
+        propertyCount: 6,
+        stitchCount: 2,
+        properties: [
+          {
+            name: "route_id",
+            type: "string",
+            description: "Airline and endpoints, as one key.",
+            identity: true
+          },
+          {
+            name: "origin_code",
+            type: "string",
+            description: "IATA code the route leaves from.",
+            stitches: [
+              "R3"
+            ]
+          },
+          {
+            name: "destination_code",
+            type: "string",
+            description: "IATA code the route arrives at.",
+            stitches: [
+              "R4"
+            ]
+          },
+          {
+            name: "status",
+            type: "enum",
+            description: "Where the route stands."
+          },
+          {
+            name: "starts_on",
+            type: "date",
+            description: "First day of service."
+          },
+          {
+            name: "frequency_weekly",
+            type: "integer",
+            description: "Departures a week."
+          }
+        ]
+      }
+    },
+    {
+      id: "NewsArticles.Topic",
+      type: "NewsArticles.Topic",
+      parentId: "NewsArticles",
+      data: {
+        label: "Topic",
+        model: "NewsArticles",
+        description: "What a piece is about.",
+        icon: "lucide/tag",
+        identity: "tag",
+        propertyCount: 2,
+        stitchCount: 1,
+        properties: [
+          {
+            name: "tag",
+            type: "string",
+            description: "Topic slug \u2014 the key a hashtag shares, case aside.",
+            identity: true,
+            stitches: [
+              "A2"
+            ]
+          },
+          {
+            name: "label",
+            type: "string",
+            description: "The topic, written out."
+          }
+        ],
+        anchored: true
+      }
+    },
+    {
+      id: "Twitter",
+      type: "model",
+      data: {
+        name: "Twitter",
+        packageId: "invana.dataset.twitter",
+        version: "1.0.0",
+        description: "Aviation chatter \u2014 posts, the accounts behind them and the tags they carry."
+      }
+    },
+    {
+      id: "Twitter.Tweet",
+      type: "Twitter.Tweet",
+      parentId: "Twitter",
+      data: {
+        label: "Tweet",
+        model: "Twitter",
+        description: "One post.",
+        icon: "lucide/message-square",
+        identity: "tweet_id",
+        propertyCount: 10,
+        stitchCount: 3,
+        properties: [
+          {
+            name: "tweet_id",
+            type: "string",
+            description: "The post's own id.",
+            identity: true,
+            stitches: [
+              "R9"
+            ]
+          },
+          {
+            name: "text",
+            type: "string",
+            description: "What was posted."
+          },
+          {
+            name: "created_at",
+            type: "datetime",
+            description: "When it was posted."
+          },
+          {
+            name: "lang",
+            type: "string",
+            description: "BCP-47 language tag."
+          },
+          {
+            name: "retweets",
+            type: "integer",
+            description: "Reposts."
+          },
+          {
+            name: "likes",
+            type: "integer",
+            description: "Likes."
+          },
+          {
+            name: "replies",
+            type: "integer",
+            description: "Replies."
+          },
+          {
+            name: "sentiment",
+            type: "enum",
+            description: "How the post reads."
+          },
+          {
+            name: "linked_url",
+            type: "string",
+            description: "The article the post links to \u2014 the key an Article's url matches.",
+            stitches: [
+              "R8"
+            ]
+          },
+          {
+            name: "airport_code",
+            type: "string",
+            description: "IATA code the post was tagged at \u2014 an air-routes airport code.",
+            stitches: [
+              "R7"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      id: "Twitter.Account",
+      type: "Twitter.Account",
+      parentId: "Twitter",
+      data: {
+        label: "Account",
+        model: "Twitter",
+        description: "Who posted it \u2014 a carrier, an outlet, a watcher or a passenger.",
+        icon: "lucide/at-sign",
+        identity: "handle",
+        propertyCount: 8,
+        stitchCount: 2,
+        properties: [
+          {
+            name: "handle",
+            type: "string",
+            description: "The @name, without the @.",
+            identity: true
+          },
+          {
+            name: "display_name",
+            type: "string",
+            description: "The name on the profile."
+          },
+          {
+            name: "followers",
+            type: "integer",
+            description: "Follower count."
+          },
+          {
+            name: "verified",
+            type: "boolean",
+            description: "Whether the account carries a check."
+          },
+          {
+            name: "kind",
+            type: "enum",
+            description: "What sort of account this is."
+          },
+          {
+            name: "airline_iata",
+            type: "string",
+            description: "For an airline account, its IATA designator \u2014 the key an Airline's iata matches.",
+            stitches: [
+              "R6"
+            ]
+          },
+          {
+            name: "domain",
+            type: "string",
+            description: "For a news account, the outlet's domain \u2014 the key a Publisher's domain matches.",
+            stitches: [
+              "R5"
+            ]
+          },
+          {
+            name: "country_code",
+            type: "string",
+            description: "Two-letter country code, as air-routes spells it."
+          }
+        ]
+      }
+    },
+    {
+      id: "Twitter.Hashtag",
+      type: "Twitter.Hashtag",
+      parentId: "Twitter",
+      data: {
+        label: "Hashtag",
+        model: "Twitter",
+        description: "A tag carried by posts.",
+        icon: "lucide/hash",
+        identity: "tag",
+        propertyCount: 1,
+        stitchCount: 1,
+        properties: [
+          {
+            name: "tag",
+            type: "string",
+            description: "The hashtag, without the # \u2014 a Topic's tag, cased differently.",
+            identity: true,
+            stitches: [
+              "A2"
+            ]
+          }
+        ],
+        anchored: true
+      }
+    },
+    {
+      id: "Deals",
+      type: "model",
+      data: {
+        name: "Deals",
+        packageId: "invana.dataset.deals",
+        version: "1.0.0",
+        description: "Sponsorship agreements between carriers and the companies that back them."
+      }
+    },
+    {
+      id: "Deals.Deal",
+      type: "Deals.Deal",
+      parentId: "Deals",
+      data: {
+        label: "Deal",
+        model: "Deals",
+        description: "One sponsorship agreement.",
+        icon: "lucide/handshake",
+        identity: "deal_id",
+        propertyCount: 12,
+        stitchCount: 1,
+        properties: [
+          {
+            name: "deal_id",
+            type: "string",
+            description: "The sponsorship agreement's own reference.",
+            identity: true
+          },
+          {
+            name: "carrier_iata",
+            type: "string",
+            description: "IATA code of the airline the deal is with \u2014 the key FOR_CARRIER resolves on.",
+            stitches: [
+              "R10"
+            ]
+          },
+          {
+            name: "sponsor_id",
+            type: "string",
+            description: "The sponsor's reference in this model."
+          },
+          {
+            name: "country_iso",
+            type: "string",
+            description: "The carrier's country, ISO 3166-1 alpha-2. The geo axis."
+          },
+          {
+            name: "stage",
+            type: "string",
+            description: "prospect \xB7 negotiating \xB7 signed \xB7 renewed \xB7 lapsed."
+          },
+          {
+            name: "channel",
+            type: "string",
+            description: "How it was sold \u2014 direct \xB7 agency \xB7 programmatic."
+          },
+          {
+            name: "segment",
+            type: "string",
+            description: "enterprise \xB7 mid-market \xB7 regional."
+          },
+          {
+            name: "contract_value",
+            type: "integer",
+            description: "The whole commitment, in minor-unit-free EUR. Commercially sensitive."
+          },
+          {
+            name: "revenue",
+            type: "integer",
+            description: "What has been recognised against the contract so far. Commercially sensitive."
+          },
+          {
+            name: "currency",
+            type: "string",
+            description: "Always EUR in this dataset; kept so the number is never a bare integer."
+          },
+          {
+            name: "signed_at",
+            type: "string",
+            description: "ISO date the agreement was signed. The valid-time axis."
+          },
+          {
+            name: "term_months",
+            type: "integer",
+            description: "How long it runs."
+          }
+        ]
+      }
+    },
+    {
+      id: "Deals.Sponsor",
+      type: "Deals.Sponsor",
+      parentId: "Deals",
+      data: {
+        label: "Sponsor",
+        model: "Deals",
+        description: "A company backing a carrier.",
+        icon: "lucide/briefcase",
+        identity: "domain",
+        propertyCount: 4,
+        stitchCount: 1,
+        properties: [
+          {
+            name: "name",
+            type: "string",
+            description: "The sponsoring company."
+          },
+          {
+            name: "domain",
+            type: "string",
+            description: "Its web domain \u2014 the key the Publisher anchor resolves on.",
+            identity: true,
+            stitches: [
+              "A3"
+            ]
+          },
+          {
+            name: "country_iso",
+            type: "string",
+            description: "The carrier's country, ISO 3166-1 alpha-2. The geo axis."
+          },
+          {
+            name: "sector",
+            type: "string",
+            description: "media \xB7 financial \xB7 hospitality \xB7 telecom \xB7 energy."
+          }
+        ],
+        anchored: true
+      }
+    }
+  ],
+  edges: [
+    {
+      id: "AirRoutes.route:airport->airport",
+      type: "route",
+      source: "AirRoutes.airport",
+      target: "AirRoutes.airport",
+      data: {
+        kind: "edge",
+        model: "AirRoutes",
+        description: "A flight between two airports.",
+        multiplicity: "MULTI"
+      }
+    },
+    {
+      id: "AirRoutes.contains:country->airport",
+      type: "contains",
+      source: "AirRoutes.country",
+      target: "AirRoutes.airport",
+      data: {
+        kind: "edge",
+        model: "AirRoutes",
+        description: "The country and the continent an airport sits in.",
+        multiplicity: "MULTI"
+      }
+    },
+    {
+      id: "AirRoutes.contains:continent->airport",
+      type: "contains",
+      source: "AirRoutes.continent",
+      target: "AirRoutes.airport",
+      data: {
+        kind: "edge",
+        model: "AirRoutes",
+        description: "The country and the continent an airport sits in.",
+        multiplicity: "MULTI"
+      }
+    },
+    {
+      id: "NewsArticles.PUBLISHED_BY:Article->Publisher",
+      type: "PUBLISHED_BY",
+      source: "NewsArticles.Article",
+      target: "NewsArticles.Publisher",
+      data: {
+        kind: "edge",
+        model: "NewsArticles",
+        description: "The outlet that ran the article.",
+        multiplicity: "MANY2ONE"
+      }
+    },
+    {
+      id: "NewsArticles.MENTIONS_AIRLINE:Article->Airline",
+      type: "MENTIONS_AIRLINE",
+      source: "NewsArticles.Article",
+      target: "NewsArticles.Airline",
+      data: {
+        kind: "edge",
+        model: "NewsArticles",
+        description: "A carrier named in the piece.",
+        multiplicity: "MULTI"
+      }
+    },
+    {
+      id: "NewsArticles.MENTIONS_CITY:Article->City",
+      type: "MENTIONS_CITY",
+      source: "NewsArticles.Article",
+      target: "NewsArticles.City",
+      data: {
+        kind: "edge",
+        model: "NewsArticles",
+        description: "A city named in the piece.",
+        multiplicity: "MULTI"
+      }
+    },
+    {
+      id: "NewsArticles.MENTIONS_COUNTRY:Article->Country",
+      type: "MENTIONS_COUNTRY",
+      source: "NewsArticles.Article",
+      target: "NewsArticles.Country",
+      data: {
+        kind: "edge",
+        model: "NewsArticles",
+        description: "A country named in the piece.",
+        multiplicity: "MULTI"
+      }
+    },
+    {
+      id: "NewsArticles.REPORTS_ON:Article->Route",
+      type: "REPORTS_ON",
+      source: "NewsArticles.Article",
+      target: "NewsArticles.Route",
+      data: {
+        kind: "edge",
+        model: "NewsArticles",
+        description: "The route the piece is about.",
+        multiplicity: "MULTI"
+      }
+    },
+    {
+      id: "NewsArticles.TAGGED:Article->Topic",
+      type: "TAGGED",
+      source: "NewsArticles.Article",
+      target: "NewsArticles.Topic",
+      data: {
+        kind: "edge",
+        model: "NewsArticles",
+        description: "The topic the piece was filed under.",
+        multiplicity: "MULTI"
+      }
+    },
+    {
+      id: "NewsArticles.OPERATED_BY:Route->Airline",
+      type: "OPERATED_BY",
+      source: "NewsArticles.Route",
+      target: "NewsArticles.Airline",
+      data: {
+        kind: "edge",
+        model: "NewsArticles",
+        description: "The carrier flying the route.",
+        multiplicity: "MANY2ONE"
+      }
+    },
+    {
+      id: "NewsArticles.BASED_IN:Airline->Country",
+      type: "BASED_IN",
+      source: "NewsArticles.Airline",
+      target: "NewsArticles.Country",
+      data: {
+        kind: "edge",
+        model: "NewsArticles",
+        description: "Where the carrier is registered.",
+        multiplicity: "MANY2ONE"
+      }
+    },
+    {
+      id: "NewsArticles.LOCATED_IN:City->Country",
+      type: "LOCATED_IN",
+      source: "NewsArticles.City",
+      target: "NewsArticles.Country",
+      data: {
+        kind: "edge",
+        model: "NewsArticles",
+        description: "The country the city sits in.",
+        multiplicity: "MANY2ONE"
+      }
+    },
+    {
+      id: "Twitter.POSTED:Account->Tweet",
+      type: "POSTED",
+      source: "Twitter.Account",
+      target: "Twitter.Tweet",
+      data: {
+        kind: "edge",
+        model: "Twitter",
+        description: "The account that wrote the post.",
+        multiplicity: "ONE2MANY"
+      }
+    },
+    {
+      id: "Twitter.TAGS:Tweet->Hashtag",
+      type: "TAGS",
+      source: "Twitter.Tweet",
+      target: "Twitter.Hashtag",
+      data: {
+        kind: "edge",
+        model: "Twitter",
+        description: "A hashtag the post carries.",
+        multiplicity: "MULTI"
+      }
+    },
+    {
+      id: "Twitter.MENTIONS:Tweet->Account",
+      type: "MENTIONS",
+      source: "Twitter.Tweet",
+      target: "Twitter.Account",
+      data: {
+        kind: "edge",
+        model: "Twitter",
+        description: "An account the post names.",
+        multiplicity: "MULTI"
+      }
+    },
+    {
+      id: "Twitter.REPLIES_TO:Tweet->Tweet",
+      type: "REPLIES_TO",
+      source: "Twitter.Tweet",
+      target: "Twitter.Tweet",
+      data: {
+        kind: "edge",
+        model: "Twitter",
+        description: "The post this one answers.",
+        multiplicity: "MANY2ONE"
+      }
+    },
+    {
+      id: "Twitter.RETWEETS:Tweet->Tweet",
+      type: "RETWEETS",
+      source: "Twitter.Tweet",
+      target: "Twitter.Tweet",
+      data: {
+        kind: "edge",
+        model: "Twitter",
+        description: "The post this one reposts.",
+        multiplicity: "MANY2ONE"
+      }
+    },
+    {
+      id: "Twitter.QUOTES:Tweet->Tweet",
+      type: "QUOTES",
+      source: "Twitter.Tweet",
+      target: "Twitter.Tweet",
+      data: {
+        kind: "edge",
+        model: "Twitter",
+        description: "The post this one quotes.",
+        multiplicity: "MANY2ONE"
+      }
+    },
+    {
+      id: "Deals.SPONSORED_BY:Deal->Sponsor",
+      type: "SPONSORED_BY",
+      source: "Deals.Deal",
+      target: "Deals.Sponsor",
+      data: {
+        kind: "edge",
+        model: "Deals",
+        description: "The company behind the agreement.",
+        multiplicity: "MANY2ONE"
+      }
+    },
+    {
+      id: "stitch:A1",
+      type: "SAME_AS",
+      source: "NewsArticles.Country",
+      target: "AirRoutes.country",
+      data: {
+        kind: "anchor",
+        stitch: "A1",
+        rule: "NewsArticles.Country.iso_code \u2261 AirRoutes.country.code",
+        match: "exact",
+        description: "A country is a country in both models; the two teams spelled the key differently (W1)."
+      }
+    },
+    {
+      id: "stitch:A2",
+      type: "SAME_AS",
+      source: "Twitter.Hashtag",
+      target: "NewsArticles.Topic",
+      data: {
+        kind: "anchor",
+        stitch: "A2",
+        rule: "Twitter.Hashtag.tag \u2261 NewsArticles.Topic.tag",
+        match: "case_insensitive",
+        partial: true,
+        description: "RouteLaunch is routelaunch. Six hashtags have no topic behind them, on purpose."
+      }
+    },
+    {
+      id: "stitch:R1",
+      type: "SERVED_BY",
+      source: "NewsArticles.City",
+      target: "AirRoutes.airport",
+      data: {
+        kind: "relationship",
+        stitch: "R1",
+        rule: "NewsArticles.City.code \u2192 AirRoutes.airport.code",
+        description: "A city is not an airport \u2014 it is served by one."
+      }
+    },
+    {
+      id: "stitch:R2",
+      type: "HUBS_AT",
+      source: "NewsArticles.Airline",
+      target: "AirRoutes.airport",
+      data: {
+        kind: "relationship",
+        stitch: "R2",
+        rule: "NewsArticles.Airline.hub_code \u2192 AirRoutes.airport.code",
+        description: "A foreign key the records already carry (W2)."
+      }
+    },
+    {
+      id: "stitch:R3",
+      type: "DEPARTS_FROM",
+      source: "NewsArticles.Route",
+      target: "AirRoutes.airport",
+      data: {
+        kind: "relationship",
+        stitch: "R3",
+        rule: "NewsArticles.Route.origin_code \u2192 AirRoutes.airport.code"
+      }
+    },
+    {
+      id: "stitch:R4",
+      type: "ARRIVES_AT",
+      source: "NewsArticles.Route",
+      target: "AirRoutes.airport",
+      data: {
+        kind: "relationship",
+        stitch: "R4",
+        rule: "NewsArticles.Route.destination_code \u2192 AirRoutes.airport.code"
+      }
+    },
+    {
+      id: "stitch:R5",
+      type: "SPEAKS_FOR",
+      source: "Twitter.Account",
+      target: "NewsArticles.Publisher",
+      data: {
+        kind: "relationship",
+        stitch: "R5",
+        rule: "Twitter.Account.domain \u2192 NewsArticles.Publisher.domain",
+        description: "An account posts on behalf of an outlet; it is not the outlet."
+      }
+    },
+    {
+      id: "stitch:R6",
+      type: "SPEAKS_FOR",
+      source: "Twitter.Account",
+      target: "NewsArticles.Airline",
+      data: {
+        kind: "relationship",
+        stitch: "R6",
+        rule: "Twitter.Account.airline_iata \u2192 NewsArticles.Airline.iata",
+        description: "Same relation, the other kind of organisation."
+      }
+    },
+    {
+      id: "stitch:R7",
+      type: "POSTED_NEAR",
+      source: "Twitter.Tweet",
+      target: "AirRoutes.airport",
+      data: {
+        kind: "relationship",
+        stitch: "R7",
+        rule: "Twitter.Tweet.airport_code \u2192 AirRoutes.airport.code"
+      }
+    },
+    {
+      id: "stitch:R8",
+      type: "LINKS_TO",
+      source: "Twitter.Tweet",
+      target: "NewsArticles.Article",
+      data: {
+        kind: "relationship",
+        stitch: "R8",
+        rule: "Twitter.Tweet.linked_url \u2192 NewsArticles.Article.url"
+      }
+    },
+    {
+      id: "stitch:R9",
+      type: "ABOUT",
+      source: "Twitter.Tweet",
+      target: "NewsArticles.Article",
+      data: {
+        kind: "relationship",
+        stitch: "R9",
+        rule: "Twitter.Tweet.tweet_id \u2192 NewsArticles.Article.article_id",
+        endpoints: "rows",
+        description: "Endpoints are their own fact, one row per edge (W3)."
+      }
+    },
+    {
+      id: "stitch:A3",
+      type: "SAME_AS",
+      source: "Deals.Sponsor",
+      target: "NewsArticles.Publisher",
+      data: {
+        kind: "anchor",
+        stitch: "A3",
+        rule: "Deals.Sponsor.domain \u2261 NewsArticles.Publisher.domain",
+        match: "exact",
+        partial: true,
+        description: "A sponsor that is also a newsroom is one company, said twice. Seven of the twelve overlap; the other five sponsor flights and write nothing, which is why this is partial."
+      }
+    },
+    {
+      id: "stitch:R10",
+      type: "FOR_CARRIER",
+      source: "Deals.Deal",
+      target: "NewsArticles.Airline",
+      data: {
+        kind: "relationship",
+        stitch: "R10",
+        rule: "Deals.Deal.carrier_iata \u2192 NewsArticles.Airline.iata",
+        description: "A deal is with an airline. The commercial model knows the IATA code and nothing else about it."
+      }
+    }
+  ]
+};
+
+// src/usecase-demos/airways-global-model/data.ts
+var airwaysGlobalModel = global_model_default;
+
+export { agentTrace, settings as agentTraceSettings, airwaysGlobalModel, citations, settings5 as citationsSettings, computingPioneers, settings7 as computingPioneersSettings, generatePaperCitations, invanaArchitecture, settings8 as invanaArchitectureSettings, invanaCodeKg, settings11 as invanaCodeKgSettings, microservices, settings3 as microservicesSettings, modellerSeed, settings9 as modellerSeedSettings, ontology, settings4 as ontologySettings, paperCitations, settings6 as paperCitationsSettings, ragEmbeddings, settings2 as ragEmbeddingsSettings, starSchema, settings10 as starSchemaSettings };
+//# sourceMappingURL=index.js.map
+//# sourceMappingURL=index.js.map
