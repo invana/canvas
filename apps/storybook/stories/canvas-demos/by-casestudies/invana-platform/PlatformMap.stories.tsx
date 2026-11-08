@@ -91,6 +91,10 @@
  * - **Layout** — *Radial* (placed, the platform at the centre) or *Layered*
  *   (`ElkLayout`, left to right). Edges switch to the matching `bump-radial` /
  *   `bump-horizontal` path.
+ * - **Legend** (the side dock, open on load) — every node and edge type with a
+ *   live count, a click to hide or show it (the layer's own switch, apart from
+ *   View and expand), then the edge styles and the card states. System colours
+ *   come from the same `ACCENT` map the cards use.
  * - **View** — which ring-1 nodes show: *Product* (the products), *System*
  *   (the services and integrations) or *All*.
  * - **Persona** — fade every product-layer card not tagged for one persona, so
@@ -106,6 +110,7 @@ import {
   GraphControlsToolbar,
   GraphNodeContextMenu,
   GraphStatusBar,
+  LegendViewPanel,
   ToolbarItems,
   useSidePanels
 } from '@invana/canvas-ui';
@@ -123,8 +128,8 @@ import {
 } from '@invana/graph';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { invanaPlatform } from '@invana/graph-datasets/usecase-demos';
-import type { MenuItem } from '@invana/ui';
-import { ChevronsDownUp, ChevronsUpDown, Focus, Map, Moon, Settings, Sun, Waypoints, X, Zap } from 'lucide-react';
+import { Eyebrow, Legend, LegendItem, type MenuItem } from '@invana/ui';
+import { ChevronsDownUp, ChevronsUpDown, Focus, List, Map, Moon, Settings, Sun, Waypoints, X, Zap } from 'lucide-react';
 
 const meta: Meta = { title: 'canvas-demos/by-casestudies/invana-platform/PlatformMap' };
 export default meta;
@@ -174,8 +179,56 @@ export const PlatformMapStory: Story = {
     const [minimapOn, setMinimapOn] = useState(true);
     const [canvas, setCanvas] = useState<GraphCanvas | null>(null);
 
+    /**
+     * A system or code card's accent, by its type — fixed hues that read in
+     * light and dark alike. The cards and the legend both read it, so they
+     * cannot disagree.
+     */
+    const ACCENT: Record<string, number> = {
+      service: 0x2563eb,
+      group: 0x64748b,
+      api: 0x7c3aed,
+      module: 0x059669,
+      package: 0xdb2777,
+      integration: 0xea580c
+    };
+    const hex = (c: number) => `#${c.toString(16).padStart(6, '0')}`;
+
     const dock = useSidePanels(
       [
+        {
+          id: 'legend',
+          icon: List,
+          label: 'Legend',
+          // Types: live counts, a click hides or shows a type. A product-layer
+          // card takes its product's colour, so its type gets a neutral swatch.
+          // Marks: the edges and the states the story draws.
+          render: (c) => (
+            <div className="flex flex-col gap-3 p-2">
+              <Eyebrow>Types</Eyebrow>
+              <LegendViewPanel
+                canvas={c as GraphCanvas | null}
+                colorForType={(type, kind) =>
+                  kind === 'edge' ? undefined : ACCENT[type] !== undefined ? hex(ACCENT[type]) : hex(0x94a3b8)
+                }
+              />
+              <Eyebrow>Edges</Eyebrow>
+              <Legend orientation="column">
+                <LegendItem kind="line" color={hex(0x94a3b8)} label="Tree — placement and expand" />
+                <LegendItem kind="dashed" color={hex(0x94a3b8)} label="Dependency — with Dependencies on" />
+                <LegendItem kind="dashed" color={hex(0xf97316)} label="Carries a blast radius" />
+              </Legend>
+              <Eyebrow>States</Eyebrow>
+              <Legend orientation="column">
+                <LegendItem kind="outline" color={hex(0x64748b)} label="Open — its children show" />
+                <LegendItem kind="box" color={hex(0xdc2626)} label="Blast radius root" />
+                <LegendItem kind="box" color={hex(0xf97316)} label="Depends on the root directly" />
+                <LegendItem kind="box" color={hex(0xcbd5e1)} label="Faded — another persona, or outside the blast" />
+                <LegendItem kind="box" color={hex(0xdc2626)} label="No Studio caller — an API Studio never calls" />
+              </Legend>
+            </div>
+          )
+        },
         {
           id: 'settings',
           icon: Settings,
@@ -183,7 +236,7 @@ export const PlatformMapStory: Story = {
           render: (c) => <CanvasSettingsEditorPanel canvas={c} className="border-0 bg-transparent shadow-none" />
         }
       ],
-      { section: { defaultSize: '360px', maxSize: '460px' } }
+      { defaultOpenId: 'legend', section: { defaultSize: '360px', maxSize: '460px' } }
     );
 
     // The tree as parent → children and child → parent, read once from the tree
@@ -363,12 +416,8 @@ export const PlatformMapStory: Story = {
       const FEATURE = { w: 300, h: 168, pad: 14 };
       const STORY = { w: 240, h: 94, pad: 12 };
       const SYSTEM = { w: 280, h: 124, pad: 14 };
-      // A system or code card's accent, by its type — fixed hues that read in
-      // light and dark alike.
-      const accent: ValueLookup<TemplateColor> = {
-        bind: 'type',
-        map: { service: 0x2563eb, group: 0x64748b, api: 0x7c3aed, module: 0x059669, package: 0xdb2777, integration: 0xea580c }
-      };
+      // A system or code card's accent, by its type (`ACCENT`).
+      const accent: ValueLookup<TemplateColor> = { bind: 'type', map: ACCENT };
 
       const structures: NodeStructureRegistry = {
         platformCard: {
