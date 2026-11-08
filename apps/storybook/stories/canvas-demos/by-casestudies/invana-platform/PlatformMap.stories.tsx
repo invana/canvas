@@ -1,7 +1,8 @@
 /**
  * **Invana platform map** — Invana in three layers, as one tree with the
  * **Invana platform at the centre**: the **product** layer (products → features
- * → stories), the **system** layer (services → APIs, Studio packages,
+ * → stories, and the **Foundation** group — Inbox, Settings and Shell, what
+ * every product uses — whose parts read *Foundation* on their card), the **system** layer (services → APIs, Studio packages,
  * integrations) and the **code** layer (engine modules, `core` and its parts).
  * Every node is a **composite card**; product cards carry *who they are for*
  * on their face.
@@ -95,7 +96,8 @@
  *   live count, a click to hide or show it (the layer's own switch, apart from
  *   View and expand), then the edge styles and the card states. System colours
  *   come from the same `ACCENT` map the cards use.
- * - **View** — which ring-1 nodes show: *Product* (the products), *System*
+ * - **View** — which ring-1 nodes show: *Product* (the products and the
+ *   Foundation group), *System*
  *   (the services and integrations) or *All*.
  * - **Persona** — fade every product-layer card not tagged for one persona, so
  *   its reach across the platform stands out.
@@ -342,7 +344,7 @@ export const PlatformMapStory: Story = {
         .filter((e) => TREE.has(e.type) || (impact ? impact.ids.has(e.source) && impact.ids.has(e.target) : deps))
         .map((e) => ({
           ...e,
-          states: [TREE.has(e.type) ? (e.source === 'invana' ? 'trunk' : (level[e.type] ?? 'twig')) : impact ? 'impactEdge' : 'cross']
+          states: [TREE.has(e.type) ? (e.source === 'invana' ? 'trunk' : e.source === 'foundation' ? 'branch' : (level[e.type] ?? 'twig')) : impact ? 'impactEdge' : 'cross']
         }));
       return { nodes, edges };
       // `layerOf` reads the memoised `tree`.
@@ -459,7 +461,7 @@ export const PlatformMapStory: Story = {
           strokeWidth: 2.5,
           elements: [
             bar(PRODUCT.h, 14),
-            { id: 'code', type: 'text', x: PRODUCT.pad, y: 2, text: 'Product · {data.code}', fontSize: 10, fontWeight: 700, uppercase: true, colorLookup: hue },
+            { id: 'code', type: 'text', x: PRODUCT.pad, y: 2, text: '{data.kind} · {data.code}', fontSize: 10, fontWeight: 700, uppercase: true, colorLookup: hue },
             { id: 'status', type: 'text', x: PRODUCT.w - PRODUCT.pad, y: 2, bind: 'data.status', anchor: 'right', fontSize: 10, fontVariant: 'small-caps', colorRole: 'muted' },
             { id: 'name', type: 'text', x: PRODUCT.pad, y: 10, bind: 'data.name', fontSize: 20, fontWeight: 800, colorRole: 'heading', maxWidth: PRODUCT.w - 2 * PRODUCT.pad },
             { id: 'summary', type: 'text', x: PRODUCT.pad, y: 50, bind: 'data.summary', fontSize: 11, lineHeight: 15, maxWidth: PRODUCT.w - 2 * PRODUCT.pad, maxLines: 3, colorRole: 'muted' },
@@ -764,7 +766,9 @@ export const PlatformMapStory: Story = {
                 ? [{ id: 'blast', label: 'Show what depends on this', icon: Zap, onClick: () => showImpact(id) }, ...clear]
                 : clear;
             // Children are one type, except the platform's.
-            const [one, many] = NOUN[tree.node[kids[0] ?? '']?.type ?? ''] ?? ['item', 'items'];
+            // The foundation's parts are product cards, but not products.
+            const [one, many] =
+              id === 'foundation' ? ['foundation part', 'foundation parts'] : (NOUN[tree.node[kids[0] ?? '']?.type ?? ''] ?? ['item', 'items']);
             const noun = `${kids.length} ${kids.length === 1 ? one : many}`;
             // Fold a node and everything open below it.
             const fold = (set: Set<string>, root: string) => {
