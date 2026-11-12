@@ -301,6 +301,8 @@ export {
   type NodeCentralityScale,
   type ContentLODBehaviourOptions,
   type ZoomBand,
+  ZoomStateBehaviour,
+  type ZoomStateBehaviourOptions,
   NodeLabelLODBehaviour,
   type NodeLabelLODBehaviourOptions,
   EdgeLabelLODBehaviour,

@@ -17,13 +17,12 @@
 // Bare content, like every `view-panels/` surface — the board's rail opens it in
 // a `FloatingPanel` (`BoardPanels`), which carries the title.
 
-import { recordsOnly } from '@invana/graph';
-import type { GraphCanvas, GraphEdge, GraphLayer, GraphNode } from '@invana/graph';
+import type { GraphCanvas } from '@invana/graph';
 import { Eyebrow, Legend, LegendItem, cn } from '@invana/ui';
-import { useEffect, useRef, useState } from 'react';
 
 import { nodeSwatchColor } from '../element-display';
 import { LegendAnnotations } from './LegendAnnotations';
+import { type LegendTallyRow, useLegendTally } from './useLegendTally';
 
 export interface LegendViewPanelProps {
   /** The live canvas (null until it is ready). */
@@ -39,56 +38,23 @@ export interface LegendViewPanelProps {
   className?: string;
 }
 
-interface Row {
-  type: string;
-  count: number;
-  color: string | undefined;
-  /** The whole type is hidden (`hiddenTypes`). */
-  hidden: boolean;
-}
-
 /** Node and relationship types with live counts, coloured as drawn. */
 export function LegendViewPanel({ canvas, layerId = 'graph', colorForType, title = null, toggleTypes = true, className }: LegendViewPanelProps) {
-  const [rows, setRows] = useState<{ nodes: Row[]; edges: Row[] }>({ nodes: [], edges: [] });
-  const frame = useRef<number | null>(null);
-  const colorRef = useRef(colorForType);
-  colorRef.current = colorForType;
-
-  useEffect(() => {
-    const layer = canvas?.layers.get<GraphLayer>(layerId);
-    if (!layer) return;
-    const rebuild = () => {
-      frame.current = null;
-      const hidden = layer.hiddenTypes;
-      setRows({
-        nodes: tally(recordsOnly(layer.store.nodes()), hidden.node, (n: GraphNode) => colorRef.current?.(n.type ?? '', 'node') ?? nodeSwatchColor(layer.resolveNodeStyle(n))),
-        edges: tally(recordsOnly(layer.store.edges()), hidden.edge, (e: GraphEdge) => colorRef.current?.(e.type ?? '', 'edge')),
-      });
-    };
-    const schedule = () => {
-      if (frame.current === null) frame.current = requestAnimationFrame(rebuild);
-    };
-    const offs = (['node:add', 'node:remove', 'edge:add', 'edge:remove', 'node:visibility', 'edge:visibility'] as const).map((ev) =>
-      layer.store.events.on(ev, schedule),
-    );
-    offs.push(layer.events.on('data:changed', schedule));
-    schedule();
-    return () => {
-      for (const off of offs) off();
-      if (frame.current !== null) cancelAnimationFrame(frame.current);
-      frame.current = null;
-    };
-  }, [canvas, layerId]);
+  const [nodes = [], edges = []] = useLegendTally(canvas, layerId, [
+    { element: 'node', colorOf: (n, layer) => colorForType?.(n.type ?? '', 'node') ?? nodeSwatchColor(layer.resolveNodeStyle(n)) },
+    { element: 'edge', colorOf: (e) => colorForType?.(e.type ?? '', 'edge') },
+  ]);
+  const rows = { nodes, edges };
 
   if (rows.nodes.length === 0 && rows.edges.length === 0) {
     return <p className={cn('text-muted-foreground px-1 py-4 text-center text-sm', className)}>Nothing drawn yet.</p>;
   }
-  const toggle = (kind: 'node' | 'edge', r: Row) =>
+  const toggle = (kind: 'node' | 'edge', r: LegendTallyRow) =>
     toggleTypes && canvas
       ? {
           pressed: !r.hidden,
-          onToggle: () => canvas.commands.run('graph.typeVisible', { layerId, kind, type: r.type }),
-          title: `${r.hidden ? 'Show' : 'Hide'} ${r.type}`,
+          onToggle: () => canvas.commands.run('graph.typeVisible', { layerId, kind, type: r.value }),
+          title: `${r.hidden ? 'Show' : 'Hide'} ${r.value}`,
         }
       : { muted: r.hidden };
   return (
@@ -97,37 +63,16 @@ export function LegendViewPanel({ canvas, layerId = 'graph', colorForType, title
       {rows.nodes.length > 0 && <Eyebrow>Nodes</Eyebrow>}
       <Legend orientation="column">
         {rows.nodes.map((r) => (
-          <LegendItem key={`n-${r.type}`} kind="dot" color={r.color} label={r.type} count={r.count.toLocaleString()} {...toggle('node', r)} />
+          <LegendItem key={`n-${r.value}`} kind="dot" color={r.color} label={r.value} count={r.count.toLocaleString()} {...toggle('node', r)} />
         ))}
       </Legend>
       {rows.edges.length > 0 && <Eyebrow>Relationships</Eyebrow>}
       <Legend orientation="column">
         {rows.edges.map((r) => (
-          <LegendItem key={`e-${r.type}`} kind="line" color={r.color} label={r.type} count={r.count.toLocaleString()} {...toggle('edge', r)} />
+          <LegendItem key={`e-${r.value}`} kind="line" color={r.color} label={r.value} count={r.count.toLocaleString()} {...toggle('edge', r)} />
         ))}
       </Legend>
       <LegendAnnotations canvas={canvas} />
     </div>
   );
-}
-
-/**
- * Elements grouped by type, largest first; the colour from the first of each.
- * Elements hidden one by one are left out; a type hidden whole keeps its count
- * and is marked, so its entry stays to bring it back.
- */
-function tally<T extends { type?: string; hidden?: boolean }>(
-  items: Iterable<T>,
-  hiddenTypes: readonly string[],
-  colorOf: (item: T) => string | undefined,
-): Row[] {
-  const out = new Map<string, Row>();
-  for (const item of items) {
-    if (item.hidden) continue;
-    const type = item.type ?? '';
-    const row = out.get(type);
-    if (row) row.count += 1;
-    else out.set(type, { type, count: 1, color: colorOf(item), hidden: hiddenTypes.includes(type) });
-  }
-  return [...out.values()].sort((a, b) => b.count - a.count);
 }

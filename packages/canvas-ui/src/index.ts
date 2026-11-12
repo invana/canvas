@@ -1058,8 +1058,19 @@ export type { MenuHeader } from './components/MenuItemList';
 export { ExportViewPanel, exportGraphData } from './view-panels/export';
 export type { ExportViewPanelProps, ExportedData, ExportedNode, ExportedEdge } from './view-panels/export';
 export { useLayoutPresetCards } from './control-panels/chromeWidgets';
-export { LegendViewPanel } from './view-panels/legend';
-export type { LegendViewPanelProps } from './view-panels/legend';
+export { CanvasLegend, LegendViewPanel, useLegendTally } from './view-panels/legend';
+export type {
+  CanvasLegendEntry,
+  CanvasLegendMarks,
+  CanvasLegendProps,
+  CanvasLegendSection,
+  LegendTallyRow,
+  LegendTallySpec,
+  LegendViewPanelProps,
+} from './view-panels/legend';
+// A tickable tree over the canvas — hides and shows the nodes its rows name, bridging the gaps.
+export { BRIDGE_KEY, TreeFilterPanel, bridgeEdges, hiddenNodeIds, isBridgeEdge } from './view-panels/tree-filter';
+export type { BridgeData, TreeFilterGroup, TreeFilterItem, TreeFilterPanelProps } from './view-panels/tree-filter';
 export { AnnotationsCount, AnnotationsViewPanel } from './view-panels/annotations';
 export type { AnnotationsViewPanelProps } from './view-panels/annotations';
 // Annotations on the board — drawn in the graph; the provider, the HTML overlay for writing, and the shape a host maps its rows onto.

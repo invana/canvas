@@ -182,6 +182,8 @@ export type {
   ContentLODBehaviourOptions,
   ZoomBand,
 } from './ContentLODBehaviour';
+export { ZoomStateBehaviour } from './ZoomStateBehaviour';
+export type { ZoomStateBehaviourOptions } from './ZoomStateBehaviour';
 export { NodeLabelLODBehaviour } from './NodeLabelLODBehaviour';
 export type { NodeLabelLODBehaviourOptions } from './NodeLabelLODBehaviour';
 export { EdgeLabelLODBehaviour } from './EdgeLabelLODBehaviour';

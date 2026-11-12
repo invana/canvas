@@ -92,7 +92,7 @@
  * - **Layout** — *Radial* (placed, the platform at the centre) or *Layered*
  *   (`ElkLayout`, left to right). Edges switch to the matching `bump-radial` /
  *   `bump-horizontal` path.
- * - **Legend** (the side dock, open on load) — every node and edge type with a
+ * - **Legend** (on the canvas, bottom left, `CanvasLegend`) — every node and edge type with a
  *   live count, a click to hide or show it (the layer's own switch, apart from
  *   View and expand), then the edge styles and the card states. System colours
  *   come from the same `ACCENT` map the cards use.
@@ -106,13 +106,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
+  CanvasLegend,
   CanvasMessageBar,
   CanvasSettingsEditorPanel,
   GraphCanvasApp,
   GraphControlsToolbar,
   GraphNodeContextMenu,
   GraphStatusBar,
-  LegendViewPanel,
   ToolbarItems,
   useSidePanels
 } from '@invana/canvas-ui';
@@ -130,8 +130,8 @@ import {
 } from '@invana/graph';
 import { ElkLayout } from '@invana/graph-layout-elkjs';
 import { invanaPlatform } from '@invana/graph-datasets/usecase-demos';
-import { Eyebrow, Legend, LegendItem, type MenuItem } from '@invana/ui';
-import { ChevronsDownUp, ChevronsUpDown, Focus, List, Map, Moon, Settings, Sun, Waypoints, X, Zap } from 'lucide-react';
+import type { MenuItem } from '@invana/ui';
+import { ChevronsDownUp, ChevronsUpDown, Focus, Map, Moon, Settings, Sun, Waypoints, X, Zap } from 'lucide-react';
 
 const meta: Meta = { title: 'canvas-demos/by-casestudies/invana-platform/PlatformMap' };
 export default meta;
@@ -199,47 +199,41 @@ export const PlatformMapStory: Story = {
     const dock = useSidePanels(
       [
         {
-          id: 'legend',
-          icon: List,
-          label: 'Legend',
-          // Types: live counts, a click hides or shows a type. A product-layer
-          // card takes its product's colour, so its type gets a neutral swatch.
-          // Marks: the edges and the states the story draws.
-          render: (c) => (
-            <div className="flex flex-col gap-3 p-2">
-              <Eyebrow>Types</Eyebrow>
-              <LegendViewPanel
-                canvas={c as GraphCanvas | null}
-                colorForType={(type, kind) =>
-                  kind === 'edge' ? undefined : ACCENT[type] !== undefined ? hex(ACCENT[type]) : hex(0x94a3b8)
-                }
-              />
-              <Eyebrow>Edges</Eyebrow>
-              <Legend orientation="column">
-                <LegendItem kind="line" color={hex(0x94a3b8)} label="Tree — placement and expand" />
-                <LegendItem kind="dashed" color={hex(0x94a3b8)} label="Dependency — with Dependencies on" />
-                <LegendItem kind="dashed" color={hex(0xf97316)} label="Carries a blast radius" />
-              </Legend>
-              <Eyebrow>States</Eyebrow>
-              <Legend orientation="column">
-                <LegendItem kind="outline" color={hex(0x64748b)} label="Open — its children show" />
-                <LegendItem kind="box" color={hex(0xdc2626)} label="Blast radius root" />
-                <LegendItem kind="box" color={hex(0xf97316)} label="Depends on the root directly" />
-                <LegendItem kind="box" color={hex(0xcbd5e1)} label="Faded — another persona, or outside the blast" />
-                <LegendItem kind="box" color={hex(0xdc2626)} label="No Studio caller — an API Studio never calls" />
-              </Legend>
-            </div>
-          )
-        },
-        {
           id: 'settings',
           icon: Settings,
           label: 'Settings',
           render: (c) => <CanvasSettingsEditorPanel canvas={c} className="border-0 bg-transparent shadow-none" />
         }
       ],
-      { defaultOpenId: 'legend', section: { defaultSize: '360px', maxSize: '460px' } }
+      { section: { defaultSize: '360px', maxSize: '460px' } }
     );
+
+    /**
+     * The legend, on the canvas: types with live counts (a click hides or
+     * shows a type; a product-layer card takes its product's colour, so its
+     * type gets a neutral swatch), then the edges and the states the story
+     * draws.
+     */
+    const legendMarks = [
+      {
+        title: 'Edges',
+        entries: [
+          { kind: 'line' as const, color: hex(0x94a3b8), label: 'Tree — placement and expand' },
+          { kind: 'dashed' as const, color: hex(0x94a3b8), label: 'Dependency — with Dependencies on' },
+          { kind: 'dashed' as const, color: hex(0xf97316), label: 'Carries a blast radius' }
+        ]
+      },
+      {
+        title: 'States',
+        entries: [
+          { kind: 'outline' as const, color: hex(0x64748b), label: 'Open — its children show' },
+          { kind: 'box' as const, color: hex(0xdc2626), label: 'Blast radius root' },
+          { kind: 'box' as const, color: hex(0xf97316), label: 'Depends on the root directly' },
+          { kind: 'box' as const, color: hex(0xcbd5e1), label: 'Faded — another persona, or outside the blast' },
+          { kind: 'box' as const, color: hex(0xdc2626), label: 'No Studio caller — an API Studio never calls' }
+        ]
+      }
+    ];
 
     // The tree as parent → children and child → parent, read once from the tree
     // edges; the cross edges as dependency → dependents, for blast radius.
@@ -726,6 +720,14 @@ export const PlatformMapStory: Story = {
         footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
         right={dock.region}
       >
+        <CanvasLegend
+          position="bottom-left"
+          sections={[
+            { element: 'node', title: 'Nodes', kind: 'dot', toggleTypes: true, colorFor: (t) => hex(ACCENT[t] ?? 0x94a3b8) },
+            { element: 'edge', title: 'Relationships', toggleTypes: true }
+          ]}
+          marks={legendMarks}
+        />
         {/* Right-click a card → expand or collapse what is below it; on a
             system or code card, show what depends on it. Leaf items close the
             menu themselves. */}
