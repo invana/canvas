@@ -19,6 +19,7 @@
 //  - invanaCodeKg        → usecases/by-casestudies/code-kg/{DotsForce,CompositeCards,HealthBadges}
 //  - starSchema          → usecases/by-casestudies/data-model/SchemaTable
 //  - invanaArchitecture  → usecases/by-casestudies/invana-architecture/EndToEnd
+//  - invanaPlatform      → usecases/by-casestudies/invana-platform/PlatformMap (generated from invana specs/)
 //  - computingPioneers   → usecases/SimpleAndCompositeNodes
 //  - modellerSeed        → usecases/tools/GraphModeller
 //  - paperCitations      → usecases/by-casestudies/paper-citations/{CitationNetwork,SubjectBundle}
@@ -47,6 +48,7 @@ export { citations } from './citations/data';
 export { paperCitations, generatePaperCitations, type PaperCitationsOptions } from './paper-citations/data';
 export { computingPioneers } from './computing-pioneers/data';
 export { invanaArchitecture } from './invana-architecture/data';
+export { invanaPlatform } from './invana-platform/data';
 export { modellerSeed } from './modeller-seed/data';
 export { starSchema } from './star-schema/data';
 export { invanaCodeKg } from './invana-code-kg/data';
