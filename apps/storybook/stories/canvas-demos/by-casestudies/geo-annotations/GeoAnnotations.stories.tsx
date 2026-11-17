@@ -23,17 +23,15 @@
  * - `map` — `MapLayer` (OpenFreeMap positron). MapLibre owns pan / zoom, so the
  *   app bundle is off: its solid background would cover the map and its
  *   pan / wheel behaviours would fight it (same as `geo-air-routes`).
- * - `regions` — `polygon` nodes, one per region, in world units (no scale-LOD),
- *   so each outline stays locked to the map. There's no pixel-constant stroke
- *   yet, so four `ZoomStateBehaviour`s swap the border width per zoom band
- *   through the layer's `node.state` overlays.
+ * - `geo` — `GeoFeaturesLayer`: one GeoJSON `Polygon` per district, drawn at a
+ *   constant pixel width at every zoom and named at its visual centre until you are
+ *   zoomed into one (map zoom 10.5). No projection in the story, no polygon nodes,
+ *   no per-zoom border behaviours.
  * - `bubble-sets` — `BubbleSetsLayer`: a rounded outline around each **cluster**
  *   of markers, declared as `sets` in `config`. It measures members by their
  *   drawn size, so the pixel-constant markers need no anchor layer. Its radii are
  *   world units (the whole earth is 512), sized here for the opening zoom; its
  *   stroke is a world width too, so it thins as you zoom out.
- * - `region-labels` — region names as body-less label nodes, held at a constant
- *   screen size, hidden once you're zoomed into a region.
  * - `graph` — the markers: a circle per POI coloured by its type, a Lucide icon
  *   inside, held at a constant screen size by `NodeScaleLODBehaviour`;
  *   `LabelCollisionBehaviour` hides a label that would overlap another. Cluster
@@ -41,7 +39,7 @@
  *
  * **What stays on the records, and why** (the per-instance exception in
  * `apps/storybook/CLAUDE.md`): a region's **outline** and **colour** (each is one
- * of a kind), a POI's **description** (its own text), and a cluster label's colour.
+ * of a kind, as simplestyle `properties` on its GeoJSON feature), a POI's **description** (its own text), and a cluster label's colour.
  * Everything per-type is config: the marker colour, size and label style, the
  * **icon** (`icon: { kind: 'named' }` in the styling template, drawn from the
  * layer's `iconSet`), and the zoomed-in **detail label**
@@ -79,7 +77,7 @@ import {
   type GraphNode
 } from '@invana/graph';
 import { BubbleSetsLayer } from '@invana/graph-layer-bubble-sets';
-import { MapLayer, projectLngLat } from '@invana/graph-layer-maplibre';
+import { GeoFeaturesLayer, MapLayer, projectLngLat, type GeoFeature } from '@invana/graph-layer-maplibre';
 import { Building2, Castle, Flame, Landmark, Library, Mountain, Waves } from 'lucide-react';
 
 const meta: Meta = {
@@ -345,22 +343,6 @@ export const GeoAnnotationsStory: Story = {
         }
       ];
 
-      // A polygon node sits at its outline's vertex mean; its vertices are relative to that.
-      const regionShapes = REGIONS.map((d) => {
-        const world = d.ring.split(' ').map((pair) => projectLngLat(pair.split(',').map(Number) as [number, number]));
-        const cx = world.reduce((s, p) => s + p.x, 0) / world.length;
-        const cy = world.reduce((s, p) => s + p.y, 0) / world.length;
-        // The name sits halfway between the centre and the top edge, clear of the
-        // markers that gather around a region's centre.
-        const top = Math.min(...world.map((p) => p.y));
-        return {
-          ...d,
-          position: { x: cx, y: cy },
-          labelAt: { x: cx, y: cy - (cy - top) * 0.5 },
-          vertices: world.map((p) => ({ x: p.x - cx, y: p.y - cy }))
-        };
-      });
-
       // A cluster's name sits above its topmost member, centred on the members —
       // `BubbleSetsLayer` computes the outline itself, so the story never needs it.
       const clusterLabels = CLUSTERS.map((c) => {
@@ -374,38 +356,13 @@ export const GeoAnnotationsStory: Story = {
         };
       });
 
-      const regions: GraphData = {
-        nodes: [
-          ...regionShapes.map(
-            (d): GraphNode => ({
-              id: `region:${d.name}`,
-              type: 'Region',
-              position: d.position,
-              data: { name: d.name },
-              style: {
-                shape: { kind: 'polygon', vertices: d.vertices },
-                // A translucent fill that leaves the border opaque (`bgAlpha` would fade both).
-                bgFill: { kind: 'solid', color: d.color, alpha: 0.12 },
-                bgStrokeColor: d.color
-              }
-            })
-          )
-        ],
-        edges: []
-      };
-
-      const regionLabels: GraphData = {
-        nodes: regionShapes.map(
-          (d): GraphNode => ({
-            id: `region-label:${d.name}`,
-            type: 'RegionLabel',
-            position: d.labelAt,
-            data: { name: d.name.toUpperCase() },
-            style: { labelColor: d.color }
-          })
-        ),
-        edges: []
-      };
+      // Regions are GeoJSON polygons for GeoFeaturesLayer: no projection, no recentring.
+      const regionFeatures: GeoFeature[] = REGIONS.map((d) => ({
+        type: 'Feature',
+        id: `region:${d.name}`,
+        properties: { name: d.name, stroke: d.color, fill: d.color },
+        geometry: { type: 'Polygon', coordinates: [d.ring.split(' ').map((pair) => pair.split(',').map(Number) as [number, number])] }
+      }));
 
       const pois: GraphData = {
         nodes: [
@@ -432,7 +389,7 @@ export const GeoAnnotationsStory: Story = {
         edges: []
       };
 
-      return { regions, regionLabels, pois };
+      return { regionFeatures, pois };
     }, []);
 
     // ─── Config: every setting, as data ────────────────────────────────────
@@ -451,22 +408,14 @@ export const GeoAnnotationsStory: Story = {
               minZoom: 6,
               maxZoom: 14
             },
-            regions: {
-              node: {
-                style: {
-                  bgStrokeAlpha: 0.85,
-                  bgStrokeAlignment: 'inside',
-                  bgStrokeWidth: 0.012
-                },
-                // Border width per zoom band, in world units (stroke scales with
-                // the camera): each lands at ~0.8–3 px on screen inside its band.
-                state: {
-                  'border-far': { bgStrokeWidth: 0.012 },
-                  'border-mid': { bgStrokeWidth: 0.003 },
-                  'border-near': { bgStrokeWidth: 0.00075 },
-                  'border-street': { bgStrokeWidth: 0.0002 }
-                }
-              }
+            // District borders: GeoJSON polygons, drawn at a constant pixel width at every
+            // zoom, named at their visual centre until you are zoomed into one (map zoom 10.5).
+            geo: {
+              defaults: { polygon: { strokeWidthPx: 1.5, strokeOpacity: 0.85, fillOpacity: 0.12 } },
+              labelFontPx: 12,
+              labelColor: 0x334155,
+              labelBackground: false,
+              labelMaxZoom: 1448
             },
             // Cluster outlines. Radii are world units (the whole earth is 512), so
             // they are sized for the zoom the story opens at; members are measured
@@ -490,38 +439,6 @@ export const GeoAnnotationsStory: Story = {
                   style: { fill: 0xea580c, fillOpacity: 0.16, stroke: 0xea580c, strokeWidth: 0.004 }
                 }
               ]
-            },
-            'region-labels': {
-              nodeStructureTemplates: {
-                labelOnly: {
-                  name: 'labelOnly',
-                  kind: 'simple',
-                  shape: { kind: 'circle', radius: 1 },
-                  slots: { label: true }
-                }
-              },
-              nodeStylingTemplates: {
-                regionLabel: {
-                  name: 'regionLabel',
-                  fillAlpha: 0,
-                  strokeAlpha: 0,
-                  label: {
-                    fontSize: 12,
-                    fontWeight: 700,
-                    placement: 'center',
-                    background: false
-                  }
-                }
-              },
-              nodeTypes: {
-                RegionLabel: {
-                  structure: 'labelOnly',
-                  styling: 'regionLabel',
-                  bindings: { label: 'data.name' }
-                }
-              },
-              // Gone once you're zoomed into a region (map zoom 10.5).
-              node: { style: { labelLetterSpacing: 1.5, labelMaxZoom: 1448 } }
             },
             graph: {
               // Icons by name: the templates below say `{ kind: 'named', name }`.
@@ -751,25 +668,6 @@ export const GeoAnnotationsStory: Story = {
             'label-collision': { enabled: true },
             // POI descriptions from map zoom 11.5.
             'poi-detail': { enabled: true, state: 'detail', minZoom: 2896 },
-            // Region border bands: map zoom < 8 · 8–10 · 10–12 · 12+.
-            'border-far': { enabled: true, state: 'border-far', maxZoom: 256 },
-            'border-mid': {
-              enabled: true,
-              state: 'border-mid',
-              minZoom: 256,
-              maxZoom: 1024
-            },
-            'border-near': {
-              enabled: true,
-              state: 'border-near',
-              minZoom: 1024,
-              maxZoom: 4096
-            },
-            'border-street': {
-              enabled: true,
-              state: 'border-street',
-              minZoom: 4096
-            }
           }
         }) as unknown as CanvasConfig,
       []
@@ -782,20 +680,7 @@ export const GeoAnnotationsStory: Story = {
         if (!canvas) return;
         // Layers pick up `config.layers.<id>` as they land; data rides on the constructor.
         canvas.layers.add(new MapLayer({ id: 'map', options: {} }));
-        canvas.layers.add(
-          new GraphLayer({
-            id: 'regions',
-            zIndex: 1,
-            options: { initData: data.regions }
-          })
-        );
-        canvas.layers.add(
-          new GraphLayer({
-            id: 'region-labels',
-            zIndex: 9,
-            options: { initData: data.regionLabels }
-          })
-        );
+        canvas.layers.add(new GeoFeaturesLayer({ id: 'geo', zIndex: 1, options: { mapLayerId: 'map', features: data.regionFeatures } }));
         canvas.layers.add(
           new GraphLayer({
             id: 'graph',
@@ -821,16 +706,12 @@ export const GeoAnnotationsStory: Story = {
                 targetLayerId: 'graph',
                 preserveRelativeSize: true,
                 strokeWidthPx: 1.5
-              },
-              { targetLayerId: 'region-labels', preserveRelativeSize: true }
+              }
             ]
           })
         );
         canvas.behaviours.register(new LabelCollisionBehaviour({ id: 'label-collision', targetLayerId: 'graph' }));
         canvas.behaviours.register(new ZoomStateBehaviour({ id: 'poi-detail', targetLayerId: 'graph' }));
-        for (const id of ['border-far', 'border-mid', 'border-near', 'border-street']) {
-          canvas.behaviours.register(new ZoomStateBehaviour({ id, targetLayerId: 'regions' }));
-        }
         // Config only reaches instances registered when it is applied — re-apply.
         canvas.update({ behaviours: config.behaviours });
         canvas.showMessage('Zoom in: icons → names → descriptions · tinted outlines are regions and clusters');
