@@ -66,6 +66,7 @@ import maplibregl from 'maplibre-gl';
 import { projectLngLat, unprojectWorld } from './mercator';
 import type {
   LngLat,
+  MapCameraDriver,
   MapLayerEvents,
   MapLayerOptions,
   MapLayerState,
@@ -82,6 +83,8 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
   private originalCanvasPointerEvents: string | null = null;
   private originalCanvasPosition: string | null = null;
   private originalCanvasZIndex: string | null = null;
+  /** Callbacks for a user drag of the map — see {@link cameraDriver}. */
+  private readonly gestureListeners = new Set<() => void>();
   private readonly handleMapMove = (): void => this.syncCameraFromMap();
 
   constructor(opts: LayerOptions<MapLayerOptions>) {
@@ -171,6 +174,37 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
     });
   }
 
+  /**
+   * A camera driver for `@invana/graph`'s `TrackingBehaviour` follow mode. Under
+   * a `MapLayer` the canvas camera is a mirror of the map, so following means
+   * moving the **map**; the canvas camera then follows through `move`.
+   *
+   * ```ts
+   * new TrackingBehaviour({ id: 'tracking', targetLayerId: 'vessels', cameraDriver: map.cameraDriver() });
+   * ```
+   *
+   * `centerOn` takes world coordinates and keeps the zoom; `onUserGesture` fires
+   * when the user **presses on the map** (a wheel zoom keeps the follow). It is a
+   * press, not a drag: a follow camera re-centres every frame, which would stop a
+   * drag from ever starting.
+   */
+  cameraDriver(): MapCameraDriver {
+    return {
+      centerOn: (x, y) => {
+        this.map?.jumpTo({ center: unprojectWorld({ x, y }) });
+      },
+      onUserGesture: (cb) => {
+        // The map may not exist yet (a behaviour registered right after the layer
+        // is added), so callbacks are kept here and fired by the one `dragstart`
+        // listener `onMount` installs.
+        this.gestureListeners.add(cb);
+        return () => {
+          this.gestureListeners.delete(cb);
+        };
+      },
+    };
+  }
+
   protected override onMount(ctx: CanvasContext): void {
     const canvasEl = ctx.canvasElement;
     if (!canvasEl) {
@@ -247,6 +281,14 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
     });
 
     this.map.on('move', this.handleMapMove);
+    // The user taking the map: pressing on it. Not `dragstart` — a follow camera
+    // re-centres the map every frame, and `jumpTo` resets MapLibre's drag handler
+    // before a drag can start, so the drag would never be seen. A press is seen at once.
+    const taken = (): void => {
+      for (const cb of [...this.gestureListeners]) cb();
+    };
+    this.map.on('mousedown', taken);
+    this.map.on('touchstart', taken);
     this.map.on('load', () => {
       this.state.update((s) => {
         s.ready = true;

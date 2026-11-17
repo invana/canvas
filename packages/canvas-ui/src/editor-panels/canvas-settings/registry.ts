@@ -224,6 +224,16 @@ import {
   optionsToForm as edgeLodToForm,
   formToOptions as edgeLodToOptions,
 } from '../../editors/behaviours/edge-lod/mapping';
+import { trackingFields } from '../../editors/behaviours/tracking/fields';
+import {
+  optionsToForm as trackingToForm,
+  formToOptions as trackingToOptions,
+} from '../../editors/behaviours/tracking/mapping';
+import { trailsLayerFields } from '../../editors/layers/trails-layer/fields';
+import {
+  optionsToForm as trailsLayerToForm,
+  formToOptions as trailsLayerToOptions,
+} from '../../editors/layers/trails-layer/mapping';
 import { labelCollisionFields } from '../../editors/behaviours/label-collision/fields';
 import {
   optionsToForm as labelCollisionToForm,
@@ -335,6 +345,8 @@ export const DEFAULT_CANVAS_SETTINGS_SCHEMAS: Record<string, SettingsSchemaEntry
   'image-lod': { section: 'behaviours', typeLabel: 'Image LOD', fields: contentLODFields, toForm: contentLodToForm, toOptions: contentLodToOptions },
   'edge-lod': { section: 'behaviours', typeLabel: 'Edge Thinning LOD', fields: edgeLODFields, toForm: edgeLodToForm, toOptions: edgeLodToOptions },
   'parallel-edge': { section: 'behaviours', typeLabel: 'Parallel Edge', fields: parallelEdgeFields, toForm: parallelEdgeToForm, toOptions: parallelEdgeToOptions },
+  'tracking': { section: 'behaviours', typeLabel: 'Tracking', fields: trackingFields, toForm: trackingToForm, toOptions: trackingToOptions },
+  'trails-layer': { section: 'layers', typeLabel: 'Trails Layer', fields: trailsLayerFields, toForm: trailsLayerToForm, toOptions: trailsLayerToOptions },
   'label-collision': { section: 'behaviours', typeLabel: 'Label Collision', fields: labelCollisionFields, toForm: labelCollisionToForm, toOptions: labelCollisionToOptions },
   'entrance': { section: 'behaviours', typeLabel: 'Entrance', fields: entranceFields, toForm: entranceToForm, toOptions: entranceToOptions },
 

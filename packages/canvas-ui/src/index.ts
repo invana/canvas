@@ -697,6 +697,32 @@ export type {
   EdgeScaleLODOptions,
 } from './editors/behaviours/edge-scale-lod';
 
+// TrackingBehaviour
+export { TrackingEditorPanel, trackingFields } from './editors/behaviours/tracking';
+export {
+  optionsToForm as trackingOptionsToForm,
+  formToOptions as trackingFormToOptions,
+} from './editors/behaviours/tracking';
+export type {
+  TrackingEditorPanelProps,
+  TrackingFields,
+  TrackingFormState,
+  TrackingOptions,
+} from './editors/behaviours/tracking';
+
+// TrailsLayer
+export { TrailsLayerEditorPanel, trailsLayerFields } from './editors/layers/trails-layer';
+export {
+  optionsToForm as trailsLayerOptionsToForm,
+  formToOptions as trailsLayerFormToOptions,
+} from './editors/layers/trails-layer';
+export type {
+  TrailsLayerEditorPanelProps,
+  TrailsLayerFields,
+  TrailsLayerFormState,
+  TrailsLayerOptions,
+} from './editors/layers/trails-layer';
+
 // LabelCollisionBehaviour
 export { LabelCollisionEditorPanel, labelCollisionFields } from './editors/behaviours/label-collision';
 export {

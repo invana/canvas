@@ -17,7 +17,8 @@
     "dev": "tsup --watch",
     "lint": "eslint src/",
     "check-types": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test": "vitest run"
   },
   "dependencies": {
     "maplibre-gl": "^4.7.1"
@@ -30,7 +31,8 @@
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "tsup": "^8.3.5",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "vitest": "^3.2.6"
   },
   "keywords": [
     "canvas",

@@ -78,3 +78,14 @@ export interface MapLayerEvents extends EventMap {
   /** Fired each time the map transform changes (move / zoom / resize). */
   'map:move': { center: [number, number]; zoom: number };
 }
+
+/**
+ * How a follow camera moves the map — structurally the `TrackingCameraDriver` of
+ * `@invana/graph`, declared here so this package needs no dependency on it.
+ */
+export interface MapCameraDriver {
+  /** Centre the map on a world point, keeping the zoom. */
+  centerOn(x: number, y: number): void;
+  /** Subscribe to the user taking the map back (pressing on it). Returns the unsubscribe. */
+  onUserGesture(cb: () => void): () => void;
+}
