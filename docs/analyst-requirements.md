@@ -43,16 +43,16 @@ customer), not just "where is it".
 
 | ID | Requirement | The analyst's / operator's question | Phase | Status |
 |---|---|---|---|---|
-| A15 | **Live position feed** — push position fixes for moving objects by id; transport-agnostic (WebSocket, SSE, polling and replay all feed one API) | "Where is everything right now?" | P5 | 📋 |
-| A16 | **Smooth motion** — interpolate between fixes; dead-reckon from speed and course when fixes are sparse (AIS: 2 s – 3 min) | "Where is it *between* reports?" | P5 | 📋 |
-| A17 | **Course-aware markers** — the icon rotates to the heading (bow of a ship, nose of a truck) | "Which way is it going?" | P2 (icon) · P5 (live) | 🚧 icon follows `data.course` from config; the live feed + fast update (RFC T6) are P5 |
-| A18 | **Trails** — the last N minutes or points as a fading line; the full track on selection | "Where has it just been?" | P5 | 📋 |
-| A19 | **Signal state** — moving · stopped · stale (no fix for T) · lost; stale and lost draw differently | "Is this position current, or are we looking at the past?" | P5 | 📋 |
-| A20 | **Follow** — the camera follows a selected object | "Keep this vessel in view." | P5 | 📋 |
+| A15 | **Live position feed** — push position fixes for moving objects by id; transport-agnostic (WebSocket, SSE, polling and replay all feed one API) | "Where is everything right now?" | P5 | ✅ P5 (in the branch) |
+| A16 | **Smooth motion** — interpolate between fixes; dead-reckon from speed and course when fixes are sparse (AIS: 2 s – 3 min) | "Where is it *between* reports?" | P5 | ✅ P5 (in the branch) |
+| A17 | **Course-aware markers** — the icon rotates to the heading (bow of a ship, nose of a truck) | "Which way is it going?" | P2 (icon) · P5 (live) | ✅ the icon turns to `data.course`, written live by `TrackingBehaviour` (in the branch) |
+| A18 | **Trails** — the last N minutes or points as a fading line; the full track on selection | "Where has it just been?" | P5 | ✅ P5 (in the branch) |
+| A19 | **Signal state** — moving · stopped · stale (no fix for T) · lost; stale and lost draw differently | "Is this position current, or are we looking at the past?" | P5 | ✅ P5 (in the branch) |
+| A20 | **Follow** — the camera follows a selected object | "Keep this vessel in view." | P5 | ✅ P5 (in the branch) |
 | A21 | **Planned route vs actual** — a planned route line, deviation distance, an off-route alert | "Has it left its route? By how much?" | P6 | 📋 |
 | A22 | **ETA** — remaining distance and estimated arrival along the planned route | "When does it arrive? Will it miss the slot?" | P6 | 📋 |
 | A23 | **Replay** — scrub recorded tracks at ×N speed with the time slider (shares A5) | "What happened last night between 02:00 and 04:00?" | P6 | 📋 |
-| A24 | **Scale** — thousands of objects updating at ~1 Hz stay smooth; they aggregate at overview (shares A8) | "Show the whole fleet." | P5 (budget) · P7 (aggregation) | 📋 |
+| A24 | **Scale** — thousands of objects updating at ~1 Hz stay smooth; they aggregate at overview (shares A8) | "Show the whole fleet." | P5 (budget) · P7 (aggregation) | 🚧 budget ✅ (P5, in the branch); aggregation at overview is P7 |
 | A25 | **Arrival / departure events** — entering or leaving a port, depot or delivery zone is logged with a timestamp (shares A9) | "When did it actually arrive?" | P6 | 📋 |
 
 ## Presentation — what every map story already needs
@@ -72,3 +72,4 @@ customer), not just "where is it".
 | Date | Change |
 |---|---|
 | 2026-11-17 | A29 → ✅, A17 and A13 → 🚧 after P2 landed in the branch. A28 → 🚧 after P1 landed in the branch. Created. A1–A14 from the analyst review of `story:canvas-demos/by-casestudies/geo-annotations/GeoAnnotations`; A15–A25 added for live tracking (ships, deliveries, shipments); A26–A30 the presentation needs that story surfaced |
+| 2026-11-17 | A15–A20 and A24 → ✅ in the branch after P5 (the A24 budget is the CPU tick; GPU frame time is machine-dependent and reported only). Aggregation at overview (A8 / A24's second half) is still P7 |

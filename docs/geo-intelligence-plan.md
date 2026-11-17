@@ -105,14 +105,14 @@ Work-item IDs are append-only. `Req` cites [`analyst-requirements.md`](./analyst
 
 | ID | Item | Package | Req | Status |
 |---|---|---|---|---|
-| V1 | Fix ingestion API — `pushFixes([{ id, t, x, y, course?, speed? }])`, transport-agnostic; writes through `setPositionsBulk` | `graph` (+ lng/lat adapter in maplibre) | A15 | 📋 |
-| V2 | Interpolation between fixes; dead reckoning from speed + course when fixes are late | `graph` (+ geodesic version in maplibre) | A16 | 📋 |
-| V3 | Course-aware markers (uses T4) | `graph` | A17 | 📋 |
-| V4 | Trails — last N minutes / points, fading; full track on select | `graph` | A18 | 📋 |
-| V5 | Signal state — moving · stopped · stale · lost from fix age + speed; state overlays style them | `graph` | A19 | 📋 |
-| V6 | Follow camera on a selected object | `graph` / `canvas` | A20 | 📋 |
-| V7 | Performance budget — 5,000 objects at 1 Hz with trails, measured headless + in Storybook | — | A24 | 📋 |
-| E3 | Editors for the tracking behaviour / trails layer | `canvas-ui` | rule 12 | 📋 |
+| V1 | Fix ingestion API — `pushFixes([{ id, t, x, y, course?, speed? }])`, transport-agnostic; writes through `setPositionsBulk` | `graph` (+ lng/lat adapter in maplibre) | A15 | ✅ implemented, not yet in `main` |
+| V2 | Interpolation between fixes; dead reckoning from speed + course when fixes are late | `graph` (+ geodesic version in maplibre) | A16 | ✅ implemented, not yet in `main` |
+| V3 | Course-aware markers (uses T4) | `graph` | A17 | ✅ implemented, not yet in `main` |
+| V4 | Trails — last N minutes / points, fading; full track on select | `graph` | A18 | ✅ implemented, not yet in `main` |
+| V5 | Signal state — moving · stopped · stale · lost from fix age + speed; state overlays style them | `graph` | A19 | ✅ implemented, not yet in `main` |
+| V6 | Follow camera on a selected object | `graph` / `canvas` | A20 | ✅ implemented, not yet in `main` |
+| V7 | Performance budget — 5,000 objects at 1 Hz with trails, measured headless + in Storybook | — | A24 | ✅ implemented, not yet in `main` |
+| E3 | Editors for the tracking behaviour / trails layer | `canvas-ui` | rule 12 | ✅ implemented, not yet in `main` |
 
 ### P6 — Time
 
@@ -158,7 +158,7 @@ Per-piece stories (rule 11) ship **with** each phase, not in P8.
 | P2 | [`feat/2026-11-17-marker-icons-and-zoom-labels-are-not-config`](./rfcs/feat/2026-11-17-marker-icons-and-zoom-labels-are-not-config.md) | 🚧 T1–T4, T2b, E1, S1 implemented; V10 partly run |
 | P3 | `feat/…-a-map-cannot-show-an-area-from-coordinates` | 📋 |
 | P4 | `feat/…-an-analyst-cannot-draw-or-query-an-area` | 📋 |
-| P5 | `feat/…-moving-objects-cannot-be-tracked-live` | 📋 |
+| P5 | `feat/…-moving-objects-cannot-be-tracked-live` | ✅ RFC accepted and implemented, not yet in `main` — `docs/rfcs/feat/2026-11-17-moving-objects-cannot-be-tracked-live.md` |
 | P6 | `feat/…-the-canvas-has-no-time` (+ a design note `docs/time-model-plan.md` first — it touches every layer) | 📋 |
 | P7 | one RFC per X-row | 📋 |
 
@@ -203,3 +203,4 @@ Per-piece stories (rule 11) ship **with** each phase, not in P8.
 | 2026-11-17 | P2 approved and implemented (icons by name, per-type state labels, icon rotation bound to a heading; 17 + 11 unit tests, three stories); the styling editor's save would have deleted template icons — fixed and tested |
 | 2026-11-17 | P1 approved and implemented (F1–F4, 13 unit tests, two stories); a finding added B3 / RFC row F5 |
 | 2026-11-17 | Plan created from the GeoAnnotations review and the analyst requirements (A1–A30); D-1…D-7 accepted by the maintainer, D-8…D-T2 recommended |
+| 2026-11-17 | P5 implemented (RFC `feat-2026-11-17-moving-objects-cannot-be-tracked-live`): `TrackingBehaviour`, `TrailsLayer`, map follow driver, lng/lat adapter, editors, stories; budget measured (tick p95 0.7 ms at 5,000, 2.4 ms with every heading rewritten). D-T1 stays open; D-T2 confirmed |
