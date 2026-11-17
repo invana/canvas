@@ -34,7 +34,8 @@
  * - `region-labels` — region names as body-less label nodes, held at a constant
  *   screen size, hidden once you're zoomed into a region.
  * - `graph` — the markers: a circle per POI coloured by its type, a Lucide icon
- *   inside, held at a constant screen size by `NodeScaleLODBehaviour`. Cluster
+ *   inside, held at a constant screen size by `NodeScaleLODBehaviour`;
+ *   `LabelCollisionBehaviour` hides a label that would overlap another. Cluster
  *   names ride here as label-only nodes so they share the markers' zoom tiers.
  *
  * **What stays on the records, and why** (the per-instance exception in
@@ -50,9 +51,9 @@
  * path, so there's no fetch and no codepoint table. Lucide has no Hindu temple
  * or mosque glyph: temples use `Flame` (a diya), mosques and palaces `Landmark`.
  *
- * **Known gap.** `LabelCollisionBehaviour` isn't used: it marks an overlapping
- * label hidden, but the label is drawn again afterwards, so places a few
- * hundred metres apart overlap at the description tier.
+ * **Known gap.** `LabelCollisionBehaviour` hides a label that overlaps another
+ * label, but it only compares labels with labels — a marker's body can still
+ * sit on a neighbour's label where places are a few hundred metres apart.
  *
  * **Sample data.** Region outlines are Telangana district boundaries (2016+),
  * simplified (Douglas–Peucker, 0.004–0.012°) from
@@ -70,6 +71,7 @@ import { CanvasMessageBar, GraphCanvasApp, GraphStatusBar } from '@invana/canvas
 import type { CanvasConfig } from '@invana/canvas';
 import {
   GraphLayer,
+  LabelCollisionBehaviour,
   NodeScaleLODBehaviour,
   ZoomStateBehaviour,
   type GraphCanvas,
@@ -753,6 +755,8 @@ export const GeoAnnotationsStory: Story = {
           },
           behaviours: {
             'marker-scale': { enabled: true },
+            // Places a few hundred metres apart would otherwise stack their labels.
+            'label-collision': { enabled: true },
             // POI descriptions from map zoom 11.5.
             'poi-detail': { enabled: true, state: 'detail', minZoom: 2896 },
             // Region border bands: map zoom < 8 · 8–10 · 10–12 · 12+.
@@ -821,6 +825,7 @@ export const GeoAnnotationsStory: Story = {
             ]
           })
         );
+        canvas.behaviours.register(new LabelCollisionBehaviour({ id: 'label-collision', targetLayerId: 'graph' }));
         canvas.behaviours.register(new ZoomStateBehaviour({ id: 'poi-detail', targetLayerId: 'graph' }));
         for (const id of ['border-far', 'border-mid', 'border-near', 'border-street']) {
           canvas.behaviours.register(new ZoomStateBehaviour({ id, targetLayerId: 'regions' }));
