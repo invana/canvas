@@ -68,10 +68,12 @@ Work-item IDs are append-only. `Req` cites [`analyst-requirements.md`](./analyst
 
 | ID | Item | Package | Req | Status |
 |---|---|---|---|---|
-| T1 | `icon` on `NodeStylingTemplate` (fills the reserved `simple` structure `icon` slot) | `graph` | A29 | 📋 |
-| T2 | Icon registry — `{ kind: 'named', name: 'waves' }` in JSON, the app registers the set (Lucide as the documented default); no network call (A13) | `graph` / `canvas-core` seam | A29, A13 | 📋 |
-| T3 | Per-state label bindings on node types — `stateBindings.detail.label: '{data.name}\n{data.description}'` | `graph` | A29 | 📋 |
-| T4 | `rotation` on `NodeStyle` / template (bindable, e.g. `data.course`) — the spec already has container `rotation` | `graph` | A17 | 📋 |
+| T1 | `icon` on `NodeStylingTemplate` (fills the reserved `simple` structure `icon` slot) | `graph` | A29 | ✅ implemented, not yet in `main` |
+| T2 | Icon registry — `{ kind: 'named', name: 'waves' }` in JSON, the app registers the set (Lucide as the documented default); no network call (A13) | `graph` / `canvas-core` seam | A29, A13 | ✅ implemented, not yet in `main` |
+| T3 | Per-state label bindings on node types — `stateBindings.detail.label: '{data.name}\n{data.description}'` | `graph` | A29 | ✅ implemented, not yet in `main` |
+| T4 | **Icon** rotation (radians, clockwise from up) on the inset layers, bindable per type (`rotationBind: 'data.course'`, degrees). Whole-shape rotation is T5 — deferred: container rotation carries the label | `canvas-core`, `renderer-pixijs`, `graph` | A17 | ✅ implemented, not yet in `main` |
+| T5 | Whole-shape heading rotation with an upright label (silhouette markers) | `renderer-pixijs`, `graph` | A17 | 🧊 deferred (RFC row T5) |
+| T6 | Hot-path `setShapeIconRotation` for per-second heading updates — decided by P5's V7 budget | `renderer-pixijs`, `graph` | A17, A24 | 🧊 deferred (RFC row T6) |
 
 ### P3 — Geographic features from data
 
@@ -153,7 +155,7 @@ Per-piece stories (rule 11) ship **with** each phase, not in P8.
 | Phase | RFC | Status |
 |---|---|---|
 | P1 | [`fix/2026-11-17-bubble-sets-draw-nothing-at-map-scale`](./rfcs/fix/2026-11-17-bubble-sets-draw-nothing-at-map-scale.md) | 🚧 F1–F4 implemented; F5 (`setOptions`) proposed |
-| P2 | `feat/…-marker-icons-and-zoom-labels-are-not-config` | 📋 |
+| P2 | [`feat/2026-11-17-marker-icons-and-zoom-labels-are-not-config`](./rfcs/feat/2026-11-17-marker-icons-and-zoom-labels-are-not-config.md) | 🚧 T1–T4, T2b, E1, S1 implemented; V10 partly run |
 | P3 | `feat/…-a-map-cannot-show-an-area-from-coordinates` | 📋 |
 | P4 | `feat/…-an-analyst-cannot-draw-or-query-an-area` | 📋 |
 | P5 | `feat/…-moving-objects-cannot-be-tracked-live` | 📋 |
@@ -198,5 +200,6 @@ Per-piece stories (rule 11) ship **with** each phase, not in P8.
 
 | Date | Event |
 |---|---|
+| 2026-11-17 | P2 approved and implemented (icons by name, per-type state labels, icon rotation bound to a heading; 17 + 11 unit tests, three stories); the styling editor's save would have deleted template icons — fixed and tested |
 | 2026-11-17 | P1 approved and implemented (F1–F4, 13 unit tests, two stories); a finding added B3 / RFC row F5 |
 | 2026-11-17 | Plan created from the GeoAnnotations review and the analyst requirements (A1–A30); D-1…D-7 accepted by the maintainer, D-8…D-T2 recommended |

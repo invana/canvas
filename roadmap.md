@@ -175,7 +175,7 @@ Plan: [`docs/geo-intelligence-plan.md`](./docs/geo-intelligence-plan.md) · requ
 |---|---|
 | MapLibre basemap, lng/lat-pinned nodes, zoom-tiered labels, regions and clusters (story-level: `canvas-demos/by-casestudies/geo-annotations`) | ✅ |
 | P1 — clusters (`BubbleSetsLayer`) at map scale and around pixel-constant markers | 🚧 |
-| P2 — marker icon, rotation and per-zoom labels as template config | 📋 |
+| P2 — marker icon, rotation and per-zoom labels as template config ([RFC](./docs/rfcs/feat/2026-11-17-marker-icons-and-zoom-labels-are-not-config.md)) | 🚧 |
 | P3 — `GeoFeaturesLayer`: GeoJSON areas / lines / circles with provenance and uncertainty | 📋 |
 | P4 — draw, measure, query an area, export GeoJSON | 📋 |
 | P5 — live tracking: fixes, interpolation, course, trails, signal state, follow | 📋 |

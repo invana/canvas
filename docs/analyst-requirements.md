@@ -32,7 +32,7 @@ and *why*.
 | A10 | **Network over geography** — relationships between geolocated entities drawn as arcs | "Who in this area is connected to whom elsewhere?" | P8 | ✅ engine · 📋 story |
 | A11 | **Briefing export** — GeoJSON / KML of drawn features; PNG / PDF with legend, scale bar, north arrow and classification banner | "Put this in the morning brief." | P4 (GeoJSON) · P7 (decorated export) | 📋 |
 | A12 | **Assessment notes on an area** — an analyst's judgement attached to an area, like a note on a record | "What did we conclude about this area, and why?" | P7 | 📋 |
-| A13 | **Offline / air-gapped** — nothing calls an outside service by default: self-hostable tiles, icons from an app-filled registry | Intel networks often have no internet | P3 (rule) | 📋 |
+| A13 | **Offline / air-gapped** — nothing calls an outside service by default: self-hostable tiles, icons from an app-filled registry | Intel networks often have no internet | P2 (icons) · P3 (tiles) | 🚧 icons draw with the network blocked; tiles pending |
 | A14 | **Place and coordinate input** — search a place name; accept decimal degrees, DMS and MGRS | "Go to 18°15′N 79°56′E." | P7 | 📋 |
 
 ## Live tracking — ships, fleets, deliveries, shipments
@@ -45,7 +45,7 @@ customer), not just "where is it".
 |---|---|---|---|---|
 | A15 | **Live position feed** — push position fixes for moving objects by id; transport-agnostic (WebSocket, SSE, polling and replay all feed one API) | "Where is everything right now?" | P5 | 📋 |
 | A16 | **Smooth motion** — interpolate between fixes; dead-reckon from speed and course when fixes are sparse (AIS: 2 s – 3 min) | "Where is it *between* reports?" | P5 | 📋 |
-| A17 | **Course-aware markers** — the icon rotates to the heading (bow of a ship, nose of a truck) | "Which way is it going?" | P5 | 📋 |
+| A17 | **Course-aware markers** — the icon rotates to the heading (bow of a ship, nose of a truck) | "Which way is it going?" | P2 (icon) · P5 (live) | 🚧 icon follows `data.course` from config; the live feed + fast update (RFC T6) are P5 |
 | A18 | **Trails** — the last N minutes or points as a fading line; the full track on selection | "Where has it just been?" | P5 | 📋 |
 | A19 | **Signal state** — moving · stopped · stale (no fix for T) · lost; stale and lost draw differently | "Is this position current, or are we looking at the past?" | P5 | 📋 |
 | A20 | **Follow** — the camera follows a selected object | "Keep this vessel in view." | P5 | 📋 |
@@ -62,7 +62,7 @@ customer), not just "where is it".
 | A26 | **Hand-drawn areas** — polygon, freehand, circle (radius in km) and line, drawn on the map and kept as GeoJSON | Marking what the data doesn't already say | P4 | 📋 |
 | A27 | **Areas from coordinates** — GeoJSON `Polygon` (with holes) · `MultiPolygon` · `LineString` · `Point` + `radiusKm`, passed as data | Districts, zones, routes from a file or an API | P3 | 📋 |
 | A28 | **Clusters from data** — an outline that wraps a group of entities and follows them | "These six sites form one circuit." | P1 | 🚧 works on a map and around pixel-constant markers; live config / editor waits on `setOptions` (B3) |
-| A29 | **Icons and zoom-tiered labels as config** — a per-type icon and a per-zoom label (icon → name → name + description) are JSON, not code | Saved visualisations must reproduce the picture | P2 | 📋 |
+| A29 | **Icons and zoom-tiered labels as config** — a per-type icon and a per-zoom label (icon → name → name + description) are JSON, not code | Saved visualisations must reproduce the picture | P2 | ✅ in the branch (`iconSet`, template `icon`, per-type `states[].label`); not yet in `main` |
 | A30 | **Labels never stack** — no two labels overlap, and a marker never covers a label | Dense cities stay legible | ✅ label vs label · P7 marker vs label | 🚧 |
 
 ---
@@ -71,4 +71,4 @@ customer), not just "where is it".
 
 | Date | Change |
 |---|---|
-| 2026-11-17 | A28 → 🚧 after P1 landed in the branch. Created. A1–A14 from the analyst review of `story:canvas-demos/by-casestudies/geo-annotations/GeoAnnotations`; A15–A25 added for live tracking (ships, deliveries, shipments); A26–A30 the presentation needs that story surfaced |
+| 2026-11-17 | A29 → ✅, A17 and A13 → 🚧 after P2 landed in the branch. A28 → 🚧 after P1 landed in the branch. Created. A1–A14 from the analyst review of `story:canvas-demos/by-casestudies/geo-annotations/GeoAnnotations`; A15–A25 added for live tracking (ships, deliveries, shipments); A26–A30 the presentation needs that story surfaced |

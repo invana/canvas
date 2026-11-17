@@ -17,6 +17,13 @@ working design-of-record documents. Day-to-day API/concept docs live in
   for the fix table (name the downstream consumers; separate the defect from the
   dressing). The long-form `*-plan.md` docs below predate the folder and stay put —
   they're the design of record an RFC links to rather than re-litigates.
+  - [feat/2026-11-17-marker-icons-and-zoom-labels-are-not-config.md](./rfcs/feat/2026-11-17-marker-icons-and-zoom-labels-are-not-config.md)
+    — 🚧 T1–T4, T2b, E1, S1 implemented 2026-11-17 (V1–V9 pass; V10 partly run). A marker's icon, heading and zoom-tier label are expressible only as code or
+    per-node records. Fix: `NodeStylingTemplate.icon`; named icons from a serialisable
+    `GraphLayerOptions.iconSet` (SVG markup by name, offline) resolved in `nodeSpec`; per-type
+    `NodeTypeBinding.states[name].label` templates; **icon** rotation bound to a record field
+    (`data.course`). Whole-shape rotation and a hot-path heading update deferred to P5. Phase P2 of
+    `geo-intelligence-plan.md`.
   - [fix/2026-11-17-bubble-sets-draw-nothing-at-map-scale.md](./rfcs/fix/2026-11-17-bubble-sets-draw-nothing-at-map-scale.md)
     — 🚧 F1–F4 implemented 2026-11-17 (V1–V5 pass); F5 (`setOptions` — the editor was inert) proposed. `BubbleSetsLayer` paints nothing on a map (`bubblesets-js` grids in whole
     units; a cluster is <1 world unit there) and sizes pixel-constant members by their authored
