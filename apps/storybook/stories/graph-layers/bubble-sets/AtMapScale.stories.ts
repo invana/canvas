@@ -84,11 +84,13 @@ export const AtMapScaleStory: Story = {
           {
             id: 'qutb-shahi',
             members: ['golconda', 'qutb-shahi-tombs', 'charminar', 'mecca-masjid', 'chowmahalla'],
+            label: { text: 'Qutb Shahi', placement: 'centroid' },
             style: { fill: 0x7c3aed, fillOpacity: 0.18, stroke: 0x7c3aed, strokeWidth: 0.004 }
           },
           {
             id: 'kakatiya',
             members: ['warangal-fort', 'thousand-pillar', 'bhadrakali', 'pakhal', 'ramappa', 'laknavaram'],
+            label: { text: 'Kakatiya', placement: 'contour-end' },
             style: { fill: 0xea580c, fillOpacity: 0.18, stroke: 0xea580c, strokeWidth: 0.004 }
           }
         ],

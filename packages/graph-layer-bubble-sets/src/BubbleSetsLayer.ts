@@ -52,6 +52,10 @@ export class BubbleSetsLayer extends WorldLayer<
   /** Hull ids published last pass, so sets that vanish are retired. */
   private published: string[] = [];
   private readonly subs: Array<() => void> = [];
+  /** Labelled hulls as last painted, so a zoom can re-place their labels without a recompute. */
+  private readonly labelled = new Map<string, { set: BubbleSet; pts: ReadonlyArray<{ x: number; y: number }> }>();
+  /** Camera scale the labels were last placed at (their offsets are screen pixels). */
+  private labelScale = 1;
 
   // Browser `setTimeout` returns `number`; using `ReturnType<typeof setTimeout>`
   // would resolve to NodeJS.Timeout in dual-typed environments and break the
@@ -100,6 +104,8 @@ export class BubbleSetsLayer extends WorldLayer<
     const renderer = this.surface.primitives;
     this.specs = ctx.store.specsFor<BaseShapeSpec>(this.id);
     this.projector = new SpecProjector(this.specs, renderer);
+    // Annotation text stays one pixel size at any zoom, as on `GeoFeaturesLayer`.
+    renderer.setLabelSizePolicy('shape', { zoomGrowth: 0 });
 
     const recompute = this.options.recompute ?? BUBBLE_SETS_LAYER_DEFAULTS.recompute;
     if (recompute === 'auto') {
@@ -131,6 +137,7 @@ export class BubbleSetsLayer extends WorldLayer<
       this.zoomTimer = null;
     }
     this.memberRects.clear();
+    this.labelled.clear();
     this.projector?.destroy();
     this.projector = null;
     this.specs?.clear();
@@ -251,6 +258,7 @@ export class BubbleSetsLayer extends WorldLayer<
     this.zoomTimer = window.setTimeout(() => {
       this.zoomTimer = null;
       if (this.membersDrawnChanged()) this.computeAndPaint();
+      else this.replaceLabels();
     }, wait);
   }
 
@@ -413,12 +421,16 @@ export class BubbleSetsLayer extends WorldLayer<
     const stroke = set.style?.stroke ?? style.fill;
     const id = `${this.id}:hull:${set.id}`;
 
+    const hull = hullCentre(pts);
     const spec: PathSpec = {
       kind: 'path',
-      x: 0,
-      y: 0,
+      // Centred on the hull, points local to it: the renderer's label-size policy
+      // scales a label about its host's origin, so a world-sized hull at (0, 0)
+      // would drag its label toward the map's corner.
+      x: hull.x,
+      y: hull.y,
       smooth: true,
-      points: pts.map((pt) => ({ x: pt.x, y: pt.y })),
+      points: pts.map((pt) => ({ x: pt.x - hull.x, y: pt.y - hull.y })),
       fill: [{ kind: 'solid', color: style.fill, alpha: style.fillOpacity }],
       stroke: {
         color: stroke,
@@ -427,13 +439,37 @@ export class BubbleSetsLayer extends WorldLayer<
         join: 'round',
         cap: 'round',
       },
-      ...(set.label ? { label: this.labelStyleFor(set, pts, stroke) } : {}),
     };
 
     specs.set(id, spec);
     this.projector?.project(id);
+    // A spec has no label field: the label is a decoration on the mounted hull.
+    if (set.label) {
+      this.labelled.set(id, { set, pts });
+      this.placeLabel(id, set, pts);
+    } else {
+      this.labelled.delete(id);
+      this.surface.primitives.setDecoration(id, 'label', null);
+    }
     this.events.emit('set:painted', { setId: set.id, vertices: pts.length });
     return [id];
+  }
+
+  /** Attach (or replace) a hull's label decoration at the current camera scale. */
+  private placeLabel(id: string, set: BubbleSet, pts: ReadonlyArray<{ x: number; y: number }>): void {
+    const stroke = set.style?.stroke ?? { ...BUBBLE_SET_STYLE_DEFAULTS, ...set.style }.fill;
+    this.labelScale = this.ctx?.camera.scale ?? 1;
+    this.surface.primitives.setDecoration(id, 'label', {
+      kind: 'label',
+      style: this.labelStyleFor(set, pts, stroke, this.labelScale),
+    });
+  }
+
+  /** Re-place every label after a zoom settles: offsets are screen pixels, so they go stale. */
+  private replaceLabels(): void {
+    if (this.labelled.size === 0) return;
+    if ((this.ctx?.camera.scale ?? 1) === this.labelScale) return;
+    for (const [id, { set, pts }] of this.labelled) this.placeLabel(id, set, pts);
   }
 
   /** Drop hulls published last pass that this pass no longer produced. */
@@ -441,6 +477,8 @@ export class BubbleSetsLayer extends WorldLayer<
     const keep = new Set(current);
     for (const id of this.published) {
       if (keep.has(id)) continue;
+      this.labelled.delete(id);
+      this.surface.primitives.setDecoration(id, 'label', null);
       this.specs?.delete(id);
       this.projector?.unproject(id);
     }
@@ -460,21 +498,22 @@ export class BubbleSetsLayer extends WorldLayer<
     set: BubbleSet,
     pts: ReadonlyArray<{ x: number; y: number }>,
     fallbackColor: number,
+    scale: number,
   ): ShapeLabelStyle {
     const label = set.label!;
     const placement = label.placement ?? 'contour-end';
 
-    let cx = 0;
-    let cy = 0;
+    // The label sits at its host's centre (the hull's bounding-box centre);
+    // `offset` moves it from there to the anchor.
+    const host = hullCentre(pts);
+    let anchorX = 0;
+    let anchorY = 0;
     for (const p of pts) {
-      cx += p.x;
-      cy += p.y;
+      anchorX += p.x;
+      anchorY += p.y;
     }
-    cx /= pts.length;
-    cy /= pts.length;
-
-    let anchorX = cx;
-    let anchorY = cy;
+    anchorX /= pts.length;
+    anchorY /= pts.length;
     let rotation = 0;
     if (placement !== 'centroid') {
       // `contour-end` — last point, rotated along the local tangent.
@@ -501,7 +540,8 @@ export class BubbleSetsLayer extends WorldLayer<
         padding: [2, 6],
       },
       placement: 'center',
-      offset: { x: anchorX - cx, y: anchorY - cy },
+      // A label's offset is screen pixels; the anchor gap is world units.
+      offset: { x: (anchorX - host.x) * scale, y: (anchorY - host.y) * scale },
       rotation,
     };
   }
@@ -510,6 +550,21 @@ export class BubbleSetsLayer extends WorldLayer<
   private emitRecompute(sets: number, t0: number): void {
     this.events.emit('recompute', { sets, durationMs: performance.now() - t0 });
   }
+}
+
+/** Centre of a hull's bounding box — where the renderer puts a host's label. */
+function hullCentre(pts: ReadonlyArray<{ x: number; y: number }>): { x: number; y: number } {
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  for (const p of pts) {
+    if (p.x < x0) x0 = p.x;
+    if (p.x > x1) x1 = p.x;
+    if (p.y < y0) y0 = p.y;
+    if (p.y > y1) y1 = p.y;
+  }
+  return { x: (x0 + x1) / 2, y: (y0 + y1) / 2 };
 }
 
 /**

@@ -27,8 +27,8 @@ export interface BubbleSetStyle {
 /**
  * Optional label printed on the set's contour. Styling pulls from the set's
  * own {@link BubbleSetStyle} (background = `fill` at full opacity, text
- * picked for contrast). The flat field is intentionally minimal; richer
- * label control lands once we settle on a layer-wide label primitive.
+ * picked for contrast). Drawn as a `'label'` decoration on the hull, at one
+ * pixel size at any zoom. The flat field is intentionally minimal.
  */
 export interface BubbleSetLabel {
   /** Required label text. */
