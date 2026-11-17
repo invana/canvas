@@ -22,12 +22,9 @@ import type { BaseShapeSpec, PathSpec, ShapeLabelStyle } from '@invana/canvas';
 import type { CanvasContext, LayerOptions, WorldLayerHit } from '@invana/canvas';
 import { GraphLayer } from '@invana/graph';
 import type { GraphNode } from '@invana/graph';
-import {
-  createOutline,
-  PointPath,
-  type IRectangle,
-  type ILine,
-} from 'bubblesets-js';
+import { PointPath, type IRectangle, type ILine } from 'bubblesets-js';
+
+import { createScaledOutline, type OutlineOptions } from './outline';
 
 import {
   BUBBLE_SET_STYLE_DEFAULTS,
@@ -60,6 +57,15 @@ export class BubbleSetsLayer extends WorldLayer<
   // would resolve to NodeJS.Timeout in dual-typed environments and break the
   // `window.clearTimeout(...)` call site.
   private debounceTimer: number | null = null;
+
+  /**
+   * Drawn rect of every set member as of the last paint, by node id — the
+   * baseline {@link membersDrawnChanged} compares a zoom settle against, so a
+   * zoom that did not resize any member costs one cheap measure and no recompute.
+   */
+  private readonly memberRects = new Map<string, IRectangle>();
+  /** Debounce handle for the zoom-settle check (kept apart from data recomputes). */
+  private zoomTimer: number | null = null;
 
   constructor(opts: LayerOptions<BubbleSetsLayerOptions>) {
     super({
@@ -100,6 +106,15 @@ export class BubbleSetsLayer extends WorldLayer<
       this.subs.push(graph.events.on('data:changed', () => this.scheduleRecompute()));
     }
 
+    // Pixel-constant members (`NodeScaleLODBehaviour`) change their *drawn* size
+    // on every zoom, so the contour has to follow — but only when a member really
+    // resized: a plain graph never recomputes on zoom. Checked on zoom *settle*.
+    if (recompute === 'auto') {
+      const onZoom = (): void => this.scheduleZoomCheck();
+      ctx.events.on('input:camera:zoom', onZoom);
+      this.subs.push(() => ctx.events.off('input:camera:zoom', onZoom));
+    }
+
     // Initial paint — the graph may already hold data when we mount.
     this.scheduleRecompute();
   }
@@ -111,6 +126,11 @@ export class BubbleSetsLayer extends WorldLayer<
       window.clearTimeout(this.debounceTimer);
       this.debounceTimer = null;
     }
+    if (this.zoomTimer !== null) {
+      window.clearTimeout(this.zoomTimer);
+      this.zoomTimer = null;
+    }
+    this.memberRects.clear();
     this.projector?.destroy();
     this.projector = null;
     this.specs?.clear();
@@ -202,6 +222,36 @@ export class BubbleSetsLayer extends WorldLayer<
     }, wait);
   }
 
+  /** Debounced entry for a camera zoom; the check itself runs once the zoom settles. */
+  private scheduleZoomCheck(): void {
+    if (!this.specs || this.memberRects.size === 0) return;
+    if (this.zoomTimer !== null) window.clearTimeout(this.zoomTimer);
+    const wait =
+      this.options.recomputeDebounceMs ?? BUBBLE_SETS_LAYER_DEFAULTS.recomputeDebounceMs;
+    this.zoomTimer = window.setTimeout(() => {
+      this.zoomTimer = null;
+      if (this.membersDrawnChanged()) this.computeAndPaint();
+    }, wait);
+  }
+
+  /**
+   * Did any set member's drawn size change since the last paint? A relative
+   * tolerance of 0.5 % ignores float noise, so only a real resize (a
+   * pixel-constant member after a zoom) triggers a recompute.
+   */
+  private membersDrawnChanged(): boolean {
+    const graph = this.graph;
+    if (!graph) return false;
+    for (const [id, was] of this.memberRects) {
+      const node = graph.store.getNode(id);
+      const now = node ? this.rectForNode(graph, node) : null;
+      if (!now) continue;
+      const tol = 0.005 * Math.max(was.width, was.height, Number.MIN_VALUE);
+      if (Math.abs(now.width - was.width) > tol || Math.abs(now.height - was.height) > tol) return true;
+    }
+    return false;
+  }
+
   private computeAndPaint(): void {
     const specs = this.specs;
     const graph = this.graph;
@@ -224,6 +274,15 @@ export class BubbleSetsLayer extends WorldLayer<
     for (const node of graph.store.nodes()) {
       const r = this.rectForNode(graph, node);
       if (r) nodeRects.set(node.id, r);
+    }
+
+    // Baseline for the zoom-settle check: what each member looked like this paint.
+    this.memberRects.clear();
+    for (const set of this.sets) {
+      for (const id of set.members) {
+        const r = nodeRects.get(id);
+        if (r) this.memberRects.set(id, r);
+      }
     }
 
     const algoOpts = this.algorithmOptions();
@@ -257,7 +316,8 @@ export class BubbleSetsLayer extends WorldLayer<
         }
       }
 
-      let path: PointPath = createOutline(members, nonMembers, edges, algoOpts);
+      // Scale-independent: world-unit options work on a map as on a graph.
+      let path: PointPath = createScaledOutline(members, nonMembers, edges, algoOpts);
       if (smoothness === 'bspline') {
         // Canonical bubblesets-js / G6 pipeline: sparsify first so the
         // b-spline has room to round, then interpolate.
@@ -277,22 +337,29 @@ export class BubbleSetsLayer extends WorldLayer<
   }
 
   /**
-   * World-space AABB for a node. `GraphLayer.boundsOfNode` returns the
-   * shape's local (centre-relative) rect — `node.position` is *not* baked
-   * in — so we offset by the node's position to get world coords. Falls
-   * back to a small box around the position when the renderer hasn't
-   * mounted the node yet.
+   * World-space AABB for a node, as **drawn**.
+   *
+   * Prefers the renderer's live bounds (`getShapeWorldBounds`), which include the
+   * shape's current display scale — so a member that `NodeScaleLODBehaviour` holds
+   * at a fixed screen size is measured at the size it is actually drawn, not at the
+   * screen-pixel size its spec carries "as if world units". Falls back to the
+   * authored bounds (`GraphLayer.boundsOfNode` is centre-relative, so the node's
+   * position is added), then to a small box around the position when the renderer
+   * has not mounted the node yet — sized from `pixelGroup` so it stays small at
+   * any scale (10 units at the default grid, as before).
    */
   private rectForNode(graph: GraphLayer, node: GraphNode): IRectangle | null {
     const p = node.position;
     if (!p) return null;
+    const drawn = graph.getRenderer()?.getShapeWorldBounds(node.id);
+    if (drawn) return { x: drawn.x, y: drawn.y, width: drawn.width, height: drawn.height };
     const b = graph.boundsOfNode(node);
     if (b) return { x: b.x + p.x, y: b.y + p.y, width: b.width, height: b.height };
-    const r = 10;
+    const r = (this.options.pixelGroup ?? BUBBLE_SETS_LAYER_DEFAULTS.pixelGroup) * 2.5;
     return { x: p.x - r, y: p.y - r, width: r * 2, height: r * 2 };
   }
 
-  private algorithmOptions() {
+  private algorithmOptions(): OutlineOptions {
     const o = this.options;
     return {
       pixelGroup: o.pixelGroup ?? BUBBLE_SETS_LAYER_DEFAULTS.pixelGroup,
