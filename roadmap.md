@@ -168,6 +168,21 @@ Legend: ✅ shipped · 🚧 in progress · 📋 planned
 | Real-time collaboration (CRDT doc + ephemeral presence) | 📋 |
 | Offline + multi-user (Postgres + Redis sync) | 📋 |
 
+### Geo intelligence
+Plan: [`docs/geo-intelligence-plan.md`](./docs/geo-intelligence-plan.md) · requirements: [`docs/analyst-requirements.md`](./docs/analyst-requirements.md)
+
+| Feature | Status |
+|---|---|
+| MapLibre basemap, lng/lat-pinned nodes, zoom-tiered labels, regions and clusters (story-level: `canvas-demos/by-casestudies/geo-annotations`) | ✅ |
+| P1 — clusters (`BubbleSetsLayer`) at map scale and around pixel-constant markers | 🚧 |
+| P2 — marker icon, rotation and per-zoom labels as template config ([RFC](./docs/rfcs/feat/2026-11-17-marker-icons-and-zoom-labels-are-not-config.md)) | 🚧 |
+| P3 — `GeoFeaturesLayer`: GeoJSON areas / lines / circles with provenance and uncertainty | 📋 |
+| P4 — draw, measure, query an area, export GeoJSON | 📋 |
+| P5 — live tracking: fixes, interpolation, course, trails, signal state, follow | 📋 |
+| P6 — time: kernel clock, slider, replay, dwell, co-location, geofences, route deviation, ETA | 📋 |
+| P7 — density / aggregation, notes on areas, briefing export, coordinate input | 📋 |
+| P8 — maritime and last-mile delivery case studies | 📋 |
+
 ## What's next
 
 Behaviours, layers, and layouts are configured today through one serialisable config

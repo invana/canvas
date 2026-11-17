@@ -17,7 +17,7 @@ import type { CompositePart, CompositeRootSpec } from '@invana/canvas';
 import type { ColorRole } from '../theme/types';
 import type { RolePalette } from '../theme/roles';
 import type { GraphNode } from '../store/types';
-import type { CompositeShapeOption, NodeBadge, NodeStyle } from '../layer/types';
+import type { CompositeShapeOption, NodeBadge, NodeIcon, NodeStyle } from '../layer/types';
 import { resolvePath, resolveText } from './bindings';
 import type {
   CardElement,
@@ -30,6 +30,7 @@ import type {
   SimpleStructure,
   SlotStyling,
   TemplateColor,
+  TemplateIcon,
   ValueLookup,
 } from './types';
 
@@ -324,6 +325,32 @@ export function compileBadges(
   return out;
 }
 
+/**
+ * Resolve a template icon against a record: drop the template-only rotation
+ * fields and, when `rotationBind` is set, turn the bound number into the
+ * icon's `rotation` (radians, clockwise from up).
+ *
+ * `rotationBind` reads a dotted path off the record. The value is taken in
+ * `rotationUnit` (default degrees — a compass course), `rotationOffset` is added
+ * in that same unit, and the sum is converted to radians. A record with no finite
+ * number at the path gets no bound rotation (an icon's own static `rotation`
+ * still applies).
+ *
+ * @param icon - The template icon, or `undefined`.
+ * @param node - The record the icon is drawn for.
+ * @returns A plain {@link NodeIcon}, or `undefined` when there is no icon.
+ */
+export function compileIcon(icon: TemplateIcon | undefined, node: GraphNode): NodeIcon | undefined {
+  if (!icon) return undefined;
+  const { rotationBind, rotationUnit, rotationOffset, ...plain } = icon;
+  if (rotationBind === undefined) return plain as NodeIcon;
+  const bound = resolvePath(node, rotationBind);
+  if (typeof bound !== 'number' || !Number.isFinite(bound)) return plain as NodeIcon;
+  const total = bound + (rotationOffset ?? 0);
+  const radians = rotationUnit === 'rad' ? total : (total * Math.PI) / 180;
+  return { ...plain, rotation: radians } as NodeIcon;
+}
+
 /** Compile a simple structure into label + shape + fill/stroke style fields. */
 export function compileSimple(
   struct: SimpleStructure,
@@ -352,6 +379,12 @@ export function compileSimple(
     out.bgStrokeWidth = styling.strokeWidth;
   }
   if (styling?.strokeAlpha !== undefined) out.bgStrokeAlpha = styling.strokeAlpha;
+
+  // Icon — drawn unless the structure opts its icon slot out.
+  if (struct.slots?.icon !== false) {
+    const icon = compileIcon(styling?.icon, node);
+    if (icon !== undefined) out.icon = icon;
+  }
 
   // Label
   const labelPath = bindings.label;

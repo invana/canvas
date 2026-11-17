@@ -45,6 +45,7 @@ import {
   type GroupOptions,
   type LayoutGeometry,
   type NodeBadge,
+  type NodeIcon,
   type NodeDecorationSpec,
   type NodeOption,
   type NodeShapeOptions,
@@ -73,6 +74,7 @@ import {
   compileSimple,
   compileSize,
   categoricalPaletteKeys,
+  interpolate,
 } from '../template/compile';
 import { BUILT_IN_STRUCTURES, BUILT_IN_STYLINGS } from '../template/structures';
 import type {
@@ -372,6 +374,12 @@ export class GraphLayer extends WorldLayer<
   private nodeStructures: NodeStructureRegistry;
   private nodeStylings: NodeStylingRegistry;
   private nodeTypes: NodeTypeRegistry | undefined;
+  /** Icons by name (name → SVG markup) — see {@link GraphLayerOptions.iconSet}. */
+  private iconSet: Readonly<Record<string, string>> = {};
+  /** `data:` URL per icon name, built lazily; cleared when {@link iconSet} changes. */
+  private iconUrls = new Map<string, string>();
+  /** Icon names already warned about, so an unknown name warns once. */
+  private readonly warnedIcons = new Set<string>();
   /** Current resolved palette (role → number), used to resolve per-type
    * templates. Seeded from the default theme until a theme is published. */
   private themePalette: RolePalette = FALLBACK_PALETTE;
@@ -424,6 +432,7 @@ export class GraphLayer extends WorldLayer<
     this.nodeStructures = { ...BUILT_IN_STRUCTURES, ...opts.options.nodeStructureTemplates };
     this.nodeStylings = { ...BUILT_IN_STYLINGS, ...opts.options.nodeStylingTemplates };
     this.nodeTypes = opts.options.nodeTypes;
+    if (opts.options.iconSet) this.iconSet = { ...opts.options.iconSet };
   }
 
   protected createState(): GraphLayerState {
@@ -774,6 +783,34 @@ export class GraphLayer extends WorldLayer<
       this.events.emit('style:changed', { scope: 'node' });
       this.events.emit('style:changed', { scope: 'edge' });
     }
+  }
+
+  /**
+   * A {@link NodeIcon} as a drawable fill layer. `glyph` / `svg` / `svg-url`
+   * pass through; `named` is looked up in {@link iconSet} and becomes an
+   * `svg-url` over a `data:` URL (built once per name), keeping every other
+   * field — colour, size, anchor, stroke, rotation. An unknown name returns
+   * `undefined` and warns once per name.
+   */
+  private resolveIconLayer(icon: NodeIcon): ShapeFillLayer | undefined {
+    if (icon.kind !== 'named') return icon as ShapeFillLayer;
+    let url = this.iconUrls.get(icon.name);
+    if (url === undefined) {
+      const markup = this.iconSet[icon.name];
+      if (markup === undefined) {
+        if (!this.warnedIcons.has(icon.name)) {
+          this.warnedIcons.add(icon.name);
+          console.warn(`GraphLayer "${this.id}": no icon named "${icon.name}" in iconSet.`);
+        }
+        return undefined;
+      }
+      url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(markup)}`;
+      this.iconUrls.set(icon.name, url);
+    }
+    // Every field of the named icon carries over except its name; `kind` and `url` become the layer's.
+    const layer: Record<string, unknown> = { ...icon, kind: 'svg-url', url };
+    delete layer.name;
+    return layer as unknown as ShapeFillLayer;
   }
 
   /**
@@ -1240,6 +1277,12 @@ export class GraphLayer extends WorldLayer<
       this.nodeTypes = { ...this.nodeTypes, ...patch.nodeTypes };
       templatesChanged = true;
     }
+    if (patch.iconSet) {
+      this.iconSet = { ...this.iconSet, ...patch.iconSet };
+      this.iconUrls.clear();
+      this.warnedIcons.clear();
+      templatesChanged = true;
+    }
     if (templatesChanged && this.mounted) this.redraw();
   }
 
@@ -1365,6 +1408,12 @@ export class GraphLayer extends WorldLayer<
         const layerOverlay = this.nodeOption?.state?.[name];
         if (layerOverlay) {
           assignNodeStyle(merged, resolveNodeStyleFields(layerOverlay, node));
+        }
+        // The type's own override for this state sits between the layer's
+        // (shared by every type) and the node's own.
+        const typeLabel = binding?.states?.[name]?.label;
+        if (typeLabel !== undefined) {
+          assignNodeStyle(merged, { labelText: interpolate(typeLabel, node) });
         }
         const perNodeOverlay = perNodeCatalogue?.[name];
         if (perNodeOverlay) assignNodeStyle(merged, perNodeOverlay);
@@ -1915,7 +1964,10 @@ export class GraphLayer extends WorldLayer<
     // to the bare-number shorthand so simple solid nodes stay cheap.
     const bg = style.bgFill;
     const hasImage = style.image !== undefined;
-    const hasIcon = style.icon !== undefined;
+    // A `named` icon resolves through `iconSet` into a drawable layer; an unknown
+    // name resolves to nothing, so the node is drawn as if it had no icon.
+    const iconLayer = style.icon !== undefined ? this.resolveIconLayer(style.icon) : undefined;
+    const hasIcon = iconLayer !== undefined;
     // A shape option may declare its own `fill` — `composite` does, and the
     // designer's compiled cards rely on it. `bgFill` is the per-node override;
     // when it is absent the shape's own fill stands. This mirrors how `stroke`
@@ -1948,8 +2000,8 @@ export class GraphLayer extends WorldLayer<
           ...(img.padding !== undefined ? { padding: img.padding } : {}),
         });
       }
-      if (style.icon !== undefined) {
-        layers.push(style.icon as ShapeFillLayer);
+      if (iconLayer !== undefined) {
+        layers.push(iconLayer);
       }
       fill = layers.length > 0 ? layers : undefined;
     }

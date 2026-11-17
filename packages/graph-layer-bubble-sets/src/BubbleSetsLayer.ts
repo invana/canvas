@@ -22,12 +22,9 @@ import type { BaseShapeSpec, PathSpec, ShapeLabelStyle } from '@invana/canvas';
 import type { CanvasContext, LayerOptions, WorldLayerHit } from '@invana/canvas';
 import { GraphLayer } from '@invana/graph';
 import type { GraphNode } from '@invana/graph';
-import {
-  createOutline,
-  PointPath,
-  type IRectangle,
-  type ILine,
-} from 'bubblesets-js';
+import { PointPath, type IRectangle, type ILine } from 'bubblesets-js';
+
+import { createScaledOutline, type OutlineOptions } from './outline';
 
 import {
   BUBBLE_SET_STYLE_DEFAULTS,
@@ -55,11 +52,24 @@ export class BubbleSetsLayer extends WorldLayer<
   /** Hull ids published last pass, so sets that vanish are retired. */
   private published: string[] = [];
   private readonly subs: Array<() => void> = [];
+  /** Labelled hulls as last painted, so a zoom can re-place their labels without a recompute. */
+  private readonly labelled = new Map<string, { set: BubbleSet; pts: ReadonlyArray<{ x: number; y: number }> }>();
+  /** Camera scale the labels were last placed at (their offsets are screen pixels). */
+  private labelScale = 1;
 
   // Browser `setTimeout` returns `number`; using `ReturnType<typeof setTimeout>`
   // would resolve to NodeJS.Timeout in dual-typed environments and break the
   // `window.clearTimeout(...)` call site.
   private debounceTimer: number | null = null;
+
+  /**
+   * Drawn rect of every set member as of the last paint, by node id — the
+   * baseline {@link membersDrawnChanged} compares a zoom settle against, so a
+   * zoom that did not resize any member costs one cheap measure and no recompute.
+   */
+  private readonly memberRects = new Map<string, IRectangle>();
+  /** Debounce handle for the zoom-settle check (kept apart from data recomputes). */
+  private zoomTimer: number | null = null;
 
   constructor(opts: LayerOptions<BubbleSetsLayerOptions>) {
     super({
@@ -94,10 +104,21 @@ export class BubbleSetsLayer extends WorldLayer<
     const renderer = this.surface.primitives;
     this.specs = ctx.store.specsFor<BaseShapeSpec>(this.id);
     this.projector = new SpecProjector(this.specs, renderer);
+    // Annotation text stays one pixel size at any zoom, as on `GeoFeaturesLayer`.
+    renderer.setLabelSizePolicy('shape', { zoomGrowth: 0 });
 
     const recompute = this.options.recompute ?? BUBBLE_SETS_LAYER_DEFAULTS.recompute;
     if (recompute === 'auto') {
       this.subs.push(graph.events.on('data:changed', () => this.scheduleRecompute()));
+    }
+
+    // Pixel-constant members (`NodeScaleLODBehaviour`) change their *drawn* size
+    // on every zoom, so the contour has to follow — but only when a member really
+    // resized: a plain graph never recomputes on zoom. Checked on zoom *settle*.
+    if (recompute === 'auto') {
+      const onZoom = (): void => this.scheduleZoomCheck();
+      ctx.events.on('input:camera:zoom', onZoom);
+      this.subs.push(() => ctx.events.off('input:camera:zoom', onZoom));
     }
 
     // Initial paint — the graph may already hold data when we mount.
@@ -111,6 +132,12 @@ export class BubbleSetsLayer extends WorldLayer<
       window.clearTimeout(this.debounceTimer);
       this.debounceTimer = null;
     }
+    if (this.zoomTimer !== null) {
+      window.clearTimeout(this.zoomTimer);
+      this.zoomTimer = null;
+    }
+    this.memberRects.clear();
+    this.labelled.clear();
     this.projector?.destroy();
     this.projector = null;
     this.specs?.clear();
@@ -173,6 +200,26 @@ export class BubbleSetsLayer extends WorldLayer<
     return true;
   }
 
+  /**
+   * Apply a config patch — the seam `canvas.update({ layers: { [id]: … } })`
+   * (and therefore the settings editor and `config.layers[id]`) drives. Merges
+   * over the current options and schedules a recompute, so the algorithm
+   * fields (`pixelGroup`, radii, `morphBuffer`, smoothing) are live-editable.
+   *
+   * `sets`, when present, replaces the set list (same as {@link setSets}).
+   * `graphLayerId` is identity, read once on mount — patching it has no
+   * effect; re-add the layer to retarget it. `recompute` (`'auto'` / `'manual'`)
+   * is likewise read on mount, because it decides which subscriptions exist.
+   */
+  setOptions(patch: Partial<BubbleSetsLayerOptions>): void {
+    const { sets, ...rest } = patch;
+    // `options` is readonly on the base `Layer`; mutate in place so every
+    // reader — including an in-flight paint — sees one object.
+    Object.assign(this.options, rest, { graphLayerId: this.graphLayerId });
+    if (sets) this.sets = [...sets];
+    this.scheduleRecompute();
+  }
+
   /** Read-only view of the current set list. */
   getSets(): readonly BubbleSet[] {
     return this.sets;
@@ -202,6 +249,37 @@ export class BubbleSetsLayer extends WorldLayer<
     }, wait);
   }
 
+  /** Debounced entry for a camera zoom; the check itself runs once the zoom settles. */
+  private scheduleZoomCheck(): void {
+    if (!this.specs || this.memberRects.size === 0) return;
+    if (this.zoomTimer !== null) window.clearTimeout(this.zoomTimer);
+    const wait =
+      this.options.recomputeDebounceMs ?? BUBBLE_SETS_LAYER_DEFAULTS.recomputeDebounceMs;
+    this.zoomTimer = window.setTimeout(() => {
+      this.zoomTimer = null;
+      if (this.membersDrawnChanged()) this.computeAndPaint();
+      else this.replaceLabels();
+    }, wait);
+  }
+
+  /**
+   * Did any set member's drawn size change since the last paint? A relative
+   * tolerance of 0.5 % ignores float noise, so only a real resize (a
+   * pixel-constant member after a zoom) triggers a recompute.
+   */
+  private membersDrawnChanged(): boolean {
+    const graph = this.graph;
+    if (!graph) return false;
+    for (const [id, was] of this.memberRects) {
+      const node = graph.store.getNode(id);
+      const now = node ? this.rectForNode(graph, node) : null;
+      if (!now) continue;
+      const tol = 0.005 * Math.max(was.width, was.height, Number.MIN_VALUE);
+      if (Math.abs(now.width - was.width) > tol || Math.abs(now.height - was.height) > tol) return true;
+    }
+    return false;
+  }
+
   private computeAndPaint(): void {
     const specs = this.specs;
     const graph = this.graph;
@@ -224,6 +302,15 @@ export class BubbleSetsLayer extends WorldLayer<
     for (const node of graph.store.nodes()) {
       const r = this.rectForNode(graph, node);
       if (r) nodeRects.set(node.id, r);
+    }
+
+    // Baseline for the zoom-settle check: what each member looked like this paint.
+    this.memberRects.clear();
+    for (const set of this.sets) {
+      for (const id of set.members) {
+        const r = nodeRects.get(id);
+        if (r) this.memberRects.set(id, r);
+      }
     }
 
     const algoOpts = this.algorithmOptions();
@@ -257,7 +344,8 @@ export class BubbleSetsLayer extends WorldLayer<
         }
       }
 
-      let path: PointPath = createOutline(members, nonMembers, edges, algoOpts);
+      // Scale-independent: world-unit options work on a map as on a graph.
+      let path: PointPath = createScaledOutline(members, nonMembers, edges, algoOpts);
       if (smoothness === 'bspline') {
         // Canonical bubblesets-js / G6 pipeline: sparsify first so the
         // b-spline has room to round, then interpolate.
@@ -277,22 +365,29 @@ export class BubbleSetsLayer extends WorldLayer<
   }
 
   /**
-   * World-space AABB for a node. `GraphLayer.boundsOfNode` returns the
-   * shape's local (centre-relative) rect — `node.position` is *not* baked
-   * in — so we offset by the node's position to get world coords. Falls
-   * back to a small box around the position when the renderer hasn't
-   * mounted the node yet.
+   * World-space AABB for a node, as **drawn**.
+   *
+   * Prefers the renderer's live bounds (`getShapeWorldBounds`), which include the
+   * shape's current display scale — so a member that `NodeScaleLODBehaviour` holds
+   * at a fixed screen size is measured at the size it is actually drawn, not at the
+   * screen-pixel size its spec carries "as if world units". Falls back to the
+   * authored bounds (`GraphLayer.boundsOfNode` is centre-relative, so the node's
+   * position is added), then to a small box around the position when the renderer
+   * has not mounted the node yet — sized from `pixelGroup` so it stays small at
+   * any scale (10 units at the default grid, as before).
    */
   private rectForNode(graph: GraphLayer, node: GraphNode): IRectangle | null {
     const p = node.position;
     if (!p) return null;
+    const drawn = graph.getRenderer()?.getShapeWorldBounds(node.id);
+    if (drawn) return { x: drawn.x, y: drawn.y, width: drawn.width, height: drawn.height };
     const b = graph.boundsOfNode(node);
     if (b) return { x: b.x + p.x, y: b.y + p.y, width: b.width, height: b.height };
-    const r = 10;
+    const r = (this.options.pixelGroup ?? BUBBLE_SETS_LAYER_DEFAULTS.pixelGroup) * 2.5;
     return { x: p.x - r, y: p.y - r, width: r * 2, height: r * 2 };
   }
 
-  private algorithmOptions() {
+  private algorithmOptions(): OutlineOptions {
     const o = this.options;
     return {
       pixelGroup: o.pixelGroup ?? BUBBLE_SETS_LAYER_DEFAULTS.pixelGroup,
@@ -326,12 +421,16 @@ export class BubbleSetsLayer extends WorldLayer<
     const stroke = set.style?.stroke ?? style.fill;
     const id = `${this.id}:hull:${set.id}`;
 
+    const hull = hullCentre(pts);
     const spec: PathSpec = {
       kind: 'path',
-      x: 0,
-      y: 0,
+      // Centred on the hull, points local to it: the renderer's label-size policy
+      // scales a label about its host's origin, so a world-sized hull at (0, 0)
+      // would drag its label toward the map's corner.
+      x: hull.x,
+      y: hull.y,
       smooth: true,
-      points: pts.map((pt) => ({ x: pt.x, y: pt.y })),
+      points: pts.map((pt) => ({ x: pt.x - hull.x, y: pt.y - hull.y })),
       fill: [{ kind: 'solid', color: style.fill, alpha: style.fillOpacity }],
       stroke: {
         color: stroke,
@@ -340,13 +439,37 @@ export class BubbleSetsLayer extends WorldLayer<
         join: 'round',
         cap: 'round',
       },
-      ...(set.label ? { label: this.labelStyleFor(set, pts, stroke) } : {}),
     };
 
     specs.set(id, spec);
     this.projector?.project(id);
+    // A spec has no label field: the label is a decoration on the mounted hull.
+    if (set.label) {
+      this.labelled.set(id, { set, pts });
+      this.placeLabel(id, set, pts);
+    } else {
+      this.labelled.delete(id);
+      this.surface.primitives.setDecoration(id, 'label', null);
+    }
     this.events.emit('set:painted', { setId: set.id, vertices: pts.length });
     return [id];
+  }
+
+  /** Attach (or replace) a hull's label decoration at the current camera scale. */
+  private placeLabel(id: string, set: BubbleSet, pts: ReadonlyArray<{ x: number; y: number }>): void {
+    const stroke = set.style?.stroke ?? { ...BUBBLE_SET_STYLE_DEFAULTS, ...set.style }.fill;
+    this.labelScale = this.ctx?.camera.scale ?? 1;
+    this.surface.primitives.setDecoration(id, 'label', {
+      kind: 'label',
+      style: this.labelStyleFor(set, pts, stroke, this.labelScale),
+    });
+  }
+
+  /** Re-place every label after a zoom settles: offsets are screen pixels, so they go stale. */
+  private replaceLabels(): void {
+    if (this.labelled.size === 0) return;
+    if ((this.ctx?.camera.scale ?? 1) === this.labelScale) return;
+    for (const [id, { set, pts }] of this.labelled) this.placeLabel(id, set, pts);
   }
 
   /** Drop hulls published last pass that this pass no longer produced. */
@@ -354,6 +477,8 @@ export class BubbleSetsLayer extends WorldLayer<
     const keep = new Set(current);
     for (const id of this.published) {
       if (keep.has(id)) continue;
+      this.labelled.delete(id);
+      this.surface.primitives.setDecoration(id, 'label', null);
       this.specs?.delete(id);
       this.projector?.unproject(id);
     }
@@ -373,21 +498,22 @@ export class BubbleSetsLayer extends WorldLayer<
     set: BubbleSet,
     pts: ReadonlyArray<{ x: number; y: number }>,
     fallbackColor: number,
+    scale: number,
   ): ShapeLabelStyle {
     const label = set.label!;
     const placement = label.placement ?? 'contour-end';
 
-    let cx = 0;
-    let cy = 0;
+    // The label sits at its host's centre (the hull's bounding-box centre);
+    // `offset` moves it from there to the anchor.
+    const host = hullCentre(pts);
+    let anchorX = 0;
+    let anchorY = 0;
     for (const p of pts) {
-      cx += p.x;
-      cy += p.y;
+      anchorX += p.x;
+      anchorY += p.y;
     }
-    cx /= pts.length;
-    cy /= pts.length;
-
-    let anchorX = cx;
-    let anchorY = cy;
+    anchorX /= pts.length;
+    anchorY /= pts.length;
     let rotation = 0;
     if (placement !== 'centroid') {
       // `contour-end` — last point, rotated along the local tangent.
@@ -414,7 +540,8 @@ export class BubbleSetsLayer extends WorldLayer<
         padding: [2, 6],
       },
       placement: 'center',
-      offset: { x: anchorX - cx, y: anchorY - cy },
+      // A label's offset is screen pixels; the anchor gap is world units.
+      offset: { x: (anchorX - host.x) * scale, y: (anchorY - host.y) * scale },
       rotation,
     };
   }
@@ -423,6 +550,21 @@ export class BubbleSetsLayer extends WorldLayer<
   private emitRecompute(sets: number, t0: number): void {
     this.events.emit('recompute', { sets, durationMs: performance.now() - t0 });
   }
+}
+
+/** Centre of a hull's bounding box — where the renderer puts a host's label. */
+function hullCentre(pts: ReadonlyArray<{ x: number; y: number }>): { x: number; y: number } {
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  for (const p of pts) {
+    if (p.x < x0) x0 = p.x;
+    if (p.x > x1) x1 = p.x;
+    if (p.y < y0) y0 = p.y;
+    if (p.y > y1) y1 = p.y;
+  }
+  return { x: (x0 + x1) / 2, y: (y0 + y1) / 2 };
 }
 
 /**

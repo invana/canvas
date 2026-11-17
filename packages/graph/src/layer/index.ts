@@ -12,6 +12,7 @@ export type {
   MiniMapKind,
 } from './MiniMapLayer';
 export { GroupFramesLayer, type GroupFrame, type GroupFrameHit, type GroupFramesLayerEvents, type GroupFramesLayerOptions } from './GroupFramesLayer';
+export { TrailsLayer, TRAILS_LAYER_DEFAULTS, type TrailsLayerOptions } from './TrailsLayer';
 export { GraphLegendLayer } from './GraphLegendLayer';
 export type {
   GraphLegendLayerOptions,
@@ -66,6 +67,7 @@ export type {
   EdgeEffects,
   NodeEffects,
   NodeIcon,
+  ResolvedNodeIcon,
   NodeImage,
   NodeOption,
   NodeShapeOptions,

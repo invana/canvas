@@ -697,6 +697,84 @@ export type {
   EdgeScaleLODOptions,
 } from './editors/behaviours/edge-scale-lod';
 
+// DrawGeoFeatureBehaviour
+export { DrawGeoFeatureEditorPanel, drawGeoFeatureFields } from './editors/behaviours/draw-geo-feature';
+export {
+  optionsToForm as drawGeoFeatureOptionsToForm,
+  formToOptions as drawGeoFeatureFormToOptions,
+} from './editors/behaviours/draw-geo-feature';
+export type {
+  DrawGeoFeatureEditorPanelProps,
+  DrawGeoFeatureFields,
+  DrawGeoFeatureFormState,
+  DrawGeoFeatureOptions,
+} from './editors/behaviours/draw-geo-feature';
+
+// MeasureBehaviour
+export { MeasureEditorPanel, measureFields } from './editors/behaviours/measure';
+export {
+  optionsToForm as measureOptionsToForm,
+  formToOptions as measureFormToOptions,
+} from './editors/behaviours/measure';
+export type {
+  MeasureEditorPanelProps,
+  MeasureFields,
+  MeasureFormState,
+  MeasureOptions,
+} from './editors/behaviours/measure';
+
+// AreaQueryBehaviour
+export { AreaQueryEditorPanel, areaQueryFields } from './editors/behaviours/area-query';
+export {
+  optionsToForm as areaQueryOptionsToForm,
+  formToOptions as areaQueryFormToOptions,
+} from './editors/behaviours/area-query';
+export type {
+  AreaQueryEditorPanelProps,
+  AreaQueryFields,
+  AreaQueryFormState,
+  AreaQueryOptions,
+} from './editors/behaviours/area-query';
+
+// TrackingBehaviour
+export { TrackingEditorPanel, trackingFields } from './editors/behaviours/tracking';
+export {
+  optionsToForm as trackingOptionsToForm,
+  formToOptions as trackingFormToOptions,
+} from './editors/behaviours/tracking';
+export type {
+  TrackingEditorPanelProps,
+  TrackingFields,
+  TrackingFormState,
+  TrackingOptions,
+} from './editors/behaviours/tracking';
+
+// GeoFeaturesLayer
+export { GeoFeaturesLayerEditorPanel, geoFeaturesLayerFields } from './editors/layers/geo-features-layer';
+export {
+  optionsToForm as geoFeaturesLayerOptionsToForm,
+  formToOptions as geoFeaturesLayerFormToOptions,
+} from './editors/layers/geo-features-layer';
+export type {
+  GeoFeaturesLayerEditorPanelProps,
+  GeoFeaturesLayerFields,
+  GeoFeaturesLayerFormState,
+  GeoFeaturesLayerOptions,
+} from './editors/layers/geo-features-layer';
+
+// TrailsLayer
+export { TrailsLayerEditorPanel, trailsLayerFields } from './editors/layers/trails-layer';
+export {
+  optionsToForm as trailsLayerOptionsToForm,
+  formToOptions as trailsLayerFormToOptions,
+} from './editors/layers/trails-layer';
+export type {
+  TrailsLayerEditorPanelProps,
+  TrailsLayerFields,
+  TrailsLayerFormState,
+  TrailsLayerOptions,
+} from './editors/layers/trails-layer';
+
 // LabelCollisionBehaviour
 export { LabelCollisionEditorPanel, labelCollisionFields } from './editors/behaviours/label-collision';
 export {
@@ -1195,6 +1273,9 @@ export type {
 // helpers that bridge engine colours and the design-kit colour swatch.
 export { COLOR_PRESETS } from './shared/colors';
 export { numberToHex, hexToNumber } from './shared/color';
+// An `iconSet` for `GraphLayerOptions` built from Lucide components — rendered to
+// SVG markup once, so the config that carries it is plain JSON.
+export { iconSetFromLucide } from './shared/iconSet';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Application UI (moved from @invana/canvas-react)
@@ -1289,6 +1370,7 @@ export {
   ModellerToolbar,
   ExportImageToolbar,
   ExportStateToolbar,
+  GeoToolsToolbar,
   ClearCanvasToolbar,
   NodeDetailView,
   EdgeDetailView,
@@ -1313,6 +1395,7 @@ export type {
   ExportImageToolbarProps,
   ExportImageFormatKey,
   ExportStateToolbarProps,
+  GeoToolsToolbarProps,
   ClearCanvasToolbarProps,
   NodeDetailViewProps,
   EdgeDetailViewProps,

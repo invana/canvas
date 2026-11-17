@@ -184,6 +184,9 @@ export type {
 } from './ContentLODBehaviour';
 export { ZoomStateBehaviour } from './ZoomStateBehaviour';
 export type { ZoomStateBehaviourOptions } from './ZoomStateBehaviour';
+export { TrackingBehaviour } from './TrackingBehaviour';
+export type { TrackingBehaviourOptions, TrackingCameraDriver } from './TrackingBehaviour';
+export type { Fix, SignalState } from './tracking/motion';
 export { NodeLabelLODBehaviour } from './NodeLabelLODBehaviour';
 export type { NodeLabelLODBehaviourOptions } from './NodeLabelLODBehaviour';
 export { EdgeLabelLODBehaviour } from './EdgeLabelLODBehaviour';

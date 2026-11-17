@@ -16,11 +16,11 @@ const withGroup =
   (f: FieldConfig): FieldConfig => ({ ...f, group });
 
 const INFLUENCE_FIELDS: FieldConfig[] = [
-  { name: 'nodeR0', type: 'number', label: 'Node radius (full)', min: 0, max: 200, step: 1, description: 'Node-influence inner radius — full influence, world units.' },
-  { name: 'nodeR1', type: 'number', label: 'Node radius (falloff)', min: 0, max: 400, step: 1, description: 'Node-influence outer radius — zero influence, world units.' },
-  { name: 'edgeR0', type: 'number', label: 'Edge radius (full)', min: 0, max: 200, step: 1, description: 'Edge-influence inner radius, world units.' },
-  { name: 'edgeR1', type: 'number', label: 'Edge radius (falloff)', min: 0, max: 400, step: 1, description: 'Edge-influence outer radius, world units.' },
-  { name: 'morphBuffer', type: 'number', label: 'Padding', min: 0, max: 100, step: 1, description: 'Padding around the energy grid before sampling, world units.' },
+  { name: 'nodeR0', type: 'number', label: 'Node radius (full)', min: 0, max: 200, step: 0.001, description: 'Node-influence inner radius — full influence, world units. On a map a few thousandths (0.006).' },
+  { name: 'nodeR1', type: 'number', label: 'Node radius (falloff)', min: 0, max: 400, step: 0.001, description: 'Node-influence outer radius — zero influence, world units. On a map a few hundredths (0.02).' },
+  { name: 'edgeR0', type: 'number', label: 'Edge radius (full)', min: 0, max: 200, step: 0.001, description: 'Edge-influence inner radius, world units.' },
+  { name: 'edgeR1', type: 'number', label: 'Edge radius (falloff)', min: 0, max: 400, step: 0.001, description: 'Edge-influence outer radius, world units.' },
+  { name: 'morphBuffer', type: 'number', label: 'Padding', min: 0, max: 100, step: 0.001, description: 'Padding around the energy grid before sampling, world units.' },
 ];
 
 const styleFields = (values: BubbleSetsLayerFields): FieldConfig[] => [
@@ -48,7 +48,7 @@ const styleFields = (values: BubbleSetsLayerFields): FieldConfig[] => [
 ];
 
 const COMPUTE_FIELDS: FieldConfig[] = [
-  { name: 'pixelGroup', type: 'number', label: 'Grid resolution', min: 1, max: 32, step: 1, description: 'Grid cell size in square world units. Smaller = sharper, costlier.' },
+  { name: 'pixelGroup', type: 'number', label: 'Grid resolution', min: 0.0001, max: 32, step: 0.001, description: 'Grid cell size in world units. Smaller = sharper, costlier. Scale it to your canvas: 4 for a graph, ~0.002 on a map (the whole earth is 512 units across there).' },
   { name: 'maxRoutingIterations', type: 'number', label: 'Routing iterations', min: 1, max: 1000, step: 1, description: 'Max routing iterations to wrap obstacles.' },
   { name: 'maxMarchingIterations', type: 'number', label: 'Marching iterations', min: 1, max: 200, step: 1, description: 'Max marching-squares refinement iterations.' },
 ];

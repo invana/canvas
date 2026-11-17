@@ -22,6 +22,15 @@ export interface NodeStylingScalarFields {
   labelColorRole: string;
   labelFontSize: number;
   labelPlacement: string;
+  // icon — a `named` icon from the layer's `iconSet`; `''` = no icon. Other icon
+  // kinds (glyph / svg / svg-url) are carried through untouched, not edited here.
+  iconName: string;
+  /** Icon size as a fraction of the shape's smaller dimension, 0.1–1. */
+  iconSizeRatio: number;
+  /** Dotted path to a number on the record that turns the icon (`data.course`); `''` = none. */
+  iconRotationBind: string;
+  iconRotationUnit: string;
+  iconRotationOffset: number;
 }
 
 /** One per-slot styling row (a `useFieldArray` entry). */

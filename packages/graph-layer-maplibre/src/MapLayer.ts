@@ -66,13 +66,24 @@ import maplibregl from 'maplibre-gl';
 import { projectLngLat, unprojectWorld } from './mercator';
 import type {
   LngLat,
+  MapCameraDriver,
   MapLayerEvents,
   MapLayerOptions,
   MapLayerState,
   WorldPoint,
 } from './types';
 
-const DEFAULT_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
+/**
+ * The style a `MapLayer` loads when it is not given one: a plain background, no
+ * tiles, no sources — so a canvas makes **no outside request** unless the app
+ * asks for a basemap with `styleUrl`.
+ */
+export const BLANK_STYLE = {
+  version: 8,
+  name: 'invana-blank',
+  sources: {},
+  layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#eef0f3' } }],
+} as const;
 
 export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEvents> {
   override readonly kind = 'map-layer';
@@ -82,6 +93,10 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
   private originalCanvasPointerEvents: string | null = null;
   private originalCanvasPosition: string | null = null;
   private originalCanvasZIndex: string | null = null;
+  /** Callbacks for a user drag of the map — see {@link cameraDriver}. */
+  private readonly gestureListeners = new Set<() => void>();
+  /** How many tools currently hold the map's drag / double-click-zoom / box-zoom. */
+  private gestureHolds = 0;
   private readonly handleMapMove = (): void => this.syncCameraFromMap();
 
   constructor(opts: LayerOptions<MapLayerOptions>) {
@@ -171,6 +186,81 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
     });
   }
 
+  /**
+   * Stop the map panning, double-click-zooming and box-zooming under a drawing
+   * tool, and start reporting its raw pointer as `map:pointer` events. Returns the
+   * **release** function. It is refcounted: two tools can hold the map, and it is
+   * handed back only when the last lets go. Releasing twice is harmless, and an
+   * unmounted layer restores everything itself.
+   *
+   * The wheel still zooms and the keyboard still works — a tool does not need
+   * them off, and an analyst can zoom while drawing.
+   *
+   * ```ts
+   * const release = map.suspendGestures();
+   * // … draw …
+   * release(); // always: on Escape, on tool exit, on unmount
+   * ```
+   */
+  suspendGestures(): () => void {
+    this.gestureHolds++;
+    this.applyGestureHolds();
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      this.gestureHolds = Math.max(0, this.gestureHolds - 1);
+      this.applyGestureHolds();
+    };
+  }
+
+  /** Whether any tool currently holds the map's gestures. */
+  get gesturesSuspended(): boolean {
+    return this.gestureHolds > 0;
+  }
+
+  /** Disable or re-enable the three handlers to match the current holds. */
+  private applyGestureHolds(): void {
+    const map = this.map;
+    if (!map) return;
+    const hold = this.gestureHolds > 0;
+    for (const handler of [map.dragPan, map.doubleClickZoom, map.boxZoom]) {
+      if (hold) handler.disable();
+      else handler.enable();
+    }
+  }
+
+  /**
+   * A camera driver for `@invana/graph`'s `TrackingBehaviour` follow mode. Under
+   * a `MapLayer` the canvas camera is a mirror of the map, so following means
+   * moving the **map**; the canvas camera then follows through `move`.
+   *
+   * ```ts
+   * new TrackingBehaviour({ id: 'tracking', targetLayerId: 'vessels', cameraDriver: map.cameraDriver() });
+   * ```
+   *
+   * `centerOn` takes world coordinates and keeps the zoom; `onUserGesture` fires
+   * when the user **presses on the map** (a wheel zoom keeps the follow). It is a
+   * press, not a drag: a follow camera re-centres every frame, which would stop a
+   * drag from ever starting.
+   */
+  cameraDriver(): MapCameraDriver {
+    return {
+      centerOn: (x, y) => {
+        this.map?.jumpTo({ center: unprojectWorld({ x, y }) });
+      },
+      onUserGesture: (cb) => {
+        // The map may not exist yet (a behaviour registered right after the layer
+        // is added), so callbacks are kept here and fired by the one `dragstart`
+        // listener `onMount` installs.
+        this.gestureListeners.add(cb);
+        return () => {
+          this.gestureListeners.delete(cb);
+        };
+      },
+    };
+  }
+
   protected override onMount(ctx: CanvasContext): void {
     const canvasEl = ctx.canvasElement;
     if (!canvasEl) {
@@ -224,7 +314,7 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
       canvasEl.style.pointerEvents = 'none';
     }
 
-    const styleUrl = this.options.styleUrl ?? DEFAULT_STYLE_URL;
+    const styleUrl = this.options.styleUrl ?? BLANK_STYLE;
     const center = this.options.center ?? [0, 20];
     const zoom = this.options.zoom ?? 1.5;
 
@@ -247,6 +337,48 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
     });
 
     this.map.on('move', this.handleMapMove);
+    // The user taking the map: pressing on it. Not `dragstart` — a follow camera
+    // re-centres the map every frame, and `jumpTo` resets MapLibre's drag handler
+    // before a drag can start, so the drag would never be seen. A press is seen at once.
+    const taken = (): void => {
+      for (const cb of [...this.gestureListeners]) cb();
+    };
+    this.map.on('mousedown', taken);
+    this.map.on('click', (e) => this.events.emit('map:click', { lngLat: [e.lngLat.lng, e.lngLat.lat], world: projectLngLat([e.lngLat.lng, e.lngLat.lat]) }));
+    // Hover is one event per frame at most: a pointer can move far faster than anything reacts.
+    let hoverFrame = 0;
+    this.map.on('mousemove', (e) => {
+      if (hoverFrame) return;
+      const { lng, lat } = e.lngLat;
+      hoverFrame = requestAnimationFrame(() => {
+        hoverFrame = 0;
+        this.events.emit('map:hover', { lngLat: [lng, lat], world: projectLngLat([lng, lat]) });
+      });
+    });
+    // The raw pointer, for drawing tools (see `suspendGestures`). `move` at most once per frame.
+    const pointer = (phase: 'down' | 'up' | 'dblclick') => (e: { lngLat: { lng: number; lat: number }; originalEvent?: MouseEvent }): void =>
+      this.events.emit('map:pointer', {
+        phase,
+        lngLat: [e.lngLat.lng, e.lngLat.lat],
+        world: projectLngLat([e.lngLat.lng, e.lngLat.lat]),
+        button: e.originalEvent?.button ?? 0,
+      });
+    this.map.on('mousedown', pointer('down'));
+    this.map.on('mouseup', pointer('up'));
+    this.map.on('dblclick', pointer('dblclick'));
+    let moveFrame = 0;
+    this.map.on('mousemove', (e) => {
+      if (moveFrame) return;
+      const { lng, lat } = e.lngLat;
+      const button = e.originalEvent?.buttons ?? 0;
+      moveFrame = requestAnimationFrame(() => {
+        moveFrame = 0;
+        this.events.emit('map:pointer', { phase: 'move', lngLat: [lng, lat], world: projectLngLat([lng, lat]), button });
+      });
+    });
+    // A tool that was already holding the map when it came up.
+    this.applyGestureHolds();
+    this.map.on('touchstart', taken);
     this.map.on('load', () => {
       this.state.update((s) => {
         s.ready = true;
@@ -264,6 +396,7 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
   }
 
   protected override onUnmount(ctx: CanvasContext): void {
+    this.gestureHolds = 0;
     if (this.map) {
       this.map.off('move', this.handleMapMove);
       this.map.remove();
