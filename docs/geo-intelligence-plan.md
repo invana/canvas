@@ -93,12 +93,12 @@ Work-item IDs are append-only. `Req` cites [`analyst-requirements.md`](./analyst
 
 | ID | Item | Package | Req | Status |
 |---|---|---|---|---|
-| M1 | `MapLayer` input hand-off — borrow pointer input from MapLibre while a tool is active, give it back after | `graph-layer-maplibre` | A26 | 📋 |
-| D1 | `DrawGeoFeatureBehaviour` — polygon (click, double-click closes) · freehand (drag) · circle (drag radius, km) · line; writes a GeoJSON feature with G6 provenance (`author`, `reportedAt`), undoable | same | A26 | 📋 |
-| D3 | Measure tools — distance, area (km²), bearing; scale bar | same | A4 | 📋 |
-| D4 | Area query — "inside feature", "within N km of point / line"; output **select** (default) or **filter** | same + `graph` selection / filter | A1 | 📋 |
-| D5 | GeoJSON export of drawn features (KML later) | same | A11 | 📋 |
-| E2 | Draw toolbar (canvas-ui) + behaviour editor | `canvas-ui` | rule 12 | 📋 |
+| M1 | `MapLayer` input hand-off — borrow pointer input from MapLibre while a tool is active, give it back after | `graph-layer-maplibre` | A26 | ✅ implemented, not yet in `main` |
+| D1 | `DrawGeoFeatureBehaviour` — polygon (click, double-click closes) · freehand (drag) · circle (drag radius, km) · line; writes a GeoJSON feature with G6 provenance (`author`, `reportedAt`), undoable | same | A26 | ✅ implemented, not yet in `main` |
+| D3 | Measure tools — distance, area (km²), bearing; scale bar | same | A4 | ✅ implemented, not yet in `main` |
+| D4 | Area query — "inside feature", "within N km of point / line"; output **select** (default) or **filter** | same + `graph` selection / filter | A1 | ✅ implemented, not yet in `main` |
+| D5 | GeoJSON export of drawn features (KML later) | same | A11 | ✅ implemented, not yet in `main` |
+| E2 | Draw toolbar (canvas-ui) + behaviour editor | `canvas-ui` | rule 12 | ✅ implemented, not yet in `main` |
 | D2 | Edit drawn features — drag vertices, move, delete | same | A26 | 🧊 after P4 core |
 
 ### P5 — Live tracking core
@@ -157,7 +157,7 @@ Per-piece stories (rule 11) ship **with** each phase, not in P8.
 | P1 | [`fix/2026-11-17-bubble-sets-draw-nothing-at-map-scale`](./rfcs/fix/2026-11-17-bubble-sets-draw-nothing-at-map-scale.md) | 🚧 F1–F4 implemented; F5 (`setOptions`) proposed |
 | P2 | [`feat/2026-11-17-marker-icons-and-zoom-labels-are-not-config`](./rfcs/feat/2026-11-17-marker-icons-and-zoom-labels-are-not-config.md) | 🚧 T1–T4, T2b, E1, S1 implemented; V10 partly run |
 | P3 | `feat/…-a-map-cannot-show-an-area-from-coordinates` | ✅ RFC accepted and implemented, not yet in `main` — `docs/rfcs/feat/2026-11-17-geographic-shapes-cannot-be-drawn-from-data.md` |
-| P4 | `feat/…-an-analyst-cannot-draw-or-query-an-area` | 📋 |
+| P4 | `feat/…-an-analyst-cannot-draw-or-query-an-area` | ✅ RFC accepted and implemented (scope: query, draw polygon / line / circle, measure, export), not yet in `main` — `docs/rfcs/feat/2026-11-17-an-analyst-cannot-draw-measure-or-query-an-area.md` |
 | P5 | `feat/…-moving-objects-cannot-be-tracked-live` | ✅ RFC accepted and implemented, not yet in `main` — `docs/rfcs/feat/2026-11-17-moving-objects-cannot-be-tracked-live.md` |
 | P6 | `feat/…-the-canvas-has-no-time` (+ a design note `docs/time-model-plan.md` first — it touches every layer) | 📋 |
 | P7 | one RFC per X-row | 📋 |
@@ -175,7 +175,7 @@ Per-piece stories (rule 11) ship **with** each phase, not in P8.
 | D-5 | Zoom units in config | camera scale (`2 ** mapZoom`), documented conversion; no new unit | accepted 2026-11-17 |
 | D-6 | RFC split | this plan + one RFC per phase | accepted 2026-11-17 |
 | D-7 | Scope of this round | P1–P4 first; time (P6) after its own design note | accepted 2026-11-17 |
-| D-8 | Area query output | select by default, filter as an option | recommended — open |
+| D-8 | Area query output | select by default, filter as an option | accepted 2026-11-17 — area query selects by default; the filter output is deferred |
 | D-9 | Case-study domains | maritime (S3) and last-mile delivery (S4); the GeoAnnotations story keeps Telangana | recommended — open |
 | D-10 | Air-gapped as a hard requirement | yes for the engine (no default outside calls); stories may use OpenFreeMap but say so | recommended — open |
 | D-11 | `classification` field shape | free text now, with an app-supplied list later for the export banner | recommended — open |
@@ -205,3 +205,4 @@ Per-piece stories (rule 11) ship **with** each phase, not in P8.
 | 2026-11-17 | Plan created from the GeoAnnotations review and the analyst requirements (A1–A30); D-1…D-7 accepted by the maintainer, D-8…D-T2 recommended |
 | 2026-11-17 | P5 implemented (RFC `feat-2026-11-17-moving-objects-cannot-be-tracked-live`): `TrackingBehaviour`, `TrailsLayer`, map follow driver, lng/lat adapter, editors, stories; budget measured (tick p95 0.7 ms at 5,000, 2.4 ms with every heading rewritten). D-T1 stays open; D-T2 confirmed |
 | 2026-11-17 | P3 implemented (RFC `feat-2026-11-17-geographic-shapes-cannot-be-drawn-from-data`): `GeoFeaturesLayer`, `GeoPositionBehaviour`, `MapLayer` click / hover forwarding and an offline blank default, editor, wrapper, eight stories; `GeoAnnotations` migrated. D-2 and D-10 answered |
+| 2026-11-17 | P4 implemented in the maintainer's scope (RFC `feat-2026-11-17-an-analyst-cannot-draw-measure-or-query-an-area`): `suspendGestures` + `map:pointer`, features as a second operation-log source (undo), draft, geodesy, `DrawGeoFeatureBehaviour`, `MeasureBehaviour`, `AreaQueryBehaviour`, GeoJSON export, editors, `GeoToolsToolbar`, nine stories. Freehand, scale bar, vertex editing (D2), filter output and KML stay deferred |
