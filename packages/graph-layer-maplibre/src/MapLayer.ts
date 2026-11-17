@@ -95,6 +95,8 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
   private originalCanvasZIndex: string | null = null;
   /** Callbacks for a user drag of the map — see {@link cameraDriver}. */
   private readonly gestureListeners = new Set<() => void>();
+  /** How many tools currently hold the map's drag / double-click-zoom / box-zoom. */
+  private gestureHolds = 0;
   private readonly handleMapMove = (): void => this.syncCameraFromMap();
 
   constructor(opts: LayerOptions<MapLayerOptions>) {
@@ -182,6 +184,50 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
       zoom: opts.zoom,
       duration: opts.duration ?? 1000,
     });
+  }
+
+  /**
+   * Stop the map panning, double-click-zooming and box-zooming under a drawing
+   * tool, and start reporting its raw pointer as `map:pointer` events. Returns the
+   * **release** function. It is refcounted: two tools can hold the map, and it is
+   * handed back only when the last lets go. Releasing twice is harmless, and an
+   * unmounted layer restores everything itself.
+   *
+   * The wheel still zooms and the keyboard still works — a tool does not need
+   * them off, and an analyst can zoom while drawing.
+   *
+   * ```ts
+   * const release = map.suspendGestures();
+   * // … draw …
+   * release(); // always: on Escape, on tool exit, on unmount
+   * ```
+   */
+  suspendGestures(): () => void {
+    this.gestureHolds++;
+    this.applyGestureHolds();
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      this.gestureHolds = Math.max(0, this.gestureHolds - 1);
+      this.applyGestureHolds();
+    };
+  }
+
+  /** Whether any tool currently holds the map's gestures. */
+  get gesturesSuspended(): boolean {
+    return this.gestureHolds > 0;
+  }
+
+  /** Disable or re-enable the three handlers to match the current holds. */
+  private applyGestureHolds(): void {
+    const map = this.map;
+    if (!map) return;
+    const hold = this.gestureHolds > 0;
+    for (const handler of [map.dragPan, map.doubleClickZoom, map.boxZoom]) {
+      if (hold) handler.disable();
+      else handler.enable();
+    }
   }
 
   /**
@@ -309,6 +355,29 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
         this.events.emit('map:hover', { lngLat: [lng, lat], world: projectLngLat([lng, lat]) });
       });
     });
+    // The raw pointer, for drawing tools (see `suspendGestures`). `move` at most once per frame.
+    const pointer = (phase: 'down' | 'up' | 'dblclick') => (e: { lngLat: { lng: number; lat: number }; originalEvent?: MouseEvent }): void =>
+      this.events.emit('map:pointer', {
+        phase,
+        lngLat: [e.lngLat.lng, e.lngLat.lat],
+        world: projectLngLat([e.lngLat.lng, e.lngLat.lat]),
+        button: e.originalEvent?.button ?? 0,
+      });
+    this.map.on('mousedown', pointer('down'));
+    this.map.on('mouseup', pointer('up'));
+    this.map.on('dblclick', pointer('dblclick'));
+    let moveFrame = 0;
+    this.map.on('mousemove', (e) => {
+      if (moveFrame) return;
+      const { lng, lat } = e.lngLat;
+      const button = e.originalEvent?.buttons ?? 0;
+      moveFrame = requestAnimationFrame(() => {
+        moveFrame = 0;
+        this.events.emit('map:pointer', { phase: 'move', lngLat: [lng, lat], world: projectLngLat([lng, lat]), button });
+      });
+    });
+    // A tool that was already holding the map when it came up.
+    this.applyGestureHolds();
     this.map.on('touchstart', taken);
     this.map.on('load', () => {
       this.state.update((s) => {
@@ -327,6 +396,7 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
   }
 
   protected override onUnmount(ctx: CanvasContext): void {
+    this.gestureHolds = 0;
     if (this.map) {
       this.map.off('move', this.handleMapMove);
       this.map.remove();

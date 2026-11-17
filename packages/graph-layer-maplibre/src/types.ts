@@ -83,6 +83,13 @@ export interface MapLayerEvents extends EventMap {
   'map:click': { lngLat: [number, number]; world: WorldPoint };
   /** The pointer moved over the map — at most once per frame. */
   'map:hover': { lngLat: [number, number]; world: WorldPoint };
+  /**
+   * The raw pointer, for drawing tools. Sent always, but only useful while a tool
+   * holds the map's gestures (`MapLayer.suspendGestures`). `move` is at most once
+   * per frame; `button` is the DOM button (`down` / `up` / `dblclick`) or the
+   * `buttons` bitmask (`move`).
+   */
+  'map:pointer': { phase: 'down' | 'move' | 'up' | 'dblclick'; lngLat: [number, number]; world: WorldPoint; button: number };
 }
 
 /**

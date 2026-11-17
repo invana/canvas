@@ -697,6 +697,45 @@ export type {
   EdgeScaleLODOptions,
 } from './editors/behaviours/edge-scale-lod';
 
+// DrawGeoFeatureBehaviour
+export { DrawGeoFeatureEditorPanel, drawGeoFeatureFields } from './editors/behaviours/draw-geo-feature';
+export {
+  optionsToForm as drawGeoFeatureOptionsToForm,
+  formToOptions as drawGeoFeatureFormToOptions,
+} from './editors/behaviours/draw-geo-feature';
+export type {
+  DrawGeoFeatureEditorPanelProps,
+  DrawGeoFeatureFields,
+  DrawGeoFeatureFormState,
+  DrawGeoFeatureOptions,
+} from './editors/behaviours/draw-geo-feature';
+
+// MeasureBehaviour
+export { MeasureEditorPanel, measureFields } from './editors/behaviours/measure';
+export {
+  optionsToForm as measureOptionsToForm,
+  formToOptions as measureFormToOptions,
+} from './editors/behaviours/measure';
+export type {
+  MeasureEditorPanelProps,
+  MeasureFields,
+  MeasureFormState,
+  MeasureOptions,
+} from './editors/behaviours/measure';
+
+// AreaQueryBehaviour
+export { AreaQueryEditorPanel, areaQueryFields } from './editors/behaviours/area-query';
+export {
+  optionsToForm as areaQueryOptionsToForm,
+  formToOptions as areaQueryFormToOptions,
+} from './editors/behaviours/area-query';
+export type {
+  AreaQueryEditorPanelProps,
+  AreaQueryFields,
+  AreaQueryFormState,
+  AreaQueryOptions,
+} from './editors/behaviours/area-query';
+
 // TrackingBehaviour
 export { TrackingEditorPanel, trackingFields } from './editors/behaviours/tracking';
 export {
@@ -1331,6 +1370,7 @@ export {
   ModellerToolbar,
   ExportImageToolbar,
   ExportStateToolbar,
+  GeoToolsToolbar,
   ClearCanvasToolbar,
   NodeDetailView,
   EdgeDetailView,
@@ -1355,6 +1395,7 @@ export type {
   ExportImageToolbarProps,
   ExportImageFormatKey,
   ExportStateToolbarProps,
+  GeoToolsToolbarProps,
   ClearCanvasToolbarProps,
   NodeDetailViewProps,
   EdgeDetailViewProps,

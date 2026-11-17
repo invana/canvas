@@ -60,3 +60,37 @@ describe('geo features layer editor mapping', () => {
     expect(DEFAULT_CANVAS_SETTINGS_SCHEMAS['geo-features-layer']?.section).toBe('layers');
   });
 });
+
+import { formToOptions as drawToOptions, optionsToForm as drawToForm } from '../src/editors/behaviours/draw-geo-feature/mapping';
+import { formToOptions as measureToOptions, optionsToForm as measureToForm } from '../src/editors/behaviours/measure/mapping';
+import { formToOptions as queryToOptions, optionsToForm as queryToForm } from '../src/editors/behaviours/area-query/mapping';
+
+describe('geo tool editor mappings', () => {
+  it('draw: tool, author and id prefix round-trip; none is null; an empty author is dropped', () => {
+    const opts = { tool: 'polygon' as const, author: 'analyst-3', idPrefix: 'zone-' };
+    expect(drawToOptions(drawToForm(opts))).toEqual(opts);
+    expect(drawToOptions({ tool: 'none' })).toEqual({ tool: null });
+    expect(drawToForm({ tool: null }).tool).toBe('none');
+    expect(drawToOptions({ author: '' })).toEqual({});
+    expect(drawToOptions({})).toEqual({});
+  });
+
+  it('measure: tool round-trips; none is null', () => {
+    expect(measureToOptions(measureToForm({ tool: 'area' }))).toEqual({ tool: 'area' });
+    expect(measureToOptions({ tool: 'none' })).toEqual({ tool: null });
+    expect(measureToForm({ tool: null }).tool).toBe('none');
+    expect(measureToOptions({})).toEqual({});
+  });
+
+  it('area query: autoQuery and withinKm round-trip, only what is set', () => {
+    expect(queryToOptions(queryToForm({ autoQuery: true, withinKm: 5 }))).toEqual({ autoQuery: true, withinKm: 5 });
+    expect(queryToOptions({})).toEqual({});
+    expect(queryToOptions({ autoQuery: false })).toEqual({ autoQuery: false });
+  });
+
+  it('all three kinds resolve in the settings registry', () => {
+    for (const kind of ['draw-geo-feature', 'measure', 'area-query']) {
+      expect(DEFAULT_CANVAS_SETTINGS_SCHEMAS[kind]?.section).toBe('behaviours');
+    }
+  });
+});

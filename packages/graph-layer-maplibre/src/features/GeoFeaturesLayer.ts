@@ -29,6 +29,7 @@ import type {
   BaseShapeSpec,
   CanvasContext,
   CircleSpec,
+  DataOpAdapter,
   EventMap,
   LayerOptions,
   PathSpec,
@@ -94,6 +95,8 @@ export interface GeoFeaturesLayerEvents extends EventMap {
   'feature:click': { id: string; feature: GeoFeature; lngLat: [number, number]; world: Pt };
   /** The feature under the pointer changed (`null` id when it left every feature). */
   'feature:hover': { id: string | null; feature: GeoFeature | null; lngLat: [number, number]; world: Pt };
+  /** A feature was added, updated or removed — or all of them replaced (`'reset'`, `id` null). Fired for edits, undo and redo alike. */
+  'feature:change': { kind: 'add' | 'update' | 'remove' | 'reset'; id: string | null };
   /** A repaint finished — `features` repainted, `specs` published, and how long it took. For diagnostics and budgets. */
   publish: { features: number; specs: number; durationMs: number };
 }
@@ -108,6 +111,15 @@ export const GEO_FEATURES_LAYER_DEFAULTS = {
   hitTolerancePx: 6,
   republishDebounceMs: 100,
 } as const;
+
+/** One recorded edit — what the operation log replays forward and back. */
+export type GeoFeatureOp =
+  | { kind: 'add'; feature: GeoFeature; index: number }
+  | { kind: 'remove'; feature: GeoFeature; index: number }
+  | { kind: 'update'; id: string; before: GeoFeature; after: GeoFeature };
+
+/** The reserved id of the transient draft shape; never in `features()`. */
+const DRAFT_ID = '__draft__';
 
 /** What the layer keeps per feature. */
 interface Entry {
@@ -134,6 +146,10 @@ export class GeoFeaturesLayer extends WorldLayer<GeoFeaturesLayerOptions, object
   private labelTier = 0;
   private hovered: string | null = null;
   private readonly warned = new Set<string>();
+  /** The transient shape being drawn or measured — drawn, never stored, never recorded. */
+  private draft: Entry | null = null;
+  /** Unregisters this layer as a source of the canvas's operation log. */
+  private offLog: (() => void) | null = null;
 
   constructor(opts: LayerOptions<GeoFeaturesLayerOptions>) {
     super({ ...opts, cullable: opts.cullable ?? false });
@@ -152,6 +168,7 @@ export class GeoFeaturesLayer extends WorldLayer<GeoFeaturesLayerOptions, object
     this.entries.clear();
     for (const f of features) this.ingest(f);
     this.options.features = [...features];
+    this.events.emit('feature:change', { kind: 'reset', id: null });
     this.schedule(true);
   }
 
@@ -162,8 +179,11 @@ export class GeoFeaturesLayer extends WorldLayer<GeoFeaturesLayerOptions, object
       return false;
     }
     const ok = this.ingest(feature);
-    if (ok) this.schedule(false);
-    return ok;
+    if (!ok) return false;
+    this.record([{ kind: 'add', feature, index: this.entries.size - 1 }]);
+    this.events.emit('feature:change', { kind: 'add', id: String(feature.id) });
+    this.schedule(false);
+    return true;
   }
 
   /** Replace a feature's geometry and/or properties. `false` when the id is unknown or the result is unusable. */
@@ -176,14 +196,19 @@ export class GeoFeaturesLayer extends WorldLayer<GeoFeaturesLayerOptions, object
       ...patch,
       properties: patch.properties === undefined ? prev.feature.properties : { ...prev.feature.properties, ...patch.properties },
     };
+    const index = [...this.entries.keys()].indexOf(key);
     this.retire(key);
     this.entries.delete(key);
     if (!this.ingest(next)) {
-      // Keep the old one rather than lose a feature to a bad edit.
+      // Keep the old one rather than lose a feature to a bad edit — and in its place.
       this.ingest(prev.feature);
+      this.moveTo(key, index);
       this.schedule(false);
       return false;
     }
+    this.moveTo(key, index);
+    this.record([{ kind: 'update', id: key, before: prev.feature, after: next }]);
+    this.events.emit('feature:change', { kind: 'update', id: key });
     this.schedule(false);
     return true;
   }
@@ -191,9 +216,13 @@ export class GeoFeaturesLayer extends WorldLayer<GeoFeaturesLayerOptions, object
   /** Remove a feature. `true` if it existed. */
   removeFeature(id: string | number): boolean {
     const key = String(id);
-    if (!this.entries.has(key)) return false;
+    const entry = this.entries.get(key);
+    if (!entry) return false;
+    const index = [...this.entries.keys()].indexOf(key);
     this.retire(key);
     this.entries.delete(key);
+    this.record([{ kind: 'remove', feature: entry.feature, index }]);
+    this.events.emit('feature:change', { kind: 'remove', id: key });
     return true;
   }
 
@@ -210,6 +239,28 @@ export class GeoFeaturesLayer extends WorldLayer<GeoFeaturesLayerOptions, object
   /** The features as a GeoJSON `FeatureCollection` — what was put in, `properties` and all. */
   toGeoJSON(): GeoFeatureCollection {
     return { type: 'FeatureCollection', features: this.features() };
+  }
+
+  /** The features as a GeoJSON string, ready to save or send. `pretty` indents by two spaces. */
+  toGeoJSONString(opts: { pretty?: boolean } = {}): string {
+    return JSON.stringify(this.toGeoJSON(), null, opts.pretty ? 2 : undefined);
+  }
+
+  /**
+   * Show a **draft**: one transient shape — what is being drawn, or a measurement
+   * readout (its `name` is the text). It is drawn dashed and faded, is never in
+   * `features()` or `toGeoJSON()`, never picked by `featureAt`, and never
+   * recorded. `null` clears it. Unusable geometry clears it too, with no warning:
+   * a draft is often one vertex short.
+   */
+  setDraft(feature: GeoFeature | null): void {
+    if (this.draft) this.retireEntry(this.draft);
+    this.draft = null;
+    if (feature && validateGeometry(feature.geometry) === null) {
+      const prepared = prepare(feature.geometry);
+      this.draft = { feature: { ...feature, id: DRAFT_ID }, prepared, labelAt: this.labelPoint(prepared), specIds: [] };
+      if (this.specs) this.paint(DRAFT_ID, this.draft, this.ctx?.camera.scale ?? 1);
+    }
   }
 
   /**
@@ -229,6 +280,9 @@ export class GeoFeaturesLayer extends WorldLayer<GeoFeaturesLayerOptions, object
   protected override onMount(ctx: CanvasContext): void {
     this.specs = ctx.store.specsFor<BaseShapeSpec>(this.id);
     this.projector = new SpecProjector(this.specs, this.surface.primitives);
+    // A second data source for undo / redo: this layer's edits are recorded as ops and replayed here.
+    const adapter: DataOpAdapter = { sourceId: this.id, applyOps: (ops, direction) => this.applyOps(ops as readonly GeoFeatureOp[], direction) };
+    this.offLog = ctx.log?.registerSource(adapter) ?? null;
     // Labels keep their authored pixel size at every zoom; this renderer is this layer's own.
     this.surface.primitives.setLabelSizePolicy('shape', { zoomGrowth: 0 });
 
@@ -269,11 +323,14 @@ export class GeoFeaturesLayer extends WorldLayer<GeoFeaturesLayerOptions, object
     this.subs.length = 0;
     if (this.timer !== null) clearTimeout(this.timer);
     this.timer = null;
+    this.offLog?.();
+    this.offLog = null;
     this.projector?.destroy();
     this.projector = null;
     this.specs?.clear();
     this.specs = null;
     for (const e of this.entries.values()) e.specIds = [];
+    if (this.draft) this.draft.specIds = [];
     this.hovered = null;
   }
 
@@ -396,6 +453,70 @@ export class GeoFeaturesLayer extends WorldLayer<GeoFeaturesLayerOptions, object
     return { x: x!, y: y! };
   }
 
+  /** Journal ops that have just been applied, unless there is no log or a replay is running. */
+  private record(ops: readonly GeoFeatureOp[]): void {
+    const log = this.ctx?.log;
+    if (!log || log.replaying) return;
+    log.recordData(this.id, ops, 'geo-features');
+  }
+
+  /** Move an existing entry to draw-order position `index` (the `Map` keeps insertion order). */
+  private moveTo(key: string, index: number): void {
+    const entry = this.entries.get(key);
+    if (!entry || index < 0) return;
+    const rest = [...this.entries].filter(([k]) => k !== key);
+    rest.splice(Math.min(index, rest.length), 0, [key, entry]);
+    this.entries.clear();
+    for (const [k, v] of rest) this.entries.set(k, v);
+  }
+
+  /**
+   * Replay recorded ops — forward in order, or their inverses in reverse. Nothing
+   * written here is recorded again (the log is replaying), and each change is
+   * announced so an app listening to `feature:change` follows undo and redo.
+   */
+  private applyOps(ops: readonly GeoFeatureOp[], direction: 'forward' | 'back'): void {
+    const list = direction === 'forward' ? ops : [...ops].reverse();
+    for (const op of list) {
+      const forward = direction === 'forward';
+      if (op.kind === 'add' || op.kind === 'remove') {
+        const insert = (op.kind === 'add') === forward;
+        const key = String(op.feature.id);
+        if (insert) {
+          if (this.ingest(op.feature)) {
+            this.moveTo(key, op.index);
+            this.events.emit('feature:change', { kind: 'add', id: key });
+          }
+        } else if (this.entries.has(key)) {
+          this.retire(key);
+          this.entries.delete(key);
+          this.events.emit('feature:change', { kind: 'remove', id: key });
+        }
+      } else {
+        const index = [...this.entries.keys()].indexOf(op.id);
+        const target = forward ? op.after : op.before;
+        if (index >= 0) {
+          this.retire(op.id);
+          this.entries.delete(op.id);
+        }
+        if (this.ingest(target)) {
+          this.moveTo(op.id, index);
+          this.events.emit('feature:change', { kind: 'update', id: op.id });
+        }
+      }
+    }
+    this.schedule(false);
+  }
+
+  /** Take every spec an entry published off the map (also used for the draft). */
+  private retireEntry(e: Entry): void {
+    for (const specId of e.specIds) {
+      this.specs?.delete(specId);
+      this.projector?.unproject(specId);
+    }
+    e.specIds = [];
+  }
+
   /** Take every spec a feature published off the map. */
   private retire(id: string): void {
     const e = this.entries.get(id);
@@ -412,6 +533,8 @@ export class GeoFeaturesLayer extends WorldLayer<GeoFeaturesLayerOptions, object
     const scale = this.ctx?.camera.scale ?? 1;
     const all = this.repaintAll || scale !== this.paintedScale;
     const ids = all ? [...this.entries.keys()] : [...this.stale];
+    // The draft is repainted on every zoom, with the rest, and otherwise left alone.
+    if (all && this.draft) this.retireEntry(this.draft);
     this.repaintAll = false;
     this.stale.clear();
     this.paintedScale = scale;
@@ -421,6 +544,7 @@ export class GeoFeaturesLayer extends WorldLayer<GeoFeaturesLayerOptions, object
       const e = this.entries.get(id);
       if (e) this.paint(id, e, scale);
     }
+    if (all && this.draft) this.paint(DRAFT_ID, this.draft, scale);
     this.events.emit('publish', { features: ids.length, specs: this.publishedCount, durationMs: performance.now() - t0 });
   }
 
@@ -429,7 +553,9 @@ export class GeoFeaturesLayer extends WorldLayer<GeoFeaturesLayerOptions, object
     const o = this.options;
     const u = 1 / scale; // one screen pixel, in world units
     const kind = kindOf(e.prepared);
-    const style = resolveStyle(kind, e.feature.properties, o.defaults?.[kind], o.unconfirmed);
+    // A draft always looks unconfirmed: dashed and faded.
+    const props = id === DRAFT_ID ? { ...e.feature.properties, confirmed: false } : e.feature.properties;
+    const style = resolveStyle(kind, props, o.defaults?.[kind], o.unconfirmed);
     const label = this.labelFor(e, scale);
     let labelled = false;
     /**
