@@ -85,6 +85,13 @@ export type ShapeFillLayer =
       readonly sizeRatio?: number;
       /** Anchor relative to the shape's bounds. Default `'center'`. */
       readonly anchor?: InsetAnchor;
+      /**
+       * Rotation of the inset about its own centre, in **radians, clockwise from
+       * up** (a compass course in radians). Default `0`. Applied without
+       * rebuilding the inset, so it is cheap to change per frame; the shape's
+       * label and silhouette are not rotated.
+       */
+      readonly rotation?: number;
     }
   | {
       /** SVG path-d. Multiple subpaths (`M...M...`) are supported. */
@@ -98,6 +105,13 @@ export type ShapeFillLayer =
       readonly alpha?: number;
       readonly sizeRatio?: number;
       readonly anchor?: InsetAnchor;
+      /**
+       * Rotation of the inset about its own centre, in **radians, clockwise from
+       * up** (a compass course in radians). Default `0`. Applied without
+       * rebuilding the inset, so it is cheap to change per frame; the shape's
+       * label and silhouette are not rotated.
+       */
+      readonly rotation?: number;
     }
   | {
       /**
@@ -121,6 +135,13 @@ export type ShapeFillLayer =
       readonly alpha?: number;
       readonly sizeRatio?: number;
       readonly anchor?: InsetAnchor;
+      /**
+       * Rotation of the inset about its own centre, in **radians, clockwise from
+       * up** (a compass course in radians). Default `0`. Applied without
+       * rebuilding the inset, so it is cheap to change per frame; the shape's
+       * label and silhouette are not rotated.
+       */
+      readonly rotation?: number;
     };
 
 /**

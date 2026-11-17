@@ -66,6 +66,7 @@ export type {
   EdgeEffects,
   NodeEffects,
   NodeIcon,
+  ResolvedNodeIcon,
   NodeImage,
   NodeOption,
   NodeShapeOptions,

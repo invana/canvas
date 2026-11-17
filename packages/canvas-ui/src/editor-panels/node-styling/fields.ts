@@ -28,6 +28,26 @@ const LABEL_PLACEMENT_FIELD: FieldConfig = {
   ],
 };
 
+/**
+ * A `named` icon on a simple shape. `iconName` is a key of the layer's
+ * `iconSet`; the rotation trio binds the icon to a heading on the record.
+ */
+const ICON_FIELDS: FieldConfig[] = [
+  { name: 'iconName', type: 'text', label: 'Icon name', description: 'A key of the layer’s iconSet. Empty = no icon.' },
+  { name: 'iconSizeRatio', type: 'number', label: 'Icon size', min: 0.1, max: 1, step: 0.05, description: 'Fraction of the shape’s smaller dimension.' },
+  { name: 'iconRotationBind', type: 'text', label: 'Icon rotation bind', description: 'Dotted path to a number on the record, e.g. data.course. Empty = no rotation.' },
+  {
+    name: 'iconRotationUnit',
+    type: 'select',
+    label: 'Rotation unit',
+    options: [
+      { value: 'deg', label: 'Degrees (0 = north, clockwise)' },
+      { value: 'rad', label: 'Radians' },
+    ],
+  },
+  { name: 'iconRotationOffset', type: 'number', label: 'Rotation offset', step: 1, description: 'Added to the bound value, in the unit above.' },
+];
+
 /** Controls for a **simple** shape (the compiler's `compileSimple` inputs). */
 export const SIMPLE_STYLING_FIELDS: FieldConfig[] = [
   NAME_FIELD,
@@ -39,6 +59,7 @@ export const SIMPLE_STYLING_FIELDS: FieldConfig[] = [
   roleField('labelColorRole', 'Label colour role'),
   { name: 'labelFontSize', type: 'number', label: 'Label font size', min: 1, step: 1 },
   LABEL_PLACEMENT_FIELD,
+  ...ICON_FIELDS,
 ];
 
 /** Controls for a **card** structure (the compiler's `compileCard` inputs). */
@@ -61,6 +82,7 @@ export const STYLING_SCALAR_FIELDS: FieldConfig[] = [
   roleField('labelColorRole', 'Label colour role'),
   { name: 'labelFontSize', type: 'number', label: 'Label font size', min: 1, step: 1 },
   LABEL_PLACEMENT_FIELD,
+  ...ICON_FIELDS,
 ];
 
 /** Per-slot styling controls (rendered under each `slots.<i>` ObjectField). */

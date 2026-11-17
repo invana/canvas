@@ -188,6 +188,11 @@ function positionAndScale(
     -(local.y + local.height / 2) * scale,
   );
   host.alpha = layer.alpha ?? 1;
+  // The child is centred on the host's origin, so rotating the host turns the
+  // inset about its own centre. Rotation is deliberately not part of `layerKey`:
+  // a heading change repositions the existing inset instead of rebuilding it
+  // (and, for `svg-url`, re-parsing it).
+  host.rotation = layer.rotation ?? 0;
 }
 
 /**
@@ -228,6 +233,7 @@ function anchorPoint(
  * arbitrarily long.
  */
 function layerKey(layer: InsetLayer): string {
+  // `rotation` is intentionally absent — see `positionAndScale`.
   if (layer.kind === 'glyph') {
     return `g:${layer.char}:${layer.fontFamily ?? ''}:${layer.fontWeight ?? ''}:${layer.fontStyle ?? ''}:${layer.color ?? 0xffffff}:${layer.alpha ?? 1}`;
   }

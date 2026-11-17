@@ -1195,6 +1195,9 @@ export type {
 // helpers that bridge engine colours and the design-kit colour swatch.
 export { COLOR_PRESETS } from './shared/colors';
 export { numberToHex, hexToNumber } from './shared/color';
+// An `iconSet` for `GraphLayerOptions` built from Lucide components — rendered to
+// SVG markup once, so the config that carries it is plain JSON.
+export { iconSetFromLucide } from './shared/iconSet';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Application UI (moved from @invana/canvas-react)

@@ -439,8 +439,14 @@ export function isBuiltInNodeShape(
 
 /**
  * Vector inset rendered inside a node's body — glyph (font codepoint), SVG
- * path, or SVG by URL. Kept structured (discriminated union) because each
- * kind carries different required params.
+ * path, SVG by URL, or an icon **by name** from the layer's
+ * {@link GraphLayerOptions.iconSet}. Kept structured (discriminated union)
+ * because each kind carries different required params.
+ *
+ * `rotation` (every kind) turns the icon about its own centre, in **radians,
+ * clockwise from up**; the node's label and silhouette are not rotated. A
+ * styling template can bind it to a record field instead — see
+ * `TemplateIcon` (`rotationBind`).
  */
 export type NodeIcon =
   | {
@@ -453,6 +459,7 @@ export type NodeIcon =
       readonly alpha?: number;
       readonly sizeRatio?: number;
       readonly anchor?: InsetAnchor;
+      readonly rotation?: number;
     }
   | {
       readonly kind: 'svg';
@@ -463,6 +470,7 @@ export type NodeIcon =
       readonly alpha?: number;
       readonly sizeRatio?: number;
       readonly anchor?: InsetAnchor;
+      readonly rotation?: number;
     }
   | {
       readonly kind: 'svg-url';
@@ -473,7 +481,31 @@ export type NodeIcon =
       readonly alpha?: number;
       readonly sizeRatio?: number;
       readonly anchor?: InsetAnchor;
+      readonly rotation?: number;
+    }
+  | {
+      /**
+       * An icon by **name**, looked up in {@link GraphLayerOptions.iconSet}
+       * (name → SVG markup) and drawn as an `svg-url` inset. Plain data — a saved
+       * visualisation carries its icons and needs no network. An unknown name
+       * draws nothing and warns once per name.
+       */
+      readonly kind: 'named';
+      readonly name: string;
+      readonly strokeWidth?: number;
+      readonly color?: number;
+      readonly alpha?: number;
+      readonly sizeRatio?: number;
+      readonly anchor?: InsetAnchor;
+      readonly rotation?: number;
     };
+
+/**
+ * A {@link NodeIcon} that is already a drawable layer — everything except
+ * `named`, which {@link GraphLayerOptions.iconSet} resolves first. What badges
+ * (which do not resolve names) take.
+ */
+export type ResolvedNodeIcon = Exclude<NodeIcon, { readonly kind: 'named' }>;
 
 /**
  * Raster image attached to a node. Mirrors the canvas-level `kind: 'image'`
@@ -594,9 +626,10 @@ export interface NodeBadge {
 
   /**
    * Vector inset rendered inside the badge plate (glyph / svg / svg-url).
-   * Projects to an extra fill layer stacked on top of the solid plate.
+   * Projects to an extra fill layer stacked on top of the solid plate. A
+   * `named` icon is not accepted here — badges do not resolve names.
    */
-  readonly icon?: NodeIcon;
+  readonly icon?: ResolvedNodeIcon;
 
   /**
    * Optional short text rendered centred on the badge (count "3", "!").
@@ -696,9 +729,10 @@ export interface EdgeBadge {
 
   /**
    * Vector inset rendered inside the badge plate (glyph / svg / svg-url).
-   * Projects to an extra fill layer stacked on top of the solid plate.
+   * Projects to an extra fill layer stacked on top of the solid plate. A
+   * `named` icon is not accepted here — badges do not resolve names.
    */
-  readonly icon?: NodeIcon;
+  readonly icon?: ResolvedNodeIcon;
 
   /**
    * Optional short text rendered centred on the badge (count "3", "!").
@@ -1557,6 +1591,22 @@ export interface GraphLayerOptions {
    * simple → shape + label) on top of the layer-level {@link node} template.
    */
   nodeTypes?: NodeTypeRegistry;
+
+  /**
+   * Icons by **name** — `{ waves: '<svg …>…</svg>' }`, name → SVG markup. A
+   * node's `icon: { kind: 'named', name: 'waves' }` (set in a styling template,
+   * the layer template, per node or in a state overlay) is looked up here and
+   * drawn as an `svg-url` inset over a `data:` URL, so it needs no network.
+   *
+   * Plain data: a saved visualisation carries its icons. Merged by
+   * `setOptions`, so `canvas.update({ layers: { graph: { iconSet } } })` adds or
+   * replaces icons live. Only the drawing primitives the renderer keeps survive
+   * (`path` · `circle` · `ellipse` · `rect` · `line` · `polyline` · `polygon`),
+   * stroked in the icon's `color` — an outline set such as Lucide fits. An app
+   * builds one from a component library with `iconSetFromLucide` in
+   * `@invana/canvas-ui`.
+   */
+  iconSet?: Readonly<Record<string, string>>;
 }
 
 /**

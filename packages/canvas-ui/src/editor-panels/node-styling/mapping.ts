@@ -1,7 +1,10 @@
-import type { LabelStyling, NodeStylingTemplate, SlotStyling } from '@invana/graph';
+import type { LabelStyling, NodeStylingTemplate, SlotStyling, TemplateIcon } from '@invana/graph';
 
 import { asRole, NO_ROLE } from '../../editors/field-helpers';
 import type { NodeStylingFormState } from './types';
+
+/** The engine's default icon size, as a fraction of the shape's smaller dimension. */
+const DEFAULT_ICON_SIZE_RATIO = 0.6;
 
 /** Seed the form from a `NodeStylingTemplate` (use as `defaults`). */
 export function stylingToForm(styling: NodeStylingTemplate = { name: '' }): NodeStylingFormState {
@@ -18,6 +21,11 @@ export function stylingToForm(styling: NodeStylingTemplate = { name: '' }): Node
       labelColorRole: styling.label?.colorRole ?? NO_ROLE,
       labelFontSize: styling.label?.fontSize ?? 12,
       labelPlacement: styling.label?.placement ?? 'bottom',
+      iconName: styling.icon?.kind === 'named' ? styling.icon.name : '',
+      iconSizeRatio: styling.icon?.sizeRatio ?? DEFAULT_ICON_SIZE_RATIO,
+      iconRotationBind: styling.icon?.rotationBind ?? '',
+      iconRotationUnit: styling.icon?.rotationUnit ?? 'deg',
+      iconRotationOffset: styling.icon?.rotationOffset ?? 0,
     },
     slots: Object.entries(styling.slots ?? {}).map(([slot, s]) => ({
       slot,
@@ -49,6 +57,13 @@ export function stylingToForm(styling: NodeStylingTemplate = { name: '' }): Node
  *
  * Per-slot extras (`color`, `fontFamily`, `fontStyle`) are still dropped — the
  * slot rows are rebuilt by name and reconciling them is a separate job.
+ *
+ * **Icon.** The form edits a `named` icon (name, size, rotation binding). Every
+ * other icon field a `named` icon carries (`color`, `alpha`, `anchor`,
+ * `strokeWidth`, a static `rotation`) is kept from `base`, and an icon of
+ * another kind (glyph / svg / svg-url) is carried through untouched — a save
+ * must never delete an icon the form cannot show. Clearing the name removes a
+ * `named` icon.
  */
 export function formToStyling(
   values: NodeStylingFormState,
@@ -64,8 +79,31 @@ export function formToStyling(
     ...(base?.accent !== undefined ? { accent: base.accent } : {}),
     ...(base?.group ? { group: base.group } : {}),
     ...(base?.badges ? { badges: base.badges } : {}),
+    // An icon of a kind the form does not edit rides through verbatim.
+    ...(base?.icon && base.icon.kind !== 'named' ? { icon: base.icon } : {}),
     name: (styling.name ?? '').trim(),
   };
+
+  const iconName = (styling.iconName ?? '').trim();
+  if (iconName && (!base?.icon || base.icon.kind === 'named')) {
+    const kept = base?.icon?.kind === 'named' ? stripBinding(base.icon) : {};
+    const bind = (styling.iconRotationBind ?? '').trim();
+    const ratio = styling.iconSizeRatio;
+    const icon: TemplateIcon = {
+      ...kept,
+      kind: 'named',
+      name: iconName,
+      ...(ratio !== undefined && ratio !== DEFAULT_ICON_SIZE_RATIO ? { sizeRatio: ratio } : {}),
+      ...(bind
+        ? {
+            rotationBind: bind,
+            ...(styling.iconRotationUnit === 'rad' ? { rotationUnit: 'rad' as const } : {}),
+            ...(styling.iconRotationOffset ? { rotationOffset: styling.iconRotationOffset } : {}),
+          }
+        : {}),
+    };
+    out.icon = icon;
+  }
 
   if (styling.fillAlpha !== undefined && styling.fillAlpha < 1) out.fillAlpha = styling.fillAlpha;
   if (styling.strokeAlpha !== undefined && styling.strokeAlpha < 1) {
@@ -103,4 +141,11 @@ export function formToStyling(
   if (slotEntries.length > 0) out.slots = Object.fromEntries(slotEntries);
 
   return out;
+}
+
+/** A `named` icon without the fields this form rewrites, so they cannot go stale. */
+function stripBinding(icon: TemplateIcon): Record<string, unknown> {
+  const rest: Record<string, unknown> = { ...icon };
+  for (const key of ['sizeRatio', 'rotationBind', 'rotationUnit', 'rotationOffset']) delete rest[key];
+  return rest;
 }

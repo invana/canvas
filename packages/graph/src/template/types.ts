@@ -18,7 +18,7 @@
 
 import type { ShapeLabelPlacement } from '@invana/canvas';
 import type { ColorRole } from '../theme/types';
-import type { GroupOptions, NodeBadge, NodeShapeOptions } from '../layer/types';
+import type { GroupOptions, NodeBadge, NodeIcon, NodeShapeOptions } from '../layer/types';
 
 /**
  * Authoring descriptor for a composite card's background silhouette, sized to
@@ -351,12 +351,38 @@ export interface FreeformStructure {
 // ─── Styling ──────────────────────────────────────────────────────────────────
 
 /**
+ * An icon in a styling template: any {@link NodeIcon}, plus an optional
+ * **rotation bound to a record field** — what makes a vessel or a rider's icon
+ * point along its heading with no code.
+ *
+ * | Field | Meaning |
+ * |---|---|
+ * | `rotationBind` | dotted path to a number on the record (`'data.course'`) |
+ * | `rotationUnit` | `'deg'` (default — what AIS and GPS report; 0 = north / up, clockwise) or `'rad'` |
+ * | `rotationOffset` | added to the bound value, in `rotationUnit` — for an icon drawn pointing somewhere other than up |
+ *
+ * A record with no number at the path draws the icon unrotated (its own static
+ * `rotation`, if any, still applies). The bound value replaces the static one.
+ */
+export type TemplateIcon = NodeIcon & {
+  readonly rotationBind?: string;
+  readonly rotationUnit?: 'deg' | 'rad';
+  readonly rotationOffset?: number;
+};
+
+/**
  * Per-type styling: roles + typography. Every colour is a **pair** — a `*Role`
  * field (themed, resolved from the active palette) **or** a direct numeric field
  * (fixed literal). `*Role` wins when both are set.
  */
 export interface NodeStylingTemplate {
   name: string;
+  /**
+   * An icon drawn inside the node's body. Applies to a `simple` structure (a card
+   * has its own `icon` parts) unless the structure declares `slots.icon: false`.
+   * `named` icons resolve through the layer's `iconSet`.
+   */
+  icon?: TemplateIcon;
   // simple:
   fillRole?: ColorRole;
   fill?: number;
@@ -585,6 +611,16 @@ export interface NodeTypeBinding {
   bindings: Record<string, string>;
   /** Optional host-provided field schema for editor pickers. */
   fields?: { key: string; label: string }[];
+  /**
+   * Per-**state** overrides for nodes of this type — what a layer-level state
+   * overlay cannot do, because that one is shared by every type.
+   *
+   * `label` is a template — `'{data.name}\n{data.description}'` — filled from
+   * the record whenever the state is active (e.g. written by
+   * `ZoomStateBehaviour`), so the text a zoom tier shows can differ per type and
+   * live in config. Applied after the layer's overlay and before the node's own.
+   */
+  states?: Record<string, { label?: string }>;
 }
 
 /** Registries keyed by template name. */
