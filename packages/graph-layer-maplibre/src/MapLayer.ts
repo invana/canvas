@@ -98,6 +98,10 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
   /** How many tools currently hold the map's drag / double-click-zoom / box-zoom. */
   private gestureHolds = 0;
   private readonly handleMapMove = (): void => this.syncCameraFromMap();
+  /** Unsubscribe from `theme:change` — set on mount, cleared on unmount. */
+  private offTheme: (() => void) | null = null;
+  /** The style last handed to MapLibre, so a no-op re-resolve skips `setStyle`. */
+  private appliedStyle: string | object | undefined;
 
   constructor(opts: LayerOptions<MapLayerOptions>) {
     super({
@@ -163,7 +167,7 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
     const map = this.map;
     if (!map) return;
 
-    if (patch.styleUrl !== undefined) map.setStyle(patch.styleUrl as string);
+    if (patch.styleUrl !== undefined || patch.styleUrlDark !== undefined) this.applyThemedStyle();
     if (patch.minZoom !== undefined) map.setMinZoom(patch.minZoom);
     if (patch.maxZoom !== undefined) map.setMaxZoom(patch.maxZoom);
     // One `jumpTo` for the view so a combined centre + zoom patch is a single
@@ -174,6 +178,24 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
         ...(patch.zoom !== undefined ? { zoom: patch.zoom } : {}),
       });
     }
+  }
+
+  /**
+   * The style for the canvas's current theme: `styleUrlDark` while dark (when
+   * set), otherwise `styleUrl`, otherwise the blank style.
+   */
+  private resolveStyle(): string | object {
+    const dark = this.ctx?.theme.current()?.kind === 'dark';
+    const o = this.options;
+    return (dark ? o.styleUrlDark : undefined) ?? o.styleUrl ?? BLANK_STYLE;
+  }
+
+  /** `setStyle` only when the theme-resolved style actually changed. */
+  private applyThemedStyle(): void {
+    const next = this.resolveStyle();
+    if (!this.map || next === this.appliedStyle) return;
+    this.appliedStyle = next;
+    this.map.setStyle(next as string);
   }
 
   /** Pan/zoom the basemap to a new view. Camera follows automatically via `move`. */
@@ -314,7 +336,9 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
       canvasEl.style.pointerEvents = 'none';
     }
 
-    const styleUrl = this.options.styleUrl ?? BLANK_STYLE;
+    // Theme-resolved: a dark canvas loads the dark basemap straight away (no light flash).
+    const styleUrl = this.resolveStyle();
+    this.appliedStyle = styleUrl;
     const center = this.options.center ?? [0, 20];
     const zoom = this.options.zoom ?? 1.5;
 
@@ -337,6 +361,7 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
     });
 
     this.map.on('move', this.handleMapMove);
+    this.offTheme = ctx.events.on('theme:change', () => this.applyThemedStyle());
     // The user taking the map: pressing on it. Not `dragstart` — a follow camera
     // re-centres the map every frame, and `jumpTo` resets MapLibre's drag handler
     // before a drag can start, so the drag would never be seen. A press is seen at once.
@@ -397,6 +422,8 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
 
   protected override onUnmount(ctx: CanvasContext): void {
     this.gestureHolds = 0;
+    this.offTheme?.();
+    this.offTheme = null;
     if (this.map) {
       this.map.off('move', this.handleMapMove);
       this.map.remove();

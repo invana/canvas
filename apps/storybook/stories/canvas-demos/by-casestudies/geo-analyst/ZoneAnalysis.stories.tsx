@@ -32,6 +32,7 @@ import { useCallback, useMemo } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { CanvasMessageBar, GeoToolsToolbar, GraphCanvasApp, GraphStatusBar, HistoryToolbar } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
+import { CanvasThemeSync, ThemeBehaviour } from '@invana/canvas-react';
 import { ClickSelectBehaviour, GraphLayer, NodeScaleLODBehaviour, type GraphCanvas, type GraphData, type GraphNode } from '@invana/graph';
 import {
   AreaQueryBehaviour,
@@ -76,7 +77,7 @@ export const ZoneAnalysisStory: Story = {
           activeLayout: 'none',
           fitOnLoad: false,
           layers: {
-            map: { styleUrl: 'https://tiles.openfreemap.org/styles/positron', center: [79.2, 17.7], zoom: 7.9, minZoom: 3, maxZoom: 15 },
+            map: { styleUrl: 'https://tiles.openfreemap.org/styles/positron', styleUrlDark: 'https://tiles.openfreemap.org/styles/dark', center: [79.2, 17.7], zoom: 7.9, minZoom: 3, maxZoom: 15 },
             geo: {
               defaults: { polygon: { fillOpacity: 0.18, strokeWidthPx: 2.5 }, line: { strokeWidthPx: 3 }, point: { fillOpacity: 0.15, strokeWidthPx: 2.5 } },
               labelFontPx: 12
@@ -84,6 +85,8 @@ export const ZoneAnalysisStory: Story = {
             graph: { node: { style: { shape: { kind: 'circle', radius: 6 }, bgFill: 0x0284c7, bgStrokeColor: 0xffffff } } }
           },
           behaviours: {
+            // `bundle={false}` brings no theme publisher — without one the basemap never learns the canvas is dark.
+            theme: { enabled: true, mode: 'document', active: 'default' },
             'marker-scale': { enabled: true },
             select: { enabled: true },
             draw: { enabled: true, tool: null, author: 'analyst-1', properties: { stroke: '#7c3aed', fill: '#7c3aed' } },
@@ -123,7 +126,10 @@ export const ZoneAnalysisStory: Story = {
         onReady={onReady}
         header={{ title: 'Zone analysis', center: <GeoToolsToolbar />, right: <HistoryToolbar showRedraw={false} /> }}
         footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
-      />
+      >
+        <ThemeBehaviour id="theme" />
+        <CanvasThemeSync />
+      </GraphCanvasApp>
     );
   }
 };
