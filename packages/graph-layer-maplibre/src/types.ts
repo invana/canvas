@@ -29,9 +29,11 @@ export interface WorldPoint {
  */
 export interface MapLayerOptions {
   /**
-   * MapLibre style URL. Defaults to the OpenFreeMap "liberty" style
-   * (https://openfreemap.org) — free, no-key, OSM-based vector tiles. Pass a
-   * different URL or a full StyleSpecification object to swap basemaps.
+   * MapLibre style URL, or a full StyleSpecification object. **Required for a
+   * basemap**: with none, the layer loads a plain blank style and makes no outside
+   * request (an air-gapped canvas must not call out unasked). For hosted vector
+   * tiles, https://openfreemap.org is free and keyless, e.g.
+   * `https://tiles.openfreemap.org/styles/liberty`.
    */
   styleUrl?: string | object;
 
@@ -77,6 +79,10 @@ export interface MapLayerEvents extends EventMap {
   'map:ready': { center: [number, number]; zoom: number };
   /** Fired each time the map transform changes (move / zoom / resize). */
   'map:move': { center: [number, number]; zoom: number };
+  /** The map was clicked. `world` is the same point in canvas world units. */
+  'map:click': { lngLat: [number, number]; world: WorldPoint };
+  /** The pointer moved over the map — at most once per frame. */
+  'map:hover': { lngLat: [number, number]; world: WorldPoint };
 }
 
 /**

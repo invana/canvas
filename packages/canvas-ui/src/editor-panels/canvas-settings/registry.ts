@@ -229,6 +229,11 @@ import {
   optionsToForm as trackingToForm,
   formToOptions as trackingToOptions,
 } from '../../editors/behaviours/tracking/mapping';
+import { geoFeaturesLayerFields } from '../../editors/layers/geo-features-layer/fields';
+import {
+  optionsToForm as geoFeaturesLayerToForm,
+  formToOptions as geoFeaturesLayerToOptions,
+} from '../../editors/layers/geo-features-layer/mapping';
 import { trailsLayerFields } from '../../editors/layers/trails-layer/fields';
 import {
   optionsToForm as trailsLayerToForm,
@@ -346,6 +351,7 @@ export const DEFAULT_CANVAS_SETTINGS_SCHEMAS: Record<string, SettingsSchemaEntry
   'edge-lod': { section: 'behaviours', typeLabel: 'Edge Thinning LOD', fields: edgeLODFields, toForm: edgeLodToForm, toOptions: edgeLodToOptions },
   'parallel-edge': { section: 'behaviours', typeLabel: 'Parallel Edge', fields: parallelEdgeFields, toForm: parallelEdgeToForm, toOptions: parallelEdgeToOptions },
   'tracking': { section: 'behaviours', typeLabel: 'Tracking', fields: trackingFields, toForm: trackingToForm, toOptions: trackingToOptions },
+  'geo-features-layer': { section: 'layers', typeLabel: 'Geo Features Layer', fields: geoFeaturesLayerFields, toForm: geoFeaturesLayerToForm, toOptions: geoFeaturesLayerToOptions },
   'trails-layer': { section: 'layers', typeLabel: 'Trails Layer', fields: trailsLayerFields, toForm: trailsLayerToForm, toOptions: trailsLayerToOptions },
   'label-collision': { section: 'behaviours', typeLabel: 'Label Collision', fields: labelCollisionFields, toForm: labelCollisionToForm, toOptions: labelCollisionToOptions },
   'entrance': { section: 'behaviours', typeLabel: 'Entrance', fields: entranceFields, toForm: entranceToForm, toOptions: entranceToOptions },

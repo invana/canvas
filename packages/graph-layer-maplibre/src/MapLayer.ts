@@ -73,7 +73,17 @@ import type {
   WorldPoint,
 } from './types';
 
-const DEFAULT_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
+/**
+ * The style a `MapLayer` loads when it is not given one: a plain background, no
+ * tiles, no sources — so a canvas makes **no outside request** unless the app
+ * asks for a basemap with `styleUrl`.
+ */
+export const BLANK_STYLE = {
+  version: 8,
+  name: 'invana-blank',
+  sources: {},
+  layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#eef0f3' } }],
+} as const;
 
 export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEvents> {
   override readonly kind = 'map-layer';
@@ -258,7 +268,7 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
       canvasEl.style.pointerEvents = 'none';
     }
 
-    const styleUrl = this.options.styleUrl ?? DEFAULT_STYLE_URL;
+    const styleUrl = this.options.styleUrl ?? BLANK_STYLE;
     const center = this.options.center ?? [0, 20];
     const zoom = this.options.zoom ?? 1.5;
 
@@ -288,6 +298,17 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
       for (const cb of [...this.gestureListeners]) cb();
     };
     this.map.on('mousedown', taken);
+    this.map.on('click', (e) => this.events.emit('map:click', { lngLat: [e.lngLat.lng, e.lngLat.lat], world: projectLngLat([e.lngLat.lng, e.lngLat.lat]) }));
+    // Hover is one event per frame at most: a pointer can move far faster than anything reacts.
+    let hoverFrame = 0;
+    this.map.on('mousemove', (e) => {
+      if (hoverFrame) return;
+      const { lng, lat } = e.lngLat;
+      hoverFrame = requestAnimationFrame(() => {
+        hoverFrame = 0;
+        this.events.emit('map:hover', { lngLat: [lng, lat], world: projectLngLat([lng, lat]) });
+      });
+    });
     this.map.on('touchstart', taken);
     this.map.on('load', () => {
       this.state.update((s) => {

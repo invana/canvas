@@ -710,6 +710,19 @@ export type {
   TrackingOptions,
 } from './editors/behaviours/tracking';
 
+// GeoFeaturesLayer
+export { GeoFeaturesLayerEditorPanel, geoFeaturesLayerFields } from './editors/layers/geo-features-layer';
+export {
+  optionsToForm as geoFeaturesLayerOptionsToForm,
+  formToOptions as geoFeaturesLayerFormToOptions,
+} from './editors/layers/geo-features-layer';
+export type {
+  GeoFeaturesLayerEditorPanelProps,
+  GeoFeaturesLayerFields,
+  GeoFeaturesLayerFormState,
+  GeoFeaturesLayerOptions,
+} from './editors/layers/geo-features-layer';
+
 // TrailsLayer
 export { TrailsLayerEditorPanel, trailsLayerFields } from './editors/layers/trails-layer';
 export {

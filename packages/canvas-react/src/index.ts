@@ -72,6 +72,8 @@ export type { DensityContourStrokeLayerProps } from './layers/DensityContourStro
 
 export { MapLayer } from './layers/MapLayer';
 export type { MapLayerProps } from './layers/MapLayer';
+export { GeoFeaturesLayer } from './layers/GeoFeaturesLayer';
+export type { GeoFeaturesLayerProps } from './layers/GeoFeaturesLayer';
 
 // ─── Behaviours ──────────────────────────────────────────────────────────
 // Camera / canvas-scoped

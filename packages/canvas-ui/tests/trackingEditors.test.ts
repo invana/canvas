@@ -36,3 +36,27 @@ describe('settings registry', () => {
     expect(DEFAULT_CANVAS_SETTINGS_SCHEMAS['trails-layer']?.section).toBe('layers');
   });
 });
+
+import { formToOptions as geoToOptions, optionsToForm as geoToForm } from '../src/editors/layers/geo-features-layer/mapping';
+
+describe('geo features layer editor mapping', () => {
+  it('round-trips kind defaults, labels and the unconfirmed rule', () => {
+    const opts = {
+      defaults: { polygon: { stroke: 0xdc2626, strokeWidthPx: 3, fillOpacity: 0.2 }, point: { pointRadiusPx: 9 } },
+      labelKey: 'title',
+      labelFontPx: 14,
+      labelColor: 0x111827,
+      labelBackground: false,
+      labelMinZoom: 128,
+      unconfirmed: { below: 0.4, alpha: 0.5 },
+      hitTolerancePx: 8,
+    };
+    expect(geoToOptions(geoToForm(opts))).toEqual(opts);
+    expect(geoToOptions({})).toEqual({});
+  });
+
+  it('accepts a hex string colour from a patch and resolves the registry kind', () => {
+    expect(geoToForm({ defaults: { polygon: { stroke: '#2563eb' } } }).polygonStroke).toBe('#2563eb');
+    expect(DEFAULT_CANVAS_SETTINGS_SCHEMAS['geo-features-layer']?.section).toBe('layers');
+  });
+});
