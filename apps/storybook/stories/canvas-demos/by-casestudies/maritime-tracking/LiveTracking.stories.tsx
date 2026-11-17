@@ -1,34 +1,32 @@
 /**
  * **Live tracking** — vessels in the Strait of Malacca, fed one position fix per
- * second, drawn on a `MapLayer` with the engine pieces that exist **today**. It is
- * the **baseline** for the P5 tracking work (`docs/geo-intelligence-plan.md`), so
- * it also shows what is *not* there yet.
+ * second and drawn on a `MapLayer` by `TrackingBehaviour` + `TrailsLayer`. The
+ * baseline version of this story hand-rolled the feed; this one hands the feed to
+ * the engine.
  *
  * **The feed** is simulated inside the story: 60 vessels sail two traffic lanes
- * (one per direction) at 8–16 knots, and a fix is `{ id, lng, lat, course }` every
- * second. The clock runs at **×600** (one second is ten simulated minutes) so the
- * motion reads at map zoom 8. About one vessel in fifty loses its transmitter for
- * 45–150 s, as AIS does. The lane is illustrative — approximate waypoints, not a
- * chart.
- *
- * **What the engine does for it**
+ * (one per direction) at 8–16 knots, and a fix is `{ id, t, lng, lat, course,
+ * speedKn }` every second, converted by `lngLatFixes` and pushed with
+ * `tracking.pushFixes`. The clock runs at **×600** (one second is ten simulated
+ * minutes) so the motion reads at map zoom 8, so the **reported** speed is ×600
+ * too — that is what lets dead reckoning cover the same ground. About one vessel
+ * in fifty loses its transmitter for 45–150 s, as AIS does. The lane is
+ * illustrative — approximate waypoints, not a chart.
  *
  * | Need | Piece | Where |
  * |---|---|---|
- * | A position per second, for every vessel at once | `GraphLayer.store.internal.setPositionsBulk` | one write per second, never the reactive store |
- * | The marker follows its heading | `icon.rotationBind: 'data.course'` | the styling template |
- * | A silent vessel dims, then says so | `node.state.stale` / `lost` overlays + `nodeTypes.<type>.states.<state>.label` | `config` |
- * | Markers stay one size on screen | `NodeScaleLODBehaviour` | `config.behaviours` |
+ * | A fix per vessel per second | `TrackingBehaviour.pushFixes` | the feed loop below |
+ * | Smooth motion, and a guess when a fix is late | `renderDelayMs`, `maxExtrapolateMs` | `config.behaviours.tracking` |
+ * | The marker follows its heading | `icon.rotationBind: 'data.course'`, written by the behaviour | the styling template |
+ * | A silent vessel dims, then says so | the `stale` / `lost` states + `states.<name>.label` | `config` |
+ * | Where each vessel has been | `TrailsLayer` | `config.layers.trails` |
+ * | Keep one vessel in view | `follow`, with the map as the camera (`map.cameraDriver()`) | set `behaviours.tracking.follow.targetId` (the settings editor does this); press the map to let go |
  *
- * **What it cannot do yet** (each is a P5 row, not a gap in this story):
- *
- * - **Smooth motion.** A fix moves a vessel in one step; there is no interpolation
- *   or dead reckoning between fixes (V2). Expect a 1 Hz hop.
- * - **Trails** (V4), **follow camera** (V6), and **signal state derived by the
- *   engine** (V5). Here the story computes fix age and flips the `stale` / `lost`
- *   runtime states itself.
- * - **A fix-ingestion API** (V1). The story writes positions and courses straight
- *   to the store.
+ * Markers are held at one size on screen by `NodeScaleLODBehaviour`, and names
+ * show from map zoom 8. Under a `MapLayer` the map takes all pointer input, so a
+ * vessel cannot be clicked — that is why follow is a setting here (the `Follow`
+ * story on a plain canvas follows by click). The picture is deliberately ~1.5 s behind the feed
+ * (`renderDelayMs`): that is what makes 1 Hz motion smooth.
  *
  * Map tiles come from OpenFreeMap, so this story needs the network; the engine
  * itself makes no outside calls.
@@ -44,11 +42,13 @@ import {
   GraphLayer,
   LabelCollisionBehaviour,
   NodeScaleLODBehaviour,
+  TrackingBehaviour,
+  TrailsLayer,
   type GraphCanvas,
   type GraphData,
   type GraphNode
 } from '@invana/graph';
-import { MapLayer, projectLngLat } from '@invana/graph-layer-maplibre';
+import { MapLayer, lngLatFixes, projectLngLat, type LngLatFix } from '@invana/graph-layer-maplibre';
 import { Navigation2 } from 'lucide-react';
 
 const meta: Meta = {
@@ -105,10 +105,7 @@ export const LiveTrackingStory: Story = {
           dir: i % 2 === 0 ? 1 : -1,
           speedKn: type === 'Tug' ? 8 + rand() * 3 : 11 + rand() * 5,
           /** Seconds of the real clock the transmitter stays silent. */
-          silentFor: 0,
-          lastFixAt: 0,
-          state: 'ok' as 'ok' | 'stale' | 'lost',
-          course: -1
+          silentFor: 0
         };
       });
 
@@ -137,12 +134,11 @@ export const LiveTrackingStory: Story = {
     const data = useMemo((): GraphData => {
       const nodes = sim.vessels.map((v): GraphNode => {
         const { lngLat, course } = sim.place(v.at, v.dir);
-        v.course = Math.round(course);
         return {
           id: v.id,
           type: v.type,
           position: projectLngLat(lngLat),
-          data: { name: v.name, course: v.course, speedKn: Math.round(v.speedKn) }
+          data: { name: v.name, course: Math.round(course), speedKn: Math.round(v.speedKn) }
         };
       });
       return { nodes, edges: [] };
@@ -288,11 +284,28 @@ export const LiveTrackingStory: Story = {
                   lost: { bgAlpha: 0.3, bgStrokeColor: 0xe05252 }
                 }
               }
+            },
+            // Where each vessel has been: fading trails, 3 px wide at any zoom.
+            trails: {
+              ids: 'all',
+              maxPoints: 24,
+              fadeBands: 5,
+              color: 0x475569,
+              alpha: 0.8,
+              strokeWidthPx: 2.5
             }
           },
           behaviours: {
             'marker-scale': { enabled: true },
-            'label-collision': { enabled: true }
+            'label-collision': { enabled: true },
+            // Fixes in, motion + heading + signal state out. Times are real milliseconds.
+            tracking: {
+              enabled: true,
+              renderDelayMs: 1500,
+              maxExtrapolateMs: 30000,
+              staleAfterMs: 20000,
+              lostAfterMs: 90000
+            }
           }
         }) as unknown as CanvasConfig,
       []
@@ -300,15 +313,16 @@ export const LiveTrackingStory: Story = {
 
     // ─── Engine: register by id; settings come from `config` ─────────────────
 
-    const vesselsLayer = useRef<GraphLayer | null>(null);
+    const tracking = useRef<TrackingBehaviour | null>(null);
 
     const onReady = useCallback(
       (canvas: GraphCanvas | null) => {
         if (!canvas) return;
-        canvas.layers.add(new MapLayer({ id: 'map', options: {} }));
-        const layer = new GraphLayer({ id: 'vessels', zIndex: 10, options: { initData: data } });
-        canvas.layers.add(layer);
-        vesselsLayer.current = layer;
+        const map = new MapLayer({ id: 'map', options: {} });
+        canvas.layers.add(map);
+        canvas.layers.add(new GraphLayer({ id: 'vessels', zIndex: 10, options: { initData: data } }));
+        // Below the markers, above the map. Wired to the behaviour by id.
+        canvas.layers.add(new TrailsLayer({ id: 'trails', zIndex: 5, options: { trackingBehaviourId: 'tracking' } }));
         canvas.behaviours.register(
           new NodeScaleLODBehaviour({
             id: 'marker-scale',
@@ -316,27 +330,28 @@ export const LiveTrackingStory: Story = {
           })
         );
         canvas.behaviours.register(new LabelCollisionBehaviour({ id: 'label-collision', targetLayerId: 'vessels' }));
+        // Follow moves the MAP here (the canvas camera mirrors it), so give the behaviour the map's driver.
+        const behaviour = new TrackingBehaviour({ id: 'tracking', targetLayerId: 'vessels', cameraDriver: map.cameraDriver() });
+        canvas.behaviours.register(behaviour);
+        tracking.current = behaviour;
         // Config only reaches instances registered when it is applied — re-apply.
-        canvas.update({ behaviours: config.behaviours });
-        canvas.showMessage('60 vessels · one fix per second · ×600 clock · positions via setPositionsBulk');
+        canvas.update({ behaviours: config.behaviours, layers: { trails: config.layers!.trails! } });
+        canvas.showMessage('60 vessels · 1 fix/s · ×600 clock · zoom in for names · trails fade with age');
       },
       [data, config]
     );
 
-    // ─── The feed: one tick per second, positions in one bulk write ─────────
+    // ─── The feed: one fix per vessel per second ────────────────────────────
 
     useEffect(() => {
-      const ids = sim.vessels.map((v) => v.id);
-      const xy = new Float32Array(ids.length * 2);
-      const startedAt = performance.now();
-
-      const tick = (): void => {
-        const layer = vesselsLayer.current;
-        if (!layer) return;
-        const now = (performance.now() - startedAt) / 1000;
+      const timer = window.setInterval(() => {
+        const behaviour = tracking.current;
+        if (!behaviour) return;
+        const now = Date.now();
         const dtSim = (FIX_EVERY_MS / 1000) * TIME_SCALE;
+        const fixes: LngLatFix[] = [];
 
-        sim.vessels.forEach((v, i) => {
+        for (const v of sim.vessels) {
           // The ship sails on whether or not its transmitter is up.
           v.at += ((v.speedKn * 1.852 * dtSim) / 3600) * v.dir;
           if (v.at > sim.laneKm || v.at < 0) {
@@ -347,42 +362,14 @@ export const LiveTrackingStory: Story = {
           // Transmitter dropout: silent for 45–150 s, then back.
           if (v.silentFor > 0) v.silentFor -= FIX_EVERY_MS / 1000;
           else if (sim.rand() < 0.02) v.silentFor = 45 + sim.rand() * 105;
+          if (v.silentFor > 0) continue;
 
           const { lngLat, course } = sim.place(v.at, v.dir);
-          if (v.silentFor <= 0) {
-            // A fix arrived: write the position, and the course when it changed.
-            const p = projectLngLat(lngLat);
-            xy[i * 2] = p.x;
-            xy[i * 2 + 1] = p.y;
-            v.lastFixAt = now;
-            const rounded = Math.round(course);
-            if (rounded !== v.course) {
-              v.course = rounded;
-              layer.store.internal.updateNode(v.id, {
-                data: { name: v.name, course: rounded, speedKn: Math.round(v.speedKn) }
-              });
-            }
-          } else if (xy[i * 2] === 0) {
-            // Silent before any fix was written: park at the first known position.
-            const p = projectLngLat(lngLat);
-            xy[i * 2] = p.x;
-            xy[i * 2 + 1] = p.y;
-          }
-
-          // Signal state from fix age.
-          const age = now - v.lastFixAt;
-          const next = age > 90 ? 'lost' : age > 20 ? 'stale' : 'ok';
-          if (next !== v.state) {
-            if (v.state !== 'ok') layer.store.internal.setNodeState(v.id, v.state, false);
-            if (next !== 'ok') layer.store.internal.setNodeState(v.id, next, true);
-            v.state = next;
-          }
-        });
-
-        layer.store.internal.setPositionsBulk(ids, xy);
-      };
-
-      const timer = window.setInterval(tick, FIX_EVERY_MS);
+          // The clock is ×600, so the speed a fix reports is ×600 as well.
+          fixes.push({ id: v.id, t: now, lng: lngLat[0], lat: lngLat[1], course, speedKn: v.speedKn * TIME_SCALE });
+        }
+        behaviour.pushFixes(lngLatFixes(fixes));
+      }, FIX_EVERY_MS);
       return () => window.clearInterval(timer);
     }, [sim]);
 
