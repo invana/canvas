@@ -14,6 +14,7 @@ const withGroup =
 
 const BASEMAP_FIELDS: FieldConfig[] = [
   { name: 'styleUrl', type: 'text', label: 'Style URL', description: 'MapLibre style URL. Defaults to the OpenFreeMap "liberty" style.' },
+  { name: 'styleUrlDark', type: 'text', label: 'Dark style URL', description: 'Basemap style while the canvas theme is dark, e.g. https://tiles.openfreemap.org/styles/dark. Empty = use the Style URL in both themes.' },
 ];
 
 const VIEW_FIELDS: FieldConfig[] = [

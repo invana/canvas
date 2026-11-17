@@ -37,6 +37,16 @@ export interface MapLayerOptions {
    */
   styleUrl?: string | object;
 
+  /**
+   * The basemap style used while the canvas theme is **dark** — `styleUrl` stays
+   * the light / default one. The layer follows the canvas theme signal
+   * (`ctx.theme`, `theme:change`): it loads the matching style at mount and
+   * `setStyle`s on every flip. With none set, `styleUrl` is used for both kinds
+   * (the basemap ignores the theme, as before). e.g.
+   * `https://tiles.openfreemap.org/styles/dark`.
+   */
+  styleUrlDark?: string | object;
+
   /** Initial map centre as `[lng, lat]`. Default `[0, 20]`. */
   center?: LngLat;
 
