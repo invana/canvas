@@ -24,13 +24,14 @@
  *   app bundle is off: its solid background would cover the map and its
  *   pan / wheel behaviours would fight it (same as `geo-air-routes`).
  * - `regions` — `polygon` nodes, one per region, in world units (no scale-LOD),
- *   so each outline stays locked to the map. There's no pixel-constant stroke,
- *   so four `ZoomStateBehaviour`s swap the border width per zoom band through
- *   the layer's `node.state` overlays. **Clusters** ride here too: a rounded
- *   convex hull around each cluster's members, computed in the story.
- *   `BubbleSetsLayer` can't draw them at map scale — `bubblesets-js` grids in
- *   whole units, and at map scale a whole state is a few world units wide, so
- *   its outline comes back empty.
+ *   so each outline stays locked to the map. There's no pixel-constant stroke
+ *   yet, so four `ZoomStateBehaviour`s swap the border width per zoom band
+ *   through the layer's `node.state` overlays.
+ * - `bubble-sets` — `BubbleSetsLayer`: a rounded outline around each **cluster**
+ *   of markers, declared as `sets` in `config`. It measures members by their
+ *   drawn size, so the pixel-constant markers need no anchor layer. Its radii are
+ *   world units (the whole earth is 512), sized here for the opening zoom; its
+ *   stroke is a world width too, so it thins as you zoom out.
  * - `region-labels` — region names as body-less label nodes, held at a constant
  *   screen size, hidden once you're zoomed into a region.
  * - `graph` — the markers: a circle per POI coloured by its type, a Lucide icon
@@ -39,17 +40,17 @@
  *   names ride here as label-only nodes so they share the markers' zoom tiers.
  *
  * **What stays on the records, and why** (the per-instance exception in
- * `apps/storybook/CLAUDE.md`): a POI's **icon** — `NodeStylingTemplate` has no
- * icon field yet (the `simple` structure's `icon` slot is reserved), so a
- * per-type icon has no template to live in; a POI's **detail label** (its own
- * description); a region's or cluster's **outline** and **colour** (each is one
- * of a kind). Everything per-type — marker colour, size, label style — is in
- * `nodeStylingTemplates` / `nodeTypes`.
+ * `apps/storybook/CLAUDE.md`): a region's **outline** and **colour** (each is one
+ * of a kind), a POI's **description** (its own text), and a cluster label's colour.
+ * Everything per-type is config: the marker colour, size and label style, the
+ * **icon** (`icon: { kind: 'named' }` in the styling template, drawn from the
+ * layer's `iconSet`), and the zoomed-in **detail label**
+ * (`nodeTypes.<type>.states.detail.label`, switched on by `ZoomStateBehaviour`).
  *
- * **Icons** are `lucide-react` components rendered to SVG markup and handed to
- * the engine's `svg-url` inset as `data:` URLs; the engine parses them into a
- * path, so there's no fetch and no codepoint table. Lucide has no Hindu temple
- * or mosque glyph: temples use `Flame` (a diya), mosques and palaces `Landmark`.
+ * **Icons** are Lucide components rendered to SVG once by `iconSetFromLucide`;
+ * from then on `iconSet` is plain name → markup data, drawn offline. Lucide has
+ * no Hindu temple or mosque glyph: temples use `Flame` (a diya), mosques and
+ * palaces `Landmark`.
  *
  * **Known gap.** `LabelCollisionBehaviour` hides a label that overlaps another
  * label, but it only compares labels with labels — a marker's body can still
@@ -64,10 +65,9 @@
 
 import 'maplibre-gl/dist/maplibre-gl.css?inline';
 
-import { createElement, useCallback, useMemo } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
+import { useCallback, useMemo } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { CanvasMessageBar, GraphCanvasApp, GraphStatusBar } from '@invana/canvas-ui';
+import { CanvasMessageBar, GraphCanvasApp, GraphStatusBar, iconSetFromLucide } from '@invana/canvas-ui';
 import type { CanvasConfig } from '@invana/canvas';
 import {
   GraphLayer,
@@ -78,6 +78,7 @@ import {
   type GraphData,
   type GraphNode
 } from '@invana/graph';
+import { BubbleSetsLayer } from '@invana/graph-layer-bubble-sets';
 import { MapLayer, projectLngLat } from '@invana/graph-layer-maplibre';
 import { Building2, Castle, Flame, Landmark, Library, Mountain, Waves } from 'lucide-react';
 
@@ -344,23 +345,6 @@ export const GeoAnnotationsStory: Story = {
         }
       ];
 
-      /** Lucide icon per POI type, as an engine `svg-url` inset over a `data:` URL. */
-      const ICONS = {
-        City: Building2,
-        Temple: Flame,
-        Fort: Castle,
-        Monument: Landmark,
-        Lake: Waves,
-        Hill: Mountain,
-        Museum: Library
-      };
-      const iconUrl = Object.fromEntries(
-        Object.entries(ICONS).map(([type, icon]) => [
-          type,
-          `data:image/svg+xml;charset=utf-8,${encodeURIComponent(renderToStaticMarkup(createElement(icon)))}`
-        ])
-      );
-
       // A polygon node sits at its outline's vertex mean; its vertices are relative to that.
       const regionShapes = REGIONS.map((d) => {
         const world = d.ring.split(' ').map((pair) => projectLngLat(pair.split(',').map(Number) as [number, number]));
@@ -377,39 +361,16 @@ export const GeoAnnotationsStory: Story = {
         };
       });
 
-      // A cluster's outline: the convex hull of a 24-point circle around each
-      // member (radius `padKm`), so the hull comes out with rounded ends.
-      // 1 world unit ≈ 78 km at the sample's latitude (512 units / 360° · cos 18°).
-      const clusterShapes = CLUSTERS.map((c) => {
-        const pad = c.padKm / 78;
-        const ring = c.members.flatMap((id) => {
-          const p = projectLngLat(POIS.find((poi) => poi.id === id)!.lngLat);
-          return Array.from({ length: 24 }, (_, k) => ({
-            x: p.x + pad * Math.cos((k / 24) * 2 * Math.PI),
-            y: p.y + pad * Math.sin((k / 24) * 2 * Math.PI)
-          }));
-        });
-        // Andrew's monotone chain.
-        const sorted = [...ring].sort((a, b) => a.x - b.x || a.y - b.y);
-        const cross = (o: { x: number; y: number }, a: { x: number; y: number }, b: { x: number; y: number }): number =>
-          (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
-        const half = (pts: { x: number; y: number }[]): { x: number; y: number }[] => {
-          const h: { x: number; y: number }[] = [];
-          for (const p of pts) {
-            while (h.length >= 2 && cross(h[h.length - 2]!, h[h.length - 1]!, p) <= 0) h.pop();
-            h.push(p);
-          }
-          return h.slice(0, -1);
-        };
-        const hull = [...half(sorted), ...half([...sorted].reverse())];
-        const cx = hull.reduce((s, p) => s + p.x, 0) / hull.length;
-        const cy = hull.reduce((s, p) => s + p.y, 0) / hull.length;
-        const top = Math.min(...hull.map((p) => p.y));
+      // A cluster's name sits above its topmost member, centred on the members —
+      // `BubbleSetsLayer` computes the outline itself, so the story never needs it.
+      const clusterLabels = CLUSTERS.map((c) => {
+        const at = c.members.map((id) => projectLngLat(POIS.find((poi) => poi.id === id)!.lngLat));
         return {
           ...c,
-          position: { x: cx, y: cy },
-          top,
-          vertices: hull.map((p) => ({ x: p.x - cx, y: p.y - cy }))
+          position: {
+            x: at.reduce((sum, p) => sum + p.x, 0) / at.length,
+            y: Math.min(...at.map((p) => p.y))
+          }
         };
       });
 
@@ -426,20 +387,6 @@ export const GeoAnnotationsStory: Story = {
                 // A translucent fill that leaves the border opaque (`bgAlpha` would fade both).
                 bgFill: { kind: 'solid', color: d.color, alpha: 0.12 },
                 bgStrokeColor: d.color
-              }
-            })
-          ),
-          // Clusters ride on the regions layer so they share its border bands.
-          ...clusterShapes.map(
-            (c): GraphNode => ({
-              id: `cluster:${c.id}`,
-              type: 'Cluster',
-              position: c.position,
-              data: { name: c.name },
-              style: {
-                shape: { kind: 'polygon', vertices: c.vertices },
-                bgFill: { kind: 'solid', color: c.color, alpha: 0.16 },
-                bgStrokeColor: c.color
               }
             })
           )
@@ -467,28 +414,16 @@ export const GeoAnnotationsStory: Story = {
               id: p.id,
               type: p.type,
               position: projectLngLat(p.lngLat),
-              data: { name: p.name, description: p.description },
-              style: {
-                icon: {
-                  kind: 'svg-url',
-                  url: iconUrl[p.type]!,
-                  color: 0xffffff,
-                  strokeWidth: 2,
-                  sizeRatio: 0.58
-                }
-              },
-              // Up close the label grows a second line; it only ever lengthens a
-              // label `labelMinZoom` already shows (11.5 > 9).
-              state: { detail: { labelText: `${p.name}\n${p.description}` } }
+              data: { name: p.name, description: p.description }
             })
           ),
-          // Cluster names on the hull's top edge — on this layer so they share
-          // the markers' `labelMinZoom` and pixel-constant text.
-          ...clusterShapes.map(
+          // Cluster names above the members — on this layer so they share the
+          // markers' `labelMinZoom` and pixel-constant text.
+          ...clusterLabels.map(
             (c): GraphNode => ({
               id: `cluster-label:${c.id}`,
               type: 'ClusterLabel',
-              position: { x: c.position.x, y: c.top },
+              position: c.position,
               data: { name: c.name },
               style: { labelColor: c.color }
             })
@@ -533,6 +468,29 @@ export const GeoAnnotationsStory: Story = {
                 }
               }
             },
+            // Cluster outlines. Radii are world units (the whole earth is 512), so
+            // they are sized for the zoom the story opens at; members are measured
+            // by their drawn size, so the pixel-constant markers need no anchor layer.
+            'bubble-sets': {
+              pixelGroup: 0.004,
+              nodeR0: 0.03,
+              nodeR1: 0.09,
+              edgeR0: 0.02,
+              edgeR1: 0.05,
+              morphBuffer: 0.05,
+              sets: [
+                {
+                  id: 'qutb-shahi',
+                  members: ['golconda', 'qutb-shahi-tombs', 'charminar', 'mecca-masjid', 'chowmahalla'],
+                  style: { fill: 0x7c3aed, fillOpacity: 0.16, stroke: 0x7c3aed, strokeWidth: 0.004 }
+                },
+                {
+                  id: 'kakatiya',
+                  members: ['warangal-fort', 'thousand-pillar', 'bhadrakali-temple', 'pakhal', 'ramappa', 'laknavaram'],
+                  style: { fill: 0xea580c, fillOpacity: 0.16, stroke: 0xea580c, strokeWidth: 0.004 }
+                }
+              ]
+            },
             'region-labels': {
               nodeStructureTemplates: {
                 labelOnly: {
@@ -566,6 +524,18 @@ export const GeoAnnotationsStory: Story = {
               node: { style: { labelLetterSpacing: 1.5, labelMaxZoom: 1448 } }
             },
             graph: {
+              // Icons by name: the templates below say `{ kind: 'named', name }`.
+              // Lucide has no Hindu temple or mosque glyph: temples use `Flame`
+              // (a diya), mosques and palaces `Landmark`.
+              iconSet: iconSetFromLucide({
+                city: Building2,
+                temple: Flame,
+                fort: Castle,
+                monument: Landmark,
+                lake: Waves,
+                hill: Mountain,
+                museum: Library
+              }),
               nodeStructureTemplates: {
                 marker: {
                   name: 'marker',
@@ -583,6 +553,7 @@ export const GeoAnnotationsStory: Story = {
               nodeStylingTemplates: {
                 city: {
                   name: 'city',
+                  icon: { kind: 'named', name: 'city', color: 0xffffff, strokeWidth: 2, sizeRatio: 0.58 },
                   fill: 0x334155,
                   stroke: 0xffffff,
                   strokeWidth: 1.5,
@@ -598,6 +569,7 @@ export const GeoAnnotationsStory: Story = {
                 },
                 temple: {
                   name: 'temple',
+                  icon: { kind: 'named', name: 'temple', color: 0xffffff, strokeWidth: 2, sizeRatio: 0.58 },
                   fill: 0xea580c,
                   stroke: 0xffffff,
                   strokeWidth: 1.5,
@@ -613,6 +585,7 @@ export const GeoAnnotationsStory: Story = {
                 },
                 fort: {
                   name: 'fort',
+                  icon: { kind: 'named', name: 'fort', color: 0xffffff, strokeWidth: 2, sizeRatio: 0.58 },
                   fill: 0x92400e,
                   stroke: 0xffffff,
                   strokeWidth: 1.5,
@@ -628,6 +601,7 @@ export const GeoAnnotationsStory: Story = {
                 },
                 monument: {
                   name: 'monument',
+                  icon: { kind: 'named', name: 'monument', color: 0xffffff, strokeWidth: 2, sizeRatio: 0.58 },
                   fill: 0x7c3aed,
                   stroke: 0xffffff,
                   strokeWidth: 1.5,
@@ -643,6 +617,7 @@ export const GeoAnnotationsStory: Story = {
                 },
                 lake: {
                   name: 'lake',
+                  icon: { kind: 'named', name: 'lake', color: 0xffffff, strokeWidth: 2, sizeRatio: 0.58 },
                   fill: 0x0284c7,
                   stroke: 0xffffff,
                   strokeWidth: 1.5,
@@ -658,6 +633,7 @@ export const GeoAnnotationsStory: Story = {
                 },
                 hill: {
                   name: 'hill',
+                  icon: { kind: 'named', name: 'hill', color: 0xffffff, strokeWidth: 2, sizeRatio: 0.58 },
                   fill: 0x16a34a,
                   stroke: 0xffffff,
                   strokeWidth: 1.5,
@@ -673,6 +649,7 @@ export const GeoAnnotationsStory: Story = {
                 },
                 museum: {
                   name: 'museum',
+                  icon: { kind: 'named', name: 'museum', color: 0xffffff, strokeWidth: 2, sizeRatio: 0.58 },
                   fill: 0xdb2777,
                   stroke: 0xffffff,
                   strokeWidth: 1.5,
@@ -694,7 +671,8 @@ export const GeoAnnotationsStory: Story = {
                     fontSize: 11,
                     fontWeight: 700,
                     fontStyle: 'italic',
-                    placement: 'center',
+                    placement: 'top',
+                    offsetY: 14,
                     background: true,
                     backgroundColor: 0xffffff
                   }
@@ -704,37 +682,51 @@ export const GeoAnnotationsStory: Story = {
                 City: {
                   structure: 'marker',
                   styling: 'city',
-                  bindings: { label: 'data.name' }
+                  bindings: { label: 'data.name' },
+                  // Up close the label grows a second line.
+                  states: { detail: { label: '{data.name}\n{data.description}' } }
                 },
                 Temple: {
                   structure: 'marker',
                   styling: 'temple',
-                  bindings: { label: 'data.name' }
+                  bindings: { label: 'data.name' },
+                  // Up close the label grows a second line.
+                  states: { detail: { label: '{data.name}\n{data.description}' } }
                 },
                 Fort: {
                   structure: 'marker',
                   styling: 'fort',
-                  bindings: { label: 'data.name' }
+                  bindings: { label: 'data.name' },
+                  // Up close the label grows a second line.
+                  states: { detail: { label: '{data.name}\n{data.description}' } }
                 },
                 Monument: {
                   structure: 'marker',
                   styling: 'monument',
-                  bindings: { label: 'data.name' }
+                  bindings: { label: 'data.name' },
+                  // Up close the label grows a second line.
+                  states: { detail: { label: '{data.name}\n{data.description}' } }
                 },
                 Lake: {
                   structure: 'marker',
                   styling: 'lake',
-                  bindings: { label: 'data.name' }
+                  bindings: { label: 'data.name' },
+                  // Up close the label grows a second line.
+                  states: { detail: { label: '{data.name}\n{data.description}' } }
                 },
                 Hill: {
                   structure: 'marker',
                   styling: 'hill',
-                  bindings: { label: 'data.name' }
+                  bindings: { label: 'data.name' },
+                  // Up close the label grows a second line.
+                  states: { detail: { label: '{data.name}\n{data.description}' } }
                 },
                 Museum: {
                   structure: 'marker',
                   styling: 'museum',
-                  bindings: { label: 'data.name' }
+                  bindings: { label: 'data.name' },
+                  // Up close the label grows a second line.
+                  states: { detail: { label: '{data.name}\n{data.description}' } }
                 },
                 ClusterLabel: {
                   structure: 'labelOnly',
@@ -809,6 +801,15 @@ export const GeoAnnotationsStory: Story = {
             id: 'graph',
             zIndex: 10,
             options: { initData: data.pois }
+          })
+        );
+        // After `graph`: it resolves its source layer on mount.
+        canvas.layers.add(
+          new BubbleSetsLayer({
+            id: 'bubble-sets',
+            zIndex: 2,
+            // `sets` and every algorithm option come from `config.layers['bubble-sets']`.
+            options: { graphLayerId: 'graph', sets: [] }
           })
         );
 

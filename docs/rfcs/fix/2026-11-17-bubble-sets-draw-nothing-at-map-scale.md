@@ -18,8 +18,8 @@ relations:
 | What breaks | On a `MapLayer` canvas, `BubbleSetsLayer` paints no contour for any set — no error, no warning |
 | Root cause | `bubblesets-js` grids in whole units; at map scale the world is 512 units across, a cluster spans 0.1–0.7 units, so any `pixelGroup` small enough to resolve it yields an empty outline (F1). Separately, members are sized from their **authored** spec, which `NodeScaleLODBehaviour` rewrites to screen pixels (F2) |
 | Defect rows | F1, F2, F3, F5 |
-| Row status | proposed 1 (F5) · accepted 0 · implemented 4 (F1–F4) · landed 0 |
-| Open decisions | D2 (F5) |
+| Row status | proposed 0 · accepted 0 · implemented 5 (F1–F5) · landed 0 |
+| Open decisions | none |
 
 ## 1. Symptom
 
@@ -66,7 +66,7 @@ relations:
 | F2 | defect | implemented | `file:packages/graph-layer-bubble-sets/src/BubbleSetsLayer.ts#L286` (`rectForNode`) | measure a member by its **drawn** world bounds (`graph.getRenderer()?.getShapeWorldBounds(id)`, which the hit index refreshes after `scaleShape`), falling back to the authored bounds, then to the small box | pixel-constant markers can be set members; contours hug what's on screen | **medium** — bubble shapes change wherever `NodeScaleLODBehaviour` is on (the currently-broken case); recompute must re-run on zoom settle when members are pixel-constant (F3) | — |
 | F3 | defect | implemented | same file | recompute on `input:camera:zoom` **settle** (debounced by `recomputeDebounceMs`) — only when a set member's drawn size changed by more than 0.5 % since the last paint (`memberRects` baseline); one cheap measure per member otherwise, and no recompute for a plain graph | the contour follows marker size across zoom | medium — a recompute per zoom settle; bounded by set count × member count | F2 |
 | F4 | dressing | implemented | `file:packages/canvas-ui/src/editors/layers/bubble-sets-layer/fields.ts` | allow sub-unit values (step `0.001`) for `pixelGroup`, radii and `morphBuffer` in the editor | the settings editor can configure a map-scale bubble set | low | F1 |
-| F5 | defect | proposed | `file:packages/graph-layer-bubble-sets/src/BubbleSetsLayer.ts` | add `setOptions(patch)` — merge into `options`, replace `sets` when given, schedule a recompute. Found while writing V6: `sym:configurable` only forwards `canvas.update({ layers })` to an instance that has a `setOptions` method, and `BubbleSetsLayer` has none, so the settings editor (and any JSON `config.layers['bubble-sets']`) is silently ignored. Existing stories change a bubble set by mutating `layer.options` and calling `recompute()` | the layer becomes config-driven like every other layer (root rule 12; the geo-intelligence plan's "everything is JSON" goal); F4's editor fields start to apply | low — additive; `graphLayerId` stays constructor-only (cross-layer id) | — |
+| F5 | defect | implemented | `file:packages/graph-layer-bubble-sets/src/BubbleSetsLayer.ts` | add `setOptions(patch)` — merge into `options`, replace `sets` when given, schedule a recompute. Found while writing V6: `sym:configurable` only forwards `canvas.update({ layers })` to an instance that has a `setOptions` method, and `BubbleSetsLayer` has none, so the settings editor (and any JSON `config.layers['bubble-sets']`) is silently ignored. Existing stories change a bubble set by mutating `layer.options` and calling `recompute()` | the layer becomes config-driven like every other layer (root rule 12; the geo-intelligence plan's "everything is JSON" goal); F4's editor fields start to apply | low — additive; `graphLayerId` stays constructor-only (cross-layer id) | — |
 
 ## 5. Blast radius
 
@@ -95,7 +95,7 @@ relations:
 | V3 | pass | new story: members are pixel-constant markers (`NodeScaleLODBehaviour`) | `story:graph-layers/bubble-sets/PixelConstantMembers` | contour hugs the markers at map zoom 8 and 12; follows after a zoom settles | F2, F3 |
 | V4 | pass | unit test: `k`-transform round-trip (inputs scaled, output unscaled). The package has no test runner today — this adds a `vitest` setup mirroring `pkg:@invana/graph` | `pkg:@invana/graph-layer-bubble-sets` | outline points within 1e-6 of the ×k run divided by k | F1 |
 | V5 | pass | `pnpm check-types` · `pnpm lint` · `pnpm build` | repo | green | all |
-| V6 | fail | editor value applies live | `sym:configurable` → `BubbleSetsLayer` | the layer's options change | F4, F5 — **fails by code read, not a UI run**: `BubbleSetsLayer` has no `setOptions` (F5), so `canvas.update` has nothing to call. The editor *accepts* sub-unit values (F4); applying them is F5 |
+| V6 | pass | config applies live | `sym:configurable` → `BubbleSetsLayer` | the layer's options change | F4, F5 — was a code-read failure (no `setOptions`). Now: `GeoAnnotations` constructs the layer with `sets: []` and every set and radius comes from `config.layers['bubble-sets']` through `canvas.update` — both clusters paint. The settings-editor UI itself was not driven |
 
 **Observed (2026-11-17)**
 
@@ -121,7 +121,7 @@ relations:
 | ID | Question | Options | Recommendation | Status |
 |---|---|---|---|---|
 | D1 | Recompute on zoom (F3) | (a) always on zoom settle · (b) only when a member is pixel-constant · (c) never — document | (b): zero cost for today's users, correct for markers | accepted 2026-11-17 — implemented as "only when a member's drawn size changed", which is (b) without having to detect `NodeScaleLODBehaviour` |
-| D2 | Add `setOptions` to `BubbleSetsLayer` (F5) | (a) now, in this RFC · (b) its own RFC · (c) leave — editor stays inert | (a): it is additive, it closes V6, and it is what makes a bubble set JSON-configurable | open |
+| D2 | Add `setOptions` to `BubbleSetsLayer` (F5) | (a) now, in this RFC · (b) its own RFC · (c) leave — editor stays inert | (a): it is additive, it closes V6, and it is what makes a bubble set JSON-configurable | accepted 2026-11-17 ("go") |
 
 ## 8. History
 
@@ -130,3 +130,5 @@ relations:
 | 2026-11-17 | Opened from the GeoAnnotations story and the geo-intelligence plan (P1) | proposed | diagnosis and T2 measured before writing |
 | 2026-11-17 | Approved by the maintainer ("ok proceed") | accepted | D1 accepted |
 | 2026-11-17 | F1–F4 implemented; V1–V5 pass; V6 fails (N2) → F5 added | accepted | F5 and D2 await approval; the RFC reaches `landed` when F1–F5 are `landed`/`rejected` and the change is in `main` |
+| 2026-11-17 | F5 approved (D2 (a)) and implemented: `setOptions` + `tests/setOptions.test.ts` (3 tests); V6 to be re-driven through the GeoAnnotations story | accepted | |
+| 2026-11-17 | F5 approved (D2 (a)) and implemented: `setOptions` + `tests/setOptions.test.ts` (3 tests); V6 to be re-driven through the GeoAnnotations story | accepted | |

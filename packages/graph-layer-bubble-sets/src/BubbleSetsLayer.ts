@@ -193,6 +193,26 @@ export class BubbleSetsLayer extends WorldLayer<
     return true;
   }
 
+  /**
+   * Apply a config patch — the seam `canvas.update({ layers: { [id]: … } })`
+   * (and therefore the settings editor and `config.layers[id]`) drives. Merges
+   * over the current options and schedules a recompute, so the algorithm
+   * fields (`pixelGroup`, radii, `morphBuffer`, smoothing) are live-editable.
+   *
+   * `sets`, when present, replaces the set list (same as {@link setSets}).
+   * `graphLayerId` is identity, read once on mount — patching it has no
+   * effect; re-add the layer to retarget it. `recompute` (`'auto'` / `'manual'`)
+   * is likewise read on mount, because it decides which subscriptions exist.
+   */
+  setOptions(patch: Partial<BubbleSetsLayerOptions>): void {
+    const { sets, ...rest } = patch;
+    // `options` is readonly on the base `Layer`; mutate in place so every
+    // reader — including an in-flight paint — sees one object.
+    Object.assign(this.options, rest, { graphLayerId: this.graphLayerId });
+    if (sets) this.sets = [...sets];
+    this.scheduleRecompute();
+  }
+
   /** Read-only view of the current set list. */
   getSets(): readonly BubbleSet[] {
     return this.sets;
