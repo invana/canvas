@@ -79,15 +79,15 @@ Work-item IDs are append-only. `Req` cites [`analyst-requirements.md`](./analyst
 
 | ID | Item | Package | Req | Status |
 |---|---|---|---|---|
-| G1 | `GeoFeaturesLayer` — GeoJSON `Polygon` (holes) · `MultiPolygon` · `LineString` · `Point` + `radiusKm`; style from `properties` or per-kind defaults in config; not nodes (the `GroupFramesLayer` pattern) | `graph-layer-maplibre` | A27 | 📋 |
-| G2 | Pixel-constant stroke — the layer re-strokes on zoom settle; no renderer change | same | A27 | 📋 |
-| G3 | Feature labels at the visual centre (polylabel), pixel-constant, min / max zoom | same | A27 | 📋 |
-| G4 | `feature:click` / `feature:hover` events; `add` / `update` / `remove` / `toGeoJSON()` | same | A11 | 📋 |
-| G5 | Geo-position — nodes with `data.lng` / `data.lat` are projected on load and on change | same | A27 | 📋 |
-| G6 | Provenance schema on feature `properties`: `source` · `reportedAt` · `author` · `confidence` · `reliability` · `classification` | same | A2 | 📋 |
-| G7 | Uncertainty styling — `uncertaintyKm` ring; unconfirmed features dashed / faded, from G6 fields | same | A3 | 📋 |
-| G8 | Offline defaults — no CDN by default; tile style URL documented as required config; a bundled minimal style for stories | same | A13 | 📋 |
-| E1 | `<GeoFeaturesLayer>` wrapper + settings editor | `canvas-react`, `canvas-ui` | rule 12 | 📋 |
+| G1 | `GeoFeaturesLayer` — GeoJSON `Polygon` (holes) · `MultiPolygon` · `LineString` · `Point` + `radiusKm`; style from `properties` or per-kind defaults in config; not nodes (the `GroupFramesLayer` pattern) | `graph-layer-maplibre` | A27 | ✅ implemented, not yet in `main` |
+| G2 | Pixel-constant stroke — the layer re-strokes on zoom settle; no renderer change | same | A27 | ✅ implemented, not yet in `main` |
+| G3 | Feature labels at the visual centre (polylabel), pixel-constant, min / max zoom | same | A27 | ✅ implemented, not yet in `main` |
+| G4 | `feature:click` / `feature:hover` events; `add` / `update` / `remove` / `toGeoJSON()` | same | A11 | ✅ implemented, not yet in `main` |
+| G5 | Geo-position — nodes with `data.lng` / `data.lat` are projected on load and on change | same | A27 | ✅ implemented, not yet in `main` |
+| G6 | Provenance schema on feature `properties`: `source` · `reportedAt` · `author` · `confidence` · `reliability` · `classification` | same | A2 | ✅ implemented, not yet in `main` |
+| G7 | Uncertainty styling — `uncertaintyKm` ring; unconfirmed features dashed / faded, from G6 fields | same | A3 | ✅ implemented, not yet in `main` |
+| G8 | Offline defaults — no CDN by default; tile style URL documented as required config; a bundled minimal style for stories | same | A13 | ✅ implemented, not yet in `main` |
+| E1 | `<GeoFeaturesLayer>` wrapper + settings editor | `canvas-react`, `canvas-ui` | rule 12 | ✅ implemented, not yet in `main` |
 
 ### P4 — Draw, measure, query
 
@@ -156,7 +156,7 @@ Per-piece stories (rule 11) ship **with** each phase, not in P8.
 |---|---|---|
 | P1 | [`fix/2026-11-17-bubble-sets-draw-nothing-at-map-scale`](./rfcs/fix/2026-11-17-bubble-sets-draw-nothing-at-map-scale.md) | 🚧 F1–F4 implemented; F5 (`setOptions`) proposed |
 | P2 | [`feat/2026-11-17-marker-icons-and-zoom-labels-are-not-config`](./rfcs/feat/2026-11-17-marker-icons-and-zoom-labels-are-not-config.md) | 🚧 T1–T4, T2b, E1, S1 implemented; V10 partly run |
-| P3 | `feat/…-a-map-cannot-show-an-area-from-coordinates` | 📋 |
+| P3 | `feat/…-a-map-cannot-show-an-area-from-coordinates` | ✅ RFC accepted and implemented, not yet in `main` — `docs/rfcs/feat/2026-11-17-geographic-shapes-cannot-be-drawn-from-data.md` |
 | P4 | `feat/…-an-analyst-cannot-draw-or-query-an-area` | 📋 |
 | P5 | `feat/…-moving-objects-cannot-be-tracked-live` | ✅ RFC accepted and implemented, not yet in `main` — `docs/rfcs/feat/2026-11-17-moving-objects-cannot-be-tracked-live.md` |
 | P6 | `feat/…-the-canvas-has-no-time` (+ a design note `docs/time-model-plan.md` first — it touches every layer) | 📋 |
@@ -169,7 +169,7 @@ Per-piece stories (rule 11) ship **with** each phase, not in P8.
 | ID | Question | Decision | Status |
 |---|---|---|---|
 | D-1 | Name of the areas layer ("annotation" already means notes on records) | `GeoFeaturesLayer` — GeoJSON's own word, covers lines and circles | accepted 2026-11-17 |
-| D-2 | Where drawn features live | the kernel's `LayerData.annotations` collection if its undo / history path is wired (verified in the P3 RFC); otherwise the layer's own data | accepted 2026-11-17 (pending check) |
+| D-2 | Where drawn features live | the kernel's `LayerData.annotations` collection if its undo / history path is wired (verified in the P3 RFC); otherwise the layer's own data | accepted 2026-11-17 — checked in the P3 RFC: the annotation collection has no undo path, so features live in the layer; undo arrives with P4's draw tool |
 | D-3 | Icons in JSON | app-filled icon registry (offline), Lucide as the documented default | accepted 2026-11-17 |
 | D-4 | First draw tools | polygon + freehand + circle + line; editing (D2) after | accepted 2026-11-17 |
 | D-5 | Zoom units in config | camera scale (`2 ** mapZoom`), documented conversion; no new unit | accepted 2026-11-17 |
@@ -204,3 +204,4 @@ Per-piece stories (rule 11) ship **with** each phase, not in P8.
 | 2026-11-17 | P1 approved and implemented (F1–F4, 13 unit tests, two stories); a finding added B3 / RFC row F5 |
 | 2026-11-17 | Plan created from the GeoAnnotations review and the analyst requirements (A1–A30); D-1…D-7 accepted by the maintainer, D-8…D-T2 recommended |
 | 2026-11-17 | P5 implemented (RFC `feat-2026-11-17-moving-objects-cannot-be-tracked-live`): `TrackingBehaviour`, `TrailsLayer`, map follow driver, lng/lat adapter, editors, stories; budget measured (tick p95 0.7 ms at 5,000, 2.4 ms with every heading rewritten). D-T1 stays open; D-T2 confirmed |
+| 2026-11-17 | P3 implemented (RFC `feat-2026-11-17-geographic-shapes-cannot-be-drawn-from-data`): `GeoFeaturesLayer`, `GeoPositionBehaviour`, `MapLayer` click / hover forwarding and an offline blank default, editor, wrapper, eight stories; `GeoAnnotations` migrated. D-2 and D-10 answered |
