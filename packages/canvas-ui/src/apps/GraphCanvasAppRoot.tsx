@@ -249,6 +249,7 @@ function GraphCanvasAppMain({
   data,
   config,
   bundle,
+  theme,
   instanceKey,
   onReady,
   telemetry,
@@ -259,6 +260,8 @@ function GraphCanvasAppMain({
   data: GraphData;
   config: CanvasConfig;
   bundle: boolean;
+  /** Mount the theme publisher + host sync (see `GraphCanvasAppProps.theme`). */
+  theme: boolean;
   instanceKey?: string | number;
   onReady: (canvas: GraphCanvas | null) => void;
   telemetry?: CanvasTelemetryConfig;
@@ -294,8 +297,12 @@ function GraphCanvasAppMain({
           {/* The sole theme publisher + the shared host-theme sync that drives its
               mode/active from the host `<ThemeProvider>`. Every theme-aware layer
               recolours off the published palette. */}
-          <ThemeBehaviour id="theme" />
-          <CanvasThemeSync />
+          {theme && (
+            <>
+              <ThemeBehaviour id="theme" />
+              <CanvasThemeSync />
+            </>
+          )}
           <DragPanBehaviour id="pan" />
           <WheelZoomBehaviour id="wheel" />
           <DragNodeBehaviour id="drag-node" targetLayerId="graph" />
@@ -311,6 +318,17 @@ function GraphCanvasAppMain({
           <EntranceBehaviour id="entrance" targetLayerId="graph" enabled={false} />
         </>
       ) : null}
+
+      {/* Without the bundle the publisher is opt-in (`theme`): `document` mode so the
+          canvas is right on the first frame, the accent tracking `--color-primary`,
+          and the sync then pins mode + palette to the host `<ThemeProvider>`. A
+          consumer's own layers (a `MapLayer`) subscribe to what it publishes. */}
+      {!bundle && theme && (
+        <>
+          <ThemeBehaviour id="theme" mode="document" accent="css-var" />
+          <CanvasThemeSync />
+        </>
+      )}
 
       {/* Consumer extras (appended bundle extras, or — with `bundle={false}` — the
           whole replacement graph). A dev overlay is just `<DevInfoLayer/>` dropped
@@ -335,6 +353,7 @@ interface SurfaceValue {
   data: GraphData;
   config: CanvasConfig;
   bundle: boolean;
+  theme: boolean;
   instanceKey?: string | number;
   onReady: (canvas: GraphCanvas | null) => void;
   telemetry?: CanvasTelemetryConfig;
@@ -361,6 +380,8 @@ export interface GraphCanvasAppRootProps {
    * graph from the surface's `children`.
    */
   bundle?: boolean;
+  /** Mount the theme publisher + host sync. Default = `bundle` (see `GraphCanvasAppProps.theme`). */
+  theme?: boolean;
   /** Re-key token (e.g. a streaming reset) — remounts the engine on change. */
   instanceKey?: string | number;
   /** Receives the live engine once every layer / behaviour has registered (or `null`). */
@@ -407,6 +428,7 @@ export function GraphCanvasAppRoot({
   data,
   config,
   bundle = true,
+  theme: themeProp,
   instanceKey,
   onReady,
   telemetry: telemetryProp,
@@ -474,18 +496,22 @@ export function GraphCanvasAppRoot({
     [bundle, config],
   );
 
+  // The bundle always carried the theme; off, it is opt-in.
+  const followTheme = themeProp ?? bundle;
+
   const surface = useMemo<SurfaceValue>(
     () => ({
       data,
       config: mergedConfig,
       bundle,
+      theme: followTheme,
       instanceKey,
       onReady: handleReady,
       telemetry,
       preference,
       controlPanels,
     }),
-    [data, mergedConfig, bundle, instanceKey, handleReady, telemetry, preference, controlPanels],
+    [data, mergedConfig, bundle, followTheme, instanceKey, handleReady, telemetry, preference, controlPanels],
   );
 
   // The root box is sized to fill its parent by default, so the same engine works
@@ -551,6 +577,7 @@ export function GraphCanvasAppSurface({ children }: GraphCanvasAppSurfaceProps) 
       data={surface.data}
       config={surface.config}
       bundle={surface.bundle}
+      theme={surface.theme}
       instanceKey={surface.instanceKey}
       onReady={surface.onReady}
       telemetry={surface.telemetry}

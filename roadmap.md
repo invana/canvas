@@ -182,6 +182,8 @@ Plan: [`docs/geo-intelligence-plan.md`](./docs/geo-intelligence-plan.md) · requ
 | P6 — time: kernel clock, slider, replay, dwell, co-location, geofences, route deviation, ETA | 📋 |
 | P7 — density / aggregation, notes on areas, briefing export, coordinate input | 📋 |
 | P8 — maritime and last-mile delivery case studies | 📋 |
+| Basemap + canvas follow every design-kit theme family, light / dark / system — React path (`MapLayer` `basemap: 'themed'`, `CanvasThemeSync` tokens, `GraphCanvasApp` `theme`) ([RFC](./docs/rfcs/feat/2026-11-18-map-and-canvas-follow-every-design-kit-theme.md)) | 🚧 |
+| Same for **non-React** hosts: `ThemeBehaviour` token source, so a plain `GraphCanvas` follows a *new* family (RFC row T10 — deferred, no `@invana/graph` change yet) | 📋 |
 
 ## What's next
 

@@ -1,7 +1,7 @@
 import 'maplibre-gl/dist/maplibre-gl.css?inline';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { GraphCanvas } from '@invana/graph';
+import { GraphCanvas, ThemeBehaviour } from '@invana/graph';
 import { GeoFeaturesLayer, MapLayer, type GeoFeature } from '@invana/graph-layer-maplibre';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
@@ -35,6 +35,7 @@ export const PolygonsStory: Story = {
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-layers-maplibre-geofeatures-polygons')!;
     const canvas = new GraphCanvas();
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme' }));
     onStoryTeardown(() => canvas.destroy());
 
     const features: GeoFeature[] = [
@@ -79,8 +80,9 @@ export const PolygonsStory: Story = {
     canvas.layers.add(new GeoFeaturesLayer({ id: 'geo', zIndex: 5, options: { mapLayerId: 'map', features } }));
 
     const canvasOptions = {
+      behaviours: { theme: { enabled: true, mode: 'document' } },
       layers: {
-        map: { styleUrl: 'https://tiles.openfreemap.org/styles/positron', center: [79.15, 17.75], zoom: 7.4, minZoom: 5, maxZoom: 15 },
+        map: { basemap: 'themed', center: [79.15, 17.75], zoom: 7.4, minZoom: 5, maxZoom: 15 },
         geo: {
           defaults: { polygon: { strokeWidthPx: 2, strokeOpacity: 0.9, fillOpacity: 0.25 } },
           labelFontPx: 12,

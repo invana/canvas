@@ -23,6 +23,7 @@ import 'maplibre-gl/dist/maplibre-gl.css?inline';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DevInfoLayer } from '@invana/canvas';
 import {
+  ThemeBehaviour,
   EdgeScaleLODBehaviour,
   GraphCanvas,
   GraphLayer,
@@ -66,12 +67,13 @@ export const Routes_Story: Story = {
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-maplibre-routes')!;
     const canvas = new GraphCanvas();
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme' }));
     onStoryTeardown(() => canvas.destroy());
 
     const map = new MapLayer({
       id: 'map',
       options: {
-        styleUrl: 'https://tiles.openfreemap.org/styles/liberty',
+        basemap: 'themed',
         center: [0, 25],
         zoom: 1.6
       }
@@ -283,6 +285,7 @@ export const Routes_Story: Story = {
         }
       },
       behaviours: {
+        theme: { enabled: true, mode: 'document' },
         'node-scale-lod': { enabled: true },
         'edge-scale-lod': { enabled: true },
         hover: {

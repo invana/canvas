@@ -20,6 +20,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DevInfoLayer } from '@invana/canvas';
 import {
+  ThemeBehaviour,
   GraphCanvas,
   GraphLayer,
   HoverActivateBehaviour,
@@ -55,6 +56,7 @@ export const Airports_Story: Story = {
 
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-maplibre-airports')!;
     const canvas = new GraphCanvas();
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme' }));
     onStoryTeardown(() => canvas.destroy());
 
     // MapLibre owns input — don't register DragPan / WheelZoom behaviours
@@ -63,7 +65,7 @@ export const Airports_Story: Story = {
     const map = new MapLayer({
       id: 'map',
       options: {
-        styleUrl: 'https://tiles.openfreemap.org/styles/liberty',
+        basemap: 'themed',
         center: [0, 25],
         zoom: 1.6
       }
@@ -172,6 +174,7 @@ export const Airports_Story: Story = {
         }
       },
       behaviours: {
+        theme: { enabled: true, mode: 'document' },
         'node-scale-lod': { enabled: true },
         hover: { enabled: true, state: 'hovered', inactiveState: 'dimmed' }
       }

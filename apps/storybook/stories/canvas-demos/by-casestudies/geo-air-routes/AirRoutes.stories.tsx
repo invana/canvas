@@ -11,8 +11,9 @@
  * This is the app's **`bundle={false}`** case: MapLibre owns pan / zoom (the
  * canvas camera mirrors its transform), so the bundle's `DragPan` /
  * `WheelZoom` would fight it — the story composes its own layer / behaviour set
- * as children instead. The header's **basemap** picker swaps the MapLibre style
- * live through `config.layers.map.styleUrl`, and **Settings** docks
+ * as children instead. The header's **basemap** picker swaps the MapLibre basemap
+ * live through `config.layers.map` — *Themed* (the default) follows light / dark
+ * and the design-kit theme family; the others are fixed styles — and **Settings** docks
  * `<CanvasSettingsEditorPanel>` over that same config.
  *
  * Exercises: `MapLayer` integration, world-coord-pinned `GraphLayer`,
@@ -55,15 +56,17 @@ type Story = StoryObj;
 export const AirRoutesStory: Story = {
   name: 'AirRoutes',
   render: function Render() {
-    // OpenFreeMap (no key required) — three styles cover the most-asked-for
-    // basemap modes for a graph overlay.
+    // OpenFreeMap (no key required). `themed` is the MapLayer's own built-in
+    // basemap — it follows light / dark *and* the design-kit theme family — so it
+    // has no URL (`null` = none); the other three are fixed styles that ignore the theme.
     const STYLES = {
+      themed: null,
       liberty: 'https://tiles.openfreemap.org/styles/liberty',
       bright: 'https://tiles.openfreemap.org/styles/bright',
       positron: 'https://tiles.openfreemap.org/styles/positron'
     };
 
-    const [basemap, setBasemap] = useState<keyof typeof STYLES>('positron');
+    const [basemap, setBasemap] = useState<keyof typeof STYLES>('themed');
     const [minimapOn, setMinimapOn] = useState(false);
 
     const dock = useSidePanels(
@@ -153,7 +156,8 @@ export const AirRoutesStory: Story = {
         // initial view.
         fitOnLoad: false,
         layers: {
-          map: { styleUrl: STYLES[basemap], center: [0, 25], zoom: 1.6 },
+          // `'light'` with a fixed style: the explicit URL wins and the palette tint is off.
+          map: { basemap: basemap === 'themed' ? 'themed' : 'light', styleUrl: STYLES[basemap], center: [0, 25], zoom: 1.6 },
           graph: {
             node: {
               style: {
@@ -243,6 +247,8 @@ export const AirRoutesStory: Story = {
         // (and its background layer — the basemap *is* the background) would
         // fight it. Compose the scene from children instead.
         bundle={false}
+        // The bundle is off, but the theme is not: the basemap and pixels follow the kit.
+        theme
         onReady={onReady}
         header={{
           title: 'Geo Air Routes',
@@ -255,7 +261,7 @@ export const AirRoutesStory: Story = {
                   key: 'basemap',
                   label: 'Basemap',
                   value: basemap,
-                  options: { liberty: 'Liberty', bright: 'Bright', positron: 'Positron' },
+                  options: { themed: 'Themed', liberty: 'Liberty', bright: 'Bright', positron: 'Positron' },
                   onChange: (v) => setBasemap(v as keyof typeof STYLES)
                 },
                 {

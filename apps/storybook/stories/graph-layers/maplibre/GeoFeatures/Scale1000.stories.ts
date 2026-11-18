@@ -1,7 +1,7 @@
 import 'maplibre-gl/dist/maplibre-gl.css?inline';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { GraphCanvas } from '@invana/graph';
+import { GraphCanvas, ThemeBehaviour } from '@invana/graph';
 import { GeoFeaturesLayer, MapLayer, type GeoFeature } from '@invana/graph-layer-maplibre';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
@@ -30,6 +30,7 @@ export const Scale1000Story: Story = {
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-layers-maplibre-geofeatures-scale-1000')!;
     const canvas = new GraphCanvas();
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme' }));
     onStoryTeardown(() => canvas.destroy());
 
     // Deterministic pseudo-random numbers: every load draws the same 1,000 features.
@@ -59,8 +60,9 @@ export const Scale1000Story: Story = {
     canvas.layers.add(geo);
 
     const canvasOptions = {
+      behaviours: { theme: { enabled: true, mode: 'document' } },
       layers: {
-        map: { styleUrl: 'https://tiles.openfreemap.org/styles/positron', center: [78, 19], zoom: 5.2, minZoom: 3, maxZoom: 15 },
+        map: { basemap: 'themed', center: [78, 19], zoom: 5.2, minZoom: 3, maxZoom: 15 },
         geo: { defaults: { polygon: { fillOpacity: 0.2, strokeWidthPx: 1.5 }, line: { strokeWidthPx: 2 }, point: { fillOpacity: 0.2, strokeWidthPx: 1.5 } }, labelFontPx: 11, labelMinZoom: 400 }
       }
     };

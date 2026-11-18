@@ -21,6 +21,8 @@ export interface MapLayerOptions {
   styleUrl?: string;
   /** Basemap style while the canvas theme is dark (string form only). */
   styleUrlDark?: string;
+  /** Built-in basemap: a fixed light / dark one, `auto` (follows the theme), or `themed` (auto + palette tint). */
+  basemap?: 'light' | 'dark' | 'auto' | 'themed';
   /** Initial map centre as `[lng, lat]` in degrees. */
   center?: [number, number];
   /** Initial MapLibre zoom level (0..22). */
@@ -44,6 +46,7 @@ export interface MapLayerOptions {
 export interface MapLayerFields {
   styleUrl?: string;
   styleUrlDark?: string;
+  basemap?: 'light' | 'dark' | 'auto' | 'themed';
   /** Centre longitude in degrees. */
   centerLng?: number;
   /** Centre latitude in degrees. */

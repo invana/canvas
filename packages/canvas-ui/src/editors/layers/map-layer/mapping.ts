@@ -10,6 +10,7 @@ export function optionsToForm(o: MapLayerOptions = {}): MapLayerFields {
   return {
     styleUrl: o.styleUrl,
     styleUrlDark: o.styleUrlDark,
+    basemap: o.basemap,
     centerLng: o.center?.[0],
     centerLat: o.center?.[1],
     zoom: o.zoom,
@@ -30,6 +31,7 @@ export function formToOptions(f: MapLayerFields): MapLayerOptions {
   const out: MapLayerOptions = {};
   if (f.styleUrl) out.styleUrl = f.styleUrl;
   if (f.styleUrlDark) out.styleUrlDark = f.styleUrlDark;
+  if (f.basemap) out.basemap = f.basemap;
   if (f.centerLng !== undefined && f.centerLat !== undefined) {
     out.center = [f.centerLng, f.centerLat];
   }

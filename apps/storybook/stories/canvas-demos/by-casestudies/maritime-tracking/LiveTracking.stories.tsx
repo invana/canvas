@@ -154,7 +154,7 @@ export const LiveTrackingStory: Story = {
           fitOnLoad: false,
           layers: {
             map: {
-              styleUrl: 'https://tiles.openfreemap.org/styles/positron',
+              basemap: 'themed',
               center: [101.9, 2.4],
               zoom: 7.6,
               minZoom: 5,
@@ -378,6 +378,7 @@ export const LiveTrackingStory: Story = {
         data={data}
         config={config}
         bundle={false}
+        theme
         onReady={onReady}
         header={{ title: 'Live tracking · Strait of Malacca' }}
         footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}

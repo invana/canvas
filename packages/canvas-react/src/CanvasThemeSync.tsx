@@ -22,12 +22,15 @@
 // not an engine `Behaviour`: a registered class is not in the React tree and could
 // never read `useThemeOptional()`.
 //
-// **Two sources.** `source: 'library'` (the default) picks the canvas library's
-// palette for the host's theme family. `source: 'tokens'` reads the palette off
-// the host page's CSS tokens instead — every role and the categorical ramp — so
-// a canvas wears exactly the app's colours, under any theme the app defines.
-// The token names default to design-kit's (`--color-background`, `--color-data-1…8`,
-// …) and a host renames any of them with `tokens`.
+// **Two sources.** `source: 'tokens'` (the default) reads the palette off the
+// host page's CSS tokens — every role and the categorical ramp — so a canvas wears
+// exactly the app's colours under **any** theme family the app defines, present or
+// future, with nothing registered per family. The token names default to
+// design-kit's (`--color-background`, `--color-data-1…8`, …) and a host renames
+// any of them with `tokens`. `source: 'library'` instead picks the canvas
+// library's own palette for the host's family — it knows only the families
+// `@invana/graph` ships (`default` · `forest` · `ocean` · `gold` · `rose` ·
+// `minimal`); any other family falls back to the pinned `active`.
 //
 // It is one of three inputs to `ThemeBehaviour`, layered by host capability:
 // this bridge (React + `<ThemeProvider>`) · `mode: 'document'` (any DOM) ·
@@ -83,8 +86,10 @@ export interface CanvasThemeSyncProps {
   /** Id of the `ThemeBehaviour` on the target canvas to drive. Default `'theme'`. */
   behaviourId?: string;
   /**
-   * Where the palette comes from: the canvas library's for the host's theme
-   * family (`'library'`, default), or the host page's CSS tokens (`'tokens'`).
+   * Where the palette comes from: the host page's CSS tokens (`'tokens'`,
+   * default — every family the design kit defines, now or later), or the canvas
+   * library's built-in palette for the host's theme family (`'library'` — six
+   * families only).
    */
   source?: 'library' | 'tokens';
   /** With `source: 'tokens'`: token names over {@link DESIGN_KIT_TOKENS}. */
@@ -99,7 +104,7 @@ export interface CanvasThemeSyncProps {
  * While a `<ThemeProvider>` is present it also registers the `theme.toggle`
  * command (active while dark), so a control panel can flip the host theme.
  */
-export function CanvasThemeSync({ behaviourId = 'theme', source = 'library', tokens }: CanvasThemeSyncProps) {
+export function CanvasThemeSync({ behaviourId = 'theme', source = 'tokens', tokens }: CanvasThemeSyncProps) {
   const canvas = useCanvas();
   const theme = useThemeOptional();
   const mode = theme ? (theme.isDark ? 'dark' : 'light') : undefined;
@@ -114,9 +119,7 @@ export function CanvasThemeSync({ behaviourId = 'theme', source = 'library', tok
       canvas.update({ behaviours: { [behaviourId]: { mode, active } } });
       return;
     }
-    // The tokens resolve once the theme's class is on `<html>` — the provider
-    // applies it in its own effect, after this one — so the read waits a frame.
-    const frame = requestAnimationFrame(() => {
+    const push = (): void => {
       const palette = readTokenPalette({ ...DESIGN_KIT_TOKENS, ...(JSON.parse(tokenKey) as Partial<ThemeTokenMap>) });
       canvas.update({
         behaviours: {
@@ -127,10 +130,19 @@ export function CanvasThemeSync({ behaviourId = 'theme', source = 'library', tok
           },
         },
       });
-    });
+    };
+    // The tokens resolve once the theme's class is on `<html>`. When something
+    // already wrote it (a first-paint writer, or an earlier pass) the variant
+    // matches and the read is correct *now* — no frame of the wrong palette.
+    // Otherwise the provider writes it in its own effect, after this one, so the
+    // read waits a frame.
+    if (variant && document.documentElement.getAttribute('data-theme') === variant) {
+      push();
+      return;
+    }
+    const frame = requestAnimationFrame(push);
     return () => cancelAnimationFrame(frame);
-    // `variant` is trigger-only: any theme or mode switch re-reads the tokens.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // `variant`: any theme or mode switch re-reads the tokens.
   }, [canvas, behaviourId, mode, active, source, tokenKey, variant]);
 
   // `theme.toggle` flips the **host** theme (the engine follows through the

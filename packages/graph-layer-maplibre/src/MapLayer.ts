@@ -63,6 +63,7 @@
 import { Layer, type CanvasContext, type LayerOptions } from '@invana/canvas';
 import maplibregl from 'maplibre-gl';
 
+import { computeTint } from './basemapTint';
 import { projectLngLat, unprojectWorld } from './mercator';
 import type {
   LngLat,
@@ -85,6 +86,17 @@ export const BLANK_STYLE = {
   layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#eef0f3' } }],
 } as const;
 
+/**
+ * The built-in basemaps behind `MapLayerOptions.basemap` — free, keyless
+ * [OpenFreeMap](https://openfreemap.org) styles. Exported so an app can name them
+ * (a basemap picker's list) instead of repeating the URLs.
+ */
+export const OPENFREEMAP_STYLES = {
+  light: 'https://tiles.openfreemap.org/styles/positron',
+  dark: 'https://tiles.openfreemap.org/styles/dark',
+  liberty: 'https://tiles.openfreemap.org/styles/liberty',
+} as const;
+
 export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEvents> {
   override readonly kind = 'map-layer';
   private map: maplibregl.Map | null = null;
@@ -102,6 +114,10 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
   private offTheme: (() => void) | null = null;
   /** The style last handed to MapLibre, so a no-op re-resolve skips `setStyle`. */
   private appliedStyle: string | object | undefined;
+  /** Whether the live style carries our `'themed'` paint overrides (so turning it off can reload a clean one). */
+  private tinted = false;
+  /** The tint found no layer to dress — warned once, not per theme change. */
+  private warnedNoTint = false;
 
   constructor(opts: LayerOptions<MapLayerOptions>) {
     super({
@@ -167,7 +183,13 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
     const map = this.map;
     if (!map) return;
 
-    if (patch.styleUrl !== undefined || patch.styleUrlDark !== undefined) this.applyThemedStyle();
+    if (patch.styleUrl !== undefined || patch.styleUrlDark !== undefined || patch.basemap !== undefined) {
+      // Leaving `'themed'` must drop the overrides: the style may resolve to the
+      // same URL, which `applyThemedStyle` would skip — so reload it clean.
+      const leavingTint = this.tinted && patch.basemap !== undefined && patch.basemap !== 'themed';
+      this.applyThemedStyle(leavingTint);
+      this.applyTint();
+    }
     if (patch.minZoom !== undefined) map.setMinZoom(patch.minZoom);
     if (patch.maxZoom !== undefined) map.setMaxZoom(patch.maxZoom);
     // One `jumpTo` for the view so a combined centre + zoom patch is a single
@@ -181,21 +203,67 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
   }
 
   /**
-   * The style for the canvas's current theme: `styleUrlDark` while dark (when
-   * set), otherwise `styleUrl`, otherwise the blank style.
+   * The style for the canvas's current theme. An explicit style wins —
+   * `styleUrlDark` while dark (when set), otherwise `styleUrl` — then the
+   * {@link MapLayerOptions.basemap} built-in, then the blank style.
    */
   private resolveStyle(): string | object {
     const dark = this.ctx?.theme.current()?.kind === 'dark';
     const o = this.options;
-    return (dark ? o.styleUrlDark : undefined) ?? o.styleUrl ?? BLANK_STYLE;
+    const explicit = (dark ? o.styleUrlDark : undefined) ?? o.styleUrl;
+    if (explicit != null) return explicit;
+    const b = o.basemap;
+    if (b === 'light' || b === 'dark') return OPENFREEMAP_STYLES[b];
+    if (b === 'auto' || b === 'themed') return dark ? OPENFREEMAP_STYLES.dark : OPENFREEMAP_STYLES.light;
+    return BLANK_STYLE;
   }
 
-  /** `setStyle` only when the theme-resolved style actually changed. */
-  private applyThemedStyle(): void {
+  /**
+   * `setStyle` only when the theme-resolved style actually changed (or `force`).
+   * A swap drops the tint with the old style; the `style.load` handler re-applies it.
+   */
+  private applyThemedStyle(force = false): void {
     const next = this.resolveStyle();
-    if (!this.map || next === this.appliedStyle) return;
+    if (!this.map || (!force && next === this.appliedStyle)) return;
     this.appliedStyle = next;
+    this.tinted = false;
     this.map.setStyle(next as string);
+  }
+
+  /**
+   * Dress the loaded style in the published palette — `basemap: 'themed'` only.
+   * Safe to call at any time: before the style is parsed, with no theme yet, or
+   * under an empty palette it does nothing. Idempotent, so every `theme:change`
+   * (including a family switch that leaves the style URL alone) can call it.
+   */
+  private applyTint(): void {
+    const map = this.map;
+    const theme = this.ctx?.theme.current();
+    if (!map || !theme || this.options.basemap !== 'themed') return;
+    let layers: { id: string; type: string }[];
+    try {
+      layers = map.getStyle()?.layers ?? [];
+    } catch {
+      return; // style not parsed yet — `style.load` will call again
+    }
+    const ops = computeTint(layers, theme);
+    if (ops.length === 0) {
+      if (layers.length > 0 && Object.keys(theme.palette).length > 0 && !this.warnedNoTint) {
+        this.warnedNoTint = true;
+        console.warn(
+          `[MapLayer] basemap 'themed': no layer of the loaded style matched the tint (layer ids it knows: background, water, landcover/landuse fills, building, road lines, boundary, symbols).`,
+        );
+      }
+      return;
+    }
+    for (const { layer, prop, value } of ops) {
+      try {
+        map.setPaintProperty(layer, prop, value);
+      } catch {
+        /* a layer the style swapped out mid-flight — the next load re-applies */
+      }
+    }
+    this.tinted = true;
   }
 
   /** Pan/zoom the basemap to a new view. Camera follows automatically via `move`. */
@@ -361,7 +429,13 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
     });
 
     this.map.on('move', this.handleMapMove);
-    this.offTheme = ctx.events.on('theme:change', () => this.applyThemedStyle());
+    this.offTheme = ctx.events.on('theme:change', () => {
+      this.applyThemedStyle();
+      // A family switch changes the palette without changing the style URL.
+      this.applyTint();
+    });
+    // A (re)loaded style comes back unthemed — dress it again.
+    this.map.on('style.load', () => this.applyTint());
     // The user taking the map: pressing on it. Not `dragstart` — a follow camera
     // re-centres the map every frame, and `jumpTo` resets MapLibre's drag handler
     // before a drag can start, so the drag would never be seen. A press is seen at once.

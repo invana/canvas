@@ -1,7 +1,7 @@
 import 'maplibre-gl/dist/maplibre-gl.css?inline';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ClickSelectBehaviour, GraphCanvas, GraphLayer, NodeScaleLODBehaviour, type GraphNode } from '@invana/graph';
+import { ClickSelectBehaviour, GraphCanvas, GraphLayer, NodeScaleLODBehaviour, type GraphNode, ThemeBehaviour } from '@invana/graph';
 import { AreaQueryBehaviour, GeoFeaturesLayer, MapLayer, projectLngLat, type GeoFeature } from '@invana/graph-layer-maplibre';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
@@ -36,6 +36,7 @@ export const AreaQueryStory: Story = {
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-layers-maplibre-geotools-area-query')!;
     const canvas = new GraphCanvas();
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme' }));
     onStoryTeardown(() => canvas.destroy());
 
     // Deterministic scatter, so every load asks the same question of the same fleet.
@@ -76,11 +77,11 @@ export const AreaQueryStory: Story = {
 
     const canvasOptions = {
       layers: {
-        map: { styleUrl: 'https://tiles.openfreemap.org/styles/positron', center: [79.1, 17.6], zoom: 7.9, minZoom: 3, maxZoom: 15 },
+        map: { basemap: 'themed', center: [79.1, 17.6], zoom: 7.9, minZoom: 3, maxZoom: 15 },
         geo: { defaults: { polygon: { fillOpacity: 0.15, strokeWidthPx: 2.5 }, line: { strokeWidthPx: 3.5 } }, labelFontPx: 12 },
         graph: { node: { style: { shape: { kind: 'circle', radius: 6 }, bgFill: 0x0284c7, bgStrokeColor: 0xffffff } } }
       },
-      behaviours: { 'marker-scale': { enabled: true }, select: { enabled: true }, query: { enabled: true } }
+      behaviours: { theme: { enabled: true, mode: 'document' }, 'marker-scale': { enabled: true }, select: { enabled: true }, query: { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 
