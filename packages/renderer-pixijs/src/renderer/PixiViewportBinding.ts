@@ -34,12 +34,20 @@ export class PixiViewportBinding implements ICameraBinding {
 
   constructor(private readonly viewport: Viewport) {}
 
+  /** Last transform read from a live viewport — served once it is destroyed. */
+  private _last: CameraTransformValue = { x: 0, y: 0, zoom: 1 };
+
+  /**
+   * The viewport's current transform. Pixi nulls `position` / `scale` when the
+   * `Viewport` is destroyed (engine teardown, remount), and a React subscriber
+   * can still read the camera in that window; a destroyed viewport therefore
+   * answers with the last live transform instead of throwing.
+   */
   getTransform(): CameraTransformValue {
-    return {
-      x: this.viewport.position.x,
-      y: this.viewport.position.y,
-      zoom: this.viewport.scale.x,
-    };
+    const v = this.viewport;
+    if (!v.position || !v.scale) return this._last;
+    this._last = { x: v.position.x, y: v.position.y, zoom: v.scale.x };
+    return this._last;
   }
 
   setTransform(t: CameraTransformValue): void {

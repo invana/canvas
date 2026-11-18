@@ -41,6 +41,15 @@ export interface CanvasRootProps extends Omit<CanvasOptions, 'container' | 'conf
   className?: string;
 }
 
+/** Engine builds attempted before a failing `init()` is reported. */
+const INIT_MAX_ATTEMPTS = 3;
+/** Base delay between init attempts (multiplied by the attempt number). */
+const INIT_RETRY_DELAY_MS = 300;
+/** Consecutive renderer-fallback remounts allowed before giving up. */
+const MAX_REMOUNTS = 3;
+/** An engine alive this long resets the remount count. */
+const REMOUNT_STABLE_MS = 15_000;
+
 /**
  * Shared engine lifecycle for the React canvas roots. Instantiates `T` (a
  * `Canvas` or subclass) via `makeInstance`, runs the StrictMode-safe `init`,
@@ -75,6 +84,8 @@ export function useCanvasEngine<T extends Canvas>(
   // Once the engine reports a WebGPU render crash we pin the backend to WebGL
   // for every subsequent (re-)init, so we don't crash straight into it again.
   const forcedPreferenceRef = useRef<'webgl' | undefined>(undefined);
+  // Consecutive engine-driven remounts; capped by {@link MAX_REMOUNTS}.
+  const remountsRef = useRef(0);
 
   useEffect(() => {
     const container = hostRef.current;
@@ -82,44 +93,82 @@ export function useCanvasEngine<T extends Canvas>(
 
     let cancelled = false;
     let offFallback: (() => void) | undefined;
-    // Telemetry rides the constructor (it builds the store); everything else
-    // goes to `init()`.
-    const instance = makeInstance(
-      optsRef.current.telemetry ? { telemetry: optsRef.current.telemetry } : {},
-    );
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    let stableTimer: ReturnType<typeof setTimeout> | undefined;
+    let instance: T | undefined;
     // Force WebGL after a WebGPU render-crash fallback; otherwise honour the prop.
     const preference = forcedPreferenceRef.current ?? optsRef.current.preference;
 
-    void instance
-      .init({ container, ...optsRef.current, ...(preference ? { preference } : {}) })
-      .then(() => {
-        if (cancelled) {
-          instance.destroy();
-          return;
-        }
-        // The engine emits this once if the experimental WebGPU renderer crashes
-        // at render time, having already halted its render loop. Pin WebGL and
-        // remount — a clean re-init on the tested single-seed path.
-        offFallback = instance.events.on('canvas:renderer:fallback', () => {
-          forcedPreferenceRef.current = 'webgl';
-          setRemountNonce((n) => n + 1);
-        });
-        setCanvas(instance);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
+    // One attempt = one fresh engine. Init can fail transiently (the GPU context
+    // was evicted or lost while the backend was still starting), so a failed
+    // attempt is torn down and retried a bounded number of times before the
+    // error is surfaced.
+    const start = (attempt: number): void => {
+      // Telemetry rides the constructor (it builds the store); everything else
+      // goes to `init()`.
+      const inst = makeInstance(
+        optsRef.current.telemetry ? { telemetry: optsRef.current.telemetry } : {},
+      );
+      instance = inst;
+      void inst
+        .init({ container, ...optsRef.current, ...(preference ? { preference } : {}) })
+        .then(() => {
+          if (cancelled) {
+            inst.destroy();
+            return;
+          }
+          // The engine emits this once if the renderer cannot continue (a WebGPU
+          // render crash, or a WebGL context that was lost and not restored),
+          // having already halted its render loop. Pin WebGL and remount — a
+          // clean re-init. Capped, so a browser that cannot hold a context at all
+          // stops here instead of flickering forever.
+          offFallback = inst.events.on('canvas:renderer:fallback', () => {
+            if (remountsRef.current >= MAX_REMOUNTS) {
+              // eslint-disable-next-line no-console
+              console.error(
+                `[canvas-react] The renderer failed ${MAX_REMOUNTS} times in a row; not remounting again.`,
+              );
+              return;
+            }
+            remountsRef.current += 1;
+            forcedPreferenceRef.current = 'webgl';
+            setRemountNonce((n) => n + 1);
+          });
+          // A remount that holds for a while was a recovery, not a loop.
+          stableTimer = setTimeout(() => {
+            remountsRef.current = 0;
+          }, REMOUNT_STABLE_MS);
+          setCanvas(inst);
+        })
+        .catch((err: unknown) => {
+          if (cancelled) return;
+          // Release whatever the failed attempt acquired before trying again.
+          try {
+            if (inst.isInitialised) inst.destroy();
+          } catch {
+            /* a half-built engine may not tear down cleanly — nothing to recover */
+          }
+          if (attempt + 1 < INIT_MAX_ATTEMPTS) {
+            retryTimer = setTimeout(() => {
+              if (!cancelled) start(attempt + 1);
+            }, INIT_RETRY_DELAY_MS * (attempt + 1));
+            return;
+          }
           // Surface init failures to the console — there's no React-idiomatic
           // way to throw from a useEffect promise.
           // eslint-disable-next-line no-console
           console.error('[canvas-react] Canvas.init() failed:', err);
-        }
-      });
+        });
+    };
+    start(0);
 
     return () => {
       cancelled = true;
+      clearTimeout(retryTimer);
+      clearTimeout(stableTimer);
       offFallback?.();
       setCanvas(null);
-      if (instance.isInitialised) instance.destroy();
+      if (instance?.isInitialised) instance.destroy();
     };
     // Init is one-shot per `remountNonce`. Reactive props (other than `children`)
     // aren't supported — recreate the root with a key to re-init; the nonce is

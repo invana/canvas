@@ -15,7 +15,7 @@
  * export all stay above this line.
  */
 
-import { Application, Container, Rectangle, type EventSystem } from 'pixi.js';
+import { Application, BatcherPipe, Container, GlLimitsSystem, Rectangle, type EventSystem } from 'pixi.js';
 import type { Camera, ICameraBinding, IOverlayDevice, IRenderer, ISurface, OverlaySpace, Rect, RendererCapabilities, RendererMountOptions, SurfaceOptions, SurfaceSpace } from '@invana/canvas-core';
 import { Viewport } from 'pixi-viewport';
 import type { CanvasEventBus, RendererBackend } from '@invana/canvas-store';
@@ -48,6 +48,85 @@ export interface PixiRendererOptions {
   hitFloorPx?: number;
 }
 
+/**
+ * Destroy an `Application` whose `init()` failed. Pixi's plugins tear down state
+ * their `init` never created (`ResizePlugin.destroy` calls `_cancelResize`, which
+ * does not exist yet), so the destroy itself throws — and that `TypeError` would
+ * replace the real init error and abort the retry. A half-built app has nothing
+ * left worth reporting, so the failure is swallowed.
+ */
+function destroyFailedApp(app: Application | undefined): void {
+  try {
+    app?.destroy(true);
+  } catch {
+    /* half-initialised: nothing to release */
+  }
+}
+
+/** Upper bound on textures per batch for the WebGL default shader (see {@link capBatchTextures}). */
+const MAX_BATCH_TEXTURES = 8;
+
+let batchTexturesCapped = false;
+
+/**
+ * Cap how many textures pixi's default batch shader samples at once.
+ *
+ * Pixi sizes that shader from what the GPU advertises (`MAX_TEXTURE_IMAGE_UNITS`,
+ * probed) and bakes it into **one page-wide program**, built the first time any
+ * renderer batches. Safari has been seen rejecting that program on a healthy
+ * context — `texture image units count exceeds MAX_TEXTURE_IMAGE_UNITS(16)` —
+ * after which every node and label silently fails to draw. A smaller shader
+ * leaves headroom on every GPU for only a few more batch breaks.
+ *
+ * It has to be in place before the first renderer initialises (the shared
+ * program is built from whatever the limit is then), so it wraps pixi's
+ * {@link GlLimitsSystem} — the class, once per page — rather than one renderer.
+ * Pixi recomputes its limits on every context change, so the clamp rides that
+ * same call. WebGL only: the other backends size theirs differently.
+ */
+function capBatchTextures(): void {
+  if (batchTexturesCapped) return;
+  batchTexturesCapped = true;
+  const proto = GlLimitsSystem.prototype;
+  const original = proto.contextChange;
+  proto.contextChange = function (this: GlLimitsSystem, ...args: Parameters<typeof original>): void {
+    original.apply(this, args);
+    this.maxBatchableTextures = Math.min(this.maxBatchableTextures, MAX_BATCH_TEXTURES);
+  };
+
+  // The default batch shader is a module-level singleton, rebuilt by whichever
+  // renderer last asked. Observed in Safari: a GL renderer whose limit is 8 got a
+  // shader built for 22 slots, which cannot link against the 16 the context
+  // enforces — and every later GL renderer on the page inherited it. Capping the
+  // limit alone cannot prevent that, so before each batch build the renderer's
+  // batchers are made to agree with the renderer's own limit.
+  const pipe = BatcherPipe.prototype as unknown as {
+    buildStart: (this: BatchPipeLike, ...a: unknown[]) => unknown;
+  };
+  const buildStart = pipe.buildStart;
+  pipe.buildStart = function (this: BatchPipeLike, ...args: unknown[]): unknown {
+    const out = buildStart.apply(this, args);
+    const limit = this.renderer.limits.maxBatchableTextures;
+    if (this.renderer.name === 'webgl' && limit > 0) {
+      for (const batcher of Object.values(this._activeBatches ?? {})) {
+        if (batcher.shader?.maxTextures !== undefined && batcher.shader.maxTextures !== limit) {
+          batcher._updateMaxTextures?.(limit);
+        }
+      }
+    }
+    return out;
+  };
+}
+
+/** The slice of pixi's `BatcherPipe` / `DefaultBatcher` that {@link capBatchTextures} touches. */
+interface BatchPipeLike {
+  renderer: { name: string; limits: { maxBatchableTextures: number } };
+  _activeBatches?: Record<string, { shader?: { maxTextures?: number }; _updateMaxTextures?: (n: number) => void }>;
+}
+
+/** How long a lost WebGL context gets to be restored before the engine is remounted. */
+const CONTEXT_RESTORE_GRACE_MS = 2000;
+
 export class PixiRenderer implements IRenderer {
   private readonly events: CanvasEventBus;
   private readonly hitFloorPx?: number;
@@ -73,6 +152,15 @@ export class PixiRenderer implements IRenderer {
    * loop + emitted `'canvas:renderer:fallback'`. Guards against repeating it.
    */
   private _fellBack = false;
+  /**
+   * True between `webglcontextlost` and `webglcontextrestored`. While set,
+   * {@link tick} presents nothing: every GPU object is gone, so a frame would
+   * only compile shaders against a dead context and flood the console.
+   */
+  private _contextLost = false;
+  /** Grace timer: a context not restored in time triggers the remount fallback. */
+  private _contextRestoreTimer?: ReturnType<typeof setTimeout>;
+  private _offContextEvents?: () => void;
 
   constructor(opts: PixiRendererOptions) {
     this.events = opts.events;
@@ -92,6 +180,7 @@ export class PixiRenderer implements IRenderer {
     // live canvases (multi-canvas pages, story/route remounts). Balanced in
     // `destroy()`. Done before `app.init` so the WebGPU→WebGL retry below is
     // already covered. See `sharedTexturePool.ts`.
+    capBatchTextures();
     acquireSharedTexturePool();
     this._holdsSharedTexturePool = true;
 
@@ -134,14 +223,17 @@ export class PixiRenderer implements IRenderer {
         // adapter / driver). Tear the half-built app down and retry once on
         // WebGL. Render-time failures are handled by the render guard instead.
         if (preference !== 'webgpu') throw err;
-        this.app.destroy(true);
+        console.warn('[canvas] WebGPU init failed; retrying on WebGL.', err);
+        destroyFailedApp(this.app);
         this.app = new Application();
         await this.app.init({ preference: 'webgl', ...initOpts });
       }
     } catch (err) {
-      // Init failed outright, so `destroy()` will never run. Balance the
-      // shared-pool acquire here or we leak the ref-count and leave the pool
-      // detached.
+      // Init failed outright, so `destroy()` will never run. Release the
+      // half-built Application, then balance the shared-pool acquire here or we
+      // leak the ref-count and leave the pool detached.
+      destroyFailedApp(this.app);
+      this.app = undefined;
       releaseSharedTexturePool();
       this._holdsSharedTexturePool = false;
       throw err;
@@ -161,6 +253,7 @@ export class PixiRenderer implements IRenderer {
 
     this.buildScene(this.app.stage, width, height, this.app.renderer.events);
     this.installRenderGuard();
+    this.installContextLossGuard(this.app.canvas);
 
     if (opts.autoResize) {
       this._onRendererResize = (w, h) => this._camera?.resize(w, h);
@@ -189,6 +282,8 @@ export class PixiRenderer implements IRenderer {
   }
 
   destroy(): void {
+    this._offContextEvents?.();
+    this._offContextEvents = undefined;
     if (this._onRendererResize && this.app) {
       this.app.renderer.off('resize', this._onRendererResize);
     }
@@ -297,6 +392,15 @@ export class PixiRenderer implements IRenderer {
    */
   tick(_dtMs: number): void {
     if (this._fellBack) return;
+    // State, not just events: a context lost before the listeners attached (or
+    // while `init` was still running) never produced an event we saw, but
+    // `isContextLost()` is authoritative at any time. Presenting on a dead
+    // context only floods the console with shader-compile errors.
+    if (this.glContextLost()) {
+      this.beginContextLoss();
+      return;
+    }
+    if (this._contextLost) this.endContextLoss();
     this.app?.render();
   }
 
@@ -456,6 +560,62 @@ export class PixiRenderer implements IRenderer {
         return undefined as ReturnType<typeof original>;
       }
     }) as typeof renderer.render;
+  }
+
+  /**
+   * Survive a lost WebGL context (GPU reset, sleep/wake, or the browser evicting
+   * the oldest context once a page — e.g. pixi plus a MapLibre basemap — exceeds
+   * its live-context cap; Safari is the strictest). Pixi already `preventDefault`s
+   * the loss so the browser may restore it; this adds the two things it doesn't:
+   * frames are suspended meanwhile ({@link tick}), and a context that isn't back
+   * within {@link CONTEXT_RESTORE_GRACE_MS} emits `canvas:renderer:fallback`, so
+   * the host (`useCanvasEngine`) rebuilds the engine on a fresh context.
+   * No-op on WebGPU / canvas backends, which never fire these events.
+   */
+  private installContextLossGuard(canvas: HTMLCanvasElement): void {
+    const onLost = (): void => this.beginContextLoss();
+    const onRestored = (): void => this.endContextLoss();
+    canvas.addEventListener('webglcontextlost', onLost);
+    canvas.addEventListener('webglcontextrestored', onRestored);
+    this._offContextEvents = () => {
+      clearTimeout(this._contextRestoreTimer);
+      this._contextRestoreTimer = undefined;
+      canvas.removeEventListener('webglcontextlost', onLost);
+      canvas.removeEventListener('webglcontextrestored', onRestored);
+    };
+    // The context may already be gone by the time we attach.
+    if (this.glContextLost()) this.beginContextLoss();
+  }
+
+  /** Whether the WebGL backend's context is currently lost (always `false` on other backends). */
+  private glContextLost(): boolean {
+    if (this.backend !== 'webgl') return false;
+    const gl = (this.app?.renderer as { gl?: WebGLRenderingContext } | undefined)?.gl;
+    return gl?.isContextLost() === true;
+  }
+
+  /** Enter the lost state (idempotent) and start the restore grace timer. */
+  private beginContextLoss(): void {
+    if (this._contextLost) return;
+    this._contextLost = true;
+    clearTimeout(this._contextRestoreTimer);
+    this._contextRestoreTimer = setTimeout(() => {
+      if (!this._contextLost || this._fellBack) return;
+      this._fellBack = true;
+      console.warn('[canvas] WebGL context lost and not restored; remounting the engine.');
+      this.events.emit('canvas:renderer:fallback', {
+        from: this.backend,
+        to: 'webgl',
+        reason: 'webgl context lost',
+      });
+    }, CONTEXT_RESTORE_GRACE_MS);
+  }
+
+  /** Leave the lost state — the browser restored the context in time. */
+  private endContextLoss(): void {
+    this._contextLost = false;
+    clearTimeout(this._contextRestoreTimer);
+    this._contextRestoreTimer = undefined;
   }
 
   /**
