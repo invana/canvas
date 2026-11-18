@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import type { Preview } from '@storybook/react-vite';
 import { themes, getThemeById, getThemeVariantById } from '@invana/styling/themes';
+import { applyTheme } from '@invana/styling/themes.config';
 import { ThemeProvider, useTheme, type ThemeMode } from '@invana/themes';
 
 // Design-kit styling via a real Tailwind v4 pass (`./tailwind.css` + the
@@ -32,7 +33,11 @@ import './global.css';
 // effect calls `applyTheme()`, which owns the whole document mutation (it swaps
 // every `theme-*` class, sets `data-theme`, adds `light`/`dark`, and arms or
 // disarms its own `prefers-color-scheme` listener for `system` mode). One writer
-// of `data-theme`, so nothing races on an OS appearance change. CSS custom
+// of `data-theme` after mount, so nothing races on an OS appearance change.
+// The provider's write is a *passive* effect — after first paint — so
+// `ThemeFirstPaint` (a layout effect) applies the same variant once, earlier, to
+// avoid a light first frame and a light-then-dark basemap; the provider's own
+// call then re-applies it idempotently. CSS custom
 // properties inherit into Radix portals, so popovers / dropdown menus pick up the
 // active theme too.
 //
@@ -97,7 +102,8 @@ function resolveMode(themeId: string, variant: string): ThemeMode {
 function ToolbarThemeBridge({ theme, mode }: { theme: string; mode: ThemeMode }) {
   const { setTheme, setMode } = useTheme();
   // Seeded with the mount-time selection, which `defaultTheme`/`defaultMode` have
-  // already applied — so mounting pushes nothing and there is no first-frame flash.
+  // already seeded into the provider's state — so mounting pushes nothing. (The DOM
+  // write is `ThemeFirstPaint`'s job; the provider's own is a passive effect.)
   const pushed = useRef({ theme, mode });
   useEffect(() => {
     if (pushed.current.theme !== theme) {
@@ -109,6 +115,34 @@ function ToolbarThemeBridge({ theme, mode }: { theme: string; mode: ThemeMode })
       setMode(mode);
     }
   }, [theme, mode, setTheme, setMode]);
+  return null;
+}
+
+/**
+ * Writes the selected variant onto `<html>` **before the first paint** — renders `null`.
+ *
+ * `<ThemeProvider>` applies the theme in a passive `useEffect`, i.e. after the first
+ * frame, and the kit's `:root` tokens are the light palette — so a dark selection
+ * painted light first and then flipped. It also meant the canvas's document-mode
+ * `ThemeBehaviour` (a child, whose passive effect runs *before* the provider's) read
+ * a bare `<html>`, published `light`, and the basemap loaded its light style before
+ * swapping. A layout effect runs before paint and before every passive effect, so
+ * both are correct from frame one. The provider's own `applyTheme` then re-applies
+ * the same variant — idempotent — and stays the writer for every later change.
+ *
+ * See `docs/rfcs/fix/2026-11-18-theme-applied-after-first-paint.md`.
+ */
+function ThemeFirstPaint({ theme, mode }: { theme: string; mode: ThemeMode }) {
+  useLayoutEffect(() => {
+    const dark =
+      mode === 'system'
+        ? typeof window.matchMedia === 'function' &&
+          window.matchMedia('(prefers-color-scheme: dark)').matches
+        : mode === 'dark';
+    const id = `${theme}-${dark ? 'dark' : 'light'}`;
+    // Same fallback the provider uses for an unknown variant.
+    applyTheme(getThemeVariantById(id) ? id : 'default-light');
+  }, [theme, mode]);
   return null;
 }
 
@@ -239,6 +273,7 @@ const preview: Preview = {
       // Storybook can't disagree with, or clobber, a design-kit app on the same origin.
       return (
         <ThemeProvider storageKey={null} defaultTheme={themeId} defaultMode={mode}>
+          <ThemeFirstPaint theme={themeId} mode={mode} />
           <ToolbarThemeBridge theme={themeId} mode={mode} />
           <Story />
         </ThemeProvider>
