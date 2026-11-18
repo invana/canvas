@@ -26,7 +26,7 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { GraphCanvas, GraphLayer, type GraphNode } from '@invana/graph';
+import { GraphCanvas, GraphLayer, type GraphNode, ThemeBehaviour } from '@invana/graph';
 import { BubbleSetsLayer } from '@invana/graph-layer-bubble-sets';
 import { MapLayer, projectLngLat } from '@invana/graph-layer-maplibre';
 import GUI from 'lil-gui';
@@ -43,6 +43,7 @@ export const AtMapScaleStory: Story = {
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-bubble-sets-at-map-scale')!;
     const canvas = new GraphCanvas();
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme' }));
     onStoryTeardown(() => canvas.destroy());
 
     // [lng, lat], approximate. `type` picks the node look (below, in the config).
@@ -105,8 +106,9 @@ export const AtMapScaleStory: Story = {
     canvas.layers.add(bubbles);
 
     const canvasOptions = {
+      behaviours: { theme: { enabled: true, mode: 'document' } },
       layers: {
-        map: { styleUrl: 'https://tiles.openfreemap.org/styles/positron', center: [79.2, 17.9], zoom: 7.4 },
+        map: { basemap: 'themed', center: [79.2, 17.9], zoom: 7.4 },
         graph: {
           nodeStructureTemplates: {
             site: { name: 'site', kind: 'simple', shape: { kind: 'circle', radius: 0.012 }, slots: { label: false } }

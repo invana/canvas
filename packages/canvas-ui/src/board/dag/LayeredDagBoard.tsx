@@ -427,7 +427,7 @@ export function LayeredDagBoard({
           {...(edgeStyle ? { edge: { style: edgeStyle } } : {})}
         />
         {theme !== false ? <ThemeBehaviour id="theme" /> : null}
-        {theme === 'tokens' ? <CanvasThemeSync source="tokens" /> : theme ? <CanvasThemeSync /> : null}
+        {theme === 'tokens' ? <CanvasThemeSync source="tokens" /> : theme ? <CanvasThemeSync source="library" /> : null}
         <DragPanBehaviour id="pan" />
         <WheelZoomBehaviour id="wheel" />
         <DragNodeBehaviour id="drag-node" targetLayerId={DAG_LAYER} enabled={!connecting} />

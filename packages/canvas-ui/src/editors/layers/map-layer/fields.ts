@@ -13,7 +13,20 @@ const withGroup =
   (f: FieldConfig): FieldConfig => ({ ...f, group });
 
 const BASEMAP_FIELDS: FieldConfig[] = [
-  { name: 'styleUrl', type: 'text', label: 'Style URL', description: 'MapLibre style URL. Defaults to the OpenFreeMap "liberty" style.' },
+  {
+    name: 'basemap',
+    type: 'select',
+    label: 'Basemap',
+    description:
+      'Built-in OpenFreeMap basemap, used when no style URL below applies. Auto follows light / dark; Themed also tints the map with the active theme family\'s colours.',
+    options: [
+      { value: 'light', label: 'Light' },
+      { value: 'dark', label: 'Dark' },
+      { value: 'auto', label: 'Auto (follow theme)' },
+      { value: 'themed', label: 'Themed (tint from theme)' },
+    ],
+  },
+  { name: 'styleUrl', type: 'text', label: 'Style URL', description: 'MapLibre style URL. Overrides the Basemap above. With neither set the map is blank (no outside request).' },
   { name: 'styleUrlDark', type: 'text', label: 'Dark style URL', description: 'Basemap style while the canvas theme is dark, e.g. https://tiles.openfreemap.org/styles/dark. Empty = use the Style URL in both themes.' },
 ];
 

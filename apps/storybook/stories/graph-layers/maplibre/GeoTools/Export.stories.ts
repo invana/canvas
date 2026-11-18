@@ -1,7 +1,7 @@
 import 'maplibre-gl/dist/maplibre-gl.css?inline';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { GraphCanvas } from '@invana/graph';
+import { GraphCanvas, ThemeBehaviour } from '@invana/graph';
 import { DrawGeoFeatureBehaviour, GeoFeaturesLayer, MapLayer, downloadGeoJSON, type GeoFeature } from '@invana/graph-layer-maplibre';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
@@ -29,6 +29,7 @@ export const ExportStory: Story = {
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-layers-maplibre-geotools-export')!;
     const canvas = new GraphCanvas();
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme' }));
     onStoryTeardown(() => canvas.destroy());
 
     const features: GeoFeature[] = [
@@ -41,10 +42,10 @@ export const ExportStory: Story = {
 
     const canvasOptions = {
       layers: {
-        map: { styleUrl: 'https://tiles.openfreemap.org/styles/positron', center: [79.1, 17.7], zoom: 7.8, minZoom: 3, maxZoom: 15 },
+        map: { basemap: 'themed', center: [79.1, 17.7], zoom: 7.8, minZoom: 3, maxZoom: 15 },
         geo: { defaults: { polygon: { fillOpacity: 0.2, strokeWidthPx: 2.5 }, line: { strokeWidthPx: 3 }, point: { fillOpacity: 0.2, strokeWidthPx: 2.5 } }, labelFontPx: 12 }
       },
-      behaviours: { draw: { enabled: true, tool: null as string | null, author: 'analyst-1', properties: { stroke: '#7c3aed', fill: '#7c3aed' } } }
+      behaviours: { theme: { enabled: true, mode: 'document' }, draw: { enabled: true, tool: null as string | null, author: 'analyst-1', properties: { stroke: '#7c3aed', fill: '#7c3aed' } } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 

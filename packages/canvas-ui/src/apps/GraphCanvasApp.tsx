@@ -163,6 +163,19 @@ export interface GraphCanvasAppProps {
    * one structural decision `config` can't express (it can't register classes).
    */
   bundle?: boolean;
+  /**
+   * Follow the host's design-kit theme — mount the engine's `ThemeBehaviour`
+   * (the single theme publisher) and `CanvasThemeSync`, which feeds it the
+   * `<ThemeProvider>`'s resolved mode and the live CSS tokens, so **every**
+   * theme family (and any added later) reaches the canvas: pixels, and — for a
+   * `MapLayer` with `basemap: 'themed'` — the basemap.
+   *
+   * Defaults to {@link bundle}: the bundle always had it, `bundle={false}` apps
+   * (a map demo, say) didn't. Pass `theme` there to opt in. **Don't** pass it if
+   * your own `children` already register a `ThemeBehaviour` with id `theme` —
+   * the duplicate id throws.
+   */
+  theme?: boolean;
   /** Re-key token (e.g. a streaming reset) — remounts the `<Canvas>` on change. */
   instanceKey?: string | number;
   /** Receives the live engine once every layer / behaviour has registered (or `null`). */
@@ -341,6 +354,7 @@ export function GraphCanvasApp({
   data,
   config,
   bundle = true,
+  theme,
   instanceKey,
   onReady,
   telemetry,
@@ -366,6 +380,7 @@ export function GraphCanvasApp({
       data={data}
       config={config}
       bundle={bundle}
+      theme={theme}
       instanceKey={instanceKey}
       onReady={onReady}
       telemetry={telemetry}

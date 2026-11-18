@@ -1,7 +1,7 @@
 import 'maplibre-gl/dist/maplibre-gl.css?inline';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { GraphCanvas } from '@invana/graph';
+import { GraphCanvas, ThemeBehaviour } from '@invana/graph';
 import {
   DrawGeoFeatureBehaviour,
   GeoFeaturesLayer,
@@ -35,6 +35,7 @@ export const DrawCircleStory: Story = {
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-layers-maplibre-geotools-draw-circle')!;
     const canvas = new GraphCanvas();
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme' }));
     onStoryTeardown(() => canvas.destroy());
 
     // Map input is the map's: the draw tool holds it still while a tool is set (no pan, no
@@ -46,10 +47,10 @@ export const DrawCircleStory: Story = {
 
     const canvasOptions = {
       layers: {
-        map: { styleUrl: 'https://tiles.openfreemap.org/styles/positron', center: [79.1, 17.8], zoom: 7.6, minZoom: 3, maxZoom: 15 },
+        map: { basemap: 'themed', center: [79.1, 17.8], zoom: 7.6, minZoom: 3, maxZoom: 15 },
         geo: { defaults: { polygon: { fillOpacity: 0.2, strokeWidthPx: 2.5 }, line: { strokeWidthPx: 3 }, point: { fillOpacity: 0.15, strokeWidthPx: 2.5 } }, labelFontPx: 12 }
       },
-      behaviours: { draw: { enabled: true, tool: null as string | null, author: 'analyst-1', properties: { stroke: '#2563eb', fill: '#2563eb' } } }
+      behaviours: { theme: { enabled: true, mode: 'document' }, draw: { enabled: true, tool: null as string | null, author: 'analyst-1', properties: { stroke: '#2563eb', fill: '#2563eb' } } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 

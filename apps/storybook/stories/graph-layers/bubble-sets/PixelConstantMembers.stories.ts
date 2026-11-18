@@ -22,7 +22,7 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { GraphCanvas, GraphLayer, NodeScaleLODBehaviour, type GraphNode } from '@invana/graph';
+import { GraphCanvas, GraphLayer, NodeScaleLODBehaviour, type GraphNode, ThemeBehaviour } from '@invana/graph';
 import { BubbleSetsLayer } from '@invana/graph-layer-bubble-sets';
 import { MapLayer, projectLngLat } from '@invana/graph-layer-maplibre';
 import GUI from 'lil-gui';
@@ -39,6 +39,7 @@ export const PixelConstantMembersStory: Story = {
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-bubble-sets-pixel-constant-members')!;
     const canvas = new GraphCanvas();
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme' }));
     onStoryTeardown(() => canvas.destroy());
 
     // [lng, lat], approximate.
@@ -89,7 +90,7 @@ export const PixelConstantMembersStory: Story = {
 
     const canvasOptions = {
       layers: {
-        map: { styleUrl: 'https://tiles.openfreemap.org/styles/positron', center: [78.44, 17.39], zoom: 11.2 },
+        map: { basemap: 'themed', center: [78.44, 17.39], zoom: 11.2 },
         graph: {
           nodeStructureTemplates: {
             marker: { name: 'marker', kind: 'simple', shape: { kind: 'circle', radius: 10 }, slots: { label: false } }
@@ -104,7 +105,7 @@ export const PixelConstantMembersStory: Story = {
           }
         }
       },
-      behaviours: { 'node-scale-lod': { enabled: true } }
+      behaviours: { theme: { enabled: true, mode: 'document' }, 'node-scale-lod': { enabled: true } }
     };
     await canvas.init({ container, autoResize: true, config: canvasOptions });
 

@@ -360,7 +360,7 @@ export function SchemaBoard({
       <BackgroundLayer id="background" />
       <GraphLayer id={SCHEMA_LAYER} data={data} />
       {theme !== false ? <ThemeBehaviour id="theme" /> : null}
-      {theme === 'tokens' ? <CanvasThemeSync source="tokens" /> : theme ? <CanvasThemeSync /> : null}
+      {theme === 'tokens' ? <CanvasThemeSync source="tokens" /> : theme ? <CanvasThemeSync source="library" /> : null}
       <DragPanBehaviour id="pan" />
       <WheelZoomBehaviour id="wheel" />
       <DragNodeBehaviour id="drag-node" targetLayerId={SCHEMA_LAYER} enabled={!connecting} />

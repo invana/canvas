@@ -33,9 +33,10 @@ export interface MapLayerOptions {
    * basemap**: with none, the layer loads a plain blank style and makes no outside
    * request (an air-gapped canvas must not call out unasked). For hosted vector
    * tiles, https://openfreemap.org is free and keyless, e.g.
-   * `https://tiles.openfreemap.org/styles/liberty`.
+   * `https://tiles.openfreemap.org/styles/liberty`. `null` clears a previously set
+   * style (so {@link basemap} applies again).
    */
-  styleUrl?: string | object;
+  styleUrl?: string | object | null;
 
   /**
    * The basemap style used while the canvas theme is **dark** — `styleUrl` stays
@@ -45,7 +46,31 @@ export interface MapLayerOptions {
    * (the basemap ignores the theme, as before). e.g.
    * `https://tiles.openfreemap.org/styles/dark`.
    */
-  styleUrlDark?: string | object;
+  styleUrlDark?: string | object | null;
+
+  /**
+   * A built-in basemap, so a canvas needs no tile URL of its own. Used when no
+   * explicit `styleUrl` (or, in dark, `styleUrlDark`) applies — an explicit style
+   * always wins.
+   *
+   * | Value | Basemap |
+   * |---|---|
+   * | `'light'` | OpenFreeMap *Positron*, always |
+   * | `'dark'` | OpenFreeMap *Dark*, always |
+   * | `'auto'` | Positron while the canvas theme is light, Dark while dark |
+   * | `'themed'` | `'auto'`, **plus** a tint from the published palette — water, land, roads, buildings, boundaries and labels take the design-kit family's colours (Rose, Ocean, …), and re-tint on every `theme:change` |
+   *
+   * `'themed'` tints whatever style is loaded, built-in or explicit, by layer id
+   * (the ids the OpenFreeMap styles share); a style lacking a layer skips it. It
+   * does nothing under a theme with an empty palette (the `ThemeBehaviour`
+   * `{ light, dark }` shorthand). Needs a theme publisher on the canvas — the
+   * `ThemeBehaviour`, or `<GraphCanvasApp theme>` — or it stays on the light style.
+   *
+   * With none set, only `styleUrl` / `styleUrlDark` apply (the blank style if
+   * neither is). The built-ins load from `tiles.openfreemap.org`, so — like any
+   * hosted style — they are an outside request the app opts into.
+   */
+  basemap?: 'light' | 'dark' | 'auto' | 'themed';
 
   /** Initial map centre as `[lng, lat]`. Default `[0, 20]`. */
   center?: LngLat;

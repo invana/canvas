@@ -1,7 +1,7 @@
 import 'maplibre-gl/dist/maplibre-gl.css?inline';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { GraphCanvas } from '@invana/graph';
+import { GraphCanvas, ThemeBehaviour } from '@invana/graph';
 import { GeoFeaturesLayer, MapLayer, type GeoFeature } from '@invana/graph-layer-maplibre';
 import GUI from 'lil-gui';
 import { createContainer, onStoryTeardown } from '../../../div-util';
@@ -31,6 +31,7 @@ export const LabelsStory: Story = {
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector<HTMLDivElement>('#graph-layers-maplibre-geofeatures-labels')!;
     const canvas = new GraphCanvas();
+    canvas.behaviours.register(new ThemeBehaviour({ id: 'theme' }));
     onStoryTeardown(() => canvas.destroy());
 
     const features: GeoFeature[] = [
@@ -68,8 +69,9 @@ export const LabelsStory: Story = {
     canvas.layers.add(new GeoFeaturesLayer({ id: 'geo', zIndex: 5, options: { mapLayerId: 'map', features } }));
 
     const canvasOptions = {
+      behaviours: { theme: { enabled: true, mode: 'document' } },
       layers: {
-        map: { styleUrl: 'https://tiles.openfreemap.org/styles/positron', center: [79.3, 17.8], zoom: 7.7, minZoom: 4, maxZoom: 15 },
+        map: { basemap: 'themed', center: [79.3, 17.8], zoom: 7.7, minZoom: 4, maxZoom: 15 },
         geo: { labelKey: 'name', labelFontPx: 13, labelBackground: true, defaults: { polygon: { fillOpacity: 0.2 } } }
       }
     };

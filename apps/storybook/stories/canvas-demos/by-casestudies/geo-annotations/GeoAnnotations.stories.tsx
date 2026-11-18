@@ -402,7 +402,7 @@ export const GeoAnnotationsStory: Story = {
           fitOnLoad: false,
           layers: {
             map: {
-              styleUrl: 'https://tiles.openfreemap.org/styles/positron',
+              basemap: 'themed',
               center: [79.0, 17.85],
               zoom: 7.6,
               minZoom: 6,
@@ -724,6 +724,7 @@ export const GeoAnnotationsStory: Story = {
         data={data.pois}
         config={config}
         bundle={false}
+        theme
         onReady={onReady}
         header={{ title: 'Geo annotations' }}
         footer={{ left: <GraphStatusBar />, right: <CanvasMessageBar /> }}
