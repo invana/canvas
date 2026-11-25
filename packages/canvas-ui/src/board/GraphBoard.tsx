@@ -54,6 +54,7 @@ import {
   DrawEdgeBehaviour,
   EdgeLODBehaviour,
   ElkLayout,
+  FocusBehaviour,
   GraphCanvas as GraphCanvasRoot,
   GraphLayer,
   HoverActivateBehaviour,
@@ -382,6 +383,8 @@ export function GraphBoard({
       <DragNodeBehaviour id="drag-node" targetLayerId={BOARD_IDS.graph} modes={NOT_HAND} />
       <WheelZoomBehaviour id="wheel" />
       <PinchZoomBehaviour id="pinch" />
+      {/* Draws `interaction.focus`: the focused nodes lit, the rest dimmed on request, framed on a `focus` camera intent. */}
+      <FocusBehaviour id="focus" targetLayerId={BOARD_IDS.graph} />
       <HoverActivateBehaviour id="hover" targetLayerId={BOARD_IDS.graph} degree={hoverDegree} state="highlighted" />
       <ClickSelectBehaviour id={BOARD_IDS.clickSelect} targetLayerId={BOARD_IDS.graph} multiple />
       <BrushSelectBehaviour id="brush-select" targetLayerId={BOARD_IDS.graph} modes={NOT_HAND} />
