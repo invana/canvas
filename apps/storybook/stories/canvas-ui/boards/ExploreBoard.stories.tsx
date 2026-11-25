@@ -27,12 +27,11 @@
  * other rows leave (never below the kit's `--spacing-board-fill`).
  */
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Board, type BoardSpec, type PanelRegistry, type PanelRendererProps, type PanelSpec } from '@invana/boards';
-import { GraphBoard } from '@invana/canvas-ui';
+import type { BoardSpec, PanelSpec } from '@invana/boards';
+import { CanvasBoard, type CanvasPanelKinds } from '@invana/canvas-ui/boards';
 import type { GraphData } from '@invana/graph';
-import { Skeleton } from '@invana/ui';
 import { BookOpen, MoreHorizontal, RefreshCw, Share2 } from 'lucide-react';
 
 // ── The Graph's data: what the engine reads (airways, the EU · H1 2026 World) ──
@@ -392,7 +391,7 @@ function ago(iso: string, now: number): string {
   return min < 1 ? 'just now' : min < 60 ? `${min} min ago` : `${Math.floor(min / 60)} h ago`;
 }
 
-/** A panel's read line: when, in which World, how long. The kit has no panel footer yet, so it sits in `aside`. */
+/** A panel's read line, for its footer: when, in which World, how long. */
 const readLine = (r: PanelRead) => `${clock(r.read_at)} · ${r.world.name} · ${r.took_ms} ms`;
 
 /** A narrative reference's value: another panel's figure exactly as the engine answered it. */
@@ -404,7 +403,10 @@ function resolveRef(ref: string, reads: Map<string, PanelRead>): string {
   return value === undefined ? '—' : fmtInt.format(value);
 }
 
-type Kinds = { canvas: { panel: string } };
+type Kinds = CanvasPanelKinds;
+
+/** The model's hue and the type's key, as the engine would answer them for `AirRoutes.airport`. */
+const AIRPORT_STYLING = { nodeTypes: { airport: { color: '#0d9488', labelKey: 'data.code' } } };
 
 /** The engine's board and its read, as the kit's `BoardSpec`. */
 function toKitBoard(board: StoredBoard, read: BoardRead | null, reading: boolean, now: number): BoardSpec<Kinds> {
@@ -413,19 +415,9 @@ function toKitBoard(board: StoredBoard, read: BoardRead | null, reading: boolean
 
   const panel = (p: StoredPanel, grow: number): PanelSpec<Kinds> => {
     const r = reads.get(p.id);
-    const aside = reading && read ? 'Reading…' : r ? readLine(r) : undefined;
-    const waiting = !read && p.kind !== 'narrative';
-    if (waiting) {
-      return {
-        id: p.id,
-        kind: 'text',
-        title: p.title,
-        aside: 'Reading…',
-        grow,
-        options: { text: '' },
-        render: <Skeleton className="h-24 w-full" />,
-      };
-    }
+    // Read once: a first read draws skeletons; a re-read keeps the values and says so in the footer.
+    const footer = reading && read ? 'Reading…' : r ? readLine(r) : p.kind === 'narrative' ? undefined : 'Reading…';
+    const state = { footer, reading: !read && p.kind !== 'narrative' };
     switch (p.kind) {
       case 'narrative': {
         const text = read
@@ -448,7 +440,7 @@ function toKitBoard(board: StoredBoard, read: BoardRead | null, reading: boolean
           id: p.id,
           kind: 'grid',
           title: p.title,
-          aside,
+          ...state,
           grow,
           options: {
             tiles: [
@@ -476,7 +468,7 @@ function toKitBoard(board: StoredBoard, read: BoardRead | null, reading: boolean
           id: p.id,
           kind: 'ranked',
           title: p.title,
-          aside,
+          ...state,
           grow,
           options: {
             items: (r?.rows ?? []).map((row) => {
@@ -494,10 +486,10 @@ function toKitBoard(board: StoredBoard, read: BoardRead | null, reading: boolean
           id: p.id,
           kind: 'canvas',
           title: p.title,
-          aside,
+          ...state,
           grow,
           flush: true,
-          options: { panel: p.id },
+          options: { dataRef: p.id, styling: AIRPORT_STYLING },
         };
       case 'table': {
         const cols = ['code', 'name', 'city', 'country', 'runways', 'routes_out'];
@@ -505,7 +497,7 @@ function toKitBoard(board: StoredBoard, read: BoardRead | null, reading: boolean
           id: p.id,
           kind: 'table',
           title: p.title,
-          aside,
+          ...state,
           grow,
           flush: true,
           options: {
@@ -556,43 +548,16 @@ function toKitBoard(board: StoredBoard, read: BoardRead | null, reading: boolean
   };
 }
 
-// ── The `canvas` panel kind: `GraphBoard` over the engine's nodes and edges ──
-
-const ReadContext = createContext<BoardRead | null>(null);
-
-function CanvasBoardPanel({ options }: PanelRendererProps<{ panel: string }>) {
-  const read = useContext(ReadContext);
-  const r = read?.panels.find((p) => p.panel === options.panel);
-  // One graph per run: a re-read is a new graph, laid out again.
-  const data = useMemo<GraphData | null>(
-    () =>
-      r?.nodes && r.edges
-        ? {
-            nodes: r.nodes.map((n) => ({
-              id: n.id,
-              type: 'airport',
-              data: n.properties,
-            })),
-            edges: r.edges.map((e) => ({
-              id: e.id,
-              source: e.from,
-              target: e.to,
-              type: 'route',
-            })),
-          }
-        : null,
-    [r?.run_id], // eslint-disable-line react-hooks/exhaustive-deps
-  );
-  // The panel body is as tall as its row; the canvas takes all of it.
-  if (!data) return <Skeleton className="m-3 min-h-0 flex-1" />;
-  return (
-    <div className="min-h-0 flex-1">
-      <GraphBoard data={data} defaultPanel={null} />
-    </div>
-  );
+/** A canvas panel's graph: the plan's nodes and edges from the engine's read, by panel id. */
+function graphOf(read: BoardRead | null, panel: string): GraphData | undefined {
+  const r = read?.panels.find((p) => p.panel === panel);
+  if (!r?.nodes || !r.edges) return undefined;
+  return {
+    nodes: r.nodes.map((n) => ({ id: n.id, type: 'airport', data: n.properties })),
+    edges: r.edges.map((e) => ({ id: e.id, source: e.from, target: e.to, type: 'route' })),
+  };
 }
 
-const REGISTRY: PanelRegistry = { canvas: CanvasBoardPanel };
 const ICONS = {
   refresh: RefreshCw,
   story: BookOpen,
@@ -639,20 +604,21 @@ function ExploreBoard({ minutesLater }: Args) {
 
   const now = tick + minutesLater * 60_000;
   const spec = useMemo(() => toKitBoard(BUSIEST, read, reading, now), [read, reading, now]);
+  // One graph per read: a re-read is a new graph, laid out again.
+  const graphs = useMemo(() => new Map([['canvas', graphOf(read, 'canvas')]]), [read]);
+  const resolveData = useCallback((ref: string) => graphs.get(ref), [graphs]);
 
   return (
-    <ReadContext.Provider value={read}>
-      <div className="bg-background text-foreground h-dvh w-dvw">
-        <Board<Kinds>
-          spec={spec}
-          registry={REGISTRY}
-          icons={ICONS}
-          onAction={(id) => {
-            if (id === 'refresh') refresh();
-          }}
-        />
-      </div>
-    </ReadContext.Provider>
+    <div className="bg-background text-foreground h-dvh w-dvw">
+      <CanvasBoard
+        spec={spec}
+        resolveData={resolveData}
+        icons={ICONS}
+        onAction={(id) => {
+          if (id === 'refresh') refresh();
+        }}
+      />
+    </div>
   );
 }
 

@@ -3,8 +3,9 @@
  * (`@invana/boards`, drawn from a JSON spec), and a board can hold a live canvas,
  * dashboard panels, or both. The canvas panels come from `@invana/canvas-ui/boards`:
  *
- * - **Team** — a `canvas` with `inspect: true`, and a `canvas-inspector` in the
- *   board's inspector column. Click a node and the column shows it.
+ * - **Team** — a `canvas` (the whole `GraphBoard`) and a `canvas-inspector` in
+ *   the board's inspector column. Click a node and the column shows it. Who
+ *   mentors whom is styled `dashed`.
  * - **Build pipeline** — a `canvas` over a `canvas-table`: the table lists the
  *   live graph's nodes (kit `table` block), and clicking a row selects that node.
  * - **Overview** — a dashboard and no canvas: metric tiles, a ranked list and a
@@ -51,7 +52,16 @@ export const CanvasBoardsStory: Story = {
             ['Alice', 'Bob'], ['Alice', 'Carol'], ['Bob', 'Carol'], ['Carol', 'Dave'], ['Dave', 'Eve'],
             ['Eve', 'Frank'], ['Frank', 'Dave'], ['Carol', 'Grace'], ['Grace', 'Heidi'], ['Heidi', 'Ivan'],
             ['Ivan', 'Grace'], ['Eve', 'Judy'], ['Judy', 'Alice'],
-          ].map(([source, target], i) => ({ id: `c${i}`, source: source!, target: target!, type: 'collaborates' })),
+          ]
+            .map(([source, target], i) => ({ id: `c${i}`, source: source!, target: target!, type: 'collaborates' }))
+            .concat(
+              [['Alice', 'Grace'], ['Carol', 'Ivan'], ['Eve', 'Heidi']].map(([source, target], i) => ({
+                id: `m${i}`,
+                source: source!,
+                target: target!,
+                type: 'mentors',
+              })),
+            ),
         },
         // A CI/CD build pipeline.
         pipeline: {
@@ -83,6 +93,7 @@ export const CanvasBoardsStory: Story = {
           spec: {
             rows: [
               {
+                fill: true,
                 panels: [
                   {
                     id: 'team-canvas',
@@ -90,8 +101,7 @@ export const CanvasBoardsStory: Story = {
                     flush: true,
                     options: {
                       dataRef: 'team',
-                      inspect: true,
-                      height: 640,
+                      styling: { edgeTypes: { mentors: { dashed: true } } },
                       config: {
                         behaviours: { color: { enabled: false } },
                         layers: {
@@ -123,6 +133,7 @@ export const CanvasBoardsStory: Story = {
           spec: {
             rows: [
               {
+                fill: true,
                 panels: [
                   {
                     id: 'pipeline-canvas',
@@ -130,7 +141,6 @@ export const CanvasBoardsStory: Story = {
                     flush: true,
                     options: {
                       dataRef: 'pipeline',
-                      height: 420,
                       config: {
                         behaviours: { color: { enabled: false } },
                         layers: {

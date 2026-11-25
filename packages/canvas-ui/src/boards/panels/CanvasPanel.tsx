@@ -1,23 +1,24 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { PanelRendererProps } from '@invana/boards';
-import { ClickInspectBehaviour } from '@invana/canvas-react';
-import { GraphCanvasAppRoot, GraphCanvasAppSurface } from '../../apps';
 import type { GraphCanvas } from '@invana/graph';
 
+import { GraphBoard } from '../../board/GraphBoard';
+import type { TypeStylingPatch } from '../../view-panels/styling/types';
 import { useCanvasBoardContext } from '../provider';
 import { DEFAULT_CANVAS_ID, type CanvasPanelOptions } from '../types';
 
-/** Default canvas height, in px — see {@link CanvasPanelOptions.height}. */
-const DEFAULT_HEIGHT = 520;
-
 /**
- * `kind: "canvas"` — a live graph canvas on a board.
+ * `kind: "canvas"` — the whole {@link GraphBoard} as one panel of a board: its
+ * modes, rail, minimap, menus and keys, sized by the panel.
  *
- * The engine half of `GraphCanvasApp` (`GraphCanvasAppRoot` + `GraphCanvasAppSurface`):
- * the same bundle, config defaults, theme sync and keyboard scope, and none of the
- * app's chrome, because the board draws its own. Resolves its graph from
- * `dataRef` and registers its engine under `canvasId` so the board's other
- * canvas panels can bind to it.
+ * Resolves its graph from `dataRef` and registers its engine under `canvasId`,
+ * so the board's `canvas-inspector` / `canvas-layers` / `canvas-table` panels
+ * bind to it. It has no height of its own: put it in a `fill` row and it takes
+ * what the board's other rows leave.
+ *
+ * `styling` is where the board starts — each type's colour and label, an edge
+ * type dashed. What a viewer changes in the Styling rail stays on this panel
+ * and is not written back to the spec.
  */
 export function CanvasPanel({ options }: PanelRendererProps<CanvasPanelOptions>) {
   const board = useCanvasBoardContext('canvas');
@@ -25,6 +26,11 @@ export function CanvasPanel({ options }: PanelRendererProps<CanvasPanelOptions>)
   const { resolveData, register } = board;
   const data = useMemo(() => resolveData(options.dataRef), [resolveData, options.dataRef]);
   const onReady = useCallback((canvas: GraphCanvas | null) => register(canvasId, canvas), [register, canvasId]);
+
+  // The spec's styling seeds the board; a new spec styling replaces the viewer's.
+  const seed = JSON.stringify(options.styling ?? {});
+  const [styling, setStyling] = useState<TypeStylingPatch>(() => options.styling ?? {});
+  useEffect(() => setStyling(JSON.parse(seed) as TypeStylingPatch), [seed]);
 
   if (!data) {
     return (
@@ -35,19 +41,16 @@ export function CanvasPanel({ options }: PanelRendererProps<CanvasPanelOptions>)
   }
 
   return (
-    <GraphCanvasAppRoot
-      data={data}
-      config={options.config}
-      bundle={options.bundle ?? true}
-      onReady={onReady}
-      height={options.height ?? DEFAULT_HEIGHT}
-      {...(options.preference ? { preference: options.preference } : {})}
-    >
-      <GraphCanvasAppSurface>
-        {options.inspect ? (
-          <ClickInspectBehaviour id="click-inspect" targetLayerId={options.layerId ?? 'graph'} />
-        ) : null}
-      </GraphCanvasAppSurface>
-    </GraphCanvasAppRoot>
+    <div className="min-h-0 flex-1">
+      <GraphBoard
+        data={data}
+        styling={styling}
+        onStylingChange={setStyling}
+        defaultPanel={options.defaultPanel ?? null}
+        onReady={onReady}
+        {...(options.config ? { config: options.config } : {})}
+        {...(options.preference ? { preference: options.preference } : {})}
+      />
+    </div>
   );
 }

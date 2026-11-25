@@ -42,6 +42,9 @@ import type { TypeStylingPatch } from './types';
  * panel's ↺), which re-applies with that type falling back to the template's
  * value from before the hook first wrote it.
  */
+/** The dash of an edge type styled `dashed`: `[dash, gap]` in canvas units. */
+const EDGE_DASH = [6, 4] as const;
+
 export function useApplyTypeStyling(
   canvas: GraphCanvas | null | undefined,
   layerId: string,
@@ -66,7 +69,7 @@ export function useApplyTypeStyling(
       before.current = {
         layer,
         node: { bgFill: node['bgFill'], size: node['size'], labelText: node['labelText'] },
-        edge: { strokeColor: edge['strokeColor'], strokeWidth: edge['strokeWidth'] },
+        edge: { strokeColor: edge['strokeColor'], strokeWidth: edge['strokeWidth'], strokeDashArray: edge['strokeDashArray'] },
         owned: new Set(),
       };
     }
@@ -143,6 +146,9 @@ export function useApplyTypeStyling(
       });
       take(edge, 'edge', 'strokeWidth', styles(edgeTypes, 'width'), (e: GraphEdge) =>
         edgeTypes[e.type]?.width ?? resolveField(prior.edge['strokeWidth'] as never, e),
+      );
+      take(edge, 'edge', 'strokeDashArray', styles(edgeTypes, 'dashed'), (e: GraphEdge) =>
+        edgeTypes[e.type]?.dashed ? EDGE_DASH : resolveField(prior.edge['strokeDashArray'] as never, e),
       );
       if (Object.keys(edge).length > 0) layer!.setEdgeDefaults(edge as unknown as Partial<EdgeStyle>);
     }
