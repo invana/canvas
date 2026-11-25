@@ -16,6 +16,7 @@ export { CanvasPanel } from './panels/CanvasPanel';
 export { CanvasInspectorPanel } from './panels/CanvasInspectorPanel';
 export { CanvasLayersPanel } from './panels/CanvasLayersPanel';
 export { CanvasTablePanel } from './panels/CanvasTablePanel';
+export { MapPanel, mapView, placeOnMap } from './panels/MapPanel';
 
 export { DEFAULT_CANVAS_ID } from './types';
 export type {
@@ -25,4 +26,6 @@ export type {
   CanvasLayersPanelOptions,
   CanvasTablePanelOptions,
   CanvasTableColumn,
+  MapGeo,
+  MapPanelOptions,
 } from './types';

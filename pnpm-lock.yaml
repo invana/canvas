@@ -471,6 +471,9 @@ importers:
       '@invana/graph':
         specifier: workspace:*
         version: link:../graph
+      '@invana/graph-layer-maplibre':
+        specifier: workspace:*
+        version: link:../graph-layer-maplibre
       '@invana/graph-layout-d3-force':
         specifier: workspace:*
         version: link:../graph-layout-d3-force

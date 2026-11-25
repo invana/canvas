@@ -27,6 +27,7 @@
     "@invana/canvas-react": "workspace:*",
     "@invana/forms": ">=0.0.36 <0.1.0",
     "@invana/graph": "workspace:*",
+    "@invana/graph-layer-maplibre": "workspace:*",
     "@invana/graph-layout-d3-force": "workspace:*",
     "@invana/styling": ">=0.0.36 <0.1.0",
     "@invana/themes": ">=0.0.36 <0.1.0",
@@ -39,6 +40,9 @@
   "peerDependenciesMeta": {
     "@invana/boards": {
       "optional": true
+    },
+    "@invana/graph-layer-maplibre": {
+      "optional": true
     }
   },
   "devDependencies": {
@@ -50,6 +54,7 @@
     "@invana/editor": "^0.0.36",
     "@invana/forms": "^0.0.36",
     "@invana/graph": "workspace:*",
+    "@invana/graph-layer-maplibre": "workspace:*",
     "@invana/graph-layout-d3-force": "workspace:*",
     "@invana/styling": "^0.0.36",
     "@invana/tables": "^0.0.36",

@@ -36,6 +36,38 @@ export interface CanvasPanelOptions {
   preference?: RenderPreference;
 }
 
+/** Which two values of a node type's `data` place it: its latitude and longitude, in degrees. */
+export interface MapGeo {
+  lat: string;
+  lon: string;
+}
+
+/**
+ * Options of a `kind: "map"` panel — a graph placed on a map.
+ *
+ * JSON like every board panel: the graph by `dataRef`, and per node type the two
+ * `data` values that place it (`geo`). A node without both is left off; an edge is
+ * drawn when both of its ends are placed. The basemap follows the board's theme:
+ * `themed` draws the built-in light or dark style tinted with the theme's palette;
+ * `none` draws a plain background and makes no outside request.
+ */
+export interface MapPanelOptions {
+  /** Names this canvas on the board, as a `canvas` panel's does. Default `"canvas"`. */
+  canvasId?: string;
+  /** The graph, by reference — resolved with the provider's `resolveData`. */
+  dataRef: string;
+  /** Per node type, the `data` values that place it. A type not named is left off. */
+  geo: Record<string, MapGeo>;
+  /** `themed` (default): the built-in style for the theme, tinted with its palette; `none`: a plain background. */
+  basemap?: 'themed' | 'none';
+  /** A MapLibre style to load instead of the built-in one; still tinted while `basemap` is `themed`. */
+  styleUrl?: string | null;
+  /** Per node type a colour and the value that labels it; per edge type a colour. */
+  styling?: TypeStylingPatch;
+  /** A line under the map — how many nodes were left off, from the host. */
+  note?: string;
+}
+
 /** Options of a `kind: "canvas-inspector"` panel — the clicked node / edge of a canvas. */
 export interface CanvasInspectorPanelOptions {
   /** The canvas to follow. Default `"canvas"`. */
@@ -101,6 +133,7 @@ export interface CanvasTablePanelOptions {
 // index signature would add a `kind: string` member that accepts any options.
 export type CanvasPanelKinds = {
   canvas: CanvasPanelOptions;
+  map: MapPanelOptions;
   'canvas-inspector': CanvasInspectorPanelOptions;
   'canvas-layers': CanvasLayersPanelOptions;
   'canvas-table': CanvasTablePanelOptions;

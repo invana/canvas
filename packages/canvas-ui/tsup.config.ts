@@ -21,6 +21,7 @@ export default defineConfig({
     '@invana/canvas',
     '@invana/canvas-react',
     '@invana/graph',
+    '@invana/graph-layer-maplibre',
     '@invana/ui',
     '@invana/themes',
     '@invana/styling',
