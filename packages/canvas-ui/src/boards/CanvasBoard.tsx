@@ -6,6 +6,7 @@ import { CanvasInspectorPanel } from './panels/CanvasInspectorPanel';
 import { CanvasLayersPanel } from './panels/CanvasLayersPanel';
 import { CanvasPanel } from './panels/CanvasPanel';
 import { CanvasTablePanel } from './panels/CanvasTablePanel';
+import { MapPanel } from './panels/MapPanel';
 import type { CanvasPanelKinds } from './types';
 
 /**
@@ -15,6 +16,7 @@ import type { CanvasPanelKinds } from './types';
  */
 export const CANVAS_PANELS: PanelRegistry = {
   canvas: CanvasPanel,
+  map: MapPanel,
   'canvas-inspector': CanvasInspectorPanel,
   'canvas-layers': CanvasLayersPanel,
   'canvas-table': CanvasTablePanel,
