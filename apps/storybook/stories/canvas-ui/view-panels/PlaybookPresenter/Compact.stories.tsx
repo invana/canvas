@@ -7,7 +7,7 @@
  *   *Present* is a host widget built from `PlaybookPresentButton`, and it shows
  *   only when there are two or more steps.
  * - **Presenting:** the same panel collapses to `PlaybookStepper`, ◀ `n/N` ▶ ✕.
- *   A bottom panel with no surface holds `PlaybookPresenterBar
+ *   A bottom panel with no surface holds `PlaybookPresenter
  *   variant="compact"`: the question as a bubble, the message beside an avatar,
  *   and one dot per step. It has no buttons, because ◀ ▶ ✕ are the toolbar's.
  *
@@ -23,14 +23,14 @@ import { ControlPanel } from '@invana/canvas-react';
 import {
   GraphCanvasApp,
   PlaybookPresentButton,
-  PlaybookPresenterBar,
+  PlaybookPresenter,
   PlaybookStepper,
   type ControlWidget
 } from '@invana/canvas-ui';
 import { lesMiserables } from '@invana/graph-datasets';
 import { Sparkles } from 'lucide-react';
 
-const meta: Meta = { title: 'canvas-ui/view-panels/PlaybookPresenterBar/Compact' };
+const meta: Meta = { title: 'canvas-ui/view-panels/PlaybookPresenter/Compact' };
 export default meta;
 type Story = StoryObj;
 
@@ -87,7 +87,7 @@ function Presenting() {
       present: ({ canvas }) => <PlaybookPresentButton canvas={canvas} onPresent={() => setPresenting(true)} />,
       stepper: ({ canvas }) => <PlaybookStepper canvas={canvas} onClose={() => setPresenting(false)} />,
       presenter: ({ canvas }) => (
-        <PlaybookPresenterBar
+        <PlaybookPresenter
           canvas={canvas}
           variant="compact"
           className="w-[540px] shadow-lg"
