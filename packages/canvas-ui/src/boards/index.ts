@@ -9,6 +9,9 @@ export type { CanvasBoardProps } from './CanvasBoard';
 export { CanvasBoardProvider, useBoardCanvas } from './provider';
 export type { CanvasBoardProviderProps, ResolveCanvasData } from './provider';
 
+export { BoardStory, useCanvasScript } from './story';
+export type { BoardStoryProps, BoardStoryStep, CanvasLit, StoryCamera } from './story';
+
 export { CanvasPanel } from './panels/CanvasPanel';
 export { CanvasInspectorPanel } from './panels/CanvasInspectorPanel';
 export { CanvasLayersPanel } from './panels/CanvasLayersPanel';
