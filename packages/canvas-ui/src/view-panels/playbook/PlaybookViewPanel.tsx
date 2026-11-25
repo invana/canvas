@@ -4,20 +4,21 @@
 // done since the last step becomes a step) and **Copy JSON**. RFC
 // `feat-2026-09-28-an-analysis-cannot-be-recorded-or-replayed`, F35.
 //
-// Built on canvas-react's headless hooks: `usePlaybook` for the script and the
-// moves, `useHistoryEntries` only as a change signal for "is there unsaved work".
+// Built on `usePlaybookStepper` (the kit's `Stepper` over the playbook) for the
+// script and the moves — its ◀ ▶ are the kit's `StepperControls` — `useHistoryEntries` only as a change signal for "is there unsaved work".
 // Every write is the playbook's own (`next` / `previous` / `goTo` / `addStep`),
 // so the panel holds no canvas state — only the in-flight flag, the last error
 // and the draft title of the step being saved.
 
 import type { Canvas, CanvasConfig, StepSpec } from '@invana/canvas';
-import { CanvasContext, useHistoryEntries, usePlaybook } from '@invana/canvas-react';
+import { CanvasContext, useHistoryEntries } from '@invana/canvas-react';
 import { Input } from '@invana/forms';
-import { Badge, Button, Card, Separator, cn } from '@invana/ui';
-import { ChevronLeft, ChevronRight, Copy, Plus } from 'lucide-react';
+import { Badge, Button, Card, Separator, StepperControls, cn } from '@invana/ui';
+import { Copy, Plus } from 'lucide-react';
 import { useCallback, useContext, useState, type ChangeEvent, type KeyboardEvent } from 'react';
 
 import { ACTIVE_CLASS } from '../../components/styles';
+import { usePlaybookStepper } from './usePlaybookStepper';
 
 export interface PlaybookViewPanelProps {
   /**
@@ -29,6 +30,8 @@ export interface PlaybookViewPanelProps {
   showSaveStep?: boolean;
   /** Show **Copy JSON** (the script, as `playbook.toJSON()`). Default `true`. */
   showCopyJson?: boolean;
+  /** Play steps on every `playEvery` ms (Play beside ◀ ▶). Omit it and there is no Play. */
+  playEvery?: number;
   /** Extra classes for the panel root. */
   className?: string;
 }
@@ -69,31 +72,21 @@ function PlaybookViewPanelContent({
   canvas,
   showSaveStep = true,
   showCopyJson = true,
+  playEvery,
   className,
 }: PlaybookViewPanelProps & { canvas: Canvas }) {
-  const { playbook, title, steps, current, index, canNext, canPrevious, next, previous, goTo } = usePlaybook(canvas);
+  const { stepper, playbook: script } = usePlaybookStepper(canvas, { playEvery });
+  const { playbook, title, steps, current, index } = script;
+  const { canNext, busy } = stepper;
   // Re-render on every log change: "unsaved work" is whether the newest applied
   // entry belongs to no step.
   const entries = useHistoryEntries(undefined, canvas);
   const unsaved = entries.length > 0 && entries[entries.length - 1]!.stepId === undefined;
 
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [failed, setError] = useState<string | null>(null);
+  const error = stepper.error ?? failed;
   const [draft, setDraft] = useState('');
   const [copied, setCopied] = useState(false);
-
-  /** Run one playbook move; one at a time, errors shown instead of thrown. */
-  const run = useCallback(async (move: () => Promise<void>): Promise<void> => {
-    setBusy(true);
-    setError(null);
-    try {
-      await move();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setBusy(false);
-    }
-  }, []);
 
   const saveStep = useCallback((): void => {
     const stepTitle = draft.trim() || `Step ${steps.length + 1}`;
@@ -123,13 +116,8 @@ function PlaybookViewPanelContent({
 
   return (
     <div className={cn('flex h-full flex-col gap-2 overflow-hidden p-2 text-base', className)}>
-      {/* Title + position. */}
-      <div className="flex items-center justify-between gap-2">
-        <span className="truncate font-medium">{title}</span>
-        <span className="text-muted-foreground shrink-0 text-sm">
-          {steps.length === 0 ? 'no steps' : `${index + 1} / ${steps.length}`}
-        </span>
-      </div>
+      {/* Title; the position is the stepper's. */}
+      <span className="truncate font-medium">{title}</span>
 
       {/* The current step and its narration. */}
       <div className="bg-muted/40 flex flex-col gap-1 rounded-md p-2">
@@ -142,12 +130,7 @@ function PlaybookViewPanelContent({
       </div>
 
       <div className="flex items-center gap-1">
-        <Button variant="outline" size="sm" disabled={busy || !canPrevious} onClick={() => void run(previous)}>
-          <ChevronLeft className="size-4" /> Previous
-        </Button>
-        <Button size="sm" disabled={busy || !canNext} onClick={() => void run(next)}>
-          Next <ChevronRight className="size-4" />
-        </Button>
+        <StepperControls stepper={stepper} />
         {showCopyJson && (
           <Button variant="ghost" size="sm" className="ml-auto" onClick={() => void copyJson()} title="Copy the playbook as JSON">
             <Copy className="size-4" /> {copied ? 'Copied' : 'JSON'}
@@ -166,10 +149,9 @@ function PlaybookViewPanelContent({
             <Button
               variant="ghost"
               size="sm"
-              disabled={busy}
               aria-current={i === index ? 'step' : undefined}
               onClick={() => {
-                if (i !== index) void run(() => goTo(step.id));
+                if (i !== index) void stepper.goTo(i);
               }}
               className={cn(
                 'h-auto w-full justify-start gap-2 px-2 py-1 text-left font-normal',

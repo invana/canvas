@@ -20,7 +20,7 @@ import {
 } from '@invana/graph';
 import { D3ForceLayout } from '@invana/graph-layout-d3-force';
 import { lesMiserables } from '@invana/graph-datasets';
-import { HistoryViewPanel, PlaybookPresenterBar, PlaybookViewPanel } from '@invana/canvas-ui';
+import { HistoryViewPanel, PlaybookPresenter, PlaybookViewPanel } from '@invana/canvas-ui';
 import { useEffect, useRef, useState } from 'react';
 
 /** What a playbook story varies — everything else is the standard canvas below. */
@@ -38,7 +38,7 @@ export interface PlaybookStoryOptions {
   /** Deep-merged over the standard config (node templates, behaviour / layout options). */
   config?: Record<string, unknown>;
   /**
-   * Overlay `PlaybookPresenterBar` on the bottom of the canvas — the playbook as
+   * Overlay `PlaybookPresenter` on the bottom of the canvas — the playbook as
    * a deck (title, narration, n / N, ◀ / ▶, a dot per step; ← / → once it has
    * focus). Default `false`.
    */
@@ -109,7 +109,7 @@ const STANDARD_CONFIG = {
  * playbook controls beside it: `PlaybookViewPanel` (the step and its narration,
  * ◀ Previous, Next ▶, jump to a step, Save as step, Copy JSON) above
  * `HistoryViewPanel` (every entry, who made it, the step it belongs to). With
- * `presenter: true`, `PlaybookPresenterBar` also sits over the bottom of the
+ * `presenter: true`, `PlaybookPresenter` also sits over the bottom of the
  * canvas.
  *
  * The canvas: a `GraphLayer` (`'graph'`), pan / zoom / drag / theme, and the
@@ -177,7 +177,7 @@ function PlaybookStage({ playbook, data = lesMiserables, layouts, config, presen
       <div className="relative min-w-0 flex-1">
         <div ref={hostRef} className="absolute inset-0" />
         {presenter && (
-          <PlaybookPresenterBar canvas={canvas} className="absolute inset-x-4 bottom-4 mx-auto max-w-2xl shadow-lg" />
+          <PlaybookPresenter canvas={canvas} className="absolute inset-x-4 bottom-4 mx-auto max-w-2xl shadow-lg" />
         )}
       </div>
       <aside className="border-border bg-card flex w-80 shrink-0 flex-col border-l">

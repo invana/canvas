@@ -17,7 +17,7 @@
  * | top-right | the rail — Legend · Styling · History · Element · Annotations · Changes · Export | {@link defaultBoardPanels} |
  * | over the graph | the annotations on the records it has loaded — cards, highlights, groups | {@link AnnotationsOverlay} |
  * | bottom-left | the minimap over zoom · fit · lock | {@link BOARD_DOCK_ITEMS} |
- * | bottom | in Present, the step's question and answer | `PlaybookPresenterBar` |
+ * | bottom | in Present, the step's question and answer | `PlaybookPresenter` |
  * | right-click | board · node · relationship · selection | {@link defaultBoardMenus} |
  *
  * **What the board does on its own** (each switchable through `policies`):
@@ -92,7 +92,7 @@ import {
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { type ControlWidget, ControlPanels } from '../control-panels';
 import { BoardContextMenus } from '../menus/BoardContextMenus';
-import { PlaybookPresenterBar } from '../view-panels/playbook';
+import { PlaybookPresenter } from '../view-panels/playbook';
 import { typeColor } from '../view-panels/schema';
 import type { TypeStylingPatch } from '../view-panels/styling/types';
 import { useApplyTypeStyling } from '../view-panels/styling/useApplyTypeStyling';
@@ -323,7 +323,7 @@ export function GraphBoard({
   const widgets = useMemo<Record<string, ControlWidget>>(
     () => ({
       presenter: ({ canvas: c }) => (
-        <PlaybookPresenterBar
+        <PlaybookPresenter
           canvas={c}
           variant="compact"
           className="w-[540px] shadow-lg"

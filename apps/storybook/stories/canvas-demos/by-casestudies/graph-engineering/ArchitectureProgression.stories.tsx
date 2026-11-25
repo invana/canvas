@@ -14,7 +14,8 @@
  *     and dim the rest; the last step pulls back to the whole staircase;
  *   - `narration` is what the right-hand `PlaybookViewPanel` reads out.
  *
- * *Play* in the header steps through on a timer; the panel's ◀ ▶ step by hand,
+ * *Play* beside the panel's ◀ ▶ steps through on a timer (any key or click stops
+ * it); ◀ ▶ step by hand,
  * and stepping back **reverts** a rung (its delta is undone).
  *
  * **Every new mark arrives animated, from config alone:** the layer's node
@@ -28,7 +29,7 @@
  * ⚠️ A `rect` mark is positioned by its top-left, a `circle` by its centre.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { CanvasConfig, PlaybookSpec } from '@invana/canvas';
 import {
@@ -40,7 +41,6 @@ import {
   type NodeTypeRegistry,
 } from '@invana/graph';
 import { GraphCanvasApp, PlaybookViewPanel } from '@invana/canvas-ui';
-import { Button } from '@invana/ui';
 import { ThemeProvider } from '@invana/themes';
 
 // `selfThemed`: pinned paper-white, like the figures.
@@ -54,8 +54,6 @@ type Story = StoryObj;
 export const ArchitectureProgressionStory: Story = {
   name: 'ArchitectureProgression',
   render: function Render() {
-    const [canvas, setCanvas] = useState<GraphCanvas | null>(null);
-    const [playing, setPlaying] = useState(false);
 
     // ── Marks (rung centres at x = 0 · 330 · 660 · 990 · 1320 · 1650) ───────
     const structures: NodeStructureRegistry = useMemo(() => ({
@@ -391,7 +389,6 @@ export const ArchitectureProgressionStory: Story = {
     }), [structures, stylings, types]);
 
     const onReady = useCallback((next: GraphCanvas | null) => {
-      setCanvas(next);
       if (!next) return;
       // The bundle has no focus behaviour — register it by id, then re-apply its slice.
       next.behaviours.register(new FocusBehaviour({ id: 'focus', targetLayerId: 'graph' }));
@@ -406,38 +403,17 @@ export const ArchitectureProgressionStory: Story = {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // *Play*: advance one step every 3.2 s; stop at the last. From the end, start over.
-    useEffect(() => {
-      if (!canvas || !playing) return;
-      const book = canvas.playbook;
-      const tick = (): void => {
-        if (book.index >= book.steps.length - 1) {
-          setPlaying(false);
-          return;
-        }
-        void book.next();
-      };
-      if (book.index >= book.steps.length - 1) void book.goTo(book.steps[0]!.id);
-      else tick();
-      const timer = setInterval(tick, 3200);
-      return () => clearInterval(timer);
-    }, [canvas, playing]);
-
     return (
       <ThemeProvider defaultMode="light" storageKey={null}>
         <GraphCanvasApp
           data={data}
           config={config}
           onReady={onReady}
-          header={{
-            title: 'From loop to graph — the staged build path',
-            right: (
-              <Button size="sm" variant={playing ? 'secondary' : 'default'} onClick={() => setPlaying((p) => !p)}>
-                {playing ? 'Pause' : 'Play'}
-              </Button>
-            ),
+          header={{ title: 'From loop to graph — the staged build path' }}
+          right={{
+            content: (ctx) => <PlaybookViewPanel canvas={ctx.canvas} playEvery={3200} className="h-full" />,
+            defaultSize: 28,
           }}
-          right={{ content: (ctx) => <PlaybookViewPanel canvas={ctx.canvas} className="h-full" />, defaultSize: 28 }}
         />
       </ThemeProvider>
     );

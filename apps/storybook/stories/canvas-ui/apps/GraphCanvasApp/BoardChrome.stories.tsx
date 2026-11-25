@@ -12,7 +12,7 @@
  *
  * The minimap is a `MiniMapLayer` anchored `bottom-left` and inset past the
  * view bar, so the two sit side by side. *Present* opens the walkthrough from
- * `PlaybookPresenterBar/Compact`; here it shows the collapsed toolbar and the
+ * `PlaybookPresenter/Compact`; here it shows the collapsed toolbar and the
  * presenter bar too.
  */
 
@@ -25,7 +25,7 @@ import {
   GraphCanvasApp,
   HISTORY_CONTROL_ITEMS,
   PlaybookPresentButton,
-  PlaybookPresenterBar,
+  PlaybookPresenter,
   PlaybookStepper,
   SELECT_MODE_CONTROL_ITEMS,
   type ControlWidget
@@ -82,7 +82,7 @@ function Board() {
       present: ({ canvas }) => <PlaybookPresentButton canvas={canvas} onPresent={() => setPresenting(true)} />,
       stepper: ({ canvas }) => <PlaybookStepper canvas={canvas} onClose={() => setPresenting(false)} />,
       presenter: ({ canvas }) => (
-        <PlaybookPresenterBar
+        <PlaybookPresenter
           canvas={canvas}
           variant="compact"
           className="w-[540px] shadow-lg"

@@ -987,11 +987,17 @@ export type { SelectionViewPanelProps } from './view-panels/selection';
 // Copy JSON — over `usePlaybook`. `HistoryViewPanel`: applied entries newest
 // first with actor / step / streamed badges and a data summary, an actor filter,
 // Undo / Redo — over `useHistoryEntries` + `history.entryData`. Both resolve the
-// canvas from context or an optional `canvas` prop. `PlaybookPresenterBar` (F20):
-// the same playbook as a deck — title, narration, n / N, ◀ / ▶, a dot per step,
-// ← / → while focused; steps only, no authoring.
-export { PlaybookViewPanel, PlaybookPresenterBar, PlaybookStepper } from './view-panels/playbook';
-export type { PlaybookViewPanelProps, PlaybookPresenterBarProps, PlaybookStepperProps } from './view-panels/playbook';
+// canvas from context or an optional `canvas` prop. `PlaybookPresenter` (F20) and
+// `PlaybookStepper`: the same playbook presented, as the kit's `Presenter` and
+// `StepperControls` over `usePlaybookStepper` (the kit's `Stepper` over
+// `canvas.playbook`); steps only, no authoring.
+export { PlaybookViewPanel, PlaybookPresenter, PlaybookStepper, usePlaybookStepper } from './view-panels/playbook';
+export type {
+  PlaybookViewPanelProps,
+  PlaybookPresenterProps,
+  PlaybookStepperProps,
+  UsePlaybookStepperOptions,
+} from './view-panels/playbook';
 // Layout presets: the cards, the active preset's options, and the panel that
 // holds both — the Layout popover's body (`layout-presets` widget).
 export {
