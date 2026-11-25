@@ -9,11 +9,11 @@
 
 import { select, type Canvas, type CanvasLayoutPreset } from '@invana/canvas';
 import { useCommandStates, usePlaybook } from '@invana/canvas-react';
-import { Button, FloatingPanel, Popover, PopoverContent, PopoverTrigger, Tooltip, TooltipContent, TooltipTrigger } from '@invana/ui';
+import { Button, FloatingPanel, Popover, PopoverContent, PopoverTrigger } from '@invana/ui';
 import { ChevronDown, Expand, Network, Shrink, Presentation, Workflow, Orbit, Share2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ComponentType } from 'react';
 
-import { ToolbarItems } from '../components';
+import { ToolbarItems, Tooltipped } from '../components';
 import { DEFAULT_LAYOUT_PRESET_CARDS, LayoutPresetsViewPanel, type LayoutPresetValue } from '../view-panels/layout-presets';
 import { PlaybookStepper } from '../view-panels/playbook/PlaybookStepper';
 import { LegendViewPanel } from '../view-panels/legend';
@@ -73,17 +73,15 @@ function LayoutPresetsWidget({ canvas }: ControlWidgetProps) {
 
   return (
     <Popover>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm" aria-label={`Layout · ${label}`} className="gap-0.5 px-1.5">
-              <Icon />
-              <ChevronDown className="size-3 opacity-70" />
-            </Button>
-          </PopoverTrigger>
-        </TooltipTrigger>
-        <TooltipContent>Layout · {label}</TooltipContent>
-      </Tooltip>
+      {/* `Tooltipped` brings its own provider: a host (GraphBoard) need not mount one. */}
+      <Tooltipped label={`Layout · ${label}`}>
+        <PopoverTrigger asChild>
+          <Button variant="ghost" size="sm" aria-label={`Layout · ${label}`} className="gap-0.5 px-1.5">
+            <Icon />
+            <ChevronDown className="size-3 opacity-70" />
+          </Button>
+        </PopoverTrigger>
+      </Tooltipped>
       <PopoverContent align="start" className="w-auto p-0">
         <LayoutPresetsViewPanel value={value} presets={presets} onChange={onChange} {...(onRunAgain ? { onRunAgain } : {})} />
       </PopoverContent>
