@@ -9,7 +9,7 @@
  * | Region | Preset |
  * |---|---|
  * | modes | {@link BOARD_MODES} — Explore · Edit · Annotate work; Focus · Present view |
- * | top-left, working | {@link BOARD_ROW_ITEMS} — the picker, Select ▾ · Hand, Edit's and Annotate's tools, undo · redo · redraw |
+ * | top-left, working | {@link BOARD_ROW_ITEMS} — the picker, Select ▾ · Hand, Layout ▾, Edit's and Annotate's tools, undo · redo · redraw |
  * | top-left, viewing | {@link BOARD_VIEW_ROW_ITEMS} — the picker; in Present, the stepper |
  * | bottom-left | {@link BOARD_DOCK_ITEMS} under the minimap — zoom, fit, lock |
  */
@@ -90,6 +90,9 @@ export const BOARD_ROW_ITEMS: readonly ControlItemSpec[] = [
   { type: 'widget', widget: 'board-mode' },
   { type: 'divider' },
   { type: 'widget', widget: 'pointer-tools' },
+  // Layout ▾ — the preset cards over `layout.preset`, the same binding as right-click *Layout…*.
+  { type: 'divider' },
+  { type: 'widget', widget: 'layout-presets' },
   { type: 'divider', modes: ['edit', 'annotate'] },
   { type: 'toggle', key: 'add', command: 'tool.active', args: { value: 'add' }, icon: 'node-add', label: 'Add node (N)', modes: ['edit'] },
   { type: 'toggle', key: 'connect', command: 'tool.active', args: { value: 'connect' }, icon: 'connect', label: 'Connect (C)', modes: ['edit'] },

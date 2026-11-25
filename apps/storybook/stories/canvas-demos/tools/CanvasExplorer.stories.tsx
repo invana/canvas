@@ -10,7 +10,7 @@
  *
  * | Where | What | canvas-ui |
  * |---|---|---|
- * | top-left | the mode picker, then the mode's tools — Select ▾ (Select · Lasso · Box); in Edit *Add node* · *Connect*; in Annotate *Annotate* · *Highlight* · *Group*; in both, Undo · Redo · Redraw | `BOARD_ROW_ITEMS` · `BOARD_VIEW_ROW_ITEMS` |
+ * | top-left | the mode picker, then the mode's tools — Select ▾ (Select · Lasso · Box); Layout ▾ (Network · Tree · Flow · Radial); in Edit *Add node* · *Connect*; in Annotate *Annotate* · *Highlight* · *Group*; in both, Undo · Redo · Redraw | `BOARD_ROW_ITEMS` · `BOARD_VIEW_ROW_ITEMS` |
  * | top-right | the panel rail — Legend · Styling · History · Element · Annotations, Changes with its count (Edit, or while unsaved), a line, Export — and one floating panel left of it | `defaultBoardPanels` |
  * | bottom-left | the view dock: the minimap over − · the zoom field ▾ · + · Fit · lock | `BOARD_DOCK_ITEMS` |
  * | right-click | the board, a node, a relationship, a selection — each headed by what it is for | `defaultBoardMenus` · `<BoardLayoutPopover>` (*Layout…* at the pointer) |

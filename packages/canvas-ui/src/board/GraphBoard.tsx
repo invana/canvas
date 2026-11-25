@@ -13,7 +13,7 @@
  *
  * | Where | What | From |
  * |---|---|---|
- * | top-left | the mode picker, then the mode's tools | {@link BOARD_ROW_ITEMS} · {@link BOARD_VIEW_ROW_ITEMS} |
+ * | top-left | the mode picker, Select ▾ · Hand, Layout ▾ (the preset cards), then the mode's tools | {@link BOARD_ROW_ITEMS} · {@link BOARD_VIEW_ROW_ITEMS} |
  * | top-right | the rail — Legend · Styling · History · Element · Annotations · Changes · Export | {@link defaultBoardPanels} |
  * | over the graph | the annotations on the records it has loaded — cards, highlights, groups | {@link AnnotationsOverlay} |
  * | bottom-left | the minimap over zoom · fit · lock | {@link BOARD_DOCK_ITEMS} |
