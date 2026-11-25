@@ -37,7 +37,7 @@ export interface CanvasBoardProps extends BoardProps<CanvasPanelKinds> {
  *   resolveData={(ref) => graphs[ref]}
  *   spec={{
  *     rows: [
- *       { panels: [{ id: 'g', kind: 'canvas', options: { dataRef: 'team', inspect: true } }] },
+ *       { fill: true, panels: [{ id: 'g', kind: 'canvas', options: { dataRef: 'team' } }] },
  *       { panels: [{ id: 't', kind: 'canvas-table', title: 'Nodes', options: {} }] },
  *     ],
  *     inspector: { spec: { rows: [{ panels: [{ id: 'i', kind: 'canvas-inspector', options: {} }] }] } },

@@ -7,7 +7,7 @@ import type { CanvasInspectorPanelOptions } from '../types';
 /**
  * `kind: "canvas-inspector"` — the node or edge last clicked on a board canvas,
  * read-only. canvas-ui's `ElementViewPanel`, bound to the canvas named
- * by `canvasId`; that canvas needs `inspect: true` so a click is recorded.
+ * by `canvasId`; the canvas records every click.
  */
 export function CanvasInspectorPanel({ options }: PanelRendererProps<CanvasInspectorPanelOptions>) {
   const canvas = useBoardCanvas(options.canvasId);

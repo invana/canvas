@@ -77,8 +77,8 @@ function useGraphSnapshot(layer: GraphLayer | undefined): Snapshot {
  * kit's own `table` block so it reads like every other table on the board.
  *
  * Re-reads as the graph changes. Clicking a row selects that node on the canvas
- * (the `click-select` behaviour), points the canvas's inspector at it when the
- * canvas has `inspect: true`, and reports the board action `select` with the
+ * (the `click-select` behaviour), points the canvas's inspector at it, and
+ * reports the board action `select` with the
  * node id as `itemId`.
  */
 export function CanvasTablePanel({ panel, options, onAction, icons, gap }: PanelRendererProps<CanvasTablePanelOptions>) {

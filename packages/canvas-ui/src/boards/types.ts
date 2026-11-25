@@ -1,15 +1,18 @@
 import type { CanvasConfig } from '@invana/canvas';
 import type { RenderPreference } from '@invana/canvas-react';
 
+import type { TypeStylingPatch } from '../view-panels/styling/types';
+
 /** The `canvasId` a panel binds to when its options name none. */
 export const DEFAULT_CANVAS_ID = 'canvas';
 
 /**
- * Options of a `kind: "canvas"` panel — a live graph canvas on the board.
+ * Options of a `kind: "canvas"` panel — a {@link GraphBoard} on the board.
  *
  * JSON by design, like every board panel: the graph arrives as a **reference**
  * (`dataRef`) that the host resolves through `CanvasBoardProvider`'s
  * `resolveData`, so a board spec can be stored, diffed and sent over the wire.
+ * No height: the panel takes its row's, so give it a `fill` row.
  */
 export interface CanvasPanelOptions {
   /**
@@ -20,31 +23,22 @@ export interface CanvasPanelOptions {
   canvasId?: string;
   /** The graph, by reference — resolved with the provider's `resolveData`. */
   dataRef: string;
-  /** Canvas config, deep-merged over the app bundle defaults (`graphCanvasAppBaseConfig`). */
+  /**
+   * Where the board's styling starts: per node type a colour and the value that
+   * labels it (`labelKey`), per edge type a colour, a width, `dashed`.
+   */
+  styling?: TypeStylingPatch;
+  /** The rail panel open at first. Default none: a panel is small, the graph comes first. */
+  defaultPanel?: string | null;
+  /** Deep-merged over the board's config. */
   config?: CanvasConfig;
-  /** Mount the default graph bundle. Default `true`. */
-  bundle?: boolean;
   /** Pin the render backend (`'webgl'` / `'webgpu'`). Default: auto. */
   preference?: RenderPreference;
-  /**
-   * Register a `ClickInspectBehaviour` (id `click-inspect`) so a click on a node
-   * or edge is what a `canvas-inspector` panel shows. Off by default: a
-   * behaviour is only ever registered when asked for.
-   */
-  inspect?: boolean;
-  /** The `GraphLayer` id the canvas draws into. Default `"graph"`. */
-  layerId?: string;
-  /**
-   * Height of the canvas in px. Default `520`. A canvas has no content height,
-   * and the kit's panel body does not grow into a `fill` row's height (its
-   * `PanelBox` body has no `flex-1`), so the panel sets its own.
-   */
-  height?: number;
 }
 
 /** Options of a `kind: "canvas-inspector"` panel — the clicked node / edge of a canvas. */
 export interface CanvasInspectorPanelOptions {
-  /** The canvas to follow. Default `"canvas"`. Needs that canvas's `inspect: true`. */
+  /** The canvas to follow. Default `"canvas"`. */
   canvasId?: string;
   /** `GraphLayer` id the inspected element is resolved against. Default `"graph"`. */
   layerId?: string;

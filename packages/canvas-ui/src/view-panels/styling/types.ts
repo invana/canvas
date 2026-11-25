@@ -40,6 +40,12 @@ export interface EdgeTypeStyling {
   color?: string;
   /** Connector width in canvas units. */
   width?: number;
+  /**
+   * Draw every edge of the type dashed — a relationship of a different kind
+   * than the rest, such as one that crosses between two models. The legend
+   * draws it dashed too.
+   */
+  dashed?: boolean;
 }
 
 /**
