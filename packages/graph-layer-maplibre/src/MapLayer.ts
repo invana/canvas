@@ -86,6 +86,13 @@ export const BLANK_STYLE = {
   layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#eef0f3' } }],
 } as const;
 
+/** {@link BLANK_STYLE} on a dark surface: what `basemap: 'none'` draws while the canvas theme is dark. */
+export const BLANK_STYLE_DARK = {
+  ...BLANK_STYLE,
+  name: 'invana-blank-dark',
+  layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#1a1c20' } }],
+} as const;
+
 /**
  * The built-in basemaps behind `MapLayerOptions.basemap` — free, keyless
  * [OpenFreeMap](https://openfreemap.org) styles. Exported so an app can name them
@@ -215,7 +222,13 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
     const b = o.basemap;
     if (b === 'light' || b === 'dark') return OPENFREEMAP_STYLES[b];
     if (b === 'auto' || b === 'themed') return dark ? OPENFREEMAP_STYLES.dark : OPENFREEMAP_STYLES.light;
-    return BLANK_STYLE;
+    return dark ? BLANK_STYLE_DARK : BLANK_STYLE;
+  }
+
+  /** Whether the resolved style is a blank one: it takes the theme's surface like a themed basemap does. */
+  private isBlank(): boolean {
+    const s = this.resolveStyle();
+    return s === BLANK_STYLE || s === BLANK_STYLE_DARK;
   }
 
   /**
@@ -239,7 +252,7 @@ export class MapLayer extends Layer<MapLayerOptions, MapLayerState, MapLayerEven
   private applyTint(): void {
     const map = this.map;
     const theme = this.ctx?.theme.current();
-    if (!map || !theme || this.options.basemap !== 'themed') return;
+    if (!map || !theme || (this.options.basemap !== 'themed' && !this.isBlank())) return;
     let layers: { id: string; type: string }[];
     try {
       layers = map.getStyle()?.layers ?? [];

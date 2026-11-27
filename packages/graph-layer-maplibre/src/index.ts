@@ -1,6 +1,6 @@
 // @invana/graph-layer-maplibre — public API surface
 
-export { MapLayer, BLANK_STYLE, OPENFREEMAP_STYLES } from './MapLayer';
+export { MapLayer, BLANK_STYLE, BLANK_STYLE_DARK, OPENFREEMAP_STYLES } from './MapLayer';
 export { computeTint } from './basemapTint';
 export type { TintLayer, TintOp, TintTheme } from './basemapTint';
 export { GeoPositionBehaviour } from './GeoPositionBehaviour';
