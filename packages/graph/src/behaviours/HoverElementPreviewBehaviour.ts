@@ -444,6 +444,8 @@ export class HoverElementPreviewBehaviour extends Behaviour {
    * `holdOpen` already cancelled the timer. Order-independent.
    */
   private held = false;
+  /** `true` while something outside the canvas host (a dialog, a sheet) is under the pointer. */
+  private covered = false;
 
   private openTimer: ReturnType<typeof setTimeout> | null = null;
   private closeTimer: ReturnType<typeof setTimeout> | null = null;
@@ -523,6 +525,24 @@ export class HoverElementPreviewBehaviour extends Behaviour {
       const onPointerDown = (): void => this.hideNow();
       el.addEventListener('pointerdown', onPointerDown);
       this.subs.push(() => el.removeEventListener('pointerdown', onPointerDown));
+
+      // The renderer hit-tests on `globalpointermove`, so it reports hovers
+      // even while a dialog or sheet covers the canvas. Track what the pointer
+      // is really over: a target outside the canvas host (the host holds the
+      // canvas element and its DOM overlays, the card included) means the
+      // canvas is covered. A covered canvas opens no card and closes one open.
+      const host = el.parentElement;
+      if (host) {
+        const onWindowMove = (e: PointerEvent): void => {
+          const target = e.target;
+          const covered = target instanceof Node && !host.contains(target);
+          if (covered === this.covered) return;
+          this.covered = covered;
+          if (covered) this.hideNow();
+        };
+        window.addEventListener('pointermove', onWindowMove, true);
+        this.subs.push(() => window.removeEventListener('pointermove', onWindowMove, true));
+      }
     }
   }
 
@@ -613,6 +633,8 @@ export class HoverElementPreviewBehaviour extends Behaviour {
     worldY: number,
   ): void {
     if (!this._enabled) return;
+    // Something else (a dialog, a sheet) is over the canvas: no card.
+    if (this.covered) return;
     // While the pointer rests on an interactive card (held open), ignore new
     // element hovers entirely. The renderer hit-tests on `globalpointermove`
     // and can still surface a `pointerover` for an element near or behind the
