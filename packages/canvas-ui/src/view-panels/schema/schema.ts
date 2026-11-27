@@ -14,7 +14,7 @@ import type {
   SchemaNodeType,
 } from '@invana/graph';
 import { readCssColor, schemaTableCard } from '@invana/graph';
-import { colorSlotByString } from '@invana/styling/color';
+import { colorSlotByString, dataVar } from '@invana/styling/color';
 
 // Re-export the domain schema surface so canvas-ui consumers can import it here.
 export type {
@@ -44,12 +44,12 @@ const UNSET_NUMBER = 0x010203;
 /**
  * A type's colour — the same one everywhere it is drawn: the board, the legend,
  * a type list's dot. The name hashes to one of design-kit's eight data slots
- * (`colorSlotByString`), read live from `--color-data-N` so it follows the
+ * (`colorSlotByString`), read live from `--color-data-<hue>` so it follows the
  * theme; on a page without those tokens the slot picks from a fixed palette.
  */
 export function typeColor(name: string): number {
   const slot = colorSlotByString(name);
-  const live = readCssColor(`var(--color-data-${slot}, ${UNSET})`);
+  const live = readCssColor(dataVar(slot, UNSET));
   return live !== undefined && live !== UNSET_NUMBER ? live : TYPE_PALETTE[slot - 1]!;
 }
 

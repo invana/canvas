@@ -26,7 +26,7 @@
 // host page's CSS tokens — every role and the categorical ramp — so a canvas wears
 // exactly the app's colours under **any** theme family the app defines, present or
 // future, with nothing registered per family. The token names default to
-// design-kit's (`--color-background`, `--color-data-1…8`, …) and a host renames
+// design-kit's (`--color-background`, `--color-data-<hue>`, …) and a host renames
 // any of them with `tokens`. `source: 'library'` instead picks the canvas
 // library's own palette for the host's family — it knows only the families
 // `@invana/graph` ships (`default` · `forest` · `ocean` · `gold` · `rose` ·
@@ -56,7 +56,7 @@ export const DESIGN_KIT_TOKENS: ThemeTokenMap = {
   stroke: '--color-input',
   selectionRing: '--color-ring',
   hoverRing: '--color-primary',
-  categorical: [1, 2, 3, 4, 5, 6, 7, 8].map((n) => `--color-data-${n}`),
+  categorical: ['blue', 'orange', 'aqua', 'yellow', 'magenta', 'green', 'violet', 'red'].map((h) => `--color-data-${h}`),
 };
 
 /** Fallbacks for a role whose token does not resolve (no DOM yet, an older theme). */
